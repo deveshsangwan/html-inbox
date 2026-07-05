@@ -1,0 +1,58 @@
+docs/architecture.md
+  s_4a8886aa9c0c07::t_7ba986dff76de0 34
+  s_4a8886aa9c0c07::t_c01903d3f80cea 40-42
+  s_4a8886aa9c0c07::t_bc552ea108594a 1-33,35-39,43-68
+docs/threat-model.md
+  s_4a8886aa9c0c07::t_bc552ea108594a 1-40
+packages/shared/tsconfig.json
+  s_4a8886aa9c0c07::t_205db194f647eb 1-8
+packages/shared/src/self-check.ts
+  s_4a8886aa9c0c07::t_205db194f647eb 1-7
+packages/cli/src/index.ts
+  s_4a8886aa9c0c07::t_385d8f57cac16f 1-41,43-120
+  s_4a8886aa9c0c07::t_69b0f54b72fb56 42
+packages/cli/src/backend.ts
+  s_4a8886aa9c0c07::t_385d8f57cac16f 1-115
+skills/html-inbox/SKILL.md
+  s_4a8886aa9c0c07::t_bc552ea108594a 2-6
+  s_4a8886aa9c0c07::t_c01903d3f80cea 1,7
+tsconfig.base.json
+  s_4a8886aa9c0c07::t_205db194f647eb 1-12
+packages/cli/package.json
+  s_4a8886aa9c0c07::t_205db194f647eb 1-17
+pnpm-workspace.yaml
+  s_4a8886aa9c0c07::t_205db194f647eb 1-2
+packages/shared/package.json
+  s_4a8886aa9c0c07::t_205db194f647eb 1-11
+packages/cli/tsconfig.json
+  s_4a8886aa9c0c07::t_205db194f647eb 1-8
+package.json
+  s_4a8886aa9c0c07::t_205db194f647eb 1-13
+packages/cli/src/self-check.ts
+  s_4a8886aa9c0c07::t_385d8f57cac16f 1-45
+.gitignore
+  s_4a8886aa9c0c07::t_4d22d459350a7e 1-3
+packages/shared/src/index.ts
+  s_4a8886aa9c0c07::t_205db194f647eb 1-80
+packages/cli/src/viewer.ts
+  s_4a8886aa9c0c07::t_69b0f54b72fb56 10-11,14-16,32-33,35-37,51,69,81,122,130-134,136,181
+  s_4a8886aa9c0c07::t_385d8f57cac16f 1-9,12-13,17-31,34,38-50,52-68,70-80,82-121,123-129,135,137-180,182-247
+pnpm-lock.yaml
+  s_4a8886aa9c0c07::t_b7605843fb23e7 1-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f7fb9114da66dda40c1b8895198d773c5c64490e",
+  "prompts": {},
+  "sessions": {
+    "s_4a8886aa9c0c07": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f3176-676c-7ea1-9be6-e98f5b2c7896",
+        "model": "gpt-5.5"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
