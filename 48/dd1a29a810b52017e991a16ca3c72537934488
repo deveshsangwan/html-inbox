@@ -1,0 +1,19 @@
+skills/html-inbox/SKILL.md
+  s_b189394135849c::t_fe98fd74362c46 1-5,8-23,28-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "48dd1a29a810b52017e991a16ca3c72537934488",
+  "prompts": {},
+  "sessions": {
+    "s_b189394135849c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f4d77-9cfa-7231-9faf-d60a661e7ce8",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
