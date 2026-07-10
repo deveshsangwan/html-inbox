@@ -1,0 +1,36 @@
+packages/shared/src/index.ts
+  s_b189394135849c::t_b1324ba2355d2e 39-44,47-53,67,78-87,93
+  s_b189394135849c::t_439928c973d125 73
+  s_b189394135849c::t_c297623ada66de 46,68-72,74-77,94-109
+  s_b189394135849c::t_d9c10ebd200b12 110
+packages/cli/src/viewer.ts
+  s_b189394135849c::t_b1324ba2355d2e 5-10,186,215
+packages/shared/src/self-check.ts
+  s_b189394135849c::t_c297623ada66de 14-16,27,29-31
+  s_b189394135849c::t_b1324ba2355d2e 7-13,17-26,28,32-33
+docs/architecture.md
+  s_b189394135849c::t_52ad7b141dc2d2 76
+  s_b189394135849c::t_b1324ba2355d2e 3,64,66,68-75
+docs/threat-model.md
+  s_b189394135849c::t_c297623ada66de 14
+  s_b189394135849c::t_b1324ba2355d2e 19,21,27-29,42-43
+  s_b189394135849c::t_52ad7b141dc2d2 20
+packages/cli/src/self-check.ts
+  s_b189394135849c::t_b1324ba2355d2e 35-37,40-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "a153a829bd729227faa609893b82b409fe354a01",
+  "prompts": {},
+  "sessions": {
+    "s_b189394135849c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f4d77-9cfa-7231-9faf-d60a661e7ce8",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
