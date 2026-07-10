@@ -32,10 +32,17 @@ async function run(): Promise<void> {
     assert.equal((await fetch(`${baseUrl}/health`)).ok, true);
     const shell = await fetch(`${baseUrl}/documents/${published.metadata.id}`);
     assert.equal(shell.headers.get("content-security-policy")?.includes("frame-src 'self'"), true);
-    assert.equal((await shell.text()).includes("<iframe sandbox"), true);
+    const shellHtml = await shell.text();
+    assert.equal(shellHtml.includes('<iframe sandbox="allow-scripts"'), true);
+    assert.equal(shellHtml.includes("allow-same-origin"), false);
 
     const content = await fetch(`${baseUrl}/documents/${published.metadata.id}/content`);
-    assert.equal(content.headers.get("content-security-policy")?.includes("script-src 'none'"), true);
+    const csp = content.headers.get("content-security-policy") ?? "";
+    assert.equal(csp.includes("script-src 'unsafe-inline' https://cdn.tailwindcss.com"), true);
+    assert.equal(csp.includes("https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"), true);
+    assert.equal(csp.includes("https://cdn.jsdelivr.net/npm/mermaid@11/dist/"), true);
+    assert.equal(csp.includes("connect-src 'none'"), true);
+    assert.equal(csp.includes("frame-src 'none'"), true);
     assert.equal(await content.text(), html);
   } finally {
     await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));

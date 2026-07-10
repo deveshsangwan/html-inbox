@@ -2,7 +2,12 @@ import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import http, { IncomingMessage, ServerResponse } from "node:http";
 import path from "node:path";
-import { DocumentBackend, DocumentMetadata, isSafeDocumentId } from "@html-inbox/shared";
+import {
+  DocumentBackend,
+  DocumentMetadata,
+  DOCUMENT_SCRIPT_CSP_SOURCES,
+  isSafeDocumentId,
+} from "@html-inbox/shared";
 
 const HOST = "127.0.0.1";
 
@@ -178,7 +183,7 @@ function renderDocumentShell(metadata: DocumentMetadata): string {
     metadata.title,
     `<main><p><a href="/">Inbox</a></p><h1>${escapeHtml(metadata.title)}</h1><p>${escapeHtml(
       metadata.type,
-    )} - ${escapeHtml(metadata.createdAt)}</p><iframe sandbox src="/documents/${escapeAttribute(
+    )} - ${escapeHtml(metadata.createdAt)}</p><iframe sandbox="allow-scripts" src="/documents/${escapeAttribute(
       metadata.id,
     )}/content" title="${escapeAttribute(metadata.title)}"></iframe></main>`,
   );
@@ -207,7 +212,7 @@ function shellCsp(): string {
 }
 
 function documentCsp(): string {
-  return "default-src 'none'; script-src 'none'; connect-src 'none'; img-src data:; media-src data:; font-src data:; style-src 'unsafe-inline'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'";
+  return `default-src 'none'; script-src 'unsafe-inline' ${DOCUMENT_SCRIPT_CSP_SOURCES.join(" ")}; connect-src 'none'; img-src data:; media-src data:; font-src data:; style-src 'unsafe-inline'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'`;
 }
 
 function sendHtml(response: ServerResponse, status: number, body: string, csp: string): void {

@@ -1,6 +1,6 @@
 # HTML Inbox Architecture
 
-Phase 1 is a local-first inbox for trusted users publishing untrusted HTML.
+Phase 1 is a local-first inbox for trusted users publishing untrusted HTML. Documents may use the official Tailwind browser CDN or Mermaid v11 CDN so reports can stay small instead of embedding generated CSS and JavaScript.
 
 ## Command
 
@@ -61,8 +61,16 @@ Documents render through a viewer-owned path inside a sandboxed iframe. The app 
 
 HTML is untrusted by default. Phase 1 uses cheap validation before storage:
 
-- reject `<script>` tags
+- allow scripts, but only allow external script entry URLs for Tailwind's browser build and Mermaid v11
 - reject inline event handlers such as `onclick`
-- reject external asset URLs
+- reject other external asset URLs
 
-Validation is a gate, not a sanitizer. Accepted HTML is still rendered only in the sandboxed viewer path with strict CSP.
+Validation is a gate, not a sanitizer. Accepted HTML is still rendered only in the sandboxed viewer path. The iframe enables scripts without `allow-same-origin`, so documents receive an opaque origin and cannot access the viewer DOM or same-origin storage. Its CSP permits inline document configuration and the allowlisted CDN script paths while continuing to block connections, frames, forms, objects, and non-data image, media, and font loads.
+
+Supported CDN entry URLs are deliberately limited to the canonical major-version URLs:
+
+- `https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4`
+- `https://cdn.tailwindcss.com` (including its official plugin query)
+- `https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs`
+
+Mermaid's CSP source includes its `dist/` subtree because the entry module loads diagram chunks from that directory. Opening a document that uses a CDN makes a remote request, but the viewer's `no-referrer` policy does not disclose its local document URL. Add another CDN or major version only by changing both validation and the document CSP and adding an accept/reject check.
