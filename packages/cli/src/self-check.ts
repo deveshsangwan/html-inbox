@@ -21,7 +21,7 @@ async function run(): Promise<void> {
     const emptyIndexCsp = emptyIndex.headers.get("content-security-policy") ?? "";
     const emptyIndexHtml = await emptyIndex.text();
     assert.equal(emptyIndexHtml.includes('class="empty-state"'), true);
-    assert.equal(emptyIndexHtml.includes("Your library is ready"), true);
+    assert.equal(emptyIndexHtml.includes("No documents yet"), true);
     assert.equal(emptyIndexHtml.includes("0 documents"), true);
 
     const published = await backend.publish({
@@ -54,8 +54,8 @@ async function run(): Promise<void> {
     assert.equal(stylesheet.headers.get("content-type"), "text/css; charset=utf-8");
     const stylesheetText = await stylesheet.text();
     assert.equal(stylesheetText.includes('[data-theme="dark"]'), true);
-    assert.equal(stylesheetText.includes("--muted: #62675f"), true);
-    assert.equal(stylesheetText.includes("--faint: #676c64"), true);
+    assert.equal(stylesheetText.includes("--muted: #5d655f"), true);
+    assert.equal(stylesheetText.includes("--faint: #646c66"), true);
 
     const viewerScript = await fetch(`${baseUrl}/assets/viewer.js`);
     assert.equal(viewerScript.headers.get("content-type"), "text/javascript; charset=utf-8");
