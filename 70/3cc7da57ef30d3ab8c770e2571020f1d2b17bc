@@ -1,0 +1,21 @@
+tsconfig.base.json
+  s_87863f771da773::t_59f6fc973f054f 4
+  s_87863f771da773::t_40f74ea3c7a3c8 10-11
+  s_87863f771da773::t_42e399bbe62aac 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "703cc7da57ef30d3ab8c770e2571020f1d2b17bc",
+  "prompts": {},
+  "sessions": {
+    "s_87863f771da773": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "0b0cd63d-8126-42f8-bb40-ac961dfd0cc6",
+        "model": "composer-2.5"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
