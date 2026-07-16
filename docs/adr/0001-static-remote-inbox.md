@@ -103,3 +103,10 @@ Costs:
 - Markdown, directory publishing, build-command execution, and auto-sync
 - Browser mutation routes, remote editing, background services, MCP, and extensions
 - Multi-user or organization-hosted administration
+
+## References
+
+- [Cloudflare Pages Direct Upload](https://developers.cloudflare.com/pages/get-started/direct-upload/)
+- [Cloudflare Pages custom headers](https://developers.cloudflare.com/pages/configuration/headers/)
+- [Wrangler Pages commands](https://developers.cloudflare.com/workers/wrangler/commands/pages/)
+- [Pagecast](https://github.com/Amal-David/pagecast), particularly its pinned Wrangler gateway, explicit `ProjectRef`, immutable deployment warning, and local operation-journal boundary

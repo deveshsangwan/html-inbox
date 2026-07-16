@@ -92,7 +92,7 @@ The provider-independent export layout is:
 
 ```text
 index.html
-.html-inbox-owner.json
+__html-inbox/ownership.json
 i/<capability>/
   index.html
   snapshot-manifest.json
@@ -107,6 +107,12 @@ i/<capability>/
 The root page contains no capability path. The owner marker contains only a schema version and opaque owner UUID. The manifest records sorted file digests and an aggregate snapshot hash without local paths. Original document bytes are copied to `content/index.html`; generated shell pages continue to embed them in sandboxed iframes.
 
 `security-headers.json` lives behind the capability path so the generic static output has no predictable file that discloses the bearer link. It is an adapter input rather than a file browsers consume. It describes common, root, shell, and document policies without provider routing syntax. A provider adapter must apply them to every corresponding route alias and must fail rather than publish without equivalent headers.
+
+The Cloudflare Pages adapter translates those policies into a compact `_headers` file in a disposable copy of the snapshot. The copy is deployed from its own root with Wrangler Direct Upload, then removed whether deployment succeeds or fails. The provider-neutral snapshot is never modified. A global common rule combines with separate root, inbox-shell, document-shell, and document-content rules so the content CSP never merges with the stricter shell CSP.
+
+Wrangler is invoked as an argument array through an exact version pin. The Cloudflare account is selected with `CLOUDFLARE_ACCOUNT_ID`; API tokens remain inherited process credentials and are never command arguments, persisted state, or error output. The adapter validates the current Direct Upload limits (20,000 files and 25 MiB per file) and `_headers` limits (100 rules and 2,000 characters per line) before invoking Wrangler.
+
+Wrangler's immutable deployment URL is the deployment receipt. The canonical project hostname is derived only when that receipt contains the expected deployment-hash prefix, which accounts for Pages assigning a globally unique subdomain different from the requested project name. A caller may describe that hostname as current production only after verifying it deployed the project's configured production branch. Callers must preserve the immutable URL for recovery and avoid presenting it as revocable.
 
 Export writes a private sibling staging directory, moves a recognized prior export to a backup, and installs the complete snapshot with same-filesystem renames. A failed install restores the backup, but the output path may be briefly absent between renames. Unrecognized directories are never replaced. Static export does not mutate the local library and does not own provider credentials or deployment state.
 

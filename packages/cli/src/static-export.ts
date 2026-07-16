@@ -22,7 +22,7 @@ import {
 
 const SNAPSHOT_SCHEMA_VERSION = 1;
 const CAPABILITY_PATTERN = /^[A-Za-z0-9_-]{22}$/;
-const OWNERSHIP_MARKER_PATH = ".html-inbox-owner.json";
+const OWNERSHIP_MARKER_PATH = "__html-inbox/ownership.json";
 
 export type SnapshotDocumentSource = Pick<
   DocumentBackend,
