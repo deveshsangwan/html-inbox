@@ -44,7 +44,7 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 ## Out Of Scope
 
 - Multi-user auth
-- Remote hosting
+- Remotely exposed administration or dynamic document storage
 - Sync
 - HTML rewriting or sanitization
 - Fine-grained permissions
@@ -52,4 +52,26 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - Protection against in-frame CPU or memory exhaustion
 - Offline rendering or vendoring of CDN dependencies
 
-Add those only when the product stops being local-first single-user software.
+Add those only when the product stops being local-first single-user software. Static remote snapshots are covered by the extension below.
+
+## Remote snapshot extension
+
+Remote publishing extends the model without exposing the local viewer. The relevant additional risks are:
+
+- Anyone with the inbox capability can read and reshare the complete published snapshot.
+- A capability leaks through copied URLs, recipient browser history, referrers, screenshots, or third-party logging.
+- A deployment accidentally replaces an unrelated Cloudflare Pages project.
+- A remote deployment succeeds but the response is lost, leaving local and remote state ambiguous.
+- Revocation removes the production route while an older immutable deployment URL remains reachable.
+- Exported manifests or pages leak local paths, Cloudflare credentials, account identifiers, or unpublished document metadata.
+
+Controls:
+
+- Generate 128 random capability bits and publish no inbox listing at the Pages root.
+- Apply `no-referrer`, restrictive CSP, and content-type headers to generated static pages.
+- Treat the account ID and project name as explicit target identity and require ownership-marker verification or deliberate adoption.
+- Journal intent before deployment, checkpoint receipts, and reconcile ambiguous operations against deployment history before retrying.
+- Keep credentials and remote state in owner-only local files; never include them in snapshots.
+- State clearly that an unlisted URL is not private and that historical deployments may need pruning after revoke.
+
+The first remote release does not claim recipient authentication, guaranteed erasure, secret-link confidentiality after sharing, protection from malicious allowlisted CDN code, or isolation between multiple remote users.
