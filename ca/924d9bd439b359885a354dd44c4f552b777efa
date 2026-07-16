@@ -1,0 +1,37 @@
+packages/cli/src/index.ts
+  s_af0402c5d6cba5::t_65765ee0023a04 2,16-28,32-41,56-69
+.gitignore
+  s_af0402c5d6cba5::t_65765ee0023a04 5
+  s_af0402c5d6cba5::t_286d1d13b61720 3
+package.json
+  s_af0402c5d6cba5::t_65765ee0023a04 5-7,10-12
+packages/cli/src/self-check.ts
+  s_af0402c5d6cba5::t_65765ee0023a04 6,10-13
+README.md
+  s_af0402c5d6cba5::t_38de6481218783 30
+  s_af0402c5d6cba5::t_65765ee0023a04 1-29,31-63
+packages/shared/package.json
+  s_af0402c5d6cba5::t_65765ee0023a04 5-9,14-15
+.github/workflows/verify.yml
+  s_af0402c5d6cba5::t_65765ee0023a04 1-33
+LICENSE
+  s_af0402c5d6cba5::t_65765ee0023a04 1-21
+packages/cli/package.json
+  s_af0402c5d6cba5::t_65765ee0023a04 5-9,17-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "ca924d9bd439b359885a354dd44c4f552b777efa",
+  "prompts": {},
+  "sessions": {
+    "s_af0402c5d6cba5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6a19-9f8b-7842-93b8-a6c4bf549f02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Devesh Sangwan <deveshsangwan@PAISAMAC156.local>"
+    }
+  }
+}
