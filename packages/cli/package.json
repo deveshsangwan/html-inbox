@@ -2,6 +2,11 @@
   "name": "html-inbox",
   "version": "0.1.0",
   "private": true,
+  "description": "A local library and viewer for generated HTML documents.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
   "bin": {
     "html-inbox": "dist/index.js"
   },
@@ -9,7 +14,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "node dist/self-check.js"
+    "test": "pnpm run build && pnpm run test:self",
+    "test:self": "node dist/self-check.js"
   },
   "dependencies": {
     "@html-inbox/shared": "workspace:*"

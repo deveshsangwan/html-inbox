@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { TextDecoder } from "node:util";
@@ -12,8 +13,31 @@ interface PublishArgs {
   type: string;
 }
 
+const USAGE = `Usage: html-inbox <command> [options]
+
+Commands:
+  publish <file.html> --title <title> --type <type>
+      Store an HTML document and print its local viewer URL.
+
+  viewer
+      Run the local viewer in the foreground.
+
+Options:
+  -h, --help       Show this help.
+  -v, --version    Print the installed version.`;
+
 export async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
   const command = argv[0];
+
+  if (!command || command === "--help" || command === "-h") {
+    console.log(formatUsage());
+    return;
+  }
+
+  if (command === "--version" || command === "-v") {
+    console.log(getCliVersion());
+    return;
+  }
 
   if (command === "publish") {
     const url = await publishCommand(parsePublishArgs(argv.slice(1)));
@@ -29,7 +53,20 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     return;
   }
 
-  throw new Error("Usage: html-inbox publish <file.html> --title <title> --type <type>");
+  throw new Error(`Unknown command: ${command}\n\n${formatUsage()}`);
+}
+
+export function formatUsage(): string {
+  return USAGE;
+}
+
+export function getCliVersion(): string {
+  const packagePath = path.join(__dirname, "..", "package.json");
+  const packageJson = JSON.parse(readFileSync(packagePath, "utf8")) as { version?: unknown };
+  if (typeof packageJson.version !== "string" || packageJson.version.length === 0) {
+    throw new Error("html-inbox package version is missing");
+  }
+  return packageJson.version;
 }
 
 export async function publishCommand(args: PublishArgs): Promise<string> {
