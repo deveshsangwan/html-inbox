@@ -55,6 +55,28 @@ export interface CloudflareDeployReceipt {
   productionInboxUrl: string;
 }
 
+export interface CloudflareProjectSummary {
+  name: string;
+  accountId: string;
+  productionBranch: string;
+  productionUrl: string;
+}
+
+export interface CloudflareDeploymentSummary {
+  id: string;
+  url: string;
+  environment: string;
+  branch: string;
+  createdAt: string;
+  commitHash: string;
+  commitMessage: string;
+}
+
+export interface CloudflareDeployMetadata {
+  commitHash: string;
+  commitMessage: string;
+}
+
 export class NodeCommandRunner implements CommandRunner {
   async run(invocation: CommandInvocation): Promise<CommandResult> {
     return new Promise((resolve, reject) => {
@@ -109,6 +131,7 @@ export class CloudflarePagesAdapter {
     snapshot: CloudflareSnapshotRef,
     target: CloudflareProjectRef,
     branch = "main",
+    metadata?: CloudflareDeployMetadata,
   ): Promise<CloudflareDeployReceipt> {
     const normalizedTarget = normalizeProjectRef(target);
     const normalizedBranch = normalizeBranch(branch);
@@ -116,16 +139,26 @@ export class CloudflarePagesAdapter {
     const deployDir = await prepareCloudflareDeployment(snapshot);
 
     try {
+      const args = [
+        "pages",
+        "deploy",
+        ".",
+        "--project-name",
+        normalizedTarget.projectName,
+        "--branch",
+        normalizedBranch,
+      ];
+      if (metadata) {
+        assertDeployMetadata(metadata);
+        args.push(
+          "--commit-hash",
+          metadata.commitHash,
+          "--commit-message",
+          metadata.commitMessage,
+        );
+      }
       const invocation = createWranglerInvocation(
-        [
-          "pages",
-          "deploy",
-          ".",
-          "--project-name",
-          normalizedTarget.projectName,
-          "--branch",
-          normalizedBranch,
-        ],
+        args,
         deployDir,
         normalizedTarget.accountId,
         this.timeoutMs,
@@ -148,6 +181,72 @@ export class CloudflarePagesAdapter {
     } finally {
       await rm(deployDir, { recursive: true, force: true });
     }
+  }
+
+  async listProjects(accountId: string, cwd: string): Promise<CloudflareProjectSummary[]> {
+    const output = await this.runWrangler(
+      ["pages", "project", "list", "--json"],
+      cwd,
+      normalizeAccountId(accountId),
+    );
+    return parseWranglerProjects(output);
+  }
+
+  async createProject(
+    target: CloudflareProjectRef,
+    cwd: string,
+    productionBranch = "main",
+  ): Promise<void> {
+    const normalizedTarget = normalizeProjectRef(target);
+    const branch = normalizeBranch(productionBranch);
+    await this.runWrangler(
+      [
+        "pages",
+        "project",
+        "create",
+        normalizedTarget.projectName,
+        "--production-branch",
+        branch,
+      ],
+      cwd,
+      normalizedTarget.accountId,
+    );
+  }
+
+  async listDeployments(
+    target: CloudflareProjectRef,
+    cwd: string,
+  ): Promise<CloudflareDeploymentSummary[]> {
+    const normalizedTarget = normalizeProjectRef(target);
+    const output = await this.runWrangler(
+      [
+        "pages",
+        "deployment",
+        "list",
+        "--project-name",
+        normalizedTarget.projectName,
+        "--json",
+      ],
+      cwd,
+      normalizedTarget.accountId,
+    );
+    return parseWranglerDeployments(output);
+  }
+
+  private async runWrangler(
+    args: string[],
+    cwd: string,
+    accountId: string,
+  ): Promise<string> {
+    const result = await this.runner.run(
+      createWranglerInvocation(args, cwd, accountId, this.timeoutMs),
+    );
+    if (result.code !== 0) {
+      throw new Error(
+        `Wrangler failed (${result.signal ?? result.code}). ${cleanOutput(result.output)}`,
+      );
+    }
+    return result.output;
   }
 }
 
@@ -236,6 +335,104 @@ export function parseWranglerDeployUrls(output: string): {
   };
 }
 
+export function receiptFromDeployment(
+  deployment: CloudflareDeploymentSummary,
+  target: CloudflareProjectRef,
+  branch: string,
+  inboxPath: string,
+): CloudflareDeployReceipt {
+  const urls = parseWranglerDeployUrls(deployment.url);
+  return {
+    target: normalizeProjectRef(target),
+    branch: normalizeBranch(branch),
+    deploymentUrl: urls.deploymentUrl,
+    productionUrl: urls.productionUrl,
+    deploymentInboxUrl: joinInboxUrl(urls.deploymentUrl, inboxPath),
+    productionInboxUrl: joinInboxUrl(urls.productionUrl, inboxPath),
+  };
+}
+
+export function parseWranglerProjects(output: string): CloudflareProjectSummary[] {
+  const parsed = parseJsonOutput(output);
+  const candidates = Array.isArray(parsed)
+    ? parsed
+    : isRecord(parsed) && Array.isArray(parsed.result)
+      ? parsed.result
+      : isRecord(parsed) && Array.isArray(parsed.projects)
+        ? parsed.projects
+        : [];
+  return candidates.flatMap((candidate) => {
+    if (!isRecord(candidate)) return [];
+    const name = firstString(candidate.name, candidate.project_name, candidate.projectName);
+    if (!name) return [];
+    let normalizedName: string;
+    try {
+      normalizedName = normalizeProjectName(name);
+    } catch {
+      return [];
+    }
+    const account = isRecord(candidate.account) ? candidate.account : {};
+    const productionConfig =
+      isRecord(candidate.deployment_configs) &&
+      isRecord(candidate.deployment_configs.production)
+        ? candidate.deployment_configs.production
+        : {};
+    const domains = firstString(
+      candidate.domains,
+      candidate.project_domains,
+      candidate.subdomain,
+      candidate.url,
+    );
+    const rawAccountId = firstString(candidate.account_id, candidate.accountId, account.id).toLowerCase();
+    return [
+      {
+        name: normalizedName,
+        accountId: /^[0-9a-f]{32}$/.test(rawAccountId) ? rawAccountId : "",
+        productionBranch: firstString(
+          candidate.production_branch,
+          candidate.productionBranch,
+          productionConfig.branch,
+        ),
+        productionUrl: normalizePagesUrl(domains),
+      },
+    ];
+  });
+}
+
+export function parseWranglerDeployments(output: string): CloudflareDeploymentSummary[] {
+  const parsed = parseJsonOutput(output);
+  const candidates = Array.isArray(parsed)
+    ? parsed
+    : isRecord(parsed) && Array.isArray(parsed.result)
+      ? parsed.result
+      : isRecord(parsed) && Array.isArray(parsed.deployments)
+        ? parsed.deployments
+        : [];
+  return candidates.flatMap((candidate) => {
+    if (!isRecord(candidate)) return [];
+    const trigger = isRecord(candidate.deployment_trigger) ? candidate.deployment_trigger : {};
+    const metadata = isRecord(trigger.metadata) ? trigger.metadata : {};
+    const id = firstString(candidate.id, candidate.deployment_id);
+    const url = normalizePagesUrl(firstString(candidate.url, candidate.deployment_url));
+    if (!id || !url) return [];
+    return [
+      {
+        id,
+        url,
+        environment: firstString(candidate.environment) || "preview",
+        branch: firstString(metadata.branch, candidate.branch),
+        createdAt: firstString(candidate.created_on, candidate.created_at, candidate.createdAt),
+        commitHash: firstString(metadata.commit_hash, metadata.commitHash, candidate.commit_hash),
+        commitMessage: firstString(
+          metadata.commit_message,
+          metadata.commitMessage,
+          candidate.commit_message,
+        ),
+      },
+    ];
+  });
+}
+
 async function prepareCloudflareDeployment(
   snapshot: CloudflareSnapshotRef,
 ): Promise<string> {
@@ -245,7 +442,7 @@ async function prepareCloudflareDeployment(
     throw new Error(`Static snapshot is not a regular directory: ${sourceDir}`);
   }
   await Promise.all([
-    assertRegularFile(path.join(sourceDir, ".html-inbox-owner.json")),
+    assertRegularFile(path.join(sourceDir, "__html-inbox", "ownership.json")),
     assertRegularFile(path.join(sourceDir, snapshot.inboxPath.slice(1), "snapshot-manifest.json")),
     assertRegularFile(path.join(sourceDir, snapshot.inboxPath.slice(1), "security-headers.json")),
   ]);
@@ -372,12 +569,70 @@ function normalizeBranch(branch: string): string {
   return normalized;
 }
 
+function assertDeployMetadata(metadata: CloudflareDeployMetadata): void {
+  if (!/^[0-9a-f]{40,64}$/.test(metadata.commitHash)) {
+    throw new Error("Cloudflare deployment commit hash must be a 40-64 character lowercase digest");
+  }
+  if (
+    !metadata.commitMessage ||
+    metadata.commitMessage.length > 200 ||
+    /\r|\n/.test(metadata.commitMessage)
+  ) {
+    throw new Error("Cloudflare deployment commit message must be 1-200 characters on one line");
+  }
+}
+
 function joinInboxUrl(baseUrl: string, inboxPath: string): string {
   return `${baseUrl.replace(/\/+$/, "")}${inboxPath}/`;
 }
 
 function stripAnsi(value: string): string {
   return value.replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, "");
+}
+
+function parseJsonOutput(output: string): unknown {
+  const cleaned = stripAnsi(output).trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const starts = [cleaned.indexOf("{"), cleaned.indexOf("[")].filter(
+      (index) => index >= 0,
+    );
+    const start = starts.length ? Math.min(...starts) : -1;
+    const end = Math.max(cleaned.lastIndexOf("}"), cleaned.lastIndexOf("]"));
+    if (start >= 0 && end > start) {
+      try {
+        return JSON.parse(cleaned.slice(start, end + 1));
+      } catch {
+        // Use the stable error below.
+      }
+    }
+  }
+  throw new Error("Wrangler did not return valid JSON");
+}
+
+function firstString(...values: unknown[]): string {
+  for (const value of values) {
+    if (Array.isArray(value)) {
+      const nested = firstString(...value);
+      if (nested) return nested;
+    }
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return "";
+}
+
+function normalizePagesUrl(value: string): string {
+  if (!value) return "";
+  const first = value.split(/[,\s]+/).find(Boolean) ?? "";
+  const candidate = /^https?:\/\//i.test(first) ? first : `https://${first}`;
+  try {
+    const parsed = new URL(candidate);
+    if (!parsed.hostname.endsWith(".pages.dev")) return "";
+    return parsed.origin;
+  } catch {
+    return "";
+  }
 }
 
 function cleanOutput(value: string): string {

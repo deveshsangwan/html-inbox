@@ -85,7 +85,7 @@ export async function exportStaticSnapshot(
   addTextFile(files, "index.html", renderPrivateRoot());
   addTextFile(
     files,
-    ".html-inbox-owner.json",
+    "__html-inbox/ownership.json",
     JSON.stringify({ schemaVersion: 1, ownerId }, null, 2),
   );
   addTextFile(files, `${inboxPath.slice(1)}/index.html`, renderIndex(documents, "", {

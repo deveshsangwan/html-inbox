@@ -92,7 +92,7 @@ The provider-independent export layout is:
 
 ```text
 index.html
-.html-inbox-owner.json
+__html-inbox/ownership.json
 i/<capability>/
   index.html
   snapshot-manifest.json
@@ -116,4 +116,8 @@ Wrangler's immutable deployment URL is the deployment receipt. The production ho
 
 Export writes a private sibling staging directory and installs the complete snapshot with a same-filesystem rename. Re-exporting to the same destination replaces the previous snapshot as one directory operation. Static export does not mutate the local library and does not own provider credentials or deployment state.
 
-The stable remote target is the Cloudflare account ID plus project name, never an inferred hostname. Remote operations journal intent before deployment, checkpoint the deployment receipt, and expose incomplete work for reconciliation. Unlisted capability URLs are bearer links, not authentication.
+The stable remote target is the Cloudflare account ID plus project name, never an inferred hostname. Remote configuration, the active operation, receipts, and operation-scoped snapshots live in private files under `<HTML_INBOX_HOME>/remote`. One atomic mutation lock prevents concurrent remote writers; a stale lock is recoverable because durable intent is stored separately.
+
+Publish and revoke write intent before invoking the adapter and attach the first 160 bits of the snapshot digest as Cloudflare commit metadata. If the process loses the deploy response, reconciliation lists deployment history and looks for that digest before retrying. A received deployment URL is checkpointed into the operation before the main state is finalized. Finalization is idempotent if a process exits between the state rename and operation cleanup.
+
+Revoke rotates the state to a new undisclosed capability and deploys an empty inbox there. The old production capability path is absent from the replacement snapshot. A later publish uses the rotated capability, so revocation never restores a previously shared link accidentally. Unlisted capability URLs are bearer links, not authentication, and older immutable deployment URLs remain a separate history-pruning concern.

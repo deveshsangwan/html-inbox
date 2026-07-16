@@ -7,6 +7,7 @@ import {
   mkdtemp,
   readFile,
   readdir,
+  rm,
   stat,
   symlink,
   writeFile,
@@ -16,23 +17,37 @@ import path from "node:path";
 import { LocalDocumentBackend } from "./backend";
 import {
   CLOUDFLARE_HEADER_LINE_LIMIT,
+  CloudflareDeployMetadata,
+  CloudflareDeployReceipt,
+  CloudflareDeploymentSummary,
   CloudflarePagesAdapter,
+  CloudflareProjectRef,
+  CloudflareProjectSummary,
   CommandInvocation,
   CommandResult,
   CommandRunner,
   NodeCommandRunner,
   PINNED_WRANGLER_VERSION,
   parseWranglerDeployUrls,
+  parseWranglerDeployments,
+  parseWranglerProjects,
 } from "./cloudflare-pages";
 import {
   formatDeleteResult,
   formatDocumentList,
+  formatRemoteState,
+  formatRemoteStatus,
   formatStaticExportResult,
   formatUsage,
   getCliVersion,
 } from "./index";
 import { loadPublishInput } from "./publish-input";
-import { exportStaticSnapshot, generateInboxCapability } from "./static-export";
+import { RemoteDeploymentPort, RemoteWorkflow } from "./remote-workflow";
+import {
+  exportStaticSnapshot,
+  generateInboxCapability,
+  StaticSnapshotResult,
+} from "./static-export";
 import {
   documentCsp,
   ensureViewer,
@@ -47,6 +62,7 @@ async function run(): Promise<void> {
   assert.match(formatUsage(), /viewer/);
   assert.match(formatUsage(), /delete <id>/);
   assert.match(formatUsage(), /export --out <directory>/);
+  assert.match(formatUsage(), /remote init --account/);
   assert.equal(getCliVersion(), "0.1.0");
   for (let index = 0; index < 10; index += 1) {
     const generatedCapability = generateInboxCapability();
@@ -80,6 +96,46 @@ async function run(): Promise<void> {
     },
   );
   assert.throws(() => parseWranglerDeployUrls("deployment finished without a URL"), /without returning/);
+  assert.deepEqual(
+    parseWranglerProjects(
+      JSON.stringify([
+        {
+          name: "inbox-project",
+          account_id: "a".repeat(32),
+          production_branch: "main",
+          domains: ["inbox-project.pages.dev"],
+        },
+      ]),
+    ),
+    [
+      {
+        name: "inbox-project",
+        accountId: "a".repeat(32),
+        productionBranch: "main",
+        productionUrl: "https://inbox-project.pages.dev",
+      },
+    ],
+  );
+  assert.equal(
+    parseWranglerDeployments(
+      JSON.stringify([
+        {
+          id: "deployment-id",
+          url: "https://abc123.inbox-project.pages.dev",
+          environment: "production",
+          created_on: "2026-07-16T00:00:00.000Z",
+          deployment_trigger: {
+            metadata: {
+              branch: "main",
+              commit_hash: "b".repeat(40),
+              commit_message: "html-inbox:test",
+            },
+          },
+        },
+      ]),
+    )[0].commitHash,
+    "b".repeat(40),
+  );
 
   const inputHome = await mkdtemp(path.join(tmpdir(), "html-inbox-input-"));
   const inputPath = path.join(inputHome, "report.html");
@@ -401,7 +457,10 @@ async function run(): Promise<void> {
     );
 
     const ownerMarker = JSON.parse(
-      await readFile(path.join(snapshotDirectory, ".html-inbox-owner.json"), "utf8"),
+      await readFile(
+        path.join(snapshotDirectory, "__html-inbox", "ownership.json"),
+        "utf8",
+      ),
     ) as Record<string, unknown>;
     assert.deepEqual(ownerMarker, { schemaVersion: 1, ownerId });
     const securityHeaders = JSON.parse(
@@ -493,6 +552,41 @@ async function run(): Promise<void> {
       false,
     );
 
+    const controlRunner = new RecordingCommandRunner({
+      code: 0,
+      signal: null,
+      output: JSON.stringify([
+        {
+          name: "html-inbox",
+          account_id: accountId.toLowerCase(),
+          production_branch: "main",
+          domains: ["html-inbox-7x.pages.dev"],
+        },
+      ]),
+    });
+    const controlAdapter = new CloudflarePagesAdapter(controlRunner, 9_999);
+    const projects = await controlAdapter.listProjects(accountId, home);
+    assert.equal(projects[0].productionUrl, "https://html-inbox-7x.pages.dev");
+    await controlAdapter.createProject(
+      { accountId, projectName: "html-inbox" },
+      home,
+      "main",
+    );
+    assert.deepEqual(controlRunner.invocations[0].args.slice(2), [
+      "pages",
+      "project",
+      "list",
+      "--json",
+    ]);
+    assert.deepEqual(controlRunner.invocations[1].args.slice(2), [
+      "pages",
+      "project",
+      "create",
+      "html-inbox",
+      "--production-branch",
+      "main",
+    ]);
+
     const previousToken = process.env.CLOUDFLARE_API_TOKEN;
     process.env.CLOUDFLARE_API_TOKEN = "super-secret-cloudflare-token";
     try {
@@ -549,6 +643,155 @@ async function run(): Promise<void> {
     } finally {
       await writeFile(securityHeaderPath, originalSecurityHeaders);
     }
+
+    const remoteHome = await mkdtemp(path.join(tmpdir(), "html-inbox-remote-"));
+    const remoteBackend = new LocalDocumentBackend(remoteHome);
+    await remoteBackend.publish({
+      originalBytes: Buffer.from(html),
+      title: "Remote report",
+      type: "report",
+      sourceFileName: "remote-report.html",
+    });
+    const remotePort = new RecordingRemoteDeploymentPort();
+    let clockTick = 0;
+    const remoteWorkflow = new RemoteWorkflow(
+      remoteBackend,
+      remoteHome,
+      remotePort,
+      () => new Date(Date.UTC(2026, 6, 16, 2, 0, clockTick++)).toISOString(),
+    );
+    const remoteAccountId = "c".repeat(32);
+    const initializedRemote = await remoteWorkflow.init({
+      accountId: remoteAccountId,
+      projectName: "html-inbox-test",
+    });
+    assert.equal(remotePort.createdProjects.length, 1);
+    assert.equal(initializedRemote.target.projectName, "html-inbox-test");
+    assert.match(formatRemoteState(initializedRemote), /State: configured/);
+    assert.equal((await remoteWorkflow.status()).operation, null);
+
+    const remoteLockPath = path.join(remoteHome, "remote", "mutation.lock");
+    await writeFile(
+      remoteLockPath,
+      `${JSON.stringify({ pid: process.pid, createdAt: new Date().toISOString() })}\n`,
+      { mode: 0o600 },
+    );
+    await assert.rejects(remoteWorkflow.publish(), /Another HTML Inbox remote command is running/);
+    await rm(remoteLockPath, { force: true });
+
+    const publishedRemote = await remoteWorkflow.publish();
+    assert.equal(publishedRemote.revoked, false);
+    assert.equal(publishedRemote.lastDeployment?.kind, "publish");
+    assert.match(
+      publishedRemote.lastDeployment?.receipt.productionInboxUrl ?? "",
+      /^https:\/\/html-inbox-test\.pages\.dev\/i\//,
+    );
+    assert.match(formatRemoteStatus(await remoteWorkflow.status()), /State: published/);
+    assert.equal(remotePort.deployCalls.at(-1)?.snapshot.manifest.documentCount, 1);
+    if (process.platform !== "win32") {
+      assert.equal((await stat(path.join(remoteHome, "remote", "state.json"))).mode & 0o777, 0o600);
+    }
+
+    await remoteBackend.publish({
+      originalBytes: Buffer.from("<!doctype html><html><body>new remote state</body></html>"),
+      title: "Recovery report",
+      type: "report",
+      sourceFileName: "recovery.html",
+    });
+    remotePort.failNextDeploy = true;
+    await assert.rejects(remoteWorkflow.publish(), /remote reconcile/);
+    const interruptedStatus = await remoteWorkflow.status();
+    assert(interruptedStatus.operation?.snapshotHash);
+    assert.equal(interruptedStatus.operation.phase, "prepared");
+    assert.equal(interruptedStatus.operation.attempts, 1);
+    if (process.platform !== "win32") {
+      assert.equal(
+        (await stat(path.join(remoteHome, "remote", "operation.json"))).mode & 0o777,
+        0o600,
+      );
+    }
+    const callsBeforeReconcile = remotePort.deployCalls.length;
+    remotePort.deployments.push({
+      id: "recovered-deployment",
+      url: "https://def456.html-inbox-test.pages.dev",
+      environment: "production",
+      branch: "main",
+      createdAt: "2026-07-16T02:30:00.000Z",
+      commitHash: interruptedStatus.operation.snapshotHash.slice(0, 40),
+      commitMessage: `html-inbox:${interruptedStatus.operation.id}:publish:${interruptedStatus.operation.snapshotHash}`,
+    });
+    const reconciled = await remoteWorkflow.reconcile();
+    assert.equal(remotePort.deployCalls.length, callsBeforeReconcile);
+    assert.equal(
+      reconciled.lastDeployment?.snapshotHash,
+      interruptedStatus.operation.snapshotHash,
+    );
+    assert.equal((await remoteWorkflow.status()).operation, null);
+
+    const capabilityBeforeRevoke = reconciled.capability;
+    const productionUrlBeforeRevoke = reconciled.lastDeployment?.receipt.productionInboxUrl ?? "";
+    const revokeResult = await remoteWorkflow.revoke();
+    assert.equal(revokeResult.state.revoked, true);
+    assert.notEqual(revokeResult.state.capability, capabilityBeforeRevoke);
+    assert.equal(revokeResult.revokedUrl, productionUrlBeforeRevoke);
+    assert.match(revokeResult.warning, /immutable Cloudflare deployment URLs may still work/);
+    const revokeCall = remotePort.deployCalls.at(-1);
+    assert.equal(revokeCall?.snapshot.manifest.documentCount, 0);
+    assert.equal(
+      revokeCall?.snapshot.manifest.files.some((file) => file.path.includes(capabilityBeforeRevoke)),
+      false,
+    );
+
+    const adoptionHome = await mkdtemp(path.join(tmpdir(), "html-inbox-adoption-"));
+    const adoptionPort = new RecordingRemoteDeploymentPort();
+    adoptionPort.projects.push({
+      name: "existing-inbox",
+      accountId: remoteAccountId,
+      productionBranch: "main",
+      productionUrl: "https://existing-inbox.pages.dev",
+    });
+    const adoptionWorkflow = new RemoteWorkflow(remoteBackend, adoptionHome, adoptionPort);
+    await assert.rejects(
+      adoptionWorkflow.init({
+        accountId: remoteAccountId,
+        projectName: "existing-inbox",
+      }),
+      /--adopt/,
+    );
+    const adopted = await adoptionWorkflow.init({
+      accountId: remoteAccountId,
+      projectName: "existing-inbox",
+      adopt: true,
+    });
+    assert.equal(adopted.target.projectName, "existing-inbox");
+    assert.equal(adoptionPort.createdProjects.length, 0);
+
+    const initRecoveryHome = await mkdtemp(path.join(tmpdir(), "html-inbox-init-recovery-"));
+    const initRecoveryPort = new RecordingRemoteDeploymentPort();
+    initRecoveryPort.failNextCreate = true;
+    const initRecoveryWorkflow = new RemoteWorkflow(
+      remoteBackend,
+      initRecoveryHome,
+      initRecoveryPort,
+    );
+    await assert.rejects(
+      initRecoveryWorkflow.init({
+        accountId: remoteAccountId,
+        projectName: "recover-init",
+      }),
+      /remote reconcile/,
+    );
+    assert.equal((await initRecoveryWorkflow.status()).operation?.kind, "init");
+    initRecoveryPort.projects.push({
+      name: "recover-init",
+      accountId: remoteAccountId,
+      productionBranch: "main",
+      productionUrl: "https://recover-init.pages.dev",
+    });
+    const recoveredInit = await initRecoveryWorkflow.reconcile();
+    assert.equal(recoveredInit.target.projectName, "recover-init");
+    assert.equal((await initRecoveryWorkflow.status()).operation, null);
+
     await assert.rejects(
       exportStaticSnapshot(backend, {
         outputDir: path.join(home, "invalid-snapshot"),
@@ -687,8 +930,88 @@ class RecordingCommandRunner implements CommandRunner {
 
   async run(invocation: CommandInvocation): Promise<CommandResult> {
     this.invocations.push(structuredClone(invocation));
-    this.headers = await readFile(path.join(invocation.cwd, "_headers"), "utf8");
+    try {
+      this.headers = await readFile(path.join(invocation.cwd, "_headers"), "utf8");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      this.headers = "";
+    }
     return this.result;
+  }
+}
+
+class RecordingRemoteDeploymentPort implements RemoteDeploymentPort {
+  readonly projects: CloudflareProjectSummary[] = [];
+  readonly deployments: CloudflareDeploymentSummary[] = [];
+  readonly createdProjects: CloudflareProjectRef[] = [];
+  readonly deployCalls: Array<{
+    snapshot: StaticSnapshotResult;
+    target: CloudflareProjectRef;
+    branch: string;
+    metadata: CloudflareDeployMetadata;
+  }> = [];
+  failNextDeploy = false;
+  failNextCreate = false;
+
+  async listProjects(): Promise<CloudflareProjectSummary[]> {
+    return structuredClone(this.projects);
+  }
+
+  async createProject(target: CloudflareProjectRef): Promise<void> {
+    this.createdProjects.push(structuredClone(target));
+    if (this.failNextCreate) {
+      this.failNextCreate = false;
+      throw new Error("simulated ambiguous project creation failure");
+    }
+    this.projects.push({
+      name: target.projectName,
+      accountId: target.accountId,
+      productionBranch: "main",
+      productionUrl: `https://${target.projectName}.pages.dev`,
+    });
+  }
+
+  async deploySnapshot(
+    snapshot: StaticSnapshotResult,
+    target: CloudflareProjectRef,
+    branch = "main",
+    metadata?: CloudflareDeployMetadata,
+  ): Promise<CloudflareDeployReceipt> {
+    assert(metadata);
+    this.deployCalls.push({
+      snapshot: structuredClone(snapshot),
+      target: structuredClone(target),
+      branch,
+      metadata: structuredClone(metadata),
+    });
+    if (this.failNextDeploy) {
+      this.failNextDeploy = false;
+      throw new Error("simulated ambiguous deploy failure");
+    }
+    const prefix = this.deployCalls.length.toString(16).padStart(6, "0").slice(-6);
+    const deploymentUrl = `https://${prefix}.${target.projectName}.pages.dev`;
+    const productionUrl = `https://${target.projectName}.pages.dev`;
+    this.deployments.push({
+      id: `deployment-${this.deployCalls.length}`,
+      url: deploymentUrl,
+      environment: "production",
+      branch,
+      createdAt: new Date(Date.UTC(2026, 6, 16, 3, 0, this.deployCalls.length)).toISOString(),
+      commitHash: metadata.commitHash,
+      commitMessage: metadata.commitMessage,
+    });
+    return {
+      target: structuredClone(target),
+      branch,
+      deploymentUrl,
+      productionUrl,
+      deploymentInboxUrl: `${deploymentUrl}${snapshot.inboxPath}/`,
+      productionInboxUrl: `${productionUrl}${snapshot.inboxPath}/`,
+    };
+  }
+
+  async listDeployments(): Promise<CloudflareDeploymentSummary[]> {
+    return structuredClone(this.deployments);
   }
 }
 

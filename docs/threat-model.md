@@ -71,7 +71,7 @@ Controls:
 - Apply `no-referrer`, restrictive CSP, and content-type headers to generated static pages.
 - Treat the account ID and project name as explicit target identity and require ownership-marker verification or deliberate adoption.
 - Journal intent before deployment, checkpoint receipts, and reconcile ambiguous operations against deployment history before retrying.
-- Keep credentials and remote state in owner-only local files; never include them in snapshots.
+- Keep remote state in owner-only local files. Inherit credentials from Wrangler's own login store or the process environment; never pass tokens as command arguments or include them in state, snapshots, or error output.
 - State clearly that an unlisted URL is not private and that historical deployments may need pruning after revoke.
 
 The first remote release does not claim recipient authentication, guaranteed erasure, secret-link confidentiality after sharing, protection from malicious allowlisted CDN code, or isolation between multiple remote users.
