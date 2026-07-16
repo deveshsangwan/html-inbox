@@ -1,0 +1,58 @@
+name: Package release artifact
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify source
+        run: pnpm test
+
+      - name: Verify release version
+        id: package
+        run: >-
+          node -e 'const fs = require("node:fs"); const { version } = require("./packages/cli/package.json");
+          if (process.env.GITHUB_REF_TYPE === "tag" && process.env.GITHUB_REF_NAME !== `v${version}`)
+          throw new Error(`Tag ${process.env.GITHUB_REF_NAME} does not match package version ${version}`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);'
+
+      - name: Prepare artifact directory
+        run: mkdir -p artifacts
+
+      - name: Build package tarball
+        working-directory: packages/cli
+        run: npm pack --pack-destination ../../artifacts
+
+      - name: Verify packaged artifact
+        run: node scripts/package-smoke.mjs artifacts/*.tgz
+
+      - name: Upload package tarball
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: html-inbox-v${{ steps.package.outputs.version }}
+          path: artifacts/*.tgz
+          if-no-files-found: error
