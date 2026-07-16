@@ -1,0 +1,44 @@
+packages/cli/src/self-check.ts
+  s_af0402c5d6cba5::t_9ba03fb4c734f7 9,22,56-74,123,220-226,294-304
+  s_af0402c5d6cba5::t_140bfb8f9dfdb4 95-97
+  s_af0402c5d6cba5::t_b7e26549e4ca12 2-3,11-17,75-94,98-103,331-347
+  s_af0402c5d6cba5::t_ec3058a613d035 348
+packages/cli/src/backend.ts
+  s_af0402c5d6cba5::t_998b8c570a2e4b 2,8,131-151,199,219-221
+  s_af0402c5d6cba5::t_88d602bea6f32a 222
+docs/threat-model.md
+  s_af0402c5d6cba5::t_9ba03fb4c734f7 40
+packages/cli/src/index.ts
+  s_af0402c5d6cba5::t_5ea6f13a02f851 4-6,9,17-23,49-60,64-75,108-187
+  s_af0402c5d6cba5::t_28d82e138869b2 188
+docs/architecture.md
+  s_af0402c5d6cba5::t_9ba03fb4c734f7 45,47,61
+  s_af0402c5d6cba5::t_4491425db60931 40
+  s_af0402c5d6cba5::t_bb3afd181ed2a1 62
+packages/cli/src/viewer.ts
+  s_af0402c5d6cba5::t_b6824ada4ea34c 3,5,22-27,495-496,527-569,718-737,774-789
+  s_af0402c5d6cba5::t_0eb65335a18dae 819
+  s_af0402c5d6cba5::t_3ab27c631e7c35 97,117,237-293,466-467,640-641,799-807,811-818,820-821,840-842,852,854-861
+  s_af0402c5d6cba5::t_bc158a4f2b69bb 570
+  s_af0402c5d6cba5::t_585a86d1ea1062 790
+README.md
+  s_af0402c5d6cba5::t_9ba03fb4c734f7 45-55
+packages/shared/src/index.ts
+  s_af0402c5d6cba5::t_998b8c570a2e4b 28-32,42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "457b29538b16bd732a12b2aaf9c91f31fb9643e3",
+  "prompts": {},
+  "sessions": {
+    "s_af0402c5d6cba5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6a19-9f8b-7842-93b8-a6c4bf549f02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Devesh Sangwan <deveshsangwan@PAISAMAC156.local>"
+    }
+  }
+}
