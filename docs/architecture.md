@@ -88,4 +88,26 @@ Mermaid's CSP source includes its `dist/` subtree because the entry module loads
 
 Remote publishing follows [ADR 0001](adr/0001-static-remote-inbox.md). The local library remains the only mutable source of truth. A provider-independent module generates a complete static snapshot under a 128-bit capability path, and a deployment workflow sends that immutable snapshot through a Cloudflare Pages adapter. Administration remains local and the root of the deployed site does not list inboxes.
 
+The provider-independent export layout is:
+
+```text
+index.html
+.html-inbox-owner.json
+i/<capability>/
+  index.html
+  snapshot-manifest.json
+  security-headers.json
+  assets/viewer.css
+  assets/viewer.js
+  documents/<id>/
+    index.html
+    content/index.html
+```
+
+The root page contains no capability path. The owner marker contains only a schema version and opaque owner UUID. The manifest records sorted file digests and an aggregate snapshot hash without local paths. Original document bytes are copied to `content/index.html`; generated shell pages continue to embed them in sandboxed iframes.
+
+`security-headers.json` lives behind the capability path so the generic static output has no predictable file that discloses the bearer link. It is an adapter input rather than a file browsers consume. It describes exact shell and document-content routes with their distinct Content Security Policies. A provider adapter must translate it into native hosting configuration and must fail rather than publish without equivalent headers.
+
+Export writes a private sibling staging directory and installs the complete snapshot with a same-filesystem rename. Re-exporting to the same destination replaces the previous snapshot as one directory operation. Static export does not mutate the local library and does not own provider credentials or deployment state.
+
 The stable remote target is the Cloudflare account ID plus project name, never an inferred hostname. Remote operations journal intent before deployment, checkpoint the deployment receipt, and expose incomplete work for reconciliation. Unlisted capability URLs are bearer links, not authentication.

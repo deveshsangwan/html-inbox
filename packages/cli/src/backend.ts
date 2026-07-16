@@ -106,12 +106,12 @@ export class LocalDocumentBackend implements DocumentBackend {
     await this.prepareStorage();
 
     let metadataBytes: string;
-    let html: string;
+    let originalBytes: Buffer;
     try {
       await this.hardenDocument(id);
-      [metadataBytes, html] = await Promise.all([
+      [metadataBytes, originalBytes] = await Promise.all([
         readFile(path.join(this.documentDir(id), "metadata.json"), "utf8"),
-        readFile(path.join(this.documentDir(id), "index.html"), "utf8"),
+        readFile(path.join(this.documentDir(id), "index.html")),
       ]);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
@@ -125,7 +125,7 @@ export class LocalDocumentBackend implements DocumentBackend {
     }
 
     const metadata = this.parseMetadata(id, metadataBytes);
-    return metadata ? { metadata, html } : null;
+    return metadata ? { metadata, html: originalBytes.toString("utf8"), originalBytes } : null;
   }
 
   async deleteDocument(id: string): Promise<DeleteResult | null> {

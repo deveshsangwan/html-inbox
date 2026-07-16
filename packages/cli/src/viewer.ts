@@ -25,7 +25,7 @@ export interface ViewerStatus {
   pid?: number;
 }
 
-const VIEWER_SCRIPT = `(() => {
+export const VIEWER_SCRIPT = `(() => {
   const root = document.documentElement;
   const storageKey = "html-inbox-theme";
   const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -72,6 +72,58 @@ const VIEWER_SCRIPT = `(() => {
         element.textContent = dateFormatter.format(date);
       }
     });
+
+    const searchForm = document.querySelector("[data-client-search]");
+    if (searchForm instanceof HTMLFormElement) {
+      const input = searchForm.querySelector('input[name="q"]');
+      const rows = Array.from(document.querySelectorAll("[data-search-text]"));
+      const count = document.querySelector("[data-document-count]");
+      const empty = document.querySelector("[data-client-empty]");
+      const clear = searchForm.querySelector("[data-search-clear]");
+      const total = rows.length;
+
+      const applySearch = (value) => {
+        const query = value.trim().toLowerCase();
+        let visible = 0;
+        rows.forEach((row) => {
+          const matches = !query || (row.dataset.searchText || "").includes(query);
+          row.hidden = !matches;
+          if (matches) visible += 1;
+        });
+        if (count) {
+          count.textContent = query
+            ? visible + " of " + total + " documents"
+            : total + (total === 1 ? " document" : " documents");
+        }
+        if (empty) empty.hidden = !query || visible > 0;
+        if (clear) clear.hidden = !query;
+      };
+
+      const initialQuery = new URL(window.location.href).searchParams.get("q") || "";
+      if (input instanceof HTMLInputElement) input.value = initialQuery;
+      applySearch(initialQuery);
+
+      searchForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const value = input instanceof HTMLInputElement ? input.value : "";
+        const url = new URL(window.location.href);
+        if (value.trim()) url.searchParams.set("q", value.trim());
+        else url.searchParams.delete("q");
+        window.history.replaceState(null, "", url);
+        applySearch(value);
+      });
+      if (clear) {
+        clear.addEventListener("click", (event) => {
+          event.preventDefault();
+          if (input instanceof HTMLInputElement) input.value = "";
+          const url = new URL(window.location.href);
+          url.searchParams.delete("q");
+          window.history.replaceState(null, "", url);
+          applySearch("");
+          if (input instanceof HTMLInputElement) input.focus();
+        });
+      }
+    }
   };
 
   media.addEventListener("change", () => {
@@ -80,7 +132,7 @@ const VIEWER_SCRIPT = `(() => {
   document.addEventListener("DOMContentLoaded", initialize, { once: true });
 })();`;
 
-const VIEWER_STYLES = `
+export const VIEWER_STYLES = `
 :root {
   --canvas: #f3f4f5;
   --surface: #ffffff;
@@ -121,6 +173,7 @@ const VIEWER_STYLES = `
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { min-height: 100%; background: var(--canvas); }
 body {
   min-height: 100dvh;
@@ -801,12 +854,23 @@ function getServerPort(server: http.Server): number {
   return address.port;
 }
 
-function renderIndex(allDocuments: DocumentMetadata[], query: string): string {
-  const normalizedQuery = query.toLocaleLowerCase();
+export interface ViewerRenderOptions {
+  basePath?: string;
+  clientSearch?: boolean;
+}
+
+export function renderIndex(
+  allDocuments: DocumentMetadata[],
+  query: string,
+  options: ViewerRenderOptions = {},
+): string {
+  const basePath = options.basePath ?? "";
+  const homePath = basePath ? `${basePath}/` : "/";
+  const normalizedQuery = query.toLowerCase();
   const documents = normalizedQuery
     ? allDocuments.filter((document) =>
         [document.title, document.type, document.sourceFileName].some((value) =>
-          value.toLocaleLowerCase().includes(normalizedQuery),
+          value.toLowerCase().includes(normalizedQuery),
         ),
       )
     : allDocuments;
@@ -828,8 +892,12 @@ function renderIndex(allDocuments: DocumentMetadata[], query: string): string {
       : `<ol class="document-list" aria-label="Published documents">${documents
           .map(
             (document) =>
-              `<li class="document-row">
-                <a class="document-row__link" href="/documents/${escapeAttribute(document.id)}">${escapeHtml(document.title)}</a>
+              `<li class="document-row" data-search-text="${escapeAttribute(
+                [document.title, document.type, document.sourceFileName]
+                  .join(" ")
+                  .toLowerCase(),
+              )}">
+                <a class="document-row__link" href="${basePath}/documents/${escapeAttribute(document.id)}${basePath ? "/" : ""}">${escapeHtml(document.title)}</a>
                 <div class="document-row__meta">
                   <div class="document-row__details">
                     <span class="document-type">${escapeHtml(document.type)}</span>
@@ -854,27 +922,49 @@ function renderIndex(allDocuments: DocumentMetadata[], query: string): string {
           <h1>Documents</h1>
           <p class="library__intro">Reports, notes, dashboards, and other HTML published to this inbox.</p>
         </div>
-        <p class="document-count" aria-live="polite">${countLabel}</p>
+        <p class="document-count" aria-live="polite" data-document-count>${countLabel}</p>
       </header>
-      <form class="search-form" role="search" method="get" action="/">
+      <form class="search-form" role="search" method="get" action="${homePath}" ${options.clientSearch ? "data-client-search" : ""}>
         <label for="document-search">Search documents</label>
         <div class="search-control">
           <input id="document-search" name="q" type="search" value="${escapeAttribute(query)}" placeholder="Title, type, or source file" maxlength="200">
           <button type="submit">Search</button>
-          ${query ? '<a class="search-clear" href="/">Clear</a>' : ""}
+          ${
+            options.clientSearch
+              ? `<a class="search-clear" href="${homePath}" data-search-clear${
+                  query ? "" : " hidden"
+                }>Clear</a>`
+              : query
+                ? `<a class="search-clear" href="${homePath}">Clear</a>`
+                : ""
+          }
         </div>
       </form>
+      ${
+        options.clientSearch && allDocuments.length > 0
+          ? '<section class="empty-state" aria-labelledby="client-empty-title" data-client-empty hidden><h2 id="client-empty-title">No matching documents</h2><p>Try another title, type, or source file name.</p></section>'
+          : ""
+      }
       ${documentContent}
     </main>`,
     "Your published HTML documents, collected in one quiet library.",
+    basePath,
   );
 }
 
-function renderDocumentShell(metadata: DocumentMetadata): string {
+export function renderDocumentShell(
+  metadata: DocumentMetadata,
+  options: ViewerRenderOptions = {},
+): string {
+  const basePath = options.basePath ?? "";
+  const homePath = basePath ? `${basePath}/` : "/";
+  const contentPath = basePath
+    ? `${basePath}/documents/${escapeAttribute(metadata.id)}/content/`
+    : `/documents/${escapeAttribute(metadata.id)}/content`;
   return page(
     metadata.title,
     `<main class="document-view" id="main-content">
-      <a class="back-link" href="/"><span aria-hidden="true">&#8592;</span> Back to inbox</a>
+      <a class="back-link" href="${homePath}"><span aria-hidden="true">&#8592;</span> Back to inbox</a>
       <header class="document-header">
         <div>
           <h1 class="document-title">${escapeHtml(metadata.title)}</h1>
@@ -888,14 +978,15 @@ function renderDocumentShell(metadata: DocumentMetadata): string {
         </div>
       </header>
       <div class="preview-frame">
-        <iframe sandbox="allow-scripts" src="/documents/${escapeAttribute(metadata.id)}/content" title="${escapeAttribute(metadata.title)}"></iframe>
+        <iframe sandbox="allow-scripts" src="${contentPath}" title="${escapeAttribute(metadata.title)}"></iframe>
       </div>
     </main>`,
     `Preview of ${metadata.title}`,
+    basePath,
   );
 }
 
-function page(title: string, body: string, description: string): string {
+function page(title: string, body: string, description: string, basePath: string): string {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -903,21 +994,22 @@ function page(title: string, body: string, description: string): string {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)}</title>
 <meta name="description" content="${escapeAttribute(description)}">
-<script src="/assets/viewer.js"></script>
-<link rel="stylesheet" href="/assets/viewer.css">
+<script src="${basePath}/assets/viewer.js"></script>
+<link rel="stylesheet" href="${basePath}/assets/viewer.css">
 </head>
 <body>
 <a class="skip-link" href="#main-content">Skip to content</a>
-${renderSiteHeader()}
+${renderSiteHeader(basePath)}
 ${body}
 </body>
 </html>`;
 }
 
-function renderSiteHeader(): string {
+function renderSiteHeader(basePath: string): string {
+  const homePath = basePath ? `${basePath}/` : "/";
   return `<header class="site-header">
     <div class="site-header__inner">
-      <a class="brand" href="/" aria-label="HTML Inbox home">
+      <a class="brand" href="${homePath}" aria-label="HTML Inbox home">
         <span class="brand__mark" aria-hidden="true">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3.25h10v9.5H3zM3 9h2.65l1.1 1.5h2.5l1.1-1.5H13" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"/></svg>
         </span>
@@ -943,11 +1035,11 @@ function formatDate(value: string): string {
   return new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(date);
 }
 
-function shellCsp(): string {
+export function shellCsp(): string {
   return "default-src 'none'; script-src 'self'; style-src 'self'; frame-src 'self'; base-uri 'none'; form-action 'none'";
 }
 
-function documentCsp(): string {
+export function documentCsp(): string {
   return `default-src 'none'; script-src 'unsafe-inline' ${DOCUMENT_SCRIPT_CSP_SOURCES.join(" ")}; connect-src 'none'; img-src data:; media-src data:; font-src data:; style-src 'unsafe-inline'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'`;
 }
 
