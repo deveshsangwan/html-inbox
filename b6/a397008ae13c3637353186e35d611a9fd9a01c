@@ -1,0 +1,36 @@
+packages/cli/src/viewer.ts
+  s_af0402c5d6cba5::t_f5476be0bffd86 464-470,617-621,632-636
+  s_af0402c5d6cba5::t_fc64558110976d 2,19,415,417-420,442-445,462,488-489,493-497,506-510,561-567,578-587,603,605-607,609-614,616,622-631,637
+  s_af0402c5d6cba5::t_1af4de0be401ca 3,12-16,596-597,604,608,615
+  s_af0402c5d6cba5::t_2b53542b6817c5 638
+packages/cli/src/self-check.ts
+  s_af0402c5d6cba5::t_70921f617a2a4b 3,15-25
+  s_af0402c5d6cba5::t_fc64558110976d 2,8,36-44,66-80,182-200
+  s_af0402c5d6cba5::t_f71bff69b76b39 26
+  s_af0402c5d6cba5::t_5c49ecb533ab90 201-202
+docs/threat-model.md
+  s_af0402c5d6cba5::t_fc64558110976d 22-23,33-35
+docs/architecture.md
+  s_af0402c5d6cba5::t_fc64558110976d 50-51,58
+packages/cli/src/private-storage.ts
+  s_af0402c5d6cba5::t_1af4de0be401ca 1-41
+packages/cli/src/backend.ts
+  s_af0402c5d6cba5::t_fc64558110976d 45,58-60,66,79-84,95-97,133-135,138-146,148,151-157
+  s_af0402c5d6cba5::t_1af4de0be401ca 2,14-18,55-57,136-137,147,149-150
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "b6a397008ae13c3637353186e35d611a9fd9a01c",
+  "prompts": {},
+  "sessions": {
+    "s_af0402c5d6cba5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6a19-9f8b-7842-93b8-a6c4bf549f02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Devesh Sangwan <deveshsangwan@PAISAMAC156.local>"
+    }
+  }
+}
