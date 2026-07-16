@@ -1,7 +1,8 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
 import http, { IncomingMessage, ServerResponse } from "node:http";
+import net from "node:net";
 import path from "node:path";
 import {
   DocumentBackend,
@@ -17,6 +18,12 @@ import {
 
 const HOST = "127.0.0.1";
 export const VIEWER_PROTOCOL_VERSION = 1;
+
+export interface ViewerStatus {
+  state: "running" | "stopped" | "conflict" | "incompatible";
+  url: string;
+  pid?: number;
+}
 
 const VIEWER_SCRIPT = `(() => {
   const root = document.documentElement;
@@ -87,6 +94,7 @@ const VIEWER_STYLES = `
   --border-strong: #bcc4be;
   --accent: #2f6a50;
   --accent-soft: #e1ebe5;
+  --accent-contrast: #f7faf8;
   --focus: #2f6a50;
   --iframe-canvas: #ffffff;
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -106,6 +114,7 @@ const VIEWER_STYLES = `
   --border-strong: #434c45;
   --accent: #8ab79c;
   --accent-soft: #223a2c;
+  --accent-contrast: #111412;
   --focus: #a6d1b7;
   --iframe-canvas: #ffffff;
   color-scheme: dark;
@@ -224,6 +233,63 @@ h1 {
   font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
 }
+
+.search-form {
+  max-width: 38rem;
+  margin-bottom: 2rem;
+}
+.search-form label {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--text-strong);
+  font-size: 0.8rem;
+  font-weight: 620;
+}
+.search-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.55rem;
+  align-items: center;
+}
+.search-control input {
+  min-width: 0;
+  min-height: 2.55rem;
+  padding: 0 0.75rem;
+  color: var(--text-strong);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.375rem;
+  font: inherit;
+}
+.search-control input::placeholder { color: var(--faint); }
+.search-control button,
+.search-clear {
+  min-height: 2.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.85rem;
+  border-radius: 0.375rem;
+  font-size: 0.82rem;
+  font-weight: 620;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.search-control button {
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  cursor: pointer;
+}
+.search-clear {
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.search-control button:hover { filter: brightness(0.94); }
+.search-clear:hover { border-color: var(--border-strong); }
+.search-control button:active,
+.search-clear:active { transform: translateY(1px); }
 
 .document-list {
   margin: 0;
@@ -397,6 +463,8 @@ select:active { transform: translateY(1px); }
   .library { padding-block: 2.25rem 3rem; }
   .library__heading, .document-header { grid-template-columns: 1fr; gap: 0.85rem; }
   .document-count { margin: 0; }
+  .search-control { grid-template-columns: minmax(0, 1fr) auto; }
+  .search-clear { grid-column: 1 / -1; justify-self: start; }
   .document-row { grid-template-columns: minmax(0, 1fr) 1.25rem; gap: 0.8rem; padding-block: 1.25rem; }
   .document-row__meta { grid-column: 1; }
   .document-row__arrow { grid-column: 2; grid-row: 1 / span 2; }
@@ -423,6 +491,8 @@ export async function ensureViewer(home: string, port: number): Promise<void> {
   if (health.ok) {
     throw new Error(`Viewer at http://${HOST}:${port} uses a different HTML_INBOX_HOME`);
   }
+
+  await assertPortAvailable(port);
 
   const entry = process.argv[1];
   if (!entry) {
@@ -452,6 +522,50 @@ export async function ensureViewer(home: string, port: number): Promise<void> {
   }
 
   throw new Error(`Viewer did not start at http://${HOST}:${port}/health`);
+}
+
+export async function getViewerStatus(home: string, port: number): Promise<ViewerStatus> {
+  const url = `http://${HOST}:${port}`;
+  const health = await getHealth(port);
+  if (!health.ok) {
+    return { state: "stopped", url };
+  }
+  if (health.protocolVersion !== VIEWER_PROTOCOL_VERSION) {
+    return { state: "incompatible", url };
+  }
+
+  const instanceId = await getInboxInstanceId(home);
+  if (health.instanceId !== instanceId) {
+    return { state: "conflict", url };
+  }
+
+  const viewerInfo = await readViewerInfo(home);
+  return {
+    state: "running",
+    url,
+    pid: viewerInfo?.port === port ? viewerInfo.pid : undefined,
+  };
+}
+
+export async function stopViewer(home: string, port: number): Promise<ViewerStatus> {
+  const status = await getViewerStatus(home, port);
+  if (status.state !== "running") {
+    return status;
+  }
+  if (!status.pid) {
+    throw new Error("Viewer is running but its process record is missing or stale");
+  }
+
+  process.kill(status.pid, "SIGTERM");
+  const deadline = Date.now() + 3000;
+  while (Date.now() < deadline) {
+    if (!(await getHealth(port)).ok) {
+      await rm(path.join(home, "viewer.json"), { force: true });
+      return { state: "stopped", url: status.url };
+    }
+    await sleep(50);
+  }
+  throw new Error(`Viewer did not stop at ${status.url}`);
 }
 
 export async function startViewer(
@@ -528,7 +642,8 @@ async function routeRequest(
 
   if (url.pathname === "/") {
     const documents = await backend.listDocuments();
-    sendHtml(response, 200, renderIndex(documents), shellCsp());
+    const query = (url.searchParams.get("q") ?? "").trim().slice(0, 200);
+    sendHtml(response, 200, renderIndex(documents, query), shellCsp());
     return;
   }
 
@@ -605,6 +720,26 @@ async function writeViewerInfo(home: string, port: number): Promise<void> {
   );
 }
 
+async function readViewerInfo(home: string): Promise<{ pid: number; port: number } | null> {
+  const viewerInfoPath = path.join(home, "viewer.json");
+  try {
+    await hardenPrivateFile(viewerInfoPath);
+    const value = JSON.parse(await readFile(viewerInfoPath, "utf8")) as {
+      pid?: unknown;
+      port?: unknown;
+    };
+    if (!Number.isInteger(value.pid) || !Number.isInteger(value.port)) {
+      throw new Error(`Invalid viewer process record at ${viewerInfoPath}`);
+    }
+    return { pid: value.pid as number, port: value.port as number };
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
+}
+
 async function getInboxInstanceId(home: string): Promise<string> {
   await ensurePrivateDirectory(home);
   const identityPath = path.join(home, "instance-id");
@@ -641,6 +776,23 @@ function isAllowedHost(hostHeader: string | undefined, port: number): boolean {
   return allowedHosts.includes(normalized);
 }
 
+async function assertPortAvailable(port: number): Promise<void> {
+  const probe = net.createServer();
+  await new Promise<void>((resolve, reject) => {
+    probe.once("error", (error: NodeJS.ErrnoException) => {
+      if (error.code === "EADDRINUSE") {
+        reject(new Error(`Port ${port} is already in use; set HTML_INBOX_PORT to another port`));
+      } else {
+        reject(error);
+      }
+    });
+    probe.listen(port, HOST, resolve);
+  });
+  await new Promise<void>((resolve, reject) => {
+    probe.close((error) => (error ? reject(error) : resolve()));
+  });
+}
+
 function getServerPort(server: http.Server): number {
   const address = server.address();
   if (!address || typeof address === "string") {
@@ -649,13 +801,29 @@ function getServerPort(server: http.Server): number {
   return address.port;
 }
 
-function renderIndex(documents: DocumentMetadata[]): string {
+function renderIndex(allDocuments: DocumentMetadata[], query: string): string {
+  const normalizedQuery = query.toLocaleLowerCase();
+  const documents = normalizedQuery
+    ? allDocuments.filter((document) =>
+        [document.title, document.type, document.sourceFileName].some((value) =>
+          value.toLocaleLowerCase().includes(normalizedQuery),
+        ),
+      )
+    : allDocuments;
   const documentContent =
     documents.length === 0
       ? `<section class="empty-state" aria-labelledby="empty-title">
-          <h2 id="empty-title">No documents yet</h2>
-          <p>Publish an HTML file from the CLI. It will appear here with its title, type, and source file.</p>
-          <code>html-inbox publish ./document.html --title "My document" --type report</code>
+          <h2 id="empty-title">${query ? "No matching documents" : "No documents yet"}</h2>
+          <p>${
+            query
+              ? "Try another title, type, or source file name."
+              : "Publish an HTML file from the CLI. It will appear here with its title, type, and source file."
+          }</p>
+          ${
+            query
+              ? ""
+              : '<code>html-inbox publish ./document.html --title "My document" --type report</code>'
+          }
         </section>`
       : `<ol class="document-list" aria-label="Published documents">${documents
           .map(
@@ -674,7 +842,9 @@ function renderIndex(documents: DocumentMetadata[]): string {
           )
           .join("")}</ol>`;
 
-  const countLabel = `${documents.length} ${documents.length === 1 ? "document" : "documents"}`;
+  const countLabel = query
+    ? `${documents.length} of ${allDocuments.length} documents`
+    : `${documents.length} ${documents.length === 1 ? "document" : "documents"}`;
 
   return page(
     "HTML Inbox",
@@ -684,8 +854,16 @@ function renderIndex(documents: DocumentMetadata[]): string {
           <h1>Documents</h1>
           <p class="library__intro">Reports, notes, dashboards, and other HTML published to this inbox.</p>
         </div>
-        <p class="document-count">${countLabel}</p>
+        <p class="document-count" aria-live="polite">${countLabel}</p>
       </header>
+      <form class="search-form" role="search" method="get" action="/">
+        <label for="document-search">Search documents</label>
+        <div class="search-control">
+          <input id="document-search" name="q" type="search" value="${escapeAttribute(query)}" placeholder="Title, type, or source file" maxlength="200">
+          <button type="submit">Search</button>
+          ${query ? '<a class="search-clear" href="/">Clear</a>' : ""}
+        </div>
+      </form>
       ${documentContent}
     </main>`,
     "Your published HTML documents, collected in one quiet library.",
@@ -766,7 +944,7 @@ function formatDate(value: string): string {
 }
 
 function shellCsp(): string {
-  return "default-src 'none'; script-src 'self'; style-src 'self'; frame-src 'self'; base-uri 'none'; form-action 'none'";
+  return "default-src 'none'; script-src 'self'; style-src 'self'; frame-src 'self'; base-uri 'none'; form-action 'self'";
 }
 
 function documentCsp(): string {

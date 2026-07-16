@@ -37,13 +37,14 @@ New records include a storage schema version. Legacy records without the field a
 
 ## Backend
 
-Keep the backend abstraction to three operations:
+Keep the backend abstraction to four operations:
 
 - `publish(input)`
 - `listDocuments()`
 - `getDocument(id)`
+- `deleteDocument(id)`
 
-No update/delete, search, sync, tags, auth, or database layer in Phase 1.
+Deletion first renames a committed document into the private trash area so it disappears from the library atomically, then removes the trash record. Search is a server-rendered filter over title, type, and source file name. There is no update, sync, tags, auth, or database layer in the local product.
 
 ## Viewer
 
@@ -56,6 +57,8 @@ Use `HTML_INBOX_PORT` when the port is taken:
 ```sh
 HTML_INBOX_PORT=4321 html-inbox viewer
 ```
+
+The CLI exposes viewer status and stop commands. Before spawning a detached viewer, it probes the requested loopback port so a non-HTML-Inbox listener produces a direct port-conflict error instead of a generic startup timeout.
 
 The health check is the source of truth for whether the viewer is ready. CLI output should be based on the health check, not process startup alone. A viewer can be reused only when both its protocol version and opaque instance identity match.
 

@@ -42,6 +42,17 @@ Run the viewer directly when you want it to remain attached to the terminal:
 corepack pnpm html-inbox viewer
 ```
 
+Manage the local library and viewer:
+
+```sh
+corepack pnpm html-inbox list
+corepack pnpm html-inbox delete <document-id>
+corepack pnpm html-inbox viewer status
+corepack pnpm html-inbox viewer stop
+```
+
+Use `--json` with `list` or `delete` for automation. Non-interactive deletion requires `--force`. The viewer also supports server-rendered search across title, type, and source file name.
+
 ## Supported HTML
 
 HTML Inbox accepts UTF-8 `.html` and `.htm` files. It rejects inline event-handler attributes and external URLs except for the explicitly supported Tailwind browser and Mermaid v11 script entry points. Accepted HTML is still untrusted: validation is a compatibility and policy gate, not sanitization.
