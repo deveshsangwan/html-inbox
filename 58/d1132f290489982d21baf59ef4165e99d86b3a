@@ -1,0 +1,53 @@
+packages/cli/src/index.ts
+  s_af0402c5d6cba5::t_6028459697ae6d 9,28-34,83-87,172-200,238-304,368-404
+  s_af0402c5d6cba5::t_c8f2bef8b31de4 405
+packages/cli/src/remote-workflow.ts
+  s_af0402c5d6cba5::t_0fe3a5dd854567 2,113,125,129-132,186-189,202-205,235-238,406-408,414-424,475-481,491-514
+  s_af0402c5d6cba5::t_446f3591976c05 1,3-112,114-124,126-128,133-185,190-201,206-225,227,230-234,239-270,272-339,342-371,380-405,409-413,425-474,515-563,573-576,584-657
+  s_af0402c5d6cba5::t_1f623a8d6d8968 271,340-341,564-572,577-583
+  s_af0402c5d6cba5::t_7e4a6cf30c6679 482-490
+  s_af0402c5d6cba5::t_e9540e8f17d896 226,228-229,372-379
+packages/cli/src/self-check.ts
+  s_af0402c5d6cba5::t_86e03c56b223a9 20-22,24-25,38-39,45-50,65,631-656,666-753,903-913,915-921,926-975
+  s_af0402c5d6cba5::t_fcc599e8d0400f 10,657-665
+  s_af0402c5d6cba5::t_74fb316d4df056 32-33,99-138,540-573,893-898
+  s_af0402c5d6cba5::t_1fa89e3636fb87 445-448
+  s_af0402c5d6cba5::t_db1252fb82c70f 754-779,914,922-925
+  s_af0402c5d6cba5::t_89feca28b27fa8 574
+  s_af0402c5d6cba5::t_13b227f58ceed1 976-977
+docs/threat-model.md
+  s_af0402c5d6cba5::t_0e2905cdfa132a 74
+packages/cli/src/static-export.ts
+  s_af0402c5d6cba5::t_1fa89e3636fb87 88
+packages/cli/src/cloudflare-pages.ts
+  s_af0402c5d6cba5::t_792222156d6c0a 386,390,416,421
+  s_af0402c5d6cba5::t_d3179ac9d97541 58-79,134,142-159,161,185-250,338-385,387-389,391-415,417-420,422-435,572,575-584,593-636
+  s_af0402c5d6cba5::t_1f623a8d6d8968 573-574
+  s_af0402c5d6cba5::t_1fa89e3636fb87 445
+  s_af0402c5d6cba5::t_bd67d958855648 637
+docs/architecture.md
+  s_af0402c5d6cba5::t_1fa89e3636fb87 95
+  s_af0402c5d6cba5::t_0e2905cdfa132a 119-123
+docs/adr/0001-static-remote-inbox.md
+  s_af0402c5d6cba5::t_0e2905cdfa132a 72
+README.md
+  s_af0402c5d6cba5::t_b277743c5c159b 66
+  s_af0402c5d6cba5::t_0e2905cdfa132a 68-104,122
+  s_af0402c5d6cba5::t_cb99e93ecc84ef 67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "58d1132f290489982d21baf59ef4165e99d86b3a",
+  "prompts": {},
+  "sessions": {
+    "s_af0402c5d6cba5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6a19-9f8b-7842-93b8-a6c4bf549f02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Devesh Sangwan <deveshsangwan@PAISAMAC156.local>"
+    }
+  }
+}
