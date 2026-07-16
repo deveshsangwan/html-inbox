@@ -19,6 +19,8 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - An allowlisted CDN is compromised or serves an incompatible update within an allowed major version.
 - An allowlisted CDN observes the user's IP address and that its resource was requested.
 - Document script consumes excessive CPU or memory inside its frame.
+- A browser reaches loopback data through an attacker-controlled Host header.
+- Another local operating-system account reads inbox files created with permissive modes.
 
 ## Phase 1 Controls
 
@@ -28,6 +30,9 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - Render documents through a dedicated viewer path inside an iframe sandboxed with only `allow-scripts`. Omitting `allow-same-origin` gives the document an opaque origin and prevents access to the viewer DOM and same-origin storage.
 - Use strict CSP on viewer responses. Document responses allow inline scripts plus the narrow CDN script paths required by Tailwind and Mermaid; `connect-src`, frames, forms, objects, and non-data images, media, and fonts remain blocked.
 - Bind the viewer to `127.0.0.1`, default port `3217`.
+- Reject requests whose `Host` is not the expected loopback host and active port.
+- Create managed directories as owner-only (`0700`) and files as owner-readable/writable (`0600`), and tighten existing managed paths when they are accessed.
+- Return an opaque instance identity and protocol version from health checks instead of the absolute inbox path.
 - Allow `HTML_INBOX_PORT` only as a local port escape hatch.
 - Treat the health check as the only readiness signal.
 

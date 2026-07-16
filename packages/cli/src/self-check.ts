@@ -1,15 +1,28 @@
 import { strict as assert } from "node:assert";
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import http from "node:http";
+import { mkdtemp, readFile, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { LocalDocumentBackend } from "./backend";
 import { formatUsage, getCliVersion } from "./index";
-import { startViewer } from "./viewer";
+import { startViewer, VIEWER_PROTOCOL_VERSION } from "./viewer";
 
 async function run(): Promise<void> {
   assert.match(formatUsage(), /publish <file\.html>/);
   assert.match(formatUsage(), /viewer/);
   assert.equal(getCliVersion(), "0.1.0");
+
+  if (process.platform !== "win32") {
+    const unsafeHome = await mkdtemp(path.join(tmpdir(), "html-inbox-unsafe-"));
+    const symlinkTarget = path.join(unsafeHome, "target.txt");
+    await writeFile(symlinkTarget, "do not overwrite");
+    await symlink(symlinkTarget, path.join(unsafeHome, "instance-id"));
+    await assert.rejects(
+      startViewer(new LocalDocumentBackend(unsafeHome), unsafeHome, 0),
+      /Managed file is not a regular file/,
+    );
+    assert.equal(await readFile(symlinkTarget, "utf8"), "do not overwrite");
+  }
 
   const home = await mkdtemp(path.join(tmpdir(), "html-inbox-"));
   const backend = new LocalDocumentBackend(home);
@@ -20,7 +33,15 @@ async function run(): Promise<void> {
   const baseUrl = `http://127.0.0.1:${address.port}`;
 
   try {
-    assert.equal((await fetch(`${baseUrl}/health`)).ok, true);
+    const healthResponse = await fetch(`${baseUrl}/health`);
+    assert.equal(healthResponse.ok, true);
+    const health = (await healthResponse.json()) as Record<string, unknown>;
+    assert.equal(health.protocolVersion, VIEWER_PROTOCOL_VERSION);
+    assert.equal(typeof health.instanceId, "string");
+    assert.equal("home" in health, false);
+
+    const hostileHost = await requestWithHost(address.port, "attacker.example");
+    assert.equal(hostileHost.statusCode, 421);
 
     const emptyIndex = await fetch(baseUrl);
     const emptyIndexCsp = emptyIndex.headers.get("content-security-policy") ?? "";
@@ -41,6 +62,21 @@ async function run(): Promise<void> {
       "utf8",
     );
     assert.equal(stored, html);
+
+    if (process.platform !== "win32") {
+      assert.equal((await stat(home)).mode & 0o777, 0o700);
+      assert.equal(
+        (await stat(path.join(home, "documents", published.metadata.id))).mode & 0o777,
+        0o700,
+      );
+      assert.equal(
+        (await stat(path.join(home, "documents", published.metadata.id, "index.html"))).mode &
+          0o777,
+        0o600,
+      );
+      assert.equal((await stat(path.join(home, "instance-id"))).mode & 0o777, 0o600);
+      assert.equal((await stat(path.join(home, "viewer.json"))).mode & 0o777, 0o600);
+    }
 
     const singularIndex = await fetch(baseUrl);
     const indexCsp = singularIndex.headers.get("content-security-policy") ?? "";
@@ -141,6 +177,27 @@ async function run(): Promise<void> {
   } finally {
     await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
   }
+}
+
+async function requestWithHost(
+  port: number,
+  host: string,
+): Promise<{ statusCode: number | undefined; body: string }> {
+  return new Promise((resolve, reject) => {
+    const request = http.request(
+      { host: "127.0.0.1", port, path: "/health", headers: { Host: host } },
+      (response) => {
+        let body = "";
+        response.setEncoding("utf8");
+        response.on("data", (chunk) => {
+          body += chunk;
+        });
+        response.on("end", () => resolve({ statusCode: response.statusCode, body }));
+      },
+    );
+    request.on("error", reject);
+    request.end();
+  });
 }
 
 void run();

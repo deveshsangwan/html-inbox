@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 import {
@@ -11,6 +11,11 @@ import {
   PublishResult,
   StoredDocument,
 } from "@html-inbox/shared";
+import {
+  ensurePrivateDirectory,
+  hardenPrivateFile,
+  writePrivateFile,
+} from "./private-storage";
 
 export const DEFAULT_PORT = 3217;
 
@@ -37,6 +42,7 @@ export class LocalDocumentBackend implements DocumentBackend {
   constructor(private readonly home: string = getInboxHome()) {}
 
   async publish(input: PublishInput): Promise<PublishResult> {
+    await this.prepareStorage();
     const metadata: DocumentMetadata = {
       id: randomUUID(),
       title: input.title,
@@ -46,14 +52,18 @@ export class LocalDocumentBackend implements DocumentBackend {
     };
     const documentDir = this.documentDir(metadata.id);
 
-    await mkdir(documentDir, { recursive: true });
-    await writeFile(path.join(documentDir, "index.html"), input.originalBytes);
-    await writeFile(path.join(documentDir, "metadata.json"), JSON.stringify(metadata, null, 2));
+    await ensurePrivateDirectory(documentDir);
+    await writePrivateFile(path.join(documentDir, "index.html"), input.originalBytes);
+    await writePrivateFile(
+      path.join(documentDir, "metadata.json"),
+      JSON.stringify(metadata, null, 2),
+    );
 
     return { metadata };
   }
 
   async listDocuments(): Promise<DocumentMetadata[]> {
+    await this.prepareStorage();
     const documentsDir = path.join(this.home, "documents");
     let entries: string[];
 
@@ -66,7 +76,12 @@ export class LocalDocumentBackend implements DocumentBackend {
       throw error;
     }
 
-    const documents = await Promise.all(entries.map((id) => this.readMetadata(id)));
+    const documents = await Promise.all(
+      entries.map(async (id) => {
+        await this.hardenDocument(id);
+        return this.readMetadata(id);
+      }),
+    );
     return documents
       .filter((metadata): metadata is DocumentMetadata => metadata !== null)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -76,6 +91,9 @@ export class LocalDocumentBackend implements DocumentBackend {
     if (!isSafeDocumentId(id)) {
       return null;
     }
+
+    await this.prepareStorage();
+    await this.hardenDocument(id);
 
     try {
       const [metadataBytes, html] = await Promise.all([
@@ -111,5 +129,30 @@ export class LocalDocumentBackend implements DocumentBackend {
 
   private documentDir(id: string): string {
     return path.join(this.home, "documents", id);
+  }
+
+  private async prepareStorage(): Promise<void> {
+    const documentsDir = path.join(this.home, "documents");
+    await ensurePrivateDirectory(this.home);
+    await ensurePrivateDirectory(documentsDir);
+  }
+
+  private async hardenDocument(id: string): Promise<void> {
+    if (!isSafeDocumentId(id)) {
+      return;
+    }
+
+    const documentDir = this.documentDir(id);
+    try {
+      await ensurePrivateDirectory(documentDir);
+      await Promise.all([
+        hardenPrivateFile(path.join(documentDir, "index.html")),
+        hardenPrivateFile(path.join(documentDir, "metadata.json")),
+      ]);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
+    }
   }
 }
