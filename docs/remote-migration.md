@@ -4,9 +4,9 @@ Remote publishing does not move or mutate the local library. `~/.html-inbox/docu
 
 ## Before publishing
 
-1. Upgrade the source checkout and run `corepack pnpm verify`.
-2. Confirm the local library with `corepack pnpm html-inbox list` and open the viewer.
-3. Inspect a provider-independent export with `corepack pnpm html-inbox export --out ./html-inbox-export`.
+1. Upgrade the installed CLI with `npm install --global html-inbox@latest` and confirm it with `html-inbox --version`.
+2. Confirm the local library with `html-inbox list` and open the viewer.
+3. Inspect a provider-independent export with `html-inbox export --out ./html-inbox-export`.
 4. Treat every document in the local library as part of one shared remote capability. Delete anything that should not be in that snapshot.
 
 ## Configure Cloudflare
@@ -20,7 +20,7 @@ npx --yes wrangler@4.86.0 login
 Create a dedicated Pages target:
 
 ```sh
-corepack pnpm html-inbox remote init \
+html-inbox remote init \
   --account <cloudflare-account-id> \
   --project <new-pages-project>
 ```
@@ -30,8 +30,8 @@ Prefer a new project. `--adopt` is deliberately required for an existing project
 ## Publish and verify
 
 ```sh
-corepack pnpm html-inbox remote publish
-corepack pnpm html-inbox remote status
+html-inbox remote publish
+html-inbox remote status
 ```
 
 Open the production capability URL, check search and at least one document, then test at a narrow viewport. Share only the `/i/<capability>/` URL. The Pages root has no inbox listing.
@@ -39,15 +39,16 @@ Open the production capability URL, check search and at least one document, then
 If the command loses its response or reports preserved intent, do not repeatedly publish by hand:
 
 ```sh
-corepack pnpm html-inbox remote reconcile
+html-inbox remote reconcile
 ```
 
 Reconciliation checks deployment history for the snapshot digest before it retries.
+If an ambiguous `remote init` later discovers the project, inspect the reported account and project before running `html-inbox remote reconcile --adopt`; adoption authorizes HTML Inbox to replace that project's complete deployed contents.
 
 ## Revoke or roll back
 
 ```sh
-corepack pnpm html-inbox remote revoke
+html-inbox remote revoke
 ```
 
 Revoke replaces the production site and rotates away from the shared capability. It does not delete older immutable deployment URLs. Remove sensitive historical deployments from the Cloudflare dashboard before treating the old content as inaccessible.
