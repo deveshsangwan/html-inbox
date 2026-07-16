@@ -34,6 +34,8 @@ corepack pnpm html-inbox publish ./examples/report.html \
 
 The command stores the original HTML under `~/.html-inbox`, starts or reuses the local viewer, and prints the document URL. Set `HTML_INBOX_HOME` to use an isolated library or `HTML_INBOX_PORT` to choose another loopback port.
 
+HTML documents are limited to 10 MiB by default. Set `HTML_INBOX_MAX_BYTES` to a positive byte count when a deliberate workflow needs a different limit.
+
 Run the viewer directly when you want it to remain attached to the terminal:
 
 ```sh
