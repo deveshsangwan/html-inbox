@@ -65,6 +65,45 @@ The command prints the private inbox path, document count, and content hash. The
 
 Exports preserve the original document bytes, include a browser-side library search, and replace a recognized prior export from a private sibling staging directory. Unrelated directories are refused. `security-headers.json` records the semantic security policies that a hosting adapter must install on every corresponding route alias. Use `--json` for automation or `--capability <value>` to reproduce a known 128-bit path; normally the command should generate the capability for you.
 
+## Publish a remote inbox
+
+HTML Inbox can deploy the complete local library as an unlisted static snapshot to a Cloudflare Pages project you own. Authenticate Wrangler once:
+
+```sh
+npx --yes wrangler@4.86.0 login
+```
+
+For non-interactive use, provide a Cloudflare API token with Account / Cloudflare Pages / Edit permission through `CLOUDFLARE_API_TOKEN`. The account ID is explicit configuration, not a secret; the token is inherited by Wrangler and is never written into HTML Inbox state or passed as a command argument.
+
+Configure a target and publish:
+
+```sh
+corepack pnpm html-inbox remote init \
+  --account <cloudflare-account-id> \
+  --project <pages-project-name>
+corepack pnpm html-inbox remote publish
+```
+
+`remote init` creates the Pages project when it does not exist. An existing project requires `--adopt` because the first publish will replace its complete contents. The publish command prints the production capability URL. Anyone with that URL can read and reshare the complete snapshot; this is an unlisted bearer link, not authentication.
+
+Inspect and recover remote state:
+
+```sh
+corepack pnpm html-inbox remote status
+corepack pnpm html-inbox remote reconcile
+```
+
+Every mutation records private durable intent before its remote side effect. If a request times out after Cloudflare may have accepted it, `remote reconcile` checks deployment history for the operation ID and snapshot digest before retrying.
+If project creation was ambiguous, reconciliation requires `--adopt` before accepting the discovered project.
+
+Revoke the shared production route:
+
+```sh
+corepack pnpm html-inbox remote revoke
+```
+
+Revocation rotates to a new undisclosed empty capability and removes the previously shared route from the production deployment. It cannot erase older immutable deployment URLs; prune sensitive deployment history in Cloudflare before treating historical content as inaccessible. Use `--json` on remote commands for automation and `--yes` for non-interactive revoke.
+
 ## Supported HTML
 
 HTML Inbox accepts UTF-8 `.html` and `.htm` files. It rejects inline event-handler attributes and external URLs except for the explicitly supported Tailwind browser and Mermaid v11 script entry points. Accepted HTML is still untrusted: validation is a compatibility and policy gate, not sanitization.
@@ -81,7 +120,7 @@ corepack pnpm test
 corepack pnpm verify
 ```
 
-`verify` is the same clean build-and-test gate used by continuous integration. Package self-checks exercise validation, storage, static export determinism, security headers, iframe isolation, theme behavior, and escaping of untrusted metadata.
+`verify` is the same clean build-and-test gate used by continuous integration. Package self-checks exercise validation, storage, static export determinism, Cloudflare command recording, remote-operation recovery, security headers, iframe isolation, theme behavior, and escaping of untrusted metadata.
 
 ## License
 
