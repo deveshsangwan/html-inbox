@@ -11,6 +11,7 @@ import {
   hardenPrivateDirectory,
   writePrivateFile,
 } from "./private-storage";
+import { assertInboxCapability, assertUuidV4 } from "./validation";
 import {
   documentCsp,
   renderDocumentShell,
@@ -21,7 +22,6 @@ import {
 } from "./viewer";
 
 const SNAPSHOT_SCHEMA_VERSION = 1;
-const CAPABILITY_PATTERN = /^[A-Za-z0-9_-]{22}$/;
 const OWNERSHIP_MARKER_PATH = "__html-inbox/ownership.json";
 
 export type SnapshotDocumentSource = Pick<
@@ -77,9 +77,9 @@ export async function exportStaticSnapshot(
 
   const existingOwnerId = await readExistingOwnerId(outputDir);
   const capability = options.capability ?? generateInboxCapability();
-  assertCapability(capability);
+  assertInboxCapability(capability);
   const ownerId = options.ownerId ?? existingOwnerId ?? randomUUID();
-  assertOwnerId(ownerId);
+  assertUuidV4(ownerId, "Static export ownerId");
   if (existingOwnerId && ownerId !== existingOwnerId) {
     throw new Error("Static export ownerId does not match the existing output");
   }
@@ -296,7 +296,6 @@ async function replaceOutputDirectory(
     await rm(backupDir, { recursive: true, force: true });
   }
 }
-
 async function validateStagedFiles(
   stagingDir: string,
   files: Map<string, Buffer>,
@@ -349,23 +348,6 @@ async function readExistingOwnerId(outputDir: string): Promise<string | null> {
   ) {
     throw new Error(`Refusing to replace a directory without a valid ${OWNERSHIP_MARKER_PATH}`);
   }
-  assertOwnerId(marker.ownerId);
+  assertUuidV4(marker.ownerId, "Static export ownerId");
   return marker.ownerId;
-}
-
-function assertCapability(capability: string): void {
-  const decoded = Buffer.from(capability, "base64url");
-  if (
-    !CAPABILITY_PATTERN.test(capability) ||
-    decoded.byteLength !== 16 ||
-    decoded.toString("base64url") !== capability
-  ) {
-    throw new Error("Inbox capability must encode exactly 128 bits as 22 base64url characters");
-  }
-}
-
-function assertOwnerId(ownerId: string): void {
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(ownerId)) {
-    throw new Error("Static export ownerId must be a version 4 UUID");
-  }
 }

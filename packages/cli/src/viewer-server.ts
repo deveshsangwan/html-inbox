@@ -5,6 +5,7 @@ import http, { IncomingMessage, ServerResponse } from "node:http";
 import net from "node:net";
 import path from "node:path";
 import { DocumentBackend, isSafeDocumentId } from "@html-inbox/shared";
+import { assertUuidV4 } from "./validation";
 import {
   ensurePrivateDirectory,
   hardenPrivateFile,
@@ -302,13 +303,7 @@ async function getInboxInstanceId(home: string): Promise<string> {
 
   await hardenPrivateFile(identityPath);
   const instanceId = (await readFile(identityPath, "utf8")).trim();
-  if (
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      instanceId,
-    )
-  ) {
-    throw new Error(`Invalid HTML Inbox instance identity at ${identityPath}`);
-  }
+  assertUuidV4(instanceId, `HTML Inbox instance identity at ${identityPath}`);
   return instanceId;
 }
 
