@@ -6,9 +6,17 @@ import { mkdir, mkdtemp, readFile, stat, symlink, writeFile } from "node:fs/prom
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { LocalDocumentBackend } from "./backend";
-import { formatDocumentList, formatUsage, getCliVersion } from "./index";
-import { loadPublishInput } from "./publish-input";
 import {
+  assertExportOutsideHome,
+  formatDocumentList,
+  formatStaticExportResult,
+  formatUsage,
+  getCliVersion,
+} from "./index";
+import { loadPublishInput } from "./publish-input";
+import { exportStaticSnapshot, generateInboxCapability } from "./static-export";
+import {
+  documentCsp,
   ensureViewer,
   getViewerStatus,
   startViewer,
@@ -20,7 +28,28 @@ async function run(): Promise<void> {
   assert.match(formatUsage(), /publish <file\.html>/);
   assert.match(formatUsage(), /viewer/);
   assert.match(formatUsage(), /delete <id>/);
+  assert.match(formatUsage(), /export --out <directory>/);
   assert.equal(getCliVersion(), "0.1.0");
+  assert.throws(
+    () => assertExportOutsideHome("/tmp/html-inbox-home/export", "/tmp/html-inbox-home"),
+    /must not contain or be inside/,
+  );
+  assert.throws(
+    () => assertExportOutsideHome("/tmp", "/tmp/html-inbox-home"),
+    /must not contain or be inside/,
+  );
+  assert.doesNotThrow(() =>
+    assertExportOutsideHome("/tmp/html-inbox-export", "/tmp/html-inbox-home"),
+  );
+  for (let index = 0; index < 10; index += 1) {
+    const generatedCapability = generateInboxCapability();
+    assert.equal(generatedCapability.length, 22);
+    assert.equal(Buffer.from(generatedCapability, "base64url").byteLength, 16);
+    assert.equal(
+      Buffer.from(generatedCapability, "base64url").toString("base64url"),
+      generatedCapability,
+    );
+  }
 
   const inputHome = await mkdtemp(path.join(tmpdir(), "html-inbox-input-"));
   const inputPath = path.join(inputHome, "report.html");
@@ -42,6 +71,26 @@ async function run(): Promise<void> {
   );
 
   if (process.platform !== "win32") {
+    const overlapRoot = await mkdtemp(path.join(tmpdir(), "html-inbox-overlap-"));
+    const realHome = path.join(overlapRoot, "home");
+    const homeAlias = path.join(overlapRoot, "home-alias");
+    await mkdir(realHome);
+    await symlink(realHome, homeAlias);
+    assert.throws(
+      () => assertExportOutsideHome(path.join(homeAlias, "export"), realHome),
+      /must not contain or be inside/,
+    );
+    const differentlyCasedHome = path.join(overlapRoot, "HOME");
+    try {
+      await stat(differentlyCasedHome);
+      assert.throws(
+        () => assertExportOutsideHome(path.join(differentlyCasedHome, "export"), realHome),
+        /must not contain or be inside/,
+      );
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+
     const unsafeHome = await mkdtemp(path.join(tmpdir(), "html-inbox-unsafe-"));
     const symlinkTarget = path.join(unsafeHome, "target.txt");
     await writeFile(symlinkTarget, "do not overwrite");
@@ -307,6 +356,189 @@ async function run(): Promise<void> {
       true,
     );
     assert.equal(hostileShellHtml.includes('onfocus="alert'), false);
+
+    const snapshotDirectory = path.join(home, "snapshot");
+    const capability = "AAAAAAAAAAAAAAAAAAAAAA";
+    const ownerId = "11111111-1111-4111-8111-111111111111";
+    await assert.rejects(
+      exportStaticSnapshot(
+        {
+          async listDocuments() {
+            return [{ ...published.metadata, id: "../../../../escaped" }];
+          },
+          async getDocument() {
+            return null;
+          },
+        },
+        {
+          outputDir: path.join(home, "escaping-snapshot"),
+          capability,
+          ownerId,
+        },
+      ),
+      /metadata\.id/,
+    );
+    const publishedDocument = await backend.getDocument(published.metadata.id);
+    assert(publishedDocument);
+    await assert.rejects(
+      exportStaticSnapshot(
+        {
+          async listDocuments() {
+            return [published.metadata];
+          },
+          async getDocument() {
+            return {
+              ...publishedDocument,
+              metadata: { ...publishedDocument.metadata, title: "Changed during export" },
+            };
+          },
+        },
+        {
+          outputDir: path.join(home, "changed-snapshot"),
+          capability,
+          ownerId,
+        },
+      ),
+      /Document changed while exporting/,
+    );
+    const firstSnapshot = await exportStaticSnapshot(backend, {
+      outputDir: snapshotDirectory,
+      capability,
+      ownerId,
+      generatedAt: "2026-07-16T00:00:00.000Z",
+    });
+    assert.equal(firstSnapshot.inboxPath, `/i/${capability}`);
+    assert.equal(firstSnapshot.manifest.documentCount, 2);
+    assert.match(formatStaticExportResult(firstSnapshot, false), /Exported 2 documents/);
+    assert.equal(
+      JSON.parse(formatStaticExportResult(firstSnapshot, true)).capability,
+      capability,
+    );
+
+    const snapshotRoot = await readFile(path.join(snapshotDirectory, "index.html"), "utf8");
+    assert.equal(snapshotRoot.includes(capability), false);
+    assert.equal(snapshotRoot.includes("no public inbox listing"), true);
+    const snapshotIndex = await readFile(
+      path.join(snapshotDirectory, "i", capability, "index.html"),
+      "utf8",
+    );
+    assert.equal(snapshotIndex.includes(`src="/i/${capability}/assets/viewer.js"`), true);
+    assert.equal(snapshotIndex.includes("data-client-search"), true);
+    assert.equal(
+      snapshotIndex.includes(`/i/${capability}/documents/${published.metadata.id}/`),
+      true,
+    );
+    const snapshotShell = await readFile(
+      path.join(
+        snapshotDirectory,
+        "i",
+        capability,
+        "documents",
+        published.metadata.id,
+        "index.html",
+      ),
+      "utf8",
+    );
+    assert.equal(
+      snapshotShell.includes(
+        `/i/${capability}/documents/${published.metadata.id}/content/`,
+      ),
+      true,
+    );
+    assert.deepEqual(
+      await readFile(
+        path.join(
+          snapshotDirectory,
+          "i",
+          capability,
+          "documents",
+          published.metadata.id,
+          "content",
+          "index.html",
+        ),
+      ),
+      Buffer.from(html),
+    );
+
+    const ownerMarker = JSON.parse(
+      await readFile(path.join(snapshotDirectory, ".html-inbox-owner.json"), "utf8"),
+    ) as Record<string, unknown>;
+    assert.deepEqual(ownerMarker, { schemaVersion: 1, ownerId });
+    const securityHeaders = JSON.parse(
+      await readFile(
+        path.join(snapshotDirectory, "i", capability, "security-headers.json"),
+        "utf8",
+      ),
+    ) as {
+      common: Record<string, string>;
+      document: Record<string, string>;
+    };
+    assert.equal(securityHeaders.document["Content-Security-Policy"], documentCsp());
+    assert.equal(securityHeaders.common["X-Robots-Tag"], "noindex, nofollow, noarchive");
+    assert.deepEqual(
+      firstSnapshot.manifest.files.map((file) => file.path),
+      firstSnapshot.manifest.files.map((file) => file.path).sort(),
+    );
+    const manifestText = await readFile(
+      path.join(snapshotDirectory, "i", capability, "snapshot-manifest.json"),
+      "utf8",
+    );
+    assert.equal(manifestText.includes(home), false);
+
+    const secondSnapshot = await exportStaticSnapshot(backend, {
+      outputDir: snapshotDirectory,
+      capability,
+      generatedAt: "2026-07-16T01:00:00.000Z",
+    });
+    assert.equal(secondSnapshot.manifest.snapshotHash, firstSnapshot.manifest.snapshotHash);
+    const reversedSnapshot = await exportStaticSnapshot(
+      {
+        async listDocuments() {
+          return (await backend.listDocuments()).reverse();
+        },
+        getDocument: (id) => backend.getDocument(id),
+      },
+      {
+        outputDir: path.join(home, "reversed-snapshot"),
+        capability,
+        ownerId,
+        generatedAt: "2026-07-16T02:00:00.000Z",
+      },
+    );
+    assert.equal(reversedSnapshot.manifest.snapshotHash, firstSnapshot.manifest.snapshotHash);
+    const unrelatedDirectory = path.join(home, "unrelated-output");
+    await mkdir(unrelatedDirectory);
+    await writeFile(path.join(unrelatedDirectory, "keep.txt"), "keep");
+    await assert.rejects(
+      exportStaticSnapshot(backend, {
+        outputDir: unrelatedDirectory,
+        capability,
+      }),
+      /Refusing to replace/,
+    );
+    assert.equal(await readFile(path.join(unrelatedDirectory, "keep.txt"), "utf8"), "keep");
+    await assert.rejects(
+      exportStaticSnapshot(backend, {
+        outputDir: path.join(home, "invalid-snapshot"),
+        capability: "too-short",
+      }),
+      /exactly 128 bits/,
+    );
+    await assert.rejects(
+      exportStaticSnapshot(backend, {
+        outputDir: path.join(home, "noncanonical-snapshot"),
+        capability: "BBBBBBBBBBBBBBBBBBBBBB",
+      }),
+      /exactly 128 bits/,
+    );
+
+    if (process.platform !== "win32") {
+      assert.equal((await stat(snapshotDirectory)).mode & 0o777, 0o700);
+      assert.equal(
+        (await stat(path.join(snapshotDirectory, "index.html"))).mode & 0o777,
+        0o600,
+      );
+    }
 
     const corruptId = "corrupt-record";
     const corruptDir = path.join(home, "documents", corruptId);

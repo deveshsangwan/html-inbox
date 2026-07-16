@@ -73,7 +73,7 @@ Revocation deploys a complete replacement snapshot without the inbox capability 
 
 ## Module seams
 
-- The snapshot module is deep: one export interface hides route layout, HTML rendering, assets, headers, manifest construction, validation, and atomic output replacement.
+- The snapshot module is deep: one export interface hides route layout, HTML rendering, assets, headers, manifest construction, validation, and staged output replacement.
 - The remote workflow module is deep: one deploy/revoke/status interface hides target resolution, journaling, receipts, and reconciliation.
 - The deployment port is a real seam with two adapters: pinned Wrangler in production and a recording adapter in tests.
 - Local storage remains concrete. Remote publishing does not add a second document-storage adapter or writer.
