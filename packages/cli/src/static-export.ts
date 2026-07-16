@@ -7,6 +7,7 @@ import {
   hardenPrivateDirectory,
   writePrivateFile,
 } from "./private-storage";
+import { assertInboxCapability, assertUuidV4 } from "./validation";
 import {
   documentCsp,
   renderDocumentShell,
@@ -17,7 +18,6 @@ import {
 } from "./viewer";
 
 const SNAPSHOT_SCHEMA_VERSION = 1;
-const CAPABILITY_PATTERN = /^[A-Za-z0-9_-]{22}$/;
 
 export type SnapshotDocumentSource = Pick<
   DocumentBackend,
@@ -71,9 +71,9 @@ export async function exportStaticSnapshot(
   }
 
   const capability = options.capability ?? generateInboxCapability();
-  assertCapability(capability);
+  assertInboxCapability(capability);
   const ownerId = options.ownerId ?? randomUUID();
-  assertOwnerId(ownerId);
+  assertUuidV4(ownerId, "Static export ownerId");
   const generatedAt = options.generatedAt ?? new Date().toISOString();
   if (Number.isNaN(Date.parse(generatedAt))) {
     throw new Error("Static export generatedAt must be a valid date");
@@ -258,22 +258,5 @@ async function replaceOutputDirectory(
 
   if (movedExisting) {
     await rm(backupDir, { recursive: true, force: true });
-  }
-}
-
-function assertCapability(capability: string): void {
-  const decoded = Buffer.from(capability, "base64url");
-  if (
-    !CAPABILITY_PATTERN.test(capability) ||
-    decoded.byteLength !== 16 ||
-    decoded.toString("base64url") !== capability
-  ) {
-    throw new Error("Inbox capability must encode exactly 128 bits as 22 base64url characters");
-  }
-}
-
-function assertOwnerId(ownerId: string): void {
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(ownerId)) {
-    throw new Error("Static export ownerId must be a version 4 UUID");
   }
 }

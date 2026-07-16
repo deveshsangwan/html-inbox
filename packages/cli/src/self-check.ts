@@ -23,6 +23,7 @@ import {
   CloudflarePagesAdapter,
   CloudflareProjectRef,
   CloudflareProjectSummary,
+  CloudflareSnapshotRef,
   CommandInvocation,
   CommandResult,
   CommandRunner,
@@ -46,7 +47,7 @@ import { RemoteDeploymentPort, RemoteWorkflow } from "./remote-workflow";
 import {
   exportStaticSnapshot,
   generateInboxCapability,
-  StaticSnapshotResult,
+  SnapshotManifest,
 } from "./static-export";
 import {
   documentCsp,
@@ -687,7 +688,7 @@ async function run(): Promise<void> {
       /^https:\/\/html-inbox-test\.pages\.dev\/i\//,
     );
     assert.match(formatRemoteStatus(await remoteWorkflow.status()), /State: published/);
-    assert.equal(remotePort.deployCalls.at(-1)?.snapshot.manifest.documentCount, 1);
+    assert.equal(remotePort.deployCalls.at(-1)?.manifest.documentCount, 1);
     if (process.platform !== "win32") {
       assert.equal((await stat(path.join(remoteHome, "remote", "state.json"))).mode & 0o777, 0o600);
     }
@@ -736,9 +737,9 @@ async function run(): Promise<void> {
     assert.equal(revokeResult.revokedUrl, productionUrlBeforeRevoke);
     assert.match(revokeResult.warning, /immutable Cloudflare deployment URLs may still work/);
     const revokeCall = remotePort.deployCalls.at(-1);
-    assert.equal(revokeCall?.snapshot.manifest.documentCount, 0);
+    assert.equal(revokeCall?.manifest.documentCount, 0);
     assert.equal(
-      revokeCall?.snapshot.manifest.files.some((file) => file.path.includes(capabilityBeforeRevoke)),
+      revokeCall?.manifest.files.some((file) => file.path.includes(capabilityBeforeRevoke)),
       false,
     );
 
@@ -945,7 +946,8 @@ class RecordingRemoteDeploymentPort implements RemoteDeploymentPort {
   readonly deployments: CloudflareDeploymentSummary[] = [];
   readonly createdProjects: CloudflareProjectRef[] = [];
   readonly deployCalls: Array<{
-    snapshot: StaticSnapshotResult;
+    snapshot: CloudflareSnapshotRef;
+    manifest: SnapshotManifest;
     target: CloudflareProjectRef;
     branch: string;
     metadata: CloudflareDeployMetadata;
@@ -972,14 +974,21 @@ class RecordingRemoteDeploymentPort implements RemoteDeploymentPort {
   }
 
   async deploySnapshot(
-    snapshot: StaticSnapshotResult,
+    snapshot: CloudflareSnapshotRef,
     target: CloudflareProjectRef,
     branch = "main",
     metadata?: CloudflareDeployMetadata,
   ): Promise<CloudflareDeployReceipt> {
     assert(metadata);
+    const manifestPath = path.join(
+      snapshot.outputDir,
+      snapshot.inboxPath.slice(1),
+      "snapshot-manifest.json",
+    );
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as SnapshotManifest;
     this.deployCalls.push({
       snapshot: structuredClone(snapshot),
+      manifest,
       target: structuredClone(target),
       branch,
       metadata: structuredClone(metadata),

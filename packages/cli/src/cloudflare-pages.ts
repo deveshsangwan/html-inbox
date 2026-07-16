@@ -6,7 +6,18 @@ import {
   ensurePrivateDirectory,
   writePrivateFile,
 } from "./private-storage";
+import {
+  assertInboxCapability,
+  isRecord,
+  normalizeCloudflareAccountId,
+  normalizeCloudflareBranch,
+  normalizeCloudflareProjectName,
+  normalizeCloudflareProjectRef,
+  type CloudflareProjectRef,
+} from "./validation";
 import type { StaticSecurityHeaders } from "./static-export";
+
+export type { CloudflareProjectRef } from "./validation";
 
 export const PINNED_WRANGLER_VERSION = "4.86.0";
 export const CLOUDFLARE_UPLOAD_FILE_LIMIT = 20_000;
@@ -16,11 +27,6 @@ export const CLOUDFLARE_HEADER_LINE_LIMIT = 2_000;
 
 const DEFAULT_TIMEOUT_MS = 5 * 60 * 1_000;
 const MAX_COMMAND_OUTPUT_BYTES = 1024 * 1024;
-
-export interface CloudflareProjectRef {
-  accountId: string;
-  projectName: string;
-}
 
 export interface CloudflareSnapshotRef {
   outputDir: string;
@@ -133,8 +139,8 @@ export class CloudflarePagesAdapter {
     branch = "main",
     metadata?: CloudflareDeployMetadata,
   ): Promise<CloudflareDeployReceipt> {
-    const normalizedTarget = normalizeProjectRef(target);
-    const normalizedBranch = normalizeBranch(branch);
+    const normalizedTarget = normalizeCloudflareProjectRef(target);
+    const normalizedBranch = normalizeCloudflareBranch(branch);
     assertSnapshotRef(snapshot);
     const deployDir = await prepareCloudflareDeployment(snapshot);
 
@@ -187,7 +193,7 @@ export class CloudflarePagesAdapter {
     const output = await this.runWrangler(
       ["pages", "project", "list", "--json"],
       cwd,
-      normalizeAccountId(accountId),
+      normalizeCloudflareAccountId(accountId),
     );
     return parseWranglerProjects(output);
   }
@@ -197,8 +203,8 @@ export class CloudflarePagesAdapter {
     cwd: string,
     productionBranch = "main",
   ): Promise<void> {
-    const normalizedTarget = normalizeProjectRef(target);
-    const branch = normalizeBranch(productionBranch);
+    const normalizedTarget = normalizeCloudflareProjectRef(target);
+    const branch = normalizeCloudflareBranch(productionBranch);
     await this.runWrangler(
       [
         "pages",
@@ -217,7 +223,7 @@ export class CloudflarePagesAdapter {
     target: CloudflareProjectRef,
     cwd: string,
   ): Promise<CloudflareDeploymentSummary[]> {
-    const normalizedTarget = normalizeProjectRef(target);
+    const normalizedTarget = normalizeCloudflareProjectRef(target);
     const output = await this.runWrangler(
       [
         "pages",
@@ -260,7 +266,7 @@ export function createWranglerInvocation(
     command: "npx",
     args: ["--yes", `wrangler@${PINNED_WRANGLER_VERSION}`, ...args],
     cwd,
-    env: { CLOUDFLARE_ACCOUNT_ID: normalizeAccountId(accountId) },
+    env: { CLOUDFLARE_ACCOUNT_ID: normalizeCloudflareAccountId(accountId) },
     timeoutMs,
   };
 }
@@ -269,7 +275,7 @@ function renderCloudflareHeaders(
   capability: string,
   security: StaticSecurityHeaders,
 ): string {
-  assertCapability(capability);
+  assertInboxCapability(capability);
   const inboxPath = `/i/${capability}`;
   const rules: Array<{ path: string; headers: Record<string, string> }> = [
     { path: "/*", headers: security.common },
@@ -343,8 +349,8 @@ export function receiptFromDeployment(
 ): CloudflareDeployReceipt {
   const urls = parseWranglerDeployUrls(deployment.url);
   return {
-    target: normalizeProjectRef(target),
-    branch: normalizeBranch(branch),
+    target: normalizeCloudflareProjectRef(target),
+    branch: normalizeCloudflareBranch(branch),
     deploymentUrl: urls.deploymentUrl,
     productionUrl: urls.productionUrl,
     deploymentInboxUrl: joinInboxUrl(urls.deploymentUrl, inboxPath),
@@ -367,7 +373,7 @@ export function parseWranglerProjects(output: string): CloudflareProjectSummary[
     if (!name) return [];
     let normalizedName: string;
     try {
-      normalizedName = normalizeProjectName(name);
+      normalizedName = normalizeCloudflareProjectName(name);
     } catch {
       return [];
     }
@@ -513,60 +519,10 @@ async function assertRegularFile(filePath: string): Promise<void> {
 }
 
 function assertSnapshotRef(snapshot: CloudflareSnapshotRef): void {
-  assertCapability(snapshot.capability);
+  assertInboxCapability(snapshot.capability);
   if (snapshot.inboxPath !== `/i/${snapshot.capability}`) {
     throw new Error("Static snapshot capability and inbox path do not match");
   }
-}
-
-function assertCapability(capability: string): void {
-  const decoded = Buffer.from(capability, "base64url");
-  if (
-    !/^[A-Za-z0-9_-]{22}$/.test(capability) ||
-    decoded.byteLength !== 16 ||
-    decoded.toString("base64url") !== capability
-  ) {
-    throw new Error("Inbox capability must encode exactly 128 bits");
-  }
-}
-
-function normalizeProjectRef(target: CloudflareProjectRef): CloudflareProjectRef {
-  return {
-    accountId: normalizeAccountId(target.accountId),
-    projectName: normalizeProjectName(target.projectName),
-  };
-}
-
-function normalizeAccountId(accountId: string): string {
-  const normalized = accountId.trim().toLowerCase();
-  if (!/^[0-9a-f]{32}$/.test(normalized)) {
-    throw new Error("Cloudflare account ID must be 32 hexadecimal characters");
-  }
-  return normalized;
-}
-
-function normalizeProjectName(projectName: string): string {
-  const normalized = projectName.trim().toLowerCase();
-  if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(normalized)) {
-    throw new Error("Cloudflare Pages project name must use 1-63 lowercase letters, digits, or hyphens");
-  }
-  return normalized;
-}
-
-function normalizeBranch(branch: string): string {
-  const normalized = branch.trim();
-  if (
-    !normalized ||
-    normalized.length > 128 ||
-    normalized.startsWith("-") ||
-    normalized.startsWith("/") ||
-    normalized.endsWith("/") ||
-    normalized.includes("..") ||
-    !/^[A-Za-z0-9._/-]+$/.test(normalized)
-  ) {
-    throw new Error("Cloudflare Pages branch must use 1-128 safe characters");
-  }
-  return normalized;
 }
 
 function assertDeployMetadata(metadata: CloudflareDeployMetadata): void {
@@ -690,8 +646,4 @@ function parseHeaderRecord(value: unknown, label: string): Record<string, string
     result[name] = headerValue;
   }
   return result;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

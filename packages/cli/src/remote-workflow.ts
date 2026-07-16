@@ -7,10 +7,19 @@ import {
   CloudflareDeployReceipt,
   CloudflareDeploymentSummary,
   CloudflarePagesAdapter,
-  CloudflareProjectRef,
   CloudflareProjectSummary,
+  CloudflareSnapshotRef,
   receiptFromDeployment,
 } from "./cloudflare-pages";
+import {
+  assertInboxCapability,
+  assertUuidV4,
+  isRecord,
+  normalizeCloudflareBranch,
+  normalizeCloudflareProjectRef,
+  sameCloudflareProject,
+  type CloudflareProjectRef,
+} from "./validation";
 import {
   ensurePrivateDirectory,
   hardenPrivateFile,
@@ -19,7 +28,6 @@ import {
 import {
   exportStaticSnapshot,
   generateInboxCapability,
-  StaticSnapshotResult,
 } from "./static-export";
 
 const REMOTE_SCHEMA_VERSION = 1;
@@ -32,7 +40,7 @@ export interface RemoteDeploymentPort {
     productionBranch?: string,
   ): Promise<void>;
   deploySnapshot(
-    snapshot: StaticSnapshotResult,
+    snapshot: CloudflareSnapshotRef,
     target: CloudflareProjectRef,
     branch?: string,
     metadata?: CloudflareDeployMetadata,
@@ -131,20 +139,16 @@ export class RemoteWorkflow {
 
   private async initUnlocked(options: RemoteInitOptions): Promise<RemoteState> {
     await this.assertNoOperation();
-    const target = normalizeTarget(options);
-    const branch = normalizeBranch(options.branch ?? "main");
+    const target = normalizeCloudflareProjectRef(options);
+    const branch = normalizeCloudflareBranch(options.branch ?? "main");
     const current = await this.readState();
     if (current) {
-      if (sameTarget(current.target, target) && current.branch === branch) return current;
+      if (sameCloudflareProject(current.target, target) && current.branch === branch) return current;
       throw new Error("Remote publishing is already configured for another target");
     }
 
     const projects = await this.deployment.listProjects(target.accountId, this.remoteDir);
-    const existing = projects.find(
-      (project) =>
-        project.name === target.projectName &&
-        (!project.accountId || project.accountId.toLowerCase() === target.accountId),
-    );
+    const existing = projects.find((project) => projectMatchesTarget(project, target));
     if (existing && !options.adopt) {
       throw new Error(
         `Cloudflare Pages project ${target.projectName} already exists; rerun with --adopt to replace its contents`,
@@ -167,15 +171,7 @@ export class RemoteWorkflow {
     };
     await this.writeOperation(operation);
     try {
-      if (!existing) {
-        operation.attempts += 1;
-        operation.updatedAt = this.now();
-        await this.writeOperation(operation);
-        await this.deployment.createProject(target, this.remoteDir, branch);
-      }
-      operation.phase = "remote-succeeded";
-      operation.updatedAt = this.now();
-      await this.writeOperation(operation);
+      await this.ensureProjectExists(operation, projects);
       return await this.finalizeOperation(operation);
     } catch (error) {
       throw withRecoveryHint(error);
@@ -244,21 +240,7 @@ export class RemoteWorkflow {
       return this.finalizeOperation(operation);
     }
     if (operation.kind === "init") {
-      const projects = await this.deployment.listProjects(operation.target.accountId, this.remoteDir);
-      const exists = projects.some(
-        (project) =>
-          project.name === operation.target.projectName &&
-          (!project.accountId || project.accountId.toLowerCase() === operation.target.accountId),
-      );
-      if (!exists) {
-        operation.attempts += 1;
-        operation.updatedAt = this.now();
-        await this.writeOperation(operation);
-        await this.deployment.createProject(operation.target, this.remoteDir, operation.branch);
-      }
-      operation.phase = "remote-succeeded";
-      operation.updatedAt = this.now();
-      await this.writeOperation(operation);
+      await this.ensureProjectExists(operation);
       return this.finalizeOperation(operation);
     }
 
@@ -281,6 +263,24 @@ export class RemoteWorkflow {
         )
       : await this.deployOperation(operation);
     return this.checkpointAndFinalize(operation, receipt);
+  }
+
+  private async ensureProjectExists(
+    operation: RemoteOperation,
+    knownProjects?: CloudflareProjectSummary[],
+  ): Promise<void> {
+    const projects =
+      knownProjects ??
+      (await this.deployment.listProjects(operation.target.accountId, this.remoteDir));
+    if (!projects.some((project) => projectMatchesTarget(project, operation.target))) {
+      operation.attempts += 1;
+      operation.updatedAt = this.now();
+      await this.writeOperation(operation);
+      await this.deployment.createProject(operation.target, this.remoteDir, operation.branch);
+    }
+    operation.phase = "remote-succeeded";
+    operation.updatedAt = this.now();
+    await this.writeOperation(operation);
   }
 
   private async prepareSnapshotOperation(
@@ -323,18 +323,10 @@ export class RemoteWorkflow {
     operation.attempts += 1;
     operation.updatedAt = this.now();
     await this.writeOperation(operation);
-    const manifest = JSON.parse(
-      await readFile(
-        path.join(this.snapshotDir(operation.id), "i", operation.capability, "snapshot-manifest.json"),
-        "utf8",
-      ),
-    ) as StaticSnapshotResult["manifest"];
-    const snapshot: StaticSnapshotResult = {
+    const snapshot: CloudflareSnapshotRef = {
       outputDir: this.snapshotDir(operation.id),
       capability: operation.capability,
       inboxPath: `/i/${operation.capability}`,
-      ownerId: operation.ownerId,
-      manifest,
     };
     return this.deployment.deploySnapshot(snapshot, operation.target, operation.branch, {
       commitHash: operation.snapshotHash.slice(0, 40),
@@ -453,7 +445,7 @@ export class RemoteWorkflow {
   }
 
   private workDir(id: string): string {
-    assertUuid(id, "operation ID");
+    assertUuidV4(id, "operation ID");
     return path.join(this.workRoot, id);
   }
 
@@ -534,10 +526,10 @@ function parseRemoteState(value: unknown): RemoteState {
     throw new Error("Remote state schema is unsupported");
   }
   const state = value as unknown as RemoteState;
-  assertUuid(state.ownerId, "remote owner ID");
-  assertCapability(state.capability);
-  normalizeTarget(state.target);
-  normalizeBranch(state.branch);
+  assertUuidV4(state.ownerId, "remote owner ID");
+  assertInboxCapability(state.capability);
+  normalizeCloudflareProjectRef(state.target);
+  normalizeCloudflareBranch(state.branch);
   if (typeof state.revoked !== "boolean") throw new Error("Remote state is invalid");
   return state;
 }
@@ -547,11 +539,11 @@ function parseRemoteOperation(value: unknown): RemoteOperation {
     throw new Error("Remote operation schema is unsupported");
   }
   const operation = value as unknown as RemoteOperation;
-  assertUuid(operation.id, "operation ID");
-  assertUuid(operation.ownerId, "remote owner ID");
-  assertCapability(operation.capability);
-  normalizeTarget(operation.target);
-  normalizeBranch(operation.branch);
+  assertUuidV4(operation.id, "operation ID");
+  assertUuidV4(operation.ownerId, "remote owner ID");
+  assertInboxCapability(operation.capability);
+  normalizeCloudflareProjectRef(operation.target);
+  normalizeCloudflareBranch(operation.branch);
   if (!(["init", "publish", "revoke"] as unknown[]).includes(operation.kind)) {
     throw new Error("Remote operation kind is invalid");
   }
@@ -568,65 +560,16 @@ function parseRemoteOperation(value: unknown): RemoteOperation {
     throw new Error("Remote operation snapshot hash is invalid");
   }
   if (operation.kind === "revoke") {
-    assertCapability(operation.previousCapability ?? "");
+    assertInboxCapability(operation.previousCapability ?? "");
   }
   return operation;
 }
 
-function normalizeTarget(value: CloudflareProjectRef): CloudflareProjectRef {
-  if (
-    !value ||
-    typeof value.accountId !== "string" ||
-    typeof value.projectName !== "string"
-  ) {
-    throw new Error("Cloudflare target is invalid");
-  }
-  const accountId = value.accountId?.trim().toLowerCase();
-  const projectName = value.projectName?.trim().toLowerCase();
-  if (!/^[0-9a-f]{32}$/.test(accountId)) {
-    throw new Error("Cloudflare account ID must be 32 hexadecimal characters");
-  }
-  if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(projectName)) {
-    throw new Error("Cloudflare Pages project name must be a lowercase slug");
-  }
-  return { accountId, projectName };
-}
-
-function normalizeBranch(value: string): string {
-  const branch = value.trim();
-  if (
-    !branch ||
-    branch.length > 128 ||
-    branch.startsWith("-") ||
-    branch.startsWith("/") ||
-    branch.endsWith("/") ||
-    branch.includes("..") ||
-    !/^[A-Za-z0-9._/-]+$/.test(branch)
-  ) {
-    throw new Error("Cloudflare Pages branch is invalid");
-  }
-  return branch;
-}
-
-function assertCapability(value: string): void {
-  const decoded = Buffer.from(value, "base64url");
-  if (
-    !/^[A-Za-z0-9_-]{22}$/.test(value) ||
-    decoded.byteLength !== 16 ||
-    decoded.toString("base64url") !== value
-  ) {
-    throw new Error("Remote capability is invalid");
-  }
-}
-
-function assertUuid(value: string, label: string): void {
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) {
-    throw new Error(`${label} is invalid`);
-  }
-}
-
 function assertOperationMatchesState(operation: RemoteOperation, state: RemoteState): void {
-  if (!sameTarget(operation.target, state.target) || operation.ownerId !== state.ownerId) {
+  if (
+    !sameCloudflareProject(operation.target, state.target) ||
+    operation.ownerId !== state.ownerId
+  ) {
     throw new Error("Remote operation does not match configured target ownership");
   }
   if (operation.kind === "publish" && operation.capability !== state.capability) {
@@ -640,18 +583,17 @@ function assertOperationMatchesState(operation: RemoteOperation, state: RemoteSt
   }
 }
 
-function sameTarget(left: CloudflareProjectRef, right: CloudflareProjectRef): boolean {
+function projectMatchesTarget(
+  project: CloudflareProjectSummary,
+  target: CloudflareProjectRef,
+): boolean {
   return (
-    left.accountId.toLowerCase() === right.accountId.toLowerCase() &&
-    left.projectName.toLowerCase() === right.projectName.toLowerCase()
+    project.name === target.projectName &&
+    (!project.accountId || project.accountId.toLowerCase() === target.accountId)
   );
 }
 
 function withRecoveryHint(error: unknown): Error {
   const message = error instanceof Error ? error.message : String(error);
   return new Error(`${message} Remote intent was preserved; run html-inbox remote reconcile.`);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
