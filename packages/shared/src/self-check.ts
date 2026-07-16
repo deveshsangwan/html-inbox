@@ -1,5 +1,11 @@
 import { strict as assert } from "node:assert";
-import { validateHtml } from "./index";
+import {
+  assertDocumentMetadata,
+  DOCUMENT_SCHEMA_VERSION,
+  MAX_DOCUMENT_TITLE_LENGTH,
+  validateHtml,
+  validatePublishMetadata,
+} from "./index";
 
 assert.equal(validateHtml("<!doctype html><html><body>ok</body></html>").ok, true);
 assert.equal(validateHtml("<html><body onclick='x()'></body></html>").ok, false);
@@ -31,3 +37,27 @@ assert.equal(
   ).ok,
   false,
 );
+
+assert.equal(
+  validatePublishMetadata({ title: "Report", type: "report", sourceFileName: "report.html" })
+    .ok,
+  true,
+);
+assert.equal(
+  validatePublishMetadata({
+    title: "x".repeat(MAX_DOCUMENT_TITLE_LENGTH + 1),
+    type: "report",
+    sourceFileName: "report.html",
+  }).ok,
+  false,
+);
+
+const legacyMetadata: unknown = {
+  id: "legacy-id",
+  title: "Legacy report",
+  type: "report",
+  createdAt: "2026-07-16T00:00:00.000Z",
+  sourceFileName: "legacy.html",
+};
+assertDocumentMetadata(legacyMetadata);
+assert.equal(legacyMetadata.schemaVersion, DOCUMENT_SCHEMA_VERSION);

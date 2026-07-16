@@ -1,6 +1,12 @@
 export type DocumentType = "report" | "note" | "dashboard" | "other" | (string & {});
 
+export const DOCUMENT_SCHEMA_VERSION = 1;
+export const MAX_DOCUMENT_TITLE_LENGTH = 200;
+export const MAX_DOCUMENT_TYPE_LENGTH = 64;
+export const MAX_SOURCE_FILE_NAME_LENGTH = 255;
+
 export interface DocumentMetadata {
+  schemaVersion: typeof DOCUMENT_SCHEMA_VERSION;
   id: string;
   title: string;
   type: DocumentType;
@@ -9,7 +15,6 @@ export interface DocumentMetadata {
 }
 
 export interface PublishInput {
-  html: string;
   originalBytes: Buffer;
   title: string;
   type: DocumentType;
@@ -114,10 +119,66 @@ export function assertDocumentMetadata(value: unknown): asserts value is Documen
   }
 
   const metadata = value as Record<string, unknown>;
+  if (metadata.schemaVersion === undefined) {
+    metadata.schemaVersion = DOCUMENT_SCHEMA_VERSION;
+  }
+  if (metadata.schemaVersion !== DOCUMENT_SCHEMA_VERSION) {
+    throw new Error(`unsupported metadata schema version: ${String(metadata.schemaVersion)}`);
+  }
   for (const key of ["id", "title", "type", "createdAt", "sourceFileName"]) {
     if (typeof metadata[key] !== "string" || metadata[key] === "") {
       throw new Error(`metadata.${key} must be a non-empty string`);
     }
+  }
+
+  if (!isSafeDocumentId(metadata.id as string)) {
+    throw new Error("metadata.id contains unsupported characters");
+  }
+  assertMetadataLength("title", metadata.title as string, MAX_DOCUMENT_TITLE_LENGTH);
+  assertMetadataLength("type", metadata.type as string, MAX_DOCUMENT_TYPE_LENGTH);
+  assertMetadataLength(
+    "sourceFileName",
+    metadata.sourceFileName as string,
+    MAX_SOURCE_FILE_NAME_LENGTH,
+  );
+  if (Number.isNaN(Date.parse(metadata.createdAt as string))) {
+    throw new Error("metadata.createdAt must be a valid date");
+  }
+}
+
+export function validatePublishMetadata(input: {
+  title: string;
+  type: string;
+  sourceFileName: string;
+}): ValidationResult {
+  const errors: string[] = [];
+  validateMetadataField(errors, "title", input.title, MAX_DOCUMENT_TITLE_LENGTH);
+  validateMetadataField(errors, "type", input.type, MAX_DOCUMENT_TYPE_LENGTH);
+  validateMetadataField(
+    errors,
+    "source file name",
+    input.sourceFileName,
+    MAX_SOURCE_FILE_NAME_LENGTH,
+  );
+  return { ok: errors.length === 0, errors };
+}
+
+function validateMetadataField(
+  errors: string[],
+  label: string,
+  value: string,
+  maximumLength: number,
+): void {
+  if (value.trim().length === 0) {
+    errors.push(`${label} must not be empty`);
+  } else if (value.length > maximumLength) {
+    errors.push(`${label} must be at most ${maximumLength} characters`);
+  }
+}
+
+function assertMetadataLength(label: string, value: string, maximumLength: number): void {
+  if (value.trim().length === 0 || value.length > maximumLength) {
+    throw new Error(`metadata.${label} must contain 1-${maximumLength} characters`);
   }
 }
 

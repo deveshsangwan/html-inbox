@@ -1,17 +1,9 @@
 #!/usr/bin/env node
 import { readFileSync } from "node:fs";
-import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
-import { TextDecoder } from "node:util";
-import { validateHtml } from "@html-inbox/shared";
 import { getInboxHome, getViewerPort, LocalDocumentBackend } from "./backend";
+import { loadPublishInput, PublishRequest } from "./publish-input";
 import { ensureViewer, startViewer } from "./viewer";
-
-interface PublishArgs {
-  filePath: string;
-  title: string;
-  type: string;
-}
 
 const USAGE = `Usage: html-inbox <command> [options]
 
@@ -69,53 +61,18 @@ export function getCliVersion(): string {
   return packageJson.version;
 }
 
-export async function publishCommand(args: PublishArgs): Promise<string> {
+export async function publishCommand(args: PublishRequest): Promise<string> {
   const home = getInboxHome();
   const port = getViewerPort();
   const backend = new LocalDocumentBackend(home);
-  const publishInput = await readPublishInput(args);
+  const publishInput = await loadPublishInput(args);
 
   await ensureViewer(home, port);
   const result = await backend.publish(publishInput);
   return `http://127.0.0.1:${port}/documents/${result.metadata.id}`;
 }
 
-async function readPublishInput(args: PublishArgs) {
-  const absolutePath = path.resolve(args.filePath);
-  const extension = path.extname(absolutePath).toLowerCase();
-
-  if (extension !== ".html" && extension !== ".htm") {
-    throw new Error("Published file must use .html or .htm");
-  }
-
-  const fileStat = await stat(absolutePath);
-  if (!fileStat.isFile()) {
-    throw new Error("Published path must be a file");
-  }
-
-  const originalBytes = await readFile(absolutePath);
-  let html: string;
-  try {
-    html = new TextDecoder("utf-8", { fatal: true }).decode(originalBytes);
-  } catch {
-    throw new Error("Published file must be valid UTF-8");
-  }
-
-  const validation = validateHtml(html);
-  if (!validation.ok) {
-    throw new Error(`HTML validation failed: ${validation.errors.join("; ")}`);
-  }
-
-  return {
-    html,
-    originalBytes,
-    title: args.title,
-    type: args.type,
-    sourceFileName: path.basename(absolutePath),
-  };
-}
-
-function parsePublishArgs(args: string[]): PublishArgs {
+function parsePublishArgs(args: string[]): PublishRequest {
   const filePath = args[0];
   if (!filePath) {
     throw new Error("publish requires a file path");

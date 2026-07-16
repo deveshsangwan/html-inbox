@@ -21,6 +21,8 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - Document script consumes excessive CPU or memory inside its frame.
 - A browser reaches loopback data through an attacker-controlled Host header.
 - Another local operating-system account reads inbox files created with permissive modes.
+- An accidental or maliciously large document exhausts memory or disk during publish.
+- A crash leaves a partially written record that appears in the library.
 
 ## Phase 1 Controls
 
@@ -33,6 +35,8 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - Reject requests whose `Host` is not the expected loopback host and active port.
 - Create managed directories as owner-only (`0700`) and files as owner-readable/writable (`0600`), and tighten existing managed paths when they are accessed.
 - Return an opaque instance identity and protocol version from health checks instead of the absolute inbox path.
+- Reject oversized input before reading it and bound all user-controlled metadata fields.
+- Stage and validate a complete record before making it visible with an atomic directory rename.
 - Allow `HTML_INBOX_PORT` only as a local port escape hatch.
 - Treat the health check as the only readiness signal.
 
