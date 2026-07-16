@@ -1,0 +1,32 @@
+packages/cli/README.md
+  s_af0402c5d6cba5::t_4538cc6e980f5a 5-13
+README.md
+  s_af0402c5d6cba5::t_4538cc6e980f5a 7,9,11,13-28,46,58,64-67,77,97,100,108-109,117
+skills/html-inbox/SKILL.md
+  s_af0402c5d6cba5::t_4538cc6e980f5a 10-11,72
+skills/html-inbox-remote/SKILL.md
+  s_af0402c5d6cba5::t_4538cc6e980f5a 1-79,81-82
+  s_af0402c5d6cba5::t_cc07c6d9c975fa 80
+CHANGELOG.md
+  s_af0402c5d6cba5::t_5c7a49ee71107a 12
+docs/releasing.md
+  s_af0402c5d6cba5::t_4538cc6e980f5a 3
+docs/remote-migration.md
+  s_af0402c5d6cba5::t_4538cc6e980f5a 7-9,23,33-34,42,50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "620427250946b1411ae5f251bd01a6e8c3be1f88",
+  "prompts": {},
+  "sessions": {
+    "s_af0402c5d6cba5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6a19-9f8b-7842-93b8-a6c4bf549f02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
