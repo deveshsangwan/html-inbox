@@ -1,0 +1,55 @@
+docs/remote-migration.md
+  s_af0402c5d6cba5::t_ea1d57d11810f2 1-55
+CHANGELOG.md
+  s_af0402c5d6cba5::t_ea1d57d11810f2 1-12
+.github/workflows/package.yml
+  s_af0402c5d6cba5::t_24c4225e3b34ff 35-37
+  s_af0402c5d6cba5::t_ea1d57d11810f2 1-34,38-47
+package.json
+  s_af0402c5d6cba5::t_471d77e4a66f1c 9
+  s_af0402c5d6cba5::t_68f79c4b07b67a 11-12
+  s_af0402c5d6cba5::t_3c902299bc35e4 16
+  s_af0402c5d6cba5::t_787f59c92d079e 18
+scripts/package-smoke.mjs
+  s_af0402c5d6cba5::t_7e912141110e80 21-24
+  s_af0402c5d6cba5::t_ce0bc368ea169c 47
+  s_af0402c5d6cba5::t_68f79c4b07b67a 1-20,25-46,48-61,69-127
+  s_af0402c5d6cba5::t_ea1d57d11810f2 62-68
+packages/cli/LICENSE
+  s_af0402c5d6cba5::t_e13307bd7c68c6 1-21
+packages/cli/package.json
+  s_af0402c5d6cba5::t_e13307bd7c68c6 4,6-20,26-27,29-33,39
+  s_af0402c5d6cba5::t_68f79c4b07b67a 25,28,37
+  s_af0402c5d6cba5::t_90ed07d1963d8f 40
+packages/cli/README.md
+  s_af0402c5d6cba5::t_e13307bd7c68c6 1-11
+SECURITY.md
+  s_af0402c5d6cba5::t_66e69da81960e2 1-12
+README.md
+  s_af0402c5d6cba5::t_ea1d57d11810f2 7,116
+  s_af0402c5d6cba5::t_e7e63ad859785f 5
+  s_af0402c5d6cba5::t_832286fd32f5be 6
+  s_af0402c5d6cba5::t_5b8958b9c4e53a 117
+docs/releasing.md
+  s_af0402c5d6cba5::t_ea1d57d11810f2 1-26
+.gitignore
+  s_af0402c5d6cba5::t_68f79c4b07b67a 3
+pnpm-lock.yaml
+  s_af0402c5d6cba5::t_0102d2831d6997 11-13,17-19,24,153-156,231-232
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "51a2e3b719a38c8b26a903662c1138a89a8dd76d",
+  "prompts": {},
+  "sessions": {
+    "s_af0402c5d6cba5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6a19-9f8b-7842-93b8-a6c4bf549f02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Devesh Sangwan <deveshsangwan@PAISAMAC156.local>"
+    }
+  }
+}
