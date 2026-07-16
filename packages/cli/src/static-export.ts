@@ -53,6 +53,14 @@ export interface StaticSnapshotResult {
   manifest: SnapshotManifest;
 }
 
+export interface StaticSecurityHeaders {
+  schemaVersion: 1;
+  common: Record<string, string>;
+  root: Record<string, string>;
+  shell: Record<string, string>;
+  document: Record<string, string>;
+}
+
 export async function exportStaticSnapshot(
   source: SnapshotDocumentSource,
   options: StaticSnapshotOptions,
@@ -94,7 +102,7 @@ export async function exportStaticSnapshot(
   addTextFile(
     files,
     `${inboxPath.slice(1)}/security-headers.json`,
-    JSON.stringify(buildSecurityHeaders(documents, inboxPath), null, 2),
+    JSON.stringify(buildSecurityHeaders(), null, 2),
   );
 
   const manifestFiles = Array.from(files.entries())
@@ -166,31 +174,22 @@ function hashManifestFiles(files: SnapshotFile[]): string {
   return hash.digest("hex");
 }
 
-function buildSecurityHeaders(documents: DocumentMetadata[], inboxPath: string) {
+function buildSecurityHeaders(): StaticSecurityHeaders {
   const common = {
-    "Cache-Control": "no-store",
+    "Cache-Control": "private, no-store",
+    "Permissions-Policy":
+      "accelerometer=(), camera=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()",
     "Referrer-Policy": "no-referrer",
     "X-Content-Type-Options": "nosniff",
+    "X-Robots-Tag": "noindex, nofollow, noarchive",
   };
-  const routes: Array<{ path: string; headers: Record<string, string> }> = [
-    { path: "/", headers: { ...common, "Content-Security-Policy": "default-src 'none'" } },
-    { path: `${inboxPath}/`, headers: { ...common, "Content-Security-Policy": shellCsp() } },
-    { path: `${inboxPath}/assets/viewer.css`, headers: common },
-    { path: `${inboxPath}/assets/viewer.js`, headers: common },
-  ];
-  for (const document of documents) {
-    routes.push(
-      {
-        path: `${inboxPath}/documents/${document.id}/`,
-        headers: { ...common, "Content-Security-Policy": shellCsp() },
-      },
-      {
-        path: `${inboxPath}/documents/${document.id}/content/`,
-        headers: { ...common, "Content-Security-Policy": documentCsp() },
-      },
-    );
-  }
-  return { schemaVersion: 1, routes };
+  return {
+    schemaVersion: 1,
+    common,
+    root: { "Content-Security-Policy": "default-src 'none'" },
+    shell: { "Content-Security-Policy": shellCsp() },
+    document: { "Content-Security-Policy": documentCsp() },
+  };
 }
 
 function renderPrivateRoot(): string {

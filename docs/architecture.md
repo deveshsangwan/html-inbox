@@ -106,7 +106,13 @@ i/<capability>/
 
 The root page contains no capability path. The owner marker contains only a schema version and opaque owner UUID. The manifest records sorted file digests and an aggregate snapshot hash without local paths. Original document bytes are copied to `content/index.html`; generated shell pages continue to embed them in sandboxed iframes.
 
-`security-headers.json` lives behind the capability path so the generic static output has no predictable file that discloses the bearer link. It is an adapter input rather than a file browsers consume. It describes exact shell and document-content routes with their distinct Content Security Policies. A provider adapter must translate it into native hosting configuration and must fail rather than publish without equivalent headers.
+`security-headers.json` lives behind the capability path so the generic static output has no predictable file that discloses the bearer link. It is an adapter input rather than a file browsers consume. It describes common, root, shell, and document policies without provider routing syntax. A provider adapter must translate it into native hosting configuration and must fail rather than publish without equivalent headers.
+
+The Cloudflare Pages adapter translates those policies into a compact `_headers` file in a disposable copy of the snapshot. The copy is deployed from its own root with Wrangler Direct Upload, then removed whether deployment succeeds or fails. The provider-neutral snapshot is never modified. A global common rule combines with separate root, inbox-shell, document-shell, and document-content rules so the content CSP never merges with the stricter shell CSP.
+
+Wrangler is invoked as an argument array through an exact version pin. The Cloudflare account is selected with `CLOUDFLARE_ACCOUNT_ID`; API tokens remain inherited process credentials and are never command arguments, persisted state, or error output. The adapter validates the current Direct Upload limits (20,000 files and 25 MiB per file) and `_headers` limits (100 rules and 2,000 characters per line) before invoking Wrangler.
+
+Wrangler's immutable deployment URL is the deployment receipt. The production hostname is derived only when that receipt contains the expected deployment-hash prefix, which accounts for Pages assigning a globally unique subdomain different from the requested project name. Both immutable and production inbox URLs are returned; callers must preserve the immutable URL for recovery and avoid presenting it as revocable.
 
 Export writes a private sibling staging directory and installs the complete snapshot with a same-filesystem rename. Re-exporting to the same destination replaces the previous snapshot as one directory operation. Static export does not mutate the local library and does not own provider credentials or deployment state.
 
