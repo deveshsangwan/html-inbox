@@ -1,5 +1,6 @@
 node_modules/
 dist/
+packages/cli/bundle/
 .pnpm-store/
 .DS_Store
 *.log

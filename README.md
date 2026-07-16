@@ -2,7 +2,9 @@
 
 HTML Inbox is a local library for generated HTML reports, notes, and dashboards. The CLI validates and stores each document, then opens it through a loopback-only viewer with an isolated document frame and a restrictive Content Security Policy.
 
-The current release is local-only. The accepted remote design publishes complete static snapshots to a user-owned Cloudflare Pages project; the local viewer and its administrative capabilities remain private to the machine running the CLI. See [ADR 0001](docs/adr/0001-static-remote-inbox.md).
+HTML Inbox is local-first. Optional remote publishing deploys complete static snapshots to a user-owned Cloudflare Pages project; the local viewer and its administrative capabilities remain private to the machine running the CLI. See [ADR 0001](docs/adr/0001-static-remote-inbox.md).
+
+The npm-ready CLI is packaged as a self-contained `html-inbox` executable. Until the first registry release, build and use it from a source checkout as shown below; the installed-package path is exercised by the repository verification gate.
 
 ## Requirements
 
@@ -110,6 +112,8 @@ HTML Inbox accepts UTF-8 `.html` and `.htm` files. It rejects inline event-handl
 Documents render inside an iframe sandbox without `allow-same-origin`. Do not open stored document files directly in a browser and do not expose the viewer port to a LAN, VPN, container wildcard mapping, or public interface.
 
 See [the architecture](docs/architecture.md) and [threat model](docs/threat-model.md) before changing storage, validation, rendering, or hosting behavior.
+
+Existing local users can follow the [remote migration guide](docs/remote-migration.md). Maintainers should use the [release checklist](docs/releasing.md); registry publication is not automatic.
 
 ## Development
 

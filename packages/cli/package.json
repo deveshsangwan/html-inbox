@@ -1,23 +1,42 @@
 {
   "name": "html-inbox",
   "version": "0.1.0",
-  "private": true,
-  "description": "A local library and viewer for generated HTML documents.",
+  "description": "A local-first library that previews and publishes generated HTML documents.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deveshsangwan/html-inbox.git"
+  },
+  "bugs": {
+    "url": "https://github.com/deveshsangwan/html-inbox/issues"
+  },
+  "homepage": "https://github.com/deveshsangwan/html-inbox#readme",
+  "keywords": [
+    "html",
+    "reports",
+    "viewer",
+    "cloudflare-pages",
+    "static-site"
+  ],
   "engines": {
     "node": ">=20"
   },
   "bin": {
-    "html-inbox": "dist/index.js"
+    "html-inbox": "bundle/index.js"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "files": [
+    "bundle",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "bundle": "ncc build dist/index.js -o bundle",
     "test": "pnpm run build && pnpm run test:self",
-    "test:self": "node dist/self-check.js"
-  },
-  "dependencies": {
-    "@html-inbox/shared": "workspace:*"
+    "test:self": "node dist/self-check.js",
+    "prepack": "tsc -p ../shared/tsconfig.json && tsc -p tsconfig.json && ncc build dist/index.js -o bundle"
   }
 }
