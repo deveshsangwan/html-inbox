@@ -25,6 +25,11 @@ export interface PublishResult {
   metadata: DocumentMetadata;
 }
 
+export interface DeleteResult {
+  metadata: DocumentMetadata;
+  reclaimedBytes: number;
+}
+
 export interface StoredDocument {
   metadata: DocumentMetadata;
   html: string;
@@ -34,6 +39,7 @@ export interface DocumentBackend {
   publish(input: PublishInput): Promise<PublishResult>;
   listDocuments(): Promise<DocumentMetadata[]>;
   getDocument(id: string): Promise<StoredDocument | null>;
+  deleteDocument(id: string): Promise<DeleteResult | null>;
 }
 
 export interface ValidationResult {

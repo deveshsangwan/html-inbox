@@ -37,6 +37,7 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - Return an opaque instance identity and protocol version from health checks instead of the absolute inbox path.
 - Reject oversized input before reading it and bound all user-controlled metadata fields.
 - Stage and validate a complete record before making it visible with an atomic directory rename.
+- Keep deletion in the CLI, require confirmation by default, and atomically move a record out of the live library before removing its files.
 - Allow `HTML_INBOX_PORT` only as a local port escape hatch.
 - Treat the health check as the only readiness signal.
 

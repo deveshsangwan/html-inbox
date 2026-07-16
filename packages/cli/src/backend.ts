@@ -1,10 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { readFile, readdir, rename, rm } from "node:fs/promises";
+import { readFile, readdir, rename, rm, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 import {
   assertDocumentMetadata,
   DOCUMENT_SCHEMA_VERSION,
+  DeleteResult,
   DocumentBackend,
   DocumentMetadata,
   isSafeDocumentId,
@@ -127,6 +128,27 @@ export class LocalDocumentBackend implements DocumentBackend {
     return metadata ? { metadata, html } : null;
   }
 
+  async deleteDocument(id: string): Promise<DeleteResult | null> {
+    const document = await this.getDocument(id);
+    if (!document) {
+      return null;
+    }
+
+    const documentDir = this.documentDir(id);
+    const [htmlStat, metadataStat] = await Promise.all([
+      stat(path.join(documentDir, "index.html")),
+      stat(path.join(documentDir, "metadata.json")),
+    ]);
+    const trashDir = path.join(this.trashDir(), `${id}-${randomUUID()}`);
+    await rename(documentDir, trashDir);
+    await rm(trashDir, { recursive: true, force: true });
+
+    return {
+      metadata: document.metadata,
+      reclaimedBytes: htmlStat.size + metadataStat.size,
+    };
+  }
+
   private async readMetadata(id: string): Promise<DocumentMetadata | null> {
     if (!isSafeDocumentId(id)) {
       return null;
@@ -174,6 +196,7 @@ export class LocalDocumentBackend implements DocumentBackend {
     await ensurePrivateDirectory(this.home);
     await ensurePrivateDirectory(documentsDir);
     await ensurePrivateDirectory(this.stagingDir());
+    await ensurePrivateDirectory(this.trashDir());
   }
 
   private async hardenDocument(id: string): Promise<void> {
@@ -197,6 +220,10 @@ export class LocalDocumentBackend implements DocumentBackend {
 
   private stagingDir(): string {
     return path.join(this.home, "documents", ".staging");
+  }
+
+  private trashDir(): string {
+    return path.join(this.home, "documents", ".trash");
   }
 
   private async validateStagedDocument(

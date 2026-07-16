@@ -1,16 +1,25 @@
 import { strict as assert } from "node:assert";
+import { spawn } from "node:child_process";
+import { once } from "node:events";
 import http from "node:http";
 import { mkdir, mkdtemp, readFile, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { LocalDocumentBackend } from "./backend";
-import { formatUsage, getCliVersion } from "./index";
+import { formatDeleteResult, formatDocumentList, formatUsage, getCliVersion } from "./index";
 import { loadPublishInput } from "./publish-input";
-import { startViewer, VIEWER_PROTOCOL_VERSION } from "./viewer";
+import {
+  ensureViewer,
+  getViewerStatus,
+  startViewer,
+  stopViewer,
+  VIEWER_PROTOCOL_VERSION,
+} from "./viewer";
 
 async function run(): Promise<void> {
   assert.match(formatUsage(), /publish <file\.html>/);
   assert.match(formatUsage(), /viewer/);
+  assert.match(formatUsage(), /delete <id>/);
   assert.equal(getCliVersion(), "0.1.0");
 
   const inputHome = await mkdtemp(path.join(tmpdir(), "html-inbox-input-"));
@@ -42,6 +51,54 @@ async function run(): Promise<void> {
       /Managed file is not a regular file/,
     );
     assert.equal(await readFile(symlinkTarget, "utf8"), "do not overwrite");
+  }
+
+  const blockedHome = await mkdtemp(path.join(tmpdir(), "html-inbox-blocked-"));
+  const blocker = http.createServer((_request, response) => {
+    response.writeHead(404);
+    response.end();
+  });
+  await new Promise<void>((resolve, reject) => {
+    blocker.once("error", reject);
+    blocker.listen(0, "127.0.0.1", resolve);
+  });
+  const blockerAddress = blocker.address();
+  assert(blockerAddress && typeof blockerAddress !== "string");
+  await assert.rejects(
+    ensureViewer(blockedHome, blockerAddress.port),
+    /Port .* is already in use/,
+  );
+  await new Promise<void>((resolve, reject) =>
+    blocker.close((error) => (error ? reject(error) : resolve())),
+  );
+
+  const lifecycleHome = await mkdtemp(path.join(tmpdir(), "html-inbox-lifecycle-"));
+  const lifecyclePort = await reservePort();
+  const viewerProcess = spawn(process.execPath, [path.join(__dirname, "index.js"), "viewer"], {
+    env: {
+      ...process.env,
+      HTML_INBOX_HOME: lifecycleHome,
+      HTML_INBOX_PORT: String(lifecyclePort),
+    },
+    stdio: "ignore",
+  });
+  try {
+    const deadline = Date.now() + 3000;
+    while (
+      (await getViewerStatus(lifecycleHome, lifecyclePort)).state !== "running" &&
+      Date.now() < deadline
+    ) {
+      await delay(50);
+    }
+    assert.equal((await getViewerStatus(lifecycleHome, lifecyclePort)).state, "running");
+    assert.equal((await stopViewer(lifecycleHome, lifecyclePort)).state, "stopped");
+    if (viewerProcess.exitCode === null) {
+      await once(viewerProcess, "exit");
+    }
+  } finally {
+    if (viewerProcess.exitCode === null) {
+      viewerProcess.kill("SIGTERM");
+    }
   }
 
   const home = await mkdtemp(path.join(tmpdir(), "html-inbox-"));
@@ -78,6 +135,7 @@ async function run(): Promise<void> {
 
     const hostileHost = await requestWithHost(address.port, "attacker.example");
     assert.equal(hostileHost.statusCode, 421);
+    assert.equal((await getViewerStatus(home, address.port)).state, "running");
 
     const interruptedStaging = path.join(home, "documents", ".staging", "interrupted");
     await mkdir(interruptedStaging, { recursive: true });
@@ -174,6 +232,13 @@ async function run(): Promise<void> {
     assert.equal(pluralIndexHtml.includes(hostileTitle), false);
     assert.equal(pluralIndexHtml.includes(hostileType), false);
     assert.equal(pluralIndexHtml.includes(hostileSource), false);
+
+    const searchResultHtml = await (await fetch(`${baseUrl}/?q=report.html`)).text();
+    assert.equal(searchResultHtml.includes("1 of 2 documents"), true);
+    assert.equal(searchResultHtml.includes("Search documents"), true);
+    assert.equal(searchResultHtml.includes('value="report.html"'), true);
+    const noSearchResultHtml = await (await fetch(`${baseUrl}/?q=missing`)).text();
+    assert.equal(noSearchResultHtml.includes("No matching documents"), true);
     assert.equal(
       pluralIndexHtml.includes(
         "Title &#60;/h1&#62;&#60;script&#62;alert(&#34;title&#34;)&#60;/script&#62;",
@@ -241,6 +306,17 @@ async function run(): Promise<void> {
     assert.equal(await backend.getDocument(corruptId), null);
     assert.equal(warnings.some((warning) => warning.includes(corruptId)), true);
     assert.equal(warnings.some((warning) => warning.includes(mismatchedId)), true);
+
+    const textList = formatDocumentList(documentsAfterCorruption, false);
+    assert.equal(textList.includes(published.metadata.id), true);
+    assert.equal(JSON.parse(formatDocumentList(documentsAfterCorruption, true)).length, 2);
+
+    const deleted = await backend.deleteDocument(hostile.metadata.id);
+    assert(deleted);
+    assert.equal(deleted.reclaimedBytes > 0, true);
+    assert.match(formatDeleteResult(deleted, false), /reclaimed/);
+    assert.equal(await backend.getDocument(hostile.metadata.id), null);
+    assert.equal((await backend.listDocuments()).length, 1);
   } finally {
     await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
   }
@@ -290,6 +366,24 @@ async function requestWithHost(
     request.on("error", reject);
     request.end();
   });
+}
+
+async function reservePort(): Promise<number> {
+  const server = http.createServer();
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  const address = server.address();
+  assert(address && typeof address !== "string");
+  await new Promise<void>((resolve, reject) =>
+    server.close((error) => (error ? reject(error) : resolve())),
+  );
+  return address.port;
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 void run();
