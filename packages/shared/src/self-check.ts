@@ -9,7 +9,40 @@ import {
 
 assert.equal(validateHtml("<!doctype html><html><body>ok</body></html>").ok, true);
 assert.equal(validateHtml("<html><body onclick='x()'></body></html>").ok, false);
-assert.equal(validateHtml('<html><img src="https://example.com/a.png"></html>').ok, false);
+for (const href of [
+  "https://effect.website/docs/runtime/",
+  "https://example.com/docs/page?q=effect#runtime",
+  "./details.html",
+  "/details",
+  "?tab=details",
+  "#runtime",
+]) {
+  assert.equal(validateHtml(`<html><a href="${href}">docs</a></html>`).ok, true);
+}
+for (const href of [
+  "http://example.com",
+  "//example.com",
+  "javascript:alert(1)",
+  "data:text/html,hello",
+  "mailto:docs@example.com",
+  "ftp://example.com/file",
+]) {
+  assert.deepEqual(validateHtml(`<html><a href="${href}">docs</a></html>`).errors, [
+    "HTML links must use HTTPS, relative, or fragment URLs",
+  ]);
+}
+for (const html of [
+  '<html><img src="https://example.com/a.png"></html>',
+  '<html><link rel="stylesheet" href="https://example.com/a.css"></html>',
+  '<html><form action="https://example.com/submit"></form></html>',
+  '<html><iframe src="https://example.com/frame"></iframe></html>',
+  '<html><video poster="https://example.com/poster.png"></video></html>',
+  '<html><video src="https://example.com/video.mp4"></video></html>',
+  '<html><img srcset="https://example.com/a.png 1x"></html>',
+  '<html><svg><use xlink:href="https://example.com/icon.svg#icon"></use></svg></html>',
+]) {
+  assert.equal(validateHtml(html).ok, false);
+}
 assert.equal(
   validateHtml(
     '<html><head><script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script></head></html>',

@@ -327,10 +327,13 @@ async function run(): Promise<void> {
     const content = await fetch(`${baseUrl}/documents/${published.metadata.id}/content`);
     const csp = content.headers.get("content-security-policy") ?? "";
     assert.equal(csp.includes("script-src 'unsafe-inline' https://cdn.tailwindcss.com"), true);
+    assert.equal(csp.includes("script-src-attr 'none'"), true);
     assert.equal(csp.includes("https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"), true);
     assert.equal(csp.includes("https://cdn.jsdelivr.net/npm/mermaid@11/dist/"), true);
     assert.equal(csp.includes("connect-src 'none'"), true);
     assert.equal(csp.includes("frame-src 'none'"), true);
+    assert.equal(csp.includes("form-action 'none'"), true);
+    assert.equal(csp.includes("base-uri 'none'"), true);
     assert.equal(await content.text(), html);
 
     const hostileTitle = 'Title </h1><script>alert("title")</script>';

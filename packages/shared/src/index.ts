@@ -79,10 +79,20 @@ export function validateHtml(html: string): ValidationResult {
   for (const match of html.matchAll(externalAttributePattern)) {
     const attribute = match[1] ?? "";
     const value = match[2] ?? match[3] ?? match[4] ?? "";
+    if (
+      attribute.toLowerCase() === "href" &&
+      isInsideOpenTag(html, match.index ?? -1, "a")
+    ) {
+      if (!isAllowedAnchorHref(value)) {
+        errors.push("HTML links must use HTTPS, relative, or fragment URLs");
+        break;
+      }
+      continue;
+    }
     const externalUrls = findExternalUrls(value);
     const allowedScriptSource =
       attribute.toLowerCase() === "src" &&
-      isInsideScriptOpenTag(html, match.index ?? -1) &&
+      isInsideOpenTag(html, match.index ?? -1, "script") &&
       externalUrls.length === 1 &&
       externalUrls[0] === value.trim() &&
       isAllowedExternalScriptUrl(externalUrls[0]);
@@ -114,10 +124,25 @@ function isAllowedExternalScriptUrl(url: string): boolean {
   return allowedExternalScriptUrls.some((pattern) => pattern.test(url));
 }
 
-function isInsideScriptOpenTag(html: string, attributeIndex: number): boolean {
+function isAllowedAnchorHref(value: string): boolean {
+  const href = value.trim();
+  if (href.startsWith("//")) {
+    return false;
+  }
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(href)) {
+    return true;
+  }
+  try {
+    return new URL(href).protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isInsideOpenTag(html: string, attributeIndex: number, tagName: string): boolean {
   const open = html.lastIndexOf("<", attributeIndex);
   const close = html.lastIndexOf(">", attributeIndex);
-  return open > close && /^<script\b/i.test(html.slice(open, attributeIndex));
+  return open > close && new RegExp(`^<${tagName}\\b`, "i").test(html.slice(open, attributeIndex));
 }
 
 export function assertDocumentMetadata(value: unknown): asserts value is DocumentMetadata {

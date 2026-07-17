@@ -121,9 +121,9 @@ Revocation rotates to a new undisclosed empty capability and removes the previou
 
 ## Supported HTML
 
-HTML Inbox accepts UTF-8 `.html` and `.htm` files. It rejects inline event-handler attributes and external URLs except for the explicitly supported Tailwind browser and Mermaid v11 script entry points. Accepted HTML is still untrusted: validation is a compatibility and policy gate, not sanitization.
+HTML Inbox accepts UTF-8 `.html` and `.htm` files. HTTPS links in `<a href>` are allowed, along with relative and fragment links. Other external URLs are rejected except for the explicitly supported Tailwind browser and Mermaid v11 script entry points. Accepted HTML is still untrusted: validation is a compatibility and policy gate, not sanitization.
 
-Documents render inside an iframe sandbox without `allow-same-origin`. Do not open stored document files directly in a browser and do not expose the viewer port to a LAN, VPN, container wildcard mapping, or public interface.
+Documents render inside an iframe sandbox without `allow-same-origin`, popup, or top-navigation permission. Links navigate the current preview frame; `_blank` links remain blocked. The `no-referrer` policy prevents a destination from receiving the local or capability URL, though it still observes the visitor's IP address when clicked. Do not open stored document files directly in a browser and do not expose the viewer port to a LAN, VPN, container wildcard mapping, or public interface.
 
 See [the architecture](docs/architecture.md) and [threat model](docs/threat-model.md) before changing storage, validation, rendering, or hosting behavior.
 
