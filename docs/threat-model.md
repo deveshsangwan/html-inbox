@@ -18,6 +18,7 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - A weak viewer response policy allows unexpected network, script, or framing behavior.
 - An allowlisted CDN is compromised or serves an incompatible update within an allowed major version.
 - An allowlisted CDN observes the user's IP address and that its resource was requested.
+- A followed external link observes the visitor's IP address or attempts to navigate outside the document frame.
 - Document script consumes excessive CPU or memory inside its frame.
 - A browser reaches loopback data through an attacker-controlled Host header.
 - Another local operating-system account reads inbox files created with permissive modes.
@@ -28,9 +29,9 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 
 - Store the original HTML unchanged at `documents/<id>/index.html`.
 - Store metadata separately at `documents/<id>/metadata.json`.
-- Reject inline event handlers and external URLs except the canonical Tailwind browser and Mermaid v11 script entries during publish.
-- Render documents through a dedicated viewer path inside an iframe sandboxed with only `allow-scripts`. Omitting `allow-same-origin` gives the document an opaque origin and prevents access to the viewer DOM and same-origin storage.
-- Use strict CSP on viewer responses. Document responses allow inline scripts plus the narrow CDN script paths required by Tailwind and Mermaid; `connect-src`, frames, forms, objects, and non-data images, media, and fonts remain blocked.
+- Allow HTTPS anchor navigation plus relative and fragment links; reject other external URLs except the canonical Tailwind browser and Mermaid v11 script entries during publish.
+- Render documents through a dedicated viewer path inside an iframe sandboxed with only `allow-scripts`. Omitting `allow-same-origin` gives the document an opaque origin and prevents access to the viewer DOM and same-origin storage. Omitting popup and top-navigation permissions keeps links in the current frame and blocks `_blank` targets.
+- Use strict CSP on viewer responses. Document responses allow inline scripts plus the narrow CDN script paths required by Tailwind and Mermaid, block inline script attributes, and keep `connect-src`, frames, forms, objects, and non-data images, media, and fonts blocked. Apply `no-referrer` so followed links do not disclose local or capability URLs; their destinations still observe the visitor's IP address.
 - Bind the viewer to `127.0.0.1`, default port `3217`.
 - Reject requests whose `Host` is not the expected loopback host and active port.
 - Create managed directories as owner-only (`0700`) and files as owner-readable/writable (`0600`), and tighten existing managed paths when they are accessed.
