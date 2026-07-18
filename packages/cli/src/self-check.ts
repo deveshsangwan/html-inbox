@@ -3,9 +3,14 @@ import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { LocalDocumentBackend } from "./backend";
+import { formatUsage, getCliVersion } from "./index";
 import { startViewer } from "./viewer";
 
 async function run(): Promise<void> {
+  assert.match(formatUsage(), /publish <file\.html>/);
+  assert.match(formatUsage(), /viewer/);
+  assert.equal(getCliVersion(), "0.1.0");
+
   const home = await mkdtemp(path.join(tmpdir(), "html-inbox-"));
   const backend = new LocalDocumentBackend(home);
   const html = "<!doctype html><html><body><h1>Report</h1></body></html>";
