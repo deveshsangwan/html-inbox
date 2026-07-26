@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import http from "node:http";
-import { mkdtemp, readFile, stat, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { LocalDocumentBackend } from "./backend";
@@ -26,6 +26,21 @@ async function run(): Promise<void> {
 
   const home = await mkdtemp(path.join(tmpdir(), "html-inbox-"));
   const backend = new LocalDocumentBackend(home);
+  assert.equal(await backend.getDocument("missing"), null);
+  await assert.rejects(
+    stat(path.join(home, "documents", "missing")),
+    (error: NodeJS.ErrnoException) => error.code === "ENOENT",
+  );
+
+  const failedViewerHome = await mkdtemp(path.join(tmpdir(), "html-inbox-failed-viewer-"));
+  await mkdir(path.join(failedViewerHome, "viewer.json"));
+  const failedViewerPort = await availablePort();
+  await assert.rejects(
+    startViewer(new LocalDocumentBackend(failedViewerHome), failedViewerHome, failedViewerPort),
+    /Managed file is not a regular file/,
+  );
+  await assertPortAvailable(failedViewerPort);
+
   const html = "<!doctype html><html><body><h1>Report</h1></body></html>";
   const server = await startViewer(backend, home, 0);
   const address = server.address();
@@ -177,6 +192,31 @@ async function run(): Promise<void> {
   } finally {
     await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
   }
+}
+
+async function availablePort(): Promise<number> {
+  const server = http.createServer();
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  const address = server.address();
+  assert(address && typeof address !== "string");
+  await new Promise<void>((resolve, reject) =>
+    server.close((error) => (error ? reject(error) : resolve())),
+  );
+  return address.port;
+}
+
+async function assertPortAvailable(port: number): Promise<void> {
+  const server = http.createServer();
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(port, "127.0.0.1", resolve);
+  });
+  await new Promise<void>((resolve, reject) =>
+    server.close((error) => (error ? reject(error) : resolve())),
+  );
 }
 
 async function requestWithHost(

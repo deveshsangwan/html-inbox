@@ -5,6 +5,10 @@ export const PRIVATE_FILE_MODE = 0o600;
 
 export async function ensurePrivateDirectory(directoryPath: string): Promise<void> {
   await mkdir(directoryPath, { recursive: true, mode: PRIVATE_DIRECTORY_MODE });
+  await hardenPrivateDirectory(directoryPath);
+}
+
+export async function hardenPrivateDirectory(directoryPath: string): Promise<void> {
   const fileStat = await lstat(directoryPath);
   if (!fileStat.isDirectory() || fileStat.isSymbolicLink()) {
     throw new Error(`Managed directory is not a regular directory: ${directoryPath}`);

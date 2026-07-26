@@ -13,6 +13,7 @@ import {
 } from "@html-inbox/shared";
 import {
   ensurePrivateDirectory,
+  hardenPrivateDirectory,
   hardenPrivateFile,
   writePrivateFile,
 } from "./private-storage";
@@ -144,7 +145,7 @@ export class LocalDocumentBackend implements DocumentBackend {
 
     const documentDir = this.documentDir(id);
     try {
-      await ensurePrivateDirectory(documentDir);
+      await hardenPrivateDirectory(documentDir);
       await Promise.all([
         hardenPrivateFile(path.join(documentDir, "index.html")),
         hardenPrivateFile(path.join(documentDir, "metadata.json")),

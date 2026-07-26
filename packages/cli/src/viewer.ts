@@ -479,7 +479,12 @@ export async function startViewer(
   });
 
   const actualPort = getServerPort(server);
-  await writeViewerInfo(home, actualPort);
+  try {
+    await writeViewerInfo(home, actualPort);
+  } catch (error) {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    throw error;
+  }
   return server;
 }
 
