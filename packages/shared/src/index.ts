@@ -43,9 +43,20 @@ export interface DocumentBackend {
   deleteDocument(id: string): Promise<DeleteResult | null>;
 }
 
+/**
+ * Two-tier validation result.
+ *
+ * `errors` are the security boundary: conditions the sandboxed frame and the
+ * document CSP do not contain, so they block publishing.
+ *
+ * `warnings` are advisory lint: conditions the runtime already fails closed.
+ * They are reported so the author can fix a document that will silently not
+ * work, but they never block publishing. See docs/threat-model.md.
+ */
 export interface ValidationResult {
   ok: boolean;
   errors: string[];
+  warnings: string[];
 }
 
 export const DOCUMENT_SCRIPT_CSP_SOURCES = [
@@ -54,8 +65,6 @@ export const DOCUMENT_SCRIPT_CSP_SOURCES = [
   "https://cdn.jsdelivr.net/npm/mermaid@11/dist/",
 ] as const;
 
-const externalAttributePattern =
-  /\b(src|href|poster|action|formaction|srcset|xlink:href)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]*))/gi;
 const scriptBodyPattern = /<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi;
 const externalUrlPattern = /(?:https?:)?\/\/[^\s"'`<>)]+/gi;
 const allowedExternalScriptUrls = [
@@ -64,52 +73,201 @@ const allowedExternalScriptUrls = [
   /^https:\/\/cdn\.jsdelivr\.net\/npm\/mermaid@11\/dist\/mermaid\.esm\.min\.mjs$/,
 ];
 
+/** Attributes whose value the browser may resolve as a URL. */
+const URL_ATTRIBUTES = new Set([
+  "src",
+  "href",
+  "poster",
+  "action",
+  "formaction",
+  "srcset",
+  "xlink:href",
+  "ping",
+  "data",
+]);
+
+/** Attributes that start a navigation rather than load a subresource. */
+const NAVIGATION_ATTRIBUTES = new Set(["href", "action", "formaction", "ping"]);
+
+/**
+ * Schemes that execute script or hand the user a document the author controls.
+ * `script-src 'unsafe-inline'` permits `javascript:` and the sandbox does not
+ * stop it, so these are part of the security boundary rather than lint.
+ */
+const EXECUTABLE_SCHEMES = new Set(["javascript", "vbscript"]);
+
+/** Schemes that are inert but worth flagging when the browser will refuse them. */
+const ADVISORY_SCHEMES = new Set(["http", "mailto", "tel", "sms"]);
+
 export function validateHtml(html: string): ValidationResult {
   const errors: string[] = [];
+  const warnings: string[] = [];
+  const add = (list: string[], message: string) => {
+    if (!list.includes(message)) {
+      list.push(message);
+    }
+  };
   const lower = html.toLowerCase();
 
   if (!lower.includes("<html") && !lower.includes("<!doctype html")) {
-    errors.push("HTML must contain <html or <!doctype html");
+    add(errors, "HTML must contain <html or <!doctype html");
   }
 
-  if (/\son[a-z][a-z0-9_-]*\s*=/i.test(html)) {
-    errors.push("HTML must not contain inline event handlers");
-  }
-
-  for (const match of html.matchAll(externalAttributePattern)) {
-    const attribute = match[1] ?? "";
-    const value = match[2] ?? match[3] ?? match[4] ?? "";
-    if (
-      attribute.toLowerCase() === "href" &&
-      isInsideOpenTag(html, match.index ?? -1, "a")
-    ) {
-      if (!isAllowedAnchorHref(value)) {
-        errors.push("HTML links must use HTTPS, relative, or fragment URLs");
-        break;
+  for (const tag of scanTags(html)) {
+    for (const attribute of tag.attributes) {
+      if (attribute.name.startsWith("on")) {
+        // Blocked at runtime by `script-src-attr 'none'`.
+        add(warnings, "HTML inline event handlers are blocked by the document CSP and will not run");
+        continue;
       }
-      continue;
+      if (!URL_ATTRIBUTES.has(attribute.name)) {
+        continue;
+      }
+      checkUrlAttribute(tag, attribute, errors, warnings, add);
     }
-    const externalUrls = findExternalUrls(value);
-    const allowedScriptSource =
-      attribute.toLowerCase() === "src" &&
-      isInsideOpenTag(html, match.index ?? -1, "script") &&
-      externalUrls.length === 1 &&
-      externalUrls[0] === value.trim() &&
-      isAllowedExternalScriptUrl(externalUrls[0]);
-    if (externalUrls.length > 0 && !allowedScriptSource) {
-      errors.push("HTML must not reference non-allowlisted external asset URLs");
-      break;
+
+    if (tag.name === "meta") {
+      checkMetaRefresh(tag, errors, warnings, add);
+    }
+    if (tag.name === "base") {
+      // Blocked at runtime by `base-uri 'none'`.
+      add(warnings, "HTML <base> is blocked by the document CSP and will be ignored");
     }
   }
 
   for (const match of html.matchAll(scriptBodyPattern)) {
     if (containsDisallowedExternalUrl(match[1] ?? "")) {
-      errors.push("HTML scripts must not reference non-allowlisted external URLs");
+      // Advisory only: string concatenation trivially defeats this check, so it
+      // documents intent rather than enforcing it. `connect-src 'none'` is the
+      // control that actually holds.
+      add(
+        warnings,
+        "HTML scripts reference non-allowlisted external URLs; the document CSP blocks fetches to them",
+      );
       break;
     }
   }
 
-  return { ok: errors.length === 0, errors };
+  return { ok: errors.length === 0, errors, warnings };
+}
+
+function checkUrlAttribute(
+  tag: HtmlTag,
+  attribute: HtmlAttribute,
+  errors: string[],
+  warnings: string[],
+  add: (list: string[], message: string) => void,
+): void {
+  const scheme = urlScheme(attribute.value);
+
+  if (scheme && EXECUTABLE_SCHEMES.has(scheme)) {
+    add(errors, `HTML must not use ${scheme}: URLs in ${attribute.name}`);
+    return;
+  }
+
+  const navigable = NAVIGATION_ATTRIBUTES.has(attribute.name) || tag.name === "iframe";
+  if (scheme === "data" && navigable) {
+    add(errors, `HTML must not navigate to data: URLs in ${attribute.name}`);
+    return;
+  }
+
+  if (tag.name === "a" || tag.name === "area") {
+    checkAnchorHref(attribute, scheme, errors, warnings, add);
+    return;
+  }
+
+  if (scheme === "data" || scheme === "blob") {
+    return;
+  }
+
+  const externalUrls = findExternalUrls(attribute.value);
+  if (externalUrls.length === 0) {
+    return;
+  }
+
+  const allowedScriptSource =
+    tag.name === "script" &&
+    attribute.name === "src" &&
+    externalUrls.length === 1 &&
+    externalUrls[0] === attribute.value.trim() &&
+    isAllowedExternalScriptUrl(externalUrls[0]);
+  if (allowedScriptSource) {
+    return;
+  }
+
+  if (tag.name === "script" && attribute.name === "src") {
+    // A non-allowlisted script source is refused by `script-src`, but a blocked
+    // script is a broken document rather than a compromised one.
+    add(
+      warnings,
+      "HTML references a non-allowlisted external script URL; the document CSP will block it",
+    );
+    return;
+  }
+
+  // Blocked at runtime by `default-src 'none'` plus the data:-only media
+  // directives, so the reference fails closed.
+  add(
+    warnings,
+    "HTML references non-allowlisted external asset URLs; the document CSP will block them",
+  );
+}
+
+function checkAnchorHref(
+  attribute: HtmlAttribute,
+  scheme: string | null,
+  errors: string[],
+  warnings: string[],
+  add: (list: string[], message: string) => void,
+): void {
+  if (attribute.name !== "href") {
+    return;
+  }
+  const href = stripUrlNoise(attribute.value);
+
+  if (href.startsWith("//")) {
+    add(warnings, "HTML links should use an explicit https: scheme rather than //");
+    return;
+  }
+  if (!scheme || scheme === "https") {
+    return;
+  }
+  if (ADVISORY_SCHEMES.has(scheme)) {
+    add(warnings, `HTML link uses ${scheme}: rather than https:`);
+    return;
+  }
+  if (scheme === "data") {
+    add(errors, "HTML must not navigate to data: URLs in href");
+    return;
+  }
+  // Deny by default. Unknown schemes are dispatched to whatever OS handler is
+  // registered for them, which leaves the browser sandbox entirely.
+  add(errors, `HTML links must not use the ${scheme}: scheme`);
+}
+
+function checkMetaRefresh(
+  tag: HtmlTag,
+  errors: string[],
+  warnings: string[],
+  add: (list: string[], message: string) => void,
+): void {
+  const httpEquiv = tag.attributes.find((attribute) => attribute.name === "http-equiv");
+  if (!httpEquiv || httpEquiv.value.trim().toLowerCase() !== "refresh") {
+    return;
+  }
+  const content = tag.attributes.find((attribute) => attribute.name === "content");
+  const target = /url\s*=\s*(.*)$/i.exec(content?.value ?? "")?.[1]?.trim();
+  if (!target) {
+    add(warnings, "HTML <meta http-equiv=\"refresh\"> reloads the document frame");
+    return;
+  }
+  // CSP has no directive that governs navigation, and `sandbox="allow-scripts"`
+  // permits the frame to navigate itself, so a refresh to an external target is
+  // an unattended exfiltration channel that nothing downstream will stop.
+  add(
+    errors,
+    "HTML must not use <meta http-equiv=\"refresh\"> to navigate the document",
+  );
 }
 
 function containsDisallowedExternalUrl(value: string): boolean {
@@ -124,25 +282,171 @@ function isAllowedExternalScriptUrl(url: string): boolean {
   return allowedExternalScriptUrls.some((pattern) => pattern.test(url));
 }
 
-function isAllowedAnchorHref(value: string): boolean {
-  const href = value.trim();
-  if (href.startsWith("//")) {
-    return false;
-  }
-  if (!/^[a-z][a-z0-9+.-]*:/i.test(href)) {
-    return true;
-  }
-  try {
-    return new URL(href).protocol === "https:";
-  } catch {
-    return false;
+/**
+ * Returns the lowercased scheme of a URL attribute value, or null when the
+ * value is relative. Entities and embedded control characters are removed
+ * first because the HTML parser strips them before the URL parser runs, so
+ * `&#106;avascript:` and `java\tscript:` both reach the browser as
+ * `javascript:`.
+ */
+function urlScheme(value: string): string | null {
+  return /^([a-z][a-z0-9+.-]*):/.exec(stripUrlNoise(value).toLowerCase())?.[1] ?? null;
+}
+
+function stripUrlNoise(value: string): string {
+  return decodeHtmlEntities(value).replace(/[\u0000-\u0020\u007f]/g, "");
+}
+
+function decodeHtmlEntities(value: string): string {
+  const named: Record<string, string> = {
+    amp: "&",
+    apos: "'",
+    colon: ":",
+    gt: ">",
+    lt: "<",
+    quot: '"',
+    sol: "/",
+    tab: "\t",
+    newline: "\n",
+  };
+  return value.replace(/&(#x?[0-9a-f]+|[a-z][a-z0-9]*);?/gi, (match, entity: string) => {
+    if (entity.startsWith("#")) {
+      const isHex = entity[1] === "x" || entity[1] === "X";
+      const code = Number.parseInt(isHex ? entity.slice(2) : entity.slice(1), isHex ? 16 : 10);
+      return Number.isFinite(code) && code >= 0 && code <= 0x10ffff
+        ? String.fromCodePoint(code)
+        : match;
+    }
+    return named[entity.toLowerCase()] ?? match;
+  });
+}
+
+interface HtmlAttribute {
+  /** Lowercased attribute name. */
+  name: string;
+  value: string;
+}
+
+interface HtmlTag {
+  /** Lowercased tag name. */
+  name: string;
+  attributes: HtmlAttribute[];
+}
+
+/**
+ * Walks the open tags of a document.
+ *
+ * This is deliberately a scanner rather than a set of regular expressions: the
+ * previous implementation located a tag by searching backwards for `<` and `>`,
+ * which a `>` inside a quoted attribute value defeated. Quoted values are
+ * consumed here, so `<a title=">" href="javascript:...">` is still recognised
+ * as an anchor. Comments, doctypes, and raw-text element bodies are skipped so
+ * their contents are never mistaken for markup.
+ */
+function* scanTags(html: string): Generator<HtmlTag> {
+  const rawTextElements = new Set(["script", "style", "textarea", "title"]);
+  let index = 0;
+
+  while (index < html.length) {
+    const start = html.indexOf("<", index);
+    if (start === -1) {
+      return;
+    }
+
+    if (html.startsWith("<!--", start)) {
+      const end = html.indexOf("-->", start + 4);
+      index = end === -1 ? html.length : end + 3;
+      continue;
+    }
+    if (html.startsWith("<!", start) || html.startsWith("<?", start) || html.startsWith("</", start)) {
+      const end = html.indexOf(">", start);
+      index = end === -1 ? html.length : end + 1;
+      continue;
+    }
+
+    const nameMatch = /^<([a-z][a-z0-9:-]*)/i.exec(html.slice(start));
+    if (!nameMatch) {
+      index = start + 1;
+      continue;
+    }
+
+    const name = nameMatch[1].toLowerCase();
+    const parsed = parseAttributes(html, start + nameMatch[0].length);
+    yield { name, attributes: parsed.attributes };
+    index = parsed.index;
+
+    if (rawTextElements.has(name)) {
+      const closing = new RegExp(`</${name}\\b`, "i").exec(html.slice(index));
+      index += closing ? closing.index + 2 : html.length;
+    }
   }
 }
 
-function isInsideOpenTag(html: string, attributeIndex: number, tagName: string): boolean {
-  const open = html.lastIndexOf("<", attributeIndex);
-  const close = html.lastIndexOf(">", attributeIndex);
-  return open > close && new RegExp(`^<${tagName}\\b`, "i").test(html.slice(open, attributeIndex));
+function parseAttributes(
+  html: string,
+  start: number,
+): { attributes: HtmlAttribute[]; index: number } {
+  const attributes: HtmlAttribute[] = [];
+  let index = start;
+
+  while (index < html.length) {
+    while (index < html.length && /\s/.test(html[index])) {
+      index += 1;
+    }
+    if (index >= html.length) {
+      break;
+    }
+    if (html[index] === ">") {
+      index += 1;
+      break;
+    }
+    if (html[index] === "/") {
+      index += 1;
+      continue;
+    }
+
+    const nameStart = index;
+    while (index < html.length && !/[\s=/>]/.test(html[index])) {
+      index += 1;
+    }
+    const name = html.slice(nameStart, index).toLowerCase();
+    if (!name) {
+      index += 1;
+      continue;
+    }
+
+    while (index < html.length && /\s/.test(html[index])) {
+      index += 1;
+    }
+    if (html[index] !== "=") {
+      attributes.push({ name, value: "" });
+      continue;
+    }
+
+    index += 1;
+    while (index < html.length && /\s/.test(html[index])) {
+      index += 1;
+    }
+
+    const quote = html[index];
+    if (quote === '"' || quote === "'") {
+      index += 1;
+      const valueStart = index;
+      const end = html.indexOf(quote, index);
+      index = end === -1 ? html.length : end;
+      attributes.push({ name, value: html.slice(valueStart, index) });
+      index += 1;
+      continue;
+    }
+
+    const valueStart = index;
+    while (index < html.length && !/[\s>]/.test(html[index])) {
+      index += 1;
+    }
+    attributes.push({ name, value: html.slice(valueStart, index) });
+  }
+
+  return { attributes, index };
 }
 
 export function assertDocumentMetadata(value: unknown): asserts value is DocumentMetadata {
@@ -192,7 +496,7 @@ export function validatePublishMetadata(input: {
     input.sourceFileName,
     MAX_SOURCE_FILE_NAME_LENGTH,
   );
-  return { ok: errors.length === 0, errors };
+  return { ok: errors.length === 0, errors, warnings: [] };
 }
 
 function validateMetadataField(

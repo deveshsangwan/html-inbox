@@ -125,10 +125,14 @@ export async function publishCommand(args: PublishRequest): Promise<string> {
   const home = getInboxHome();
   const port = getViewerPort();
   const backend = new LocalDocumentBackend(home);
-  const publishInput = await loadPublishInput(args);
+  const { input, warnings } = await loadPublishInput(args);
+
+  for (const warning of warnings) {
+    console.warn(`html-inbox: ${warning}`);
+  }
 
   await ensureViewer(home, port);
-  const result = await backend.publish(publishInput);
+  const result = await backend.publish(input);
   return `http://127.0.0.1:${port}/documents/${result.metadata.id}`;
 }
 

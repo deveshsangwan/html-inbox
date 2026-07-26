@@ -29,7 +29,7 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 
 - Store the original HTML unchanged at `documents/<id>/index.html`.
 - Store metadata separately at `documents/<id>/metadata.json`.
-- Allow HTTPS anchor navigation plus relative and fragment links; reject other external URLs except the canonical Tailwind browser and Mermaid v11 script entries during publish.
+- Validate published HTML in two tiers. See "Publish-time validation tiers" below.
 - Render documents through a dedicated viewer path inside an iframe sandboxed with only `allow-scripts`. Omitting `allow-same-origin` gives the document an opaque origin and prevents access to the viewer DOM and same-origin storage. Omitting popup and top-navigation permissions keeps links in the current frame and blocks `_blank` targets.
 - Use strict CSP on viewer responses. Document responses allow inline scripts plus the narrow CDN script paths required by Tailwind and Mermaid, block inline script attributes, and keep `connect-src`, frames, forms, objects, and non-data images, media, and fonts blocked. Apply `no-referrer` so followed links do not disclose local or capability URLs; their destinations still observe the visitor's IP address.
 - Bind the viewer to `127.0.0.1`, default port `3217`.
@@ -41,6 +41,62 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - Keep deletion in the CLI, require confirmation by default, and atomically move a record out of the live library before removing its files.
 - Allow `HTML_INBOX_PORT` only as a local port escape hatch.
 - Treat the health check as the only readiness signal.
+
+## Publish-time Validation Tiers
+
+`validateHtml` is neither a full security boundary nor pure lint. It is split
+explicitly, because a single tier misrepresents what it can enforce.
+
+**The runtime is the primary control.** A document is arbitrary agent-generated
+HTML and may contain arbitrary inline script — `script-src 'unsafe-inline'`
+permits it by design, so Tailwind and Mermaid work. What contains that script is
+the opaque-origin sandboxed frame plus the document CSP, not the validator.
+Static string checks over HTML are bypassable by construction: an exfiltration
+URL assembled by concatenation cannot be seen by any string matcher. Treating
+such checks as a boundary would be false assurance.
+
+**Tier 1 — security boundary (blocks publishing).** Reserved for conditions the
+sandbox and CSP genuinely do not close:
+
+- `javascript:` and `vbscript:` URLs in any URL-bearing attribute. CSP permits
+  these because `script-src` includes `'unsafe-inline'`, and the sandbox does
+  not stop them.
+- `data:` URLs in a navigable attribute, which hand the visitor a document the
+  author fully controls.
+- Anchor schemes outside `https:`, relative, and fragment that are not on the
+  known-inert list. Unknown schemes are dispatched to a registered OS handler
+  and leave the browser sandbox entirely, so the policy denies by default.
+- `<meta http-equiv="refresh">` that navigates. CSP has no directive governing
+  navigation — `navigate-to` was removed from the spec — and
+  `sandbox="allow-scripts"` permits a frame to navigate itself. This is an
+  unattended exfiltration channel with no downstream control.
+
+**Tier 2 — advisory lint (reported, never blocks).** Conditions the runtime
+already fails closed. They are surfaced because a silently blocked resource is a
+confusing broken document, not because they are attacks:
+
+- Inline event handlers, blocked by `script-src-attr 'none'`.
+- Non-allowlisted external assets, blocked by `default-src 'none'` and the
+  `data:`-only media directives.
+- Non-allowlisted external script sources, blocked by `script-src`.
+- Non-allowlisted external URLs in script bodies. Advisory only — string
+  concatenation defeats the check, and `connect-src 'none'` is what actually
+  holds.
+- `<base>`, blocked by `base-uri 'none'`.
+- `http:` and protocol-relative anchors, which are a cleartext downgrade rather
+  than code execution.
+
+**Detection integrity.** Tier 1 depends on correctly identifying which tag an
+attribute belongs to, so tags are parsed with a scanner that consumes quoted
+attribute values. A backwards search for `<` and `>` cannot do this: a `>`
+inside an earlier attribute hides the tag, which previously let
+`<a title=">" href="javascript:alert(1)">` publish. Attribute values are also
+entity-decoded and stripped of embedded control characters before the scheme is
+read, because the HTML parser does both before the URL parser runs.
+
+**Residual risk.** A document opened directly from disk — an exported snapshot
+file loaded over `file://` rather than served — carries no CSP, so every Tier 2
+condition becomes live. Tier 2 is a statement about the served runtime only.
 
 ## Out Of Scope
 

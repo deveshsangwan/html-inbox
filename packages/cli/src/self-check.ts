@@ -157,6 +157,38 @@ async function run(): Promise<void> {
     /title must not be empty/,
   );
 
+  // A clean document publishes with no advisory output.
+  const cleanLoad = await loadPublishInput(
+    { filePath: inputPath, title: "Report", type: "report" },
+    { HTML_INBOX_MAX_BYTES: "1024" },
+  );
+  assert.deepEqual(cleanLoad.warnings, []);
+  assert.equal(cleanLoad.input.title, "Report");
+
+  // Lint findings surface without blocking the publish.
+  const lintPath = path.join(inputHome, "lint.html");
+  await writeFile(
+    lintPath,
+    '<!doctype html><html><body><img src="https://example.com/a.png"></body></html>',
+  );
+  const lintLoad = await loadPublishInput({
+    filePath: lintPath,
+    title: "Lint",
+    type: "report",
+  });
+  assert.ok(lintLoad.warnings.length > 0);
+
+  // Security-boundary findings still refuse the publish.
+  const unsafePath = path.join(inputHome, "unsafe.html");
+  await writeFile(
+    unsafePath,
+    '<!doctype html><html><body><a title=">" href="javascript:alert(1)">x</a></body></html>',
+  );
+  await assert.rejects(
+    loadPublishInput({ filePath: unsafePath, title: "Unsafe", type: "report" }),
+    /HTML validation failed/,
+  );
+
   if (process.platform !== "win32") {
     const unsafeHome = await mkdtemp(path.join(tmpdir(), "html-inbox-unsafe-"));
     const symlinkTarget = path.join(unsafeHome, "target.txt");

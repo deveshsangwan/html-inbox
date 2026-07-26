@@ -11,10 +11,16 @@ export interface PublishRequest {
   type: string;
 }
 
+export interface LoadedPublishInput {
+  input: PublishInput;
+  /** Advisory findings the document CSP already blocks; publishing continues. */
+  warnings: string[];
+}
+
 export async function loadPublishInput(
   request: PublishRequest,
   env: NodeJS.ProcessEnv = process.env,
-): Promise<PublishInput> {
+): Promise<LoadedPublishInput> {
   const absolutePath = path.resolve(request.filePath);
   const extension = path.extname(absolutePath).toLowerCase();
 
@@ -64,10 +70,13 @@ export async function loadPublishInput(
   }
 
   return {
-    originalBytes,
-    title: request.title,
-    type: request.type,
-    sourceFileName,
+    input: {
+      originalBytes,
+      title: request.title,
+      type: request.type,
+      sourceFileName,
+    },
+    warnings: validation.warnings,
   };
 }
 
