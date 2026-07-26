@@ -69,11 +69,11 @@ Documents render through a viewer-owned path inside a sandboxed iframe. The app 
 HTML is untrusted by default. Phase 1 uses cheap validation before storage:
 
 - allow scripts, but only allow external script entry URLs for Tailwind's browser build and Mermaid v11
-- reject inline event handlers such as `onclick`
+- warn on inline event handlers such as `onclick`, which the document CSP blocks
 - allow HTTPS navigation in anchor `href` attributes, plus relative and fragment links
-- reject other external asset URLs
+- warn on other external asset URLs, which the document CSP blocks
 
-Validation is a gate, not a sanitizer. Accepted HTML is still rendered only in the sandboxed viewer path. The iframe enables scripts without `allow-same-origin`, popup, or top-navigation permission, so documents receive an opaque origin and cannot access the viewer DOM or same-origin storage. Links navigate the current preview frame, and `_blank` links remain blocked. Its CSP permits inline document configuration and the allowlisted CDN script paths, blocks inline script attributes, and continues to block connections, frames, forms, objects, and non-data image, media, and font loads.
+Validation is a gate, not a sanitizer. Accepted HTML is still rendered only in the sandboxed viewer path. The iframe enables scripts without `allow-same-origin`, popup, or top-navigation permission, so documents receive an opaque origin and cannot access the viewer DOM or same-origin storage. Links and allowed scripts can navigate the current preview frame, while `_blank` links remain blocked. Its CSP permits inline document configuration and the allowlisted CDN script paths, blocks inline script attributes, and continues to block connections, frames, forms, objects, and non-data image, media, and font loads.
 
 Input is bounded before reading. HTML files default to a 10 MiB limit, configurable through `HTML_INBOX_MAX_BYTES`, and metadata fields have explicit length limits.
 
@@ -83,7 +83,7 @@ Supported CDN entry URLs are deliberately limited to the canonical major-version
 - `https://cdn.tailwindcss.com` (including its official plugin query)
 - `https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs`
 
-Mermaid's CSP source includes its `dist/` subtree because the entry module loads diagram chunks from that directory. Opening a document that uses a CDN makes a remote request, and following an HTTPS link makes a request to its destination, but the viewer's `no-referrer` policy does not disclose the local document or capability URL. Those destinations still observe the visitor's IP address. Add another CDN or major version only by changing both validation and the document CSP and adding an accept/reject check.
+Mermaid's CSP source includes its `dist/` subtree because the entry module loads diagram chunks from that directory. Opening a document that uses a CDN or navigating to an external page makes a remote request. Viewer responses default to `no-referrer`, but author markup or script can override that default or include data in the destination URL. Add another CDN or major version only by changing both validation and the document CSP and adding an accept/reject check.
 
 ## Remote publishing
 
