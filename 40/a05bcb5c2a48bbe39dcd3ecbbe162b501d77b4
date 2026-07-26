@@ -1,0 +1,26 @@
+packages/cli/src/self-check.ts
+  s_ddee24bf27fc05::t_3c7313dab9592c 3,29-43,197-220
+  s_ddee24bf27fc05::t_b4547f2675b942 221
+packages/cli/src/backend.ts
+  s_ddee24bf27fc05::t_3c7313dab9592c 16,148
+packages/cli/src/viewer.ts
+  s_ddee24bf27fc05::t_3c7313dab9592c 482-487
+packages/cli/src/private-storage.ts
+  s_ddee24bf27fc05::t_3c7313dab9592c 8-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "40a05bcb5c2a48bbe39dcd3ecbbe162b501d77b4",
+  "prompts": {},
+  "sessions": {
+    "s_ddee24bf27fc05": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f9de3-ba1b-78e0-ab92-cc443bb440c4",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
