@@ -1,0 +1,28 @@
+README.md
+  s_2381dcc91da35a::t_ddc9380aedf385 5
+docs/architecture.md
+  s_2381dcc91da35a::t_f3755335e3a3d8 86-91
+docs/adr/0001-static-remote-inbox.md
+  s_2381dcc91da35a::t_a978b24a98cc7b 1-64,72-105
+  s_2381dcc91da35a::t_53aafcd8f730fc 69-71
+  s_2381dcc91da35a::t_8e88aeeaa8f1d6 68
+  s_2381dcc91da35a::t_6204af6f954efa 65-67
+docs/threat-model.md
+  s_2381dcc91da35a::t_771473d6e6bf8f 47,55-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "de9b0f5e2a848e82d55a8629bb3dc612480c98c1",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
