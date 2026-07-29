@@ -202,6 +202,38 @@ async function run(): Promise<void> {
     /title must not be empty/,
   );
 
+  // A clean document publishes with no advisory output.
+  const cleanLoad = await loadPublishInput(
+    { filePath: inputPath, title: "Report", type: "report" },
+    { HTML_INBOX_MAX_BYTES: "1024" },
+  );
+  assert.deepEqual(cleanLoad.warnings, []);
+  assert.equal(cleanLoad.input.title, "Report");
+
+  // Lint findings surface without blocking the publish.
+  const lintPath = path.join(inputHome, "lint.html");
+  await writeFile(
+    lintPath,
+    '<!doctype html><html><body><img src="https://example.com/a.png"></body></html>',
+  );
+  const lintLoad = await loadPublishInput({
+    filePath: lintPath,
+    title: "Lint",
+    type: "report",
+  });
+  assert.ok(lintLoad.warnings.length > 0);
+
+  // Security-boundary findings still refuse the publish.
+  const unsafePath = path.join(inputHome, "unsafe.html");
+  await writeFile(
+    unsafePath,
+    '<!doctype html><html><body><a title=">" href="javascript:alert(1)">x</a></body></html>',
+  );
+  await assert.rejects(
+    loadPublishInput({ filePath: unsafePath, title: "Unsafe", type: "report" }),
+    /HTML validation failed/,
+  );
+
   if (process.platform !== "win32") {
     const overlapRoot = await mkdtemp(path.join(tmpdir(), "html-inbox-overlap-"));
     const realHome = path.join(overlapRoot, "home");
@@ -420,11 +452,13 @@ async function run(): Promise<void> {
     const content = await fetch(`${baseUrl}/documents/${published.metadata.id}/content`);
     const csp = content.headers.get("content-security-policy") ?? "";
     assert.equal(csp.includes("script-src 'unsafe-inline' https://cdn.tailwindcss.com"), true);
+    assert.equal(csp.includes("script-src-attr 'none'"), true);
     assert.equal(csp.includes("https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"), true);
     assert.equal(csp.includes("https://cdn.jsdelivr.net/npm/mermaid@11/dist/"), true);
     assert.equal(csp.includes("connect-src 'none'"), true);
     assert.equal(csp.includes("frame-src 'none'"), true);
     assert.equal(csp.includes("form-action 'none'"), true);
+    assert.equal(csp.includes("base-uri 'none'"), true);
     assert.equal(await content.text(), html);
 
     const hostileTitle = 'Title </h1><script>alert("title")</script>';
