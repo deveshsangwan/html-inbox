@@ -1,0 +1,52 @@
+.github/workflows/package.yml
+  s_2381dcc91da35a::t_605ad1921f50b4 19-56
+  s_2381dcc91da35a::t_9f072ad7d70d09 16-18
+  s_2381dcc91da35a::t_fb89d8e6f51ded 57-58
+  s_2381dcc91da35a::t_7c5cd20e6ae96a 1-15
+scripts/package-smoke.mjs
+  s_2381dcc91da35a::t_605ad1921f50b4 20-37,112
+  s_2381dcc91da35a::t_b1ee217e29f34d 17-19
+  s_2381dcc91da35a::t_b2437a550d930c 38-40,109-111
+  s_2381dcc91da35a::t_9c7d325eee1726 113-115
+  s_2381dcc91da35a::t_88418786d1cead 1-16,41-108,116-136
+docs/releasing.md
+  s_2381dcc91da35a::t_605ad1921f50b4 19-25
+  s_2381dcc91da35a::t_24ef05e255cf49 16-18
+  s_2381dcc91da35a::t_e24966b339745c 1-15
+.gitignore
+  s_2381dcc91da35a::t_e1f2bf7f8b71fb 3
+CHANGELOG.md
+  s_2381dcc91da35a::t_50e5ee3eb61581 1-12
+README.md
+  s_2381dcc91da35a::t_349c99692e46fc 5-7,117-118
+SECURITY.md
+  s_2381dcc91da35a::t_7f2a2f049ae095 1-12
+docs/remote-migration.md
+  s_2381dcc91da35a::t_34ba3343d80f88 1-55
+package.json
+  s_2381dcc91da35a::t_d044f51ec5e7a2 9,11-12,16,18
+packages/cli/LICENSE
+  s_2381dcc91da35a::t_35a953ea555af1 1-21
+packages/cli/README.md
+  s_2381dcc91da35a::t_5fe55f49f119f8 1-11
+packages/cli/package.json
+  s_2381dcc91da35a::t_4c73af9e2bf60b 4,6-20,25-33,37,39-40
+pnpm-lock.yaml
+  s_2381dcc91da35a::t_3ef9d8e6c2f355 11-13,17-19,24,153-156,231-232
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "a1f53d16510dfbd57d275d00ec961186aa58fc6a",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
