@@ -1,0 +1,96 @@
+packages/cli/src/self-check.ts
+  s_2381dcc91da35a::t_97eaf8a89f130f 9,11-15,17,19,31,44-52,340-410,417-432,459-480
+  s_2381dcc91da35a::t_c563c61ee11b46 10,33-43
+  s_2381dcc91da35a::t_2f1b61aaad6d23 433-458
+  s_2381dcc91da35a::t_d51cc1c9adb1dc 411-416
+  s_2381dcc91da35a::t_1aab9244426ed9 481
+README.md
+  s_2381dcc91da35a::t_be3a14bb89e0fe 66
+  s_2381dcc91da35a::t_16cabb9c7478b9 63-65
+  s_2381dcc91da35a::t_7da0d60f4fe2b9 67
+  s_2381dcc91da35a::t_5b8301f66a3f5c 56-62,84
+docs/adr/0001-static-remote-inbox.md
+  s_2381dcc91da35a::t_25fd6424fec656 76
+packages/cli/src/static-export.ts
+  s_2381dcc91da35a::t_dae44cfaa9b81e 99,153
+  s_2381dcc91da35a::t_9205a861ac2400 2-21,33,39,47,55,72,74-93,106,116,133,137,148,156,160,168,179,181-189,207,220,231,240,242,247,288-322,326,330,332-333,338-339
+  s_2381dcc91da35a::t_bdda883b257363 57-64,111,124,140,144,163,167,191-206,224-225,248-287
+  s_2381dcc91da35a::t_099a95c7e7e0bb 1
+  s_2381dcc91da35a::t_a2866ec8970a4e 22-24,30-32
+  s_2381dcc91da35a::t_3dd43ccce2aca1 34-38
+  s_2381dcc91da35a::t_34db00e56a726e 40-42,44-46
+  s_2381dcc91da35a::t_13bb778727dfbd 48-50,52-54
+  s_2381dcc91da35a::t_3948d83a0a0ac5 56
+  s_2381dcc91da35a::t_4fc2b196a1ecdf 65-67,69-71
+  s_2381dcc91da35a::t_ff02c2b466f975 73
+  s_2381dcc91da35a::t_f7b3359b7b2fec 94-98
+  s_2381dcc91da35a::t_cce37c4152b3b8 100-105
+  s_2381dcc91da35a::t_bc9b47827bf03a 107-110
+  s_2381dcc91da35a::t_08475745086c83 112-115
+  s_2381dcc91da35a::t_987be66bbee2ce 117-119,121-123
+  s_2381dcc91da35a::t_381052c2be444e 125-127,130-132
+  s_2381dcc91da35a::t_e7cb9bb1f56277 134-136
+  s_2381dcc91da35a::t_c1070c485739e2 138-139
+  s_2381dcc91da35a::t_7d6c8cc2109add 141-143
+  s_2381dcc91da35a::t_8028522ca268bc 145-147
+  s_2381dcc91da35a::t_cc9bcb10f8adec 149-152
+  s_2381dcc91da35a::t_e9bdae1ca12d3e 154-155
+  s_2381dcc91da35a::t_1b258fb8780912 157-159
+  s_2381dcc91da35a::t_d1a7cefda72d49 161-162
+  s_2381dcc91da35a::t_bbc8f0b78dcc52 164-166
+  s_2381dcc91da35a::t_12e62d8495e41a 169-171,176-178
+  s_2381dcc91da35a::t_afd26ae2e4ffbe 180
+  s_2381dcc91da35a::t_5967246db0d625 190
+  s_2381dcc91da35a::t_decc356fd493ac 208-210,217-219
+  s_2381dcc91da35a::t_71fcdb93075b76 221-223
+  s_2381dcc91da35a::t_1ca4f10b399cd6 226-230
+  s_2381dcc91da35a::t_16ea3682a96398 232-234,237-239
+  s_2381dcc91da35a::t_d2b2dc2c0ba2e7 241
+  s_2381dcc91da35a::t_98d56b6ed4db67 243-246
+  s_2381dcc91da35a::t_7d98c622734e71 323-325
+  s_2381dcc91da35a::t_18a1f344bd81e1 327-329
+  s_2381dcc91da35a::t_6bd69bad59e2b0 331
+  s_2381dcc91da35a::t_85b5f2a75c79af 334-337
+  s_2381dcc91da35a::t_2a5ff06565584d 25-29,43,51,68,120,128-129,172-175,211-216,235-236
+docs/architecture.md
+  s_2381dcc91da35a::t_be3a14bb89e0fe 109
+  s_2381dcc91da35a::t_25fd6424fec656 111
+  s_2381dcc91da35a::t_0a0323e3125eca 106-108
+  s_2381dcc91da35a::t_6e5b135a424055 110
+  s_2381dcc91da35a::t_685cb7d3a15c0f 112
+  s_2381dcc91da35a::t_91d98a33067573 91-105
+packages/cli/src/viewer.ts
+  s_2381dcc91da35a::t_97eaf8a89f130f 28,75-126,135,176,857-859,861-870,874,896-901,926,928,933-941,944-948,952,956-964,968,982,986,990,998-999,1003,1009-1010,1013,1043,1047
+  s_2381dcc91da35a::t_1e80494c11f9d0 860,905,976,1031,1036-1040
+packages/cli/src/index.ts
+  s_2381dcc91da35a::t_c563c61ee11b46 67-76,145-172,272,302,306,309,311
+  s_2381dcc91da35a::t_8b031f6fcd9743 65-66
+  s_2381dcc91da35a::t_2a168adb5b8c1c 173
+  s_2381dcc91da35a::t_d61c6e8896e286 269-271
+  s_2381dcc91da35a::t_522cd31474c6b2 273-275,299-301
+  s_2381dcc91da35a::t_593889d0746b25 303-305
+  s_2381dcc91da35a::t_71102257ac5e9b 307-308
+  s_2381dcc91da35a::t_90db4955ba3fb8 310
+  s_2381dcc91da35a::t_b076d4d552918e 312
+  s_2381dcc91da35a::t_04398486b94b88 9,24-26,268,276-298
+packages/cli/src/backend.ts
+  s_2381dcc91da35a::t_b34f8a626609e9 110,120,122,137
+packages/shared/src/index.ts
+  s_2381dcc91da35a::t_0f0e7970786547 36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "55075f0a10f6ac6cb19d585a63e10cce5c77e6ff",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
