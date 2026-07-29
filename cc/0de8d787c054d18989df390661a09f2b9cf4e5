@@ -1,0 +1,23 @@
+docs/architecture.md
+  s_2381dcc91da35a::t_44bdecc4fc1855 95,111-115
+packages/cli/src/static-export.ts
+  s_2381dcc91da35a::t_44bdecc4fc1855 25
+packages/cli/src/self-check.ts
+  s_2381dcc91da35a::t_44bdecc4fc1855 5-13,17-26,71-93,495-498,554-670,830-840
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "cc0de8d787c054d18989df390661a09f2b9cf4e5",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
