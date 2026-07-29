@@ -1,0 +1,37 @@
+packages/cli/src/self-check.ts
+  s_2381dcc91da35a::t_8849b2ac066079 2-3,9,11-17,22,56-103,165,210,246,264-270,361-389
+  s_2381dcc91da35a::t_cabe7563979e8a 390-391
+  s_2381dcc91da35a::t_061d9a1caebc17 443-446
+packages/cli/src/backend.ts
+  s_2381dcc91da35a::t_dad2f6ad3c72c0 2,8,140-160,211,247-249
+  s_2381dcc91da35a::t_2df35a57e71346 250
+packages/cli/src/viewer.ts
+  s_2381dcc91da35a::t_8849b2ac066079 947
+  s_2381dcc91da35a::t_a9eda738bb63e6 3,5,22-27,97,117,237-293,466-467,495-496,527-570,645-646,723-742,779-795,804-812,816-826,845-847,857,859-866
+README.md
+  s_2381dcc91da35a::t_923872fa39272d 45-55
+docs/architecture.md
+  s_2381dcc91da35a::t_f19aaa6b53968d 40,45,47,61-62
+docs/threat-model.md
+  s_2381dcc91da35a::t_9ceee27d822c3f 40
+packages/cli/src/index.ts
+  s_2381dcc91da35a::t_fb3bd0e7339873 4-6,9,17-23,49-60,64-75,108-188
+packages/shared/src/index.ts
+  s_2381dcc91da35a::t_6a90a0abf868ea 28-32,42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "bfb032c518038d48dbbf6289d4d4075e68a9586c",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
