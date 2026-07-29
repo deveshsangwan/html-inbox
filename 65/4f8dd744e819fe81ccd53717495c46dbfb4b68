@@ -1,0 +1,56 @@
+packages/cli/src/self-check.ts
+  s_2381dcc91da35a::t_a9af707e5779df 593,681,694,727,741,744-745,747,749,779,792,817,1021,1036,1047,1052
+  s_2381dcc91da35a::t_390721bc6b703e 590-592
+  s_2381dcc91da35a::t_1b34f4271051fb 594-596
+  s_2381dcc91da35a::t_744916f595f96c 678-680
+  s_2381dcc91da35a::t_3eaf5813fe7e23 682-684,691-693
+  s_2381dcc91da35a::t_8eb01f01478b96 695-697,724-726
+  s_2381dcc91da35a::t_4f02b010ceef28 728-730,738-740
+  s_2381dcc91da35a::t_706809c81c6c07 742-743
+  s_2381dcc91da35a::t_fc84beaa0f276f 746
+  s_2381dcc91da35a::t_21455ffc7b9eb3 748
+  s_2381dcc91da35a::t_3cf1d0e4283106 750-752,776-778
+  s_2381dcc91da35a::t_4d7646469b9d61 780-782,789-791
+  s_2381dcc91da35a::t_8409148b7e0cbe 793-795,814-816
+  s_2381dcc91da35a::t_d4aa189dc2e8cb 818-820
+  s_2381dcc91da35a::t_8e62529b76efb3 1018-1020
+  s_2381dcc91da35a::t_75e7191f85eda9 1022-1024,1033-1035
+  s_2381dcc91da35a::t_01a5fdec3e032f 1037-1039,1044-1046
+  s_2381dcc91da35a::t_8a5b41df6c01c8 1048-1051
+  s_2381dcc91da35a::t_577319343ae940 1053-1055
+  s_2381dcc91da35a::t_26c92a46fd7809 10,20-22,24-25,32-33,38-39,45-50,65,99-138,582-589,597-616,673-677,685-690,698-723,731-737,753-775,783-788,796-813,821,983-988,993-1017,1025-1032,1040-1043,1056-1067
+README.md
+  s_2381dcc91da35a::t_a438301a2755b7 84-96,98-99,101-107,110-111,113-116,118-121,140
+packages/cli/src/remote-workflow.ts
+  s_2381dcc91da35a::t_a9af707e5779df 268-271
+  s_2381dcc91da35a::t_a52c1959c2a781 265-267
+  s_2381dcc91da35a::t_7be9c34a4deb29 273-275
+  s_2381dcc91da35a::t_cd2f6fd88032f7 1-264,276-657
+packages/cli/src/index.ts
+  s_2381dcc91da35a::t_a438301a2755b7 9,28-34,83-87,172-200,238-304,368-404
+  s_2381dcc91da35a::t_eb941157d60563 405
+docs/adr/0001-static-remote-inbox.md
+  s_2381dcc91da35a::t_98cbb593efb2ec 72
+docs/architecture.md
+  s_2381dcc91da35a::t_a99d92ea36c51e 119-123
+docs/threat-model.md
+  s_2381dcc91da35a::t_e160701064bb24 74
+packages/cli/src/cloudflare-pages.ts
+  s_2381dcc91da35a::t_2aa38fee38bbdf 58-79,134,142-159,161,185-250,338-435,445,572-584,593-637
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "654f8dd744e819fe81ccd53717495c46dbfb4b68",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
