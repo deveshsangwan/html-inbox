@@ -1,0 +1,56 @@
+packages/cli/src/self-check.ts
+  s_2381dcc91da35a::t_a9af707e5779df 631,719,732,765,779-788,791-792,794,796,826,839,864,1074,1089,1100,1105
+  s_2381dcc91da35a::t_390721bc6b703e 628-630
+  s_2381dcc91da35a::t_1b34f4271051fb 632-634
+  s_2381dcc91da35a::t_744916f595f96c 716-718
+  s_2381dcc91da35a::t_3eaf5813fe7e23 720-722,729-731
+  s_2381dcc91da35a::t_8eb01f01478b96 733-735,762-764
+  s_2381dcc91da35a::t_4f02b010ceef28 766-768,776-778
+  s_2381dcc91da35a::t_706809c81c6c07 789-790
+  s_2381dcc91da35a::t_fc84beaa0f276f 793
+  s_2381dcc91da35a::t_21455ffc7b9eb3 795
+  s_2381dcc91da35a::t_3cf1d0e4283106 797-799,823-825
+  s_2381dcc91da35a::t_4d7646469b9d61 827-829,836-838
+  s_2381dcc91da35a::t_8409148b7e0cbe 840-842,861-863
+  s_2381dcc91da35a::t_d4aa189dc2e8cb 865-867
+  s_2381dcc91da35a::t_8e62529b76efb3 1071-1073
+  s_2381dcc91da35a::t_75e7191f85eda9 1075-1077,1086-1088
+  s_2381dcc91da35a::t_01a5fdec3e032f 1090-1092,1097-1099
+  s_2381dcc91da35a::t_8a5b41df6c01c8 1101-1104
+  s_2381dcc91da35a::t_577319343ae940 1106-1108
+  s_2381dcc91da35a::t_26c92a46fd7809 10,20-22,24-25,32-33,38-39,45-50,65,110-149,620-627,635-654,711-715,723-728,736-761,769-775,800-822,830-835,843-860,868,1036-1041,1046-1070,1078-1085,1093-1096,1109-1120
+README.md
+  s_2381dcc91da35a::t_a438301a2755b7 68-105,122
+packages/cli/src/remote-workflow.ts
+  s_2381dcc91da35a::t_a9af707e5779df 268-274
+  s_2381dcc91da35a::t_a52c1959c2a781 265-267
+  s_2381dcc91da35a::t_7be9c34a4deb29 275-277
+  s_2381dcc91da35a::t_cd2f6fd88032f7 1-264,278-659
+packages/cli/src/index.ts
+  s_2381dcc91da35a::t_a438301a2755b7 9,28-34,85-89,187-215,253-319,383-419
+  s_2381dcc91da35a::t_eb941157d60563 420
+docs/adr/0001-static-remote-inbox.md
+  s_2381dcc91da35a::t_98cbb593efb2ec 72
+docs/architecture.md
+  s_2381dcc91da35a::t_a99d92ea36c51e 119-123
+docs/threat-model.md
+  s_2381dcc91da35a::t_e160701064bb24 74
+packages/cli/src/cloudflare-pages.ts
+  s_2381dcc91da35a::t_2aa38fee38bbdf 58-79,134,142-159,161,185-250,338-435,445,572-584,593-637
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "5fdb8d376453792b0e12710a16d4a60546f436db",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
