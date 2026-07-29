@@ -2,10 +2,32 @@ import { strict as assert } from "node:assert";
 import { spawn, spawnSync } from "node:child_process";
 import { once } from "node:events";
 import http from "node:http";
-import { mkdir, mkdtemp, readFile, stat, symlink, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  open,
+  readFile,
+  readdir,
+  rm,
+  stat,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { LocalDocumentBackend } from "./backend";
+import {
+  CLOUDFLARE_HEADER_LINE_LIMIT,
+  CLOUDFLARE_UPLOAD_FILE_SIZE_LIMIT,
+  CloudflarePagesAdapter,
+  CommandInvocation,
+  CommandResult,
+  CommandRunner,
+  NodeCommandRunner,
+  PINNED_WRANGLER_VERSION,
+  createWranglerInvocation,
+  parseWranglerDeployUrls,
+} from "./cloudflare-pages";
 import {
   assertExportOutsideHome,
   formatDocumentList,
@@ -50,6 +72,58 @@ async function run(): Promise<void> {
       generatedCapability,
     );
   }
+  const commandResult = await new NodeCommandRunner().run({
+    command: process.execPath,
+    args: [
+      "-e",
+      'process.stdout.write(process.env.HTML_INBOX_RUNNER_TEST || ""); process.stderr.write(" stderr")',
+    ],
+    cwd: process.cwd(),
+    env: { HTML_INBOX_RUNNER_TEST: "runner-ok" },
+    timeoutMs: 5_000,
+  });
+  assert.equal(commandResult.code, 0);
+  assert.equal(commandResult.output.includes("runner-ok"), true);
+  assert.equal(commandResult.output.includes("stderr"), true);
+  const windowsInvocation = createWranglerInvocation(
+    [],
+    process.cwd(),
+    "A".repeat(32),
+    5_000,
+    "win32",
+    "C:\\Program Files\\nodejs\\node.exe",
+  );
+  assert.equal(windowsInvocation.command, "C:\\Program Files\\nodejs\\node.exe");
+  assert.equal(
+    windowsInvocation.args[0],
+    "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx-cli.js",
+  );
+  assert.deepEqual(
+    parseWranglerDeployUrls(
+      "\u001b[32mDeployment: https://abc123.assigned-project.pages.dev\u001b[0m",
+    ),
+    {
+      deploymentUrl: "https://abc123.assigned-project.pages.dev",
+      projectUrl: "https://assigned-project.pages.dev",
+    },
+  );
+  assert.throws(() => parseWranglerDeployUrls("deployment finished without a URL"), /without returning/);
+  const runnerHome = await mkdtemp(path.join(tmpdir(), "html-inbox-runner-"));
+  const lateMarker = path.join(runnerHome, "late.txt");
+  const descendantScript = `setTimeout(() => require("node:fs").writeFileSync(${JSON.stringify(lateMarker)}, "late"), 300)`;
+  const parentScript = `require("node:child_process").spawn(process.execPath, ["-e", ${JSON.stringify(descendantScript)}], { stdio: "ignore" }); setInterval(() => {}, 1000)`;
+  await assert.rejects(
+    new NodeCommandRunner().run({
+      command: process.execPath,
+      args: ["-e", parentScript],
+      cwd: runnerHome,
+      env: {},
+      timeoutMs: 50,
+    }),
+    /did not finish/,
+  );
+  await delay(400);
+  await assert.rejects(readFile(lateMarker), /ENOENT/);
 
   const inputHome = await mkdtemp(path.join(tmpdir(), "html-inbox-input-"));
   const inputPath = path.join(inputHome, "report.html");
@@ -461,7 +535,10 @@ async function run(): Promise<void> {
     );
 
     const ownerMarker = JSON.parse(
-      await readFile(path.join(snapshotDirectory, ".html-inbox-owner.json"), "utf8"),
+      await readFile(
+        path.join(snapshotDirectory, "__html-inbox", "ownership.json"),
+        "utf8",
+      ),
     ) as Record<string, unknown>;
     assert.deepEqual(ownerMarker, { schemaVersion: 1, ownerId });
     const securityHeaders = JSON.parse(
@@ -517,6 +594,145 @@ async function run(): Promise<void> {
       /Refusing to replace/,
     );
     assert.equal(await readFile(path.join(unrelatedDirectory, "keep.txt"), "utf8"), "keep");
+
+    const accountId = "A".repeat(32);
+    const recordingRunner = new RecordingCommandRunner({
+      code: 0,
+      signal: null,
+      output:
+        "✨ Deployment complete! Take a peek over at https://abc123.html-inbox-7x.pages.dev",
+    });
+    const cloudflare = new CloudflarePagesAdapter(recordingRunner, 12_345);
+    const receipt = await cloudflare.deploySnapshot(
+      firstSnapshot,
+      { accountId, projectName: "HTML-Inbox" },
+      "main",
+    );
+    assert.equal(recordingRunner.invocations.length, 1);
+    const deploymentInvocation = recordingRunner.invocations[0];
+    assert.equal(deploymentInvocation.command, "npx");
+    assert.deepEqual(deploymentInvocation.args, [
+      "--yes",
+      `wrangler@${PINNED_WRANGLER_VERSION}`,
+      "pages",
+      "deploy",
+      ".",
+      "--project-name",
+      "html-inbox",
+      "--branch",
+      "main",
+    ]);
+    assert.deepEqual(deploymentInvocation.env, {
+      CLOUDFLARE_ACCOUNT_ID: accountId.toLowerCase(),
+      WRANGLER_LOG_SANITIZE: "true",
+    });
+    assert.equal(deploymentInvocation.timeoutMs, 12_345);
+    assert.equal(
+      deploymentInvocation.args.some((argument) => argument.includes("token")),
+      false,
+    );
+    assert.equal(receipt.deploymentUrl, "https://abc123.html-inbox-7x.pages.dev");
+    assert.equal(receipt.projectUrl, "https://html-inbox-7x.pages.dev");
+    assert.equal(
+      receipt.projectInboxUrl,
+      `https://html-inbox-7x.pages.dev/i/${capability}/`,
+    );
+    assert(recordingRunner.headers);
+    assert.equal(recordingRunner.headers.includes("/documents/:id/content/*"), true);
+    assert.equal(recordingRunner.headers.includes(documentCsp()), true);
+    assert.equal(
+      recordingRunner.headers.split("\n").every((line) => line.length <= CLOUDFLARE_HEADER_LINE_LIMIT),
+      true,
+    );
+    assert.equal(
+      recordingRunner.headers
+        .split("\n")
+        .filter((line) => line && !line.startsWith(" ")).length,
+      8,
+    );
+    await assert.rejects(readFile(path.join(snapshotDirectory, "_headers")), /ENOENT/);
+    assert.equal(
+      (await readdir(home)).some((entry) => entry.startsWith("snapshot.cloudflare-")),
+      false,
+    );
+
+    const previousToken = process.env.CLOUDFLARE_API_TOKEN;
+    const previousApiKey = process.env.CLOUDFLARE_API_KEY;
+    process.env.CLOUDFLARE_API_TOKEN = "super-secret-cloudflare-token";
+    process.env.CLOUDFLARE_API_KEY = "super-secret-cloudflare-key";
+    try {
+      const failingRunner = new RecordingCommandRunner({
+        code: 1,
+        signal: null,
+        output:
+          "authentication failed: super-secret-cloudflare-token super-secret-cloudflare-key",
+      });
+      await assert.rejects(
+        new CloudflarePagesAdapter(failingRunner).deploySnapshot(firstSnapshot, {
+          accountId,
+          projectName: "html-inbox",
+        }),
+        (error: Error) =>
+          error.message.includes("[redacted]") &&
+          !error.message.includes("super-secret-cloudflare-token") &&
+          !error.message.includes("super-secret-cloudflare-key"),
+      );
+      assert.equal(
+        (await readdir(home)).some((entry) => entry.startsWith("snapshot.cloudflare-")),
+        false,
+      );
+    } finally {
+      if (previousToken === undefined) delete process.env.CLOUDFLARE_API_TOKEN;
+      else process.env.CLOUDFLARE_API_TOKEN = previousToken;
+      if (previousApiKey === undefined) delete process.env.CLOUDFLARE_API_KEY;
+      else process.env.CLOUDFLARE_API_KEY = previousApiKey;
+    }
+
+    await assert.rejects(
+      new CloudflarePagesAdapter(recordingRunner).deploySnapshot(firstSnapshot, {
+        accountId: "not-an-account-id",
+        projectName: "html-inbox",
+      }),
+      /32 hexadecimal/,
+    );
+    const securityHeaderPath = path.join(
+      snapshotDirectory,
+      "i",
+      capability,
+      "security-headers.json",
+    );
+    const originalSecurityHeaders = await readFile(securityHeaderPath, "utf8");
+    const weakenedSecurityHeaders = JSON.parse(originalSecurityHeaders) as {
+      common: Record<string, string>;
+    };
+    weakenedSecurityHeaders.common["Cache-Control"] = "public, max-age=3600";
+    await writeFile(securityHeaderPath, JSON.stringify(weakenedSecurityHeaders));
+    try {
+      await assert.rejects(
+        new CloudflarePagesAdapter(recordingRunner).deploySnapshot(firstSnapshot, {
+          accountId,
+          projectName: "html-inbox",
+        }),
+        /common security policy is incomplete/,
+      );
+    } finally {
+      await writeFile(securityHeaderPath, originalSecurityHeaders);
+    }
+    const oversizedPath = path.join(snapshotDirectory, "oversized.bin");
+    const oversizedFile = await open(oversizedPath, "w");
+    await oversizedFile.truncate(CLOUDFLARE_UPLOAD_FILE_SIZE_LIMIT + 1);
+    await oversizedFile.close();
+    try {
+      await assert.rejects(
+        new CloudflarePagesAdapter(recordingRunner).deploySnapshot(firstSnapshot, {
+          accountId,
+          projectName: "html-inbox",
+        }),
+        /file exceeds 25 MiB/,
+      );
+    } finally {
+      await rm(oversizedPath);
+    }
     await assert.rejects(
       exportStaticSnapshot(backend, {
         outputDir: path.join(home, "invalid-snapshot"),
@@ -674,6 +890,19 @@ async function requestWithHost(
 
 function delay(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+class RecordingCommandRunner implements CommandRunner {
+  readonly invocations: CommandInvocation[] = [];
+  headers = "";
+
+  constructor(private readonly result: CommandResult) {}
+
+  async run(invocation: CommandInvocation): Promise<CommandResult> {
+    this.invocations.push(structuredClone(invocation));
+    this.headers = await readFile(path.join(invocation.cwd, "_headers"), "utf8");
+    return this.result;
+  }
 }
 
 void run();
