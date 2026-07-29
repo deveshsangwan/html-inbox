@@ -1,6 +1,6 @@
 # Releasing HTML Inbox
 
-The repository remains a pnpm workspace for development, but the published `html-inbox` package contains one self-contained ncc executable and no runtime package dependencies.
+The repository remains a pnpm workspace for development, but the published `html-inbox` package contains one self-contained ncc executable and no runtime package dependencies. End-user documentation uses npm and the installed `html-inbox` command; pnpm appears here only because this checklist operates the source workspace and its lockfile.
 
 ## Prepare
 

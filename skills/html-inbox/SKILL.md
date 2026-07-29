@@ -7,6 +7,8 @@ description: Publish HTML artifacts to the local HTML Inbox. Use when the user w
 
 Publish a finished HTML artifact into the local private document library. `publish` stores the original bytes, starts or reuses the localhost viewer, and prints the document URL.
 
+This skill owns local publishing and viewer operation. For Cloudflare setup, remote publishing, recovery, or revocation, use [`html-inbox-remote`](../html-inbox-remote/SKILL.md).
+
 ## Publish
 
 ### 1. Fix the publish contract
@@ -67,6 +69,6 @@ If a healthy viewer on the requested port uses a different library, choose anoth
 
 ## Security boundary
 
-HTML Inbox is local-only and stores each document's original HTML unchanged. It renders that HTML on a dedicated path inside a sandboxed iframe with a Content Security Policy; it does not sanitize the stored file. Do not present an accepted document as safe to open outside the viewer.
+The local viewer is loopback-only and stores each document's original HTML unchanged. It renders that HTML on a dedicated path inside a sandboxed iframe with a Content Security Policy; it does not sanitize the stored file. Do not present an accepted document as safe to open outside the viewer.
 
 When changing implementation or security policy rather than operating the CLI, first read [`docs/architecture.md`](../../docs/architecture.md) and [`docs/threat-model.md`](../../docs/threat-model.md).

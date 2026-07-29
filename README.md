@@ -4,14 +4,28 @@ HTML Inbox is a local library for generated HTML reports, notes, and dashboards.
 
 HTML Inbox is local-first. Optional remote publishing deploys complete static snapshots to a user-owned Cloudflare Pages project; the local viewer and its administrative capabilities remain private to the machine running the CLI. See [ADR 0001](docs/adr/0001-static-remote-inbox.md).
 
-The npm-ready CLI is packaged as a self-contained `html-inbox` executable. Until the first registry release, build and use it from a source checkout as shown below; the installed-package path is exercised by the repository verification gate.
+The CLI is packaged as a self-contained `html-inbox` executable with no runtime package dependencies.
 
-## Requirements
+## Install with npm
 
-- Node.js 20 or newer
-- Corepack
+Node.js 20 or newer is required. After the first registry release, install the CLI globally:
 
-## Set up a source checkout
+```sh
+npm install --global html-inbox
+html-inbox --help
+```
+
+For occasional use without a global install:
+
+```sh
+npx html-inbox --help
+```
+
+Until the first registry release, use a source checkout. The operational examples below assume the installed `html-inbox` command; from a source checkout, run the same command as `corepack pnpm html-inbox ...`.
+
+## Set up a source checkout for development
+
+The repository is a pnpm workspace, so contributor and release commands use the checked-in pnpm lockfile:
 
 ```sh
 corepack enable
@@ -29,7 +43,7 @@ corepack pnpm html-inbox --help
 ## Publish a document
 
 ```sh
-corepack pnpm html-inbox publish ./examples/report.html \
+html-inbox publish ./examples/report.html \
   --title "Quarterly migration report" \
   --type report
 ```
@@ -41,16 +55,16 @@ HTML documents are limited to 10 MiB by default. Set `HTML_INBOX_MAX_BYTES` to a
 Run the viewer directly when you want it to remain attached to the terminal:
 
 ```sh
-corepack pnpm html-inbox viewer
+html-inbox viewer
 ```
 
 Manage the local library and viewer:
 
 ```sh
-corepack pnpm html-inbox list
-corepack pnpm html-inbox delete <document-id>
-corepack pnpm html-inbox viewer status
-corepack pnpm html-inbox viewer stop
+html-inbox list
+html-inbox delete <document-id>
+html-inbox viewer status
+html-inbox viewer stop
 ```
 
 Use `--json` with `list` or `delete` for automation. Non-interactive deletion requires `--force`. The viewer also supports server-rendered search across title, type, and source file name.
@@ -60,7 +74,7 @@ Use `--json` with `list` or `delete` for automation. Non-interactive deletion re
 Build a provider-independent static snapshot without contacting a hosting service:
 
 ```sh
-corepack pnpm html-inbox export --out ./html-inbox-export
+html-inbox export --out ./html-inbox-export
 ```
 
 The command prints the private inbox path, document count, and content hash. The deployed site root deliberately does not link to the inbox. Treat the generated `/i/<capability>/` path as a bearer secret: anyone who receives it can read that snapshot.
@@ -80,10 +94,10 @@ For non-interactive use, provide a Cloudflare API token with Account / Cloudflar
 Configure a target and publish:
 
 ```sh
-corepack pnpm html-inbox remote init \
+html-inbox remote init \
   --account <cloudflare-account-id> \
   --project <pages-project-name>
-corepack pnpm html-inbox remote publish
+html-inbox remote publish
 ```
 
 `remote init` creates the Pages project when it does not exist. An existing project requires `--adopt` because the first publish will replace its complete contents. The publish command prints the production capability URL. Anyone with that URL can read and reshare the complete snapshot; this is an unlisted bearer link, not authentication.
@@ -91,8 +105,8 @@ corepack pnpm html-inbox remote publish
 Inspect and recover remote state:
 
 ```sh
-corepack pnpm html-inbox remote status
-corepack pnpm html-inbox remote reconcile
+html-inbox remote status
+html-inbox remote reconcile
 ```
 
 Every mutation records private durable intent before its remote side effect. If a request times out after Cloudflare may have accepted it, `remote reconcile` checks deployment history for the operation ID and snapshot digest before retrying.
@@ -101,7 +115,7 @@ If project creation was ambiguous, reconciliation requires `--adopt` before acce
 Revoke the shared production route:
 
 ```sh
-corepack pnpm html-inbox remote revoke
+html-inbox remote revoke
 ```
 
 Revocation rotates to a new undisclosed empty capability and removes the previously shared route from the production deployment. It cannot erase older immutable deployment URLs; prune sensitive deployment history in Cloudflare before treating historical content as inaccessible. Use `--json` on remote commands for automation and `--yes` for non-interactive revoke.
