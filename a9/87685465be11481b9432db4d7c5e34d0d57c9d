@@ -1,0 +1,19 @@
+packages/cli/src/viewer-assets.ts
+  s_2381dcc91da35a::t_6eb74d8a1ef6da 1-516
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "a987685465be11481b9432db4d7c5e34d0d57c9d",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
