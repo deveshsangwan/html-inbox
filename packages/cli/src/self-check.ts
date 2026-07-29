@@ -25,6 +25,7 @@ import {
   CloudflarePagesAdapter,
   CloudflareProjectRef,
   CloudflareProjectSummary,
+  CloudflareSnapshotRef,
   CommandInvocation,
   CommandResult,
   CommandRunner,
@@ -49,7 +50,7 @@ import { RemoteDeploymentPort, RemoteWorkflow } from "./remote-workflow";
 import {
   exportStaticSnapshot,
   generateInboxCapability,
-  StaticSnapshotResult,
+  SnapshotManifest,
 } from "./static-export";
 import {
   documentCsp,
@@ -852,6 +853,21 @@ async function run(): Promise<void> {
     assert.match(formatRemoteState(initializedRemote), /State: configured/);
     assert.equal((await remoteWorkflow.status()).operation, null);
 
+    const remoteStatePath = path.join(remoteHome, "remote", "state.json");
+    const paddedState = JSON.parse(await readFile(remoteStatePath, "utf8")) as {
+      target: CloudflareProjectRef;
+      branch: string;
+    };
+    paddedState.target.accountId = ` ${paddedState.target.accountId.toUpperCase()} `;
+    paddedState.target.projectName = ` ${paddedState.target.projectName.toUpperCase()} `;
+    paddedState.branch = ` ${paddedState.branch} `;
+    await writeFile(remoteStatePath, `${JSON.stringify(paddedState, null, 2)}\n`);
+    const normalizedState = (await remoteWorkflow.status()).state;
+    assert.equal(normalizedState?.target.accountId, remoteAccountId);
+    assert.equal(normalizedState?.target.projectName, "html-inbox-test");
+    assert.equal(normalizedState?.branch, "main");
+    await writeFile(remoteStatePath, `${JSON.stringify(initializedRemote, null, 2)}\n`);
+
     const remoteLockPath = path.join(remoteHome, "remote", "mutation.lock");
     await writeFile(
       remoteLockPath,
@@ -892,7 +908,7 @@ async function run(): Promise<void> {
       /^https:\/\/html-inbox-test\.pages\.dev\/i\//,
     );
     assert.match(formatRemoteStatus(await remoteWorkflow.status()), /State: published/);
-    assert.equal(remotePort.deployCalls.at(-1)?.snapshot.manifest.documentCount, 1);
+    assert.equal(remotePort.deployCalls.at(-1)?.manifest.documentCount, 1);
     const repeatedRemote = await remoteWorkflow.publish();
     assert.notEqual(
       repeatedRemote.lastDeployment?.operationId,
@@ -918,6 +934,23 @@ async function run(): Promise<void> {
     assert(interruptedStatus.operation?.snapshotHash);
     assert.equal(interruptedStatus.operation.phase, "prepared");
     assert.equal(interruptedStatus.operation.attempts, 1);
+    const remoteOperationPath = path.join(remoteHome, "remote", "operation.json");
+    const paddedOperation = JSON.parse(await readFile(remoteOperationPath, "utf8")) as {
+      target: CloudflareProjectRef;
+      branch: string;
+    };
+    paddedOperation.target.accountId = ` ${paddedOperation.target.accountId.toUpperCase()} `;
+    paddedOperation.target.projectName = ` ${paddedOperation.target.projectName.toUpperCase()} `;
+    paddedOperation.branch = ` ${paddedOperation.branch} `;
+    await writeFile(remoteOperationPath, `${JSON.stringify(paddedOperation, null, 2)}\n`);
+    const normalizedOperation = (await remoteWorkflow.status()).operation;
+    assert.equal(normalizedOperation?.target.accountId, remoteAccountId);
+    assert.equal(normalizedOperation?.target.projectName, "html-inbox-test");
+    assert.equal(normalizedOperation?.branch, "main");
+    await writeFile(
+      remoteOperationPath,
+      `${JSON.stringify(interruptedStatus.operation, null, 2)}\n`,
+    );
     if (process.platform !== "win32") {
       assert.equal(
         (await stat(path.join(remoteHome, "remote", "operation.json"))).mode & 0o777,
@@ -979,9 +1012,9 @@ async function run(): Promise<void> {
     assert.equal(revokeResult.revokedUrl, productionUrlBeforeRevoke);
     assert.match(revokeResult.warning, /immutable Cloudflare deployment URLs may still work/);
     const revokeCall = remotePort.deployCalls.at(-1);
-    assert.equal(revokeCall?.snapshot.manifest.documentCount, 0);
+    assert.equal(revokeCall?.manifest.documentCount, 0);
     assert.equal(
-      revokeCall?.snapshot.manifest.files.some((file) => file.path.includes(capabilityBeforeRevoke)),
+      revokeCall?.manifest.files.some((file) => file.path.includes(capabilityBeforeRevoke)),
       false,
     );
     for (const document of await remoteBackend.listDocuments()) {
@@ -1243,7 +1276,8 @@ class RecordingRemoteDeploymentPort implements RemoteDeploymentPort {
   readonly deployments: CloudflareDeploymentSummary[] = [];
   readonly createdProjects: CloudflareProjectRef[] = [];
   readonly deployCalls: Array<{
-    snapshot: StaticSnapshotResult;
+    snapshot: CloudflareSnapshotRef;
+    manifest: SnapshotManifest;
     target: CloudflareProjectRef;
     branch: string;
     metadata: CloudflareDeployMetadata;
@@ -1270,14 +1304,21 @@ class RecordingRemoteDeploymentPort implements RemoteDeploymentPort {
   }
 
   async deploySnapshot(
-    snapshot: StaticSnapshotResult,
+    snapshot: CloudflareSnapshotRef,
     target: CloudflareProjectRef,
     branch = "main",
     metadata?: CloudflareDeployMetadata,
   ): Promise<CloudflareDeployReceipt> {
     assert(metadata);
+    const manifestPath = path.join(
+      snapshot.outputDir,
+      snapshot.inboxPath.slice(1),
+      "snapshot-manifest.json",
+    );
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as SnapshotManifest;
     this.deployCalls.push({
       snapshot: structuredClone(snapshot),
+      manifest,
       target: structuredClone(target),
       branch,
       metadata: structuredClone(metadata),
