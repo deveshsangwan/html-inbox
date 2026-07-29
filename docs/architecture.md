@@ -83,3 +83,9 @@ Supported CDN entry URLs are deliberately limited to the canonical major-version
 - `https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs`
 
 Mermaid's CSP source includes its `dist/` subtree because the entry module loads diagram chunks from that directory. Opening a document that uses a CDN makes a remote request, but the viewer's `no-referrer` policy does not disclose its local document URL. Add another CDN or major version only by changing both validation and the document CSP and adding an accept/reject check.
+
+## Remote publishing
+
+Remote publishing follows [ADR 0001](adr/0001-static-remote-inbox.md). The local library remains the only mutable source of truth. A provider-independent module generates a complete static snapshot under a 128-bit capability path, and a deployment workflow sends that immutable snapshot through a Cloudflare Pages adapter. Administration remains local and the root of the deployed site does not list inboxes.
+
+The stable remote target is the Cloudflare account ID plus project name, never an inferred hostname. Remote operations journal intent before deployment, checkpoint the deployment receipt, and expose incomplete work for reconciliation. Unlisted capability URLs are bearer links, not authentication.

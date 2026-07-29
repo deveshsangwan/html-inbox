@@ -2,7 +2,7 @@
 
 HTML Inbox is a local library for generated HTML reports, notes, and dashboards. The CLI validates and stores each document, then opens it through a loopback-only viewer with an isolated document frame and a restrictive Content Security Policy.
 
-The current release is local-only. Remote static publishing is planned, but the local viewer and its administrative capabilities will remain private to the machine running the CLI.
+The current release is local-only. The accepted remote design publishes complete static snapshots to a user-owned Cloudflare Pages project; the local viewer and its administrative capabilities remain private to the machine running the CLI. See [ADR 0001](docs/adr/0001-static-remote-inbox.md).
 
 ## Requirements
 
