@@ -1,5 +1,7 @@
 packages/cli/src/static-export.ts
   s_2381dcc91da35a::t_143ec21829cc99 14,80,82,351
+packages/cli/src/cloudflare-pages.ts
+  s_2381dcc91da35a::t_5ac1958ddf6bb9 9-17,20-21,149-150,209,219-220,239,284,295,369-370,393,565
 ---
 {
   "schema_version": "authorship/3.0.0",
