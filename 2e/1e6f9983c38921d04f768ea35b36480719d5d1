@@ -1,0 +1,19 @@
+packages/cli/src/backend.ts
+  s_2381dcc91da35a::t_dad2f6ad3c72c0 2,8,140-160,211,247-249
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "2e1e6f9983c38921d04f768ea35b36480719d5d1",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
