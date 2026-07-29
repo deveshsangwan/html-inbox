@@ -8,6 +8,8 @@ README.md
 docs/threat-model.md
   s_af0402c5d6cba5::t_d3751813a41ecb 47,55
   s_af0402c5d6cba5::t_fe1ce588eac1a2 56-77
+packages/cli/src/backend.ts
+  s_2381dcc91da35a::t_e1ea02fed46567 110,115,117,131
 ---
 {
   "schema_version": "authorship/3.0.0",
@@ -15,6 +17,14 @@ docs/threat-model.md
   "base_commit_sha": "72d70d17b96c0e3863f5d0fbaf8f30714f216817",
   "prompts": {},
   "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    },
     "s_af0402c5d6cba5": {
       "agent_id": {
         "tool": "codex",
