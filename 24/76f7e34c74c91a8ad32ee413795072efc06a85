@@ -1,0 +1,25 @@
+packages/cli/src/viewer-assets.ts
+  s_2381dcc91da35a::t_5f78535ea1ead3 1-516
+packages/cli/src/viewer-render.ts
+  s_2381dcc91da35a::t_af77ab2e860dcb 1-195
+packages/cli/src/viewer.ts
+  s_2381dcc91da35a::t_2a11add11a4781 1-19
+packages/cli/src/viewer-server.ts
+  s_2381dcc91da35a::t_011a82fe0a8fc4 1-383
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "2476f7e34c74c91a8ad32ee413795072efc06a85",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
