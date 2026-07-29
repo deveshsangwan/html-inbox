@@ -1,0 +1,21 @@
+packages/cli/src/self-check.ts
+  s_2381dcc91da35a::t_a6ad01482c75fb 28,53,896,983,985,1247-1248,1275,1281-1286,1289
+packages/cli/src/remote-workflow.ts
+  s_2381dcc91da35a::t_a6ad01482c75fb 11,14-22,43,148-149,152,157,182,251,282-313,355,469,489,593-596,599,609-613,633,638,640-641,664-667,669-670
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "c307de9f941206aeb12712bfc0f7852dd3021436",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
