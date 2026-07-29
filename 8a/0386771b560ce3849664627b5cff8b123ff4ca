@@ -1,0 +1,26 @@
+packages/cli/src/index.ts
+  s_2381dcc91da35a::t_313fffec2ff511 10,29-35,87-91,211-239,277-343,407-443
+packages/cli/src/cloudflare-pages.ts
+  s_2381dcc91da35a::t_313fffec2ff511 58-79,141,149-166,168,198-263,355-452,462,615-627,636-679
+packages/cli/src/remote-workflow.ts
+  s_2381dcc91da35a::t_313fffec2ff511 1-664
+packages/cli/src/self-check.ts
+  s_2381dcc91da35a::t_20ecec541adb8f 22-24,26-27,35-36,41-42,48-53,68,133-172,705-739,817-856,858-911,913-940,951-984,1152-1157,1162-1211,1213-1225,1227,1229-1234
+  s_2381dcc91da35a::t_313fffec2ff511 857,912,941-950,1212,1226,1228
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "8a0386771b560ce3849664627b5cff8b123ff4ca",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
