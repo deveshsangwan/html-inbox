@@ -1,0 +1,19 @@
+packages/cli/src/self-check.ts
+  s_2381dcc91da35a::t_62fa1e1147d96b 5-9,11-14,18-19,23,27-32,35,77-99,534-539,557-617,653-708,1011-1018,1025-1026
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "06bb91fcf79fe9ec45b2dd23f2837a18e0817cae",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
