@@ -1,0 +1,21 @@
+README.md
+  s_2381dcc91da35a::t_a438301a2755b7 68-105,122
+packages/cli/src/index.ts
+  s_2381dcc91da35a::t_a438301a2755b7 9,28-34,85-89,187-215,253-319,383-419
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "bfaf03f2ac858e8c932d734899fe0caf22d9ee52",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
