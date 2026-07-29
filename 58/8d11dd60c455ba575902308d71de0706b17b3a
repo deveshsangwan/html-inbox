@@ -1,0 +1,42 @@
+packages/cli/src/self-check.ts
+  s_af0402c5d6cba5::t_4cb519639e4737 26,50,691,740,742,949-950,977,991
+  s_af0402c5d6cba5::t_209eee0f4b5258 983-988
+packages/cli/src/remote-workflow.ts
+  s_af0402c5d6cba5::t_3042364c011840 17
+  s_af0402c5d6cba5::t_2dc90b9ee8382c 11,14-16,18-21,43,142-143,146
+  s_af0402c5d6cba5::t_7f92d025eaf233 22
+  s_af0402c5d6cba5::t_d82681618cb7c9 151,174,243,268-283
+  s_af0402c5d6cba5::t_ff6bb5cb1f5fe0 448,529-532,542-546,563,568,570-571
+  s_af0402c5d6cba5::t_f9d498a44840be 326
+  s_af0402c5d6cba5::t_168dccfe9ec58c 586-589,591-592
+  s_af0402c5d6cba5::t_3637f610147bb5 284-285
+packages/cli/src/cloudflare-pages.ts
+  s_af0402c5d6cba5::t_02b93c26bbf631 9-10,12-16,21,142-143,196,206-207,226,269,278,352-353,376,522
+  s_af0402c5d6cba5::t_7f92d025eaf233 17,20
+  s_af0402c5d6cba5::t_3042364c011840 11
+packages/cli/src/static-export.ts
+  s_af0402c5d6cba5::t_7f92d025eaf233 10
+  s_af0402c5d6cba5::t_0d6430bbadaa1b 74,76
+packages/cli/src/viewer-server.ts
+  s_af0402c5d6cba5::t_a84f65fd49e892 306
+  s_af0402c5d6cba5::t_7f92d025eaf233 8
+packages/cli/src/validation.ts
+  s_af0402c5d6cba5::t_3042364c011840 10-11
+  s_af0402c5d6cba5::t_24928300be9ce4 1-9,12-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "588d11dd60c455ba575902308d71de0706b17b3a",
+  "prompts": {},
+  "sessions": {
+    "s_af0402c5d6cba5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6a19-9f8b-7842-93b8-a6c4bf549f02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+docs/adr/0001-static-remote-inbox.md
+  s_af0402c5d6cba5::t_d3751813a41ecb 11
+  s_af0402c5d6cba5::t_fe1ce588eac1a2 1-10,12-105
+docs/architecture.md
+  s_af0402c5d6cba5::t_fe1ce588eac1a2 86-91
+README.md
+  s_af0402c5d6cba5::t_fe1ce588eac1a2 5
+docs/threat-model.md
+  s_af0402c5d6cba5::t_d3751813a41ecb 47,55
+  s_af0402c5d6cba5::t_fe1ce588eac1a2 56-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f45b1aa5a36f95efc8ce7655a1b34633b2db7ae3",
+  "prompts": {},
+  "sessions": {
+    "s_af0402c5d6cba5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6a19-9f8b-7842-93b8-a6c4bf549f02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Devesh Sangwan <deveshsangwan@PAISAMAC156.local>"
+    }
+  }
+}

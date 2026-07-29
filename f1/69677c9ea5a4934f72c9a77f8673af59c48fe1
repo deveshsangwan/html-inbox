@@ -1,0 +1,35 @@
+docs/architecture.md
+  s_af0402c5d6cba5::t_9a029fd8c9837e 109-115
+docs/adr/0001-static-remote-inbox.md
+  s_af0402c5d6cba5::t_9a029fd8c9837e 106-112
+packages/cli/src/self-check.ts
+  s_af0402c5d6cba5::t_5c8a8e4a780606 412-417
+  s_af0402c5d6cba5::t_9c69a409fcbe17 5-13,17-22,24,26,435-528,682-692
+  s_af0402c5d6cba5::t_ee72cd43703543 23,25,60-82
+  s_af0402c5d6cba5::t_6025a182be6147 529-551
+  s_af0402c5d6cba5::t_a4dc74572abbd1 693-694
+packages/cli/src/cloudflare-pages.ts
+  s_af0402c5d6cba5::t_f8099d394cdd21 9
+  s_af0402c5d6cba5::t_6c4e076d002bd6 353-354,361-369
+  s_af0402c5d6cba5::t_ad2f0391ea5aa3 169,411-418
+  s_af0402c5d6cba5::t_3d6ce3d7203771 1-8,10-168,173-175,180-181,183-185,187-189,191-193,195-251,258-263,268-352,355-360,370-387,442
+  s_af0402c5d6cba5::t_5c8a8e4a780606 170-172,176-179,182,186,190,194,252-257,264-267,388-410,419-441
+packages/cli/src/static-export.ts
+  s_af0402c5d6cba5::t_5c8a8e4a780606 56-63,105,177,179-181,184-191
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f169677c9ea5a4934f72c9a77f8673af59c48fe1",
+  "prompts": {},
+  "sessions": {
+    "s_af0402c5d6cba5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6a19-9f8b-7842-93b8-a6c4bf549f02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Devesh Sangwan <deveshsangwan@PAISAMAC156.local>"
+    }
+  }
+}

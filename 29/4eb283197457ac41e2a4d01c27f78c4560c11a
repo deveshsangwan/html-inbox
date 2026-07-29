@@ -1,0 +1,31 @@
+docs/threat-model.md
+  s_fb73b381cee9d3::t_b481d2df2a2c25 21,32-34
+packages/cli/src/viewer-assets.ts
+  s_fb73b381cee9d3::t_b481d2df2a2c25 515
+packages/cli/src/self-check.ts
+  s_fb73b381cee9d3::t_b481d2df2a2c25 330,335-336
+packages/shared/src/self-check.ts
+  s_fb73b381cee9d3::t_3878b3ab5f4e37 12-45
+README.md
+  s_fb73b381cee9d3::t_b481d2df2a2c25 124,126
+docs/architecture.md
+  s_fb73b381cee9d3::t_b481d2df2a2c25 73,76,86
+packages/shared/src/index.ts
+  s_fb73b381cee9d3::t_b481d2df2a2c25 82-91,95,127-142,145
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "294eb283197457ac41e2a4d01c27f78c4560c11a",
+  "prompts": {},
+  "sessions": {
+    "s_fb73b381cee9d3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f71af-eb28-7ef0-b648-b99d2528757f",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
