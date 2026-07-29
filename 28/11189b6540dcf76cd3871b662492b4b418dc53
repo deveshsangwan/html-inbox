@@ -1,0 +1,26 @@
+.github/workflows/pages.yml
+  s_2381dcc91da35a::t_18e657005a1d14 26-34
+  s_2381dcc91da35a::t_bebb82930c4b81 23-25
+  s_2381dcc91da35a::t_6c341865b66bb2 1-22
+site/index.html
+  s_2381dcc91da35a::t_18e657005a1d14 66-570
+  s_2381dcc91da35a::t_333fd173e1fc18 63-65
+  s_2381dcc91da35a::t_3777fd8c8e2623 571-573
+  s_2381dcc91da35a::t_9192125911dca5 1-62,574
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "2811189b6540dcf76cd3871b662492b4b418dc53",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
