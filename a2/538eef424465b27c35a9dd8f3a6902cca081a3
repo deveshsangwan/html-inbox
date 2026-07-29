@@ -1,0 +1,79 @@
+docs/threat-model.md
+  s_2381dcc91da35a::t_f9694983361f24 66-69,91
+  s_2381dcc91da35a::t_5c15b1369e444a 34,45-59,80-83,93-100,128,134
+  s_2381dcc91da35a::t_a68e12052b408d 60-65
+  s_2381dcc91da35a::t_c47b6bbea27a30 70-72,77-79
+  s_2381dcc91da35a::t_624f169fb89de0 84-86,88-90
+  s_2381dcc91da35a::t_daecbebbb4f8c0 92
+  s_2381dcc91da35a::t_1de01192020bd9 32,73-76,87
+packages/shared/src/index.ts
+  s_2381dcc91da35a::t_b5576c98f0a97b 191-202
+  s_2381dcc91da35a::t_9a2ed21ce5dade 122,305-312
+  s_2381dcc91da35a::t_ce4d2ad1107bf9 90,159-172,174-175,177-189,205-206,215-216,233-234,445
+  s_2381dcc91da35a::t_5c15b1369e444a 49-50,95,138-139,223,237,293-304,313-356
+  s_2381dcc91da35a::t_f9694983361f24 127,173,238-259
+  s_2381dcc91da35a::t_9a37eb5cdd4959 46-48
+  s_2381dcc91da35a::t_8cec73e337f7bf 51-53
+  s_2381dcc91da35a::t_9117c3df1077d6 87-89
+  s_2381dcc91da35a::t_dfe78f218b3b75 91-94
+  s_2381dcc91da35a::t_5b8177d7317f89 96-98
+  s_2381dcc91da35a::t_b016f8b54b7761 120-121
+  s_2381dcc91da35a::t_678eed2e7df188 123
+  s_2381dcc91da35a::t_7ccb11cfc137be 125-126
+  s_2381dcc91da35a::t_88277b781be328 128-130
+  s_2381dcc91da35a::t_4b8a9b844671b8 137
+  s_2381dcc91da35a::t_cc7b20efc06d60 140-142
+  s_2381dcc91da35a::t_6341121f8a6ade 156-158
+  s_2381dcc91da35a::t_60e1e3d11f7e31 176
+  s_2381dcc91da35a::t_6baa1c8942c9f0 190
+  s_2381dcc91da35a::t_bfa580a6084413 203-204
+  s_2381dcc91da35a::t_6d338e0ab45e7a 207-209,212-214
+  s_2381dcc91da35a::t_4fa0c4ab95a5d1 217-222
+  s_2381dcc91da35a::t_149f6101a729bf 224-226,230-232
+  s_2381dcc91da35a::t_81dcc8a7fffd88 235-236
+  s_2381dcc91da35a::t_8078c24885a5de 290-292
+  s_2381dcc91da35a::t_1250e5e25c9b0e 357-359
+  s_2381dcc91da35a::t_f6a8816b220121 442-444
+  s_2381dcc91da35a::t_23db1d7ff73ed0 446-447
+  s_2381dcc91da35a::t_2a66f4404c3b8c 54-55,59,76-86,101-106,110,113-118,131,143,148-155,210-211,227-229,274-289,360-379,383-441,497
+README.md
+  s_2381dcc91da35a::t_5c15b1369e444a 127
+  s_2381dcc91da35a::t_f9694983361f24 125
+packages/shared/src/self-check.ts
+  s_2381dcc91da35a::t_f9694983361f24 36-37,40-44
+  s_2381dcc91da35a::t_5c15b1369e444a 14-23,38-39,45
+  s_2381dcc91da35a::t_ce4d2ad1107bf9 46,48,50-52,54,63-68,93-95
+  s_2381dcc91da35a::t_b5576c98f0a97b 69-71
+  s_2381dcc91da35a::t_c677fbc568037d 11-13
+  s_2381dcc91da35a::t_d335645b663dcd 24-26,33-35
+  s_2381dcc91da35a::t_2b4966cf9e1eb9 72-74
+  s_2381dcc91da35a::t_a0635706d446f2 90-92
+  s_2381dcc91da35a::t_2ec00ea6a8c256 10,27-32,75-84,86-88,114-126,128-129
+docs/architecture.md
+  s_2381dcc91da35a::t_5c15b1369e444a 76,86
+  s_2381dcc91da35a::t_f9694983361f24 72,74
+packages/cli/src/index.ts
+  s_2381dcc91da35a::t_b7adaff185efe2 132-136,139
+packages/cli/src/publish-input.ts
+  s_2381dcc91da35a::t_711ca36b4d5334 14-19,23,81-87
+packages/cli/src/self-check.ts
+  s_2381dcc91da35a::t_7d0a2a463b1f4f 205-236
+test/fixtures/invalid.html
+  s_2381dcc91da35a::t_5a0dab0fabbeea 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "a2538eef424465b27c35a9dd8f3a6902cca081a3",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
