@@ -7,6 +7,7 @@ import { DeleteResult, DocumentMetadata } from "@html-inbox/shared";
 import { getInboxHome, getViewerPort, LocalDocumentBackend } from "./backend";
 import { loadPublishInput, PublishRequest } from "./publish-input";
 import { ensurePrivateDirectory } from "./private-storage";
+import { RemoteInitOptions, RemoteState, RemoteStatus, RemoteWorkflow } from "./remote-workflow";
 import { exportStaticSnapshot, StaticSnapshotResult } from "./static-export";
 import { ensureViewer, getViewerStatus, startViewer, stopViewer } from "./viewer";
 
@@ -24,6 +25,13 @@ Commands:
 
   export --out <directory> [--capability <value>] [--json]
       Build a provider-independent static snapshot of the local library.
+
+  remote init --account <id> --project <name> [--branch <name>] [--adopt] [--json]
+  remote publish [--json]
+  remote status [--json]
+  remote reconcile [--adopt] [--json]
+  remote revoke [--yes] [--json]
+      Configure and manage a private capability inbox on Cloudflare Pages.
 
   viewer [status|stop]
       Run the local viewer in the foreground.
@@ -73,6 +81,11 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
       options,
     );
     console.log(formatStaticExportResult(result, options.json));
+    return;
+  }
+
+  if (command === "remote") {
+    await remoteCommand(argv.slice(1));
     return;
   }
 
@@ -195,6 +208,35 @@ function containsPath(parent: string, child: string): boolean {
   return relative === "" || (relative !== ".." && !relative.startsWith(`..${path.sep}`));
 }
 
+export function formatRemoteState(state: RemoteState): string {
+  const lines = [
+    `Target: ${state.target.accountId}/${state.target.projectName} (${state.branch})`,
+    `State: ${state.revoked ? "revoked" : state.lastDeployment ? "published" : "configured"}`,
+  ];
+  if (state.lastDeployment && !state.revoked) {
+    lines.push(`Inbox: ${state.lastDeployment.receipt.projectInboxUrl}`);
+  }
+  if (state.lastDeployment) {
+    lines.push(`Snapshot: ${state.lastDeployment.snapshotHash}`);
+  }
+  return lines.join("\n");
+}
+
+export function formatRemoteStatus(status: RemoteStatus): string {
+  if (!status.configured || !status.state) {
+    return status.operation
+      ? `Remote publishing is not configured. Incomplete ${status.operation.kind} operation: ${status.operation.id}`
+      : "Remote publishing is not configured.";
+  }
+  const lines = [formatRemoteState(status.state)];
+  if (status.operation) {
+    lines.push(
+      `Incomplete operation: ${status.operation.kind} ${status.operation.id} (${status.operation.phase}, ${status.operation.attempts} attempts)`,
+    );
+  }
+  return lines.join("\n");
+}
+
 async function deleteCommand(args: string[]): Promise<void> {
   const id = args[0];
   if (!id || id.startsWith("--")) {
@@ -230,6 +272,74 @@ async function deleteCommand(args: string[]): Promise<void> {
     throw new Error(`Document disappeared before it could be deleted: ${id}`);
   }
   console.log(formatDeleteResult(result, json));
+}
+
+async function remoteCommand(args: string[]): Promise<void> {
+  const action = args[0];
+  if (!action) throw new Error("remote requires init, publish, status, reconcile, or revoke");
+  const commandArgs = args.slice(1);
+  const home = getInboxHome();
+  const workflow = new RemoteWorkflow(new LocalDocumentBackend(home), home);
+
+  if (action === "init") {
+    const options = parseRemoteInitArgs(commandArgs);
+    const state = await workflow.init(options);
+    console.log(options.json ? JSON.stringify(state, null, 2) : formatRemoteState(state));
+    return;
+  }
+
+  if (action === "publish") {
+    const json = parseBooleanFlag(commandArgs, "--json");
+    const state = await workflow.publish();
+    console.log(json ? JSON.stringify(state, null, 2) : formatRemoteState(state));
+    return;
+  }
+
+  if (action === "status") {
+    const json = parseBooleanFlag(commandArgs, "--json");
+    const status = await workflow.status();
+    console.log(json ? JSON.stringify(status, null, 2) : formatRemoteStatus(status));
+    return;
+  }
+
+  if (action === "reconcile") {
+    const adopt = parseBooleanFlag(commandArgs, "--adopt", ["--json"]);
+    const json = parseBooleanFlag(commandArgs, "--json", ["--adopt"]);
+    const state = await workflow.reconcile({ adopt });
+    console.log(json ? JSON.stringify(state, null, 2) : formatRemoteState(state));
+    return;
+  }
+
+  if (action === "revoke") {
+    const yes = parseBooleanFlag(commandArgs, "--yes", ["--json"]);
+    const json = parseBooleanFlag(commandArgs, "--json", ["--yes"]);
+    if (!yes) {
+      if (!stdin.isTTY || !stdout.isTTY) {
+        throw new Error("remote revoke requires --yes when no interactive terminal is available");
+      }
+      const prompt = createInterface({ input: stdin, output: stdout });
+      try {
+        const answer = await prompt.question(
+          "Replace the current remote capability route? Older immutable deployment URLs may remain readable. [y/N] ",
+        );
+        if (!/^y(?:es)?$/i.test(answer.trim())) {
+          console.log("Revoke cancelled.");
+          return;
+        }
+      } finally {
+        prompt.close();
+      }
+    }
+    const result = await workflow.revoke();
+    if (json) console.log(JSON.stringify(result, null, 2));
+    else {
+      console.log(result.revokedUrl ? `Revoked ${result.revokedUrl}` : "Remote capability revoked.");
+      console.log(result.warning);
+    }
+    return;
+  }
+
+  throw new Error(`Unknown remote action: ${action}`);
 }
 
 function parseBooleanFlag(
@@ -293,6 +403,44 @@ interface ExportCommandOptions {
   outputDir: string;
   capability?: string;
   json: boolean;
+}
+
+interface RemoteInitCommandOptions extends RemoteInitOptions {
+  json: boolean;
+}
+
+function parseRemoteInitArgs(args: string[]): RemoteInitCommandOptions {
+  let accountId = "";
+  let projectName = "";
+  let branch: string | undefined;
+  let adopt = false;
+  let json = false;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === "--account" || arg === "--project" || arg === "--branch") {
+      const value = args[++index];
+      if (!value || value.startsWith("--")) throw new Error(`${arg} requires a value`);
+      if (arg === "--account") accountId = value;
+      else if (arg === "--project") projectName = value;
+      else branch = value;
+    } else if (arg.startsWith("--account=")) {
+      accountId = arg.slice("--account=".length);
+    } else if (arg.startsWith("--project=")) {
+      projectName = arg.slice("--project=".length);
+    } else if (arg.startsWith("--branch=")) {
+      branch = arg.slice("--branch=".length);
+    } else if (arg === "--adopt") {
+      adopt = true;
+    } else if (arg === "--json") {
+      json = true;
+    } else {
+      throw new Error(`Unknown remote init argument: ${arg}`);
+    }
+  }
+  if (!accountId) throw new Error("remote init requires --account <id>");
+  if (!projectName) throw new Error("remote init requires --project <name>");
+  return { accountId, projectName, branch, adopt, json };
 }
 
 function parseExportArgs(args: string[]): ExportCommandOptions {

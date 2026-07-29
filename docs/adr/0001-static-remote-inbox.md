@@ -69,7 +69,7 @@ Each deployment attaches its journaled operation ID and the first 160 bits of it
 
 ### Revoke semantics
 
-Revocation deploys a complete replacement snapshot without the inbox capability route. It does not guarantee removal of older immutable Cloudflare deployment URLs. The CLI must state this and provide or document a deployment-history pruning step before describing sensitive content as inaccessible.
+Revocation deploys a complete replacement snapshot without the previously shared inbox capability route. The replacement contains a newly rotated, undisclosed empty capability so a later publish cannot restore the old link. Revocation does not guarantee removal of older immutable Cloudflare deployment URLs. The CLI must state this and document a deployment-history pruning step before describing sensitive content as inaccessible.
 
 ## Module seams
 
