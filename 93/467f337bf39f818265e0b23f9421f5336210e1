@@ -1,0 +1,31 @@
+packages/cli/src/remote-workflow.ts
+  s_2381dcc91da35a::t_444d19831458b2 595-596,601,612-613,635
+  s_2381dcc91da35a::t_a6ad01482c75fb 11,14-22,43,148-149,152,157,182,251,282-313,355,469,489,593-594,599,609-611,633,638,640-641,664-667,669-670
+packages/cli/src/self-check.ts
+  s_2381dcc91da35a::t_0d1db088af962b 856-870,937-953
+  s_2381dcc91da35a::t_a6ad01482c75fb 28,53,911,1015,1017,1279-1280,1307,1313-1318,1321
+packages/cli/src/cloudflare-pages.ts
+  s_2381dcc91da35a::t_6133d07d533d47 9-17,20-21,151-152,211,221-222,241,300,311,385-386,409,584
+packages/cli/src/static-export.ts
+  s_2381dcc91da35a::t_c8184727a7b9ac 14,80,82,351
+packages/cli/src/validation.ts
+  s_2381dcc91da35a::t_08c6422cc722fc 1-101
+packages/cli/src/viewer-server.ts
+  s_2381dcc91da35a::t_012714d00d703a 8,306
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "93467f337bf39f818265e0b23f9421f5336210e1",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
