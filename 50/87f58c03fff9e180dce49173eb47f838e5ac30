@@ -1,0 +1,21 @@
+packages/cli/src/static-export.ts
+  s_2381dcc91da35a::t_143ec21829cc99 14,80,82,351
+packages/cli/src/cloudflare-pages.ts
+  s_2381dcc91da35a::t_5ac1958ddf6bb9 9-17,20-21,149-150,209,219-220,239,298,309,383-384,407,579
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "5087f58c03fff9e180dce49173eb47f838e5ac30",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
