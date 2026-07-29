@@ -1,11 +1,13 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import { DeleteResult, DocumentMetadata } from "@html-inbox/shared";
 import { getInboxHome, getViewerPort, LocalDocumentBackend } from "./backend";
 import { loadPublishInput, PublishRequest } from "./publish-input";
+import { ensurePrivateDirectory } from "./private-storage";
+import { exportStaticSnapshot, StaticSnapshotResult } from "./static-export";
 import { ensureViewer, getViewerStatus, startViewer, stopViewer } from "./viewer";
 
 const USAGE = `Usage: html-inbox <command> [options]
@@ -19,6 +21,9 @@ Commands:
 
   delete <id> [--force] [--json]
       Delete a document after confirmation.
+
+  export --out <directory> [--capability <value>] [--json]
+      Build a provider-independent static snapshot of the local library.
 
   viewer [status|stop]
       Run the local viewer in the foreground.
@@ -55,6 +60,19 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
   if (command === "delete") {
     await deleteCommand(argv.slice(1));
+    return;
+  }
+
+  if (command === "export") {
+    const options = parseExportArgs(argv.slice(1));
+    const home = getInboxHome();
+    await ensurePrivateDirectory(home);
+    assertExportOutsideHome(options.outputDir, home);
+    const result = await exportStaticSnapshot(
+      new LocalDocumentBackend(home),
+      options,
+    );
+    console.log(formatStaticExportResult(result, options.json));
     return;
   }
 
@@ -124,6 +142,57 @@ export function formatDeleteResult(result: DeleteResult, json: boolean): string 
     return JSON.stringify(result, null, 2);
   }
   return `Deleted ${result.metadata.id} (${formatBytes(result.reclaimedBytes)} reclaimed).`;
+}
+
+export function formatStaticExportResult(
+  result: StaticSnapshotResult,
+  json: boolean,
+): string {
+  if (json) {
+    return JSON.stringify(result, null, 2);
+  }
+  return [
+    `Exported ${result.manifest.documentCount} ${
+      result.manifest.documentCount === 1 ? "document" : "documents"
+    } to ${result.outputDir}.`,
+    `Inbox path: ${result.inboxPath}/`,
+    `Snapshot: ${result.manifest.snapshotHash}`,
+  ].join("\n");
+}
+
+export function assertExportOutsideHome(outputDir: string, home: string): void {
+  const output = normalizeComparisonPath(resolveExistingPath(outputDir));
+  const inboxHome = normalizeComparisonPath(resolveExistingPath(home));
+  if (containsPath(output, inboxHome) || containsPath(inboxHome, output)) {
+    throw new Error("Static export output must not contain or be inside HTML_INBOX_HOME");
+  }
+}
+
+function normalizeComparisonPath(value: string): string {
+  return process.platform === "darwin" || process.platform === "win32"
+    ? value.toLowerCase()
+    : value;
+}
+
+function resolveExistingPath(value: string): string {
+  let current = path.resolve(value);
+  const missing: string[] = [];
+  for (;;) {
+    try {
+      return path.join(realpathSync(current), ...missing.reverse());
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      const parent = path.dirname(current);
+      if (parent === current) throw error;
+      missing.push(path.basename(current));
+      current = parent;
+    }
+  }
+}
+
+function containsPath(parent: string, child: string): boolean {
+  const relative = path.relative(parent, child);
+  return relative === "" || (relative !== ".." && !relative.startsWith(`..${path.sep}`));
 }
 
 async function deleteCommand(args: string[]): Promise<void> {
@@ -218,6 +287,51 @@ function parsePublishArgs(args: string[]): PublishRequest {
   }
 
   return { filePath, title, type };
+}
+
+interface ExportCommandOptions {
+  outputDir: string;
+  capability?: string;
+  json: boolean;
+}
+
+function parseExportArgs(args: string[]): ExportCommandOptions {
+  let outputDir = "";
+  let capability: string | undefined;
+  let json = false;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === "--out") {
+      const value = args[++index];
+      if (!value || value.startsWith("--")) {
+        throw new Error("export requires --out <directory>");
+      }
+      outputDir = value;
+    } else if (arg.startsWith("--out=")) {
+      outputDir = arg.slice("--out=".length);
+    } else if (arg === "--capability") {
+      const value = args[++index];
+      if (!value || value.startsWith("--")) {
+        throw new Error("export --capability requires a value");
+      }
+      capability = value;
+    } else if (arg.startsWith("--capability=")) {
+      capability = arg.slice("--capability=".length);
+    } else if (arg === "--json") {
+      json = true;
+    } else {
+      throw new Error(`Unknown export argument: ${arg}`);
+    }
+  }
+
+  if (!outputDir) {
+    throw new Error("export requires --out <directory>");
+  }
+  if (capability === "") {
+    throw new Error("export --capability requires a value");
+  }
+  return { outputDir, capability, json };
 }
 
 if (require.main === module) {

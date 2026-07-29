@@ -53,6 +53,18 @@ corepack pnpm html-inbox viewer stop
 
 Use `--json` with `list` or `delete` for automation. Non-interactive deletion requires `--force`. The viewer also supports server-rendered search across title, type, and source file name.
 
+## Export a static inbox
+
+Build a provider-independent static snapshot without contacting a hosting service:
+
+```sh
+corepack pnpm html-inbox export --out ./html-inbox-export
+```
+
+The command prints the private inbox path, document count, and content hash. The deployed site root deliberately does not link to the inbox. Treat the generated `/i/<capability>/` path as a bearer secret: anyone who receives it can read that snapshot.
+
+Exports preserve the original document bytes, include a browser-side library search, and replace a recognized prior export from a private sibling staging directory. Unrelated directories are refused. `security-headers.json` records the semantic security policies that a hosting adapter must install on every corresponding route alias. Use `--json` for automation or `--capability <value>` to reproduce a known 128-bit path; normally the command should generate the capability for you.
+
 ## Supported HTML
 
 HTML Inbox accepts UTF-8 `.html` and `.htm` files. It rejects inline event-handler attributes and external URLs except for the explicitly supported Tailwind browser and Mermaid v11 script entry points. Accepted HTML is still untrusted: validation is a compatibility and policy gate, not sanitization.
@@ -69,7 +81,7 @@ corepack pnpm test
 corepack pnpm verify
 ```
 
-`verify` is the same clean build-and-test gate used by continuous integration. Package self-checks exercise validation, storage, security headers, iframe isolation, theme behavior, and escaping of untrusted metadata.
+`verify` is the same clean build-and-test gate used by continuous integration. Package self-checks exercise validation, storage, static export determinism, security headers, iframe isolation, theme behavior, and escaping of untrusted metadata.
 
 ## License
 

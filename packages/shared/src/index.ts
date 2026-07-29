@@ -33,6 +33,7 @@ export interface DeleteResult {
 export interface StoredDocument {
   metadata: DocumentMetadata;
   html: string;
+  originalBytes: Buffer;
 }
 
 export interface DocumentBackend {
