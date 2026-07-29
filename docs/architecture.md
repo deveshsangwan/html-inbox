@@ -33,6 +33,8 @@ documents/<id>/metadata.json
 
 `index.html` is the original uploaded HTML bytes. `metadata.json` holds the generated id, title, type, publish time, and source file name.
 
+New records include a storage schema version. Legacy records without the field are read as schema version 1. Publishing writes and validates both files in the private `documents/.staging/<id>` area, then makes the complete record visible with one same-filesystem directory rename. Interrupted staging records are never listed. A corrupt committed record is skipped with a diagnostic instead of breaking the rest of the library.
+
 ## Backend
 
 Keep the backend abstraction to three operations:
@@ -68,6 +70,8 @@ HTML is untrusted by default. Phase 1 uses cheap validation before storage:
 - reject other external asset URLs
 
 Validation is a gate, not a sanitizer. Accepted HTML is still rendered only in the sandboxed viewer path. The iframe enables scripts without `allow-same-origin`, so documents receive an opaque origin and cannot access the viewer DOM or same-origin storage. Its CSP permits inline document configuration and the allowlisted CDN script paths while continuing to block connections, frames, forms, objects, and non-data image, media, and font loads.
+
+Input is bounded before reading. HTML files default to a 10 MiB limit, configurable through `HTML_INBOX_MAX_BYTES`, and metadata fields have explicit length limits.
 
 Supported CDN entry URLs are deliberately limited to the canonical major-version URLs:
 

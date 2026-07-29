@@ -5,12 +5,32 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { LocalDocumentBackend } from "./backend";
 import { formatUsage, getCliVersion } from "./index";
+import { loadPublishInput } from "./publish-input";
 import { startViewer, VIEWER_PROTOCOL_VERSION } from "./viewer";
 
 async function run(): Promise<void> {
   assert.match(formatUsage(), /publish <file\.html>/);
   assert.match(formatUsage(), /viewer/);
   assert.equal(getCliVersion(), "0.1.0");
+
+  const inputHome = await mkdtemp(path.join(tmpdir(), "html-inbox-input-"));
+  const inputPath = path.join(inputHome, "report.html");
+  const inputHtml = "<!doctype html><html><body>bounded</body></html>";
+  await writeFile(inputPath, inputHtml);
+  await assert.rejects(
+    loadPublishInput(
+      { filePath: inputPath, title: "Report", type: "report" },
+      { HTML_INBOX_MAX_BYTES: "8" },
+    ),
+    /limit of 8 bytes/,
+  );
+  await assert.rejects(
+    loadPublishInput(
+      { filePath: inputPath, title: " ", type: "report" },
+      { HTML_INBOX_MAX_BYTES: "1024" },
+    ),
+    /title must not be empty/,
+  );
 
   if (process.platform !== "win32") {
     const unsafeHome = await mkdtemp(path.join(tmpdir(), "html-inbox-unsafe-"));
@@ -25,8 +45,10 @@ async function run(): Promise<void> {
   }
 
   const home = await mkdtemp(path.join(tmpdir(), "html-inbox-"));
-  const backend = new LocalDocumentBackend(home);
+  const warnings: string[] = [];
+  const backend = new LocalDocumentBackend(home, (warning) => warnings.push(warning));
   assert.equal(await backend.getDocument("missing"), null);
+  assert.equal(warnings.length, 0);
   await assert.rejects(
     stat(path.join(home, "documents", "missing")),
     (error: NodeJS.ErrnoException) => error.code === "ENOENT",
@@ -42,6 +64,32 @@ async function run(): Promise<void> {
   await assertPortAvailable(failedViewerPort);
 
   const html = "<!doctype html><html><body><h1>Report</h1></body></html>";
+  const failedPublishId = "failed-publish";
+  const failedStagingDir = path.join(home, "documents", ".staging", failedPublishId);
+  await mkdir(path.join(failedStagingDir, "metadata.json"), { recursive: true });
+  const failedBackend = new LocalDocumentBackend(
+    home,
+    (warning) => warnings.push(warning),
+    () => failedPublishId,
+  );
+  await assert.rejects(
+    failedBackend.publish({
+      originalBytes: Buffer.from(html),
+      title: "Failed report",
+      type: "report",
+      sourceFileName: "failed.html",
+    }),
+    /Managed file is not a regular file/,
+  );
+  await assert.rejects(
+    stat(failedStagingDir),
+    (error: NodeJS.ErrnoException) => error.code === "ENOENT",
+  );
+  await assert.rejects(
+    stat(path.join(home, "documents", failedPublishId)),
+    (error: NodeJS.ErrnoException) => error.code === "ENOENT",
+  );
+
   const server = await startViewer(backend, home, 0);
   const address = server.address();
   assert(address && typeof address !== "string");
@@ -58,6 +106,10 @@ async function run(): Promise<void> {
     const hostileHost = await requestWithHost(address.port, "attacker.example");
     assert.equal(hostileHost.statusCode, 421);
 
+    const interruptedStaging = path.join(home, "documents", ".staging", "interrupted");
+    await mkdir(interruptedStaging, { recursive: true });
+    await writeFile(path.join(interruptedStaging, "index.html"), html);
+
     const emptyIndex = await fetch(baseUrl);
     const emptyIndexCsp = emptyIndex.headers.get("content-security-policy") ?? "";
     const emptyIndexHtml = await emptyIndex.text();
@@ -66,12 +118,12 @@ async function run(): Promise<void> {
     assert.equal(emptyIndexHtml.includes("0 documents"), true);
 
     const published = await backend.publish({
-      html,
       originalBytes: Buffer.from(html),
       title: "Report",
       type: "report",
       sourceFileName: "report.html",
     });
+    assert.equal(published.metadata.schemaVersion, 1);
     const stored = await readFile(
       path.join(home, "documents", published.metadata.id, "index.html"),
       "utf8",
@@ -138,7 +190,6 @@ async function run(): Promise<void> {
     const hostileType = "report\"><svg/onload=alert('type')>";
     const hostileSource = 'source.html\" autofocus onfocus="alert(\'source\')';
     const hostile = await backend.publish({
-      html,
       originalBytes: Buffer.from(html),
       title: hostileTitle,
       type: hostileType,
@@ -189,6 +240,57 @@ async function run(): Promise<void> {
       true,
     );
     assert.equal(hostileShellHtml.includes('onfocus="alert'), false);
+
+    const corruptId = "corrupt-record";
+    const corruptDir = path.join(home, "documents", corruptId);
+    await mkdir(corruptDir);
+    await writeFile(path.join(corruptDir, "index.html"), html);
+    await writeFile(path.join(corruptDir, "metadata.json"), "{not-json");
+
+    const mismatchedId = "mismatched-record";
+    const mismatchedDir = path.join(home, "documents", mismatchedId);
+    await mkdir(mismatchedDir);
+    await writeFile(path.join(mismatchedDir, "index.html"), html);
+    await writeFile(
+      path.join(mismatchedDir, "metadata.json"),
+      JSON.stringify({
+        schemaVersion: 1,
+        id: "different-id",
+        title: "Mismatched report",
+        type: "report",
+        createdAt: "2026-07-16T00:00:00.000Z",
+        sourceFileName: "mismatched.html",
+      }),
+    );
+
+    const incompleteId = "incomplete-record";
+    const incompleteDir = path.join(home, "documents", incompleteId);
+    await mkdir(incompleteDir);
+    await writeFile(
+      path.join(incompleteDir, "metadata.json"),
+      JSON.stringify({
+        schemaVersion: 1,
+        id: incompleteId,
+        title: "Incomplete report",
+        type: "report",
+        createdAt: "2026-07-16T00:00:00.000Z",
+        sourceFileName: "incomplete.html",
+      }),
+    );
+
+    const warningCount = warnings.length;
+    assert.equal(await backend.getDocument(incompleteId), null);
+    assert.equal(
+      warnings.slice(warningCount).some((warning) => warning.includes(incompleteId)),
+      true,
+    );
+
+    const documentsAfterCorruption = await backend.listDocuments();
+    assert.equal(documentsAfterCorruption.length, 2);
+    assert.equal(await backend.getDocument(corruptId), null);
+    assert.equal(warnings.some((warning) => warning.includes(corruptId)), true);
+    assert.equal(warnings.some((warning) => warning.includes(mismatchedId)), true);
+    assert.equal(warnings.some((warning) => warning.includes(incompleteId)), true);
   } finally {
     await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
   }
