@@ -1,0 +1,57 @@
+packages/cli/src/publish-input.ts
+  s_2381dcc91da35a::t_fdd2a5621be313 1,36-59
+  s_af0402c5d6cba5::t_9cc0dd3ee726df 2-35,60-93
+packages/shared/src/index.ts
+  s_af0402c5d6cba5::t_9cc0dd3ee726df 3-7,9,122-127,133-182
+packages/shared/src/self-check.ts
+  s_af0402c5d6cba5::t_1ecfbf2087ed99 2-8,40-63
+README.md
+  s_af0402c5d6cba5::t_1ecfbf2087ed99 37-38
+packages/cli/src/index.ts
+  s_af0402c5d6cba5::t_9cc0dd3ee726df 5,64,68,75
+packages/cli/src/self-check.ts
+  s_2381dcc91da35a::t_fdd2a5621be313 25,66-91,262-276,285
+  s_af0402c5d6cba5::t_0ecb6679b7b2e4 249-261,277-279,284
+  s_af0402c5d6cba5::t_1ecfbf2087ed99 8,16-24,26-34,48-49,108-111,125,242-248,280-283
+docs/architecture.md
+  s_af0402c5d6cba5::t_1ecfbf2087ed99 36-37,74
+  s_af0402c5d6cba5::t_10c2745553b495 75
+packages/cli/src/backend.ts
+  s_8a8fbf0aad5e48::t_118c84e536ea98 139,226-227
+  s_2381dcc91da35a::t_fdd2a5621be313 48,55,111-113,140-143,185,187,197,199-200,202
+  s_af0402c5d6cba5::t_a9df9d565cab6d 2,7,44-47,49,54,62,64-76,95,108-109,114,122-125,128-130,138,144-160,162,164-166,168-169,182,205-225,228-232
+docs/threat-model.md
+  s_af0402c5d6cba5::t_1ecfbf2087ed99 24-25,38-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "dce9fd1aa8a64b428b53fb90b9312729995f6fae",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    },
+    "s_8a8fbf0aad5e48": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2c0c7b25-456b-4f20-841d-065e2f0af8a2",
+        "model": "claude-opus-5"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    },
+    "s_af0402c5d6cba5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6a19-9f8b-7842-93b8-a6c4bf549f02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Devesh Sangwan <deveshsangwan@PAISAMAC156.local>"
+    }
+  }
+}
