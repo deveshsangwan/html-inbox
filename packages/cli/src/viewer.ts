@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import http, { IncomingMessage, ServerResponse } from "node:http";
 import path from "node:path";
 import {
@@ -8,8 +9,14 @@ import {
   DOCUMENT_SCRIPT_CSP_SOURCES,
   isSafeDocumentId,
 } from "@html-inbox/shared";
+import {
+  ensurePrivateDirectory,
+  hardenPrivateFile,
+  writePrivateFile,
+} from "./private-storage";
 
 const HOST = "127.0.0.1";
+export const VIEWER_PROTOCOL_VERSION = 1;
 
 const VIEWER_SCRIPT = `(() => {
   const root = document.documentElement;
@@ -405,8 +412,12 @@ select:active { transform: translateY(1px); }
 `;
 
 export async function ensureViewer(home: string, port: number): Promise<void> {
+  const instanceId = await getInboxInstanceId(home);
   const health = await getHealth(port);
-  if (health.ok && health.home === home) {
+  if (health.ok && health.protocolVersion !== VIEWER_PROTOCOL_VERSION) {
+    throw new Error(`Viewer at http://${HOST}:${port} uses an incompatible protocol`);
+  }
+  if (health.ok && health.instanceId === instanceId) {
     return;
   }
   if (health.ok) {
@@ -428,7 +439,10 @@ export async function ensureViewer(home: string, port: number): Promise<void> {
   const deadline = Date.now() + 3000;
   while (Date.now() < deadline) {
     const nextHealth = await getHealth(port);
-    if (nextHealth.ok && nextHealth.home === home) {
+    if (nextHealth.ok && nextHealth.protocolVersion !== VIEWER_PROTOCOL_VERSION) {
+      throw new Error(`Viewer at http://${HOST}:${port} uses an incompatible protocol`);
+    }
+    if (nextHealth.ok && nextHealth.instanceId === instanceId) {
       return;
     }
     if (nextHealth.ok) {
@@ -445,8 +459,15 @@ export async function startViewer(
   home: string,
   port: number,
 ): Promise<http.Server> {
+  const instanceId = await getInboxInstanceId(home);
   const server = http.createServer((request, response) => {
-    void routeRequest(backend, home, request, response).catch((error) => {
+    void routeRequest(
+      backend,
+      instanceId,
+      getServerPort(server),
+      request,
+      response,
+    ).catch((error) => {
       console.error(error);
       sendText(response, 500, "Internal Server Error");
     });
@@ -458,16 +479,27 @@ export async function startViewer(
   });
 
   const actualPort = getServerPort(server);
-  await writeViewerInfo(home, actualPort);
+  try {
+    await writeViewerInfo(home, actualPort);
+  } catch (error) {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    throw error;
+  }
   return server;
 }
 
 async function routeRequest(
   backend: DocumentBackend,
-  home: string,
+  instanceId: string,
+  port: number,
   request: IncomingMessage,
   response: ServerResponse,
 ): Promise<void> {
+  if (!isAllowedHost(request.headers.host, port)) {
+    sendText(response, 421, "Misdirected Request");
+    return;
+  }
+
   if (request.method !== "GET" && request.method !== "HEAD") {
     sendText(response, 405, "Method Not Allowed");
     return;
@@ -476,7 +508,11 @@ async function routeRequest(
   const url = new URL(request.url ?? "/", `http://${HOST}`);
 
   if (url.pathname === "/health") {
-    sendJson(response, 200, { ok: true, home });
+    sendJson(response, 200, {
+      ok: true,
+      instanceId,
+      protocolVersion: VIEWER_PROTOCOL_VERSION,
+    });
     return;
   }
 
@@ -527,7 +563,13 @@ async function routeRequest(
   sendText(response, 404, "Not Found");
 }
 
-async function getHealth(port: number): Promise<{ ok: boolean; home?: string }> {
+interface ViewerHealth {
+  ok: boolean;
+  instanceId?: string;
+  protocolVersion?: number;
+}
+
+async function getHealth(port: number): Promise<ViewerHealth> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 400);
 
@@ -538,8 +580,16 @@ async function getHealth(port: number): Promise<{ ok: boolean; home?: string }> 
     if (!response.ok) {
       return { ok: false };
     }
-    const body = (await response.json()) as { home?: unknown };
-    return { ok: true, home: typeof body.home === "string" ? body.home : undefined };
+    const body = (await response.json()) as {
+      instanceId?: unknown;
+      protocolVersion?: unknown;
+    };
+    return {
+      ok: true,
+      instanceId: typeof body.instanceId === "string" ? body.instanceId : undefined,
+      protocolVersion:
+        typeof body.protocolVersion === "number" ? body.protocolVersion : undefined,
+    };
   } catch {
     return { ok: false };
   } finally {
@@ -548,11 +598,47 @@ async function getHealth(port: number): Promise<{ ok: boolean; home?: string }> 
 }
 
 async function writeViewerInfo(home: string, port: number): Promise<void> {
-  await mkdir(home, { recursive: true });
-  await writeFile(
+  await ensurePrivateDirectory(home);
+  await writePrivateFile(
     path.join(home, "viewer.json"),
     JSON.stringify({ host: HOST, port, pid: process.pid, startedAt: new Date().toISOString() }, null, 2),
   );
+}
+
+async function getInboxInstanceId(home: string): Promise<string> {
+  await ensurePrivateDirectory(home);
+  const identityPath = path.join(home, "instance-id");
+
+  try {
+    await writePrivateFile(identityPath, randomUUID(), { flag: "wx" });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
+      throw error;
+    }
+  }
+
+  await hardenPrivateFile(identityPath);
+  const instanceId = (await readFile(identityPath, "utf8")).trim();
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      instanceId,
+    )
+  ) {
+    throw new Error(`Invalid HTML Inbox instance identity at ${identityPath}`);
+  }
+  return instanceId;
+}
+
+function isAllowedHost(hostHeader: string | undefined, port: number): boolean {
+  if (!hostHeader) {
+    return false;
+  }
+  const normalized = hostHeader.toLowerCase();
+  const allowedHosts = [`${HOST}:${port}`, `localhost:${port}`];
+  if (port === 80) {
+    allowedHosts.push(HOST, "localhost");
+  }
+  return allowedHosts.includes(normalized);
 }
 
 function getServerPort(server: http.Server): number {

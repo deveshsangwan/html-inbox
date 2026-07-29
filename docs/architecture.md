@@ -47,13 +47,15 @@ No update/delete, search, sync, tags, auth, or database layer in Phase 1.
 
 The viewer binds `127.0.0.1:3217` by default.
 
+The local HTTP interface accepts only the expected loopback `Host` values. Its health response contains an opaque, per-home instance identity and a viewer protocol version; it never exposes the absolute inbox path. Managed directories are owner-only and managed files are owner-readable and owner-writable.
+
 Use `HTML_INBOX_PORT` when the port is taken:
 
 ```sh
 HTML_INBOX_PORT=4321 html-inbox viewer
 ```
 
-The health check is the source of truth for whether the viewer is ready. CLI output should be based on the health check, not process startup alone.
+The health check is the source of truth for whether the viewer is ready. CLI output should be based on the health check, not process startup alone. A viewer can be reused only when both its protocol version and opaque instance identity match.
 
 Documents render through a viewer-owned path inside a sandboxed iframe. The app shell lists documents and opens one document at a time; raw files are never rendered directly into the shell DOM.
 
