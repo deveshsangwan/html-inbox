@@ -1,0 +1,71 @@
+packages/cli/src/index.ts
+  s_af0402c5d6cba5::t_9cc0dd3ee726df 5,64,68,75
+packages/shared/src/index.ts
+  s_af0402c5d6cba5::t_9cc0dd3ee726df 3-7,9,122-127,133-182
+packages/shared/src/self-check.ts
+  s_af0402c5d6cba5::t_1ecfbf2087ed99 2-8,40-63
+docs/threat-model.md
+  s_af0402c5d6cba5::t_1ecfbf2087ed99 24-25,38-39
+docs/architecture.md
+  s_af0402c5d6cba5::t_1ecfbf2087ed99 36-37,74
+  s_af0402c5d6cba5::t_10c2745553b495 75
+packages/cli/src/self-check.ts
+  s_2381dcc91da35a::t_97d5745a9f8408 51
+  s_af0402c5d6cba5::t_0ecb6679b7b2e4 250-262,278-280,292
+  s_2381dcc91da35a::t_e4a569226f8f9d 281-287
+  s_af0402c5d6cba5::t_1ecfbf2087ed99 8,16-24,26-34,48-49,109-112,126,243-249,288-291
+  s_2381dcc91da35a::t_fdd2a5621be313 25,67-92,263-277,293
+packages/cli/src/publish-input.ts
+  s_2381dcc91da35a::t_fdd2a5621be313 1,36-59
+  s_af0402c5d6cba5::t_9cc0dd3ee726df 2-35,60-93
+packages/cli/src/backend.ts
+  s_2381dcc91da35a::t_e4a569226f8f9d 111-112,115-118,146,191,193,199-206,211,214
+  s_af0402c5d6cba5::t_fc64558110976d 212,215,217-218
+  s_8a8fbf0aad5e48::t_118c84e536ea98 240-241
+  s_2381dcc91da35a::t_fdd2a5621be313 48,55,113-114,147-149,213,216
+  s_af0402c5d6cba5::t_a9df9d565cab6d 7,44-47,49,54,62,64-76,95,108-109,119,128-129,134-136,144,150-166,168,170-172,174-175,188,219-239,242-245
+  s_4a8886aa9c0c07::t_385d8f57cac16f 126-127,145
+  s_2381dcc91da35a::t_97d5745a9f8408 2,125,246-251
+README.md
+  s_af0402c5d6cba5::t_1ecfbf2087ed99 37-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "3afac9020a3a7f325c8f6d78e612e996d52559a8",
+  "prompts": {},
+  "sessions": {
+    "s_2381dcc91da35a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019faf66-afb6-7ef0-b25d-d9229afa1ff3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    },
+    "s_4a8886aa9c0c07": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f3176-676c-7ea1-9be6-e98f5b2c7896",
+        "model": "gpt-5.5"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    },
+    "s_8a8fbf0aad5e48": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2c0c7b25-456b-4f20-841d-065e2f0af8a2",
+        "model": "claude-opus-5"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    },
+    "s_af0402c5d6cba5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6a19-9f8b-7842-93b8-a6c4bf549f02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Devesh Sangwan <deveshsangwan@PAISAMAC156.local>"
+    }
+  }
+}
