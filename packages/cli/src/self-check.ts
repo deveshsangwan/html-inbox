@@ -426,7 +426,7 @@ async function run(): Promise<void> {
     const singularIndexHtml = await singularIndex.text();
     assert.equal(singularIndexHtml.includes('class="document-list"'), true);
     assert.equal(singularIndexHtml.includes("report.html"), true);
-    assert.equal(singularIndexHtml.includes('data-theme-selector'), true);
+    assert.equal(singularIndexHtml.match(/data-theme-option/g)?.length, 3);
     assert.equal(singularIndexHtml.includes("1 document"), true);
     assert.equal(singularIndexHtml.includes("1 documents"), false);
 

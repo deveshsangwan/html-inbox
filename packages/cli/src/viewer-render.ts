@@ -39,20 +39,15 @@ export function renderIndex(
       : `<ol class="document-list" aria-label="Published documents">${documents
           .map(
             (document) =>
-              `<li class="document-row" data-search-text="${escapeAttribute(
+              `<li class="doc" data-search-text="${escapeAttribute(
                 [document.title, document.type, document.sourceFileName]
                   .join(" ")
                   .toLowerCase(),
               )}">
-                <a class="document-row__link" href="${basePath}/documents/${escapeAttribute(document.id)}${basePath ? "/" : ""}">${escapeHtml(document.title)}</a>
-                <div class="document-row__meta">
-                  <div class="document-row__details">
-                    <span class="document-type">${escapeHtml(document.type)}</span>
-                    <time class="document-date" datetime="${escapeAttribute(document.createdAt)}" data-local-date>${escapeHtml(formatDate(document.createdAt, options.timeZone))}</time>
-                  </div>
-                  <span class="document-source" title="${escapeAttribute(document.sourceFileName)}">${escapeHtml(document.sourceFileName)}</span>
-                </div>
-                <span class="document-row__arrow" aria-hidden="true">&#8594;</span>
+                <a class="doc__title" href="${basePath}/documents/${escapeAttribute(document.id)}${basePath ? "/" : ""}">${escapeHtml(document.title)}</a>
+                <time class="document-date" datetime="${escapeAttribute(document.createdAt)}" data-local-date>${escapeHtml(formatDate(document.createdAt, options.timeZone))}</time>
+                <span class="doc__source" title="${escapeAttribute(document.sourceFileName)}">${escapeHtml(document.sourceFileName)}</span>
+                <span class="document-type">${escapeHtml(document.type)}</span>
               </li>`,
           )
           .join("")}</ol>`;
@@ -64,29 +59,26 @@ export function renderIndex(
   return page(
     "HTML Inbox",
     `<main class="library" id="main-content">
-      <header class="library__heading">
-        <div>
-          <h1>Documents</h1>
-          <p class="library__intro">Reports, notes, dashboards, and other HTML published to this inbox.</p>
-        </div>
+      <header class="library__bar">
+        <h1>Inbox</h1>
         <p class="document-count" aria-live="polite" data-document-count>${countLabel}</p>
+        <form class="search" role="search" method="get" action="${homePath}" ${options.clientSearch ? "data-client-search" : ""}>
+          <label class="visually-hidden" for="document-search">Search documents</label>
+          <div class="search__control">
+            <input id="document-search" name="q" type="search" value="${escapeAttribute(query)}" placeholder="Search title, type, or file" maxlength="200">
+            <button class="search__button" type="submit" data-search-submit>Search</button>
+            ${
+              options.clientSearch
+                ? `<a class="search__clear" href="${homePath}" data-search-clear${
+                    query ? "" : " hidden"
+                  }>Clear</a>`
+                : query
+                  ? `<a class="search__clear" href="${homePath}">Clear</a>`
+                  : ""
+            }
+          </div>
+        </form>
       </header>
-      <form class="search-form" role="search" method="get" action="${homePath}" ${options.clientSearch ? "data-client-search" : ""}>
-        <label for="document-search">Search documents</label>
-        <div class="search-control">
-          <input id="document-search" name="q" type="search" value="${escapeAttribute(query)}" placeholder="Title, type, or source file" maxlength="200">
-          <button type="submit">Search</button>
-          ${
-            options.clientSearch
-              ? `<a class="search-clear" href="${homePath}" data-search-clear${
-                  query ? "" : " hidden"
-                }>Clear</a>`
-              : query
-                ? `<a class="search-clear" href="${homePath}">Clear</a>`
-                : ""
-          }
-        </div>
-      </form>
       ${
         options.clientSearch && allDocuments.length > 0
           ? '<section class="empty-state" aria-labelledby="client-empty-title" data-client-empty hidden><h2 id="client-empty-title">No matching documents</h2><p>Try another title, type, or source file name.</p></section>'
@@ -111,18 +103,14 @@ export function renderDocumentShell(
   return page(
     metadata.title,
     `<main class="document-view" id="main-content">
-      <a class="back-link" href="${homePath}"><span aria-hidden="true">&#8592;</span> Back to inbox</a>
-      <header class="document-header">
-        <div>
-          <h1 class="document-title">${escapeHtml(metadata.title)}</h1>
+      <header class="reader__bar">
+        <a class="back-link" href="${homePath}"><span aria-hidden="true">&#8592;</span> Back to inbox</a>
+        <h1 class="document-title">${escapeHtml(metadata.title)}</h1>
+        <div class="reader__meta">
+          <span class="document-type">${escapeHtml(metadata.type)}</span>
+          <time class="document-date" datetime="${escapeAttribute(metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(metadata.createdAt, options.timeZone))}</time>
         </div>
-        <div class="document-header__meta">
-          <div class="document-row__details">
-            <span class="document-type">${escapeHtml(metadata.type)}</span>
-            <time class="document-date" datetime="${escapeAttribute(metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(metadata.createdAt, options.timeZone))}</time>
-          </div>
-          <span class="document-header__source" title="${escapeAttribute(metadata.sourceFileName)}">${escapeHtml(metadata.sourceFileName)}</span>
-        </div>
+        <span class="document-header__source" title="${escapeAttribute(metadata.sourceFileName)}">${escapeHtml(metadata.sourceFileName)}</span>
       </header>
       <div class="preview-frame">
         <iframe sandbox="allow-scripts" src="${contentPath}" title="${escapeAttribute(metadata.title)}"></iframe>
@@ -162,14 +150,12 @@ function renderSiteHeader(basePath: string): string {
         </span>
         <span>HTML Inbox</span>
       </a>
-      <label class="theme-field">
-        <span>Appearance</span>
-        <select data-theme-selector aria-label="Appearance">
-          <option value="system">System</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-        </select>
-      </label>
+      <fieldset class="theme-switch">
+        <legend class="visually-hidden">Appearance</legend>
+        <label class="theme-switch__option"><input type="radio" name="appearance" value="system" data-theme-option checked><span>System</span></label>
+        <label class="theme-switch__option"><input type="radio" name="appearance" value="light" data-theme-option><span>Light</span></label>
+        <label class="theme-switch__option"><input type="radio" name="appearance" value="dark" data-theme-option><span>Dark</span></label>
+      </fieldset>
     </div>
   </header>`;
 }
