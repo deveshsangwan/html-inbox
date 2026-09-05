@@ -1,0 +1,25 @@
+packages/cli/src/cloudflare-api.test.ts
+  s_c419d815fae329::t_29b45416115ff4 3,116-147
+packages/cli/src/cloudflare-pages.ts
+  s_c419d815fae329::t_c0673c4ca52e19 3,5,17-21,276-283,289-300,711,733,735
+packages/cli/src/remote-integrity.test.ts
+  s_c419d815fae329::t_bbf971282b6844 7,137-139,141-150,162-175
+packages/cli/src/remote-workflow.ts
+  s_c419d815fae329::t_65915792bd1611 831
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "e97f45479a685d23c2e4f11f537a55e3f0b160ef",
+  "prompts": {},
+  "sessions": {
+    "s_c419d815fae329": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0718b-e6f2-7ea0-a504-7558add4c0a2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
