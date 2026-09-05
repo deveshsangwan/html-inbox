@@ -1,0 +1,19 @@
+.github/workflows/verify.yml
+  s_c419d815fae329::t_d142be9ab673a6 34,45-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "1dad1e0e82f0f131f71f08f7bab7578fdf2a9da5",
+  "prompts": {},
+  "sessions": {
+    "s_c419d815fae329": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0718b-e6f2-7ea0-a504-7558add4c0a2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
