@@ -1,3 +1,4 @@
+import { readBoundedFile } from "./bounded-file";
 import { open } from "node:fs/promises";
 import path from "node:path";
 import { TextDecoder } from "node:util";
@@ -46,21 +47,9 @@ export async function loadPublishInput(
       throw new Error("Published path must be a file");
     }
 
-    const chunks: Buffer[] = [];
-    let byteLength = 0;
-    while (true) {
-      const chunk = Buffer.allocUnsafe(Math.min(64 * 1024, maximumBytes - byteLength + 1));
-      const { bytesRead } = await file.read(chunk, 0, chunk.length, null);
-      if (bytesRead === 0) {
-        break;
-      }
-      byteLength += bytesRead;
-      if (byteLength > maximumBytes) {
-        throw new Error(`Published file exceeds the limit of ${maximumBytes} bytes`);
-      }
-      chunks.push(chunk.subarray(0, bytesRead));
-    }
-    originalBytes = Buffer.concat(chunks, byteLength);
+    originalBytes = await readBoundedFile(
+      file, maximumBytes, `Published file exceeds the limit of ${maximumBytes} bytes`,
+    );
   } finally {
     await file.close();
   }

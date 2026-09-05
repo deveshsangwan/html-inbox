@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { lstat, mkdir, readFile, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import {
-  assertDocumentMetadata,
+  parseDocumentMetadata,
   DocumentBackend,
   DocumentMetadata,
 } from "@html-inbox/shared";
@@ -88,53 +88,57 @@ export async function exportStaticSnapshot(
     throw new Error("Static export generatedAt must be a valid date");
   }
 
-  const documents = [...(await source.listDocuments())];
-  documents.forEach(assertDocumentMetadata);
+  const documents = (await source.listDocuments()).map(parseDocumentMetadata);
   documents.sort(compareDocuments);
   const inboxPath = `/i/${capability}`;
-  const files = new Map<string, Buffer>();
-  addTextFile(files, "index.html", renderPrivateRoot());
-  addTextFile(
-    files,
-    OWNERSHIP_MARKER_PATH,
-    JSON.stringify({ schemaVersion: 1, ownerId }, null, 2),
-  );
-  addTextFile(files, `${inboxPath.slice(1)}/index.html`, renderIndex(documents, "", {
-    basePath: inboxPath,
-    clientSearch: true,
-    timeZone: "UTC",
-  }));
-  addTextFile(files, `${inboxPath.slice(1)}/assets/viewer.css`, VIEWER_STYLES);
-  addTextFile(files, `${inboxPath.slice(1)}/assets/viewer.js`, VIEWER_SCRIPT);
+  const manifest = await replaceOutputDirectory(outputDir, async (stagingDir) => {
+    const manifestFiles: SnapshotFile[] = [];
+    const writeFile = async (filePath: string, contents: string | Buffer) => {
+      const bytes = typeof contents === "string" ? Buffer.from(contents, "utf8") : contents;
+      const destination = path.join(stagingDir, filePath);
+      await ensurePrivateDirectory(path.dirname(destination));
+      await writePrivateFile(destination, bytes);
+      manifestFiles.push(describeFile(filePath, bytes));
+    };
+    await writeFile("index.html", renderPrivateRoot());
+    await writeFile(
+      OWNERSHIP_MARKER_PATH,
+      JSON.stringify({ schemaVersion: 1, ownerId }, null, 2),
+    );
+    await writeFile(`${inboxPath.slice(1)}/index.html`, renderIndex(documents, "", {
+      basePath: inboxPath,
+      clientSearch: true,
+      timeZone: "UTC",
+    }));
+    await writeFile(`${inboxPath.slice(1)}/assets/viewer.css`, VIEWER_STYLES);
+    await writeFile(`${inboxPath.slice(1)}/assets/viewer.js`, VIEWER_SCRIPT);
 
-  for (const metadata of documents) {
-    await addDocumentFiles(files, source, metadata, inboxPath);
-  }
+    for (const metadata of documents) {
+      await addDocumentFiles(writeFile, source, metadata, inboxPath);
+    }
 
-  addTextFile(
-    files,
-    `${inboxPath.slice(1)}/security-headers.json`,
-    JSON.stringify(buildSecurityHeaders(), null, 2),
-  );
+    await writeFile(
+      `${inboxPath.slice(1)}/security-headers.json`,
+      JSON.stringify(buildSecurityHeaders(), null, 2),
+    );
 
-  const manifestFiles = Array.from(files.entries())
-    .map(([filePath, contents]) => describeFile(filePath, contents))
-    .sort((a, b) => compareText(a.path, b.path));
-  const snapshotHash = hashManifestFiles(manifestFiles);
-  const manifest: SnapshotManifest = {
-    schemaVersion: SNAPSHOT_SCHEMA_VERSION,
-    generatedAt,
-    documentCount: documents.length,
-    snapshotHash,
-    files: manifestFiles,
-  };
-  addTextFile(
-    files,
-    `${inboxPath.slice(1)}/snapshot-manifest.json`,
-    JSON.stringify(manifest, null, 2),
-  );
+    manifestFiles.sort((a, b) => compareText(a.path, b.path));
+    const snapshotHash = hashManifestFiles(manifestFiles);
+    const manifest: SnapshotManifest = {
+      schemaVersion: SNAPSHOT_SCHEMA_VERSION,
+      generatedAt,
+      documentCount: documents.length,
+      snapshotHash,
+      files: [...manifestFiles],
+    };
+    await writeFile(
+      `${inboxPath.slice(1)}/snapshot-manifest.json`,
+      JSON.stringify(manifest, null, 2),
+    );
 
-  await replaceOutputDirectory(outputDir, files);
+    return manifest;
+  });
+
   return { outputDir, capability, inboxPath, ownerId, manifest };
 }
 
@@ -143,7 +147,7 @@ export function generateInboxCapability(): string {
 }
 
 async function addDocumentFiles(
-  files: Map<string, Buffer>,
+  writeFile: (filePath: string, contents: string | Buffer) => Promise<void>,
   source: SnapshotDocumentSource,
   metadata: DocumentMetadata,
   inboxPath: string,
@@ -152,21 +156,16 @@ async function addDocumentFiles(
   if (!document) {
     throw new Error(`Document changed while exporting: ${metadata.id}`);
   }
-  assertDocumentMetadata(document.metadata);
-  if (!sameMetadata(document.metadata, metadata) || !Buffer.isBuffer(document.originalBytes)) {
+  const currentMetadata = parseDocumentMetadata(document.metadata);
+  if (!sameMetadata(currentMetadata, metadata) || !Buffer.isBuffer(document.originalBytes)) {
     throw new Error(`Document changed while exporting: ${metadata.id}`);
   }
   const documentPath = `${inboxPath.slice(1)}/documents/${metadata.id}`;
-  addTextFile(
-    files,
+  await writeFile(
     `${documentPath}/index.html`,
     renderDocumentShell(metadata, { basePath: inboxPath, timeZone: "UTC" }),
   );
-  files.set(`${documentPath}/content/index.html`, document.originalBytes);
-}
-
-function addTextFile(files: Map<string, Buffer>, filePath: string, contents: string): void {
-  files.set(filePath, Buffer.from(contents, "utf8"));
+  await writeFile(`${documentPath}/content/index.html`, document.originalBytes);
 }
 
 function describeFile(filePath: string, contents: Buffer): SnapshotFile {
@@ -177,7 +176,7 @@ function describeFile(filePath: string, contents: Buffer): SnapshotFile {
   };
 }
 
-function hashManifestFiles(files: SnapshotFile[]): string {
+export function hashManifestFiles(files: SnapshotFile[]): string {
   const hash = createHash("sha256");
   for (const file of files) {
     hash.update(file.path);
@@ -240,10 +239,10 @@ function renderPrivateRoot(): string {
 </html>`;
 }
 
-async function replaceOutputDirectory(
+async function replaceOutputDirectory<T>(
   outputDir: string,
-  files: Map<string, Buffer>,
-): Promise<void> {
+  writeSnapshot: (stagingDir: string) => Promise<T>,
+): Promise<T> {
   const parentDir = path.dirname(outputDir);
   await mkdir(parentDir, { recursive: true });
   const parentStat = await lstat(parentDir);
@@ -257,16 +256,10 @@ async function replaceOutputDirectory(
   await ensurePrivateDirectory(stagingDir);
   let movedExisting = false;
   let installedSnapshot = false;
+  let result: T;
 
   try {
-    for (const [filePath, contents] of Array.from(files.entries()).sort(([a], [b]) =>
-      compareText(a, b),
-    )) {
-      const destination = path.join(stagingDir, filePath);
-      await ensurePrivateDirectory(path.dirname(destination));
-      await writePrivateFile(destination, contents);
-    }
-    await validateStagedFiles(stagingDir, files);
+    result = await writeSnapshot(stagingDir);
 
     try {
       await hardenPrivateDirectory(outputDir);
@@ -295,19 +288,9 @@ async function replaceOutputDirectory(
   if (movedExisting) {
     await rm(backupDir, { recursive: true, force: true });
   }
-}
-async function validateStagedFiles(
-  stagingDir: string,
-  files: Map<string, Buffer>,
-): Promise<void> {
-  for (const [filePath, expected] of files) {
-    const actual = await readFile(path.join(stagingDir, filePath));
-    if (!actual.equals(expected)) {
-      throw new Error(`Static export verification failed for ${filePath}`);
-    }
-  }
-}
 
+  return result;
+}
 async function readExistingOwnerId(outputDir: string): Promise<string | null> {
   try {
     const outputStat = await lstat(outputDir);

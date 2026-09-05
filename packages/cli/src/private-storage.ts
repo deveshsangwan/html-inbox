@@ -1,5 +1,7 @@
 import { chmod, lstat, mkdir, writeFile } from "node:fs/promises";
 
+export class ManagedStorageError extends Error {}
+
 export const PRIVATE_DIRECTORY_MODE = 0o700;
 export const PRIVATE_FILE_MODE = 0o600;
 
@@ -11,7 +13,7 @@ export async function ensurePrivateDirectory(directoryPath: string): Promise<voi
 export async function hardenPrivateDirectory(directoryPath: string): Promise<void> {
   const fileStat = await lstat(directoryPath);
   if (!fileStat.isDirectory() || fileStat.isSymbolicLink()) {
-    throw new Error(`Managed directory is not a regular directory: ${directoryPath}`);
+    throw new ManagedStorageError(`Managed directory is not a regular directory: ${directoryPath}`);
   }
   await chmod(directoryPath, PRIVATE_DIRECTORY_MODE);
 }
@@ -19,7 +21,7 @@ export async function hardenPrivateDirectory(directoryPath: string): Promise<voi
 export async function hardenPrivateFile(filePath: string): Promise<void> {
   const fileStat = await lstat(filePath);
   if (!fileStat.isFile() || fileStat.isSymbolicLink()) {
-    throw new Error(`Managed file is not a regular file: ${filePath}`);
+    throw new ManagedStorageError(`Managed file is not a regular file: ${filePath}`);
   }
   await chmod(filePath, PRIVATE_FILE_MODE);
 }

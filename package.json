@@ -16,6 +16,7 @@
     "@html-inbox/shared": "workspace:*",
     "@types/node": "^24.0.0",
     "@vercel/ncc": "0.44.1",
+    "parse5": "^7.3.0",
     "typescript": "^7.0.2"
   }
 }

@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import {
-  assertDocumentMetadata,
+  parseDocumentMetadata,
   DOCUMENT_SCHEMA_VERSION,
   MAX_DOCUMENT_TITLE_LENGTH,
   validateHtml,
@@ -150,5 +150,5 @@ const legacyMetadata: unknown = {
   createdAt: "2026-07-16T00:00:00.000Z",
   sourceFileName: "legacy.html",
 };
-assertDocumentMetadata(legacyMetadata);
-assert.equal(legacyMetadata.schemaVersion, DOCUMENT_SCHEMA_VERSION);
+assert.equal(parseDocumentMetadata(legacyMetadata).schemaVersion, DOCUMENT_SCHEMA_VERSION);
+assert.equal("schemaVersion" in Object(legacyMetadata), false);

@@ -1,3 +1,5 @@
+import { parse, type DefaultTreeAdapterMap } from "parse5";
+
 export type DocumentType = "report" | "note" | "dashboard" | "other" | (string & {});
 
 export const DOCUMENT_SCHEMA_VERSION = 1;
@@ -32,13 +34,13 @@ export interface DeleteResult {
 
 export interface StoredDocument {
   metadata: DocumentMetadata;
-  html: string;
   originalBytes: Buffer;
 }
 
 export interface DocumentBackend {
   publish(input: PublishInput): Promise<PublishResult>;
   listDocuments(): Promise<DocumentMetadata[]>;
+  getDocumentMetadata(id: string): Promise<DocumentMetadata | null>;
   getDocument(id: string): Promise<StoredDocument | null>;
   deleteDocument(id: string): Promise<DeleteResult | null>;
 }
@@ -65,7 +67,6 @@ export const DOCUMENT_SCRIPT_CSP_SOURCES = [
   "https://cdn.jsdelivr.net/npm/mermaid@11/dist/",
 ] as const;
 
-const scriptBodyPattern = /<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi;
 const externalUrlPattern = /(?:https?:)?\/\/[^\s"'`<>)]+/gi;
 const allowedExternalScriptUrls = [
   /^https:\/\/cdn\.tailwindcss\.com\/?(?:\?plugins=(?:forms|typography|aspect-ratio|line-clamp)(?:,(?:forms|typography|aspect-ratio|line-clamp))*)?$/,
@@ -110,7 +111,20 @@ export function validateHtml(html: string): ValidationResult {
     add(errors, "HTML must contain <html or <!doctype html");
   }
 
-  for (const tag of scanTags(html)) {
+  for (const element of elements(parse(html))) {
+    const tag = {
+      name: element.tagName.toLowerCase(),
+      attributes: element.attrs.map((attribute) => ({
+        name: attribute.prefix ? `${attribute.prefix}:${attribute.name}` : attribute.name,
+        value: attribute.value,
+      })),
+    };
+
+    if (tag.name === "script" && element.childNodes.some((node) =>
+      "value" in node && containsDisallowedExternalUrl(node.value),
+    )) {
+      add(warnings, "HTML scripts reference non-allowlisted external URLs; the document CSP blocks fetches to them");
+    }
     for (const attribute of tag.attributes) {
       if (attribute.name.startsWith("on")) {
         // Blocked at runtime by `script-src-attr 'none'`.
@@ -132,19 +146,6 @@ export function validateHtml(html: string): ValidationResult {
     }
   }
 
-  for (const match of html.matchAll(scriptBodyPattern)) {
-    if (containsDisallowedExternalUrl(match[1] ?? "")) {
-      // Advisory only: string concatenation trivially defeats this check, so it
-      // documents intent rather than enforcing it. `connect-src 'none'` blocks
-      // direct fetches, but an allowed script can still navigate its frame.
-      add(
-        warnings,
-        "HTML scripts reference non-allowlisted external URLs; the document CSP blocks fetches to them",
-      );
-      break;
-    }
-  }
-
   return { ok: errors.length === 0, errors, warnings };
 }
 
@@ -156,7 +157,7 @@ function checkUrlAttribute(
   add: (list: string[], message: string) => void,
 ): void {
   const scheme = urlScheme(attribute.value);
-  const value = decodeHtmlEntities(attribute.value);
+  const value = attribute.value;
 
   if (scheme && EXECUTABLE_SCHEMES.has(scheme)) {
     add(errors, `HTML must not use ${scheme}: URLs in ${attribute.name}`);
@@ -250,7 +251,7 @@ function checkMetaRefresh(
   add: (list: string[], message: string) => void,
 ): void {
   const httpEquiv = tag.attributes.find((attribute) => attribute.name === "http-equiv");
-  if (!httpEquiv || decodeHtmlEntities(httpEquiv.value).trim().toLowerCase() !== "refresh") {
+  if (!httpEquiv || httpEquiv.value.trim().toLowerCase() !== "refresh") {
     return;
   }
   // The refresh grammar allows a bare URL after the delay, and entity decoding
@@ -273,8 +274,8 @@ function isAllowedExternalScriptUrl(url: string): boolean {
 
 /**
  * Returns the lowercased scheme of a URL attribute value, or null when the
- * value is relative. Entities and embedded control characters are removed
- * first because the HTML parser strips them before the URL parser runs, so
+ * value is relative. Attribute entities have already been decoded by parse5.
+ * Strip embedded URL whitespace before matching the scheme so
  * `&#106;avascript:` and `java\tscript:` both reach the browser as
  * `javascript:`.
  */
@@ -283,35 +284,7 @@ function urlScheme(value: string): string | null {
 }
 
 function stripUrlNoise(value: string): string {
-  return decodeHtmlEntities(value).replace(/[\u0000-\u0020\u007f]/g, "");
-}
-
-function decodeHtmlEntities(value: string): string {
-  const named: Record<string, string> = {
-    amp: "&",
-    apos: "'",
-    bsol: "\\",
-    colon: ":",
-    gt: ">",
-    lt: "<",
-    quot: '"',
-    sol: "/",
-    tab: "\t",
-    newline: "\n",
-  };
-  return value.replace(
-    /&(#(?:x[0-9a-f]+|[0-9]+)|[a-z][a-z0-9]*);?/gi,
-    (match, entity: string) => {
-      if (entity.startsWith("#")) {
-        const isHex = entity[1] === "x" || entity[1] === "X";
-        const code = Number.parseInt(isHex ? entity.slice(2) : entity.slice(1), isHex ? 16 : 10);
-        return Number.isFinite(code) && code >= 0 && code <= 0x10ffff
-          ? String.fromCodePoint(code)
-          : match;
-      }
-      return named[entity.toLowerCase()] ?? match;
-    },
-  );
+  return value.replace(/[\u0000-\u0020\u007f]/g, "");
 }
 
 interface HtmlAttribute {
@@ -326,158 +299,66 @@ interface HtmlTag {
   attributes: HtmlAttribute[];
 }
 
-/**
- * Walks the open tags of a document.
- *
- * This is deliberately a scanner rather than a set of regular expressions: the
- * previous implementation located a tag by searching backwards for `<` and `>`,
- * which a `>` inside a quoted attribute value defeated. Quoted values are
- * consumed here, so `<a title=">" href="javascript:...">` is still recognised
- * as an anchor. Comments, doctypes, and raw-text element bodies are skipped so
- * their contents are never mistaken for markup.
- */
-function* scanTags(html: string): Generator<HtmlTag> {
-  const rawTextElements = new Set(["script", "style", "textarea", "title"]);
-  let index = 0;
+function* elements(root: DefaultTreeAdapterMap["node"]): Generator<DefaultTreeAdapterMap["element"]> {
+  const pending = [root];
 
-  while (index < html.length) {
-    const start = html.indexOf("<", index);
-    if (start === -1) {
-      return;
-    }
-
-    if (html.startsWith("<!--", start)) {
-      // `<!-->` and `<!--->` close abruptly because their `-->` overlaps the
-      // opener. `--!>` is the other browser-recognized malformed close.
-      const normalEnd = html.indexOf("-->", start + 2);
-      const bangEnd = html.indexOf("--!>", start + 2);
-      const end =
-        normalEnd === -1 ? bangEnd : bangEnd === -1 ? normalEnd : Math.min(normalEnd, bangEnd);
-      index = end === -1 ? html.length : end + (end === bangEnd ? 4 : 3);
-      continue;
-    }
-    if (html.startsWith("<!", start) || html.startsWith("<?", start) || html.startsWith("</", start)) {
-      const end = html.indexOf(">", start);
-      index = end === -1 ? html.length : end + 1;
+  while (pending.length > 0) {
+    const node = pending.pop();
+    if (!node) {
       continue;
     }
 
-    const nameMatch = /^<([a-z][a-z0-9:-]*)/i.exec(html.slice(start));
-    if (!nameMatch) {
-      index = start + 1;
-      continue;
+    if ("tagName" in node) {
+      yield node;
     }
-
-    const name = nameMatch[1].toLowerCase();
-    const parsed = parseAttributes(html, start + nameMatch[0].length);
-    yield { name, attributes: parsed.attributes };
-    index = parsed.index;
-
-    if (rawTextElements.has(name)) {
-      const closing = new RegExp(`</${name}\\b`, "i").exec(html.slice(index));
-      index += closing ? closing.index + 2 : html.length;
+    if ("childNodes" in node) {
+      for (let index = node.childNodes.length - 1; index >= 0; index -= 1) {
+        pending.push(node.childNodes[index]);
+      }
+    }
+    if ("content" in node) {
+      pending.push(node.content);
     }
   }
 }
 
-function parseAttributes(
-  html: string,
-  start: number,
-): { attributes: HtmlAttribute[]; index: number } {
-  const attributes: HtmlAttribute[] = [];
-  let index = start;
-
-  while (index < html.length) {
-    while (index < html.length && /\s/.test(html[index])) {
-      index += 1;
-    }
-    if (index >= html.length) {
-      break;
-    }
-    if (html[index] === ">") {
-      index += 1;
-      break;
-    }
-    if (html[index] === "/") {
-      index += 1;
-      continue;
-    }
-
-    const nameStart = index;
-    while (index < html.length && !/[\s=/>]/.test(html[index])) {
-      index += 1;
-    }
-    const name = html.slice(nameStart, index).toLowerCase();
-    if (!name) {
-      index += 1;
-      continue;
-    }
-
-    while (index < html.length && /\s/.test(html[index])) {
-      index += 1;
-    }
-    if (html[index] !== "=") {
-      attributes.push({ name, value: "" });
-      continue;
-    }
-
-    index += 1;
-    while (index < html.length && /\s/.test(html[index])) {
-      index += 1;
-    }
-
-    const quote = html[index];
-    if (quote === '"' || quote === "'") {
-      index += 1;
-      const valueStart = index;
-      const end = html.indexOf(quote, index);
-      index = end === -1 ? html.length : end;
-      attributes.push({ name, value: html.slice(valueStart, index) });
-      index += 1;
-      continue;
-    }
-
-    const valueStart = index;
-    while (index < html.length && !/[\s>]/.test(html[index])) {
-      index += 1;
-    }
-    attributes.push({ name, value: html.slice(valueStart, index) });
-  }
-
-  return { attributes, index };
-}
-
-export function assertDocumentMetadata(value: unknown): asserts value is DocumentMetadata {
-  if (!value || typeof value !== "object") {
+export function parseDocumentMetadata(value: unknown): DocumentMetadata {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("metadata must be an object");
   }
 
-  const metadata = value as Record<string, unknown>;
-  if (metadata.schemaVersion === undefined) {
-    metadata.schemaVersion = DOCUMENT_SCHEMA_VERSION;
+  const schemaVersion = "schemaVersion" in value ? value.schemaVersion : DOCUMENT_SCHEMA_VERSION;
+  if (schemaVersion !== DOCUMENT_SCHEMA_VERSION) {
+    throw new Error(`unsupported metadata schema version: ${String(schemaVersion)}`);
   }
-  if (metadata.schemaVersion !== DOCUMENT_SCHEMA_VERSION) {
-    throw new Error(`unsupported metadata schema version: ${String(metadata.schemaVersion)}`);
-  }
-  for (const key of ["id", "title", "type", "createdAt", "sourceFileName"]) {
-    if (typeof metadata[key] !== "string" || metadata[key] === "") {
-      throw new Error(`metadata.${key} must be a non-empty string`);
-    }
-  }
-
-  if (!isSafeDocumentId(metadata.id as string)) {
+  if (!("id" in value) || typeof value.id !== "string" || !isSafeDocumentId(value.id)) {
     throw new Error("metadata.id contains unsupported characters");
   }
-  assertMetadataLength("title", metadata.title as string, MAX_DOCUMENT_TITLE_LENGTH);
-  assertMetadataLength("type", metadata.type as string, MAX_DOCUMENT_TYPE_LENGTH);
-  assertMetadataLength(
-    "sourceFileName",
-    metadata.sourceFileName as string,
-    MAX_SOURCE_FILE_NAME_LENGTH,
-  );
-  if (Number.isNaN(Date.parse(metadata.createdAt as string))) {
+  if (!("title" in value) || typeof value.title !== "string") {
+    throw new Error("metadata.title must be a non-empty string");
+  }
+  if (!("type" in value) || typeof value.type !== "string") {
+    throw new Error("metadata.type must be a non-empty string");
+  }
+  if (!("sourceFileName" in value) || typeof value.sourceFileName !== "string") {
+    throw new Error("metadata.sourceFileName must be a non-empty string");
+  }
+  if (!("createdAt" in value) || typeof value.createdAt !== "string" || Number.isNaN(Date.parse(value.createdAt))) {
     throw new Error("metadata.createdAt must be a valid date");
   }
+
+  assertMetadataLength("title", value.title, MAX_DOCUMENT_TITLE_LENGTH);
+  assertMetadataLength("type", value.type, MAX_DOCUMENT_TYPE_LENGTH);
+  assertMetadataLength("sourceFileName", value.sourceFileName, MAX_SOURCE_FILE_NAME_LENGTH);
+
+  return {
+    schemaVersion,
+    id: value.id,
+    title: value.title,
+    type: value.type,
+    createdAt: value.createdAt,
+    sourceFileName: value.sourceFileName,
+  };
 }
 
 export function validatePublishMetadata(input: {
