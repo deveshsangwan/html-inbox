@@ -1,0 +1,21 @@
+packages/cli/src/private-storage.ts
+  s_c419d815fae329::t_26599d7a8f1311 3,83-103
+packages/cli/src/cloudflare-upload.test.ts
+  s_c419d815fae329::t_26599d7a8f1311 63-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "0cc2927a883dc279e89a0c6b92edeb3b7319301a",
+  "prompts": {},
+  "sessions": {
+    "s_c419d815fae329": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0718b-e6f2-7ea0-a504-7558add4c0a2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
