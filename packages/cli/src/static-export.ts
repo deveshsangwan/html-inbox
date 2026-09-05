@@ -13,13 +13,12 @@ import {
 } from "./private-storage";
 import { assertInboxCapability, assertUuidV4 } from "./validation";
 import {
-  documentCsp,
-  renderDocumentShell,
-  renderIndex,
-  shellCsp,
+  DOCUMENT_CSP,
+  SHELL_CSP,
   VIEWER_SCRIPT,
   VIEWER_STYLES,
-} from "./viewer";
+} from "./viewer-assets";
+import { renderDocumentShell, renderIndex } from "./viewer-render";
 
 const SNAPSHOT_SCHEMA_VERSION = 1;
 const OWNERSHIP_MARKER_PATH = "__html-inbox/ownership.json";
@@ -221,8 +220,8 @@ function buildSecurityHeaders(): StaticSecurityHeaders {
     schemaVersion: 1,
     common,
     root: { "Content-Security-Policy": "default-src 'none'" },
-    shell: { "Content-Security-Policy": shellCsp() },
-    document: { "Content-Security-Policy": documentCsp() },
+    shell: { "Content-Security-Policy": SHELL_CSP },
+    document: { "Content-Security-Policy": DOCUMENT_CSP },
   };
 }
 

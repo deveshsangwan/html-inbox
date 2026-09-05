@@ -13,12 +13,14 @@ export function renderIndex(
 ): string {
   const basePath = options.basePath ?? "";
   const homePath = basePath ? `${basePath}/` : "/";
+  query = query.trim().slice(0, 200);
   const normalizedQuery = query.toLowerCase();
   const documents = normalizedQuery
     ? allDocuments.filter((document) =>
-        [document.title, document.type, document.sourceFileName].some((value) =>
-          value.toLowerCase().includes(normalizedQuery),
-        ),
+        [document.title, document.type, document.sourceFileName]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedQuery),
       )
     : allDocuments;
   const documentContent =
@@ -39,14 +41,14 @@ export function renderIndex(
       : `<ol class="document-list" aria-label="Published documents">${documents
           .map(
             (document) =>
-              `<li class="doc" data-search-text="${escapeAttribute(
+              `<li class="doc" data-search-text="${escapeHtml(
                 [document.title, document.type, document.sourceFileName]
                   .join(" ")
                   .toLowerCase(),
               )}">
-                <a class="doc__title" href="${basePath}/documents/${escapeAttribute(document.id)}${basePath ? "/" : ""}">${escapeHtml(document.title)}</a>
-                <time class="document-date" datetime="${escapeAttribute(document.createdAt)}" data-local-date>${escapeHtml(formatDate(document.createdAt, options.timeZone))}</time>
-                <span class="doc__source" title="${escapeAttribute(document.sourceFileName)}">${escapeHtml(document.sourceFileName)}</span>
+                <a class="doc__title" href="${basePath}/documents/${escapeHtml(document.id)}${basePath ? "/" : ""}">${escapeHtml(document.title)}</a>
+                <time class="document-date" datetime="${escapeHtml(document.createdAt)}" data-local-date>${escapeHtml(formatDate(document.createdAt, options.timeZone))}</time>
+                <span class="doc__source" title="${escapeHtml(document.sourceFileName)}">${escapeHtml(document.sourceFileName)}</span>
                 <span class="document-type">${escapeHtml(document.type)}</span>
               </li>`,
           )
@@ -65,7 +67,7 @@ export function renderIndex(
         <form class="search" role="search" method="get" action="${homePath}" ${options.clientSearch ? "data-client-search" : ""}>
           <label class="visually-hidden" for="document-search">Search documents</label>
           <div class="search__control">
-            <input id="document-search" name="q" type="search" value="${escapeAttribute(query)}" placeholder="Search title, type, or file" maxlength="200">
+            <input id="document-search" name="q" type="search" value="${escapeHtml(query)}" placeholder="Search title, type, or file" maxlength="200">
             <button class="search__button" type="submit" data-search-submit>Search</button>
             ${
               options.clientSearch
@@ -98,8 +100,8 @@ export function renderDocumentShell(
   const basePath = options.basePath ?? "";
   const homePath = basePath ? `${basePath}/` : "/";
   const contentPath = basePath
-    ? `${basePath}/documents/${escapeAttribute(metadata.id)}/content/`
-    : `/documents/${escapeAttribute(metadata.id)}/content`;
+    ? `${basePath}/documents/${escapeHtml(metadata.id)}/content/`
+    : `/documents/${escapeHtml(metadata.id)}/content`;
   return page(
     metadata.title,
     `<main class="document-view" id="main-content">
@@ -108,12 +110,12 @@ export function renderDocumentShell(
         <h1 class="document-title">${escapeHtml(metadata.title)}</h1>
         <div class="reader__meta">
           <span class="document-type">${escapeHtml(metadata.type)}</span>
-          <time class="document-date" datetime="${escapeAttribute(metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(metadata.createdAt, options.timeZone))}</time>
+          <time class="document-date" datetime="${escapeHtml(metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(metadata.createdAt, options.timeZone))}</time>
         </div>
-        <span class="document-header__source" title="${escapeAttribute(metadata.sourceFileName)}">${escapeHtml(metadata.sourceFileName)}</span>
+        <span class="document-header__source" title="${escapeHtml(metadata.sourceFileName)}">${escapeHtml(metadata.sourceFileName)}</span>
       </header>
       <div class="preview-frame">
-        <iframe sandbox="allow-scripts" src="${contentPath}" title="${escapeAttribute(metadata.title)}"></iframe>
+        <iframe sandbox="allow-scripts" src="${contentPath}" title="${escapeHtml(metadata.title)}"></iframe>
       </div>
     </main>`,
     `Preview of ${metadata.title}`,
@@ -121,14 +123,19 @@ export function renderDocumentShell(
   );
 }
 
-function page(title: string, body: string, description: string, basePath: string): string {
+function page(
+  title: string,
+  body: string,
+  description: string,
+  basePath: string,
+): string {
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)}</title>
-<meta name="description" content="${escapeAttribute(description)}">
+<meta name="description" content="${escapeHtml(description)}">
 <script src="${basePath}/assets/viewer.js"></script>
 <link rel="stylesheet" href="${basePath}/assets/viewer.css">
 </head>
@@ -174,8 +181,4 @@ function formatDate(value: string, timeZone?: string): string {
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
-}
-
-function escapeAttribute(value: string): string {
-  return escapeHtml(value);
 }

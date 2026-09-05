@@ -242,13 +242,13 @@ export function formatRemoteStatus(status: RemoteStatus): string {
 
 async function deleteCommand({ id, force, json }: Extract<CliCommand, { command: "delete" }>): Promise<void> {
   const backend = new LocalDocumentBackend(getInboxHome());
-  const document = await backend.getDocument(id);
-  if (!document) {
+  const metadata = await backend.getDocumentMetadata(id);
+  if (!metadata) {
     throw new Error(`Document not found: ${id}`);
   }
 
   if (!force && !(await confirmAction(
-    `Delete "${document.metadata.title}"? [y/N] `,
+    `Delete "${metadata.title}"? [y/N] `,
     "delete requires --force when no interactive terminal is available",
   ))) {
     console.log("Delete cancelled.");
