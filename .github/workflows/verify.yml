@@ -39,9 +39,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install browser
-        run: pnpm exec playwright install --with-deps chromium
-
       - name: Build
         run: pnpm build
 
@@ -52,6 +49,9 @@ jobs:
 
       - name: Unit and integration tests
         run: node scripts/run-unit-tests.mjs
+
+      - name: Install browser
+        run: node node_modules/playwright/cli.js install --with-deps chromium
 
       - name: Browser tests
         run: node --test scripts/viewer-browser.test.mjs

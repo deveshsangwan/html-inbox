@@ -137,7 +137,7 @@ test("Cloudflare upload validates and isolates deployment files", async (t) => {
     home,
     "main",
   );
-  assert.deepEqual(controlRunner.invocations[0].args.slice(2), [
+  assert.deepEqual(controlRunner.invocations[0].args.slice(process.platform === "win32" ? 3 : 2), [
     "pages",
     "project",
     "create",
