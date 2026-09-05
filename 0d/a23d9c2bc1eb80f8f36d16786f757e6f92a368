@@ -1,0 +1,29 @@
+packages/cli/src/cloudflare-api.test.ts
+  s_c419d815fae329::t_91ec1f85f7c4a8 34-38,40-50,67,81-82,105-107,113,138-139
+packages/cli/src/cloudflare-pages.ts
+  s_c419d815fae329::t_7574d23a9a785d 51-52,96-98,123,125-129,137-140,148,238,306,375,378,381-382,512,516-517,522
+packages/cli/src/cloudflare-upload.test.ts
+  s_c419d815fae329::t_64ffa1f4b045d8 52-53,69-75,139-140,148-153,163-164
+packages/cli/src/command-runner.test.ts
+  s_c419d815fae329::t_d0758882667afc 13,25-29,46-48,58-60,65-67
+packages/cli/src/remote-integrity.test.ts
+  s_c419d815fae329::t_0e394a1d4fdb14 114-119,182-187
+packages/cli/src/remote-workflow.ts
+  s_c419d815fae329::t_c86f0273fa7caa 875
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "0da23d9c2bc1eb80f8f36d16786f757e6f92a368",
+  "prompts": {},
+  "sessions": {
+    "s_c419d815fae329": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0718b-e6f2-7ea0-a504-7558add4c0a2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
