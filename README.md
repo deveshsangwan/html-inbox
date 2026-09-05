@@ -25,7 +25,7 @@ Until the first registry release, use a source checkout. The operational example
 
 ## Set up a source checkout for development
 
-The repository is a pnpm workspace, so contributor and release commands use the checked-in pnpm lockfile:
+Use Node.js 24 for source development and release tooling. The published CLI supports Node.js 20 or newer. The repository is a pnpm workspace, so contributor and release commands use the checked-in pnpm lockfile:
 
 ```sh
 corepack enable
