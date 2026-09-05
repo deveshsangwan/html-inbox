@@ -35,8 +35,6 @@ import {
   PINNED_WRANGLER_VERSION,
   createWranglerInvocation,
   parseWranglerDeployUrls,
-  parseWranglerDeployments,
-  parseWranglerProjects,
 } from "./cloudflare-pages";
 import {
   assertExportOutsideHome,
@@ -159,48 +157,7 @@ test("command execution and Wrangler parsing", async (t) => {
   );
   await delay(400);
   await assert.rejects(readFile(lateMarker), /ENOENT/);
-  assert.deepEqual(
-    parseWranglerProjects(
-      JSON.stringify([
-        {
-          name: "inbox-project",
-          account_id: "a".repeat(32),
-          production_branch: "main",
-          domains: ["inbox-project.pages.dev"],
-        },
-      ]),
-    ),
-    [
-      {
-        name: "inbox-project",
-        accountId: "a".repeat(32),
-        productionBranch: "main",
-        productionUrl: "https://inbox-project.pages.dev",
-      },
-    ],
-  );
-  assert.equal(
-    parseWranglerDeployments(
-      JSON.stringify([
-        {
-          id: "deployment-id",
-          url: "https://abc123.inbox-project.pages.dev",
-          environment: "production",
-          is_skipped: false,
-          latest_stage: { status: "success" },
-          created_on: "2026-07-16T00:00:00.000Z",
-          deployment_trigger: {
-            metadata: {
-              branch: "main",
-              commit_hash: "b".repeat(40),
-              commit_message: "html-inbox:test",
-            },
-          },
-        },
-      ]),
-    )[0].commitHash,
-    "b".repeat(40),
-  );
+
 });
 
 test("publish input validation", async (t) => {
@@ -929,33 +886,14 @@ test("static export and Cloudflare adapter preserve snapshot contracts", async (
     false,
   );
 
-  const controlRunner = new RecordingCommandRunner({
-    code: 0,
-    signal: null,
-    output: JSON.stringify([
-      {
-        name: "html-inbox",
-        account_id: accountId.toLowerCase(),
-        production_branch: "main",
-        domains: ["html-inbox-7x.pages.dev"],
-      },
-    ]),
-  });
+  const controlRunner = new RecordingCommandRunner({ code: 0, signal: null, output: "Created project" });
   const controlAdapter = new CloudflarePagesAdapter(controlRunner, 9_999);
-  const projects = await controlAdapter.listProjects(accountId, home);
-  assert.equal(projects[0].productionUrl, "https://html-inbox-7x.pages.dev");
   await controlAdapter.createProject(
     { accountId, projectName: "html-inbox" },
     home,
     "main",
   );
   assert.deepEqual(controlRunner.invocations[0].args.slice(2), [
-    "pages",
-    "project",
-    "list",
-    "--json",
-  ]);
-  assert.deepEqual(controlRunner.invocations[1].args.slice(2), [
     "pages",
     "project",
     "create",
@@ -1026,7 +964,7 @@ test("static export and Cloudflare adapter preserve snapshot contracts", async (
           projectName: "html-inbox",
         },
       ),
-      /common security policy is incomplete/,
+      /does not match manifest/,
     );
   } finally {
     await writeFile(securityHeaderPath, originalSecurityHeaders);
@@ -1206,7 +1144,8 @@ test("remote workflow recovers publish, revoke and init", async (t) => {
   remotePort.failNextDeploy = true;
   await assert.rejects(remoteWorkflow.publish(), /remote reconcile/);
   const interruptedStatus = await remoteWorkflow.status();
-  assert(interruptedStatus.operation?.snapshotHash);
+  assert(interruptedStatus.operation?.kind === "publish");
+  assert(interruptedStatus.operation.snapshotHash);
   assert.equal(interruptedStatus.operation.phase, "prepared");
   assert.equal(interruptedStatus.operation.attempts, 1);
   const remoteOperationPath = path.join(remoteHome, "remote", "operation.json");
@@ -1327,7 +1266,6 @@ test("remote workflow recovers publish, revoke and init", async (t) => {
     name: "existing-inbox",
     accountId: remoteAccountId,
     productionBranch: "main",
-    productionUrl: "https://existing-inbox.pages.dev",
   });
   const adoptionWorkflow = new RemoteWorkflow(
     remoteBackend,
@@ -1379,7 +1317,6 @@ test("remote workflow recovers publish, revoke and init", async (t) => {
     name: "recover-init",
     accountId: remoteAccountId,
     productionBranch: "release",
-    productionUrl: "https://recover-init.pages.dev",
   });
   await assert.rejects(
     initRecoveryWorkflow.reconcile({ adopt: true }),
@@ -1624,7 +1561,6 @@ class RecordingRemoteDeploymentPort implements RemoteDeploymentPort {
       name: target.projectName,
       accountId: target.accountId,
       productionBranch: "main",
-      productionUrl: `https://${target.projectName}.pages.dev`,
     });
   }
 
