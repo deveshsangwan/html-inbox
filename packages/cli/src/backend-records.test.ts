@@ -9,8 +9,15 @@ import { assertExportOutsideHome, formatDocumentList } from "./index";
 import { startViewer } from "./viewer-server";
 import { temporaryHome, availablePort } from "./test-fixtures";
 
-test("private storage and path overlap", async (t) => {
-  if (process.platform !== "win32") {
+test(
+  "private storage and path overlap",
+  {
+    skip:
+      process.platform === "win32"
+        ? "POSIX symlink and file-permission checks"
+        : false,
+  },
+  async (t) => {
     const overlapRoot = await temporaryHome(t);
     const realHome = path.join(overlapRoot, "home");
     const homeAlias = path.join(overlapRoot, "home-alias");
@@ -44,8 +51,8 @@ test("private storage and path overlap", async (t) => {
       /Managed file is not a regular file/,
     );
     assert.equal(await readFile(symlinkTarget, "utf8"), "do not overwrite");
-  }
-});
+  },
+);
 test("failed storage and viewer startup roll back", async (t) => {
   const home = await temporaryHome(t);
   const warnings: string[] = [];
@@ -227,10 +234,7 @@ test("corrupt records are skipped and CLI deletion requires force", async (t) =>
     { env: cliEnv, encoding: "utf8" },
   );
   assert.equal(forcedDelete.status, 0, forcedDelete.stderr);
-  assert.equal(
-    JSON.parse(forcedDelete.stdout).metadata.id,
-    hostile.id,
-  );
+  assert.equal(JSON.parse(forcedDelete.stdout).metadata.id, hostile.id);
   assert.equal(await backend.getDocument(hostile.id), null);
   assert.equal((await backend.listDocuments()).length, 1);
 });

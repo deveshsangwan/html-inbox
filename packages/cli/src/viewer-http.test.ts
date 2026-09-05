@@ -49,6 +49,9 @@ test("viewer serves isolated documents and searches metadata", async (t) => {
       processId: "11111111-1111-4111-8111-111111111111",
     }),
   );
+  const staleStatus = await getViewerStatus(home, address.port);
+  assert.equal(staleStatus.state, "running");
+  assert.equal(staleStatus.pid, undefined);
   await assert.rejects(stopViewer(home, address.port), /missing or stale/);
   await writeFile(processRecordPath, processRecord);
 
@@ -84,16 +87,12 @@ test("viewer serves isolated documents and searches metadata", async (t) => {
   if (process.platform !== "win32") {
     assert.equal((await stat(home)).mode & 0o777, 0o700);
     assert.equal(
-      (await stat(path.join(home, "documents", published.id))).mode &
-        0o777,
+      (await stat(path.join(home, "documents", published.id))).mode & 0o777,
       0o700,
     );
     assert.equal(
-      (
-        await stat(
-          path.join(home, "documents", published.id, "index.html"),
-        )
-      ).mode & 0o777,
+      (await stat(path.join(home, "documents", published.id, "index.html")))
+        .mode & 0o777,
       0o600,
     );
     assert.equal(
@@ -145,9 +144,7 @@ test("viewer serves isolated documents and searches metadata", async (t) => {
   assert.equal(shellHtml.includes("report.html"), true);
   assert.equal(shellHtml.includes("Back to inbox"), true);
 
-  const content = await fetch(
-    `${baseUrl}/documents/${published.id}/content`,
-  );
+  const content = await fetch(`${baseUrl}/documents/${published.id}/content`);
   const csp = content.headers.get("content-security-policy") ?? "";
   assert.equal(
     csp.includes("script-src 'unsafe-inline' https://cdn.tailwindcss.com"),

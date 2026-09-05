@@ -1,4 +1,5 @@
-import { test } from "node:test";
+import { test, type TestContext } from "node:test";
+import { createHash } from "node:crypto";
 import { strict as assert } from "node:assert";
 import { open, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -12,39 +13,16 @@ import {
   CommandRunner,
   PINNED_WRANGLER_VERSION,
 } from "./cloudflare-pages";
-import { exportStaticSnapshot } from "./static-export";
+import {
+  exportStaticSnapshot,
+  hashManifestFiles,
+  type StaticSecurityHeaders,
+} from "./static-export";
 import { DOCUMENT_CSP } from "./viewer-assets";
 import { temporaryHome } from "./test-fixtures";
 
-test("Cloudflare upload validates and isolates deployment files", async (t) => {
-  const home = await temporaryHome(t);
-  const backend = new LocalDocumentBackend(home);
-  const html = "<!doctype html><html><body><h1>Report</h1></body></html>";
-  await backend.publish({
-    originalBytes: Buffer.from(html),
-    title: "Report",
-    type: "report",
-    sourceFileName: "report.html",
-  });
-  const hostileTitle = 'Title </h1><script>alert("title")</script>';
-  const hostileType = "report\"><svg/onload=alert('type')>";
-  const hostileSource = "source.html\" autofocus onfocus=\"alert('source')";
-  await backend.publish({
-    originalBytes: Buffer.from(html),
-    title: hostileTitle,
-    type: hostileType,
-    sourceFileName: hostileSource,
-  });
-
-  const snapshotDirectory = path.join(home, "snapshot");
-  const capability = "AAAAAAAAAAAAAAAAAAAAAA";
-  const ownerId = "11111111-1111-4111-8111-111111111111";
-  const firstSnapshot = await exportStaticSnapshot(backend, {
-    outputDir: snapshotDirectory,
-    capability,
-    ownerId,
-    generatedAt: "2026-07-16T00:00:00.000Z",
-  });
+test("Cloudflare upload builds private headers, normalizes arguments and returns assigned URLs", async (t) => {
+  const { home, snapshot } = await createSnapshot(t);
   const accountId = "A".repeat(32);
   const recordingRunner = new RecordingCommandRunner({
     code: 0,
@@ -55,7 +33,7 @@ test("Cloudflare upload validates and isolates deployment files", async (t) => {
   });
   const cloudflare = new CloudflarePagesAdapter(recordingRunner, 12_345);
   const receipt = await cloudflare.deploySnapshot(
-    firstSnapshot,
+    snapshot,
     { accountId, projectName: "HTML-Inbox" },
     "main",
   );
@@ -102,7 +80,7 @@ test("Cloudflare upload validates and isolates deployment files", async (t) => {
   assert.equal(receipt.projectUrl, "https://html-inbox-7x.pages.dev");
   assert.equal(
     receipt.projectInboxUrl,
-    `https://html-inbox-7x.pages.dev/i/${capability}/`,
+    `https://html-inbox-7x.pages.dev/i/${snapshot.capability}/`,
   );
   assert(recordingRunner.headers);
   assert.equal(
@@ -123,7 +101,7 @@ test("Cloudflare upload validates and isolates deployment files", async (t) => {
     8,
   );
   await assert.rejects(
-    readFile(path.join(snapshotDirectory, "_headers")),
+    readFile(path.join(snapshot.outputDir, "_headers")),
     /ENOENT/,
   );
   assert.equal(
@@ -132,7 +110,11 @@ test("Cloudflare upload validates and isolates deployment files", async (t) => {
     ),
     false,
   );
+});
 
+test("Cloudflare project creation preserves its production branch", async (t) => {
+  const home = await temporaryHome(t);
+  const accountId = "A".repeat(32);
   const controlRunner = new RecordingCommandRunner({
     code: 0,
     signal: null,
@@ -151,7 +133,11 @@ test("Cloudflare upload validates and isolates deployment files", async (t) => {
     ),
     ["pages", "project", "create", "html-inbox", "--production-branch", "main"],
   );
+});
 
+test("Cloudflare upload redacts credentials and removes staging after failure", async (t) => {
+  const { home, snapshot } = await createSnapshot(t);
+  const accountId = "A".repeat(32);
   const previousToken = process.env.CLOUDFLARE_API_TOKEN;
   const previousApiKey = process.env.CLOUDFLARE_API_KEY;
   process.env.CLOUDFLARE_API_TOKEN = "super-secret-cloudflare-token";
@@ -165,7 +151,7 @@ test("Cloudflare upload validates and isolates deployment files", async (t) => {
         "authentication failed: super-secret-cloudflare-token super-secret-cloudflare-key",
     });
     await assert.rejects(
-      new CloudflarePagesAdapter(failingRunner).deploySnapshot(firstSnapshot, {
+      new CloudflarePagesAdapter(failingRunner).deploySnapshot(snapshot, {
         accountId,
         projectName: "html-inbox",
       }),
@@ -186,59 +172,107 @@ test("Cloudflare upload validates and isolates deployment files", async (t) => {
     if (previousApiKey === undefined) delete process.env.CLOUDFLARE_API_KEY;
     else process.env.CLOUDFLARE_API_KEY = previousApiKey;
   }
+});
 
+test("Cloudflare upload rejects invalid account identifiers before invoking Wrangler", async (t) => {
+  const { snapshot } = await createSnapshot(t);
+  const runner = new RecordingCommandRunner({
+    code: 0,
+    signal: null,
+    stderr: "",
+    stdout: "unused",
+  });
   await assert.rejects(
-    new CloudflarePagesAdapter(recordingRunner).deploySnapshot(firstSnapshot, {
+    new CloudflarePagesAdapter(runner).deploySnapshot(snapshot, {
       accountId: "not-an-account-id",
       projectName: "html-inbox",
     }),
     /32 hexadecimal/,
   );
-  const securityHeaderPath = path.join(
-    snapshotDirectory,
-    "i",
-    capability,
-    "security-headers.json",
+  assert.equal(runner.invocations.length, 0);
+});
+
+test("Cloudflare upload rejects incomplete common security policy in an otherwise valid snapshot", async (t) => {
+  const { snapshot } = await createSnapshot(t);
+  const runner = new RecordingCommandRunner({
+    code: 0,
+    signal: null,
+    stderr: "",
+    stdout: "unused",
+  });
+  const headerPath = `i/${snapshot.capability}/security-headers.json`;
+  const headers: StaticSecurityHeaders = JSON.parse(
+    await readFile(path.join(snapshot.outputDir, headerPath), "utf8"),
   );
-  const originalSecurityHeaders = await readFile(securityHeaderPath, "utf8");
-  const weakenedSecurityHeaders = JSON.parse(originalSecurityHeaders) as {
-    common: Record<string, string>;
-  };
-  weakenedSecurityHeaders.common["Cache-Control"] = "public, max-age=3600";
-  await writeFile(securityHeaderPath, JSON.stringify(weakenedSecurityHeaders));
-  try {
-    await assert.rejects(
-      new CloudflarePagesAdapter(recordingRunner).deploySnapshot(
-        firstSnapshot,
-        {
-          accountId,
-          projectName: "html-inbox",
-        },
-      ),
-      /does not match manifest/,
-    );
-  } finally {
-    await writeFile(securityHeaderPath, originalSecurityHeaders);
-  }
-  const oversizedPath = path.join(snapshotDirectory, "oversized.bin");
+  delete headers.common["Cache-Control"];
+  const bytes = Buffer.from(JSON.stringify(headers));
+  await writeFile(path.join(snapshot.outputDir, headerPath), bytes);
+
+  const manifestFile = snapshot.manifest.files.find(
+    (file) => file.path === headerPath,
+  );
+  assert(manifestFile);
+  manifestFile.size = bytes.length;
+  manifestFile.sha256 = createHash("sha256").update(bytes).digest("hex");
+  snapshot.manifest.snapshotHash = hashManifestFiles(snapshot.manifest.files);
+  await writeFile(
+    path.join(snapshot.outputDir, snapshot.inboxPath, "snapshot-manifest.json"),
+    JSON.stringify(snapshot.manifest),
+  );
+
+  await assert.rejects(
+    new CloudflarePagesAdapter(runner).deploySnapshot(snapshot, {
+      accountId: "a".repeat(32),
+      projectName: "html-inbox",
+    }),
+    /common security policy is incomplete/,
+  );
+  assert.equal(runner.invocations.length, 0);
+});
+
+test("Cloudflare upload rejects files above its size limit before invoking Wrangler", async (t) => {
+  const { snapshot } = await createSnapshot(t);
+  const runner = new RecordingCommandRunner({
+    code: 0,
+    signal: null,
+    stderr: "",
+    stdout: "unused",
+  });
+  const accountId = "A".repeat(32);
+  const oversizedPath = path.join(snapshot.outputDir, "oversized.bin");
   const oversizedFile = await open(oversizedPath, "w");
   await oversizedFile.truncate(CLOUDFLARE_UPLOAD_FILE_SIZE_LIMIT + 1);
   await oversizedFile.close();
   try {
     await assert.rejects(
-      new CloudflarePagesAdapter(recordingRunner).deploySnapshot(
-        firstSnapshot,
-        {
-          accountId,
-          projectName: "html-inbox",
-        },
-      ),
+      new CloudflarePagesAdapter(runner).deploySnapshot(snapshot, {
+        accountId,
+        projectName: "html-inbox",
+      }),
       /file exceeds 25 MiB/,
     );
   } finally {
     await rm(oversizedPath);
   }
+  assert.equal(runner.invocations.length, 0);
 });
+
+async function createSnapshot(t: TestContext) {
+  const home = await temporaryHome(t);
+  const backend = new LocalDocumentBackend(home);
+  await backend.publish({
+    originalBytes: Buffer.from(
+      "<!doctype html><html><body>Report</body></html>",
+    ),
+    title: "Report",
+    type: "report",
+    sourceFileName: "report.html",
+  });
+  const snapshot = await exportStaticSnapshot(backend, {
+    outputDir: path.join(home, "snapshot"),
+  });
+  return { home, snapshot };
+}
 
 class RecordingCommandRunner implements CommandRunner {
   readonly invocations: CommandInvocation[] = [];
