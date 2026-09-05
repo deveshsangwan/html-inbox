@@ -1,0 +1,37 @@
+package.json
+  s_c419d815fae329::t_990aa7e2855634 19
+packages/cli/src/backend.ts
+  s_c419d815fae329::t_8e2b7c7e6304e6 6,18,55,62,103-104,109-110,112,118,120-126,130-131,145,157-161,171,183
+packages/cli/src/bounded-file.ts
+  s_c419d815fae329::t_63eeb6f202f478 1-24
+packages/cli/src/private-storage.ts
+  s_c419d815fae329::t_ce0746bd9f9b37 3-4,16,24
+packages/cli/src/publish-input.ts
+  s_c419d815fae329::t_f801b03c5598cc 1,50-52
+packages/cli/src/static-export.ts
+  s_c419d815fae329::t_62b2d8e1bacc4e 5,91,94-118,120-140,150,159-160,164,168,179,242,244-245,259,262,292-293
+packages/cli/src/storage-cleanup.test.ts
+  s_c419d815fae329::t_3caa77b41eb35f 1-128
+packages/shared/src/index.ts
+  s_c419d815fae329::t_6fdbdde681065d 1-2,43,114-127,160,254,277-278,287,302-303,305-307,311-312,314-317,319-320,325-326,330-332,334-335,337-338,340-341,343-346,349-361
+packages/shared/src/self-check.ts
+  s_c419d815fae329::t_2026db62a9102a 3,153-154
+pnpm-lock.yaml
+  s_c419d815fae329::t_65ec5fbff35004 20-22,160-166,243-248
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "ebdd307975326cde890d6aed627a277fb0446e28",
+  "prompts": {},
+  "sessions": {
+    "s_c419d815fae329": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0718b-e6f2-7ea0-a504-7558add4c0a2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
