@@ -17,11 +17,12 @@ test("browser theme, static search, and document isolation", async (t) => {
     type: "report",
     sourceFileName: "results.html",
     originalBytes:
-      Buffer.from(`<!doctype html><html><body><p id="result">loading</p><script>
+      Buffer.from(`<!doctype html><html><body><p id="isolation">loading</p><p id="network">loading</p><script>
       let isolated = false;
       try { parent.document.documentElement.dataset.compromised = 'yes'; } catch { isolated = true; }
-      fetch('/health').then(() => document.querySelector('#result').textContent = 'network allowed')
-        .catch(() => document.querySelector('#result').textContent = isolated ? 'isolated' : 'parent allowed');
+      document.querySelector('#isolation').textContent = isolated ? 'isolated' : 'parent allowed';
+      fetch('/health').then(() => document.querySelector('#network').textContent = 'network allowed')
+        .catch(() => document.querySelector('#network').textContent = 'network blocked');
     </script></body></html>`),
   });
   const server = await startViewer(backend, home, 0);
@@ -68,8 +69,9 @@ test("browser theme, static search, and document isolation", async (t) => {
   await page.goto(`${origin}/?q=REPORT%20REPORT`);
   assert.equal(await page.locator("[data-search-text]").count(), 1);
   await page.goto(`${origin}/documents/${published.id}`);
-  const result = page.frameLocator("iframe").locator("#result");
-  await result.getByText("isolated", { exact: true }).waitFor();
+  const frame = page.frameLocator("iframe");
+  await frame.locator("#isolation").getByText("isolated", { exact: true }).waitFor();
+  await frame.locator("#network").getByText("network blocked", { exact: true }).waitFor();
   assert.equal(
     await page.locator("html").getAttribute("data-compromised"),
     null,

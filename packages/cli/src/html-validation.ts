@@ -55,13 +55,17 @@ const EXECUTABLE_SCHEMES = new Set(["javascript", "vbscript"]);
 export function validateHtml(html: string): ValidationResult {
   const errors = new Set<string>();
   const warnings = new Set<string>();
-  const lower = html.toLowerCase();
+  const document = parse(html, { sourceCodeLocationInfo: true });
+  const hasDocumentMarker = document.childNodes.some((node) =>
+    (node.nodeName === "#documentType" && "name" in node && node.name.toLowerCase() === "html") ||
+    ("tagName" in node && node.tagName === "html" && node.sourceCodeLocation?.startTag !== undefined),
+  );
 
-  if (!lower.includes("<html") && !lower.includes("<!doctype html")) {
-    errors.add("HTML must contain <html or <!doctype html");
+  if (!hasDocumentMarker) {
+    errors.add("HTML must contain an <html> tag or <!doctype html>");
   }
 
-  for (const element of elements(parse(html))) {
+  for (const element of elements(document)) {
     const tag = {
       name: element.tagName.toLowerCase(),
       attributes: element.attrs.map((attribute) => ({

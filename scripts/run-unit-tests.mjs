@@ -3,7 +3,7 @@ import { readdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 const directory = new URL("../packages/cli/dist/", import.meta.url);
-const files = (await readdir(directory))
+const files = (await readdir(directory, { recursive: true }))
   .filter((name) => name.endsWith(".test.js"))
   .sort()
   .map((name) => fileURLToPath(new URL(name, directory)));

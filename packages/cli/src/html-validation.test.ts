@@ -1,3 +1,4 @@
+import { test } from "node:test";
 import { strict as assert } from "node:assert";
 import { parseDocumentMetadata, DOCUMENT_SCHEMA_VERSION, MAX_DOCUMENT_TITLE_LENGTH, validatePublishMetadata } from "./documents";
 import { validateHtml } from "./html-validation";
@@ -138,3 +139,13 @@ const legacyMetadata: unknown = {
 };
 assert.equal(parseDocumentMetadata(legacyMetadata).schemaVersion, DOCUMENT_SCHEMA_VERSION);
 assert.equal("schemaVersion" in Object(legacyMetadata), false);
+
+test("HTML requires a parsed document marker rather than matching text", () => {
+  for (const html of ["<html-not-real>text</html-not-real>", "&lt;html&gt;", "<!-- <html> -->", "<script>const text = '<html>';</script>", "<!doctype html-not-real>"]) {
+    assert.equal(validateHtml(html).ok, false, html);
+  }
+
+  for (const html of ["<HTML><body>ok</body></HTML>", "<!DOCTYPE html><p>ok</p>", "<html lang='en'><p>ok</p></html>"]) {
+    assert.equal(validateHtml(html).ok, true, html);
+  }
+});

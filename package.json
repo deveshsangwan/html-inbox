@@ -9,9 +9,9 @@
     "build": "node -e \"require('node:fs').rmSync('packages/cli/dist', { recursive: true, force: true })\" && pnpm --filter html-inbox build",
     "test": "pnpm build && node scripts/run-unit-tests.mjs",
     "test:package": "node scripts/package-smoke.mjs",
-    "verify": "pnpm test && pnpm test:browser && pnpm test:package",
+    "verify": "pnpm test && node --test scripts/viewer-browser.test.mjs && pnpm test:package",
     "html-inbox": "node packages/cli/dist/index.js",
-    "test:browser": "node --test scripts/viewer-browser.test.mjs"
+    "test:browser": "pnpm build && node --test scripts/viewer-browser.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
