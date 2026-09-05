@@ -1,0 +1,21 @@
+docs/releasing.md
+  s_c419d815fae329::t_ed0b07d6754cc6 8
+README.md
+  s_c419d815fae329::t_ed0b07d6754cc6 28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "406cd1fc576e0d380baf6a04e67b06b12e6f6d85",
+  "prompts": {},
+  "sessions": {
+    "s_c419d815fae329": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0718b-e6f2-7ea0-a504-7558add4c0a2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
