@@ -1,0 +1,22 @@
+.github/workflows/verify.yml
+  s_c419d815fae329::t_ab66480ea9d956 53-54
+  s_c419d815fae329::t_4f5a762241d892 55
+packages/cli/src/cloudflare-upload.test.ts
+  s_c419d815fae329::t_ab66480ea9d956 140
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "f8a876ef7d4e43cf02cfa58d786770e17ea3520d",
+  "prompts": {},
+  "sessions": {
+    "s_c419d815fae329": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0718b-e6f2-7ea0-a504-7558add4c0a2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
