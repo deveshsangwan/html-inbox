@@ -1,0 +1,25 @@
+packages/cli/src/backend-records.test.ts
+  s_c419d815fae329::t_3007ed28175eac 195,212,223,232,234
+packages/cli/src/cloudflare-upload.test.ts
+  s_c419d815fae329::t_cef0b8f71c2e7c 63-74,140
+packages/cli/src/storage-cleanup.test.ts
+  s_c419d815fae329::t_ba2683db8ceb64 1-129
+packages/cli/src/viewer-http.test.ts
+  s_c419d815fae329::t_dad5c4ef5813eb 77,79,87,94,137,149,217
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "ef2f17b67c2fc1067adeb57be9b85a306035df11",
+  "prompts": {},
+  "sessions": {
+    "s_c419d815fae329": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0718b-e6f2-7ea0-a504-7558add4c0a2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
