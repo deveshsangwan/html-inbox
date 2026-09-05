@@ -1,0 +1,67 @@
+docs/adr/0001-static-remote-inbox.md
+  s_c419d815fae329::t_92a2ec9542bb16 53
+docs/architecture.md
+  s_c419d815fae329::t_92a2ec9542bb16 36,40,44-45,64,70
+site/index.html
+  s_c419d815fae329::t_92a2ec9542bb16 504
+docs/threat-model.md
+  s_c419d815fae329::t_92a2ec9542bb16 85-86,129
+.github/workflows/package.yml
+  s_c419d815fae329::t_9665c3c7ae0d9b 32-34,36
+.github/workflows/verify.yml
+  s_c419d815fae329::t_eab834824bc8ef 14-24,29,32,34,42-44
+README.md
+  s_c419d815fae329::t_5261f3faf85f01 33,142
+docs/releasing.md
+  s_c419d815fae329::t_d07dfdb913db92 9
+package.json
+  s_c419d815fae329::t_70d7796f06e44b 9-10,12-14,20-21
+packages/cli/package.json
+  s_c419d815fae329::t_e747d6baf8a98b 39-40
+packages/cli/src/backend.ts
+  s_c419d815fae329::t_50eeb7d6bff1f8 5
+packages/cli/src/documents.ts
+  s_c419d815fae329::t_61d90d50711a16 1-121
+packages/cli/src/html-validation.test.ts
+  s_c419d815fae329::t_83519e3c00f070 2-3
+packages/cli/src/html-validation.ts
+  s_c419d815fae329::t_43616038c7e6db 56-57,61,76,81,87,91,95,99,105-106,112,118,123,137,161,168,175,180,186,191,200
+packages/cli/src/index.ts
+  s_c419d815fae329::t_544be1f92ac0d6 6
+packages/cli/src/publish-input.ts
+  s_c419d815fae329::t_150afd06eb1dc3 5-6
+packages/cli/src/remote-workflow.ts
+  s_c419d815fae329::t_242865a33e0cb1 4
+packages/cli/src/static-export.ts
+  s_c419d815fae329::t_8578ecc1aed010 4
+packages/cli/src/storage-cleanup.test.ts
+  s_c419d815fae329::t_eae1c5e2e6e71f 7-8
+packages/cli/src/viewer-assets.ts
+  s_c419d815fae329::t_c2fcc40e4ba9b1 1
+packages/cli/src/viewer-render.ts
+  s_c419d815fae329::t_18a5db268caf15 1
+packages/cli/src/viewer-server.ts
+  s_c419d815fae329::t_484e825e065527 8,436
+pnpm-lock.yaml
+  s_c419d815fae329::t_a4947801326a8d 20-22,165-174,257-262
+pnpm-workspace.yaml
+  s_c419d815fae329::t_a200b233783e74 25-26
+scripts/run-unit-tests.mjs
+  s_c419d815fae329::t_8bd27353b80df8 1-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "3d821e5df54354bd8a8bb50a7e8980cd4859b137",
+  "prompts": {},
+  "sessions": {
+    "s_c419d815fae329": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0718b-e6f2-7ea0-a504-7558add4c0a2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
