@@ -1,0 +1,25 @@
+packages/cli/src/backend-records.test.ts
+  s_c419d815fae329::t_49569382a94f2e 12-20,54-55,237
+packages/cli/src/cloudflare-upload.test.ts
+  s_c419d815fae329::t_9af691c8057cd6 1-2,16-20,24-25,30-31,36,47-53,83,104,113,115-117,121-122,130-136,138-140,149-150,154,175,177-184,186,192-205,207-242,248-251,257,260-276
+packages/cli/src/storage-cleanup.test.ts
+  s_c419d815fae329::t_b2575dc3900773 1,4-11,20-25,28-38,40-47,53-58,60-72,76,78-81,86-89,97,99-101,112-116,120,127-130,132-135,144,150-176,178-184,186-189,196-205,207-209
+packages/cli/src/viewer-http.test.ts
+  s_c419d815fae329::t_13ff33d7144d2d 52-54,90,94-95,147
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "056afc5e6661e98309d9c61b3e910e4838464d01",
+  "prompts": {},
+  "sessions": {
+    "s_c419d815fae329": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0718b-e6f2-7ea0-a504-7558add4c0a2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
