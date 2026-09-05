@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import path from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import { chmod, lstat, mkdir, writeFile, rename, rm } from "node:fs/promises";
 
 export class ManagedStorageError extends Error {}
@@ -79,7 +80,27 @@ export async function writeAtomicPrivateJson(
         throw error;
       }
     }
-    await rename(temporaryPath, filePath);
+    // Windows can temporarily deny replacement while a reader holds the file open.
+    // Retry the rename without unlinking the previous, still-readable value.
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        await rename(temporaryPath, filePath);
+        break;
+      } catch (error) {
+        if (
+          process.platform !== "win32" ||
+          attempt >= 10 ||
+          !(error instanceof Error) ||
+          !("code" in error) ||
+          (error.code !== "EPERM" && error.code !== "EACCES" && error.code !== "EBUSY")
+        ) {
+          throw error;
+        }
+
+        await delay(100);
+      }
+    }
+
     await hardenPrivateFile(filePath);
   } catch (error) {
     await rm(temporaryPath, { force: true });

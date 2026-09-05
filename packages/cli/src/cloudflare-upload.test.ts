@@ -60,8 +60,18 @@ test("Cloudflare upload validates and isolates deployment files", async (t) => {
   );
   assert.equal(recordingRunner.invocations.length, 1);
   const deploymentInvocation = recordingRunner.invocations[0];
-  assert.equal(deploymentInvocation.command, "npx");
-  assert.deepEqual(deploymentInvocation.args, [
+  const commandArguments = [...deploymentInvocation.args];
+  if (process.platform === "win32") {
+    assert.equal(deploymentInvocation.command, process.execPath);
+    assert.equal(
+      commandArguments.shift(),
+      path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npx-cli.js"),
+    );
+  } else {
+    assert.equal(deploymentInvocation.command, "npx");
+  }
+
+  assert.deepEqual(commandArguments, [
     "--yes",
     `wrangler@${PINNED_WRANGLER_VERSION}`,
     "pages",
