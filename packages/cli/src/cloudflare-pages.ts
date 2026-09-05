@@ -1,11 +1,8 @@
 import { spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { lstat, open, readFile, readdir, rm } from "node:fs/promises";
 import path from "node:path";
-import {
-  ensurePrivateDirectory,
-  writePrivateFile,
-} from "./private-storage";
+import { ensurePrivateDirectory, writePrivateFile } from "./private-storage";
 import {
   assertInboxCapability,
   isRecord,
@@ -15,6 +12,7 @@ import {
   normalizeCloudflareProjectRef,
   type CloudflareProjectRef,
 } from "./validation";
+import { readBoundedFile } from "./bounded-file";
 import type { StaticSecurityHeaders } from "./static-export";
 
 export type { CloudflareProjectRef } from "./validation";
@@ -32,6 +30,7 @@ export interface CloudflareSnapshotRef {
   outputDir: string;
   capability: string;
   inboxPath: string;
+  snapshotHash?: string;
 }
 
 export interface CommandInvocation {
@@ -65,7 +64,6 @@ export interface CloudflareProjectSummary {
   name: string;
   accountId: string;
   productionBranch: string;
-  productionUrl: string;
 }
 
 export interface CloudflareDeploymentSummary {
@@ -109,26 +107,42 @@ export class NodeCommandRunner implements CommandRunner {
         if (failure || settled) return;
         failure = error;
         terminateProcessTree(child);
-        forceTimer = setTimeout(() => terminateProcessTree(child, "SIGKILL"), 2_000);
+        forceTimer = setTimeout(
+          () => terminateProcessTree(child, "SIGKILL"),
+          2_000,
+        );
         forceTimer.unref();
       };
       const record = (chunk: Buffer) => {
         if (failure) return;
         output += chunk.toString("utf8");
         if (Buffer.byteLength(output, "utf8") > MAX_COMMAND_OUTPUT_BYTES) {
-          fail(new Error("Wrangler produced more than 1 MiB of output and was stopped"));
+          fail(
+            new Error(
+              "Wrangler produced more than 1 MiB of output and was stopped",
+            ),
+          );
         }
       };
       child.stdout.on("data", record);
       child.stderr.on("data", record);
-      child.once("error", (error) => fail(new Error(`Wrangler could not start: ${error.message}`)));
+      child.once("error", (error) =>
+        fail(new Error(`Wrangler could not start: ${error.message}`)),
+      );
       child.once("close", (code, signal) =>
         finish(() =>
-          failure ? reject(failure) : resolve({ code: code ?? 1, signal, output }),
+          failure
+            ? reject(failure)
+            : resolve({ code: code ?? 1, signal, output }),
         ),
       );
       const timer = setTimeout(
-        () => fail(new Error(`Wrangler did not finish within ${invocation.timeoutMs}ms`)),
+        () =>
+          fail(
+            new Error(
+              `Wrangler did not finish within ${invocation.timeoutMs}ms`,
+            ),
+          ),
         invocation.timeoutMs,
       );
       timer.unref();
@@ -140,6 +154,7 @@ export class CloudflarePagesAdapter {
   constructor(
     private readonly runner: CommandRunner = new NodeCommandRunner(),
     private readonly timeoutMs = DEFAULT_TIMEOUT_MS,
+    private readonly request: typeof fetch = fetch,
   ) {}
 
   async deploySnapshot(
@@ -172,25 +187,21 @@ export class CloudflarePagesAdapter {
           metadata.commitMessage,
         );
       }
-      const invocation = createWranglerInvocation(
+      const output = await this.runWrangler(
         args,
         deployDir,
         normalizedTarget.accountId,
-        this.timeoutMs,
       );
-      const result = await this.runner.run(invocation);
-      if (result.code !== 0) {
-        throw new Error(
-          `Cloudflare Pages deploy failed (${result.signal ?? result.code}). ${cleanOutput(result.output)}`,
-        );
-      }
-      const urls = parseWranglerDeployUrls(result.output);
+      const urls = parseWranglerDeployUrls(output);
       return {
         target: normalizedTarget,
         branch: normalizedBranch,
         deploymentUrl: urls.deploymentUrl,
         projectUrl: urls.projectUrl,
-        deploymentInboxUrl: joinInboxUrl(urls.deploymentUrl, snapshot.inboxPath),
+        deploymentInboxUrl: joinInboxUrl(
+          urls.deploymentUrl,
+          snapshot.inboxPath,
+        ),
         projectInboxUrl: joinInboxUrl(urls.projectUrl, snapshot.inboxPath),
       };
     } finally {
@@ -204,13 +215,17 @@ export class CloudflarePagesAdapter {
     }
   }
 
-  async listProjects(accountId: string, cwd: string): Promise<CloudflareProjectSummary[]> {
-    const output = await this.runWrangler(
-      ["pages", "project", "list", "--json"],
+  async listProjects(
+    accountId: string,
+    cwd: string,
+  ): Promise<CloudflareProjectSummary[]> {
+    const normalizedAccountId = normalizeCloudflareAccountId(accountId);
+    const result = await this.listApi(
+      `/accounts/${normalizedAccountId}/pages/projects`,
       cwd,
-      normalizeCloudflareAccountId(accountId),
+      normalizedAccountId,
     );
-    return parseWranglerProjects(output);
+    return parseCloudflareProjects(result);
   }
 
   async createProject(
@@ -239,19 +254,88 @@ export class CloudflarePagesAdapter {
     cwd: string,
   ): Promise<CloudflareDeploymentSummary[]> {
     const normalizedTarget = normalizeCloudflareProjectRef(target);
-    const output = await this.runWrangler(
-      [
-        "pages",
-        "deployment",
-        "list",
-        "--project-name",
-        normalizedTarget.projectName,
-        "--json",
-      ],
+    const result = await this.listApi(
+      `/accounts/${normalizedTarget.accountId}/pages/projects/${normalizedTarget.projectName}/deployments`,
       cwd,
       normalizedTarget.accountId,
     );
-    return parseWranglerDeployments(output);
+    return parseCloudflareDeployments(result);
+  }
+
+  private async listApi(
+    resource: string,
+    cwd: string,
+    accountId: string,
+  ): Promise<unknown[]> {
+    // Wrangler's list --json output contains display rows, omitting recovery metadata.
+    const authResult = await this.runner.run(
+      createWranglerInvocation(
+        ["auth", "token", "--json"],
+        cwd,
+        accountId,
+        this.timeoutMs,
+      ),
+    );
+    if (authResult.code !== 0)
+      throw new Error(
+        "Could not retrieve Cloudflare credentials from Wrangler",
+      );
+    const credentials: unknown = parseJsonOutput(authResult.output);
+    const headers: Record<string, string> = {};
+    if (
+      isRecord(credentials) &&
+      (credentials.type === "oauth" || credentials.type === "api_token") &&
+      typeof credentials.token === "string" &&
+      credentials.token
+    ) {
+      headers.Authorization = `Bearer ${credentials.token}`;
+    } else if (
+      isRecord(credentials) &&
+      credentials.type === "api_key" &&
+      typeof credentials.key === "string" &&
+      typeof credentials.email === "string"
+    ) {
+      headers["X-Auth-Key"] = credentials.key;
+      headers["X-Auth-Email"] = credentials.email;
+    } else {
+      throw new Error("Wrangler returned unsupported credentials");
+    }
+
+    const records: unknown[] = [];
+    const signal = AbortSignal.timeout(this.timeoutMs);
+    for (let page = 1; ; page += 1) {
+      const response = await this.request(
+        `https://api.cloudflare.com/client/v4${resource}?page=${page}&per_page=100`,
+        { headers, signal, redirect: "error" },
+      );
+      if (!response.ok)
+        throw new Error(`Cloudflare list request failed (${response.status})`);
+      const payload: unknown = await response.json();
+      if (
+        !isRecord(payload) ||
+        payload.success !== true ||
+        !Array.isArray(payload.result) ||
+        (payload.result_info !== undefined && !isRecord(payload.result_info))
+      )
+        throw new Error("Cloudflare returned an invalid list response");
+      const totalPages = isRecord(payload.result_info)
+        ? payload.result_info.total_pages
+        : undefined;
+      if (
+        totalPages !== undefined &&
+        (typeof totalPages !== "number" ||
+          !Number.isSafeInteger(totalPages) ||
+          totalPages < 0)
+      )
+        throw new Error("Cloudflare returned invalid pagination");
+      records.push(...payload.result);
+      if (
+        typeof totalPages === "number"
+          ? page >= totalPages
+          : payload.result.length < 100
+      )
+        return records;
+    }
   }
 
   private async runWrangler(
@@ -360,13 +444,17 @@ export function parseWranglerDeployUrls(output: string): {
     /https:\/\/[a-z0-9-]+(?:\.[a-z0-9-]+)*\.pages\.dev(?:\/[^\s"'<>)]*)?/i,
   );
   if (!match) {
-    throw new Error("Wrangler completed without returning a Cloudflare Pages deployment URL");
+    throw new Error(
+      "Wrangler completed without returning a Cloudflare Pages deployment URL",
+    );
   }
   const deploymentUrl = match[0].replace(/[),.;]+$/g, "").replace(/\/+$/, "");
   const parsed = new URL(deploymentUrl);
   const labels = parsed.hostname.split(".");
   if (labels.length < 4 || !/^[0-9a-f]{6,12}$/i.test(labels[0])) {
-    throw new Error("Wrangler returned a Pages URL without an immutable deployment prefix");
+    throw new Error(
+      "Wrangler returned a Pages URL without an immutable deployment prefix",
+    );
   }
   return {
     deploymentUrl,
@@ -391,88 +479,67 @@ export function receiptFromDeployment(
   };
 }
 
-export function parseWranglerProjects(output: string): CloudflareProjectSummary[] {
-  const parsed = parseJsonOutput(output);
-  const candidates = Array.isArray(parsed)
-    ? parsed
-    : isRecord(parsed) && Array.isArray(parsed.result)
-      ? parsed.result
-      : isRecord(parsed) && Array.isArray(parsed.projects)
-        ? parsed.projects
-        : [];
-  return candidates.flatMap((candidate) => {
-    if (!isRecord(candidate)) return [];
-    const name = firstString(candidate.name, candidate.project_name, candidate.projectName);
-    if (!name) return [];
-    let normalizedName: string;
-    try {
-      normalizedName = normalizeCloudflareProjectName(name);
-    } catch {
-      return [];
-    }
-    const account = isRecord(candidate.account) ? candidate.account : {};
-    const productionConfig =
-      isRecord(candidate.deployment_configs) &&
-      isRecord(candidate.deployment_configs.production)
-        ? candidate.deployment_configs.production
-        : {};
-    const domains = firstString(
-      candidate.domains,
-      candidate.project_domains,
-      candidate.subdomain,
-      candidate.url,
-    );
-    const rawAccountId = firstString(candidate.account_id, candidate.accountId, account.id).toLowerCase();
-    return [
-      {
-        name: normalizedName,
-        accountId: /^[0-9a-f]{32}$/.test(rawAccountId) ? rawAccountId : "",
-        productionBranch: firstString(
-          candidate.production_branch,
-          candidate.productionBranch,
-          productionConfig.branch,
-        ),
-        productionUrl: normalizePagesUrl(domains),
-      },
-    ];
+export function parseCloudflareProjects(
+  value: unknown,
+): CloudflareProjectSummary[] {
+  if (!Array.isArray(value))
+    throw new Error("Cloudflare projects must be an array");
+  return value.map((project) => {
+    if (!isRecord(project)) throw new Error("Cloudflare project is invalid");
+    return {
+      name: normalizeCloudflareProjectName(requiredString(project.name)),
+      accountId: "",
+      productionBranch: normalizeCloudflareBranch(
+        requiredString(project.production_branch),
+      ),
+    };
   });
 }
 
-export function parseWranglerDeployments(output: string): CloudflareDeploymentSummary[] {
-  const parsed = parseJsonOutput(output);
-  const candidates = Array.isArray(parsed)
-    ? parsed
-    : isRecord(parsed) && Array.isArray(parsed.result)
-      ? parsed.result
-      : isRecord(parsed) && Array.isArray(parsed.deployments)
-        ? parsed.deployments
-        : [];
-  return candidates.flatMap((candidate) => {
-    if (!isRecord(candidate)) return [];
-    const trigger = isRecord(candidate.deployment_trigger) ? candidate.deployment_trigger : {};
-    const metadata = isRecord(trigger.metadata) ? trigger.metadata : {};
-    const latestStage = isRecord(candidate.latest_stage) ? candidate.latest_stage : {};
-    const id = firstString(candidate.id, candidate.deployment_id);
-    const url = normalizePagesUrl(firstString(candidate.url, candidate.deployment_url));
-    if (!id || !url) return [];
-    return [
-      {
-        id,
-        url,
-        environment: firstString(candidate.environment) || "preview",
-        status: firstString(latestStage.status),
-        isSkipped: candidate.is_skipped === true,
-        branch: firstString(metadata.branch, candidate.branch),
-        createdAt: firstString(candidate.created_on, candidate.created_at, candidate.createdAt),
-        commitHash: firstString(metadata.commit_hash, metadata.commitHash, candidate.commit_hash),
-        commitMessage: firstString(
-          metadata.commit_message,
-          metadata.commitMessage,
-          candidate.commit_message,
-        ),
-      },
-    ];
+export function parseCloudflareDeployments(
+  value: unknown,
+): CloudflareDeploymentSummary[] {
+  if (!Array.isArray(value))
+    throw new Error("Cloudflare deployments must be an array");
+  return value.map((deployment) => {
+    if (
+      !isRecord(deployment) ||
+      !isRecord(deployment.deployment_trigger) ||
+      !isRecord(deployment.deployment_trigger.metadata) ||
+      !isRecord(deployment.latest_stage) ||
+      typeof deployment.is_skipped !== "boolean"
+    )
+      throw new Error("Cloudflare deployment is invalid");
+    const metadata = deployment.deployment_trigger.metadata;
+    const url = requiredString(deployment.url);
+    const parsedUrl = new URL(url);
+    if (
+      parsedUrl.protocol !== "https:" ||
+      !parsedUrl.hostname.endsWith(".pages.dev") ||
+      parsedUrl.origin !== url
+    )
+      throw new Error("Cloudflare deployment URL is invalid");
+    const createdAt = requiredString(deployment.created_on);
+    if (!Number.isFinite(Date.parse(createdAt)))
+      throw new Error("Cloudflare deployment date is invalid");
+    return {
+      id: requiredString(deployment.id),
+      url,
+      environment: requiredString(deployment.environment),
+      status: requiredString(deployment.latest_stage.status),
+      isSkipped: deployment.is_skipped,
+      branch: requiredString(metadata.branch),
+      createdAt,
+      commitHash: requiredString(metadata.commit_hash),
+      commitMessage: requiredString(metadata.commit_message),
+    };
   });
+}
+
+function requiredString(value: unknown): string {
+  if (typeof value !== "string")
+    throw new Error("Cloudflare field must be a string");
+  return value;
 }
 
 async function prepareCloudflareDeployment(
@@ -485,28 +552,62 @@ async function prepareCloudflareDeployment(
   }
   await Promise.all([
     assertRegularFile(path.join(sourceDir, "__html-inbox", "ownership.json")),
-    assertRegularFile(path.join(sourceDir, snapshot.inboxPath.slice(1), "snapshot-manifest.json")),
-    assertRegularFile(path.join(sourceDir, snapshot.inboxPath.slice(1), "security-headers.json")),
-  ]);
-  const security = parseStaticSecurityHeaders(
-    await readFile(
-      path.join(sourceDir, snapshot.inboxPath.slice(1), "security-headers.json"),
-      "utf8",
+    assertRegularFile(
+      path.join(
+        sourceDir,
+        snapshot.inboxPath.slice(1),
+        "snapshot-manifest.json",
+      ),
     ),
+    assertRegularFile(
+      path.join(
+        sourceDir,
+        snapshot.inboxPath.slice(1),
+        "security-headers.json",
+      ),
+    ),
+  ]);
+  const manifestPath = `${snapshot.inboxPath.slice(1)}/snapshot-manifest.json`;
+  const manifestBytes = await readSnapshotFile(
+    path.join(sourceDir, manifestPath),
   );
+  const inventory = parseSnapshotInventory(
+    manifestBytes,
+    snapshot.snapshotHash,
+  );
+  if (inventory.has(manifestPath))
+    throw new Error("Snapshot manifest must not list itself");
+  inventory.set(manifestPath, {
+    size: manifestBytes.length,
+    sha256: createHash("sha256").update(manifestBytes).digest("hex"),
+  });
 
   const deployDir = `${sourceDir}.cloudflare-${randomUUID()}`;
   await ensurePrivateDirectory(deployDir);
   try {
     const limits = { files: 0 };
-    await copyStaticTree(sourceDir, deployDir, limits);
+    await copyStaticTree(sourceDir, deployDir, limits, inventory);
+    if (inventory.size !== 0)
+      throw new Error("Static snapshot is missing manifest files");
+    const security = parseStaticSecurityHeaders(
+      await readFile(
+        path.join(
+          deployDir,
+          snapshot.inboxPath.slice(1),
+          "security-headers.json",
+        ),
+        "utf8",
+      ),
+    );
     await writePrivateFile(
       path.join(deployDir, "_headers"),
       renderCloudflareHeaders(snapshot.capability, security),
     );
     limits.files += 1;
     if (limits.files > CLOUDFLARE_UPLOAD_FILE_LIMIT) {
-      throw new Error(`Cloudflare Direct Upload allows at most ${CLOUDFLARE_UPLOAD_FILE_LIMIT} files`);
+      throw new Error(
+        `Cloudflare Direct Upload allows at most ${CLOUDFLARE_UPLOAD_FILE_LIMIT} files`,
+      );
     }
     return deployDir;
   } catch (error) {
@@ -519,55 +620,129 @@ async function copyStaticTree(
   sourceDir: string,
   destinationDir: string,
   limits: { files: number },
+  inventory: Map<string, { size: number; sha256: string }>,
+  relativeDir = "",
 ): Promise<void> {
   const entries = await readdir(sourceDir, { withFileTypes: true });
   for (const entry of entries) {
+    const relativePath = relativeDir
+      ? `${relativeDir}/${entry.name}`
+      : entry.name;
     const sourcePath = path.join(sourceDir, entry.name);
     const destinationPath = path.join(destinationDir, entry.name);
     const entryStat = await lstat(sourcePath);
     if (entryStat.isSymbolicLink()) {
-      throw new Error(`Static snapshot contains a symbolic link: ${sourcePath}`);
+      throw new Error(
+        `Static snapshot contains a symbolic link: ${sourcePath}`,
+      );
     }
     if (entryStat.isDirectory()) {
       await ensurePrivateDirectory(destinationPath);
-      await copyStaticTree(sourcePath, destinationPath, limits);
+      await copyStaticTree(
+        sourcePath,
+        destinationPath,
+        limits,
+        inventory,
+        relativePath,
+      );
       continue;
     }
     if (!entryStat.isFile()) {
-      throw new Error(`Static snapshot contains an unsupported entry: ${sourcePath}`);
+      throw new Error(
+        `Static snapshot contains an unsupported entry: ${sourcePath}`,
+      );
     }
     if (entryStat.size > CLOUDFLARE_UPLOAD_FILE_SIZE_LIMIT) {
-      throw new Error(`Cloudflare Direct Upload file exceeds 25 MiB: ${sourcePath}`);
+      throw new Error(
+        `Cloudflare Direct Upload file exceeds 25 MiB: ${sourcePath}`,
+      );
     }
     limits.files += 1;
     if (limits.files > CLOUDFLARE_UPLOAD_FILE_LIMIT) {
-      throw new Error(`Cloudflare Direct Upload allows at most ${CLOUDFLARE_UPLOAD_FILE_LIMIT} files`);
+      throw new Error(
+        `Cloudflare Direct Upload allows at most ${CLOUDFLARE_UPLOAD_FILE_LIMIT} files`,
+      );
     }
-    await writePrivateFile(destinationPath, await readBoundedFile(sourcePath));
+    const expected = inventory.get(relativePath);
+    if (!expected)
+      throw new Error(
+        `Static snapshot contains an unlisted file: ${relativePath}`,
+      );
+    const contents = await readSnapshotFile(sourcePath);
+    if (
+      contents.length !== expected.size ||
+      createHash("sha256").update(contents).digest("hex") !== expected.sha256
+    )
+      throw new Error(
+        `Static snapshot file does not match manifest: ${relativePath}`,
+      );
+    await writePrivateFile(destinationPath, contents);
+    inventory.delete(relativePath);
   }
 }
 
-async function readBoundedFile(filePath: string): Promise<Buffer> {
+function parseSnapshotInventory(contents: Buffer, expectedHash?: string) {
+  const value: unknown = JSON.parse(contents.toString("utf8"));
+  if (
+    !isRecord(value) ||
+    value.schemaVersion !== 1 ||
+    !Array.isArray(value.files) ||
+    typeof value.snapshotHash !== "string"
+  )
+    throw new Error("Static snapshot manifest is invalid");
+  const inventory = new Map<string, { size: number; sha256: string }>();
+  const hash = createHash("sha256");
+  let previousPath = "";
+  for (const file of value.files) {
+    if (
+      !isRecord(file) ||
+      typeof file.path !== "string" ||
+      !file.path ||
+      file.path.startsWith("/") ||
+      file.path.includes("\\") ||
+      file.path
+        .split("/")
+        .some((part) => !part || part === "." || part === "..") ||
+      file.path <= previousPath ||
+      typeof file.size !== "number" ||
+      !Number.isSafeInteger(file.size) ||
+      file.size < 0 ||
+      typeof file.sha256 !== "string" ||
+      !/^[0-9a-f]{64}$/.test(file.sha256)
+    )
+      throw new Error("Static snapshot manifest file is invalid");
+    previousPath = file.path;
+    inventory.set(file.path, { size: file.size, sha256: file.sha256 });
+    hash
+      .update(file.path)
+      .update("\0")
+      .update(file.sha256)
+      .update("\0")
+      .update(String(file.size))
+      .update("\0");
+  }
+  const digest = hash.digest("hex");
+  if (
+    digest !== value.snapshotHash ||
+    (expectedHash !== undefined && digest !== expectedHash)
+  )
+    throw new Error("Static snapshot hash does not match remote intent");
+  return inventory;
+}
+
+async function readSnapshotFile(filePath: string): Promise<Buffer> {
   const file = await open(filePath, "r");
   try {
     if (!(await file.stat()).isFile()) {
-      throw new Error(`Static snapshot contains an unsupported entry: ${filePath}`);
-    }
-    const chunks: Buffer[] = [];
-    let byteLength = 0;
-    while (true) {
-      const chunk = Buffer.allocUnsafe(
-        Math.min(64 * 1024, CLOUDFLARE_UPLOAD_FILE_SIZE_LIMIT - byteLength + 1),
+      throw new Error(
+        `Static snapshot contains an unsupported entry: ${filePath}`,
       );
-      const { bytesRead } = await file.read(chunk, 0, chunk.length, null);
-      if (bytesRead === 0) break;
-      byteLength += bytesRead;
-      if (byteLength > CLOUDFLARE_UPLOAD_FILE_SIZE_LIMIT) {
-        throw new Error(`Cloudflare Direct Upload file exceeds 25 MiB: ${filePath}`);
-      }
-      chunks.push(chunk.subarray(0, bytesRead));
     }
-    return Buffer.concat(chunks, byteLength);
+    return await readBoundedFile(
+      file,
+      CLOUDFLARE_UPLOAD_FILE_SIZE_LIMIT,
+      `Cloudflare Direct Upload file exceeds 25 MiB: ${filePath}`,
+    );
   } finally {
     await file.close();
   }
@@ -589,14 +764,18 @@ function assertSnapshotRef(snapshot: CloudflareSnapshotRef): void {
 
 function assertDeployMetadata(metadata: CloudflareDeployMetadata): void {
   if (!/^[0-9a-f]{40,64}$/.test(metadata.commitHash)) {
-    throw new Error("Cloudflare deployment commit hash must be a 40-64 character lowercase digest");
+    throw new Error(
+      "Cloudflare deployment commit hash must be a 40-64 character lowercase digest",
+    );
   }
   if (
     !metadata.commitMessage ||
     metadata.commitMessage.length > 200 ||
     /\r|\n/.test(metadata.commitMessage)
   ) {
-    throw new Error("Cloudflare deployment commit message must be 1-200 characters on one line");
+    throw new Error(
+      "Cloudflare deployment commit message must be 1-200 characters on one line",
+    );
   }
 }
 
@@ -613,43 +792,7 @@ function parseJsonOutput(output: string): unknown {
   try {
     return JSON.parse(cleaned);
   } catch {
-    const starts = [cleaned.indexOf("{"), cleaned.indexOf("[")].filter(
-      (index) => index >= 0,
-    );
-    const start = starts.length ? Math.min(...starts) : -1;
-    const end = Math.max(cleaned.lastIndexOf("}"), cleaned.lastIndexOf("]"));
-    if (start >= 0 && end > start) {
-      try {
-        return JSON.parse(cleaned.slice(start, end + 1));
-      } catch {
-        // Use the stable error below.
-      }
-    }
-  }
-  throw new Error("Wrangler did not return valid JSON");
-}
-
-function firstString(...values: unknown[]): string {
-  for (const value of values) {
-    if (Array.isArray(value)) {
-      const nested = firstString(...value);
-      if (nested) return nested;
-    }
-    if (typeof value === "string" && value.trim()) return value.trim();
-  }
-  return "";
-}
-
-function normalizePagesUrl(value: string): string {
-  if (!value) return "";
-  const first = value.split(/[,\s]+/).find(Boolean) ?? "";
-  const candidate = /^https?:\/\//i.test(first) ? first : `https://${first}`;
-  try {
-    const parsed = new URL(candidate);
-    if (!parsed.hostname.endsWith(".pages.dev")) return "";
-    return parsed.origin;
-  } catch {
-    return "";
+    throw new Error("Wrangler did not return valid JSON");
   }
 }
 
@@ -707,11 +850,15 @@ function parseStaticSecurityHeaders(value: string): StaticSecurityHeaders {
   };
   for (const policy of [security.root, security.shell, security.document]) {
     if (!policy["Content-Security-Policy"]) {
-      throw new Error("Static snapshot security policy is missing Content-Security-Policy");
+      throw new Error(
+        "Static snapshot security policy is missing Content-Security-Policy",
+      );
     }
   }
   if (
-    !security.common["Cache-Control"]?.split(",").some((value) => value.trim() === "no-store") ||
+    !security.common["Cache-Control"]
+      ?.split(",")
+      .some((value) => value.trim() === "no-store") ||
     security.common["Referrer-Policy"] !== "no-referrer" ||
     security.common["X-Content-Type-Options"] !== "nosniff" ||
     !security.common["X-Robots-Tag"]?.includes("noindex")
@@ -721,7 +868,10 @@ function parseStaticSecurityHeaders(value: string): StaticSecurityHeaders {
   return security;
 }
 
-function parseHeaderRecord(value: unknown, label: string): Record<string, string> {
+function parseHeaderRecord(
+  value: unknown,
+  label: string,
+): Record<string, string> {
   if (!isRecord(value)) {
     throw new Error(`Static snapshot ${label} headers are invalid`);
   }
