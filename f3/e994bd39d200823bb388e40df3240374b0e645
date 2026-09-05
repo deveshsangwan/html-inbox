@@ -1,0 +1,29 @@
+packages/cli/src/html-validation.test.ts
+  s_c419d815fae329::t_5810f7bfc97b86 1,142-151
+packages/cli/src/html-validation.ts
+  s_c419d815fae329::t_d587d6d32c20f7 58-62,64-65,68
+scripts/viewer-browser.test.mjs
+  s_c419d815fae329::t_d587d6d32c20f7 20,23-25,72-74
+pnpm-workspace.yaml
+  s_c419d815fae329::t_14aa92373b79fa 25-26
+scripts/run-unit-tests.mjs
+  s_c419d815fae329::t_5810f7bfc97b86 6
+package.json
+  s_c419d815fae329::t_5810f7bfc97b86 12,14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "f3e994bd39d200823bb388e40df3240374b0e645",
+  "prompts": {},
+  "sessions": {
+    "s_c419d815fae329": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0718b-e6f2-7ea0-a504-7558add4c0a2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
