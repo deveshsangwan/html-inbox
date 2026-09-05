@@ -35,7 +35,7 @@ test("static export preserves bytes, metadata and atomic replacement", async (t)
     exportStaticSnapshot(
       {
         async listDocuments() {
-          return [{ ...published.metadata, id: "../../../../escaped" }];
+          return [{ ...published, id: "../../../../escaped" }];
         },
         async getDocument() {
           return null;
@@ -49,13 +49,13 @@ test("static export preserves bytes, metadata and atomic replacement", async (t)
     ),
     /metadata\.id/,
   );
-  const publishedDocument = await backend.getDocument(published.metadata.id);
+  const publishedDocument = await backend.getDocument(published.id);
   assert(publishedDocument);
   await assert.rejects(
     exportStaticSnapshot(
       {
         async listDocuments() {
-          return [published.metadata];
+          return [published];
         },
         async getDocument() {
           return {
@@ -109,7 +109,7 @@ test("static export preserves bytes, metadata and atomic replacement", async (t)
   assert.equal(snapshotIndex.includes("data-client-search"), true);
   assert.equal(
     snapshotIndex.includes(
-      `/i/${capability}/documents/${published.metadata.id}/`,
+      `/i/${capability}/documents/${published.id}/`,
     ),
     true,
   );
@@ -119,14 +119,14 @@ test("static export preserves bytes, metadata and atomic replacement", async (t)
       "i",
       capability,
       "documents",
-      published.metadata.id,
+      published.id,
       "index.html",
     ),
     "utf8",
   );
   assert.equal(
     snapshotShell.includes(
-      `/i/${capability}/documents/${published.metadata.id}/content/`,
+      `/i/${capability}/documents/${published.id}/content/`,
     ),
     true,
   );
@@ -137,7 +137,7 @@ test("static export preserves bytes, metadata and atomic replacement", async (t)
         "i",
         capability,
         "documents",
-        published.metadata.id,
+        published.id,
         "content",
         "index.html",
       ),

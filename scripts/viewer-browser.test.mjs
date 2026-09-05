@@ -67,7 +67,7 @@ test("browser theme, static search, and document isolation", async (t) => {
 
   await page.goto(`${origin}/?q=REPORT%20REPORT`);
   assert.equal(await page.locator("[data-search-text]").count(), 1);
-  await page.goto(`${origin}/documents/${published.metadata.id}`);
+  await page.goto(`${origin}/documents/${published.id}`);
   const result = page.frameLocator("iframe").locator("#result");
   await result.getByText("isolated", { exact: true }).waitFor();
   assert.equal(

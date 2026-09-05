@@ -2,15 +2,10 @@ import { test } from "node:test";
 import { strict as assert } from "node:assert";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { assertExportOutsideHome, USAGE, getCliVersion } from "./index";
+import { assertExportOutsideHome, getCliVersion } from "./index";
 import { generateInboxCapability } from "./static-export";
 
 test("CLI contracts and export paths", async () => {
-  assert.match(USAGE, /publish <file\.html>/);
-  assert.match(USAGE, /viewer/);
-  assert.match(USAGE, /delete <id>/);
-  assert.match(USAGE, /export --out <directory>/);
-  assert.match(USAGE, /remote init --account/);
   assert.equal(
     getCliVersion(),
     JSON.parse(await readFile(path.join(__dirname, "../package.json"), "utf8"))

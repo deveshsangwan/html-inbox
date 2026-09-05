@@ -44,7 +44,7 @@ test("publish validates metadata before writing and metadata reads preserve orig
   await assert.rejects(backend.publish({ ...input, title: "" }), /metadata.title/);
   assert.deepEqual(await backend.listDocuments(), []);
 
-  const { metadata } = await backend.publish(input);
+  const metadata = await backend.publish(input);
   assert.deepEqual(await backend.getDocumentMetadata(metadata.id), metadata);
   assert.deepEqual((await backend.getDocument(metadata.id))?.originalBytes, input.originalBytes);
   const deleted = await backend.deleteDocument(metadata.id);
@@ -57,7 +57,7 @@ test("corrupt managed files are skipped with the same warning for listing and re
   const directory = await temporaryDirectory(context);
   const warnings: string[] = [];
   const backend = new LocalDocumentBackend(directory, (warning) => warnings.push(warning));
-  const { metadata } = await backend.publish(input);
+  const metadata = await backend.publish(input);
   const htmlPath = path.join(directory, "documents", metadata.id, "index.html");
   const externalPath = path.join(directory, "external.html");
   await writeFile(externalPath, "external");
@@ -91,7 +91,7 @@ test("bounded reads accept exactly the limit and reject one extra byte", async (
 test("incremental snapshots preserve manifests and roll back when a document changes", async (context) => {
   const directory = await temporaryDirectory(context);
   const backend = new LocalDocumentBackend(path.join(directory, "home"));
-  const { metadata } = await backend.publish(input);
+  const metadata = await backend.publish(input);
   const outputDir = path.join(directory, "snapshot");
   await backend.publish({ ...input, title: "Second report" });
   let previousDocumentId: string | undefined;

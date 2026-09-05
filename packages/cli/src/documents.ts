@@ -19,10 +19,6 @@ export interface PublishInput {
   sourceFileName: string;
 }
 
-export interface PublishResult {
-  metadata: DocumentMetadata;
-}
-
 export interface DeleteResult {
   metadata: DocumentMetadata;
   reclaimedBytes: number;
@@ -34,7 +30,7 @@ export interface StoredDocument {
 }
 
 export interface DocumentBackend {
-  publish(input: PublishInput): Promise<PublishResult>;
+  publish(input: PublishInput): Promise<DocumentMetadata>;
   listDocuments(): Promise<DocumentMetadata[]>;
   getDocumentMetadata(id: string): Promise<DocumentMetadata | null>;
   getDocument(id: string): Promise<StoredDocument | null>;

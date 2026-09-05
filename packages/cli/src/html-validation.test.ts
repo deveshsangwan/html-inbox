@@ -88,24 +88,15 @@ for (const href of [
 const inlineImage = validateHtml('<html><img src="data:image/png;base64,iVBORw0KGgo="></html>');
 assert.equal(inlineImage.ok, true);
 assert.deepEqual(inlineImage.warnings, []);
-assert.equal(
-  validateHtml(
-    '<html><head><script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script></head></html>',
-  ).ok,
-  true,
-);
-assert.equal(
-  validateHtml(
-    '<html><head><script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script></head></html>',
-  ).ok,
-  true,
-);
-assert.equal(
-  validateHtml(`<html><body><pre class="mermaid">graph LR; A-->B</pre><script type="module">
-    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-  </script></body></html>`).ok,
-  true,
-);
+for (const html of [
+  '<html><script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script></html>',
+  '<html><script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script></html>',
+  '<html><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";</script></html>',
+]) {
+  const result = validateHtml(html);
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.warnings, [], `expected supported script without warnings: ${html}`);
+}
 // A blocked script source is a broken document, not a compromised one.
 for (const html of [
   '<html><script src="https://cdn.jsdelivr.net/npm/react@19"></script></html>',

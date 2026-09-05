@@ -166,7 +166,7 @@ test("deployment copies verified snapshot bytes and generates host headers", asy
             "i",
             capability,
             "documents",
-            published.metadata.id,
+            published.id,
             "content",
             "index.html",
           ),

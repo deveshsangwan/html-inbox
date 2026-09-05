@@ -192,7 +192,7 @@ test("corrupt records are skipped and CLI deletion requires force", async (t) =>
   );
 
   const textList = formatDocumentList(documentsAfterCorruption, false);
-  assert.equal(textList.includes(published.metadata.id), true);
+  assert.equal(textList.includes(published.id), true);
   assert.equal(
     JSON.parse(formatDocumentList(documentsAfterCorruption, true)).length,
     2,
@@ -209,7 +209,7 @@ test("corrupt records are skipped and CLI deletion requires force", async (t) =>
 
   const refusedDelete = spawnSync(
     process.execPath,
-    [path.join(__dirname, "index.js"), "delete", hostile.metadata.id],
+    [path.join(__dirname, "index.js"), "delete", hostile.id],
     { env: cliEnv, encoding: "utf8" },
   );
   assert.notEqual(refusedDelete.status, 0);
@@ -220,7 +220,7 @@ test("corrupt records are skipped and CLI deletion requires force", async (t) =>
     [
       path.join(__dirname, "index.js"),
       "delete",
-      hostile.metadata.id,
+      hostile.id,
       "--force",
       "--json",
     ],
@@ -229,9 +229,9 @@ test("corrupt records are skipped and CLI deletion requires force", async (t) =>
   assert.equal(forcedDelete.status, 0, forcedDelete.stderr);
   assert.equal(
     JSON.parse(forcedDelete.stdout).metadata.id,
-    hostile.metadata.id,
+    hostile.id,
   );
-  assert.equal(await backend.getDocument(hostile.metadata.id), null);
+  assert.equal(await backend.getDocument(hostile.id), null);
   assert.equal((await backend.listDocuments()).length, 1);
 });
 async function assertPortAvailable(port: number): Promise<void> {

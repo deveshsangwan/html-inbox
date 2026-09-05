@@ -74,9 +74,9 @@ test("viewer serves isolated documents and searches metadata", async (t) => {
     type: "report",
     sourceFileName: "report.html",
   });
-  assert.equal(published.metadata.schemaVersion, 1);
+  assert.equal(published.schemaVersion, 1);
   const stored = await readFile(
-    path.join(home, "documents", published.metadata.id, "index.html"),
+    path.join(home, "documents", published.id, "index.html"),
     "utf8",
   );
   assert.equal(stored, html);
@@ -84,14 +84,14 @@ test("viewer serves isolated documents and searches metadata", async (t) => {
   if (process.platform !== "win32") {
     assert.equal((await stat(home)).mode & 0o777, 0o700);
     assert.equal(
-      (await stat(path.join(home, "documents", published.metadata.id))).mode &
+      (await stat(path.join(home, "documents", published.id))).mode &
         0o777,
       0o700,
     );
     assert.equal(
       (
         await stat(
-          path.join(home, "documents", published.metadata.id, "index.html"),
+          path.join(home, "documents", published.id, "index.html"),
         )
       ).mode & 0o777,
       0o600,
@@ -134,7 +134,7 @@ test("viewer serves isolated documents and searches metadata", async (t) => {
   );
   assert.match(viewerScript.headers.get("content-type") ?? "", /javascript/);
 
-  const shell = await fetch(`${baseUrl}/documents/${published.metadata.id}`);
+  const shell = await fetch(`${baseUrl}/documents/${published.id}`);
   assert.equal(
     shell.headers.get("content-security-policy")?.includes("frame-src 'self'"),
     true,
@@ -146,7 +146,7 @@ test("viewer serves isolated documents and searches metadata", async (t) => {
   assert.equal(shellHtml.includes("Back to inbox"), true);
 
   const content = await fetch(
-    `${baseUrl}/documents/${published.metadata.id}/content`,
+    `${baseUrl}/documents/${published.id}/content`,
   );
   const csp = content.headers.get("content-security-policy") ?? "";
   assert.equal(
@@ -214,7 +214,7 @@ test("viewer serves isolated documents and searches metadata", async (t) => {
   );
 
   const hostileShellHtml = await (
-    await fetch(`${baseUrl}/documents/${hostile.metadata.id}`)
+    await fetch(`${baseUrl}/documents/${hostile.id}`)
   ).text();
   assert.equal(hostileShellHtml.includes(hostileTitle), false);
   assert.equal(hostileShellHtml.includes(hostileType), false);

@@ -144,7 +144,7 @@ export class RemoteWorkflow {
 
   constructor(
     private readonly backend: DocumentBackend,
-    private readonly home: string,
+    home: string,
     private readonly deployment: RemoteDeploymentPort = new CloudflarePagesAdapter(),
     private readonly now: () => string = () => new Date().toISOString(),
   ) {

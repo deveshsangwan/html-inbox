@@ -377,7 +377,7 @@ class RecordingRemoteDeploymentPort implements RemoteDeploymentPort {
     assert(metadata);
     const manifestPath = path.join(
       snapshot.outputDir,
-      snapshot.inboxPath.slice(1),
+      `i/${snapshot.capability}`,
       "snapshot-manifest.json",
     );
     const manifest = JSON.parse(
@@ -418,8 +418,8 @@ class RecordingRemoteDeploymentPort implements RemoteDeploymentPort {
       branch,
       deploymentUrl,
       projectUrl,
-      deploymentInboxUrl: `${deploymentUrl}${snapshot.inboxPath}/`,
-      projectInboxUrl: `${projectUrl}${snapshot.inboxPath}/`,
+      deploymentInboxUrl: `${deploymentUrl}/i/${snapshot.capability}/`,
+      projectInboxUrl: `${projectUrl}/i/${snapshot.capability}/`,
     };
   }
 

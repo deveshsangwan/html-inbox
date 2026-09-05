@@ -44,7 +44,7 @@ Cloudflare Pages is the first production deployment adapter. The stable target i
 ProjectRef { accountId, projectName }
 ```
 
-Hostnames and deployment URLs are deployment metadata, not target identity. The adapter invokes a pinned Wrangler version and returns a normalized deployment receipt. Tests use a recording adapter at the same seam; provider-specific command execution does not leak into the snapshot module or workflow.
+Hostnames and deployment URLs are deployment metadata, not target identity. The adapter invokes a pinned Wrangler version for mutations and returns a normalized deployment receipt. It reads project and deployment metadata through the Cloudflare API using credentials retrieved from Wrangler. The pinned CLI list output omits fields needed to verify production branches and reconcile operations. Tests use a recording adapter at the same seam; provider-specific command execution does not leak into the snapshot module or workflow.
 
 ### Ownership and adoption
 

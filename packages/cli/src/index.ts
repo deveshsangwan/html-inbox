@@ -135,8 +135,8 @@ export async function publishCommand(args: PublishRequest): Promise<string> {
   }
 
   await ensureViewer(home, port);
-  const result = await backend.publish(input);
-  return `http://127.0.0.1:${port}/documents/${result.metadata.id}`;
+  const metadata = await backend.publish(input);
+  return `http://127.0.0.1:${port}/documents/${metadata.id}`;
 }
 
 export function formatDocumentList(documents: DocumentMetadata[], json: boolean): string {

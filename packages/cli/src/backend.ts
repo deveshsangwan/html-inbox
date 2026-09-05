@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { lstat, readFile, readdir, rename, rm, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
-import { parseDocumentMetadata, DOCUMENT_SCHEMA_VERSION, DeleteResult, DocumentBackend, DocumentMetadata, isSafeDocumentId, PublishInput, PublishResult, StoredDocument } from "./documents";
+import { parseDocumentMetadata, DOCUMENT_SCHEMA_VERSION, DeleteResult, DocumentBackend, DocumentMetadata, isSafeDocumentId, PublishInput, StoredDocument } from "./documents";
 import {
   ensurePrivateDirectory,
   ManagedStorageError,
@@ -40,7 +40,7 @@ export class LocalDocumentBackend implements DocumentBackend {
     private readonly createDocumentId: () => string = randomUUID,
   ) {}
 
-  async publish(input: PublishInput): Promise<PublishResult> {
+  async publish(input: PublishInput): Promise<DocumentMetadata> {
     await this.prepareStorage();
     const metadata = parseDocumentMetadata({
       schemaVersion: DOCUMENT_SCHEMA_VERSION,
@@ -66,7 +66,7 @@ export class LocalDocumentBackend implements DocumentBackend {
       throw error;
     }
 
-    return { metadata };
+    return metadata;
   }
 
   async listDocuments(): Promise<DocumentMetadata[]> {

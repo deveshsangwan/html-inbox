@@ -1,6 +1,6 @@
 # Code quality audit, 2026-09-05
 
-Reviewed the CLI and shared source, both self-check suites, package smoke test, build and CI configuration, static site source, and architecture and operating documentation. This is a findings and implementation plan. Production code and tests have not been changed.
+Reviewed the CLI and shared source, both self-check suites, package smoke test, build and CI configuration, static site source, and architecture and operating documentation. This records the initial findings against commit a17b91a, before cleanup began. Source references describe that baseline; the GitHub issues below track implementation.
 
 The local-storage, isolated-viewer, static-export, and deployment-workflow separation is worth keeping. The largest problems are unreliable test completion, incomplete boundary validation, and duplicated representations and processing. A framework rewrite would add work without addressing those problems.
 
