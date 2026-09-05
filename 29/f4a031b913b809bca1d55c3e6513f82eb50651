@@ -1,0 +1,28 @@
+packages/cli/src/cli-args.test.ts
+  s_c419d815fae329::t_9cb04322669c1a 1-26,28-39,41-52
+  s_c419d815fae329::t_045fe3823c5c81 27,40
+docs/code-quality-audit-2026-09-05.md
+  s_c419d815fae329::t_e59dfec5235baf 1-133
+  s_c419d815fae329::t_c603d1d92d5325 134-154
+packages/cli/src/index.ts
+  s_c419d815fae329::t_4ad009b9789f2e 10,12-14,16,46-47,49-50,54,60,66,73,78,90-91,250-255,265-266,270-271,277-278,284-285,291-292,298-305,307,320-330,346
+  s_c419d815fae329::t_a550e702408647 98,115,120-121,243,347
+packages/cli/src/cli-args.ts
+  s_c419d815fae329::t_4ad009b9789f2e 1-152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "29f4a031b913b809bca1d55c3e6513f82eb50651",
+  "prompts": {},
+  "sessions": {
+    "s_c419d815fae329": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0718b-e6f2-7ea0-a504-7558add4c0a2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
