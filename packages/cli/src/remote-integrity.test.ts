@@ -183,3 +183,34 @@ test("deployment copies verified snapshot bytes and generates host headers", asy
   );
   assert.equal(copied, true);
 });
+
+test("remote receipts preserve Cloudflare assigned project hostname suffixes", () => {
+  const assignedReceipt = {
+    ...receipt,
+    deploymentUrl: "https://abcdef12.inbox-test-7x.pages.dev",
+    projectUrl: "https://inbox-test-7x.pages.dev",
+    deploymentInboxUrl: `https://abcdef12.inbox-test-7x.pages.dev/i/${capability}/`,
+    projectInboxUrl: `https://inbox-test-7x.pages.dev/i/${capability}/`,
+  };
+  const deployment = {
+    operationId: randomUUID(),
+    kind: "publish",
+    snapshotHash: "a".repeat(64),
+    completedAt: timestamp,
+    receipt: assignedReceipt,
+  };
+  assert.deepEqual(
+    parseRemoteState({ ...base, lastDeployment: deployment }).lastDeployment
+      ?.receipt,
+    assignedReceipt,
+  );
+  assert.throws(() =>
+    parseRemoteState({
+      ...base,
+      lastDeployment: {
+        ...deployment,
+        receipt: { ...assignedReceipt, projectUrl: receipt.projectUrl },
+      },
+    }),
+  );
+});

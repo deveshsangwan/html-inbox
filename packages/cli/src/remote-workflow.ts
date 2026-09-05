@@ -43,8 +43,8 @@ export interface RemoteDeploymentPort {
   deploySnapshot(
     snapshot: CloudflareSnapshotRef,
     target: CloudflareProjectRef,
-    branch?: string,
-    metadata?: CloudflareDeployMetadata,
+    branch: string,
+    metadata: CloudflareDeployMetadata,
   ): Promise<CloudflareDeployReceipt>;
   listDeployments(
     target: CloudflareProjectRef,
@@ -400,7 +400,6 @@ export class RemoteWorkflow {
       outputDir: this.snapshotDir(operation.id),
       snapshotHash: operation.snapshotHash,
       capability: operation.capability,
-      inboxPath: `/i/${operation.capability}`,
     };
     return this.deployment.deploySnapshot(
       snapshot,
@@ -827,7 +826,6 @@ function parseReceipt(
   if (
     !sameCloudflareProject(target, intent.target) ||
     branch !== intent.branch ||
-    urls.projectUrl !== `https://${target.projectName}.pages.dev` ||
     new URL(urls.deploymentUrl).origin !== urls.deploymentUrl ||
     value.deploymentUrl !== urls.deploymentUrl ||
     value.projectUrl !== urls.projectUrl ||

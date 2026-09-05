@@ -34,7 +34,6 @@ const MAX_COMMAND_OUTPUT_BYTES = 1024 * 1024;
 export interface CloudflareSnapshotRef {
   outputDir: string;
   capability: string;
-  inboxPath: string;
   snapshotHash?: string;
 }
 
@@ -170,7 +169,8 @@ export class CloudflarePagesAdapter {
   ): Promise<CloudflareDeployReceipt> {
     const normalizedTarget = normalizeCloudflareProjectRef(target);
     const normalizedBranch = normalizeCloudflareBranch(branch);
-    assertSnapshotRef(snapshot);
+    assertInboxCapability(snapshot.capability);
+    const inboxPath = `/i/${snapshot.capability}`;
     const deployDir = await prepareCloudflareDeployment(snapshot);
 
     try {
@@ -203,11 +203,8 @@ export class CloudflarePagesAdapter {
         branch: normalizedBranch,
         deploymentUrl: urls.deploymentUrl,
         projectUrl: urls.projectUrl,
-        deploymentInboxUrl: joinInboxUrl(
-          urls.deploymentUrl,
-          snapshot.inboxPath,
-        ),
-        projectInboxUrl: joinInboxUrl(urls.projectUrl, snapshot.inboxPath),
+        deploymentInboxUrl: joinInboxUrl(urls.deploymentUrl, inboxPath),
+        projectInboxUrl: joinInboxUrl(urls.projectUrl, inboxPath),
       };
     } finally {
       try {
@@ -289,7 +286,11 @@ export class CloudflarePagesAdapter {
       // Wrangler logs token output even with sanitization enabled. Keep that log
       // private and remove it on success, command failure, and malformed output.
       invocation.env.WRANGLER_LOG_PATH = logPath;
-      const authResult = await this.runner.run(invocation);
+      const authResult = await this.runner.run(invocation).catch(() => {
+        throw new Error(
+          "Could not retrieve Cloudflare credentials from Wrangler",
+        );
+      });
       if (authResult.code !== 0)
         throw new Error(
           "Could not retrieve Cloudflare credentials from Wrangler",
@@ -572,19 +573,15 @@ async function prepareCloudflareDeployment(
     assertRegularFile(
       path.join(
         sourceDir,
-        snapshot.inboxPath.slice(1),
+        `i/${snapshot.capability}`,
         "snapshot-manifest.json",
       ),
     ),
     assertRegularFile(
-      path.join(
-        sourceDir,
-        snapshot.inboxPath.slice(1),
-        "security-headers.json",
-      ),
+      path.join(sourceDir, `i/${snapshot.capability}`, "security-headers.json"),
     ),
   ]);
-  const manifestPath = `${snapshot.inboxPath.slice(1)}/snapshot-manifest.json`;
+  const manifestPath = `i/${snapshot.capability}/snapshot-manifest.json`;
   const manifestBytes = await readSnapshotFile(
     path.join(sourceDir, manifestPath),
   );
@@ -610,7 +607,7 @@ async function prepareCloudflareDeployment(
       await readFile(
         path.join(
           deployDir,
-          snapshot.inboxPath.slice(1),
+          `i/${snapshot.capability}`,
           "security-headers.json",
         ),
         "utf8",
@@ -763,13 +760,6 @@ async function assertRegularFile(filePath: string): Promise<void> {
   const fileStat = await lstat(filePath);
   if (!fileStat.isFile() || fileStat.isSymbolicLink()) {
     throw new Error(`Static snapshot file is not regular: ${filePath}`);
-  }
-}
-
-function assertSnapshotRef(snapshot: CloudflareSnapshotRef): void {
-  assertInboxCapability(snapshot.capability);
-  if (snapshot.inboxPath !== `/i/${snapshot.capability}`) {
-    throw new Error("Static snapshot capability and inbox path do not match");
   }
 }
 

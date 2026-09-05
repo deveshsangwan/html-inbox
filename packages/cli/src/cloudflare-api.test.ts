@@ -7,7 +7,7 @@ import {
   parseCloudflareProjects,
 } from "./cloudflare-pages";
 
-// Wrangler 4.86.0 src/pages/project.ts and src/pages/deployment.ts emit display rows,
+// Wrangler 4.86.0 src/pages/projects.ts and src/pages/deployments.ts emit display rows,
 // not the API records needed to check production branches and journal receipts.
 const project = { name: "inbox-test", production_branch: "main" };
 const deployment = {
@@ -125,7 +125,7 @@ for (const outcome of ["success", "failed", "malformed", "throw"] as const) {
           if (process.platform !== "win32")
             assert.equal((await stat(logPath)).mode & 0o777, 0o600);
           await writeFile(logPath, "secret logged by Wrangler");
-          if (outcome === "throw") throw new Error("runner failed");
+          if (outcome === "throw") throw new Error("secret logged by Wrangler");
           return {
             code: outcome === "failed" ? 1 : 0,
             signal: null,
@@ -141,7 +141,12 @@ for (const outcome of ["success", "failed", "malformed", "throw"] as const) {
     );
     const result = adapter.listProjects("a".repeat(32), process.cwd());
     if (outcome === "success") assert.deepEqual(await result, []);
-    else await assert.rejects(result);
+    else
+      await assert.rejects(
+        result,
+        (error: unknown) =>
+          error instanceof Error && !error.message.includes("secret"),
+      );
     await assert.rejects(readFile(logPath), /ENOENT/);
   });
 }

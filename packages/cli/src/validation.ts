@@ -96,8 +96,8 @@ export function sameCloudflareProject(
   right: CloudflareProjectRef,
 ): boolean {
   return (
-    left.accountId.toLowerCase() === right.accountId.toLowerCase() &&
-    left.projectName.toLowerCase() === right.projectName.toLowerCase()
+    left.accountId === right.accountId &&
+    left.projectName === right.projectName
   );
 }
 
