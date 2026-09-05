@@ -4,6 +4,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
+import { LocalDocumentBackend } from "./backend";
 import { CloudflarePagesAdapter } from "./cloudflare-pages";
 import { parseRemoteOperation, parseRemoteState } from "./remote-workflow";
 import { exportStaticSnapshot } from "./static-export";
@@ -133,17 +134,20 @@ for (const change of ["extra", "missing", "changed", "journal"] as const) {
 test("deployment copies verified snapshot bytes and generates host headers", async (t) => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "inbox-integrity-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
-  const snapshot = await exportStaticSnapshot(
-    {
-      async listDocuments() {
-        return [];
-      },
-      async getDocument() {
-        return null;
-      },
-    },
-    { outputDir: path.join(directory, "snapshot"), capability },
+  const backend = new LocalDocumentBackend(path.join(directory, "home"));
+  const originalBytes = Buffer.from(
+    `<!doctype html><html><body>${"x".repeat(128 * 1024)}</body></html>`,
   );
+  const published = await backend.publish({
+    originalBytes,
+    title: "Large document",
+    type: "report",
+    sourceFileName: "large.html",
+  });
+  const snapshot = await exportStaticSnapshot(backend, {
+    outputDir: path.join(directory, "snapshot"),
+    capability,
+  });
   let copied = false;
   const adapter = new CloudflarePagesAdapter({
     async run(invocation) {
@@ -154,6 +158,20 @@ test("deployment copies verified snapshot bytes and generates host headers", asy
       assert.match(
         await readFile(path.join(invocation.cwd, "_headers"), "utf8"),
         /Content-Security-Policy/,
+      );
+      assert.deepEqual(
+        await readFile(
+          path.join(
+            invocation.cwd,
+            "i",
+            capability,
+            "documents",
+            published.metadata.id,
+            "content",
+            "index.html",
+          ),
+        ),
+        originalBytes,
       );
       copied = true;
       return { code: 0, signal: null, output: receipt.deploymentUrl };

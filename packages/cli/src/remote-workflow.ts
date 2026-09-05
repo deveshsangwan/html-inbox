@@ -828,6 +828,7 @@ function parseReceipt(
     !sameCloudflareProject(target, intent.target) ||
     branch !== intent.branch ||
     urls.projectUrl !== `https://${target.projectName}.pages.dev` ||
+    new URL(urls.deploymentUrl).origin !== urls.deploymentUrl ||
     value.deploymentUrl !== urls.deploymentUrl ||
     value.projectUrl !== urls.projectUrl ||
     value.deploymentInboxUrl !== `${urls.deploymentUrl}${inboxPath}` ||

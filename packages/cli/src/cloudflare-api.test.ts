@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { readFile, stat, writeFile } from "node:fs/promises";
 import {
   CloudflarePagesAdapter,
   parseCloudflareDeployments,
@@ -112,3 +113,35 @@ test("failed credential commands cannot leak their output", async () => {
       error instanceof Error && !error.message.includes("sensitive-token"),
   );
 });
+
+for (const outcome of ["success", "failed", "malformed", "throw"] as const) {
+  test(`Wrangler credential log is private and removed on ${outcome}`, async () => {
+    let logPath = "";
+    const adapter = new CloudflarePagesAdapter(
+      {
+        async run(invocation) {
+          logPath = invocation.env.WRANGLER_LOG_PATH;
+          assert(logPath);
+          if (process.platform !== "win32")
+            assert.equal((await stat(logPath)).mode & 0o777, 0o600);
+          await writeFile(logPath, "secret logged by Wrangler");
+          if (outcome === "throw") throw new Error("runner failed");
+          return {
+            code: outcome === "failed" ? 1 : 0,
+            signal: null,
+            output:
+              outcome === "malformed"
+                ? "invalid"
+                : JSON.stringify({ type: "oauth", token: "secret" }),
+          };
+        },
+      },
+      1000,
+      async () => Response.json({ success: true, result: [] }),
+    );
+    const result = adapter.listProjects("a".repeat(32), process.cwd());
+    if (outcome === "success") assert.deepEqual(await result, []);
+    else await assert.rejects(result);
+    await assert.rejects(readFile(logPath), /ENOENT/);
+  });
+}

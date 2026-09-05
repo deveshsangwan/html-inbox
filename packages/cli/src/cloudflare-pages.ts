@@ -1,7 +1,8 @@
 import { spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
-import { lstat, open, readFile, readdir, rm } from "node:fs/promises";
+import { lstat, mkdtemp, open, readFile, readdir, rm } from "node:fs/promises";
 import path from "node:path";
+import os from "node:os";
 import { ensurePrivateDirectory, writePrivateFile } from "./private-storage";
 import {
   assertInboxCapability,
@@ -13,7 +14,11 @@ import {
   type CloudflareProjectRef,
 } from "./validation";
 import { readBoundedFile } from "./bounded-file";
-import type { StaticSecurityHeaders } from "./static-export";
+import {
+  hashManifestFiles,
+  type SnapshotFile,
+  type StaticSecurityHeaders,
+} from "./static-export";
 
 export type { CloudflareProjectRef } from "./validation";
 
@@ -268,19 +273,31 @@ export class CloudflarePagesAdapter {
     accountId: string,
   ): Promise<unknown[]> {
     // Wrangler's list --json output contains display rows, omitting recovery metadata.
-    const authResult = await this.runner.run(
-      createWranglerInvocation(
+    const logDirectory = await mkdtemp(
+      path.join(os.tmpdir(), "html-inbox-auth-"),
+    );
+    let credentials: unknown;
+    try {
+      const logPath = path.join(logDirectory, "wrangler.log");
+      await writePrivateFile(logPath, "");
+      const invocation = createWranglerInvocation(
         ["auth", "token", "--json"],
         cwd,
         accountId,
         this.timeoutMs,
-      ),
-    );
-    if (authResult.code !== 0)
-      throw new Error(
-        "Could not retrieve Cloudflare credentials from Wrangler",
       );
-    const credentials: unknown = parseJsonOutput(authResult.output);
+      // Wrangler logs token output even with sanitization enabled. Keep that log
+      // private and remove it on success, command failure, and malformed output.
+      invocation.env.WRANGLER_LOG_PATH = logPath;
+      const authResult = await this.runner.run(invocation);
+      if (authResult.code !== 0)
+        throw new Error(
+          "Could not retrieve Cloudflare credentials from Wrangler",
+        );
+      credentials = parseJsonOutput(authResult.output);
+    } finally {
+      await rm(logDirectory, { recursive: true, force: true });
+    }
     const headers: Record<string, string> = {};
     if (
       isRecord(credentials) &&
@@ -691,7 +708,7 @@ function parseSnapshotInventory(contents: Buffer, expectedHash?: string) {
   )
     throw new Error("Static snapshot manifest is invalid");
   const inventory = new Map<string, { size: number; sha256: string }>();
-  const hash = createHash("sha256");
+  const files: SnapshotFile[] = [];
   let previousPath = "";
   for (const file of value.files) {
     if (
@@ -713,15 +730,9 @@ function parseSnapshotInventory(contents: Buffer, expectedHash?: string) {
       throw new Error("Static snapshot manifest file is invalid");
     previousPath = file.path;
     inventory.set(file.path, { size: file.size, sha256: file.sha256 });
-    hash
-      .update(file.path)
-      .update("\0")
-      .update(file.sha256)
-      .update("\0")
-      .update(String(file.size))
-      .update("\0");
+    files.push({ path: file.path, size: file.size, sha256: file.sha256 });
   }
-  const digest = hash.digest("hex");
+  const digest = hashManifestFiles(files);
   if (
     digest !== value.snapshotHash ||
     (expectedHash !== undefined && digest !== expectedHash)
