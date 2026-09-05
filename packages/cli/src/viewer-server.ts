@@ -6,11 +6,12 @@ import http, { IncomingMessage, ServerResponse } from "node:http";
 import net from "node:net";
 import path from "node:path";
 import { DocumentBackend, isSafeDocumentId } from "./documents";
-import { assertUuidV4 } from "./validation";
+import { assertUuidV4, isRecord } from "./validation";
 import {
   ensurePrivateDirectory,
   hardenPrivateFile,
   writePrivateFile,
+  writeAtomicPrivateJson,
 } from "./private-storage";
 import {
   DOCUMENT_CSP,
@@ -32,18 +33,8 @@ export interface ViewerStatus {
 export async function ensureViewer(home: string, port: number): Promise<void> {
   const instanceId = await getInboxInstanceId(home);
   const health = await getHealth(port);
-  if (health.ok && health.protocolVersion !== VIEWER_PROTOCOL_VERSION) {
-    throw new Error(
-      `Viewer at http://${HOST}:${port} uses an incompatible protocol`,
-    );
-  }
-  if (health.ok && health.instanceId === instanceId) {
+  if (isMatchingViewer(health, instanceId, port)) {
     return;
-  }
-  if (health.ok) {
-    throw new Error(
-      `Viewer at http://${HOST}:${port} uses a different HTML_INBOX_HOME`,
-    );
   }
 
   await assertPortAvailable(port);
@@ -67,21 +58,8 @@ export async function ensureViewer(home: string, port: number): Promise<void> {
   const deadline = Date.now() + 3000;
   while (Date.now() < deadline) {
     const nextHealth = await getHealth(port);
-    if (
-      nextHealth.ok &&
-      nextHealth.protocolVersion !== VIEWER_PROTOCOL_VERSION
-    ) {
-      throw new Error(
-        `Viewer at http://${HOST}:${port} uses an incompatible protocol`,
-      );
-    }
-    if (nextHealth.ok && nextHealth.instanceId === instanceId) {
+    if (isMatchingViewer(nextHealth, instanceId, port)) {
       return;
-    }
-    if (nextHealth.ok) {
-      throw new Error(
-        `Viewer at http://${HOST}:${port} uses a different HTML_INBOX_HOME`,
-      );
     }
     await sleep(100);
   }
@@ -95,7 +73,7 @@ export async function getViewerStatus(
 ): Promise<ViewerStatus> {
   const url = `http://${HOST}:${port}`;
   const health = await getHealth(port);
-  if (!health.ok) {
+  if (health.state === "unavailable") {
     try {
       await assertPortAvailable(port);
       return { state: "stopped", url };
@@ -103,8 +81,12 @@ export async function getViewerStatus(
       return { state: "conflict", url };
     }
   }
-  if (health.protocolVersion !== VIEWER_PROTOCOL_VERSION) {
+  if (health.state === "incompatible") {
     return { state: "incompatible", url };
+  }
+
+  if (health.state === "invalid") {
+    return { state: "conflict", url };
   }
 
   const instanceId = await getInboxInstanceId(home);
@@ -142,7 +124,7 @@ export async function stopViewer(
   process.kill(status.pid, "SIGTERM");
   const deadline = Date.now() + 3000;
   while (Date.now() < deadline) {
-    if (!(await getHealth(port)).ok) {
+    if ((await getHealth(port)).state === "unavailable") {
       await rm(path.join(home, "viewer.json"), { force: true });
       return { state: "stopped", url: status.url };
     }
@@ -266,52 +248,90 @@ async function routeRequest(
   sendText(response, 404, "Not Found");
 }
 
-interface ViewerHealth {
-  ok: boolean;
-  instanceId?: string;
-  protocolVersion?: number;
-  processId?: string;
-  pid?: number;
+type ViewerHealth =
+  | { state: "unavailable" }
+  | { state: "invalid" }
+  | { state: "incompatible" }
+  | { state: "ready"; instanceId: string; processId: string; pid: number };
+
+function isMatchingViewer(
+  health: ViewerHealth,
+  instanceId: string,
+  port: number,
+): boolean {
+  switch (health.state) {
+    case "unavailable":
+      return false;
+    case "invalid":
+      throw new Error(
+        `Port ${port} is already in use by a service with an invalid health response`,
+      );
+    case "incompatible":
+      throw new Error(
+        `Viewer at http://${HOST}:${port} uses an incompatible protocol`,
+      );
+    case "ready":
+      if (health.instanceId !== instanceId) {
+        throw new Error(
+          `Viewer at http://${HOST}:${port} uses a different HTML_INBOX_HOME`,
+        );
+      }
+      return true;
+  }
+}
+
+function parseViewerHealth(body: unknown): ViewerHealth {
+  if (
+    !isRecord(body) ||
+    body.ok !== true ||
+    typeof body.instanceId !== "string" ||
+    typeof body.protocolVersion !== "number" ||
+    !Number.isInteger(body.protocolVersion) ||
+    body.protocolVersion <= 0
+  ) {
+    return { state: "invalid" };
+  }
+
+  try {
+    assertUuidV4(body.instanceId, "Viewer inbox identity");
+    if (body.protocolVersion !== VIEWER_PROTOCOL_VERSION) {
+      return { state: "incompatible" };
+    }
+    if (
+      typeof body.processId !== "string" ||
+      typeof body.pid !== "number" ||
+      !Number.isSafeInteger(body.pid) ||
+      body.pid <= 0
+    ) {
+      return { state: "invalid" };
+    }
+    assertUuidV4(body.processId, "Viewer process identity");
+    return {
+      state: "ready",
+      instanceId: body.instanceId,
+      processId: body.processId,
+      pid: body.pid,
+    };
+  } catch {
+    return { state: "invalid" };
+  }
 }
 
 async function getHealth(port: number): Promise<ViewerHealth> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 400);
-
   try {
     const response = await fetch(`http://${HOST}:${port}/health`, {
-      signal: controller.signal,
+      signal: AbortSignal.timeout(400),
     });
     if (!response.ok) {
-      return { ok: false };
+      return { state: "invalid" };
     }
-    const body: unknown = await response.json();
-    if (
-      !body ||
-      typeof body !== "object" ||
-      !("instanceId" in body) ||
-      !("protocolVersion" in body)
-    ) {
-      return { ok: false };
+    try {
+      return parseViewerHealth(await response.json());
+    } catch {
+      return { state: "invalid" };
     }
-    return {
-      ok: true,
-      instanceId:
-        typeof body.instanceId === "string" ? body.instanceId : undefined,
-      protocolVersion:
-        typeof body.protocolVersion === "number"
-          ? body.protocolVersion
-          : undefined,
-      processId:
-        "processId" in body && typeof body.processId === "string"
-          ? body.processId
-          : undefined,
-      pid: "pid" in body && typeof body.pid === "number" ? body.pid : undefined,
-    };
   } catch {
-    return { ok: false };
-  } finally {
-    clearTimeout(timeout);
+    return { state: "unavailable" };
   }
 }
 
@@ -320,21 +340,13 @@ async function writeViewerInfo(
   port: number,
   processId: string,
 ): Promise<void> {
-  await ensurePrivateDirectory(home);
-  await writePrivateFile(
-    path.join(home, "viewer.json"),
-    JSON.stringify(
-      {
-        host: HOST,
-        port,
-        pid: process.pid,
-        processId,
-        startedAt: new Date().toISOString(),
-      },
-      null,
-      2,
-    ),
-  );
+  await writeAtomicPrivateJson(path.join(home, "viewer.json"), {
+    host: HOST,
+    port,
+    pid: process.pid,
+    processId,
+    startedAt: new Date().toISOString(),
+  });
 }
 
 async function readViewerInfo(

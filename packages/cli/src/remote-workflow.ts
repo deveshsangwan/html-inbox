@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { open, readFile, readdir, rename, rm } from "node:fs/promises";
+import { open, readFile, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { DocumentBackend } from "./documents";
 import {
@@ -24,7 +24,7 @@ import {
 import {
   ensurePrivateDirectory,
   hardenPrivateFile,
-  writePrivateFile,
+  writeAtomicPrivateJson,
 } from "./private-storage";
 import { exportStaticSnapshot, generateInboxCapability } from "./static-export";
 
@@ -559,25 +559,6 @@ export class RemoteWorkflow {
 
   private snapshotDir(id: string): string {
     return path.join(this.workDir(id), "snapshot");
-  }
-}
-
-async function writeAtomicPrivateJson(
-  filePath: string,
-  value: unknown,
-): Promise<void> {
-  await ensurePrivateDirectory(path.dirname(filePath));
-  const temporaryPath = `${filePath}.tmp-${randomUUID()}`;
-  try {
-    await writePrivateFile(
-      temporaryPath,
-      `${JSON.stringify(value, null, 2)}\n`,
-    );
-    await rename(temporaryPath, filePath);
-    await hardenPrivateFile(filePath);
-  } catch (error) {
-    await rm(temporaryPath, { force: true });
-    throw error;
   }
 }
 
