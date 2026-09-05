@@ -1,11 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { lstat, mkdir, readFile, rename, rm } from "node:fs/promises";
 import path from "node:path";
-import {
-  parseDocumentMetadata,
-  DocumentBackend,
-  DocumentMetadata,
-} from "@html-inbox/shared";
+import { parseDocumentMetadata, DocumentBackend, DocumentMetadata } from "./documents";
 import {
   ensurePrivateDirectory,
   hardenPrivateDirectory,

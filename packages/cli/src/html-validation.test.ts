@@ -1,11 +1,6 @@
 import { strict as assert } from "node:assert";
-import {
-  parseDocumentMetadata,
-  DOCUMENT_SCHEMA_VERSION,
-  MAX_DOCUMENT_TITLE_LENGTH,
-  validateHtml,
-  validatePublishMetadata,
-} from "./index";
+import { parseDocumentMetadata, DOCUMENT_SCHEMA_VERSION, MAX_DOCUMENT_TITLE_LENGTH, validatePublishMetadata } from "./documents";
+import { validateHtml } from "./html-validation";
 
 const clean = validateHtml("<!doctype html><html><body>ok</body></html>");
 assert.equal(clean.ok, true);

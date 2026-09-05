@@ -1,4 +1,4 @@
-import { DOCUMENT_SCRIPT_CSP_SOURCES } from "@html-inbox/shared";
+import { DOCUMENT_SCRIPT_CSP_SOURCES } from "./html-validation";
 
 import { initializeViewer } from "./viewer-client";
 

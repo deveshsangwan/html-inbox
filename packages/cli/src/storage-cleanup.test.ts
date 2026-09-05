@@ -4,7 +4,8 @@ import { mkdtemp, open, readFile, readdir, rm, symlink, writeFile } from "node:f
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { parseDocumentMetadata, validateHtml } from "@html-inbox/shared";
+import { parseDocumentMetadata } from "./documents";
+import { validateHtml } from "./html-validation";
 import { LocalDocumentBackend } from "./backend";
 import { readBoundedFile } from "./bounded-file";
 import { exportStaticSnapshot, hashManifestFiles } from "./static-export";

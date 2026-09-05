@@ -2,17 +2,7 @@ import { randomUUID } from "node:crypto";
 import { lstat, readFile, readdir, rename, rm, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
-import {
-  parseDocumentMetadata,
-  DOCUMENT_SCHEMA_VERSION,
-  DeleteResult,
-  DocumentBackend,
-  DocumentMetadata,
-  isSafeDocumentId,
-  PublishInput,
-  PublishResult,
-  StoredDocument,
-} from "@html-inbox/shared";
+import { parseDocumentMetadata, DOCUMENT_SCHEMA_VERSION, DeleteResult, DocumentBackend, DocumentMetadata, isSafeDocumentId, PublishInput, PublishResult, StoredDocument } from "./documents";
 import {
   ensurePrivateDirectory,
   ManagedStorageError,

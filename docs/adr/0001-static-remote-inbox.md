@@ -50,7 +50,7 @@ Hostnames and deployment URLs are deployment metadata, not target identity. The 
 
 Remote state records a random local owner identity and the exact `ProjectRef`. A generated remote ownership marker contains only the owner identity and schema version. It contains no local path, account ID, token, or document metadata.
 
-HTML Inbox may create a new target or reuse a target carrying the expected marker. Managing an existing unmarked or differently marked project requires an explicit adoption flag because a Pages deployment replaces that project's contents.
+HTML Inbox may create a new target. Managing any project that already exists requires an explicit adoption flag because a Pages deployment replaces that project's contents. The owner marker identifies locally generated exports; it is not remote authentication or proof that a remote project still belongs to this installation. After setup, the saved account ID and project name identify the authorized target.
 
 ### Local state and operation journal
 

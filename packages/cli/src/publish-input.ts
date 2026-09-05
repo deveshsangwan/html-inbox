@@ -2,7 +2,8 @@ import { readBoundedFile } from "./bounded-file";
 import { open } from "node:fs/promises";
 import path from "node:path";
 import { TextDecoder } from "node:util";
-import { PublishInput, validateHtml, validatePublishMetadata } from "@html-inbox/shared";
+import { PublishInput, validatePublishMetadata } from "./documents";
+import { validateHtml } from "./html-validation";
 
 export const DEFAULT_MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
 

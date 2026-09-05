@@ -3,7 +3,7 @@ import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
-import { DeleteResult, DocumentMetadata } from "@html-inbox/shared";
+import { DeleteResult, DocumentMetadata } from "./documents";
 import { getInboxHome, getViewerPort, LocalDocumentBackend } from "./backend";
 import { loadPublishInput, PublishRequest } from "./publish-input";
 import { ensurePrivateDirectory } from "./private-storage";

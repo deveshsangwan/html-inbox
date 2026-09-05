@@ -5,7 +5,7 @@ import { readFile, rm } from "node:fs/promises";
 import http, { IncomingMessage, ServerResponse } from "node:http";
 import net from "node:net";
 import path from "node:path";
-import { DocumentBackend, isSafeDocumentId } from "@html-inbox/shared";
+import { DocumentBackend, isSafeDocumentId } from "./documents";
 import { assertUuidV4 } from "./validation";
 import {
   ensurePrivateDirectory,
@@ -433,7 +433,7 @@ function getServerPort(server: http.Server): number {
 function sendHtml(
   response: ServerResponse,
   status: number,
-  body: string,
+  body: string | Buffer,
   csp: string,
 ): void {
   response.writeHead(

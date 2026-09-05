@@ -8,9 +8,6 @@ importers:
 
   .:
     devDependencies:
-      '@html-inbox/shared':
-        specifier: workspace:*
-        version: link:packages/shared
       '@types/node':
         specifier: ^24.0.0
         version: 24.13.2
@@ -20,13 +17,14 @@ importers:
       parse5:
         specifier: ^7.3.0
         version: 7.3.0
+      playwright:
+        specifier: 1.63.0
+        version: 1.63.0
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
 
   packages/cli: {}
-
-  packages/shared: {}
 
 packages:
 
@@ -164,6 +162,16 @@ packages:
   parse5@7.3.0:
     resolution: {integrity: sha512-IInvU7fabl34qmi9gY8XOVxhYyMyuH2xUNpb2q8/Y+7552KlejkRvqvD19nMoUW/uQGGbqNpA6Tufu5FL5BZgw==}
 
+  playwright-core@1.63.0:
+    resolution: {integrity: sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  playwright@1.63.0:
+    resolution: {integrity: sha512-+7ziBLidS4NaNCdt57SUDT+wYmmd5fmiQejUic/kb+YsYSCPyOOE9sebzMjNmQrsnNpDJqd4WHvV/8lfKfUDUg==}
+    engines: {node: '>=20'}
+    hasBin: true
+
   typescript@7.0.2:
     resolution: {integrity: sha512-8FYau96o3NKOhbjKi/qNvG/W5jhzxkbdm5sj9AbZ/5T5sWqn3hJgLfGx27sRKZWTvyzCP8dLRBTf5tBTSRVUNA==}
     engines: {node: '>=16.20.0'}
@@ -245,6 +253,12 @@ snapshots:
   parse5@7.3.0:
     dependencies:
       entities: 6.0.1
+
+  playwright-core@1.63.0: {}
+
+  playwright@1.63.0:
+    dependencies:
+      playwright-core: 1.63.0
 
   typescript@7.0.2:
     optionalDependencies:

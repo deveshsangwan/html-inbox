@@ -33,15 +33,16 @@ documents/<id>/metadata.json
 
 `index.html` is the original uploaded HTML bytes. `metadata.json` holds the generated id, title, type, publish time, and source file name.
 
-New records include a storage schema version. Legacy records without the field are read as schema version 1. Publishing writes and validates both files in the private `documents/.staging/<id>` area, then makes the complete record visible with one same-filesystem directory rename. Interrupted staging records are never listed. A corrupt committed record is skipped with a diagnostic instead of breaking the rest of the library.
+New records include a storage schema version. Legacy records without the field are read as schema version 1. Publishing validates metadata and writes both files in the private `documents/.staging/<id>` area, then makes the complete record visible with one same-filesystem directory rename. Interrupted staging records are never listed. A corrupt committed record is skipped with a diagnostic instead of breaking the rest of the library.
 
 ## Backend
 
-Keep the backend abstraction to four operations:
+The local document store exposes these operations:
 
 - `publish(input)`
 - `listDocuments()`
-- `getDocument(id)`
+- `getDocumentMetadata(id)` for metadata-only views and confirmation
+- `getDocument(id)` for original document bytes
 - `deleteDocument(id)`
 
 Deletion first renames a committed document into the private trash area so it disappears from the library atomically, then removes the trash record. Search is a server-rendered filter over title, type, and source file name. There is no update, sync, tags, auth, or database layer in the local product.
@@ -60,13 +61,13 @@ HTML_INBOX_PORT=4321 html-inbox viewer
 
 The CLI exposes viewer status and stop commands. Before spawning a detached viewer, it probes the requested loopback port so a non-HTML-Inbox listener produces a direct port-conflict error instead of a generic startup timeout.
 
-The health check is the source of truth for whether the viewer is ready. CLI output should be based on the health check, not process startup alone. A viewer can be reused only when both its protocol version and opaque instance identity match.
+The health check is the source of truth for whether the viewer is ready. CLI output should be based on the health check, not process startup alone. A viewer can be reused only when both its protocol version and opaque home identity match. Shutdown also matches the saved PID and per-process identity against the current health response before sending a signal.
 
 Documents render through a viewer-owned path inside a sandboxed iframe. The app shell lists documents and opens one document at a time; raw files are never rendered directly into the shell DOM.
 
 ## Validation
 
-HTML is untrusted by default. Phase 1 uses cheap validation before storage:
+HTML is untrusted by default. HTML policy validation uses an HTML5 parser before storage:
 
 - allow scripts, but only allow external script entry URLs for Tailwind's browser build and Mermaid v11
 - warn on inline event handlers such as `onclick`, which the document CSP blocks

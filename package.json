@@ -6,17 +6,18 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "pnpm --filter @html-inbox/shared build && pnpm --filter html-inbox build",
-    "test": "pnpm build && pnpm -r run test:self",
+    "build": "node -e \"require('node:fs').rmSync('packages/cli/dist', { recursive: true, force: true })\" && pnpm --filter html-inbox build",
+    "test": "pnpm build && node scripts/run-unit-tests.mjs",
     "test:package": "node scripts/package-smoke.mjs",
-    "verify": "pnpm test && pnpm test:package",
-    "html-inbox": "node packages/cli/dist/index.js"
+    "verify": "pnpm test && pnpm test:browser && pnpm test:package",
+    "html-inbox": "node packages/cli/dist/index.js",
+    "test:browser": "node --test scripts/viewer-browser.test.mjs"
   },
   "devDependencies": {
-    "@html-inbox/shared": "workspace:*",
     "@types/node": "^24.0.0",
     "@vercel/ncc": "0.44.1",
     "parse5": "^7.3.0",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "playwright": "1.63.0"
   }
 }

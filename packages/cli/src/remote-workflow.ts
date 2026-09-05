@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { open, readFile, readdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
-import { DocumentBackend } from "@html-inbox/shared";
+import { DocumentBackend } from "./documents";
 import {
   CloudflareDeployMetadata,
   CloudflareDeployReceipt,

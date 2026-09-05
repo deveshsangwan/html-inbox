@@ -30,6 +30,7 @@ The repository is a pnpm workspace, so contributor and release commands use the 
 ```sh
 corepack enable
 corepack pnpm install --frozen-lockfile
+corepack pnpm exec playwright install chromium
 corepack pnpm verify
 ```
 
@@ -138,7 +139,7 @@ corepack pnpm test
 corepack pnpm verify
 ```
 
-`verify` is the same clean build-and-test gate used by continuous integration. Package self-checks exercise validation, storage, static export determinism, Cloudflare command recording, remote-operation recovery, security headers, iframe isolation, theme behavior, and escaping of untrusted metadata.
+`verify` is the same clean build-and-test gate used by continuous integration. Named unit and integration tests exercise validation, storage, static export determinism, Cloudflare command recording, remote-operation recovery, security headers, iframe isolation, theme behavior, and escaping of untrusted metadata. The browser suite runs Chromium to check theme persistence, search, and document isolation. CI checks Node 20 and 24 on Linux and Node 24 on Windows.
 
 ## License
 

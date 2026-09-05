@@ -1,4 +1,4 @@
-import { type DocumentMetadata } from "@html-inbox/shared";
+import { type DocumentMetadata } from "./documents";
 
 export interface ViewerRenderOptions {
   basePath?: string;
