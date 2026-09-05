@@ -111,7 +111,12 @@ for (const change of ["extra", "missing", "changed", "journal"] as const) {
     const adapter = new CloudflarePagesAdapter({
       async run() {
         invoked = true;
-        return { code: 0, signal: null, output: receipt.deploymentUrl };
+        return {
+          code: 0,
+          signal: null,
+          stderr: "",
+          stdout: receipt.deploymentUrl,
+        };
       },
     });
     await assert.rejects(
@@ -174,7 +179,12 @@ test("deployment copies verified snapshot bytes and generates host headers", asy
         originalBytes,
       );
       copied = true;
-      return { code: 0, signal: null, output: receipt.deploymentUrl };
+      return {
+        code: 0,
+        signal: null,
+        stderr: "",
+        stdout: receipt.deploymentUrl,
+      };
     },
   });
   await adapter.deploySnapshot(

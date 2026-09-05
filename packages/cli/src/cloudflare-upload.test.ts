@@ -49,7 +49,8 @@ test("Cloudflare upload validates and isolates deployment files", async (t) => {
   const recordingRunner = new RecordingCommandRunner({
     code: 0,
     signal: null,
-    output:
+    stderr: "",
+    stdout:
       "✨ Deployment complete! Take a peek over at https://abc123.html-inbox-7x.pages.dev",
   });
   const cloudflare = new CloudflarePagesAdapter(recordingRunner, 12_345);
@@ -65,7 +66,13 @@ test("Cloudflare upload validates and isolates deployment files", async (t) => {
     assert.equal(deploymentInvocation.command, process.execPath);
     assert.equal(
       commandArguments.shift(),
-      path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npx-cli.js"),
+      path.join(
+        path.dirname(process.execPath),
+        "node_modules",
+        "npm",
+        "bin",
+        "npx-cli.js",
+      ),
     );
   } else {
     assert.equal(deploymentInvocation.command, "npx");
@@ -129,7 +136,8 @@ test("Cloudflare upload validates and isolates deployment files", async (t) => {
   const controlRunner = new RecordingCommandRunner({
     code: 0,
     signal: null,
-    output: "Created project",
+    stderr: "",
+    stdout: "Created project",
   });
   const controlAdapter = new CloudflarePagesAdapter(controlRunner, 9_999);
   await controlAdapter.createProject(
@@ -137,14 +145,12 @@ test("Cloudflare upload validates and isolates deployment files", async (t) => {
     home,
     "main",
   );
-  assert.deepEqual(controlRunner.invocations[0].args.slice(process.platform === "win32" ? 3 : 2), [
-    "pages",
-    "project",
-    "create",
-    "html-inbox",
-    "--production-branch",
-    "main",
-  ]);
+  assert.deepEqual(
+    controlRunner.invocations[0].args.slice(
+      process.platform === "win32" ? 3 : 2,
+    ),
+    ["pages", "project", "create", "html-inbox", "--production-branch", "main"],
+  );
 
   const previousToken = process.env.CLOUDFLARE_API_TOKEN;
   const previousApiKey = process.env.CLOUDFLARE_API_KEY;
@@ -154,7 +160,8 @@ test("Cloudflare upload validates and isolates deployment files", async (t) => {
     const failingRunner = new RecordingCommandRunner({
       code: 1,
       signal: null,
-      output:
+      stderr: "",
+      stdout:
         "authentication failed: super-secret-cloudflare-token super-secret-cloudflare-key",
     });
     await assert.rejects(

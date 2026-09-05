@@ -48,7 +48,8 @@ export interface CommandInvocation {
 export interface CommandResult {
   code: number;
   signal: NodeJS.Signals | null;
-  output: string;
+  stdout: string;
+  stderr: string;
 }
 
 export interface CommandRunner {
@@ -92,7 +93,9 @@ export class NodeCommandRunner implements CommandRunner {
     return new Promise((resolve, reject) => {
       let settled = false;
       let failure: Error | null = null;
-      let output = "";
+      let stdout = "";
+      let stderr = "";
+      let outputBytes = 0;
       const child = spawn(invocation.command, invocation.args, {
         cwd: invocation.cwd,
         env: { ...process.env, ...invocation.env },
@@ -117,10 +120,13 @@ export class NodeCommandRunner implements CommandRunner {
         );
         forceTimer.unref();
       };
-      const record = (chunk: Buffer) => {
+      const record = (chunk: string, stream: "stdout" | "stderr") => {
         if (failure) return;
-        output += chunk.toString("utf8");
-        if (Buffer.byteLength(output, "utf8") > MAX_COMMAND_OUTPUT_BYTES) {
+        if (stream === "stdout") stdout += chunk;
+        else stderr += chunk;
+
+        outputBytes += Buffer.byteLength(chunk, "utf8");
+        if (outputBytes > MAX_COMMAND_OUTPUT_BYTES) {
           fail(
             new Error(
               "Wrangler produced more than 1 MiB of output and was stopped",
@@ -128,8 +134,10 @@ export class NodeCommandRunner implements CommandRunner {
           );
         }
       };
-      child.stdout.on("data", record);
-      child.stderr.on("data", record);
+      child.stdout.setEncoding("utf8");
+      child.stderr.setEncoding("utf8");
+      child.stdout.on("data", (chunk: string) => record(chunk, "stdout"));
+      child.stderr.on("data", (chunk: string) => record(chunk, "stderr"));
       child.once("error", (error) =>
         fail(new Error(`Wrangler could not start: ${error.message}`)),
       );
@@ -137,7 +145,7 @@ export class NodeCommandRunner implements CommandRunner {
         finish(() =>
           failure
             ? reject(failure)
-            : resolve({ code: code ?? 1, signal, output }),
+            : resolve({ code: code ?? 1, signal, stdout, stderr }),
         ),
       );
       const timer = setTimeout(
@@ -227,7 +235,7 @@ export class CloudflarePagesAdapter {
       cwd,
       normalizedAccountId,
     );
-    return parseCloudflareProjects(result);
+    return parseCloudflareProjects(result, normalizedAccountId);
   }
 
   async createProject(
@@ -295,7 +303,7 @@ export class CloudflarePagesAdapter {
         throw new Error(
           "Could not retrieve Cloudflare credentials from Wrangler",
         );
-      credentials = parseJsonOutput(authResult.output);
+      credentials = parseJsonOutput(authResult.stdout);
     } finally {
       await rm(logDirectory, { recursive: true, force: true });
     }
@@ -364,12 +372,14 @@ export class CloudflarePagesAdapter {
     const result = await this.runner.run(
       createWranglerInvocation(args, cwd, accountId, this.timeoutMs),
     );
+    const output = `${result.stdout}\n${result.stderr}`;
     if (result.code !== 0) {
       throw new Error(
-        `Wrangler failed (${result.signal ?? result.code}). ${cleanOutput(result.output)}`,
+        `Wrangler failed (${result.signal ?? result.code}). ${cleanOutput(output)}`,
       );
     }
-    return result.output;
+
+    return output;
   }
 }
 
@@ -499,14 +509,17 @@ export function receiptFromDeployment(
 
 export function parseCloudflareProjects(
   value: unknown,
+  accountId: string,
 ): CloudflareProjectSummary[] {
   if (!Array.isArray(value))
     throw new Error("Cloudflare projects must be an array");
+
+  const normalizedAccountId = normalizeCloudflareAccountId(accountId);
   return value.map((project) => {
     if (!isRecord(project)) throw new Error("Cloudflare project is invalid");
     return {
       name: normalizeCloudflareProjectName(requiredString(project.name)),
-      accountId: "",
+      accountId: normalizedAccountId,
       productionBranch: normalizeCloudflareBranch(
         requiredString(project.production_branch),
       ),

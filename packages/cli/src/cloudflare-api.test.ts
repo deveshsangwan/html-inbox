@@ -31,17 +31,23 @@ test("API parsers preserve recovery metadata and reject Wrangler display rows", 
     parseCloudflareDeployments([deployment])[0]?.commitMessage,
     deployment.deployment_trigger.metadata.commit_message,
   );
-  assert.equal(parseCloudflareProjects([project])[0]?.productionBranch, "main");
-  assert.throws(() => parseCloudflareProjects({ result: [] }));
+  assert.equal(
+    parseCloudflareProjects([project], "a".repeat(32))[0]?.productionBranch,
+    "main",
+  );
+  assert.throws(() => parseCloudflareProjects({ result: [] }, "a".repeat(32)));
   assert.throws(() =>
-    parseCloudflareProjects([
-      {
-        "Project Name": "inbox-test",
-        "Project Domains": "inbox-test.pages.dev",
-        "Git Provider": "No",
-        "Last Modified": "1 day ago",
-      },
-    ]),
+    parseCloudflareProjects(
+      [
+        {
+          "Project Name": "inbox-test",
+          "Project Domains": "inbox-test.pages.dev",
+          "Git Provider": "No",
+          "Last Modified": "1 day ago",
+        },
+      ],
+      "a".repeat(32),
+    ),
   );
   assert.throws(() =>
     parseCloudflareDeployments([
@@ -58,7 +64,7 @@ test("API parsers preserve recovery metadata and reject Wrangler display rows", 
   );
 });
 
-test("API listing uses Wrangler OAuth credentials and reads every page", async () => {
+test("API listing ignores diagnostic stderr, preserves the account, and reads every page", async () => {
   let page = 0;
   const adapter = new CloudflarePagesAdapter(
     {
@@ -72,7 +78,8 @@ test("API listing uses Wrangler OAuth credentials and reads every page", async (
         return {
           code: 0,
           signal: null,
-          output: JSON.stringify({ type: "oauth", token: "test-credential" }),
+          stderr: "npm warning: cache permission notice",
+          stdout: JSON.stringify({ type: "oauth", token: "test-credential" }),
         };
       },
     },
@@ -95,16 +102,15 @@ test("API listing uses Wrangler OAuth credentials and reads every page", async (
       });
     },
   );
-  assert.equal(
-    (await adapter.listProjects("a".repeat(32), process.cwd())).length,
-    2,
-  );
+  const projects = await adapter.listProjects("A".repeat(32), process.cwd());
+  assert.equal(projects.length, 2);
+  assert(projects.every((project) => project.accountId === "a".repeat(32)));
 });
 
 test("failed credential commands cannot leak their output", async () => {
   const adapter = new CloudflarePagesAdapter({
     async run() {
-      return { code: 1, signal: null, output: "sensitive-token" };
+      return { code: 1, signal: null, stderr: "", stdout: "sensitive-token" };
     },
   });
   await assert.rejects(
@@ -129,7 +135,8 @@ for (const outcome of ["success", "failed", "malformed", "throw"] as const) {
           return {
             code: outcome === "failed" ? 1 : 0,
             signal: null,
-            output:
+            stderr: "",
+            stdout:
               outcome === "malformed"
                 ? "invalid"
                 : JSON.stringify({ type: "oauth", token: "secret" }),

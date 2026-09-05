@@ -10,7 +10,7 @@ import {
 } from "./cloudflare-pages";
 import { temporaryHome } from "./test-fixtures";
 
-test("command execution and Wrangler parsing", async (t) => {
+test("command execution separates stdout from diagnostic stderr", async () => {
   const commandResult = await new NodeCommandRunner().run({
     command: process.execPath,
     args: [
@@ -22,8 +22,11 @@ test("command execution and Wrangler parsing", async (t) => {
     timeoutMs: 5_000,
   });
   assert.equal(commandResult.code, 0);
-  assert.equal(commandResult.output.includes("runner-ok"), true);
-  assert.equal(commandResult.output.includes("stderr"), true);
+  assert.equal(commandResult.stdout, "runner-ok");
+  assert.equal(commandResult.stderr, " stderr");
+});
+
+test("Windows Wrangler invocation uses npm through Node", () => {
   const windowsInvocation = createWranglerInvocation(
     [],
     process.cwd(),
@@ -40,6 +43,9 @@ test("command execution and Wrangler parsing", async (t) => {
     windowsInvocation.args[0],
     "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx-cli.js",
   );
+});
+
+test("Wrangler deployment URLs retain assigned hostnames", () => {
   assert.deepEqual(
     parseWranglerDeployUrls(
       "\u001b[32mDeployment: https://abc123.assigned-project.pages.dev\u001b[0m",
@@ -49,10 +55,16 @@ test("command execution and Wrangler parsing", async (t) => {
       projectUrl: "https://assigned-project.pages.dev",
     },
   );
+});
+
+test("Wrangler deployment output without a URL is rejected", () => {
   assert.throws(
     () => parseWranglerDeployUrls("deployment finished without a URL"),
     /without returning/,
   );
+});
+
+test("command timeout stops descendant processes", async (t) => {
   const runnerHome = await temporaryHome(t);
   const lateMarker = path.join(runnerHome, "late.txt");
   const descendantScript = `setTimeout(() => require("node:fs").writeFileSync(${JSON.stringify(lateMarker)}, "late"), 300)`;

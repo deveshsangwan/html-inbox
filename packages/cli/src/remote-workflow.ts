@@ -872,7 +872,7 @@ function projectMatchesTarget(
 ): boolean {
   return (
     project.name === target.projectName &&
-    (!project.accountId || project.accountId.toLowerCase() === target.accountId)
+    project.accountId === target.accountId
   );
 }
 
