@@ -31,7 +31,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 24
 
       - name: Enable Corepack
         run: corepack enable
@@ -42,5 +42,19 @@ jobs:
       - name: Install browser
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Verify
-        run: pnpm verify
+      - name: Build
+        run: pnpm build
+
+      - name: Select test runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Unit and integration tests
+        run: node scripts/run-unit-tests.mjs
+
+      - name: Browser tests
+        run: node --test scripts/viewer-browser.test.mjs
+
+      - name: Package smoke test
+        run: node scripts/package-smoke.mjs
