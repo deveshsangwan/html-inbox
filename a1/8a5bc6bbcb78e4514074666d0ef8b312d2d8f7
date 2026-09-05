@@ -1,0 +1,55 @@
+packages/cli/src/remote-workflow.ts
+  s_c419d815fae329::t_1bb21e066b73cf 147
+scripts/run-unit-tests.mjs
+  s_c419d815fae329::t_1bb21e066b73cf 7
+packages/cli/src/remote-recovery.test.ts
+  s_c419d815fae329::t_1bb21e066b73cf 380,421-422
+docs/adr/0001-static-remote-inbox.md
+  s_c419d815fae329::t_eea2b28efed84f 47
+packages/cli/src/backend-records.test.ts
+  s_c419d815fae329::t_1bb21e066b73cf 195,212,223,232,234
+scripts/viewer-browser.test.mjs
+  s_c419d815fae329::t_1bb21e066b73cf 70
+packages/cli/src/documents.ts
+  s_c419d815fae329::t_1bb21e066b73cf 33
+packages/cli/src/remote-integrity.test.ts
+  s_c419d815fae329::t_1bb21e066b73cf 169
+packages/cli/src/viewer-http.test.ts
+  s_c419d815fae329::t_1bb21e066b73cf 77,79,87,94,137,149,217
+packages/cli/src/storage-cleanup.test.ts
+  s_c419d815fae329::t_1bb21e066b73cf 47,60,94
+packages/cli/src/index.ts
+  s_c419d815fae329::t_1bb21e066b73cf 138-139
+CHANGELOG.md
+  s_c419d815fae329::t_eea2b28efed84f 14-18
+docs/code-quality-audit-2026-09-05.md
+  s_c419d815fae329::t_eea2b28efed84f 3
+packages/cli/src/cli-contracts.test.ts
+  s_c419d815fae329::t_1bb21e066b73cf 5
+packages/cli/src/html-validation.test.ts
+  s_c419d815fae329::t_1bb21e066b73cf 91-99
+docs/remote-migration.md
+  s_c419d815fae329::t_eea2b28efed84f 12-13
+packages/cli/src/backend.ts
+  s_c419d815fae329::t_1bb21e066b73cf 5,43,69
+docs/architecture.md
+  s_c419d815fae329::t_eea2b28efed84f 113,117-118,121
+packages/cli/src/static-export.test.ts
+  s_c419d815fae329::t_1bb21e066b73cf 38,52,58,112,122,129,140
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "a18a5bc6bbcb78e4514074666d0ef8b312d2d8f7",
+  "prompts": {},
+  "sessions": {
+    "s_c419d815fae329": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0718b-e6f2-7ea0-a504-7558add4c0a2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
