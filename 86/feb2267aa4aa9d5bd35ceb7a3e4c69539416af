@@ -1,0 +1,19 @@
+packages/cli/src/self-check.ts
+  s_c419d815fae329::t_8f7ce9b4ea029c 160,889,967,1147-1148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "86feb2267aa4aa9d5bd35ceb7a3e4c69539416af",
+  "prompts": {},
+  "sessions": {
+    "s_c419d815fae329": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0718b-e6f2-7ea0-a504-7558add4c0a2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
