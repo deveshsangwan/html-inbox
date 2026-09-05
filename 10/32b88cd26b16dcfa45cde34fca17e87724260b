@@ -1,0 +1,23 @@
+packages/cli/src/private-storage.ts
+  s_c419d815fae329::t_8de0cdbfca24bd 3-4,16,24
+packages/cli/src/remote-workflow.ts
+  s_c419d815fae329::t_fcbb111af2018c 4,13,29,34-37,46-47,75,87-107,147,168-175,178-184,269-271,287-290,295,315,321-327,344-348,358,361-362,373,376-378,393-395,401,404-412,416,419-426,429-431,447,454-456,487-490,517-520,528-534,536-538,565-568,572-575,584-586,606-608,611-613,629-631,633,663-664,669-709,711,714-716,719-757,759-761,763-769,771-791,794-849,852-853,855-857,859-865,871-873,877-880,900-902
+packages/cli/src/viewer-server.ts
+  s_c419d815fae329::t_7b22ecee11083a 8,241-242,246,262,436
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "1032b88cd26b16dcfa45cde34fca17e87724260b",
+  "prompts": {},
+  "sessions": {
+    "s_c419d815fae329": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0718b-e6f2-7ea0-a504-7558add4c0a2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "deveshsangwan <dev.sangwan2001@gmail.com>"
+    }
+  }
+}
