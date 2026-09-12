@@ -5,8 +5,8 @@ The repository remains a pnpm workspace for development, but the published `html
 ## Prepare
 
 1. Update the package version and `CHANGELOG.md` together.
-2. Run `corepack pnpm install --frozen-lockfile` from a clean checkout.
-3. Run `corepack pnpm verify`. This builds and tests the source, packs the CLI, installs it into a temporary consumer, and exercises the installed binary.
+2. Use Node.js 24 and run `corepack pnpm install --frozen-lockfile` from a clean checkout.
+3. Install the test browser with `corepack pnpm exec playwright install chromium`, then run `corepack pnpm verify`. This builds and tests the source, packs the CLI, installs it into a temporary consumer, and exercises the installed binary.
 4. Inspect `npm pack --dry-run` from `packages/cli`. The archive should contain only `bundle/index.js`, `README.md`, `LICENSE`, and `package.json`.
 5. Confirm the npm name immediately before the first release with `npm view html-inbox`; availability can change.
 

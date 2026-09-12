@@ -44,13 +44,13 @@ Cloudflare Pages is the first production deployment adapter. The stable target i
 ProjectRef { accountId, projectName }
 ```
 
-Hostnames and deployment URLs are deployment metadata, not target identity. The adapter invokes a pinned Wrangler version and returns a normalized deployment receipt. Tests use a recording adapter at the same seam; provider-specific command execution does not leak into the snapshot module or workflow.
+Hostnames and deployment URLs are deployment metadata, not target identity. The adapter invokes a pinned Wrangler version for mutations and returns a normalized deployment receipt. It reads project and deployment metadata through the Cloudflare API using credentials retrieved from Wrangler. The pinned CLI list output omits fields needed to verify production branches and reconcile operations. Tests use a recording adapter at the same seam; provider-specific command execution does not leak into the snapshot module or workflow.
 
 ### Ownership and adoption
 
 Remote state records a random local owner identity and the exact `ProjectRef`. A generated remote ownership marker contains only the owner identity and schema version. It contains no local path, account ID, token, or document metadata.
 
-HTML Inbox may create a new target or reuse a target carrying the expected marker. Managing an existing unmarked or differently marked project requires an explicit adoption flag because a Pages deployment replaces that project's contents.
+HTML Inbox may create a new target. Managing any project that already exists requires an explicit adoption flag because a Pages deployment replaces that project's contents. The owner marker identifies locally generated exports; it is not remote authentication or proof that a remote project still belongs to this installation. After setup, the saved account ID and project name identify the authorized target.
 
 ### Local state and operation journal
 

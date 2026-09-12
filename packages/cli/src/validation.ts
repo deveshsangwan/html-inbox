@@ -1,5 +1,6 @@
 const CAPABILITY_PATTERN = /^[A-Za-z0-9_-]{22}$/;
-const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_V4_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export interface CloudflareProjectRef {
   accountId: string;
@@ -8,14 +9,18 @@ export interface CloudflareProjectRef {
 
 export function assertInboxCapability(value: string): void {
   const decoded =
-    typeof value === "string" ? Buffer.from(value, "base64url") : Buffer.alloc(0);
+    typeof value === "string"
+      ? Buffer.from(value, "base64url")
+      : Buffer.alloc(0);
   if (
     typeof value !== "string" ||
     !CAPABILITY_PATTERN.test(value) ||
     decoded.byteLength !== 16 ||
     decoded.toString("base64url") !== value
   ) {
-    throw new Error("Inbox capability must encode exactly 128 bits as 22 base64url characters");
+    throw new Error(
+      "Inbox capability must encode exactly 128 bits as 22 base64url characters",
+    );
   }
 }
 
@@ -26,10 +31,10 @@ export function assertUuidV4(value: string, label: string): void {
 }
 
 export function normalizeCloudflareProjectRef(
-  value: CloudflareProjectRef,
+  value: unknown,
 ): CloudflareProjectRef {
   if (
-    !value ||
+    !isRecord(value) ||
     typeof value.accountId !== "string" ||
     typeof value.projectName !== "string"
   ) {
@@ -91,8 +96,8 @@ export function sameCloudflareProject(
   right: CloudflareProjectRef,
 ): boolean {
   return (
-    left.accountId.toLowerCase() === right.accountId.toLowerCase() &&
-    left.projectName.toLowerCase() === right.projectName.toLowerCase()
+    left.accountId === right.accountId &&
+    left.projectName === right.projectName
   );
 }
 

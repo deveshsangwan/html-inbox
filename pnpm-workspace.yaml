@@ -22,3 +22,7 @@ minimumReleaseAgeExclude:
   - '@typescript/typescript-win32-arm64@7.0.2'
   - '@typescript/typescript-win32-x64@7.0.2'
   - typescript@7.0.2
+  # CI needs these pinned browser packages before their 24-hour release delay ends.
+  # Published 2026-09-04 22:42 UTC; remove these exceptions after 2026-09-05 22:43 UTC.
+  - playwright-core@1.63.0
+  - playwright@1.63.0

@@ -11,3 +11,8 @@ All notable changes to HTML Inbox will be documented here.
 - Added durable remote init, publish, status, reconcile, and capability-rotating revoke workflows.
 - Added npm-first user documentation and separate local and remote operation skills.
 - Added CI, installed-package smoke tests, a self-contained ncc bundle, documentation, threat model, and MIT license.
+
+- Replaced incomplete self-check execution with independently cleaned-up tests and real-browser checks.
+- Validated saved remote operations and deployment snapshots; use Cloudflare API metadata for reliable recovery.
+- Consolidated document modules, adopted HTML5 parsing, and reduced duplicate file reads and CLI wrappers.
+- Added process-specific viewer shutdown checks and consistent local/static search.

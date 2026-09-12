@@ -33,15 +33,16 @@ documents/<id>/metadata.json
 
 `index.html` is the original uploaded HTML bytes. `metadata.json` holds the generated id, title, type, publish time, and source file name.
 
-New records include a storage schema version. Legacy records without the field are read as schema version 1. Publishing writes and validates both files in the private `documents/.staging/<id>` area, then makes the complete record visible with one same-filesystem directory rename. Interrupted staging records are never listed. A corrupt committed record is skipped with a diagnostic instead of breaking the rest of the library.
+New records include a storage schema version. Legacy records without the field are read as schema version 1. Publishing validates metadata and writes both files in the private `documents/.staging/<id>` area, then makes the complete record visible with one same-filesystem directory rename. Interrupted staging records are never listed. A corrupt committed record is skipped with a diagnostic instead of breaking the rest of the library.
 
 ## Backend
 
-Keep the backend abstraction to four operations:
+The local document store exposes these operations:
 
 - `publish(input)`
 - `listDocuments()`
-- `getDocument(id)`
+- `getDocumentMetadata(id)` for metadata-only views and confirmation
+- `getDocument(id)` for original document bytes
 - `deleteDocument(id)`
 
 Deletion first renames a committed document into the private trash area so it disappears from the library atomically, then removes the trash record. Search is a server-rendered filter over title, type, and source file name. There is no update, sync, tags, auth, or database layer in the local product.
@@ -60,13 +61,13 @@ HTML_INBOX_PORT=4321 html-inbox viewer
 
 The CLI exposes viewer status and stop commands. Before spawning a detached viewer, it probes the requested loopback port so a non-HTML-Inbox listener produces a direct port-conflict error instead of a generic startup timeout.
 
-The health check is the source of truth for whether the viewer is ready. CLI output should be based on the health check, not process startup alone. A viewer can be reused only when both its protocol version and opaque instance identity match.
+The health check is the source of truth for whether the viewer is ready. CLI output should be based on the health check, not process startup alone. A viewer can be reused only when both its protocol version and opaque home identity match. Shutdown also matches the saved PID and per-process identity against the current health response before sending a signal.
 
 Documents render through a viewer-owned path inside a sandboxed iframe. The app shell lists documents and opens one document at a time; raw files are never rendered directly into the shell DOM.
 
 ## Validation
 
-HTML is untrusted by default. Phase 1 uses cheap validation before storage:
+HTML is untrusted by default. HTML policy validation uses an HTML5 parser before storage:
 
 - allow scripts, but only allow external script entry URLs for Tailwind's browser build and Mermaid v11
 - warn on inline event handlers such as `onclick`, which the document CSP blocks
@@ -109,13 +110,15 @@ The root page contains no capability path. The owner marker contains only a sche
 
 `security-headers.json` lives behind the capability path so the generic static output has no predictable file that discloses the bearer link. It is an adapter input rather than a file browsers consume. It describes common, root, shell, and document policies without provider routing syntax. A provider adapter must apply them to every corresponding route alias and must fail rather than publish without equivalent headers.
 
-The Cloudflare Pages adapter translates those policies into a compact `_headers` file in a disposable copy of the snapshot. The copy is deployed from its own root with Wrangler Direct Upload, then removed whether deployment succeeds or fails. The provider-neutral snapshot is never modified. A global common rule combines with separate root, inbox-shell, document-shell, and document-content rules so the content CSP never merges with the stricter shell CSP.
+The Cloudflare Pages adapter translates those policies into a compact `_headers` file in a disposable copy of the snapshot. The copy is deployed from its own root with Wrangler Direct Upload, then removed whether deployment succeeds or fails. The provider-neutral snapshot is never modified. Deployment preparation verifies every listed file digest, rejects extra and missing files, and checks the journaled snapshot hash before invoking Wrangler. A global common rule combines with separate root, inbox-shell, document-shell, and document-content rules so the content CSP never merges with the stricter shell CSP.
 
 Wrangler is invoked as an argument array through an exact version pin. The Cloudflare account is selected with `CLOUDFLARE_ACCOUNT_ID`; API tokens remain inherited process credentials and are never command arguments, persisted state, or error output. The adapter validates the current Direct Upload limits (20,000 files and 25 MiB per file) and `_headers` limits (100 rules and 2,000 characters per line) before invoking Wrangler.
 
+Project and deployment-history reads use the Cloudflare REST API. The pinned Wrangler list commands emit display rows that omit production-branch and commit-message fields needed for recovery. The adapter obtains existing OAuth or environment credentials through Wrangler, confines its credential-command logs to private temporary files, and removes those logs on completion. Credentials are never recorded in remote state.
+
 Wrangler's immutable deployment URL is the deployment receipt. The canonical project hostname is derived only when that receipt contains the expected deployment-hash prefix, which accounts for Pages assigning a globally unique subdomain different from the requested project name. A caller may describe that hostname as current production only after verifying it deployed the project's configured production branch. Callers must preserve the immutable URL for recovery and avoid presenting it as revocable.
 
-Export writes a private sibling staging directory, moves a recognized prior export to a backup, and installs the complete snapshot with same-filesystem renames. A failed install restores the backup, but the output path may be briefly absent between renames. Unrecognized directories are never replaced. Static export does not mutate the local library and does not own provider credentials or deployment state.
+Export writes one document at a time to a private sibling staging directory and retains only file hashes and metadata in memory. It moves a recognized prior export to a backup, and installs the complete snapshot with same-filesystem renames. A failed install restores the backup, but the output path may be briefly absent between renames. Unrecognized directories are never replaced. Static export does not mutate the local library and does not own provider credentials or deployment state.
 
 The stable remote target is the Cloudflare account ID plus project name, never an inferred hostname. Remote configuration, the active operation, receipts, and operation-scoped snapshots live in private files under `<HTML_INBOX_HOME>/remote`. One atomic mutation lock prevents concurrent remote writers; a stale lock is recoverable because durable intent is stored separately.
 

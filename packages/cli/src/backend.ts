@@ -2,19 +2,10 @@ import { randomUUID } from "node:crypto";
 import { lstat, readFile, readdir, rename, rm, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
-import {
-  assertDocumentMetadata,
-  DOCUMENT_SCHEMA_VERSION,
-  DeleteResult,
-  DocumentBackend,
-  DocumentMetadata,
-  isSafeDocumentId,
-  PublishInput,
-  PublishResult,
-  StoredDocument,
-} from "@html-inbox/shared";
+import { parseDocumentMetadata, DOCUMENT_SCHEMA_VERSION, DeleteResult, DocumentBackend, DocumentMetadata, isSafeDocumentId, PublishInput, StoredDocument } from "./documents";
 import {
   ensurePrivateDirectory,
+  ManagedStorageError,
   hardenPrivateDirectory,
   hardenPrivateFile,
   writePrivateFile,
@@ -49,16 +40,16 @@ export class LocalDocumentBackend implements DocumentBackend {
     private readonly createDocumentId: () => string = randomUUID,
   ) {}
 
-  async publish(input: PublishInput): Promise<PublishResult> {
+  async publish(input: PublishInput): Promise<DocumentMetadata> {
     await this.prepareStorage();
-    const metadata: DocumentMetadata = {
+    const metadata = parseDocumentMetadata({
       schemaVersion: DOCUMENT_SCHEMA_VERSION,
       id: this.createDocumentId(),
       title: input.title,
       type: input.type,
       createdAt: new Date().toISOString(),
       sourceFileName: input.sourceFileName,
-    };
+    });
     const documentDir = this.documentDir(metadata.id);
     const stagingDir = path.join(this.stagingDir(), metadata.id);
 
@@ -69,14 +60,13 @@ export class LocalDocumentBackend implements DocumentBackend {
         path.join(stagingDir, "metadata.json"),
         JSON.stringify(metadata, null, 2),
       );
-      await this.validateStagedDocument(stagingDir, metadata.id, input.originalBytes);
       await rename(stagingDir, documentDir);
     } catch (error) {
       await rm(stagingDir, { recursive: true, force: true });
       throw error;
     }
 
-    return { metadata };
+    return metadata;
   }
 
   async listDocuments(): Promise<DocumentMetadata[]> {
@@ -100,46 +90,35 @@ export class LocalDocumentBackend implements DocumentBackend {
   }
 
   async getDocument(id: string): Promise<StoredDocument | null> {
+    const metadata = await this.getDocumentMetadata(id);
+    if (!metadata) {
+      return null;
+    }
+
+    try {
+      const originalBytes = await readFile(path.join(this.documentDir(id), "index.html"));
+      return { metadata, originalBytes };
+    } catch (error) {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+        await this.warnIfIncomplete(id);
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  async getDocumentMetadata(id: string): Promise<DocumentMetadata | null> {
     if (!isSafeDocumentId(id)) {
       return null;
     }
 
     await this.prepareStorage();
-
-    let metadataBytes: string;
-    let originalBytes: Buffer;
-    try {
-      const state = await this.hardenDocument(id);
-      if (state === "missing") {
-        return null;
-      }
-      if (state === "incomplete") {
-        this.warnCorrupt(id, new Error("document files are incomplete"));
-        return null;
-      }
-      [metadataBytes, originalBytes] = await Promise.all([
-        readFile(path.join(this.documentDir(id), "metadata.json"), "utf8"),
-        readFile(path.join(this.documentDir(id), "index.html")),
-      ]);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        await this.warnIfIncomplete(id);
-        return null;
-      }
-      if (error instanceof Error && error.message.startsWith("Managed ")) {
-        this.warnCorrupt(id, error);
-        return null;
-      }
-      throw error;
-    }
-
-    const metadata = this.parseMetadata(id, metadataBytes);
-    return metadata ? { metadata, html: originalBytes.toString("utf8"), originalBytes } : null;
+    return this.readMetadata(id);
   }
 
   async deleteDocument(id: string): Promise<DeleteResult | null> {
-    const document = await this.getDocument(id);
-    if (!document) {
+    const metadata = await this.getDocumentMetadata(id);
+    if (!metadata) {
       return null;
     }
 
@@ -153,7 +132,7 @@ export class LocalDocumentBackend implements DocumentBackend {
     await rm(trashDir, { recursive: true, force: true });
 
     return {
-      metadata: document.metadata,
+      metadata,
       reclaimedBytes: htmlStat.size + metadataStat.size,
     };
   }
@@ -165,7 +144,11 @@ export class LocalDocumentBackend implements DocumentBackend {
 
     let metadataBytes: string;
     try {
-      if ((await this.hardenDocument(id)) !== "complete") {
+      const state = await this.hardenDocument(id);
+      if (state === "missing") {
+        return null;
+      }
+      if (state === "incomplete") {
         this.warnCorrupt(id, new Error("document files are incomplete"));
         return null;
       }
@@ -175,7 +158,7 @@ export class LocalDocumentBackend implements DocumentBackend {
         this.warnCorrupt(id, new Error("document files are incomplete"));
         return null;
       }
-      if (error instanceof Error && error.message.startsWith("Managed ")) {
+      if (error instanceof ManagedStorageError) {
         this.warnCorrupt(id, error);
         return null;
       }
@@ -187,8 +170,7 @@ export class LocalDocumentBackend implements DocumentBackend {
 
   private parseMetadata(id: string, metadataBytes: string): DocumentMetadata | null {
     try {
-      const metadata = JSON.parse(metadataBytes) as unknown;
-      assertDocumentMetadata(metadata);
+      const metadata = parseDocumentMetadata(JSON.parse(metadataBytes));
       if (metadata.id !== id) {
         throw new Error(`metadata ID ${metadata.id} does not match its directory`);
       }
@@ -246,25 +228,6 @@ export class LocalDocumentBackend implements DocumentBackend {
 
   private trashDir(): string {
     return path.join(this.home, "documents", ".trash");
-  }
-
-  private async validateStagedDocument(
-    stagingDir: string,
-    expectedId: string,
-    expectedBytes: Uint8Array,
-  ): Promise<void> {
-    const [metadataBytes, storedBytes] = await Promise.all([
-      readFile(path.join(stagingDir, "metadata.json"), "utf8"),
-      readFile(path.join(stagingDir, "index.html")),
-    ]);
-    const metadata = JSON.parse(metadataBytes) as unknown;
-    assertDocumentMetadata(metadata);
-    if (metadata.id !== expectedId) {
-      throw new Error("Staged metadata does not match the generated document ID");
-    }
-    if (!storedBytes.equals(Buffer.from(expectedBytes))) {
-      throw new Error("Staged HTML does not match the published bytes");
-    }
   }
 
   private warnCorrupt(id: string, error: unknown): void {

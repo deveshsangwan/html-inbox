@@ -1,26 +1,28 @@
+import { setTimeout as sleep } from "node:timers/promises";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { readFile, rm } from "node:fs/promises";
 import http, { IncomingMessage, ServerResponse } from "node:http";
 import net from "node:net";
 import path from "node:path";
-import { DocumentBackend, isSafeDocumentId } from "@html-inbox/shared";
-import { assertUuidV4 } from "./validation";
+import { DocumentBackend, isSafeDocumentId } from "./documents";
+import { assertUuidV4, isRecord } from "./validation";
 import {
   ensurePrivateDirectory,
   hardenPrivateFile,
   writePrivateFile,
+  writeAtomicPrivateJson,
 } from "./private-storage";
 import {
-  documentCsp,
-  shellCsp,
+  DOCUMENT_CSP,
+  SHELL_CSP,
   VIEWER_SCRIPT,
   VIEWER_STYLES,
 } from "./viewer-assets";
 import { renderDocumentShell, renderIndex } from "./viewer-render";
 
 const HOST = "127.0.0.1";
-export const VIEWER_PROTOCOL_VERSION = 1;
+export const VIEWER_PROTOCOL_VERSION = 2;
 
 export interface ViewerStatus {
   state: "running" | "stopped" | "conflict" | "incompatible";
@@ -31,14 +33,8 @@ export interface ViewerStatus {
 export async function ensureViewer(home: string, port: number): Promise<void> {
   const instanceId = await getInboxInstanceId(home);
   const health = await getHealth(port);
-  if (health.ok && health.protocolVersion !== VIEWER_PROTOCOL_VERSION) {
-    throw new Error(`Viewer at http://${HOST}:${port} uses an incompatible protocol`);
-  }
-  if (health.ok && health.instanceId === instanceId) {
+  if (isMatchingViewer(health, instanceId, port)) {
     return;
-  }
-  if (health.ok) {
-    throw new Error(`Viewer at http://${HOST}:${port} uses a different HTML_INBOX_HOME`);
   }
 
   await assertPortAvailable(port);
@@ -50,7 +46,11 @@ export async function ensureViewer(home: string, port: number): Promise<void> {
 
   const child = spawn(process.execPath, [entry, "viewer"], {
     detached: true,
-    env: { ...process.env, HTML_INBOX_HOME: home, HTML_INBOX_PORT: String(port) },
+    env: {
+      ...process.env,
+      HTML_INBOX_HOME: home,
+      HTML_INBOX_PORT: String(port),
+    },
     stdio: "ignore",
   });
   child.unref();
@@ -58,14 +58,8 @@ export async function ensureViewer(home: string, port: number): Promise<void> {
   const deadline = Date.now() + 3000;
   while (Date.now() < deadline) {
     const nextHealth = await getHealth(port);
-    if (nextHealth.ok && nextHealth.protocolVersion !== VIEWER_PROTOCOL_VERSION) {
-      throw new Error(`Viewer at http://${HOST}:${port} uses an incompatible protocol`);
-    }
-    if (nextHealth.ok && nextHealth.instanceId === instanceId) {
+    if (isMatchingViewer(nextHealth, instanceId, port)) {
       return;
-    }
-    if (nextHealth.ok) {
-      throw new Error(`Viewer at http://${HOST}:${port} uses a different HTML_INBOX_HOME`);
     }
     await sleep(100);
   }
@@ -73,14 +67,26 @@ export async function ensureViewer(home: string, port: number): Promise<void> {
   throw new Error(`Viewer did not start at http://${HOST}:${port}/health`);
 }
 
-export async function getViewerStatus(home: string, port: number): Promise<ViewerStatus> {
+export async function getViewerStatus(
+  home: string,
+  port: number,
+): Promise<ViewerStatus> {
   const url = `http://${HOST}:${port}`;
   const health = await getHealth(port);
-  if (!health.ok) {
-    return { state: "stopped", url };
+  if (health.state === "unavailable") {
+    try {
+      await assertPortAvailable(port);
+      return { state: "stopped", url };
+    } catch {
+      return { state: "conflict", url };
+    }
   }
-  if (health.protocolVersion !== VIEWER_PROTOCOL_VERSION) {
+  if (health.state === "incompatible") {
     return { state: "incompatible", url };
+  }
+
+  if (health.state === "invalid") {
+    return { state: "conflict", url };
   }
 
   const instanceId = await getInboxInstanceId(home);
@@ -92,23 +98,33 @@ export async function getViewerStatus(home: string, port: number): Promise<Viewe
   return {
     state: "running",
     url,
-    pid: viewerInfo?.port === port ? viewerInfo.pid : undefined,
+    pid:
+      viewerInfo?.port === port &&
+      viewerInfo.processId === health.processId &&
+      viewerInfo.pid === health.pid
+        ? viewerInfo.pid
+        : undefined,
   };
 }
 
-export async function stopViewer(home: string, port: number): Promise<ViewerStatus> {
+export async function stopViewer(
+  home: string,
+  port: number,
+): Promise<ViewerStatus> {
   const status = await getViewerStatus(home, port);
   if (status.state !== "running") {
     return status;
   }
   if (!status.pid) {
-    throw new Error("Viewer is running but its process record is missing or stale");
+    throw new Error(
+      "Viewer is running but its process record is missing or stale",
+    );
   }
 
   process.kill(status.pid, "SIGTERM");
   const deadline = Date.now() + 3000;
   while (Date.now() < deadline) {
-    if (!(await getHealth(port)).ok) {
+    if ((await getHealth(port)).state === "unavailable") {
       await rm(path.join(home, "viewer.json"), { force: true });
       return { state: "stopped", url: status.url };
     }
@@ -123,10 +139,12 @@ export async function startViewer(
   port: number,
 ): Promise<http.Server> {
   const instanceId = await getInboxInstanceId(home);
+  const processId = randomUUID();
   const server = http.createServer((request, response) => {
     void routeRequest(
       backend,
       instanceId,
+      processId,
       getServerPort(server),
       request,
       response,
@@ -143,7 +161,7 @@ export async function startViewer(
 
   const actualPort = getServerPort(server);
   try {
-    await writeViewerInfo(home, actualPort);
+    await writeViewerInfo(home, actualPort, processId);
   } catch (error) {
     await new Promise<void>((resolve) => server.close(() => resolve()));
     throw error;
@@ -154,6 +172,7 @@ export async function startViewer(
 async function routeRequest(
   backend: DocumentBackend,
   instanceId: string,
+  processId: string,
   port: number,
   request: IncomingMessage,
   response: ServerResponse,
@@ -175,6 +194,8 @@ async function routeRequest(
       ok: true,
       instanceId,
       protocolVersion: VIEWER_PROTOCOL_VERSION,
+      processId,
+      pid: process.pid,
     });
     return;
   }
@@ -192,19 +213,19 @@ async function routeRequest(
   if (url.pathname === "/") {
     const documents = await backend.listDocuments();
     const query = (url.searchParams.get("q") ?? "").trim().slice(0, 200);
-    sendHtml(response, 200, renderIndex(documents, query), shellCsp());
+    sendHtml(response, 200, renderIndex(documents, query), SHELL_CSP);
     return;
   }
 
   const documentMatch = /^\/documents\/([^/]+)$/.exec(url.pathname);
   if (documentMatch) {
     const id = documentMatch[1];
-    const document = await backend.getDocument(id);
-    if (!document) {
+    const metadata = await backend.getDocumentMetadata(id);
+    if (!metadata) {
       sendText(response, 404, "Not Found");
       return;
     }
-    sendHtml(response, 200, renderDocumentShell(document.metadata), shellCsp());
+    sendHtml(response, 200, renderDocumentShell(metadata), SHELL_CSP);
     return;
   }
 
@@ -220,67 +241,140 @@ async function routeRequest(
       sendText(response, 404, "Not Found");
       return;
     }
-    sendHtml(response, 200, document.html, documentCsp());
+    sendHtml(response, 200, document.originalBytes, DOCUMENT_CSP);
     return;
   }
 
   sendText(response, 404, "Not Found");
 }
 
-interface ViewerHealth {
-  ok: boolean;
-  instanceId?: string;
-  protocolVersion?: number;
-}
+type ViewerHealth =
+  | { state: "unavailable" }
+  | { state: "invalid" }
+  | { state: "incompatible" }
+  | { state: "ready"; instanceId: string; processId: string; pid: number };
 
-async function getHealth(port: number): Promise<ViewerHealth> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 400);
-
-  try {
-    const response = await fetch(`http://${HOST}:${port}/health`, {
-      signal: controller.signal,
-    });
-    if (!response.ok) {
-      return { ok: false };
-    }
-    const body = (await response.json()) as {
-      instanceId?: unknown;
-      protocolVersion?: unknown;
-    };
-    return {
-      ok: true,
-      instanceId: typeof body.instanceId === "string" ? body.instanceId : undefined,
-      protocolVersion:
-        typeof body.protocolVersion === "number" ? body.protocolVersion : undefined,
-    };
-  } catch {
-    return { ok: false };
-  } finally {
-    clearTimeout(timeout);
+function isMatchingViewer(
+  health: ViewerHealth,
+  instanceId: string,
+  port: number,
+): boolean {
+  switch (health.state) {
+    case "unavailable":
+      return false;
+    case "invalid":
+      throw new Error(
+        `Port ${port} is already in use by a service with an invalid health response`,
+      );
+    case "incompatible":
+      throw new Error(
+        `Viewer at http://${HOST}:${port} uses an incompatible protocol`,
+      );
+    case "ready":
+      if (health.instanceId !== instanceId) {
+        throw new Error(
+          `Viewer at http://${HOST}:${port} uses a different HTML_INBOX_HOME`,
+        );
+      }
+      return true;
   }
 }
 
-async function writeViewerInfo(home: string, port: number): Promise<void> {
-  await ensurePrivateDirectory(home);
-  await writePrivateFile(
-    path.join(home, "viewer.json"),
-    JSON.stringify({ host: HOST, port, pid: process.pid, startedAt: new Date().toISOString() }, null, 2),
-  );
+function parseViewerHealth(body: unknown): ViewerHealth {
+  if (
+    !isRecord(body) ||
+    body.ok !== true ||
+    typeof body.instanceId !== "string" ||
+    typeof body.protocolVersion !== "number" ||
+    !Number.isInteger(body.protocolVersion) ||
+    body.protocolVersion <= 0
+  ) {
+    return { state: "invalid" };
+  }
+
+  try {
+    assertUuidV4(body.instanceId, "Viewer inbox identity");
+    if (body.protocolVersion !== VIEWER_PROTOCOL_VERSION) {
+      return { state: "incompatible" };
+    }
+    if (
+      typeof body.processId !== "string" ||
+      typeof body.pid !== "number" ||
+      !Number.isSafeInteger(body.pid) ||
+      body.pid <= 0
+    ) {
+      return { state: "invalid" };
+    }
+    assertUuidV4(body.processId, "Viewer process identity");
+    return {
+      state: "ready",
+      instanceId: body.instanceId,
+      processId: body.processId,
+      pid: body.pid,
+    };
+  } catch {
+    return { state: "invalid" };
+  }
 }
 
-async function readViewerInfo(home: string): Promise<{ pid: number; port: number } | null> {
+async function getHealth(port: number): Promise<ViewerHealth> {
+  try {
+    const response = await fetch(`http://${HOST}:${port}/health`, {
+      signal: AbortSignal.timeout(400),
+    });
+    if (!response.ok) {
+      return { state: "invalid" };
+    }
+    try {
+      return parseViewerHealth(await response.json());
+    } catch {
+      return { state: "invalid" };
+    }
+  } catch {
+    return { state: "unavailable" };
+  }
+}
+
+async function writeViewerInfo(
+  home: string,
+  port: number,
+  processId: string,
+): Promise<void> {
+  await writeAtomicPrivateJson(path.join(home, "viewer.json"), {
+    host: HOST,
+    port,
+    pid: process.pid,
+    processId,
+    startedAt: new Date().toISOString(),
+  });
+}
+
+async function readViewerInfo(
+  home: string,
+): Promise<{ pid: number; port: number; processId: string } | null> {
   const viewerInfoPath = path.join(home, "viewer.json");
   try {
     await hardenPrivateFile(viewerInfoPath);
-    const value = JSON.parse(await readFile(viewerInfoPath, "utf8")) as {
-      pid?: unknown;
-      port?: unknown;
-    };
-    if (!Number.isInteger(value.pid) || !Number.isInteger(value.port)) {
+    const value: unknown = JSON.parse(await readFile(viewerInfoPath, "utf8"));
+    if (
+      !value ||
+      typeof value !== "object" ||
+      !("pid" in value) ||
+      typeof value.pid !== "number" ||
+      !Number.isInteger(value.pid) ||
+      value.pid <= 0 ||
+      !("port" in value) ||
+      typeof value.port !== "number" ||
+      !Number.isInteger(value.port) ||
+      value.port <= 0 ||
+      value.port > 65535 ||
+      !("processId" in value) ||
+      typeof value.processId !== "string"
+    ) {
       throw new Error(`Invalid viewer process record at ${viewerInfoPath}`);
     }
-    return { pid: value.pid as number, port: value.port as number };
+    assertUuidV4(value.processId, "Viewer process identity");
+    return { pid: value.pid, port: value.port, processId: value.processId };
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return null;
@@ -324,7 +418,11 @@ async function assertPortAvailable(port: number): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     probe.once("error", (error: NodeJS.ErrnoException) => {
       if (error.code === "EADDRINUSE") {
-        reject(new Error(`Port ${port} is already in use; set HTML_INBOX_PORT to another port`));
+        reject(
+          new Error(
+            `Port ${port} is already in use; set HTML_INBOX_PORT to another port`,
+          ),
+        );
       } else {
         reject(error);
       }
@@ -344,35 +442,63 @@ function getServerPort(server: http.Server): number {
   return address.port;
 }
 
-function sendHtml(response: ServerResponse, status: number, body: string, csp: string): void {
-  response.writeHead(status, securityHeaders({ "Content-Type": "text/html; charset=utf-8", "Content-Security-Policy": csp }));
+function sendHtml(
+  response: ServerResponse,
+  status: number,
+  body: string | Buffer,
+  csp: string,
+): void {
+  response.writeHead(
+    status,
+    securityHeaders({
+      "Content-Type": "text/html; charset=utf-8",
+      "Content-Security-Policy": csp,
+    }),
+  );
   response.end(body);
 }
 
-function sendJson(response: ServerResponse, status: number, body: unknown): void {
-  response.writeHead(status, securityHeaders({ "Content-Type": "application/json; charset=utf-8" }));
+function sendJson(
+  response: ServerResponse,
+  status: number,
+  body: unknown,
+): void {
+  response.writeHead(
+    status,
+    securityHeaders({ "Content-Type": "application/json; charset=utf-8" }),
+  );
   response.end(JSON.stringify(body));
 }
 
-function sendText(response: ServerResponse, status: number, body: string): void {
-  response.writeHead(status, securityHeaders({ "Content-Type": "text/plain; charset=utf-8" }));
+function sendText(
+  response: ServerResponse,
+  status: number,
+  body: string,
+): void {
+  response.writeHead(
+    status,
+    securityHeaders({ "Content-Type": "text/plain; charset=utf-8" }),
+  );
   response.end(body);
 }
 
-function sendAsset(response: ServerResponse, status: number, body: string, contentType: string): void {
+function sendAsset(
+  response: ServerResponse,
+  status: number,
+  body: string,
+  contentType: string,
+): void {
   response.writeHead(status, securityHeaders({ "Content-Type": contentType }));
   response.end(body);
 }
 
-function securityHeaders(headers: Record<string, string>): Record<string, string> {
+function securityHeaders(
+  headers: Record<string, string>,
+): Record<string, string> {
   return {
     ...headers,
     "Cache-Control": "no-store",
     "Referrer-Policy": "no-referrer",
     "X-Content-Type-Options": "nosniff",
   };
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }

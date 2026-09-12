@@ -82,8 +82,8 @@ confusing broken document, not because they are attacks:
 - `<base>`, blocked by `base-uri 'none'`.
 
 **Detection integrity.** Tier 1 depends on correctly identifying which tag an
-attribute belongs to, so tags are parsed with a scanner that consumes quoted
-attribute values. A backwards search for `<` and `>` cannot do this: a `>`
+attribute belongs to, so tags are parsed with an HTML5 parser that handles quoted
+attribute values and raw-text elements. A backwards search for `<` and `>` cannot do this: a `>`
 inside an earlier attribute hides the tag, which previously let
 `<a title=">" href="javascript:alert(1)">` publish. Attribute values are also
 entity-decoded and stripped of embedded control characters before the scheme is
@@ -126,7 +126,7 @@ Controls:
 
 - Generate 128 random capability bits and publish no inbox listing at the Pages root.
 - Apply default `no-referrer`, restrictive CSP, and content-type headers to generated static pages.
-- Treat the account ID and project name as explicit target identity and require ownership-marker verification or deliberate adoption.
+- Treat the account ID and project name as explicit target identity. Require deliberate adoption of every existing remote project during setup; the export ownership marker is not remote authentication.
 - Journal intent before deployment, checkpoint receipts, and reconcile ambiguous operations against deployment history before retrying.
 - Keep remote state in owner-only local files. Inherit credentials from Wrangler's own login store or the process environment; never pass tokens as command arguments or include them in state, snapshots, or error output.
 - State clearly that an unlisted URL is not private and that historical deployments may need pruning after revoke.

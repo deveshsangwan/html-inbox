@@ -29,8 +29,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install browser
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Verify source
-        run: pnpm test
+        run: pnpm test && pnpm test:browser
 
       - name: Verify release version
         id: package

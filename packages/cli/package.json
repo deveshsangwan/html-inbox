@@ -36,7 +36,7 @@
     "build": "tsc -p tsconfig.json",
     "bundle": "ncc build dist/index.js -o bundle",
     "test": "pnpm run build && pnpm run test:self",
-    "test:self": "node dist/self-check.js",
-    "prepack": "tsc -p ../shared/tsconfig.json && tsc -p tsconfig.json && ncc build dist/index.js -o bundle"
+    "test:self": "node ../../scripts/run-unit-tests.mjs",
+    "prepack": "tsc -p tsconfig.json && ncc build dist/index.js -o bundle"
   }
 }

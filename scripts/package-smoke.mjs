@@ -66,15 +66,14 @@ try {
 
   const executable = path.join(installedRoot, "bundle", "index.js");
   assert.equal((await stat(executable)).isFile(), true);
-  assert.equal((await stat(executable)).size > 10_000, true);
-  assert.equal((await run(process.execPath, [executable, "--version"], consumerRoot)).output.trim(), "0.1.0");
+  assert.equal((await run(process.execPath, [executable, "--version"], consumerRoot)).output.trim(), installedPackage.version);
   const installedBin = path.join(
     consumerRoot,
     "node_modules",
     ".bin",
     process.platform === "win32" ? "html-inbox.cmd" : "html-inbox",
   );
-  assert.equal((await run(installedBin, ["--version"], consumerRoot)).output.trim(), "0.1.0");
+  assert.equal((await run(installedBin, ["--version"], consumerRoot)).output.trim(), installedPackage.version);
   const help = (await run(process.execPath, [executable, "--help"], consumerRoot)).output;
   assert.match(help, /remote init --account/);
   assert.match(help, /export --out <directory>/);
