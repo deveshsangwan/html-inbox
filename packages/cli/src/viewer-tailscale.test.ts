@@ -2,12 +2,14 @@ import { strict as assert } from "node:assert";
 import { spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { once } from "node:events";
-import { readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import http from "node:http";
-import { tmpdir } from "node:os";
+import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { temporaryHome } from "./test-fixtures";
+import { runTailscale } from "./tailscale-command";
+import { withTailscaleServeLock } from "./tailscale-records";
 import {
   cleanupTailscale,
   getTailscaleStatus,
@@ -760,6 +762,258 @@ test("recording command timeouts and output limits are bounded before ownership"
   assert.deepEqual(mutations(await f.commands()), []);
 });
 
+test(
+  "silent Serve failure uses its exit code and daemon advice without setup hints",
+  recordingTestOptions,
+  async (t) => {
+    const f = await fixture(t);
+    const prepared = await prepareTailscale(f.options, f.command);
+    await f.update({ failOn: "serve", failure: "" });
+    await assert.rejects(startTailscale(prepared), (error) => {
+      assert(error instanceof Error);
+      assert.match(error.message, /exited with code 1 without stderr/);
+      assert.match(error.message, /daemon is running, signed in and connected/);
+      assert.doesNotMatch(error.message, /enable MagicDNS|operator access/);
+      return true;
+    });
+
+    assert.deepEqual(await f.liveConfig(), {});
+    await assert.rejects(f.journal(), /ENOENT/);
+  },
+);
+
+test(
+  "Serve timeout, signal and maxBuffer failures use execution metadata before stderr advice",
+  recordingTestOptions,
+  async (t) => {
+    const f = await fixture(t);
+    const args = [
+      "serve",
+      "--bg",
+      "--yes",
+      "--https=443",
+      "--set-path=/",
+      `http://127.0.0.1:${f.options.backendPort}`,
+    ];
+    const scenarios = [
+      {
+        change: { delayOperation: "serve", delayMs: 1000 },
+        timeoutMs: 50,
+        expected: /timed out after 50ms/,
+      },
+      {
+        change: { signalOn: "serve", signal: "SIGTERM" },
+        timeoutMs: 2000,
+        expected: /terminated by SIGTERM/,
+      },
+      {
+        change: { serveOutput: "x".repeat(1024 * 1024 + 1) },
+        timeoutMs: 2000,
+        expected: /exceeded the 1048576-byte command output limit/,
+      },
+      {
+        change: { serveErrorOutput: "https permission denied ".repeat(60_000) },
+        timeoutMs: 2000,
+        expected: /exceeded the 1048576-byte command output limit/,
+      },
+    ];
+    for (const scenario of scenarios) {
+      await f.update({
+        delayOperation: "",
+        signalOn: "",
+        serveOutput: "",
+        serveErrorOutput: "",
+        ...scenario.change,
+      });
+      await assert.rejects(
+        runTailscale(f.executable, args, scenario.timeoutMs),
+        (error) => {
+          assert(error instanceof Error);
+          assert.match(error.message, scenario.expected);
+          assert.doesNotMatch(error.message, /enable MagicDNS|operator access/);
+          return true;
+        },
+      );
+    }
+  },
+);
+
+test(
+  "private account locks ignore inbox and HOME overrides across child processes",
+  recordingTestOptions,
+  async (t) => {
+    const first = await fixture(t);
+    const second = await fixture(t);
+    assert.equal(first.lockHome, second.lockHome);
+    assert.equal(os.userInfo().homedir, first.lockHome);
+    const nodeId = first.status.Self.ID;
+    const nodeHash = createHash("sha256")
+      .update(nodeId)
+      .digest("hex")
+      .slice(0, 24);
+    const lockPath = path.join(first.lockDirectory, `${nodeHash}.lock`);
+    await withTailscaleServeLock(nodeId, async () => {
+      assert.equal((await stat(first.lockDirectory)).mode & 0o777, 0o700);
+      assert.equal((await stat(lockPath)).mode & 0o777, 0o700);
+      assert.equal(
+        (await stat(path.join(lockPath, "owner.json"))).mode & 0o777,
+        0o600,
+      );
+      const child = spawn(
+        process.execPath,
+        [
+          "--eval",
+          `
+const { withTailscaleServeLock } = require("./tailscale-records.js");
+withTailscaleServeLock(${JSON.stringify(nodeId)}, async () => {}).then(
+  () => process.exit(1),
+  (error) => { process.stdout.write(error.message); },
+);
+`,
+        ],
+        {
+          cwd: __dirname,
+          env: {
+            ...process.env,
+            HOME: second.home,
+            HTML_INBOX_HOME: second.home,
+          },
+          stdio: ["ignore", "pipe", "inherit"],
+        },
+      );
+      let output = "";
+      child.stdout.setEncoding("utf8");
+      child.stdout.on("data", (chunk: string) => {
+        output += chunk;
+      });
+      const [code] = await once(child, "close");
+      assert.equal(code, 0);
+      assert.match(
+        output,
+        /Another HTML Inbox operation owns this Tailscale node lock/,
+      );
+      assert(output.includes(lockPath));
+    });
+
+    await assert.rejects(stat(lockPath), /ENOENT/);
+    await assert.rejects(
+      stat(path.join(first.home, ".html-inbox-tailscale")),
+      /ENOENT/,
+    );
+    await assert.rejects(
+      stat(path.join(second.home, ".html-inbox-tailscale")),
+      /ENOENT/,
+    );
+  },
+);
+
+test(
+  "symlinked and public account state cannot authorize startup or cleanup",
+  recordingTestOptions,
+  async (t) => {
+    const f = await fixture(t);
+    const prepared = await prepareTailscale(f.options, f.command);
+    const target = await temporaryHome(t);
+    await symlink(target, f.lockDirectory);
+    await assert.rejects(
+      startTailscale(prepared),
+      /directory without symlinks/,
+    );
+    await assert.rejects(f.journal(), /ENOENT/);
+    assert.deepEqual(mutations(await f.commands()), []);
+
+    await rm(f.lockDirectory);
+    await mkdir(f.lockDirectory, { mode: 0o700 });
+    await startTailscale(prepared);
+    for (const mode of [0o755, 0o770]) {
+      await chmod(f.lockDirectory, mode);
+      await assert.rejects(
+        cleanupTailscale(f.home, f.options),
+        /private mode 0700/,
+      );
+      assert.equal((await f.journal()).phase, "active");
+      assert.equal(mutations(await f.commands()).length, 1);
+    }
+
+    await chmod(f.lockDirectory, 0o700);
+    await rm(f.lockDirectory, { recursive: true });
+    await symlink(target, f.lockDirectory);
+    await assert.rejects(
+      cleanupTailscale(f.home, f.options),
+      /directory without symlinks/,
+    );
+    assert.equal(os.userInfo().homedir, f.lockHome);
+    await rm(f.lockDirectory);
+    await cleanupTailscale(f.home, f.options);
+  },
+);
+
+test(
+  "foreign account ownership and writable account home fail before lock creation",
+  recordingTestOptions,
+  async (t) => {
+    const f = await fixture(t);
+    const account = os.userInfo();
+    const ownerMock = t.mock.method(os, "userInfo", () => ({
+      ...account,
+      uid: account.uid + 1,
+    }));
+    await assert.rejects(
+      withTailscaleServeLock(f.status.Self.ID, async () => {}),
+      /account ownership/,
+    );
+    ownerMock.mock.restore();
+    await assert.rejects(stat(f.lockDirectory), /ENOENT/);
+
+    await chmod(f.lockHome, 0o770);
+    await assert.rejects(
+      withTailscaleServeLock(f.status.Self.ID, async () => {}),
+      /must not be writable by other users/,
+    );
+    await assert.rejects(stat(f.lockDirectory), /ENOENT/);
+    await chmod(f.lockHome, 0o700);
+    assert.deepEqual(await f.commands(), []);
+  },
+);
+
+test(
+  "unsafe existing node lock is preserved and regular operation failures release only their lock",
+  recordingTestOptions,
+  async (t) => {
+    const f = await fixture(t);
+    const nodeId = f.status.Self.ID;
+    const nodeHash = createHash("sha256")
+      .update(nodeId)
+      .digest("hex")
+      .slice(0, 24);
+    const lockPath = path.join(f.lockDirectory, `${nodeHash}.lock`);
+    await mkdir(f.lockDirectory, { mode: 0o700 });
+    const target = await temporaryHome(t);
+    await symlink(target, lockPath);
+    await assert.rejects(
+      withTailscaleServeLock(nodeId, async () => {}),
+      /directory without symlinks/,
+    );
+    await rm(lockPath);
+
+    await mkdir(lockPath, { mode: 0o755 });
+    await assert.rejects(
+      withTailscaleServeLock(nodeId, async () => {}),
+      /private mode 0700/,
+    );
+    assert.equal((await stat(lockPath)).mode & 0o777, 0o755);
+    await rm(lockPath, { recursive: true });
+    await assert.rejects(
+      withTailscaleServeLock(nodeId, async () => {
+        throw new Error("operation failed");
+      }),
+      /operation failed/,
+    );
+    await assert.rejects(stat(lockPath), /ENOENT/);
+    assert.equal((await stat(f.lockDirectory)).mode & 0o777, 0o700);
+  },
+);
+
 test("cleanup command errors retain active ownership even after the route was removed", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   await startTailscale(await prepareTailscale(f.options, f.command));
@@ -842,8 +1096,8 @@ test(
       .digest("hex")
       .slice(0, 24);
     const lockPath = path.join(
-      tmpdir(),
-      `html-inbox-tailscale-${process.getuid?.() ?? process.env.USERNAME ?? "user"}-${nodeHash}.lock`,
+      f.lockDirectory,
+      `${nodeHash}.lock`,
     );
     const owner = spawn(
       process.execPath,

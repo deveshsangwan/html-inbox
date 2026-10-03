@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
-import { constants } from "node:fs";
-import { mkdir, open, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { constants, type BigIntStats } from "node:fs";
+import { lstat, mkdir, open, realpath, rm } from "node:fs/promises";
+import { userInfo } from "node:os";
 import path from "node:path";
 import { readBoundedFile } from "./bounded-file";
 import {
@@ -189,19 +189,39 @@ export async function withTailscaleServeLock<T>(
   nodeId: string,
   operation: () => Promise<T>,
 ): Promise<T> {
+  const account = userInfo();
+  if (
+    !path.isAbsolute(account.homedir) ||
+    account.homedir.includes("\0") ||
+    !Number.isSafeInteger(account.uid) ||
+    (process.platform !== "win32" && account.uid < 0)
+  ) {
+    throw new Error(
+      "Tailscale lock storage requires a valid native OS account home and identity",
+    );
+  }
+
+  await assertOwnedLockDirectory(account.homedir, account.uid, false);
+  const lockDirectory = path.join(account.homedir, ".html-inbox-tailscale");
+  try {
+    await mkdir(lockDirectory, { mode: 0o700 });
+  } catch (error) {
+    if (!isRecord(error) || error.code !== "EEXIST") {
+      throw error;
+    }
+  }
+  await assertOwnedLockDirectory(lockDirectory, account.uid, true);
+
   const nodeHash = createHash("sha256")
     .update(nodeId)
     .digest("hex")
     .slice(0, 24);
-  const userId = process.getuid?.() ?? process.env.USERNAME ?? "user";
-  const lockPath = path.join(
-    tmpdir(),
-    `html-inbox-tailscale-${userId}-${nodeHash}.lock`,
-  );
+  const lockPath = path.join(lockDirectory, `${nodeHash}.lock`);
   try {
     await mkdir(lockPath, { mode: 0o700 });
   } catch (error) {
     if (isRecord(error) && error.code === "EEXIST") {
+      await assertOwnedLockDirectory(lockPath, account.uid, true);
       throw new Error(
         `Another HTML Inbox operation owns this Tailscale node lock: ${lockPath}. Retry when it finishes. If its process crashed, inspect owner.json and remove only this stale lock directory.`,
       );
@@ -211,12 +231,142 @@ export async function withTailscaleServeLock<T>(
   }
 
   try {
-    await writeAtomicPrivateJson(path.join(lockPath, "owner.json"), {
-      pid: process.pid,
-      nodeId,
-    });
+    await assertOwnedLockDirectory(lockPath, account.uid, true);
+    const ownerFile = await open(
+      path.join(lockPath, "owner.json"),
+      constants.O_WRONLY |
+        constants.O_CREAT |
+        constants.O_EXCL |
+        (constants.O_NOFOLLOW ?? 0),
+      0o600,
+    );
+    try {
+      const ownerStat = await ownerFile.stat({ bigint: true });
+      if (
+        !ownerStat.isFile() ||
+        (process.platform !== "win32" &&
+          (ownerStat.uid !== BigInt(account.uid) ||
+            (ownerStat.mode & 0o777n) !== 0o600n))
+      ) {
+        throw new Error(
+          `Tailscale node lock owner file is not private account storage: ${lockPath}`,
+        );
+      }
+
+      await ownerFile.writeFile(
+        `${JSON.stringify({ pid: process.pid, nodeId })}\n`,
+      );
+    } finally {
+      await ownerFile.close();
+    }
+
     return await operation();
   } finally {
     await rm(lockPath, { recursive: true, force: true });
+  }
+}
+
+async function assertOwnedLockDirectory(
+  directory: string,
+  ownerUid: number,
+  requirePrivateMode: boolean,
+): Promise<void> {
+  const entry = await lstat(directory, { bigint: true });
+  assertLockDirectoryIdentity(
+    directory,
+    entry,
+    entry,
+    ownerUid,
+    requirePrivateMode,
+  );
+  if (
+    process.platform !== "win32" &&
+    (await realpath(directory)) !== path.resolve(directory)
+  ) {
+    throw new Error(
+      `Tailscale lock storage path must not contain symlinks or reparse substitutions: ${directory}`,
+    );
+  }
+
+  const file = await open(
+    directory,
+    constants.O_RDONLY |
+      (constants.O_DIRECTORY ?? 0) |
+      (constants.O_NOFOLLOW ?? 0) |
+      (constants.O_NONBLOCK ?? 0),
+  ).catch((error: unknown) => {
+    // Windows can refuse directory descriptors. Profile ACLs protect creation;
+    // repeat the directory identity check without changing pathname permissions.
+    if (
+      process.platform === "win32" &&
+      isRecord(error) &&
+      typeof error.code === "string" &&
+      ["EISDIR", "EPERM", "EACCES", "EINVAL", "ENOTSUP"].includes(error.code)
+    ) {
+      return undefined;
+    }
+
+    throw error;
+  });
+  if (!file) {
+    assertLockDirectoryIdentity(
+      directory,
+      entry,
+      await lstat(directory, { bigint: true }),
+      ownerUid,
+      requirePrivateMode,
+    );
+    return;
+  }
+
+  try {
+    assertLockDirectoryIdentity(
+      directory,
+      entry,
+      await file.stat({ bigint: true }),
+      ownerUid,
+      requirePrivateMode,
+    );
+  } finally {
+    await file.close();
+  }
+}
+
+function assertLockDirectoryIdentity(
+  directory: string,
+  entry: BigIntStats,
+  opened: BigIntStats,
+  ownerUid: number,
+  requirePrivateMode: boolean,
+): void {
+  if (!opened.isDirectory() || opened.isSymbolicLink()) {
+    throw new Error(
+      `Tailscale lock storage must be a directory without symlinks: ${directory}`,
+    );
+  }
+
+  if (opened.dev !== entry.dev || opened.ino !== entry.ino) {
+    throw new Error(
+      `Tailscale lock storage identity changed during inspection: ${directory}`,
+    );
+  }
+
+  if (process.platform === "win32") {
+    return;
+  }
+
+  if (opened.uid !== BigInt(ownerUid)) {
+    throw new Error(
+      `Tailscale lock storage account ownership could not be verified: ${directory}`,
+    );
+  }
+
+  const mode = opened.mode & 0o777n;
+  if (requirePrivateMode ? mode !== 0o700n : (mode & 0o022n) !== 0n) {
+    throw new Error(
+      requirePrivateMode
+        ? `Tailscale lock storage must have private mode 0700: ${directory}`
+        : `OS account home must not be writable by other users for Tailscale locking: ${directory}`,
+    );
   }
 }
