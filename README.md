@@ -125,6 +125,8 @@ Revocation rotates to a new undisclosed empty capability and removes the previou
 
 HTML Inbox accepts UTF-8 `.html` and `.htm` files. HTTPS links in `<a href>` are allowed, along with relative and fragment links; other navigation is rejected. Non-allowlisted external resources produce warnings and are blocked by the viewer CSP, except for the supported Tailwind browser and Mermaid v11 script entry points. Accepted HTML is still untrusted: validation is a compatibility and policy gate, not sanitization.
 
+Document-relative assets also produce advisory warnings. See [HTML compatibility](docs/html-compatibility.md) for supported resources and ways to embed them.
+
 Documents render inside an iframe sandbox without `allow-same-origin`, popup, or top-navigation permission. Links and allowed scripts can navigate the current preview frame; `_blank` links remain blocked. Viewer responses default to `no-referrer`, but author markup or script can override that policy or place data directly in a destination URL. Do not open stored document files directly in a browser and do not expose the viewer port to a LAN, VPN, container wildcard mapping, or public interface.
 
 See [the architecture](docs/architecture.md) and [threat model](docs/threat-model.md) before changing storage, validation, rendering, or hosting behavior.
