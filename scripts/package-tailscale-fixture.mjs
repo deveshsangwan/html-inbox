@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export async function createPackageTailscaleFixture(directory) {
@@ -9,9 +9,10 @@ export async function createPackageTailscaleFixture(directory) {
   const configPath = path.join(directory, "serve.json");
   const commandsPath = path.join(directory, "commands.jsonl");
   const executable = path.join(directory, "recording tailscale.cjs");
-  const lockHome = path.join(directory, "account-home");
   const accountPreload = path.join(directory, "account-home.cjs");
-  await mkdir(lockHome, { mode: 0o700 });
+  const accountDirectory = path.join(directory, "account-home");
+  await mkdir(accountDirectory, { mode: 0o700 });
+  const lockHome = await realpath(accountDirectory);
   await writeFile(accountPreload, `
 const os = require("node:os");
 const originalUserInfo = os.userInfo;
