@@ -228,7 +228,11 @@ async function getHealth(home: string, port: number): Promise<ViewerHealth> {
       return { state: "invalid" };
     }
     try {
-      return parseViewerHealth(await response.json());
+      const body: unknown = await response.json();
+      if (!controlUrl && isRecord(body) && body.ok === true && Object.keys(body).length === 1) {
+        return { state: "unavailable" };
+      }
+      return parseViewerHealth(body);
     } catch {
       return { state: "invalid" };
     }

@@ -2,6 +2,7 @@ import { strict as assert } from "node:assert";
 import { randomUUID } from "node:crypto";
 import { once } from "node:events";
 import http from "node:http";
+import os from "node:os";
 import { test } from "node:test";
 import { setImmediate as nextTurn } from "node:timers/promises";
 import { LocalDocumentBackend } from "./backend";
@@ -40,6 +41,43 @@ test("LAN wildcard listener serves its advertised interface URLs with an anonymo
   });
   assert.equal(invalidHost.status, 421);
 });
+
+for (const host of ["0.0.0.0", "::"]) {
+  test(`${host} refreshes interface Hosts and keeps cached URLs when discovery fails`, async (t) => {
+    const home = await temporaryHome(t);
+    let address = "192.0.2.10";
+    let unavailable = false;
+    const interfaces = t.mock.method(os, "networkInterfaces", () => {
+      if (unavailable) throw new Error("Interface discovery unavailable");
+      return { eth0: [{ address, family: "IPv4", internal: false, netmask: "255.255.255.0", mac: "00:00:00:00:00:00", cidr: `${address}/24` }] };
+    });
+    const backend = new LocalDocumentBackend(home);
+    const list = t.mock.method(backend, "listDocuments");
+    const listener = await startViewerHttpServer(backend, resolveViewerNetworkConfig({ port: 0, exposure: "lan", host }), controlHealth());
+    t.after(() => listener.close());
+    const url = `http://127.0.0.1:${listener.config.port}`;
+    const requestHost = (hostname: string) => requestUrl(url, {
+      headers: { Host: `${hostname}:${listener.config.port}` },
+    });
+
+    address = "192.0.2.11";
+    assert.equal((await requestHost(address)).status, 200);
+    const callsAfterRefresh = interfaces.mock.callCount();
+    assert.equal((await requestHost(address)).status, 200);
+    assert.equal(interfaces.mock.callCount(), callsAfterRefresh);
+    assert.equal((await requestHost("192.0.2.10")).status, 421);
+    assert.equal((await requestHost("attacker.example")).status, 421);
+    assert.equal((await requestUrl(url, {
+      headers: ["Host", `${address}:${listener.config.port}`, "Host", "attacker.example"],
+    })).status, 421);
+    assert.equal(list.mock.callCount(), 2);
+
+    unavailable = true;
+    assert.equal((await requestHost("192.0.2.12")).status, 421);
+    assert.equal((await requestHost(address)).status, 200);
+    assert.equal(list.mock.callCount(), 3);
+  });
+}
 
 test("LAN reads the live inbox without granting HTTP mutations and preserves document protections", async (t) => {
   const home = await temporaryHome(t);

@@ -198,3 +198,30 @@ test("viewer rejects malformed current health and recognizes an older protocol",
   await ensureViewer(home, address.port);
   assert.equal((await getViewerStatus(home, address.port)).state, "running");
 });
+
+
+test("anonymous fallback health is unavailable while anonymous control health is invalid", async (t) => {
+  const home = await temporaryHome(t);
+  const server = http.createServer((_request, response) => {
+    response.writeHead(200, { "Content-Type": "application/json" });
+    response.end(JSON.stringify({ ok: true }));
+  });
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  t.after(() => new Promise<void>((resolve) => server.close(() => resolve())));
+  const address = server.address();
+  assert(address && typeof address !== "string");
+
+  assert.equal((await getViewerStatus(home, address.port)).state, "conflict");
+  await assert.rejects(ensureViewer(home, address.port), /already in use; set HTML_INBOX_PORT/);
+
+  await writeFile(path.join(home, "viewer.json"), JSON.stringify({
+    port: address.port,
+    pid: process.pid,
+    processId: randomUUID(),
+    controlUrl: `http://127.0.0.1:${address.port}/control/${"a".repeat(43)}`,
+  }));
+  await assert.rejects(ensureViewer(home, address.port), /invalid health response/);
+});
