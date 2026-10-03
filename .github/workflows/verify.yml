@@ -54,7 +54,7 @@ jobs:
         run: node node_modules/playwright/cli.js install --with-deps chromium
 
       - name: Browser tests
-        run: node --test scripts/viewer-browser.test.mjs scripts/document-isolation-browser.test.mjs
+        run: node scripts/run-browser-tests.mjs
 
       - name: Package smoke test
         run: node scripts/package-smoke.mjs
