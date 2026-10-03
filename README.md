@@ -51,6 +51,8 @@ html-inbox publish ./examples/report.html \
 
 The command stores the original HTML under `~/.html-inbox`, starts or reuses the local viewer, and prints the document URL. Set `HTML_INBOX_HOME` to use an isolated library or `HTML_INBOX_PORT` to choose another loopback port.
 
+On POSIX filesystems that enforce Unix permissions, the CLI creates and tightens managed directories to `0700` and files to `0600`. On Windows, privacy depends on the filesystem's existing and inherited access control lists. The CLI does not install or verify owner-only Windows ACLs. Keep `HTML_INBOX_HOME` in a protected local user directory and restrict access to its files and subdirectories, including `remote` state containing bearer capabilities. Follow the [Windows storage prerequisites](docs/threat-model.md#windows-storage-prerequisites) before storing sensitive reports or configuring remote publishing.
+
 HTML documents are limited to 10 MiB by default. Set `HTML_INBOX_MAX_BYTES` to a positive byte count when a deliberate workflow needs a different limit.
 
 Run the viewer directly when you want it to remain attached to the terminal:
@@ -80,7 +82,7 @@ html-inbox export --out ./html-inbox-export
 
 The command prints the private inbox path, document count, and content hash. The deployed site root deliberately does not link to the inbox. Treat the generated `/i/<capability>/` path as a bearer secret: anyone who receives it can read that snapshot.
 
-Exports preserve the original document bytes, include a browser-side library search, and replace a recognized prior export from a private sibling staging directory. Unrelated directories are refused. `security-headers.json` records the semantic security policies that a hosting adapter must install on every corresponding route alias. Use `--json` for automation or `--capability <value>` to reproduce a known 128-bit path; normally the command should generate the capability for you.
+Exports preserve the original document bytes, include a browser-side library search, and replace a recognized prior export from a sibling staging directory. The same filesystem privacy prerequisites apply to the export output and its parent directory. Unrelated directories are refused. `security-headers.json` records the semantic security policies that a hosting adapter must install on every corresponding route alias. Use `--json` for automation or `--capability <value>` to reproduce a known 128-bit path; normally the command should generate the capability for you.
 
 ## Publish a remote inbox
 
@@ -110,7 +112,7 @@ html-inbox remote status
 html-inbox remote reconcile
 ```
 
-Every mutation records private durable intent before its remote side effect. If a request times out after Cloudflare may have accepted it, `remote reconcile` checks deployment history for the operation ID and snapshot digest before retrying.
+Every mutation records durable intent in local files under the storage protections described above before its remote side effect. If a request times out after Cloudflare may have accepted it, `remote reconcile` checks deployment history for the operation ID and snapshot digest before retrying.
 If project creation was ambiguous, reconciliation requires `--adopt` before accepting the discovered project.
 
 Revoke the shared production route:

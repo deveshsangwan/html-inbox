@@ -8,6 +8,7 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - Published HTML is untrusted.
 - The inbox is local-only by default.
 - Storage is on the user's filesystem under `~/.html-inbox` unless `HTML_INBOX_HOME` is set.
+- The filesystem enforces Unix permission modes on POSIX, or the user has restricted Windows ACLs throughout the storage subtree as described below.
 
 ## Main Risks
 
@@ -21,7 +22,7 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - A followed external link observes the visitor's IP address or attempts to navigate outside the document frame.
 - Document script consumes excessive CPU or memory inside its frame.
 - A browser reaches loopback data through an attacker-controlled Host header.
-- Another local operating-system account reads inbox files created with permissive modes.
+- Another local operating-system account reads or changes inbox files because filesystem permissions or Windows ACLs allow access.
 - An accidental or maliciously large document exhausts memory or disk during publish.
 - A crash leaves a partially written record that appears in the library.
 
@@ -34,13 +35,38 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - Use strict CSP on viewer responses. Document responses allow inline scripts plus the narrow CDN script paths required by Tailwind and Mermaid, block inline script attributes, and keep `connect-src`, frames, forms, objects, and non-data images, media, and fonts blocked. Default navigations to `no-referrer`.
 - Bind the viewer to `127.0.0.1`, default port `3217`.
 - Reject requests whose `Host` is not the expected loopback host and active port.
-- Create managed directories as owner-only (`0700`) and files as owner-readable/writable (`0600`), and tighten existing managed paths when they are accessed.
+- On POSIX filesystems that enforce Unix permissions, create managed directories with `0700` and files with `0600`, and tighten existing managed paths when they are accessed. On Windows, rely on the user-provided filesystem ACLs described below.
 - Return an opaque instance identity and protocol version from health checks instead of the absolute inbox path.
 - Reject oversized input before reading it and bound all user-controlled metadata fields.
 - Stage and validate a complete record before making it visible with an atomic directory rename.
 - Keep deletion in the CLI, require confirmation by default, and atomically move a record out of the live library before removing its files.
 - Allow `HTML_INBOX_PORT` only as a local port escape hatch.
 - Treat the health check as the only readiness signal.
+
+## Storage privacy
+
+On POSIX, the CLI uses Node's filesystem `mode` options and `chmod` to set managed directories to `0700`, giving the owner read, write, and traversal access, and files to `0600`, giving the owner read and write access. Group and other permission bits are cleared. Existing managed paths are tightened when accessed. The CLI does not change ownership, encrypt files, or protect against processes running as the same user or privileged administrators. A filesystem that ignores Unix permission modes cannot provide this POSIX guarantee.
+
+On Windows, Node's `chmod` changes only the write permission and does not distinguish owner, group, and other users. Directory creation modes are unsupported. These calls do not install an owner-only Windows discretionary access control list, or DACL. See [Node's file modes](https://nodejs.org/api/fs.html#file-modes) and [directory creation options](https://nodejs.org/api/fs.html#fspromisesmkdirpath-options).
+
+Windows checks each file or directory's DACL for access. New files and directories inherit ACLs from their parent, while existing or moved files can retain different permissions. Restricting only the inbox root does not repair permissive child ACLs. The CLI neither audits nor repairs Windows ACLs and does not warn or fail when other accounts can access storage. Privacy on Windows is a prerequisite the user must establish. See Microsoft's [file security and access rights](https://learn.microsoft.com/en-us/windows/win32/fileio/file-security-and-access-rights).
+
+### Windows storage prerequisites
+
+1. Choose a [local NTFS directory](https://learn.microsoft.com/en-us/windows-server/storage/file-server/ntfs-overview) under your user profile, such as the default `%USERPROFILE%\.html-inbox` or `%LOCALAPPDATA%\html-inbox` for a custom `HTML_INBOX_HOME`. Check its permissions before use. A location under your profile is a starting point, not proof of restricted access. Avoid public, shared, network, or synced locations for sensitive content.
+2. Create the chosen directory before the first publish or `remote init`. In File Explorer, open its Properties, then Security, then Advanced. Keep access for your own account and trusted system or administrator accounts only. Remove grants to other users and broad groups such as Everyone, Users, or Authenticated Users. If those grants are inherited from a permissive parent, disable inheritance for this directory, convert inherited entries to explicit entries, and remove the unwanted grants. Give your account Full control with scope "This folder, subfolders and files" so new paths inherit the restrictions.
+3. Inspect existing files and subdirectories too. Remove permissive explicit grants and repair disabled inheritance so the restricted directory permissions apply throughout the subtree. Recheck after moving or restoring an inbox. Protect `remote\state.json`, `remote\operation.json`, and `remote\work` as carefully as documents. State and operation records contain bearer capabilities; snapshots can contain the complete report library. Cloudflare tokens are not stored in these records.
+4. Protect separate export locations and their parent directories, where sibling staging and backup directories are created. Remote publishing also uses the operating system's temporary directory for short-lived Wrangler credential logs. On Windows, that directory and its new children must have restricted ACLs too. Cleanup after a command does not protect a file while it exists.
+
+After selecting and protecting a custom home, set it for the PowerShell session and inspect its DACLs:
+
+```powershell
+$env:HTML_INBOX_HOME = Join-Path $env:LOCALAPPDATA 'html-inbox'
+icacls "$env:HTML_INBOX_HOME"
+icacls "$env:HTML_INBOX_HOME" /T
+```
+
+Use the same inspection with the actual default or custom path if it differs. Check every reported path and resolve inspection errors before using sensitive data. The output should grant access only to your account and trusted system or administrator accounts. `icacls /verify` checks ACL structure, not confidentiality. Displaying ACLs or granting yourself access does not remove other users' grants. See Microsoft's [icacls reference](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/icacls) for display, inheritance, and permission options.
 
 ## Publish-time Validation Tiers
 
@@ -128,7 +154,7 @@ Controls:
 - Apply default `no-referrer`, restrictive CSP, and content-type headers to generated static pages.
 - Treat the account ID and project name as explicit target identity. Require deliberate adoption of every existing remote project during setup; the export ownership marker is not remote authentication.
 - Journal intent before deployment, checkpoint receipts, and reconcile ambiguous operations against deployment history before retrying.
-- Keep remote state in owner-only local files. Inherit credentials from Wrangler's own login store or the process environment; never pass tokens as command arguments or include them in state, snapshots, or error output.
+- Keep remote state in local files protected by POSIX `0600` modes or the restricted Windows ACLs required above. Inherit credentials from Wrangler's own login store or the process environment; never pass tokens as command arguments or include them in state, snapshots, or error output.
 - State clearly that an unlisted URL is not private and that historical deployments may need pruning after revoke.
 
 The first remote release does not claim recipient authentication, guaranteed erasure, secret-link confidentiality after sharing, containment of navigation by allowed document scripts, protection from malicious allowlisted CDN code, or isolation between multiple remote users.
