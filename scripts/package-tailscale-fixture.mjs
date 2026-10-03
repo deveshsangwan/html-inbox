@@ -9,6 +9,21 @@ export async function createPackageTailscaleFixture(directory) {
   const configPath = path.join(directory, "serve.json");
   const commandsPath = path.join(directory, "commands.jsonl");
   const executable = path.join(directory, "recording tailscale.cjs");
+  const lockHome = path.join(directory, "account-home");
+  const accountPreload = path.join(directory, "account-home.cjs");
+  await mkdir(lockHome, { mode: 0o700 });
+  await writeFile(accountPreload, `
+const os = require("node:os");
+const originalUserInfo = os.userInfo;
+os.userInfo = (...args) => {
+  const user = originalUserInfo(...args);
+  const home = ${JSON.stringify(lockHome)};
+  return { ...user, homedir: Buffer.isBuffer(user.homedir) ? Buffer.from(home) : home };
+};
+`, { mode: 0o600 });
+  const environment = {
+    NODE_OPTIONS: [process.env.NODE_OPTIONS, `--require ${JSON.stringify(accountPreload)}`].filter(Boolean).join(" "),
+  };
   const originalConfig = {
     TCP: { "443": { HTTPS: true }, "8443": { HTTPS: true } },
     Web: {
@@ -62,5 +77,5 @@ process.stdout.write("https://untrusted-command-output.invalid/\n");
 `;
   await writeFile(executable, `#!${process.execPath}\n${source.replace("STATUS_PLACEHOLDER", JSON.stringify(status))}`, { mode: 0o700 });
 
-  return { hostname, executable, configPath, commandsPath, originalConfig };
+  return { hostname, executable, configPath, commandsPath, originalConfig, environment, lockHome };
 }

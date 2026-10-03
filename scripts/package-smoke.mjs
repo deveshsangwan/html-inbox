@@ -19,6 +19,7 @@ import { createPackageTailscaleFixture } from "./package-tailscale-fixture.mjs";
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const temporaryRoot = await mkdtemp(path.join(tmpdir(), "html-inbox-package-"));
 let viewer;
+let tailscaleEnvironment;
 
 try {
   assert.equal(process.argv.length <= 3, true, "Pass at most one package tarball");
@@ -213,9 +214,10 @@ try {
 
   if (process.platform !== "win32") {
     const fixture = await createPackageTailscaleFixture(path.join(temporaryRoot, "recording-tailscale"));
+    tailscaleEnvironment = { ...fixture.environment, HTML_INBOX_TAILSCALE_COMMAND: fixture.executable };
     const runTailscaleCli = (args) => run(process.execPath, [executable, ...args], consumerRoot, {
       ...cliEnvironment,
-      HTML_INBOX_TAILSCALE_COMMAND: fixture.executable,
+      ...tailscaleEnvironment,
     });
     const tailnetOrigin = `https://${fixture.hostname}`;
     assert.equal((await runTailscaleCli(["viewer", "--tailscale"])).stdout.trim(), tailnetOrigin);
@@ -256,6 +258,7 @@ try {
     const installedExecutable = path.join(temporaryRoot, "consumer", "node_modules", "html-inbox", "bundle", "index.js");
     await run(process.execPath, [installedExecutable, "viewer", "stop"], temporaryRoot, {
       HTML_INBOX_HOME: path.join(temporaryRoot, "home"),
+      ...tailscaleEnvironment,
     }).catch(() => {});
   } finally {
     if (process.env.HTML_INBOX_KEEP_PACKAGE_SMOKE !== "1") {
