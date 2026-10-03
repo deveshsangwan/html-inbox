@@ -6,10 +6,13 @@ import { strict as assert } from "node:assert";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import http from "node:http";
+import net from "node:net";
 import path from "node:path";
+import { LocalDocumentBackend } from "./backend";
 import {
   ensureViewer,
   getViewerStatus,
+  startViewer,
   stopViewer,
   VIEWER_PROTOCOL_VERSION,
 } from "./viewer-server";
@@ -37,6 +40,66 @@ test("occupied viewer port", async (t) => {
     /Port .* is already in use/,
   );
 });
+
+test("status polling cannot take the port from a starting viewer", async (t) => {
+  const home = await temporaryHome(t);
+  const port = await availablePort();
+  let beginStartup = () => {};
+  const startupGate = new Promise<void>((resolve) => {
+    beginStartup = resolve;
+  });
+  const startup = startupGate.then(() =>
+    startViewer(new LocalDocumentBackend(home), home, port),
+  );
+  const startupOutcome = Promise.allSettled([startup]);
+
+  t.after(async () => {
+    beginStartup();
+    const [outcome] = await startupOutcome;
+    if (outcome.status === "fulfilled") {
+      await new Promise<void>((resolve) => outcome.value.close(() => resolve()));
+    }
+  });
+
+  // Hold any status probe open until startup tries to bind, making the race deterministic.
+  const createProbe = net.createServer;
+  t.mock.method(net, "createServer", () => {
+    const probe = createProbe();
+    const closeProbe = probe.close.bind(probe);
+    t.mock.method(probe, "close", (callback?: (error?: Error) => void) => {
+      beginStartup();
+      void startupOutcome.then(() => closeProbe(callback));
+
+      return probe;
+    });
+
+    return probe;
+  });
+
+  try {
+    assert.equal((await getViewerStatus(home, port)).state, "stopped");
+  } finally {
+    beginStartup();
+  }
+
+  await startup;
+  assert.equal((await getViewerStatus(home, port)).state, "running");
+});
+
+test("status detects a non-HTTP listener without reserving its port", async (t) => {
+  const home = await temporaryHome(t);
+  const blocker = net.createServer((socket) => socket.destroy());
+  await new Promise<void>((resolve, reject) => {
+    blocker.once("error", reject);
+    blocker.listen(0, "127.0.0.1", resolve);
+  });
+  t.after(() => new Promise<void>((resolve) => blocker.close(() => resolve())));
+  const address = blocker.address();
+  assert(address && typeof address !== "string");
+
+  assert.equal((await getViewerStatus(home, address.port)).state, "conflict");
+});
+
 test("viewer starts and stops", async (t) => {
   const lifecycleHome = await temporaryHome(t);
   const lifecyclePort = await availablePort();
