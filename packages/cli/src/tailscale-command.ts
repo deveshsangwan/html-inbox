@@ -1,4 +1,4 @@
-import { execFile } from "node:child_process";
+import { execFile, type ExecFileException } from "node:child_process";
 import { constants } from "node:fs";
 import { access, stat } from "node:fs/promises";
 import path from "node:path";
@@ -69,17 +69,11 @@ export async function runTailscale(
           return;
         }
 
-        const detail = stderr.trim() || error.message;
-        const advice =
-          /access denied|permission denied|not permitted|403/i.test(detail)
-            ? "Ask the server administrator to grant this normal user Tailscale operator access. HTML Inbox does not elevate privileges."
-            : /unknown flag|unknown command|flag provided but not defined/i.test(
-                  detail,
-                )
-              ? "Use a Tailscale client supporting serve status --json, --bg, --yes, --https and --set-path."
-              : /https|certificate|magicdns/i.test(detail)
-                ? "Ask the tailnet administrator to enable MagicDNS and HTTPS certificates, then retry."
-                : "Check that the existing Tailscale daemon is running, signed in and connected, then retry.";
+        const { detail, advice } = describeTailscaleFailure(
+          error,
+          stderr,
+          timeoutMs,
+        );
 
         reject(
           new Error(
@@ -93,4 +87,67 @@ export async function runTailscale(
     // The integration must never participate in an interactive setup or consent flow.
     child.stdin?.end();
   });
+}
+
+function describeTailscaleFailure(
+  error: ExecFileException,
+  stderr: string,
+  timeoutMs: number,
+) {
+  if (error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") {
+    return {
+      detail: "exceeded the 1048576-byte command output limit",
+      advice:
+        "Inspect the existing client's output; HTML Inbox refuses oversized responses.",
+    };
+  }
+
+  if (error.killed || error.code === "ETIMEDOUT") {
+    return {
+      detail: `timed out after ${timeoutMs}ms`,
+      advice:
+        "Check that the existing Tailscale daemon is responsive, then retry.",
+    };
+  }
+
+  if (error.signal) {
+    return {
+      detail: `terminated by ${error.signal}`,
+      advice:
+        "Inspect the client and daemon logs for the interruption, then retry.",
+    };
+  }
+
+  if (typeof error.code === "string") {
+    return {
+      detail: `could not execute the client (${error.code})`,
+      advice:
+        "Check the configured executable path and permissions for the existing Tailscale client.",
+    };
+  }
+
+  return {
+    detail:
+      stderr.trim() ||
+      `exited with code ${error.code ?? "unknown"} without stderr`,
+    advice: getTailscaleStderrAdvice(stderr),
+  };
+}
+
+function getTailscaleStderrAdvice(stderr: string) {
+  if (/access denied|permission denied|not permitted|403/i.test(stderr)) {
+    return "Ask the server administrator to grant this normal user Tailscale operator access. HTML Inbox does not elevate privileges.";
+  }
+
+  if (
+    /unknown flag|unknown command|flag provided but not defined/i.test(stderr)
+  ) {
+    return "Use a Tailscale client supporting serve status --json, --bg, --yes, --https and --set-path.";
+  }
+
+  if (/https|certificate|magicdns/i.test(stderr)) {
+    return "Ask the tailnet administrator to enable MagicDNS and HTTPS certificates, then retry.";
+  }
+
+  return "Check that the existing Tailscale daemon is running, signed in and connected, then retry.";
 }

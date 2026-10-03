@@ -1,7 +1,8 @@
 import { strict as assert } from "node:assert";
 import { randomUUID } from "node:crypto";
-import { chmod, readFile, writeFile } from "node:fs/promises";
+import { chmod, readFile, realpath, writeFile } from "node:fs/promises";
 import http from "node:http";
+import os from "node:os";
 import path from "node:path";
 import type { TestContext } from "node:test";
 import { temporaryHome } from "./test-fixtures";
@@ -28,8 +29,9 @@ const operation = args[0] === "status" ? "status"
   : args[1] === "status" ? "config" : args.at(-1) === "off" ? "off" : "serve";
 function save() { fs.writeFileSync(scenarioPath, JSON.stringify(scenario)); }
 function finish() {
+  if (scenario.signalOn === operation) process.kill(process.pid, scenario.signal || "SIGTERM");
   if (scenario.failOn === operation && !scenario.failAfterWrite) {
-    process.stderr.write(scenario.failure || "permission denied");
+    process.stderr.write(scenario.failure ?? "permission denied");
     process.exit(1);
   }
 
@@ -51,7 +53,8 @@ function finish() {
     scenario.config = scenario.afterServeConfig === undefined ? config : scenario.afterServeConfig;
     if (scenario.afterServeStatus !== undefined) scenario.status = scenario.afterServeStatus;
     if (scenario.afterServeConfigOutput !== undefined) scenario.configOutput = scenario.afterServeConfigOutput;
-    process.stdout.write("https://untrusted-output.invalid/\n");
+    process.stdout.write(scenario.serveOutput ?? "https://untrusted-output.invalid/\n");
+    if (scenario.serveErrorOutput !== undefined) process.stderr.write(scenario.serveErrorOutput);
   } else {
     if (scenario.ignoreOff !== true) {
       delete config.Web?.[hostPort]?.Handlers["/"];
@@ -68,12 +71,75 @@ function finish() {
   save();
 
   if (scenario.failOn === operation && scenario.failAfterWrite) {
-    process.stderr.write(scenario.failure || "permission denied after configuration update");
+    process.stderr.write(scenario.failure ?? "permission denied after configuration update");
     process.exit(1);
   }
 }
 setTimeout(finish, scenario.delayOperation === operation ? scenario.delayMs : 0);
 `;
+
+export interface TailscaleTestAccount {
+  home: string;
+  preloadPath: string;
+  nodeOptions: string;
+}
+
+const recordingAccounts = new WeakMap<
+  TestContext,
+  Promise<TailscaleTestAccount>
+>();
+
+export function recordingTailscaleAccount(
+  t: TestContext,
+): Promise<TailscaleTestAccount> {
+  const existing = recordingAccounts.get(t);
+  if (existing) {
+    return existing;
+  }
+
+  const account = createRecordingTailscaleAccount(t);
+  recordingAccounts.set(t, account);
+  return account;
+}
+
+async function createRecordingTailscaleAccount(
+  t: TestContext,
+): Promise<TailscaleTestAccount> {
+  const home = await realpath(await temporaryHome(t));
+  const nativeUserInfo = os.userInfo;
+  t.mock.method(os, "userInfo", (options: os.UserInfoOptions = {}) => ({
+    ...nativeUserInfo(options),
+    homedir: options.encoding === "buffer" ? Buffer.from(home) : home,
+  }));
+
+  const preloadPath = path.join(home, "recording-account.cjs");
+  await writeFile(
+    preloadPath,
+    `
+const os = require("node:os");
+const nativeUserInfo = os.userInfo;
+os.userInfo = (options) => ({
+  ...nativeUserInfo(options),
+  homedir: options?.encoding === "buffer" ? Buffer.from(${JSON.stringify(home)}) : ${JSON.stringify(home)},
+});
+`,
+    { mode: 0o600 },
+  );
+  const previousNodeOptions = process.env.NODE_OPTIONS;
+  const nodeOptions =
+    `${previousNodeOptions ?? ""} --require=${JSON.stringify(preloadPath)}`.trim();
+  process.env.NODE_OPTIONS = nodeOptions;
+  t.after(() => {
+    if (previousNodeOptions === undefined) {
+      delete process.env.NODE_OPTIONS;
+      return;
+    }
+
+    process.env.NODE_OPTIONS = previousNodeOptions;
+  });
+
+  return { home, preloadPath, nodeOptions };
+}
 
 function connectedStatus() {
   return {
@@ -102,6 +168,7 @@ export async function recordingTailscale(
     throw new Error(TAILSCALE_RECORDING_SKIP_REASON);
   }
 
+  const account = await recordingTailscaleAccount(t);
   const home = await temporaryHome(t);
   const executable = path.join(home, "recording ; tailscale.cjs");
   const scenarioPath = path.join(home, "scenario.json");
@@ -169,6 +236,11 @@ export async function recordingTailscale(
 
   return {
     home,
+    lockHome: account.home,
+    accountHome: account.home,
+    nodeOptions: account.nodeOptions,
+    environment: { NODE_OPTIONS: account.nodeOptions },
+    lockDirectory: path.join(account.home, ".html-inbox-tailscale"),
     executable,
     status,
     options,
