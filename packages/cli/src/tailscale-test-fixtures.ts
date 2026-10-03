@@ -9,6 +9,10 @@ import { parseServeConfig } from "./tailscale-config";
 import { isRecord } from "./validation";
 
 export const TAILSCALE_TEST_HOSTNAME = "reader.example-tailnet.ts.net";
+export const TAILSCALE_RECORDING_SKIP_REASON =
+  process.platform === "win32"
+    ? "The recording Tailscale CLI uses a POSIX shebang; Windows execFile cannot execute it."
+    : false;
 
 // JSON and route mutations follow Tailscale source 9128778b6515f32e13d92e7380044fe025f9b08e.
 // Every command runs this temporary recording executable, never the installed client.
@@ -94,6 +98,10 @@ export async function recordingTailscale(
   config: unknown = {},
   health: unknown = { ok: true },
 ) {
+  if (TAILSCALE_RECORDING_SKIP_REASON) {
+    throw new Error(TAILSCALE_RECORDING_SKIP_REASON);
+  }
+
   const home = await temporaryHome(t);
   const executable = path.join(home, "recording ; tailscale.cjs");
   const scenarioPath = path.join(home, "scenario.json");

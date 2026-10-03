@@ -17,14 +17,17 @@ import {
 
 import {
   recordingTailscale as fixture,
+  TAILSCALE_RECORDING_SKIP_REASON,
   TAILSCALE_TEST_HOSTNAME as HOSTNAME,
 } from "./tailscale-test-fixtures";
+
+const recordingTestOptions = { skip: TAILSCALE_RECORDING_SKIP_REASON };
 
 function mutations(commands: string[][]) {
   return commands.filter((args) => args[0] === "serve" && args[1] !== "status");
 }
 
-test("Serve verifies URL, owns a private route, repeats idempotently and preserves unrelated configuration", async (t) => {
+test("Serve verifies URL, owns a private route, repeats idempotently and preserves unrelated configuration", recordingTestOptions, async (t) => {
   const original = {
     TCP: { "443": { HTTPS: true }, "8443": { HTTPS: true } },
     Web: {
@@ -102,7 +105,7 @@ test("Serve verifies URL, owns a private route, repeats idempotently and preserv
   );
 });
 
-test("missing CLI and read-only status never fall back to an installed Tailscale", async (t) => {
+test("missing CLI and read-only status never fall back to an installed Tailscale", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   await assert.rejects(
     prepareTailscale(f.options, {
@@ -116,7 +119,7 @@ test("missing CLI and read-only status never fall back to an installed Tailscale
   assert.deepEqual(await f.commands(), []);
 });
 
-test("offline, login, expired, MagicDNS, HTTPS and identity failures are actionable and read-only", async (t) => {
+test("offline, login, expired, MagicDNS, HTTPS and identity failures are actionable and read-only", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   const cases = [
     {
@@ -195,7 +198,7 @@ test("offline, login, expired, MagicDNS, HTTPS and identity failures are actiona
   assert.deepEqual(mutations(await f.commands()), []);
 });
 
-test("malformed or unsupported full configuration is refused before any mutation", async (t) => {
+test("malformed or unsupported full configuration is refused before any mutation", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   for (const config of [
     [],
@@ -223,7 +226,7 @@ test("malformed or unsupported full configuration is refused before any mutation
   assert.deepEqual(mutations(await f.commands()), []);
 });
 
-test("existing root, Funnel, foreground, TCP, HTTP and shared-host listener conflicts are refused", async (t) => {
+test("existing root, Funnel, foreground, TCP, HTTP and shared-host listener conflicts are refused", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   const proxy = `http://127.0.0.1:${f.options.backendPort}`;
   const configs = [
@@ -258,7 +261,7 @@ test("existing root, Funnel, foreground, TCP, HTTP and shared-host listener conf
   assert.deepEqual(mutations(await f.commands()), []);
 });
 
-test("start rechecks a route claimed after preparation and never overwrites it", async (t) => {
+test("start rechecks a route claimed after preparation and never overwrites it", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   const prepared = await prepareTailscale(f.options, f.command);
   const occupied = {
@@ -272,7 +275,7 @@ test("start rechecks a route claimed after preparation and never overwrites it",
   await assert.rejects(f.journal(), /ENOENT/);
 });
 
-test("reader identity metadata cannot be proxied even with a spoofed loopback Host", async (t) => {
+test("reader identity metadata cannot be proxied even with a spoofed loopback Host", recordingTestOptions, async (t) => {
   const f = await fixture(t, {}, (request: http.IncomingMessage) =>
     request.headers.host === HOSTNAME
       ? { ok: true }
@@ -287,7 +290,7 @@ test("reader identity metadata cannot be proxied even with a spoofed loopback Ho
   await assert.rejects(f.journal(), /ENOENT/);
 });
 
-test("drifted routes, listeners and Funnel never authorize cleanup", async (t) => {
+test("drifted routes, listeners and Funnel never authorize cleanup", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   const prepared = await prepareTailscale(f.options, f.command);
   await startTailscale(prepared);
@@ -333,7 +336,7 @@ test("drifted routes, listeners and Funnel never authorize cleanup", async (t) =
   await cleanupTailscale(f.home, f.options);
 });
 
-test("pending journal can recover exact ownership but never reports a usable URL", async (t) => {
+test("pending journal can recover exact ownership but never reports a usable URL", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   await startTailscale(await prepareTailscale(f.options, f.command));
   await writeFile(
@@ -348,7 +351,7 @@ test("pending journal can recover exact ownership but never reports a usable URL
   assert.deepEqual(await f.liveConfig(), {});
 });
 
-test("startup failures before and after mutation clean only the recorded route", async (t) => {
+test("startup failures before and after mutation clean only the recorded route", recordingTestOptions, async (t) => {
   for (const failAfterWrite of [false, true]) {
     const f = await fixture(t);
     const prepared = await prepareTailscale(f.options, f.command);
@@ -367,7 +370,7 @@ test("startup failures before and after mutation clean only the recorded route",
   }
 });
 
-test("unverifiable partial startup retains pending ownership for later scoped recovery", async (t) => {
+test("unverifiable partial startup retains pending ownership for later scoped recovery", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   const prepared = await prepareTailscale(f.options, f.command);
   await f.update({ afterServeConfigOutput: "malformed output after mutation" });
@@ -386,7 +389,7 @@ test("unverifiable partial startup retains pending ownership for later scoped re
   assert.deepEqual(await f.liveConfig(), {});
 });
 
-test("postmutation unrelated changes are preserved while startup refuses success", async (t) => {
+test("postmutation unrelated changes are preserved while startup refuses success", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   const prepared = await prepareTailscale(f.options, f.command);
   const added = { TCP: { "9001": { TCPForward: "127.0.0.1:9002" } } };
@@ -410,7 +413,7 @@ test("postmutation unrelated changes are preserved while startup refuses success
   await assert.rejects(f.journal(), /ENOENT/);
 });
 
-test("changed node identity blocks both status URL and cleanup after partial startup", async (t) => {
+test("changed node identity blocks both status URL and cleanup after partial startup", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   const prepared = await prepareTailscale(f.options, f.command);
   await f.update({
@@ -435,7 +438,7 @@ test("changed node identity blocks both status URL and cleanup after partial sta
   await cleanupTailscale(f.home, f.options);
 });
 
-test("cleanup rejects stale process identity and verifies that off actually removed the route", async (t) => {
+test("cleanup rejects stale process identity and verifies that off actually removed the route", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   await startTailscale(await prepareTailscale(f.options, f.command));
   await assert.rejects(
@@ -454,7 +457,7 @@ test("cleanup rejects stale process identity and verifies that off actually remo
   await cleanupTailscale(f.home, f.options);
 });
 
-test("externally removed route clears ownership without a Tailscale mutation", async (t) => {
+test("externally removed route clears ownership without a Tailscale mutation", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   await startTailscale(await prepareTailscale(f.options, f.command));
   await f.update({ config: {} });
@@ -464,7 +467,7 @@ test("externally removed route clears ownership without a Tailscale mutation", a
   await assert.rejects(f.journal(), /ENOENT/);
 });
 
-test("offline and missing CLI preserve ownership, while disabled HTTPS still permits safe cleanup", async (t) => {
+test("offline and missing CLI preserve ownership, while disabled HTTPS still permits safe cleanup", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   await startTailscale(await prepareTailscale(f.options, f.command));
   await f.update({
@@ -490,7 +493,7 @@ test("offline and missing CLI preserve ownership, while disabled HTTPS still per
   await cleanupTailscale(f.home, f.options);
 });
 
-test("different inbox homes cannot race root claims or remove the winning owner's route", async (t) => {
+test("different inbox homes cannot race root claims or remove the winning owner's route", recordingTestOptions, async (t) => {
   const first = await fixture(t);
   const second = await fixture(t);
   const preparedFirst = await prepareTailscale(first.options, first.command);
@@ -517,7 +520,7 @@ test("different inbox homes cannot race root claims or remove the winning owner'
   assert.deepEqual(await first.liveConfig(), {});
 });
 
-test("ephemeral preflight and persisted executable work without boot PATH lookup", async (t) => {
+test("ephemeral preflight and persisted executable work without boot PATH lookup", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   const previousCommand = process.env.HTML_INBOX_TAILSCALE_COMMAND;
   t.after(() => {
@@ -538,7 +541,7 @@ test("ephemeral preflight and persisted executable work without boot PATH lookup
   await cleanupTailscale(f.home, f.options);
 });
 
-test("symlinked, malformed and oversized private journals never authorize a mutation", async (t) => {
+test("symlinked, malformed and oversized private journals never authorize a mutation", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   const journalPath = path.join(f.home, "tailscale-serve.json");
   const target = path.join(f.home, "unrelated-file");
@@ -562,7 +565,7 @@ test("symlinked, malformed and oversized private journals never authorize a muta
   assert.deepEqual(mutations(await f.commands()), []);
 });
 
-test("recording command timeouts and output limits are bounded before ownership", async (t) => {
+test("recording command timeouts and output limits are bounded before ownership", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   await f.update({ delayOperation: "status", delayMs: 1000 });
   await assert.rejects(
@@ -580,7 +583,7 @@ test("recording command timeouts and output limits are bounded before ownership"
   assert.deepEqual(mutations(await f.commands()), []);
 });
 
-test("cleanup command errors retain active ownership even after the route was removed", async (t) => {
+test("cleanup command errors retain active ownership even after the route was removed", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   await startTailscale(await prepareTailscale(f.options, f.command));
   await f.update({ failOn: "off", failAfterWrite: true });
@@ -597,7 +600,7 @@ test("cleanup command errors retain active ownership even after the route was re
   await assert.rejects(f.journal(), /ENOENT/);
 });
 
-test("startup retains a pending journal when the postmutation route belongs to another target", async (t) => {
+test("startup retains a pending journal when the postmutation route belongs to another target", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   const prepared = await prepareTailscale(f.options, f.command);
   const drifted = {
@@ -616,7 +619,7 @@ test("startup retains a pending journal when the postmutation route belongs to a
   assert.equal((await getTailscaleStatus(f.home)).url, undefined);
 });
 
-test("symlinked home and corrupted ownership fields cannot authorize route removal", async (t) => {
+test("symlinked home and corrupted ownership fields cannot authorize route removal", recordingTestOptions, async (t) => {
   const f = await fixture(t);
   await startTailscale(await prepareTailscale(f.options, f.command));
   const ownership = await f.journal();
@@ -649,7 +652,7 @@ test("symlinked home and corrupted ownership fields cannot authorize route remov
 
 test(
   "a killed lock owner retains pending ownership until documented manual lock recovery",
-  { timeout: 10_000 },
+  { ...recordingTestOptions, timeout: 10_000 },
   async (t) => {
     const f = await fixture(t);
     await startTailscale(await prepareTailscale(f.options, f.command));
