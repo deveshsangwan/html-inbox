@@ -8,7 +8,6 @@ import {
   getViewerStatus,
   startViewer,
   stopViewer,
-  VIEWER_PROTOCOL_VERSION,
 } from "./viewer-server";
 import { temporaryHome } from "./test-fixtures";
 import { DOCUMENT_CSP } from "./viewer-assets";
@@ -33,10 +32,8 @@ test("viewer serves isolated documents and searches metadata", async (t) => {
 
   const healthResponse = await fetch(`${baseUrl}/health`);
   assert.equal(healthResponse.ok, true);
-  const health = (await healthResponse.json()) as Record<string, unknown>;
-  assert.equal(health.protocolVersion, VIEWER_PROTOCOL_VERSION);
-  assert.equal(typeof health.instanceId, "string");
-  assert.equal("home" in health, false);
+  const health: unknown = await healthResponse.json();
+  assert.deepEqual(health, { ok: true });
 
   const hostileHost = await requestWithHost(address.port, "attacker.example");
   assert.equal(hostileHost.statusCode, 421);
