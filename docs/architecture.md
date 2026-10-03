@@ -51,9 +51,9 @@ Deletion first renames a committed document into the private trash area so it di
 
 ## Viewer
 
-The viewer binds `127.0.0.1:3217` by default.
+The viewer binds `127.0.0.1:3217` by default. Explicit LAN exposure selects a listening IP and serves the complete live inbox to reachable readers. Tailscale exposure keeps the backend on loopback and uses HTTPS Serve within the user's existing tailnet. Neither mode adds HTTP mutation or administration routes.
 
-The local HTTP interface accepts only the expected loopback `Host` values. Its health response contains an opaque, per-home instance identity and a viewer protocol version; it never exposes the absolute inbox path.
+The reader accepts only explicit `Host` values derived from its configuration and reported interface URLs. Tailscale's exact verified DNS name is trusted configuration. Forwarded-host and identity headers do not authorize requests. The reader's `/health` response is anonymous. A separate loopback control listener returns the opaque inbox identity, protocol version, PID, and process identity through a private endpoint recorded under the inbox home.
 
 Use `HTML_INBOX_PORT` when the port is taken:
 
@@ -61,9 +61,11 @@ Use `HTML_INBOX_PORT` when the port is taken:
 HTML_INBOX_PORT=4321 html-inbox viewer
 ```
 
-The CLI exposes viewer status and stop commands. Before spawning a detached viewer, it probes the requested loopback port so a non-HTML-Inbox listener produces a direct port-conflict error instead of a generic startup timeout.
+`viewer` and `publish` share the same detached startup path. The child runs `viewer --foreground`, retains the selected inbox and exposure configuration, and writes diagnostics in protected local storage. Startup serialization prevents concurrent callers from creating duplicate viewers. Saved configuration survives `stop`; the active process record identifies only the current viewer. Status and stop use the recorded local control endpoint instead of a network reader URL.
 
-The health check is the source of truth for whether the viewer is ready. CLI output should be based on the health check, not process startup alone. A viewer can be reused only when both its protocol version and opaque home identity match. Shutdown also matches the saved PID and per-process identity against the current health response before sending a signal.
+The control health check is the source of truth for readiness. A viewer can be reused only when its protocol and opaque home identity match. Shutdown also matches the saved PID and per-process identity against current control health before signaling. Tailscale readiness additionally requires verification of the live Serve route. A private ownership journal tracks the exact HTTPS route and backend; startup failures and shutdown remove only that verified route, preserving the journal when external changes make cleanup unsafe.
+
+Boot configuration is an explicit service operation. Linux systemd system units and macOS LaunchDaemons run the foreground viewer as a selected normal user before login. Definitions preserve the inbox, exposure, port, executable paths, and required environment. Installation and removal require administrator privileges, reject unrelated definitions, and preserve documents. See [service setup](self-hosting.md).
 
 Documents render through a viewer-owned path inside a sandboxed iframe. The app shell lists documents and opens one document at a time; raw files are never rendered directly into the shell DOM.
 

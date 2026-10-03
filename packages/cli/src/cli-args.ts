@@ -1,6 +1,7 @@
 import { parseArgs } from "node:util";
 import type { PublishRequest } from "./publish-input";
 import type { RemoteInitOptions } from "./remote-workflow";
+import type { ViewerExposure, ViewerNetworkOptions } from "./viewer-network";
 
 export type CliCommand =
   | { command: "help" | "version" }
@@ -8,7 +9,8 @@ export type CliCommand =
   | { command: "list"; json: boolean }
   | { command: "delete"; id: string; force: boolean; json: boolean }
   | { command: "export"; options: { outputDir: string; capability?: string; json: boolean } }
-  | { command: "viewer"; action?: "status" | "stop" }
+  | { command: "viewer"; action?: "status" | "stop"; foreground?: boolean; port?: number; exposure?: ViewerExposure; host?: string }
+  | { command: "viewer service"; action: "install" | "uninstall" | "status"; user?: string; port?: number; exposure?: ViewerExposure; host?: string }
   | { command: "remote init"; options: RemoteInitOptions & { json: boolean } }
   | { command: "remote publish" | "remote status"; json: boolean }
   | { command: "remote reconcile"; adopt: boolean; recoverLock: boolean; json: boolean }
@@ -88,13 +90,42 @@ export function parseCommand(argv: string[]): CliCommand {
     }
 
     case "viewer": {
-      const { positionals } = parseArgs({ args, options: {}, allowPositionals: true });
-      const action = positionals[0];
-      if (positionals.length > 1 || (action !== undefined && action !== "status" && action !== "stop")) {
-        throw new Error("viewer accepts only status or stop");
+      if (args[0] === "service") {
+        const action = args[1];
+        if (action !== "install" && action !== "uninstall" && action !== "status") {
+          throw new Error("viewer service requires install, uninstall, or status");
+        }
+
+        if (action !== "install") {
+          const { values } = parseArgs({ args: args.slice(2), options: { user: { type: "string" } } });
+          const user = values.user === undefined ? undefined : requireValue(values.user, "viewer service --user requires a normal user name");
+          return { command: "viewer service", action, ...(user ? { user } : {}) };
+        }
+
+        const { values } = parseArgs({ args: args.slice(2), options: { ...viewerNetworkFlags, user: { type: "string" } } });
+        const user = values.user === undefined ? undefined : requireValue(values.user, "viewer service --user requires a normal user name");
+        return { command: "viewer service", action, ...(user ? { user } : {}), ...parseViewerFlags(values) };
       }
 
-      return { command: name, action };
+      const { values, positionals } = parseArgs({
+        args,
+        options: { ...viewerNetworkFlags, foreground: { type: "boolean" } },
+        allowPositionals: true,
+      });
+      const action = positionals[0];
+      if (positionals.length > 1 || (action !== undefined && action !== "status" && action !== "stop")) {
+        throw new Error("viewer accepts only status, stop, or service");
+      }
+
+      if (action !== undefined) {
+        if (Object.keys(values).length > 0) {
+          throw new Error(`viewer ${action} does not accept startup options`);
+        }
+
+        return { command: name, action };
+      }
+
+      return { command: name, ...(values.foreground ? { foreground: true } : {}), ...parseViewerFlags(values) };
     }
 
     case "remote init": {
@@ -153,4 +184,31 @@ function requirePositional(positionals: string[], message: string): string {
   }
 
   return requireValue(positionals[0], message);
+}
+
+const viewerNetworkFlags = {
+  port: { type: "string" },
+  host: { type: "string" },
+  loopback: { type: "boolean" },
+  lan: { type: "boolean" },
+  tailscale: { type: "boolean" },
+} satisfies Record<string, { type: "string" | "boolean" }>;
+
+function parseViewerFlags(values: { port?: string; host?: string; loopback?: boolean; lan?: boolean; tailscale?: boolean }) {
+  if ([values.loopback, values.lan, values.tailscale].filter(Boolean).length > 1) {
+    throw new Error("Choose only one of --loopback, --lan, or --tailscale");
+  }
+
+  const exposure = values.loopback ? "loopback" : values.lan ? "lan" : values.tailscale ? "tailscale" : undefined;
+  const host = values.host === undefined ? undefined : requireValue(values.host, "viewer --host requires an IP address");
+  const port = values.port === undefined ? undefined : Number(values.port);
+  if (port !== undefined && (!/^[0-9]+$/.test(values.port ?? "") || !Number.isInteger(port) || port < 1 || port > 65535)) {
+    throw new Error("viewer --port must be an integer from 1 to 65535");
+  }
+
+  return {
+    ...(port !== undefined ? { port } : {}),
+    ...(host !== undefined ? { host } : {}),
+    ...(exposure !== undefined ? { exposure } : {}),
+  } satisfies Partial<ViewerNetworkOptions>;
 }

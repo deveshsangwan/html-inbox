@@ -1,357 +1,385 @@
-import { setTimeout as sleep } from "node:timers/promises";
-import { spawn } from "node:child_process";
+import { setTimeout as delay } from "node:timers/promises";
 import { randomUUID } from "node:crypto";
-import { readFile, rm } from "node:fs/promises";
-import http from "node:http";
-import net from "node:net";
+import { rm } from "node:fs/promises";
+import type http from "node:http";
 import path from "node:path";
-import { DocumentBackend } from "./documents";
-import { assertUuidV4, isRecord } from "./validation";
-import {
-  ensurePrivateDirectory,
-  hardenPrivateFile,
-  writePrivateFile,
-  writeAtomicPrivateJson,
-} from "./private-storage";
-import { startViewerHttpServer } from "./viewer-http-server";
-import { resolveViewerNetworkConfig } from "./viewer-network";
+import type { DocumentBackend } from "./documents";
+import { ManagedStorageError } from "./private-storage";
+import { startViewerHttpServer, type ViewerHttpServer } from "./viewer-http-server";
+import { resolveViewerNetworkConfig, type ViewerNetworkOptions } from "./viewer-network";
+import { cleanupTailscale, prepareTailscale, startTailscale, type PreparedTailscale } from "./viewer-tailscale";
+import { getInboxInstanceId, hasErrorCode, readSavedViewerConfiguration, readViewerRecord, removeViewerRecord, saveViewerConfiguration, writeViewerRecord, type ViewerRecord } from "./viewer-records";
+import { acquireViewerStartLock, hasInheritedViewerStartLock, isProcessAlive } from "./viewer-start-lock";
+import { spawnDetachedViewer } from "./viewer-process";
+import { getControlHealth, getViewerStatus, isPortListening, resolveViewerConfiguration, VIEWER_PROTOCOL_VERSION, type ViewerStatus } from "./viewer-status";
 
-const HOST = "127.0.0.1";
-export const VIEWER_PROTOCOL_VERSION = 2;
+export { getViewerStatus, resolveViewerConfiguration, VIEWER_PROTOCOL_VERSION, type ViewerStatus } from "./viewer-status";
 
-export interface ViewerStatus {
-  state: "running" | "stopped" | "conflict" | "incompatible";
-  url: string;
-  pid?: number;
-}
-
-export async function ensureViewer(home: string, port: number): Promise<void> {
-  const instanceId = await getInboxInstanceId(home);
-  const health = await getHealth(home, port);
-  if (isMatchingViewer(health, instanceId, port)) {
-    return;
-  }
-
-  await assertPortAvailable(port);
-
-  const entry = process.argv[1];
-  if (!entry) {
-    throw new Error("Cannot locate html-inbox executable to start viewer");
-  }
-
-  const child = spawn(process.execPath, [entry, "viewer"], {
-    detached: true,
-    env: {
-      ...process.env,
-      HTML_INBOX_HOME: home,
-      HTML_INBOX_PORT: String(port),
-    },
-    stdio: "ignore",
-  });
-  child.unref();
-
-  const deadline = Date.now() + 3000;
-  while (Date.now() < deadline) {
-    const nextHealth = await getHealth(home, port);
-    if (isMatchingViewer(nextHealth, instanceId, port)) {
-      return;
-    }
-    await sleep(100);
-  }
-
-  throw new Error(`Viewer did not start at http://${HOST}:${port}/health`);
-}
-
-export async function getViewerStatus(
+export async function ensureViewer(
   home: string,
-  port: number,
+  input?: number | ViewerNetworkOptions,
 ): Promise<ViewerStatus> {
-  const url = `http://${HOST}:${port}`;
-  const health = await getHealth(home, port);
-  if (health.state === "unavailable") {
-    const isListening = await isPortListening(port);
-    return { state: isListening ? "conflict" : "stopped", url };
-  }
-  if (health.state === "incompatible") {
-    return { state: "incompatible", url };
-  }
+  const lock = await acquireViewerStartLock(home);
+  try {
+    const config = await resolveViewerConfiguration(home, input);
+    const existing = await getViewerStatus(home, undefined, { refreshLanUrls: false });
+    if (existing.state === "running") {
+      const record = await readViewerRecord(home);
+      if (!record || !existing.pid) {
+        throw new Error("Viewer is running but its process record is missing or stale");
+      }
 
-  if (health.state === "invalid") {
-    return { state: "conflict", url };
-  }
+      if (record.config.port !== config.port || record.config.exposure !== config.exposure || record.config.host !== config.host) {
+        throw new Error(`Viewer is already running with ${record.config.exposure} exposure on ${record.config.host}:${record.config.port}; stop it before changing configuration`);
+      }
 
-  const instanceId = await getInboxInstanceId(home);
-  if (health.instanceId !== instanceId) {
-    return { state: "conflict", url };
-  }
+      return getViewerStatus(home);
+    }
 
-  const viewerInfo = await readViewerInfo(home);
-  return {
-    state: "running",
-    url,
-    pid:
-      viewerInfo?.port === port &&
-      viewerInfo.processId === health.processId &&
-      viewerInfo.pid === health.pid
-        ? viewerInfo.pid
-        : undefined,
-  };
+    await assertCanReplaceViewerRecord(home, existing);
+    const status = await getViewerStatus(home, config.port, { refreshLanUrls: false });
+    assertCanStart(status);
+    await clearPreviousTailscaleRoute(home);
+    await getInboxInstanceId(home);
+    await rm(path.join(home, "viewer.json"), { force: true });
+
+    const saved = await readSavedViewerConfiguration(home);
+    const detached = await spawnDetachedViewer(home, config, lock.token, saved?.tailscaleExecutable);
+    try {
+      const startupTimeout = config.exposure === "tailscale" ? 45_000 : 10_000;
+      const deadline = Date.now() + startupTimeout;
+      while (Date.now() < deadline) {
+        const failure = detached.getFailure();
+        if (failure) {
+          throw new Error(`Viewer child could not start: ${failure.message}`);
+        }
+
+        if (detached.child.exitCode !== null || detached.child.signalCode !== null) {
+          throw new Error(`Viewer child exited before readiness (${detached.child.signalCode ?? detached.child.exitCode})`);
+        }
+
+        const ready = await getViewerStatus(home, config.port);
+        if (ready.state === "running" && ready.pid === detached.child.pid) {
+          return ready;
+        }
+
+        if (ready.state === "incompatible") {
+          throw new Error("Viewer child uses an incompatible protocol");
+        }
+
+        await delay(50);
+      }
+
+      throw new Error(`Viewer child did not become ready within ${startupTimeout / 1000} seconds`);
+    } catch (error) {
+      try {
+        await detached.close();
+      } catch (terminationError) {
+        const message = error instanceof Error ? error.message : String(error);
+        throw new AggregateError([error, terminationError], `${message}. Failed viewer child process tree could not be verified as stopped; ownership journal retained. Verify command descendants have exited before retrying viewer stop. Private diagnostics: ${detached.logPath}`);
+      }
+
+      try {
+        // A failed child may journal a route before committing viewer.json.
+        await clearPreviousTailscaleRoute(home);
+        const record = await readViewerRecord(home).catch(() => null);
+        if (record && record.pid === detached.child.pid) {
+          await removeViewerRecord(home, record.processId);
+        }
+      } catch (cleanupError) {
+        throw new AggregateError([error, cleanupError], `Viewer startup failed and scoped cleanup failed. Private diagnostics: ${detached.logPath}. Ownership journal retained; retry viewer stop`);
+      }
+
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`${message}. Private diagnostics: ${detached.logPath}`, { cause: error });
+    }
+  } finally {
+    await lock.release();
+  }
 }
 
-export async function stopViewer(
-  home: string,
-  port: number,
-): Promise<ViewerStatus> {
-  const status = await getViewerStatus(home, port);
-  if (status.state !== "running") {
-    return status;
-  }
-  if (!status.pid) {
-    throw new Error(
-      "Viewer is running but its process record is missing or stale",
-    );
-  }
+export async function stopViewer(home: string, port?: number): Promise<ViewerStatus> {
+  const lock = await acquireViewerStartLock(home);
+  try {
+    const status = await getViewerStatus(home, port, { refreshLanUrls: false });
+    const record = await readViewerRecord(home).catch((error: unknown) => {
+      if (error instanceof ManagedStorageError) {
+        throw error;
+      }
 
-  process.kill(status.pid, "SIGTERM");
-  const deadline = Date.now() + 3000;
-  while (Date.now() < deadline) {
-    if ((await getHealth(home, port)).state === "unavailable") {
-      await rm(path.join(home, "viewer.json"), { force: true });
-      return { state: "stopped", url: status.url };
+      return null;
+    });
+    if (record && port !== undefined && record.config.port !== port) {
+      throw new Error(`Selected stop port ${port} does not match the viewer record port ${record.config.port}; stop without a port override to manage that viewer`);
     }
-    await sleep(50);
+
+    if (status.state !== "running" && !(status.pid && record?.config.exposure === "tailscale")) {
+      let remaining = record;
+      if (status.state === "stopped" && record && !record.shutdownError) {
+        remaining = await waitForViewerRecordCleanup(home, record, shutdownDeadline(record));
+      }
+
+      await clearPreviousTailscaleRoute(home, record ?? undefined);
+      if (status.state === "stopped" && remaining) {
+        await removeViewerRecord(home, remaining.processId);
+      }
+
+      return status;
+    }
+
+    if (!status.pid || !record) {
+      throw new Error("Viewer is running but its process record is missing or stale");
+    }
+
+    // Recheck the private endpoint immediately before signalling a recorded PID.
+    const current = await getControlHealth(record.controlUrl);
+    if (current.state !== "ready" || current.pid !== status.pid || current.processId !== record.processId || current.instanceId !== record.instanceId) {
+      throw new Error("Viewer process identity changed before stop; no signal sent");
+    }
+
+    try {
+      process.kill(status.pid, "SIGTERM");
+    } catch (error) {
+      if (!hasErrorCode(error, "ESRCH")) {
+        throw error;
+      }
+    }
+
+    const deadline = shutdownDeadline(record);
+    while (Date.now() < deadline) {
+      if ((await getControlHealth(record.controlUrl)).state === "unavailable" && !(await isPortListening(record.config))) {
+        const remaining = await waitForViewerRecordCleanup(home, record, deadline);
+        await clearPreviousTailscaleRoute(home, record);
+        if (remaining) {
+          await removeViewerRecord(home, record.processId);
+        }
+
+        return { ...status, state: "stopped", pid: undefined };
+      }
+
+      await delay(50);
+    }
+
+    if (record.config.exposure === "tailscale") {
+      throw new Error(`Viewer shutdown or Tailscale cleanup did not finish. Ownership journal retained; retry viewer stop. Private diagnostics: ${path.join(home, "viewer.log")}`);
+    }
+
+    throw new Error(`Viewer did not stop at ${status.url}`);
+  } finally {
+    await lock.release();
   }
-  throw new Error(`Viewer did not stop at ${status.url}`);
 }
 
 export async function startViewer(
   backend: DocumentBackend,
   home: string,
-  port: number,
+  input: number | ViewerNetworkOptions,
 ): Promise<http.Server> {
-  const instanceId = await getInboxInstanceId(home);
-  const processId = randomUUID();
-  const listener = await startViewerHttpServer(backend, resolveViewerNetworkConfig(port), {
-    instanceId,
-    processId,
-    protocolVersion: VIEWER_PROTOCOL_VERSION,
-    pid: process.pid,
-  });
-
+  const inherited = await hasInheritedViewerStartLock(home);
+  const lock = inherited ? null : await acquireViewerStartLock(home);
   try {
-    await writeViewerInfo(home, listener.config.port, processId, listener.controlUrl);
-  } catch (error) {
-    await listener.close();
-    throw error;
-  }
+    const existing = await getViewerStatus(home, undefined, { refreshLanUrls: false });
+    if (existing.state === "running") {
+      throw new Error(`Viewer is already running at ${existing.url}`);
+    }
 
-  return listener.server;
-}
+    await assertCanReplaceViewerRecord(home, existing);
+    const instanceId = await getInboxInstanceId(home);
+    const processId = randomUUID();
+    const health = { instanceId, processId, protocolVersion: VIEWER_PROTOCOL_VERSION, pid: process.pid };
+    let reader: ViewerHttpServer | undefined;
+    let prepared: PreparedTailscale | undefined;
+    let startup: Promise<void> | undefined;
+    let closing: Promise<void> | undefined;
+    let hasReportedShutdownFailure = false;
+    const close = () => closing ??= (async () => {
+      try {
+        // Startup owns route mutation and readiness writes until its promise settles.
+        await startup?.catch(() => undefined);
+        if (reader) {
+          const listenersClosed = reader.close();
+          reader.server.closeAllConnections();
+          reader.controlServer.closeAllConnections();
+          await listenersClosed;
+        }
 
-type ViewerHealth =
-  | { state: "unavailable" }
-  | { state: "invalid" }
-  | { state: "incompatible" }
-  | { state: "ready"; instanceId: string; processId: string; pid: number };
+        if (prepared) {
+          await clearPreviousTailscaleRoute(home, { instanceId, processId });
+        }
 
-function isMatchingViewer(
-  health: ViewerHealth,
-  instanceId: string,
-  port: number,
-): boolean {
-  switch (health.state) {
-    case "unavailable":
-      return false;
-    case "invalid":
-      throw new Error(
-        `Port ${port} is already in use by a service with an invalid health response`,
-      );
-    case "incompatible":
-      throw new Error(
-        `Viewer at http://${HOST}:${port} uses an incompatible protocol`,
-      );
-    case "ready":
-      if (health.instanceId !== instanceId) {
-        throw new Error(
-          `Viewer at http://${HOST}:${port} uses a different HTML_INBOX_HOME`,
-        );
+        await removeViewerRecord(home, processId);
+      } finally {
+        process.off("SIGTERM", onSignal);
+        process.off("SIGINT", onSignal);
       }
-      return true;
-  }
-}
+    })();
+    const reportShutdownFailure = (error: unknown) => {
+      if (hasReportedShutdownFailure) {
+        return;
+      }
 
-function parseViewerHealth(body: unknown): ViewerHealth {
-  if (
-    !isRecord(body) ||
-    body.ok !== true ||
-    typeof body.instanceId !== "string" ||
-    typeof body.protocolVersion !== "number" ||
-    !Number.isInteger(body.protocolVersion) ||
-    body.protocolVersion <= 0
-  ) {
-    return { state: "invalid" };
-  }
-
-  try {
-    assertUuidV4(body.instanceId, "Viewer inbox identity");
-    if (body.protocolVersion !== VIEWER_PROTOCOL_VERSION) {
-      return { state: "incompatible" };
-    }
-    if (
-      typeof body.processId !== "string" ||
-      typeof body.pid !== "number" ||
-      !Number.isSafeInteger(body.pid) ||
-      body.pid <= 0
-    ) {
-      return { state: "invalid" };
-    }
-    assertUuidV4(body.processId, "Viewer process identity");
-    return {
-      state: "ready",
-      instanceId: body.instanceId,
-      processId: body.processId,
-      pid: body.pid,
+      hasReportedShutdownFailure = true;
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`html-inbox: Viewer shutdown failed: ${message}`);
+      process.exitCode = 1;
+      void readViewerRecord(home).then((record) => {
+        if (record?.processId === processId) {
+          return writeViewerRecord(home, { ...record, shutdownError: message });
+        }
+      }).catch((recordError: unknown) => {
+        console.error(`html-inbox: Could not record shutdown failure: ${String(recordError)}`);
+      });
     };
-  } catch {
-    return { state: "invalid" };
-  }
-}
+    const onSignal = () => { void close().catch(reportShutdownFailure); };
 
-async function getHealth(home: string, port: number): Promise<ViewerHealth> {
-  try {
-    const record = await readViewerInfo(home);
-    const controlUrl = record?.port === port ? record.controlUrl : undefined;
-    const response = await fetch(controlUrl ?? `http://${HOST}:${port}/health`, {
-      signal: AbortSignal.timeout(400),
-    });
-    if (!response.ok) {
-      return { state: "invalid" };
-    }
-    try {
-      const body: unknown = await response.json();
-      if (!controlUrl && isRecord(body) && body.ok === true && Object.keys(body).length === 1) {
-        return { state: "unavailable" };
+    process.on("SIGTERM", onSignal);
+    process.on("SIGINT", onSignal);
+    startup = (async () => {
+      await clearPreviousTailscaleRoute(home);
+      if (closing) {
+        return;
       }
 
-      return parseViewerHealth(body);
-    } catch {
-      return { state: "invalid" };
-    }
-  } catch {
-    return { state: "unavailable" };
-  }
-}
+      const initialConfig = resolveViewerNetworkConfig(input);
+      const saved = await readSavedViewerConfiguration(home);
+      if (initialConfig.exposure === "tailscale") {
+        prepared = await prepareTailscale({ home, backendPort: initialConfig.port, instanceId, processId }, {
+          executable: process.env.HTML_INBOX_TAILSCALE_COMMAND ?? saved?.tailscaleExecutable,
+        });
+      }
 
-async function writeViewerInfo(
-  home: string,
-  port: number,
-  processId: string,
-  controlUrl: string,
-): Promise<void> {
-  await writeAtomicPrivateJson(path.join(home, "viewer.json"), {
-    host: HOST,
-    port,
-    controlUrl,
-    pid: process.pid,
-    processId,
-    startedAt: new Date().toISOString(),
-  });
-}
+      if (closing) {
+        return;
+      }
 
-async function readViewerInfo(
-  home: string,
-): Promise<{ pid: number; port: number; processId: string; controlUrl?: string } | null> {
-  const viewerInfoPath = path.join(home, "viewer.json");
-  try {
-    await hardenPrivateFile(viewerInfoPath);
-    const value: unknown = JSON.parse(await readFile(viewerInfoPath, "utf8"));
-    if (
-      !value ||
-      typeof value !== "object" ||
-      !("pid" in value) ||
-      typeof value.pid !== "number" ||
-      !Number.isInteger(value.pid) ||
-      value.pid <= 0 ||
-      !("port" in value) ||
-      typeof value.port !== "number" ||
-      !Number.isInteger(value.port) ||
-      value.port <= 0 ||
-      value.port > 65535 ||
-      !("processId" in value) ||
-      typeof value.processId !== "string"
-    ) {
-      throw new Error(`Invalid viewer process record at ${viewerInfoPath}`);
-    }
-    assertUuidV4(value.processId, "Viewer process identity");
-    const controlUrl = "controlUrl" in value ? value.controlUrl : undefined;
-    if (controlUrl !== undefined && (
-      typeof controlUrl !== "string" ||
-      !/^http:\/\/127\.0\.0\.1:[0-9]{1,5}\/control\/[A-Za-z0-9_-]{43}$/.test(controlUrl)
-    )) {
-      throw new Error(`Invalid viewer control URL at ${viewerInfoPath}`);
-    }
+      const config = prepared ? { ...initialConfig, tailscaleHostname: prepared.hostname } : initialConfig;
+      reader = await startViewerHttpServer(backend, config, health);
+      reader.server.once("close", () => { void close().catch(reportShutdownFailure); });
+      if (closing) {
+        return;
+      }
 
-    return { pid: value.pid, port: value.port, processId: value.processId, controlUrl };
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return null;
-    }
-    throw error;
-  }
-}
+      if (prepared) {
+        await startTailscale({ ...prepared, backendPort: reader.config.port });
+      }
 
-async function getInboxInstanceId(home: string): Promise<string> {
-  await ensurePrivateDirectory(home);
-  const identityPath = path.join(home, "instance-id");
+      if (closing) {
+        return;
+      }
 
-  try {
-    await writePrivateFile(identityPath, randomUUID(), { flag: "wx" });
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
+      await saveViewerConfiguration(home, {
+        config: reader.config,
+        urls: reader.urls,
+        ...(prepared ? { tailscaleExecutable: prepared.executable } : {}),
+      });
+      if (closing) {
+        return;
+      }
+
+      await writeViewerRecord(home, {
+        ...health,
+        config: reader.config,
+        urls: reader.urls,
+        controlUrl: reader.controlUrl,
+        startedAt: new Date().toISOString(),
+      });
+    })();
+
+    try {
+      await startup;
+      if (closing) {
+        await closing;
+        throw new Error("Viewer startup interrupted before readiness");
+      }
+
+      if (!reader) {
+        throw new Error("Viewer startup finished without a reader");
+      }
+
+      return reader.server;
+    } catch (error) {
+      try {
+        await close();
+      } catch (cleanupError) {
+        throw new AggregateError([error, cleanupError], "Viewer startup failed and Tailscale cleanup failed; private ownership journal retained");
+      }
+
       throw error;
     }
+  } finally {
+    await lock?.release();
+  }
+}
+
+function shutdownDeadline(record: ViewerRecord): number {
+  return Date.now() + (record.config.exposure === "tailscale" ? 45_000 : 5000);
+}
+
+async function waitForViewerRecordCleanup(home: string, record: ViewerRecord, deadline: number): Promise<ViewerRecord | null> {
+  while (Date.now() < deadline) {
+    const remaining = await readViewerRecord(home);
+    if (!remaining) {
+      return null;
+    }
+
+    if (remaining.processId !== record.processId) {
+      throw new Error("Viewer process identity changed during shutdown; no cleanup was attempted");
+    }
+
+    if (remaining.shutdownError) {
+      throw new Error(`${remaining.shutdownError}. Ownership journal retained; retry viewer stop`);
+    }
+
+    if (!isProcessAlive(record.pid)) {
+      return remaining;
+    }
+
+    await delay(50);
   }
 
-  await hardenPrivateFile(identityPath);
-  const instanceId = (await readFile(identityPath, "utf8")).trim();
-  assertUuidV4(instanceId, `HTML Inbox instance identity at ${identityPath}`);
-  return instanceId;
+  throw new Error(`Viewer shutdown cleanup did not finish. Private records retained; retry viewer stop. Private diagnostics: ${path.join(home, "viewer.log")}`);
 }
 
-async function isPortListening(port: number): Promise<boolean> {
-  // Status checks must not bind a port that a viewer may be starting on.
-  return new Promise((resolve) => {
-    const socket = net.createConnection({ port, host: HOST });
-    const finish = (isListening: boolean) => {
-      socket.destroy();
-      resolve(isListening);
-    };
+function assertCanStart(status: ViewerStatus): void {
+  if (status.state === "stopped") {
+    return;
+  }
 
-    socket.once("connect", () => finish(true));
-    socket.once("error", (error: NodeJS.ErrnoException) => {
-      finish(error.code !== "ECONNREFUSED");
-    });
-    socket.setTimeout(400, () => finish(true));
-  });
+  if (status.state === "incompatible") {
+    throw new Error(status.reason ?? `Viewer at ${status.url} uses an incompatible protocol`);
+  }
+
+  throw new Error(status.reason ?? `Port ${status.port} is already in use by a service with an invalid health response or another inbox; choose another --port`);
 }
 
-async function assertPortAvailable(port: number): Promise<void> {
-  const probe = net.createServer();
-  await new Promise<void>((resolve, reject) => {
-    probe.once("error", (error: NodeJS.ErrnoException) => {
-      if (error.code === "EADDRINUSE") {
-        reject(
-          new Error(
-            `Port ${port} is already in use; set HTML_INBOX_PORT to another port`,
-          ),
-        );
-      } else {
-        reject(error);
-      }
-    });
-    probe.listen(port, HOST, resolve);
-  });
-  await new Promise<void>((resolve, reject) => {
-    probe.close((error) => (error ? reject(error) : resolve()));
-  });
+async function assertCanReplaceViewerRecord(home: string, status: ViewerStatus): Promise<void> {
+  if (status.state === "incompatible") {
+    assertCanStart(status);
+  }
+
+  if (status.state !== "conflict") {
+    return;
+  }
+
+  const record = await readViewerRecord(home);
+  if (!record) {
+    return;
+  }
+
+  const hasLiveProcess = isProcessAlive(record.pid) || (await getControlHealth(record.controlUrl)).state !== "unavailable";
+  if (hasLiveProcess) {
+    throw new Error(status.reason ?? "Existing viewer process record is unverified; stop that viewer before starting another");
+  }
+}
+
+async function clearPreviousTailscaleRoute(home: string, owner?: { instanceId: string; processId: string }): Promise<void> {
+  try {
+    const result = await cleanupTailscale(home, owner, { executable: process.env.HTML_INBOX_TAILSCALE_COMMAND });
+    if (result.state !== "stopped") {
+      throw new Error(`Tailscale cleanup ${result.state}: ${result.reason ?? "private ownership journal retained"}`);
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Tailscale cleanup failed: ${message}. Ownership journal retained; retry viewer stop`, { cause: error });
+  }
 }

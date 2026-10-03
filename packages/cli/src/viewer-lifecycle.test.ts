@@ -20,7 +20,13 @@ import { temporaryHome, availablePort } from "./test-fixtures";
 
 test("occupied viewer port", async (t) => {
   const blockedHome = await temporaryHome(t);
-  const blocker = http.createServer((_request, response) => {
+  const blocker = http.createServer((request, response) => {
+    if (request.url === "/health") {
+      response.writeHead(200, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ ok: true }));
+      return;
+    }
+
     response.writeHead(404);
     response.end();
   });
@@ -31,6 +37,7 @@ test("occupied viewer port", async (t) => {
   t.after(() => new Promise<void>((resolve) => blocker.close(() => resolve())));
   const blockerAddress = blocker.address();
   assert(blockerAddress && typeof blockerAddress !== "string");
+  assert.deepEqual(await (await fetch(`http://127.0.0.1:${blockerAddress.port}/health`)).json(), { ok: true });
   assert.equal(
     (await getViewerStatus(blockedHome, blockerAddress.port)).state,
     "conflict",
@@ -105,7 +112,7 @@ test("viewer starts and stops", async (t) => {
   const lifecyclePort = await availablePort();
   const viewerProcess = spawn(
     process.execPath,
-    [path.join(__dirname, "index.js"), "viewer"],
+    [path.join(__dirname, "index.js"), "viewer", "--foreground"],
     {
       env: {
         ...process.env,
@@ -164,9 +171,20 @@ test("viewer rejects malformed current health and recognizes an older protocol",
   t.after(() => new Promise<void>((resolve) => server.close(() => resolve())));
   const address = server.address();
   assert(address && typeof address !== "string");
+  await writeFile(path.join(home, "viewer.json"), JSON.stringify({
+    pid: process.pid,
+    instanceId,
+    processId: validHealth.processId,
+    protocolVersion: VIEWER_PROTOCOL_VERSION,
+    config: { port: address.port, exposure: "loopback", host: "127.0.0.1" },
+    urls: [`http://127.0.0.1:${address.port}`],
+    controlUrl: `http://127.0.0.1:${address.port}/control/${"A".repeat(43)}`,
+    startedAt: new Date().toISOString(),
+  }));
 
   for (const invalid of [
     null,
+    { ok: true },
     { ...validHealth, ok: false },
     { ...validHealth, pid: undefined },
     { ...validHealth, pid: 0 },
@@ -180,7 +198,7 @@ test("viewer rejects malformed current health and recognizes an older protocol",
     assert.equal((await getViewerStatus(home, address.port)).state, "conflict");
     await assert.rejects(
       ensureViewer(home, address.port),
-      /invalid health response/,
+      /process record is unverified/,
     );
   }
 
@@ -197,30 +215,4 @@ test("viewer rejects malformed current health and recognizes an older protocol",
   body = validHealth;
   await ensureViewer(home, address.port);
   assert.equal((await getViewerStatus(home, address.port)).state, "running");
-});
-
-test("anonymous fallback health is unavailable while anonymous control health is invalid", async (t) => {
-  const home = await temporaryHome(t);
-  const server = http.createServer((_request, response) => {
-    response.writeHead(200, { "Content-Type": "application/json" });
-    response.end(JSON.stringify({ ok: true }));
-  });
-  await new Promise<void>((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", resolve);
-  });
-  t.after(() => new Promise<void>((resolve) => server.close(() => resolve())));
-  const address = server.address();
-  assert(address && typeof address !== "string");
-
-  assert.equal((await getViewerStatus(home, address.port)).state, "conflict");
-  await assert.rejects(ensureViewer(home, address.port), /already in use; set HTML_INBOX_PORT/);
-
-  await writeFile(path.join(home, "viewer.json"), JSON.stringify({
-    port: address.port,
-    pid: process.pid,
-    processId: randomUUID(),
-    controlUrl: `http://127.0.0.1:${address.port}/control/${"a".repeat(43)}`,
-  }));
-  await assert.rejects(ensureViewer(home, address.port), /invalid health response/);
 });

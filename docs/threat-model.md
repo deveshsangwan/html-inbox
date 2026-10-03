@@ -7,6 +7,7 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - The user running the CLI is trusted.
 - Published HTML is untrusted.
 - The inbox is local-only by default.
+- Explicit LAN exposure trusts all readers who can reach the port; explicit Tailscale exposure trusts readers allowed by the user's tailnet policy. Either exposes the complete live library.
 - Storage is on the user's filesystem under `~/.html-inbox` unless `HTML_INBOX_HOME` is set.
 - The filesystem enforces Unix permission modes on POSIX, or the user has restricted Windows ACLs throughout the storage subtree as described below.
 
@@ -33,15 +34,23 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - Validate published HTML in two tiers. See "Publish-time validation tiers" below.
 - Render documents through a dedicated viewer path inside an iframe sandboxed with only `allow-scripts`. Omitting `allow-same-origin` gives the document an opaque origin and prevents access to the viewer DOM and same-origin storage. Omitting popup and top-navigation permissions keeps links in the current frame and blocks `_blank` targets.
 - Use strict CSP on viewer responses. Document responses allow inline scripts plus the narrow CDN script paths required by Tailwind and Mermaid, block inline script attributes, and keep `connect-src`, frames, forms, objects, and non-data images, media, and fonts blocked. Default navigations to `no-referrer`.
-- Bind the viewer to `127.0.0.1`, default port `3217`.
-- Reject requests whose `Host` is not the expected loopback host and active port.
+- Bind the viewer to `127.0.0.1`, default port `3217`, unless LAN exposure is explicitly selected. Tailscale Serve uses a loopback backend.
+- Reject requests whose `Host` is outside the allowlist derived from the selected listening addresses and exact trusted tailnet hostname. Ignore forwarding and identity headers for authorization.
 - On POSIX filesystems that enforce Unix permissions, create managed directories with `0700` and files with `0600`, and tighten existing managed paths when they are accessed. On Windows, rely on the user-provided filesystem ACLs described below.
-- Return an opaque instance identity and protocol version from health checks instead of the absolute inbox path.
+- Keep identity-bearing health on a separate loopback control endpoint recorded in protected local storage. Reader health returns only an anonymous success response. Control health never exposes the absolute inbox path.
 - Reject oversized input before reading it and bound all user-controlled metadata fields.
 - Stage and validate a complete record before making it visible with an atomic directory rename.
 - Keep deletion in the CLI, require confirmation by default, and atomically move a record out of the live library before removing its files.
-- Allow `HTML_INBOX_PORT` only as a local port escape hatch.
-- Treat the health check as the only readiness signal.
+- Validate the configured listening IP and port at the boundary. Report usable addresses rather than wildcard browser URLs.
+- Treat verified local control health as the readiness signal, and verify the HTTPS Serve route before reporting Tailscale readiness.
+
+## Live self-hosting
+
+LAN mode has no password or reader access token. Every device that can reach the listener can browse metadata, search, and open every stored document. HTTP transport on the LAN does not encrypt the traffic. The operator chooses the listening interface and firewall policy. Host validation limits accepted request authorities; it does not authenticate a reader or prevent an allowed reader from sharing content.
+
+Tailscale mode delegates encrypted transport and reader access to the existing signed-in Tailscale client, HTTPS Serve, and tailnet policy. HTML Inbox accepts only the exact trusted tailnet hostname and its configured loopback authorities. Client-supplied forwarding and Tailscale identity headers grant no access. It checks existing Serve/Funnel settings before changes, refuses conflicting routes, and never enables Funnel or changes tailnet access rules. Cleanup verifies the journaled node and exact owned route before scoped removal. Configuration drift or unavailable clients leave the journal for deliberate recovery rather than deleting unrelated services.
+
+Publishing, deletion, startup, and stop remain local CLI operations. The exposed reader has no administration endpoints. Private process records and startup logs follow the same filesystem protections as documents. Boot services are installed explicitly with administrator privileges, run the viewer as a normal user, and refuse unrelated definitions. A privileged administrator or another process running as the same user remains trusted.
 
 ## Storage privacy
 
