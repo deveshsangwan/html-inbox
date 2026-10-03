@@ -1,11 +1,12 @@
 {
   "name": "html-inbox",
   "version": "0.1.0",
-  "description": "A local-first library that previews and publishes generated HTML documents.",
+  "description": "A local-first CLI that stores, previews, and publishes generated HTML documents.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deveshsangwan/html-inbox.git"
+    "url": "git+https://github.com/deveshsangwan/html-inbox.git",
+    "directory": "packages/cli"
   },
   "bugs": {
     "url": "https://github.com/deveshsangwan/html-inbox/issues"
@@ -30,7 +31,8 @@
     "LICENSE"
   ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

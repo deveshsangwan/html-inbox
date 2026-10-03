@@ -1,6 +1,7 @@
 node_modules/
 dist/
 packages/cli/bundle/
+artifacts/
 .pnpm-store/
 .DS_Store
 *.log

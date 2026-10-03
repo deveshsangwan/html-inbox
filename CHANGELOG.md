@@ -2,7 +2,7 @@
 
 All notable changes to HTML Inbox will be documented here.
 
-## 0.1.0 - Unreleased
+## 0.1.0 - 2026-10-04
 
 - Added a private local HTML library with atomic bounded storage, search, deletion, and viewer lifecycle controls.
 - Isolated untrusted documents in sandboxed iframes with restrictive route-specific Content Security Policies.

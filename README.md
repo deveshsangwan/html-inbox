@@ -8,7 +8,7 @@ The CLI is packaged as a self-contained `html-inbox` executable with no runtime 
 
 ## Install with npm
 
-Node.js 20 or newer is required. After the first registry release, install the CLI globally:
+Node.js 20 or newer is required. Install the CLI globally:
 
 ```sh
 npm install --global html-inbox
@@ -21,7 +21,7 @@ For occasional use without a global install:
 npx html-inbox --help
 ```
 
-Until the first registry release, use a source checkout. The operational examples below assume the installed `html-inbox` command; from a source checkout, run the same command as `corepack pnpm html-inbox ...`.
+The operational examples below assume the installed `html-inbox` command; from a source checkout, run the same command as `corepack pnpm html-inbox ...`.
 
 ## Set up a source checkout for development
 
