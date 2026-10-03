@@ -88,6 +88,25 @@ test("Cloudflare upload builds private headers, normalizes arguments and returns
     true,
   );
   assert.equal(recordingRunner.headers.includes(DOCUMENT_CSP), true);
+
+  const headerRules = recordingRunner.headers.trim().split("\n\n");
+  const contentRule = headerRules.find((rule) =>
+    rule.startsWith(`/i/${snapshot.capability}/documents/:id/content/*\n`),
+  );
+  assert(contentRule);
+  assert.equal(
+    contentRule.split("\n").slice(1).find((line) =>
+      line.startsWith("  Content-Security-Policy: "),
+    ),
+    `  Content-Security-Policy: ${DOCUMENT_CSP}`,
+  );
+  assert.match(contentRule, /Content-Security-Policy: sandbox allow-scripts;/);
+  assert.equal(contentRule.includes("allow-same-origin"), false);
+  assert.equal(
+    headerRules.filter((rule) => rule.includes("sandbox allow-scripts")).length,
+    1,
+  );
+
   assert.equal(
     recordingRunner.headers
       .split("\n")

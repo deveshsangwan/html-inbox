@@ -165,6 +165,14 @@ test("static export preserves bytes, metadata and atomic replacement", async (t)
     securityHeaders.document["Content-Security-Policy"],
     DOCUMENT_CSP,
   );
+  assert.match(
+    securityHeaders.document["Content-Security-Policy"],
+    /(?:^|;\s*)sandbox allow-scripts(?:;|$)/,
+  );
+  assert.equal(
+    securityHeaders.document["Content-Security-Policy"].includes("allow-same-origin"),
+    false,
+  );
   assert.equal(
     securityHeaders.common["X-Robots-Tag"],
     "noindex, nofollow, noarchive",
