@@ -33,6 +33,8 @@ documents/<id>/metadata.json
 
 `index.html` is the original uploaded HTML bytes. `metadata.json` holds the generated id, title, type, publish time, and source file name.
 
+On POSIX filesystems that enforce Unix permissions, `private-storage.ts` creates and tightens managed directories to `0700` and files to `0600`. It rejects symbolic links and unexpected file types at the managed paths it checks, but does not change ownership. On Windows, Node's `chmod` does not establish owner-only ACLs. Privacy relies on existing file and directory ACLs and the permissions inherited when new paths are created. The CLI does not install or verify those ACLs, so a permissive `HTML_INBOX_HOME` can expose documents and remote state without a warning. The [Windows storage prerequisites](threat-model.md#windows-storage-prerequisites) apply to all local storage described as private here, including staging, trash, exports, and temporary credential logs.
+
 New records include a storage schema version. Legacy records without the field are read as schema version 1. Publishing validates metadata and writes both files in the private `documents/.staging/<id>` area, then makes the complete record visible with one same-filesystem directory rename. Interrupted staging records are never listed. A corrupt committed record is skipped with a diagnostic instead of breaking the rest of the library.
 
 ## Backend
@@ -51,7 +53,7 @@ Deletion first renames a committed document into the private trash area so it di
 
 The viewer binds `127.0.0.1:3217` by default.
 
-The local HTTP interface accepts only the expected loopback `Host` values. Its health response contains an opaque, per-home instance identity and a viewer protocol version; it never exposes the absolute inbox path. Managed directories are owner-only and managed files are owner-readable and owner-writable.
+The local HTTP interface accepts only the expected loopback `Host` values. Its health response contains an opaque, per-home instance identity and a viewer protocol version; it never exposes the absolute inbox path.
 
 Use `HTML_INBOX_PORT` when the port is taken:
 
@@ -120,7 +122,7 @@ Wrangler's immutable deployment URL is the deployment receipt. The canonical pro
 
 Export writes one document at a time to a private sibling staging directory and retains only file hashes and metadata in memory. It moves a recognized prior export to a backup, and installs the complete snapshot with same-filesystem renames. A failed install restores the backup, but the output path may be briefly absent between renames. Unrecognized directories are never replaced. Static export does not mutate the local library and does not own provider credentials or deployment state.
 
-The stable remote target is the Cloudflare account ID plus project name, never an inferred hostname. Remote configuration, the active operation, receipts, and operation-scoped snapshots live in private files under `<HTML_INBOX_HOME>/remote`. One atomic mutation lock prevents concurrent remote writers; a stale lock is recoverable because durable intent is stored separately.
+The stable remote target is the Cloudflare account ID plus project name, never an inferred hostname. Remote configuration, the active operation, receipts, and operation-scoped snapshots live under `<HTML_INBOX_HOME>/remote` with the filesystem protections described above. `state.json`, `operation.json`, and snapshots under `work` can contain bearer capabilities or report contents and require restricted Windows ACLs. One atomic mutation lock prevents concurrent remote writers; a stale lock is recoverable because durable intent is stored separately.
 
 Publish and revoke write intent before invoking the adapter and attach the first 160 bits of the snapshot digest as Cloudflare commit metadata. If the process loses the deploy response, reconciliation lists deployment history and looks for that digest before retrying. A received deployment URL is checkpointed into the operation before the main state is finalized. Finalization is idempotent if a process exits between the state rename and operation cleanup.
 
