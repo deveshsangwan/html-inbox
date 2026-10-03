@@ -72,7 +72,13 @@ export async function ensureViewer(
 
       throw new Error(`Viewer child did not become ready within ${startupTimeout / 1000} seconds`);
     } catch (error) {
-      await detached.close();
+      try {
+        await detached.close();
+      } catch (terminationError) {
+        const message = error instanceof Error ? error.message : String(error);
+        throw new AggregateError([error, terminationError], `${message}. Failed viewer child process tree could not be verified as stopped; ownership journal retained. Verify command descendants have exited before retrying viewer stop. Private diagnostics: ${detached.logPath}`);
+      }
+
       try {
         // A failed child may journal a route before committing viewer.json.
         await clearPreviousTailscaleRoute(home);

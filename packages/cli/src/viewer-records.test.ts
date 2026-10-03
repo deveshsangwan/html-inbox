@@ -20,6 +20,10 @@ const recordRaceSkip =
   process.platform === "win32"
     ? "Descriptor and symlink permission-race checks require POSIX no-follow support."
     : false;
+const openRecordReplacementSkip =
+  process.platform === "win32"
+    ? "Windows denies the fixture's synchronous rename while the original record descriptor is held open."
+    : false;
 const configuration = {
   version: 1,
   config: { port: 3217, exposure: "loopback", host: "127.0.0.1" },
@@ -186,6 +190,11 @@ test("an opened viewer record unlinked by shutdown is reread before being treate
 });
 
 test("an atomically replaced viewer record is reread so shutdown failures remain observable", async (t) => {
+  if (openRecordReplacementSkip) {
+    t.skip(openRecordReplacementSkip);
+    return;
+  }
+
   const home = await temporaryHome(t);
   const recordPath = path.join(home, "viewer.json");
   const record: ViewerRecord = {
@@ -339,6 +348,11 @@ test("the missing-no-follow fallback rereads a record removed after its descript
 });
 
 test("the missing-no-follow fallback rereads a replacement shutdown failure marker", async (t) => {
+  if (openRecordReplacementSkip) {
+    t.skip(openRecordReplacementSkip);
+    return;
+  }
+
   const home = await temporaryHome(t);
   const recordPath = path.join(home, "viewer.json");
   const record: ViewerRecord = {

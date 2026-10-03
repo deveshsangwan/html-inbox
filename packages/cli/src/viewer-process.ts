@@ -27,7 +27,8 @@ export async function spawnDetachedViewer(
 
   const selectedTailscaleExecutable = process.env.HTML_INBOX_TAILSCALE_COMMAND ?? tailscaleExecutable;
   const logPath = path.join(home, "viewer.log");
-  const log = await open(logPath, constants.O_APPEND | constants.O_CREAT | constants.O_WRONLY | (constants.O_NOFOLLOW ?? 0), 0o600);
+  const log = await open(logPath, constants.O_APPEND | constants.O_CREAT | constants.O_WRONLY |
+    (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0), 0o600);
   let child: ChildProcess;
   let failure: Error | null = null;
   try {
@@ -69,6 +70,24 @@ async function terminateChild(child: ChildProcess): Promise<void> {
     return;
   }
 
+  if (process.platform === "win32") {
+    if (child.exitCode !== null || child.signalCode !== null) {
+      throw new Error("Failed viewer child already exited; its process tree cannot be verified from its saved PID");
+    }
+
+    await terminateWindowsProcessTree(child.pid);
+    const deadline = Date.now() + 2000;
+    while (child.exitCode === null && child.signalCode === null && Date.now() < deadline) {
+      await delay(25);
+    }
+
+    if (child.exitCode === null && child.signalCode === null) {
+      throw new Error(`Failed viewer child ${child.pid} could not be stopped`);
+    }
+
+    return;
+  }
+
   terminateChildGroup(child, "SIGTERM");
   let deadline = Date.now() + 1000;
   while (child.exitCode === null && child.signalCode === null && Date.now() < deadline) {
@@ -96,11 +115,6 @@ function terminateChildGroup(child: ChildProcess, signal: NodeJS.Signals): void 
     return;
   }
 
-  if (process.platform === "win32") {
-    child.kill(signal);
-    return;
-  }
-
   try {
     // Detached Node and its in-flight command children share this process group.
     process.kill(-child.pid, signal);
@@ -109,4 +123,28 @@ function terminateChildGroup(child: ChildProcess, signal: NodeJS.Signals): void 
       throw error;
     }
   }
+}
+
+async function terminateWindowsProcessTree(pid: number): Promise<void> {
+  const killer = spawn("taskkill", ["/pid", String(pid), "/t", "/f"], { stdio: "ignore", windowsHide: true });
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      killer.kill("SIGKILL");
+      reject(new Error(`Failed viewer child process tree ${pid} could not be stopped: taskkill timed out`));
+    }, 5000);
+    timer.unref();
+    killer.once("error", (error) => {
+      clearTimeout(timer);
+      reject(new Error(`Failed viewer child process tree ${pid} could not be stopped: ${error.message}`, { cause: error }));
+    });
+    killer.once("close", (code) => {
+      clearTimeout(timer);
+      if (code !== 0) {
+        reject(new Error(`Failed viewer child process tree ${pid} could not be stopped: taskkill exited ${code}`));
+        return;
+      }
+
+      resolve();
+    });
+  });
 }
