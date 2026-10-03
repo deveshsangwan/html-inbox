@@ -149,3 +149,153 @@ test("HTML requires a parsed document marker rather than matching text", () => {
     assert.equal(validateHtml(html).ok, true, html);
   }
 });
+
+test("document-relative asset warnings explain the CSP and remediation without blocking publish", () => {
+  for (const markup of [
+    '<img src="chart.png">',
+    '<img src="./assets/chart.png">',
+    '<img src="../chart.png">',
+    '<img src="/assets/chart.png">',
+    '<img src="?chart=weekly">',
+    '<img src="#chart">',
+    '<img src="assets&sol;chart.png">',
+    '<img src="assets\\chart.png">',
+    '<script src="app.js"></script>',
+    '<link rel="stylesheet" href="styles.css">',
+    '<link rel="stylesheet" href="../styles/report.css">',
+    '<link rel="alternate STYLESHEET" href="report.css">',
+    '<link rel="icon" href="favicon.png">',
+    '<link rel="preload" href="font.woff2" as="font">',
+    '<video src="movie.mp4" poster="poster.png"></video>',
+    '<audio src="audio.mp3"></audio>',
+    '<video><source src="movie.webm"><track src="captions.vtt"></video>',
+    '<input type="image" src="submit.png">',
+    '<iframe src="frame.html"></iframe>',
+    '<embed src="report.pdf">',
+    '<object data="report.pdf"></object>',
+    '<svg><image href="chart.svg"></image></svg>',
+    '<svg><image xlink:href="chart.svg"></image></svg>',
+    '<svg><use href="icons.svg#chart"></use></svg>',
+    '<svg><use xlink:href="icons.svg#chart"></use></svg>',
+  ]) {
+    const result = validateHtml(`<!doctype html><html>${markup}</html>`);
+
+    assert.equal(result.ok, true, markup);
+    assert.deepEqual(result.errors, [], markup);
+    assert.ok(result.warnings.length > 0, markup);
+    assert.ok(result.warnings.every((warning) =>
+      warning.includes("document-relative asset") &&
+      warning.includes("CSP will block") &&
+      warning.includes("only the HTML file is stored") &&
+      /Embed|Inline/.test(warning),
+    ), markup);
+  }
+
+  const script = validateHtml('<html><script src="app.js"></script></html>');
+  const stylesheet = validateHtml('<html><link rel="stylesheet" href="styles.css"></html>');
+
+  assert.match(script.warnings[0], /Inline the JavaScript or use a supported Tailwind or Mermaid script entry URL/);
+  assert.match(stylesheet.warnings[0], /Inline stylesheet CSS in a <style> element/);
+});
+
+test("srcset warns for relative candidates even after an embedded or external image", () => {
+  for (const markup of [
+    '<img srcset="a">',
+    '<img srcset="a 1x, b 2x">',
+    '<img srcset="chart.png">',
+    '<img srcset="chart.png 1x, chart@2x.png 2x">',
+    '<img srcset="./small.png 320w, ../large.png 640w" sizes="100vw">',
+    '<picture><source srcset="/small.webp 320w, /large.webp 640w"></picture>',
+    '<img srcset="data:image/png;base64,iVBORw0KGgo= 1x, chart.png 2x">',
+    '<img srcset="data:image/png;base64,iVBORw0KGgo=, chart.png 2x">',
+    '<img srcset="chart.png 1x, data:image/png;base64,iVBORw0KGgo= 2x">',
+    '<img srcset="https://example.com/chart.png 1x, chart.png 2x">',
+    '<img srcset="chart.png 1x, https://example.com/chart.png 2x">',
+    '<img srcset="data:image/svg+xml,%3Csvg%3E,%3C/svg%3E 1x, chart.png 2x">',
+    '<img srcset="&#32;chart.png&#9;1x,&#10;large.png 2x">',
+  ]) {
+    const result = validateHtml(`<!doctype html><html>${markup}</html>`);
+
+    assert.equal(result.ok, true, markup);
+    assert.deepEqual(result.errors, [], markup);
+    assert.ok(result.warnings.some((warning) =>
+      warning.includes("srcset references a document-relative asset") &&
+      warning.includes("Embed the resource"),
+    ), markup);
+  }
+});
+
+test("navigation, embedded resources, and supported CDN entry points have no relative-asset warnings", () => {
+  for (const markup of [
+    '<a href="chart.png">chart</a>',
+    '<a href="./details.html">details</a>',
+    '<a href="../details.html">details</a>',
+    '<a href="/details">details</a>',
+    '<a href="?tab=details">details</a>',
+    '<a href="#chart">chart</a>',
+    '<map><area href="details.html"><area href="#chart"></map>',
+    '<svg><a href="#chart">chart</a><use href="#chart"></use></svg>',
+    '<svg><use xlink:href=" &#35;chart "></use></svg>',
+    '<img src="data:image/png;base64,iVBORw0KGgo=">',
+    '<img srcset="data:image/png;base64,iVBORw0KGgo=">',
+    '<img srcset="data:image/png;base64,iVBORw0KGgo= 1x, data:image/png;base64,iVBORw0KGgo= 2x">',
+    '<picture><source srcset="data:image/webp;base64,UklGRg== 320w, data:image/webp;base64,UklGRg== 640w"></picture>',
+    '<img srcset="data:image/svg+xml,%3Csvg%3E,%3C/svg%3E 1x, data:image/png;base64,iVBORw0KGgo= 2x">',
+    '<audio src="data:audio/mpeg;base64,AAAA"></audio>',
+    '<video src="data:video/mp4;base64,AAAA" poster="data:image/png;base64,AAAA"></video>',
+    '<svg><image href="data:image/png;base64,AAAA"></image></svg>',
+    '<svg><image xlink:href="data:image/png;base64,AAAA"></image></svg>',
+    '<svg><filter><feImage href="data:image/png;base64,AAAA"></feImage></filter></svg>',
+    '<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>',
+    '<script src="https://cdn.tailwindcss.com"></script>',
+    '<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>',
+    '<script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"></script>',
+    '<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";</script>',
+    '<div src="chart.png" href="chart.png" data="chart.png"></div>',
+    '<input type="text" src="chart.png">',
+    '<link rel="canonical" href="report.html">',
+    '<link rel="alternate" href="report.html">',
+    '<img alt="chart.png"><script>const markup = \'<img src="chart.png">\';</script>',
+    '<img src=""><img srcset=" ">',
+  ]) {
+    const result = validateHtml(`<!doctype html><html>${markup}</html>`);
+
+    assert.equal(result.ok, true, markup);
+    assert.deepEqual(result.errors, [], markup);
+    assert.deepEqual(result.warnings, [], markup);
+  }
+});
+
+test("srcset keeps executable schemes blocking even in a later candidate", () => {
+  for (const value of [
+    "javascript:alert(1) 1x",
+    "data:image/png;base64,AAAA 1x, javascript:alert(1) 2x",
+    "chart.png 1x, &#106;avascript:alert(1) 2x",
+    "chart.png 1x, vbscript:msgbox(1) 2x",
+  ]) {
+    const result = validateHtml(`<html><img srcset="${value}"></html>`);
+
+    assert.equal(result.ok, false, value);
+    assert.ok(result.errors.some((error) => /must not use (javascript|vbscript):/.test(error)), value);
+  }
+});
+
+test("invalid srcset descriptors are ignored without changing the advisory result", () => {
+  const result = validateHtml('<html><img srcset="ignored.png invalid, chart.png 2x"></html>');
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.warnings.length, 1);
+  assert.match(result.warnings[0], /srcset references a document-relative asset/);
+});
+
+test("repeated relative assets produce one warning per element and attribute", () => {
+  const result = validateHtml(`<html>
+    <img src="chart.png"><img src="other-chart.png">
+    <img srcset="small.png 1x, large.png 2x">
+    <img srcset="other-small.png 1x, other-large.png 2x">
+  </html>`);
+
+  assert.equal(result.ok, true);
+  assert.equal(result.warnings.length, 2);
+});
