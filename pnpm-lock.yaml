@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@fisker/parse-srcset':
+        specifier: 1.0.2
+        version: 1.0.2
       '@types/node':
         specifier: ^24.0.0
         version: 24.13.2
@@ -27,6 +30,9 @@ importers:
   packages/cli: {}
 
 packages:
+
+  '@fisker/parse-srcset@1.0.2':
+    resolution: {integrity: sha512-DCLDSVB5PWC/KbT1ajPPwBGWwAb87/BxfwL8LVlbx3RPlOo5kWg/OMkNyrzwAk4KFMhdINLoBIhqz01f39Joug==}
 
   '@types/node@24.13.2':
     resolution: {integrity: sha512-fRa09kZTgu8o71KFcDjUFuc7F+dEbZYZmkI0mg5YBTRs0yMKjYHsq/c0urDKeDb+D5qVgXOdFcuu+DZPKOITwA==}
@@ -181,6 +187,8 @@ packages:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
 snapshots:
+
+  '@fisker/parse-srcset@1.0.2': {}
 
   '@types/node@24.13.2':
     dependencies:

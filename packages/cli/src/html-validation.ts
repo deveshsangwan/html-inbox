@@ -1,4 +1,5 @@
 import { parse, type DefaultTreeAdapterMap } from "parse5";
+import parseSrcset from "@fisker/parse-srcset";
 
 /**
  * Two-tier validation result.
@@ -109,6 +110,25 @@ function checkUrlAttribute(
   errors: Set<string>,
   warnings: Set<string>,
 ): void {
+  // A comma can belong to a data URL, so splitting srcset on commas would
+  // mistake embedded image bytes for another resource.
+  // Browsers discard invalid descriptors; keep the parser's diagnostics out
+  // of CLI output and report only the resources that can be selected.
+  const values = attribute.name === "srcset"
+    ? parseSrcset(attribute.value, { logger: {} }).map((candidate) => candidate.url)
+    : [attribute.value];
+
+  for (const value of values) {
+    checkUrlValue(tag, { name: attribute.name, value }, errors, warnings);
+  }
+}
+
+function checkUrlValue(
+  tag: HtmlTag,
+  attribute: HtmlAttribute,
+  errors: Set<string>,
+  warnings: Set<string>,
+): void {
   const scheme = urlScheme(attribute.value);
   const value = attribute.value;
 
@@ -117,8 +137,12 @@ function checkUrlAttribute(
     return;
   }
 
-  const navigable = NAVIGATION_ATTRIBUTES.has(attribute.name) || tag.name === "iframe";
-  if (scheme === "data" && navigable) {
+  const isNavigation =
+    (NAVIGATION_ATTRIBUTES.has(attribute.name) &&
+      (attribute.name !== "href" || ["a", "area"].includes(tag.name))) ||
+    (tag.name === "iframe" && attribute.name === "src");
+
+  if (scheme === "data" && isNavigation) {
     errors.add(`HTML must not navigate to data: URLs in ${attribute.name}`);
     return;
   }
@@ -133,10 +157,12 @@ function checkUrlAttribute(
     ((attribute.name === "src" && ["audio", "img", "input", "source", "video"].includes(tag.name)) ||
       (attribute.name === "srcset" && ["img", "source"].includes(tag.name)) ||
       (attribute.name === "poster" && tag.name === "video") ||
-      (["href", "xlink:href"].includes(attribute.name) && tag.name === "image"));
+      (["href", "xlink:href"].includes(attribute.name) && ["image", "feimage"].includes(tag.name)));
+
   if (cspAllowsData) {
     return;
   }
+
   if (scheme === "data" || scheme === "blob") {
     warnings.add(`HTML references a ${scheme}: URL that the document CSP will block`);
     return;
@@ -145,7 +171,25 @@ function checkUrlAttribute(
   // Special HTTP(S) URLs treat reverse solidus as solidus.
   const externalValue = value.replaceAll("\\", "/");
   const externalUrls = findExternalUrls(externalValue);
+
   if (externalUrls.length === 0) {
+    if (!scheme && value.trim() !== "" && isResourceAttribute(tag, attribute)) {
+      const isStylesheet = tag.name === "link" && tag.attributes.some((linkAttribute) =>
+        linkAttribute.name === "rel" &&
+        linkAttribute.value.toLowerCase().split(/\s+/).includes("stylesheet"),
+      );
+      const remediation = tag.name === "script"
+        ? "Inline the JavaScript or use a supported Tailwind or Mermaid script entry URL."
+        : isStylesheet
+          ? "Inline stylesheet CSS in a <style> element."
+          : "Embed the resource in the HTML, using a data: URL for images or media.";
+
+      warnings.add(
+        `HTML <${tag.name}> ${attribute.name} references a document-relative asset; ` +
+        `the document CSP will block it and only the HTML file is stored. ${remediation}`,
+      );
+    }
+
     return;
   }
 
@@ -171,6 +215,52 @@ function checkUrlAttribute(
   // directives, so the reference fails closed.
   warnings.add("HTML references non-allowlisted external asset URLs; the document CSP will block them",
   );
+}
+
+function isResourceAttribute(tag: HtmlTag, attribute: HtmlAttribute): boolean {
+  if (["href", "xlink:href"].includes(attribute.name) && tag.name === "use") {
+    // SVG references to an element in this document do not load a resource.
+    return !attribute.value.trim().startsWith("#");
+  }
+
+  switch (attribute.name) {
+    case "src":
+      if (tag.name === "input") {
+        return tag.attributes.some((inputAttribute) =>
+          inputAttribute.name === "type" && inputAttribute.value.toLowerCase() === "image",
+        );
+      }
+
+      return [
+        "audio", "embed", "iframe", "img", "script", "source", "track", "video",
+      ].includes(tag.name);
+    case "srcset":
+      return ["img", "source"].includes(tag.name);
+
+    case "href":
+      if (tag.name === "link") {
+        const relations = tag.attributes.find((linkAttribute) => linkAttribute.name === "rel")
+          ?.value.toLowerCase().split(/\s+/) ?? [];
+
+        return relations.some((relation) =>
+          ["stylesheet", "icon", "preload", "modulepreload", "prefetch", "manifest"].includes(relation),
+        );
+      }
+
+      return ["image", "feimage"].includes(tag.name);
+
+    case "xlink:href":
+      return ["image", "feimage"].includes(tag.name);
+
+    case "poster":
+      return tag.name === "video";
+
+    case "data":
+      return tag.name === "object";
+
+    default:
+      return false;
+  }
 }
 
 function checkAnchorHref(
@@ -265,4 +355,3 @@ function* elements(root: DefaultTreeAdapterMap["node"]): Generator<DefaultTreeAd
     }
   }
 }
-
