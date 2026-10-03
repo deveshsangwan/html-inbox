@@ -514,7 +514,11 @@
     <section class="section">
       <div class="quickstart shell reveal">
         <h2>From checkout to your first document.</h2>
-        <div class="terminal" aria-label="Source checkout commands"><span class="comment"># Node.js 20 or newer</span>
+        <div class="terminal" aria-label="Source checkout commands"><span class="comment"># Node.js 24 for source development</span>
+<span class="comment"># Installed CLI runtime: Node.js 20 or newer</span>
+<span class="prompt">$</span> git clone https://github.com/deveshsangwan/html-inbox.git
+<span class="prompt">$</span> cd html-inbox
+<span class="prompt">$</span> corepack enable
 <span class="prompt">$</span> corepack pnpm install --frozen-lockfile
 <span class="prompt">$</span> corepack pnpm build
 <span class="prompt">$</span> corepack pnpm html-inbox publish ./examples/report.html \

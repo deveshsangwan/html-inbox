@@ -45,9 +45,15 @@ The handoff is complete when the user has a clickable URL and any verification l
 
 ## Validation gate
 
-The source must be a regular `.html` or `.htm` file containing valid UTF-8 and either an `<html` element or `<!doctype html` marker. Active and external content is policy-controlled: the installed CLI may reject scripts, inline event handlers, or asset URLs that are not allowed by its current policy.
+The source must be a regular `.html` or `.htm` file containing valid UTF-8 and an explicit `<html>` tag or `<!doctype html>` declaration. The default size limit is 10 MiB.
+
+Blocking HTML policy errors reject publishing. These include `javascript:` or `vbscript:` URL attributes, navigation to `data:` URLs, `<meta http-equiv="refresh">`, and `<a>` or `<area>` links with non-HTTPS schemes or protocol-relative URLs. HTTPS, relative, and fragment links are allowed.
+
+Inline scripts and the supported Tailwind browser and Mermaid v11 script entry points are allowed. Inline event handlers, `<base>`, and non-allowlisted external scripts or asset URLs produce advisory warnings. Publishing continues, and the viewer CSP blocks the warned features.
 
 When publishing fails, preserve the exact error, fix the named condition in the source, and retry the same publish contract. Do not bypass validation, weaken viewer security, or claim that a CDN works without rendering it in the viewer.
+
+When publishing succeeds with warnings, preserve the printed URL, report the warnings, and verify the affected behavior in the viewer. Replace any required blocked feature with supported markup before republishing.
 
 ## Operate the viewer
 
