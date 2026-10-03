@@ -116,6 +116,11 @@ for (const host of ["0.0.0.0", "::"]) {
     assert.deepEqual(JSON.parse((await requestUrl(`${reader}/health`)).body), { ok: true });
     assert.deepEqual(JSON.parse((await requestUrl(listener.controlUrl)).body), { ok: true, ...health });
 
+    inventory.mock.mockImplementation(() => { throw new Error("Interface discovery unavailable"); });
+    assert.equal((await requestUrl(`${reader}/health`, { headers: { Host: newHost } })).status, 421);
+    assert.deepEqual(publishedUrls, []);
+
+    inventory.mock.mockImplementation(() => interfaces);
     interfaces = { lan: [networkAddress("192.0.2.30")] };
     const restoredHost = `192.0.2.30:${listener.config.port}`;
     assert.equal((await requestUrl(`${reader}/health`, { headers: { Host: restoredHost } })).status, 200);
