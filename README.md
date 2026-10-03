@@ -25,21 +25,18 @@ Until the first registry release, use a source checkout. The operational example
 
 ## Set up a source checkout for development
 
-Use Node.js 24 for source development and release tooling. The published CLI supports Node.js 20 or newer. The repository is a pnpm workspace, so contributor and release commands use the checked-in pnpm lockfile:
+Use Node.js 24 for source development and release tooling. The installed CLI supports Node.js 20 or newer. Clone the repository and use its pinned pnpm version and lockfile:
 
 ```sh
+git clone https://github.com/deveshsangwan/html-inbox.git
+cd html-inbox
 corepack enable
 corepack pnpm install --frozen-lockfile
-corepack pnpm exec playwright install chromium
-corepack pnpm verify
-```
-
-Build and inspect the CLI:
-
-```sh
 corepack pnpm build
 corepack pnpm html-inbox --help
 ```
+
+Run subsequent source commands from the checkout root. See [Development](#development) for the full test gate.
 
 ## Publish a document
 
@@ -135,13 +132,21 @@ Existing local users can follow the [remote migration guide](docs/remote-migrati
 
 ## Development
 
+Use Node.js 24 from the checkout root. Build or run the unit and integration tests:
+
 ```sh
 corepack pnpm build
 corepack pnpm test
+```
+
+Install Chromium before running the full verification gate:
+
+```sh
+corepack pnpm exec playwright install chromium
 corepack pnpm verify
 ```
 
-`verify` is the same clean build-and-test gate used by continuous integration. Named unit and integration tests exercise validation, storage, static export determinism, Cloudflare command recording, remote-operation recovery, security headers, iframe isolation, theme behavior, and escaping of untrusted metadata. The browser suite runs Chromium to check theme persistence, search, and document isolation. CI checks Node 20 and 24 on Linux and Node 24 on Windows.
+`verify` runs a clean build, unit and integration tests, Chromium browser tests, and the package smoke test. Named tests exercise validation, storage, static export determinism, Cloudflare command recording, remote-operation recovery, security headers, and escaping of untrusted metadata. The browser suite checks theme persistence, search, and document isolation. CI installs dependencies and builds with Node 24, then tests the CLI on Node 20 and 24 on Linux and Node 24 on Windows.
 
 ## License
 
