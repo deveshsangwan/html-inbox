@@ -39,6 +39,19 @@ export async function startViewerHttpServer(
   let config = resolveViewerNetworkConfig(configuration);
   let urls = getViewerUrls(config);
   const server = http.createServer((request, response) => {
+    if (
+      hasSingleHost(request) &&
+      (config.host === "0.0.0.0" || config.host === "::") &&
+      !isAllowedViewerHost(request.headers.host, config, urls)
+    ) {
+      try {
+        urls.splice(0, urls.length, ...getViewerUrls(config));
+      } catch {
+        // Removed interface addresses must not remain trusted when enumeration fails.
+        urls.length = 0;
+      }
+    }
+
     void routeReaderRequest(backend, config, urls, request, response).catch((error: unknown) => {
       console.error(error);
 

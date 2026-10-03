@@ -2,6 +2,8 @@ import { strict as assert } from "node:assert";
 import { randomUUID } from "node:crypto";
 import { once } from "node:events";
 import http from "node:http";
+import { isIP } from "node:net";
+import os from "node:os";
 import { test } from "node:test";
 import { setImmediate as nextTurn } from "node:timers/promises";
 import { LocalDocumentBackend } from "./backend";
@@ -39,6 +41,112 @@ test("LAN wildcard listener serves its advertised interface URLs with an anonymo
     headers: { Host: `0.0.0.0:${address.port}` },
   });
   assert.equal(invalidHost.status, 421);
+});
+
+for (const host of ["0.0.0.0", "::"]) {
+  test(`wildcard ${host} refreshes derived Hosts after interface addresses change`, async (t) => {
+    const home = await temporaryHome(t);
+    let interfaces = { lan: [networkAddress("192.0.2.10")] };
+    const inventory = t.mock.method(os, "networkInterfaces", () => interfaces);
+    const health = controlHealth();
+    const listener = await startViewerHttpServer(new LocalDocumentBackend(home), resolveViewerNetworkConfig({
+      port: 0,
+      exposure: "lan",
+      host,
+    }), health);
+    t.after(() => listener.close());
+    const reader = `http://127.0.0.1:${listener.config.port}`;
+    const publishedUrls = listener.urls;
+    const oldHost = `192.0.2.10:${listener.config.port}`;
+    const newHost = `192.0.2.20:${listener.config.port}`;
+    assert.equal((await requestUrl(`${reader}/health`, { headers: { Host: oldHost } })).status, 200);
+    const startupReads = inventory.mock.callCount();
+
+    interfaces = { lan: [
+      networkAddress("192.0.2.20"),
+      networkAddress("fd00::20"),
+      networkAddress("fe80::20"),
+      networkAddress("fe80::20%eth0"),
+      networkAddress("ff02::1"),
+      networkAddress("attacker.example"),
+    ] };
+    const duplicate = await requestUrl(`${reader}/health`, { headers: ["Host", newHost, "Host", "attacker.example"] });
+    assert.equal(duplicate.status, 421);
+    assert.equal(inventory.mock.callCount(), startupReads);
+
+    const refreshed = await requestUrl(`${reader}/health`, { headers: { Host: newHost } });
+    assert.equal(refreshed.status, 200);
+    assert.deepEqual(JSON.parse(refreshed.body), { ok: true });
+    assert.equal(inventory.mock.callCount(), startupReads + 1);
+    assert.equal(listener.urls, publishedUrls);
+    assert.deepEqual(publishedUrls, [
+      `http://${newHost}`,
+      ...(host === "::" ? [`http://[fd00::20]:${listener.config.port}`] : []),
+    ]);
+
+    assert.equal((await requestUrl(`${reader}/health`, { headers: { Host: newHost } })).status, 200);
+    assert.equal(inventory.mock.callCount(), startupReads + 1);
+    const ipv6 = await requestUrl(`${reader}/health`, { headers: { Host: `[fd00::20]:${listener.config.port}` } });
+    assert.equal(ipv6.status, host === "::" ? 200 : 421);
+
+    for (const authority of [oldHost, "attacker.example", `192.0.2.21:${listener.config.port}`, `192.0.2.20:${listener.config.port + 1}`, `[fe80::20]:${listener.config.port}`, `[fe80::20%eth0]:${listener.config.port}`, `[ff02::1]:${listener.config.port}`]) {
+      const denied = await requestUrl(`${reader}/health`, { headers: {
+        Host: authority,
+        Forwarded: `host=${newHost};for=127.0.0.1`,
+        "X-Forwarded-Host": newHost,
+      } });
+      assert.equal(denied.status, 421, authority);
+      assertSecurityHeaders(denied.headers);
+    }
+
+    const forwarded = await requestUrl(`${reader}/health`, { headers: {
+      Host: newHost,
+      Forwarded: "host=attacker.example;for=127.0.0.1",
+      "X-Forwarded-Host": "attacker.example",
+    } });
+    assert.equal(forwarded.status, 200);
+    assert.deepEqual(JSON.parse(forwarded.body), { ok: true });
+    assertSecurityHeaders(forwarded.headers);
+    assert.deepEqual(JSON.parse((await requestUrl(listener.controlUrl)).body), { ok: true, ...health });
+
+    interfaces = { lan: [] };
+    assert.equal((await requestUrl(`${reader}/health`, { headers: { Host: "unassigned.example" } })).status, 421);
+    assert.deepEqual(publishedUrls, []);
+    assert.equal((await requestUrl(`${reader}/health`, { headers: { Host: newHost } })).status, 421);
+    assert.deepEqual(JSON.parse((await requestUrl(`${reader}/health`)).body), { ok: true });
+    assert.deepEqual(JSON.parse((await requestUrl(listener.controlUrl)).body), { ok: true, ...health });
+
+    interfaces = { lan: [networkAddress("192.0.2.30")] };
+    const restoredHost = `192.0.2.30:${listener.config.port}`;
+    assert.equal((await requestUrl(`${reader}/health`, { headers: { Host: restoredHost } })).status, 200);
+    assert.deepEqual(publishedUrls, [`http://${restoredHost}`]);
+  });
+}
+
+test("explicit bindings retain their configured Host inventory after interface changes", async (t) => {
+  const home = await temporaryHome(t);
+  let interfaces = { lan: [networkAddress("192.0.2.10")] };
+  const inventory = t.mock.method(os, "networkInterfaces", () => interfaces);
+  const configurations = [
+    resolveViewerNetworkConfig(0),
+    resolveViewerNetworkConfig({ port: 0, exposure: "lan", host: "127.0.0.1" }),
+    resolveViewerNetworkConfig({ port: 0, exposure: "tailscale", tailscaleHostname: "server.tailnet.ts.net" }),
+  ];
+
+  for (const config of configurations) {
+    const listener = await startViewerHttpServer(new LocalDocumentBackend(home), config, controlHealth());
+    t.after(() => listener.close());
+    const initialUrls = [...listener.urls];
+    const startupReads = inventory.mock.callCount();
+    interfaces = { lan: [networkAddress("192.0.2.20")] };
+
+    const response = await requestUrl(`http://127.0.0.1:${listener.config.port}/health`, {
+      headers: { Host: `192.0.2.20:${listener.config.port}` },
+    });
+    assert.equal(response.status, 421, config.exposure);
+    assert.equal(inventory.mock.callCount(), startupReads);
+    assert.deepEqual(listener.urls, initialUrls);
+  }
 });
 
 test("LAN reads the live inbox without granting HTTP mutations and preserves document protections", async (t) => {
@@ -416,6 +524,18 @@ test("reader storage errors produce a generic response and keep health available
 
 function controlHealth() {
   return { instanceId: randomUUID(), processId: randomUUID(), protocolVersion: 2, pid: process.pid };
+}
+
+function networkAddress(address: string): os.NetworkInterfaceInfo {
+  return {
+    address,
+    internal: false,
+    family: isIP(address) === 4 ? "IPv4" : "IPv6",
+    netmask: isIP(address) === 4 ? "255.255.255.0" : "ffff:ffff:ffff:ffff::",
+    mac: "00:00:00:00:00:00",
+    cidr: null,
+    scopeid: 0,
+  };
 }
 
 function assertSecurityHeaders(headers: http.IncomingHttpHeaders): void {
