@@ -51,11 +51,14 @@ export async function startViewerHttpServer(
     });
   });
   const controlPath = `/control/${randomBytes(32).toString("base64url")}`;
+  let controlPort = 0;
   const controlServer = http.createServer((request, response) => {
-    routeControlRequest(health, getServerPort(controlServer), controlPath, request, response);
+    routeControlRequest(health, controlPort, controlPath, request, response);
   });
+  let readerClosed: Promise<void> | undefined;
+  let controlClosed: Promise<void> | undefined;
   let controlClose: Promise<void> | undefined;
-  const closeControl = () => controlClose ??= closeServer(controlServer);
+  const closeControl = () => controlClose ??= closeServer(controlServer, controlClosed);
 
   server.once("close", () => {
     void closeControl();
@@ -63,12 +66,15 @@ export async function startViewerHttpServer(
 
   try {
     await listen(server, config.port, config.host);
+    readerClosed = new Promise((resolve) => server.once("close", resolve));
     config = { ...config, port: getServerPort(server) };
     urls = getViewerUrls(config);
 
     await listen(controlServer, 0, "127.0.0.1");
+    controlClosed = new Promise((resolve) => controlServer.once("close", resolve));
+    controlPort = getServerPort(controlServer);
   } catch (error) {
-    await Promise.all([closeServer(server), closeControl()]);
+    await Promise.all([closeServer(server, readerClosed), closeControl()]);
     throw error;
   }
 
@@ -77,9 +83,9 @@ export async function startViewerHttpServer(
     controlServer,
     config,
     urls,
-    controlUrl: `http://127.0.0.1:${getServerPort(controlServer)}${controlPath}`,
+    controlUrl: `http://127.0.0.1:${controlPort}${controlPath}`,
     async close() {
-      await Promise.all([closeServer(server), closeControl()]);
+      await Promise.all([closeServer(server, readerClosed), closeControl()]);
     },
   };
 }
@@ -213,7 +219,13 @@ function parseRequestUrl(request: IncomingMessage, response: ServerResponse): UR
   }
 
   try {
-    return new URL(target, "http://127.0.0.1");
+    const url = new URL(target, "http://127.0.0.1");
+    if (url.origin !== "http://127.0.0.1") {
+      sendText(response, 400, "Bad Request");
+      return null;
+    }
+
+    return url;
   } catch {
     sendText(response, 400, "Bad Request");
     return null;
@@ -231,12 +243,14 @@ async function listen(server: http.Server, port: number, host: string): Promise<
   });
 }
 
-function closeServer(server: http.Server): Promise<void> {
+async function closeServer(server: http.Server, closed?: Promise<void>): Promise<void> {
   if (!server.listening) {
-    return Promise.resolve();
+    // Closing stops the listener before active requests finish.
+    await closed;
+    return;
   }
 
-  return new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     server.close((error) => error ? reject(error) : resolve());
   });
 }

@@ -38,14 +38,19 @@ export function parseViewerNetworkConfig(value: unknown): ViewerNetworkConfig {
     throw new Error("Viewer port must be an integer between 0 and 65535");
   }
 
-  const exposure = value.exposure ?? "loopback";
+  const exposure = value.exposure === undefined ? "loopback" : value.exposure;
   if (exposure !== "loopback" && exposure !== "lan" && exposure !== "tailscale") {
     throw new Error("Viewer exposure must be loopback, lan, or tailscale");
   }
 
-  const host = normalizeIpAddress(value.host ?? (exposure === "lan" ? "0.0.0.0" : "127.0.0.1"));
+  const defaultHost = exposure === "lan" ? "0.0.0.0" : "127.0.0.1";
+  const host = normalizeIpAddress(value.host === undefined ? defaultHost : value.host);
   if (exposure !== "lan" && !isLoopbackAddress(host)) {
     throw new Error(`${exposure} viewer must bind a loopback IP address`);
+  }
+
+  if (exposure === "tailscale" && host !== "127.0.0.1") {
+    throw new Error("tailscale viewer must bind 127.0.0.1 for its Serve proxy target");
   }
 
   if (value.tailscaleHostname !== undefined) {
@@ -68,7 +73,11 @@ export function getViewerUrls(
   config: ViewerNetworkConfig,
   interfaces: ReturnType<typeof networkInterfaces> = networkInterfaces(),
 ): string[] {
-  if (config.exposure === "tailscale" && config.tailscaleHostname) {
+  if (config.exposure === "tailscale") {
+    if (!config.tailscaleHostname) {
+      throw new Error("Resolve the Tailscale hostname before starting the viewer");
+    }
+
     return [`https://${config.tailscaleHostname}`];
   }
 
@@ -163,7 +172,12 @@ function normalizeTailscaleHostname(value: unknown): string {
 
 function isUsableInterfaceAddress(address: string, bindHost: string): boolean {
   const family = isIP(address);
-  if (family === 0 || address.includes("%") || isLoopbackAddress(address)) {
+  if (family === 0 || address.includes("%")) {
+    return false;
+  }
+
+  const normalized = normalizeIpAddress(address);
+  if (isLoopbackAddress(normalized)) {
     return false;
   }
 
@@ -172,8 +186,7 @@ function isUsableInterfaceAddress(address: string, bindHost: string): boolean {
     return firstOctet > 0 && firstOctet < 224;
   }
 
-  const normalized = normalizeIpAddress(address);
-  return bindHost === "::" && normalized !== "::" && !/^(?:fe[89ab]|ff)/.test(normalized);
+  return bindHost === "::" && normalized !== "::" && !/^(?:fe[89ab]|ff|::ffff:)/.test(normalized);
 }
 
 function httpUrl(host: string, port: number): string {
