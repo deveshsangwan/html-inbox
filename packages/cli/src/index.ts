@@ -12,6 +12,7 @@ import { exportStaticSnapshot, StaticSnapshotResult } from "./static-export";
 import { ensureViewer, getViewerStatus, startViewer, stopViewer } from "./viewer-server";
 import { parseCommand, type CliCommand } from "./cli-args";
 import { isRecord } from "./validation";
+import { containsPath } from "./path-containment";
 
 export const USAGE = `Usage: html-inbox <command> [options]
 
@@ -179,6 +180,7 @@ export function formatStaticExportResult(
 export function assertExportOutsideHome(outputDir: string, home: string): void {
   const output = normalizeComparisonPath(resolveExistingPath(outputDir));
   const inboxHome = normalizeComparisonPath(resolveExistingPath(home));
+
   if (containsPath(output, inboxHome) || containsPath(inboxHome, output)) {
     throw new Error("Static export output must not contain or be inside HTML_INBOX_HOME");
   }
@@ -204,11 +206,6 @@ function resolveExistingPath(value: string): string {
       current = parent;
     }
   }
-}
-
-function containsPath(parent: string, child: string): boolean {
-  const relative = path.relative(parent, child);
-  return relative === "" || (relative !== ".." && !relative.startsWith(`..${path.sep}`));
 }
 
 export function formatRemoteState(state: RemoteState): string {
