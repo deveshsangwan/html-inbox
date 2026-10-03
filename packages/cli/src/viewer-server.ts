@@ -2,10 +2,10 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { readFile, rm } from "node:fs/promises";
-import http, { IncomingMessage, ServerResponse } from "node:http";
+import http from "node:http";
 import net from "node:net";
 import path from "node:path";
-import { DocumentBackend, isSafeDocumentId } from "./documents";
+import { DocumentBackend } from "./documents";
 import { assertUuidV4, isRecord } from "./validation";
 import {
   ensurePrivateDirectory,
@@ -13,13 +13,8 @@ import {
   writePrivateFile,
   writeAtomicPrivateJson,
 } from "./private-storage";
-import {
-  DOCUMENT_CSP,
-  SHELL_CSP,
-  VIEWER_SCRIPT,
-  VIEWER_STYLES,
-} from "./viewer-assets";
-import { renderDocumentShell, renderIndex } from "./viewer-render";
+import { startViewerHttpServer } from "./viewer-http-server";
+import { resolveViewerNetworkConfig } from "./viewer-network";
 
 const HOST = "127.0.0.1";
 export const VIEWER_PROTOCOL_VERSION = 2;
@@ -32,7 +27,7 @@ export interface ViewerStatus {
 
 export async function ensureViewer(home: string, port: number): Promise<void> {
   const instanceId = await getInboxInstanceId(home);
-  const health = await getHealth(port);
+  const health = await getHealth(home, port);
   if (isMatchingViewer(health, instanceId, port)) {
     return;
   }
@@ -57,7 +52,7 @@ export async function ensureViewer(home: string, port: number): Promise<void> {
 
   const deadline = Date.now() + 3000;
   while (Date.now() < deadline) {
-    const nextHealth = await getHealth(port);
+    const nextHealth = await getHealth(home, port);
     if (isMatchingViewer(nextHealth, instanceId, port)) {
       return;
     }
@@ -72,7 +67,7 @@ export async function getViewerStatus(
   port: number,
 ): Promise<ViewerStatus> {
   const url = `http://${HOST}:${port}`;
-  const health = await getHealth(port);
+  const health = await getHealth(home, port);
   if (health.state === "unavailable") {
     const isListening = await isPortListening(port);
     return { state: isListening ? "conflict" : "stopped", url };
@@ -120,7 +115,7 @@ export async function stopViewer(
   process.kill(status.pid, "SIGTERM");
   const deadline = Date.now() + 3000;
   while (Date.now() < deadline) {
-    if ((await getHealth(port)).state === "unavailable") {
+    if ((await getHealth(home, port)).state === "unavailable") {
       await rm(path.join(home, "viewer.json"), { force: true });
       return { state: "stopped", url: status.url };
     }
@@ -136,112 +131,21 @@ export async function startViewer(
 ): Promise<http.Server> {
   const instanceId = await getInboxInstanceId(home);
   const processId = randomUUID();
-  const server = http.createServer((request, response) => {
-    void routeRequest(
-      backend,
-      instanceId,
-      processId,
-      getServerPort(server),
-      request,
-      response,
-    ).catch((error) => {
-      console.error(error);
-      sendText(response, 500, "Internal Server Error");
-    });
+  const listener = await startViewerHttpServer(backend, resolveViewerNetworkConfig(port), {
+    instanceId,
+    processId,
+    protocolVersion: VIEWER_PROTOCOL_VERSION,
+    pid: process.pid,
   });
 
-  await new Promise<void>((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(port, HOST, resolve);
-  });
-
-  const actualPort = getServerPort(server);
   try {
-    await writeViewerInfo(home, actualPort, processId);
+    await writeViewerInfo(home, listener.config.port, processId, listener.controlUrl);
   } catch (error) {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await listener.close();
     throw error;
   }
-  return server;
-}
 
-async function routeRequest(
-  backend: DocumentBackend,
-  instanceId: string,
-  processId: string,
-  port: number,
-  request: IncomingMessage,
-  response: ServerResponse,
-): Promise<void> {
-  if (!isAllowedHost(request.headers.host, port)) {
-    sendText(response, 421, "Misdirected Request");
-    return;
-  }
-
-  if (request.method !== "GET" && request.method !== "HEAD") {
-    sendText(response, 405, "Method Not Allowed");
-    return;
-  }
-
-  const url = new URL(request.url ?? "/", `http://${HOST}`);
-
-  if (url.pathname === "/health") {
-    sendJson(response, 200, {
-      ok: true,
-      instanceId,
-      protocolVersion: VIEWER_PROTOCOL_VERSION,
-      processId,
-      pid: process.pid,
-    });
-    return;
-  }
-
-  if (url.pathname === "/assets/viewer.css") {
-    sendAsset(response, 200, VIEWER_STYLES, "text/css; charset=utf-8");
-    return;
-  }
-
-  if (url.pathname === "/assets/viewer.js") {
-    sendAsset(response, 200, VIEWER_SCRIPT, "text/javascript; charset=utf-8");
-    return;
-  }
-
-  if (url.pathname === "/") {
-    const documents = await backend.listDocuments();
-    const query = (url.searchParams.get("q") ?? "").trim().slice(0, 200);
-    sendHtml(response, 200, renderIndex(documents, query), SHELL_CSP);
-    return;
-  }
-
-  const documentMatch = /^\/documents\/([^/]+)$/.exec(url.pathname);
-  if (documentMatch) {
-    const id = documentMatch[1];
-    const metadata = await backend.getDocumentMetadata(id);
-    if (!metadata) {
-      sendText(response, 404, "Not Found");
-      return;
-    }
-    sendHtml(response, 200, renderDocumentShell(metadata), SHELL_CSP);
-    return;
-  }
-
-  const contentMatch = /^\/documents\/([^/]+)\/content$/.exec(url.pathname);
-  if (contentMatch) {
-    const id = contentMatch[1];
-    if (!isSafeDocumentId(id)) {
-      sendText(response, 404, "Not Found");
-      return;
-    }
-    const document = await backend.getDocument(id);
-    if (!document) {
-      sendText(response, 404, "Not Found");
-      return;
-    }
-    sendHtml(response, 200, document.originalBytes, DOCUMENT_CSP);
-    return;
-  }
-
-  sendText(response, 404, "Not Found");
+  return listener.server;
 }
 
 type ViewerHealth =
@@ -313,16 +217,23 @@ function parseViewerHealth(body: unknown): ViewerHealth {
   }
 }
 
-async function getHealth(port: number): Promise<ViewerHealth> {
+async function getHealth(home: string, port: number): Promise<ViewerHealth> {
   try {
-    const response = await fetch(`http://${HOST}:${port}/health`, {
+    const record = await readViewerInfo(home);
+    const controlUrl = record?.port === port ? record.controlUrl : undefined;
+    const response = await fetch(controlUrl ?? `http://${HOST}:${port}/health`, {
       signal: AbortSignal.timeout(400),
     });
     if (!response.ok) {
       return { state: "invalid" };
     }
     try {
-      return parseViewerHealth(await response.json());
+      const body: unknown = await response.json();
+      if (!controlUrl && isRecord(body) && body.ok === true && Object.keys(body).length === 1) {
+        return { state: "unavailable" };
+      }
+
+      return parseViewerHealth(body);
     } catch {
       return { state: "invalid" };
     }
@@ -335,10 +246,12 @@ async function writeViewerInfo(
   home: string,
   port: number,
   processId: string,
+  controlUrl: string,
 ): Promise<void> {
   await writeAtomicPrivateJson(path.join(home, "viewer.json"), {
     host: HOST,
     port,
+    controlUrl,
     pid: process.pid,
     processId,
     startedAt: new Date().toISOString(),
@@ -347,7 +260,7 @@ async function writeViewerInfo(
 
 async function readViewerInfo(
   home: string,
-): Promise<{ pid: number; port: number; processId: string } | null> {
+): Promise<{ pid: number; port: number; processId: string; controlUrl?: string } | null> {
   const viewerInfoPath = path.join(home, "viewer.json");
   try {
     await hardenPrivateFile(viewerInfoPath);
@@ -370,7 +283,15 @@ async function readViewerInfo(
       throw new Error(`Invalid viewer process record at ${viewerInfoPath}`);
     }
     assertUuidV4(value.processId, "Viewer process identity");
-    return { pid: value.pid, port: value.port, processId: value.processId };
+    const controlUrl = "controlUrl" in value ? value.controlUrl : undefined;
+    if (controlUrl !== undefined && (
+      typeof controlUrl !== "string" ||
+      !/^http:\/\/127\.0\.0\.1:[0-9]{1,5}\/control\/[A-Za-z0-9_-]{43}$/.test(controlUrl)
+    )) {
+      throw new Error(`Invalid viewer control URL at ${viewerInfoPath}`);
+    }
+
+    return { pid: value.pid, port: value.port, processId: value.processId, controlUrl };
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return null;
@@ -395,18 +316,6 @@ async function getInboxInstanceId(home: string): Promise<string> {
   const instanceId = (await readFile(identityPath, "utf8")).trim();
   assertUuidV4(instanceId, `HTML Inbox instance identity at ${identityPath}`);
   return instanceId;
-}
-
-function isAllowedHost(hostHeader: string | undefined, port: number): boolean {
-  if (!hostHeader) {
-    return false;
-  }
-  const normalized = hostHeader.toLowerCase();
-  const allowedHosts = [`${HOST}:${port}`, `localhost:${port}`];
-  if (port === 80) {
-    allowedHosts.push(HOST, "localhost");
-  }
-  return allowedHosts.includes(normalized);
 }
 
 async function isPortListening(port: number): Promise<boolean> {
@@ -445,73 +354,4 @@ async function assertPortAvailable(port: number): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     probe.close((error) => (error ? reject(error) : resolve()));
   });
-}
-
-function getServerPort(server: http.Server): number {
-  const address = server.address();
-  if (!address || typeof address === "string") {
-    throw new Error("Viewer did not expose a TCP port");
-  }
-  return address.port;
-}
-
-function sendHtml(
-  response: ServerResponse,
-  status: number,
-  body: string | Buffer,
-  csp: string,
-): void {
-  response.writeHead(
-    status,
-    securityHeaders({
-      "Content-Type": "text/html; charset=utf-8",
-      "Content-Security-Policy": csp,
-    }),
-  );
-  response.end(body);
-}
-
-function sendJson(
-  response: ServerResponse,
-  status: number,
-  body: unknown,
-): void {
-  response.writeHead(
-    status,
-    securityHeaders({ "Content-Type": "application/json; charset=utf-8" }),
-  );
-  response.end(JSON.stringify(body));
-}
-
-function sendText(
-  response: ServerResponse,
-  status: number,
-  body: string,
-): void {
-  response.writeHead(
-    status,
-    securityHeaders({ "Content-Type": "text/plain; charset=utf-8" }),
-  );
-  response.end(body);
-}
-
-function sendAsset(
-  response: ServerResponse,
-  status: number,
-  body: string,
-  contentType: string,
-): void {
-  response.writeHead(status, securityHeaders({ "Content-Type": contentType }));
-  response.end(body);
-}
-
-function securityHeaders(
-  headers: Record<string, string>,
-): Record<string, string> {
-  return {
-    ...headers,
-    "Cache-Control": "no-store",
-    "Referrer-Policy": "no-referrer",
-    "X-Content-Type-Options": "nosniff",
-  };
 }

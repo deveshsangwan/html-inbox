@@ -268,11 +268,22 @@ async function startInstalledViewer(executable, cwd, env) {
         signal: AbortSignal.timeout(500),
       }).catch(() => null);
       if (response?.ok) {
-        const health = await response.json();
-        assert.equal(health.ok, true);
-        assert.equal(health.pid, child.pid);
+        assert.deepEqual(await response.json(), { ok: true });
+        const recordContents = await readFile(path.join(env.HTML_INBOX_HOME, "viewer.json"), "utf8").catch((error) => {
+          if (error.code === "ENOENT") return null;
 
-        return { origin, close };
+          throw error;
+        });
+        if (recordContents) {
+          const record = JSON.parse(recordContents);
+          const controlResponse = await fetch(record.controlUrl, { signal: AbortSignal.timeout(500) });
+          const health = await controlResponse.json();
+          assert.equal(controlResponse.status, 200);
+          assert.equal(health.ok, true);
+          assert.equal(health.pid, child.pid);
+
+          return { origin, close };
+        }
       }
 
       await delay(50);
