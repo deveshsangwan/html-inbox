@@ -432,4 +432,6 @@ iframe {
 
 export const SHELL_CSP = "default-src 'none'; script-src 'self'; style-src 'self'; frame-src 'self'; base-uri 'none'; form-action 'self'";
 
-export const DOCUMENT_CSP = `default-src 'none'; script-src 'unsafe-inline' ${DOCUMENT_SCRIPT_CSP_SOURCES.join(" ")}; script-src-attr 'none'; connect-src 'none'; img-src data:; media-src data:; font-src data:; style-src 'unsafe-inline'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'`;
+// Direct content URLs also need an opaque origin. Keep this in the response
+// policy because CSP sandbox directives do not work in HTML meta elements.
+export const DOCUMENT_CSP = `sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline' ${DOCUMENT_SCRIPT_CSP_SOURCES.join(" ")}; script-src-attr 'none'; connect-src 'none'; img-src data:; media-src data:; font-src data:; style-src 'unsafe-inline'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'`;

@@ -11,6 +11,7 @@ import {
   VIEWER_PROTOCOL_VERSION,
 } from "./viewer-server";
 import { temporaryHome } from "./test-fixtures";
+import { DOCUMENT_CSP } from "./viewer-assets";
 
 test("viewer serves isolated documents and searches metadata", async (t) => {
   const home = await temporaryHome(t);
@@ -146,6 +147,9 @@ test("viewer serves isolated documents and searches metadata", async (t) => {
 
   const content = await fetch(`${baseUrl}/documents/${published.id}/content`);
   const csp = content.headers.get("content-security-policy") ?? "";
+  assert.equal(csp, DOCUMENT_CSP);
+  assert.match(csp, /(?:^|;\s*)sandbox allow-scripts(?:;|$)/);
+  assert.equal(csp.includes("allow-same-origin"), false);
   assert.equal(
     csp.includes("script-src 'unsafe-inline' https://cdn.tailwindcss.com"),
     true,
@@ -164,6 +168,13 @@ test("viewer serves isolated documents and searches metadata", async (t) => {
   assert.equal(csp.includes("form-action 'none'"), true);
   assert.equal(csp.includes("base-uri 'none'"), true);
   assert.equal(await content.text(), html);
+
+  const contentHead = await fetch(`${baseUrl}/documents/${published.id}/content`, {
+    method: "HEAD",
+  });
+  assert.equal(contentHead.status, 200);
+  assert.equal(contentHead.headers.get("content-security-policy"), csp);
+  assert.equal(await contentHead.text(), "");
 
   const hostileTitle = 'Title </h1><script>alert("title")</script>';
   const hostileType = "report\"><svg/onload=alert('type')>";
