@@ -31,7 +31,8 @@ Commands:
   remote init --account <id> --project <name> [--branch <name>] [--adopt] [--json]
   remote publish [--json]
   remote status [--json]
-  remote reconcile [--adopt] [--json]
+  remote reconcile [--adopt] [--recover-lock] [--json]
+      Recover preserved intent; --recover-lock verifies and replaces an abandoned lock.
   remote revoke [--yes] [--json]
       Configure and manage a private capability inbox on Cloudflare Pages.
 
@@ -289,8 +290,8 @@ async function remoteCommand(parsed: Extract<CliCommand, { command: `remote ${st
   }
 
   if (action === "remote reconcile") {
-    const { adopt, json } = parsed;
-    const state = await workflow.reconcile({ adopt });
+    const { adopt, recoverLock, json } = parsed;
+    const state = await workflow.reconcile({ adopt, recoverLock });
     console.log(json ? JSON.stringify(state, null, 2) : formatRemoteState(state));
     return;
   }

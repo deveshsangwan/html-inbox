@@ -76,6 +76,7 @@ export interface RemoteInitOptions extends CloudflareProjectRef {
 
 export interface RemoteReconcileOptions {
   adopt?: boolean;
+  recoverLock?: boolean;
 }
 
 export interface RemoteRevokeResult {
@@ -221,7 +222,10 @@ export class RemoteWorkflow {
   }
 
   async reconcile(options: RemoteReconcileOptions = {}): Promise<RemoteState> {
-    return this.withMutationLock(() => this.reconcileUnlocked(options));
+    return this.withMutationLock(
+      () => this.reconcileUnlocked(options),
+      options.recoverLock,
+    );
   }
 
   private async reconcileUnlocked(
@@ -450,9 +454,12 @@ export class RemoteWorkflow {
     }
   }
 
-  private async withMutationLock<T>(action: () => Promise<T>): Promise<T> {
+  private async withMutationLock<T>(
+    action: () => Promise<T>,
+    recoverLock = false,
+  ): Promise<T> {
     await this.prepareRemoteStorage();
-    const release = await acquireRemoteLock(this.lockPath);
+    const release = await acquireRemoteLock(this.lockPath, recoverLock);
 
     try {
       await this.cleanupOrphanWork();

@@ -44,9 +44,19 @@ test("required and optional string flags reject missing or empty values", () => 
 test("destructive flags remain opt-in and remote options stay command-specific", () => {
   assert.deepEqual(parseCommand(["delete", "id"]), { command: "delete", id: "id", force: false, json: false });
   assert.deepEqual(parseCommand(["remote", "revoke"]), { command: "remote revoke", yes: false, json: false });
-  assert.deepEqual(parseCommand(["remote", "reconcile", "--adopt", "--json"]), { command: "remote reconcile", adopt: true, json: true });
+  assert.deepEqual(parseCommand(["remote", "reconcile", "--adopt", "--json"]), { command: "remote reconcile", adopt: true, recoverLock: false, json: true });
   assert.deepEqual(parseCommand(["remote", "init", "--account=id", "--project=name", "--branch=release", "--adopt"]), {
     command: "remote init", options: { accountId: "id", projectName: "name", branch: "release", adopt: true, json: false },
   });
   assert.deepEqual(parseCommand(["viewer", "status"]), { command: "viewer", action: "status" });
+});
+
+test("abandoned lock recovery is explicit and restricted to reconciliation", () => {
+  assert.deepEqual(parseCommand(["remote", "reconcile", "--recover-lock", "--adopt", "--json"]), {
+    command: "remote reconcile", adopt: true, recoverLock: true, json: true,
+  });
+
+  for (const command of ["init", "publish", "status", "revoke"]) {
+    assert.throws(() => parseCommand(["remote", command, "--recover-lock"]), /Unknown option/);
+  }
 });
