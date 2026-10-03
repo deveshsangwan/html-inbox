@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Support queue dashboard</title>
+  <style>
+    :root {
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #3d434f;
+      background: #fff;
+      line-height: 1.5;
+      --accent: #3858c7;
+      --line: #d7dbe4;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { width: min(100% - 40px, 920px); margin: 36px auto; }
+    header { border-bottom: 2px solid var(--accent); padding-bottom: 24px; }
+    h1, h2 { color: #16181d; letter-spacing: -.03em; line-height: 1.2; }
+    h1 { margin: 0 0 12px; font-size: clamp(28px, 5vw, 38px); }
+    h2 { margin: 0 0 20px; font-size: 21px; }
+    p { margin: 0 0 12px; max-width: 70ch; }
+    .note { color: #5d626d; font-size: 14px; }
+    .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 28px 0 36px; }
+    dt { font-size: 14px; }
+    dd { margin: 4px 0; color: #16181d; font-size: 34px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .metrics p { margin: 0; color: #5d626d; font-size: 13px; }
+    .overview { display: grid; grid-template-columns: 1.1fr .9fr; gap: 32px; }
+    figure { margin: 0; }
+    .bars { display: grid; gap: 16px; margin: 0 0 20px; padding: 0; list-style: none; }
+    .bars li { display: grid; grid-template-columns: 86px minmax(0, 1fr) 26px; gap: 12px; align-items: center; font-size: 14px; }
+    .track { height: 16px; overflow: hidden; background: #e9ecf1; border-radius: 4px; }
+    .fill { height: 100%; background: var(--accent); border-radius: inherit; }
+    .count { text-align: right; font-variant-numeric: tabular-nums; }
+    figcaption { color: #5d626d; font-size: 13px; }
+    .handoff { padding: 20px; border: 1px solid var(--line); border-radius: 8px; background: #f7f8fc; }
+    .handoff h2 { font-size: 18px; margin-bottom: 12px; }
+    .handoff p:last-child { margin-bottom: 0; }
+    .queues { margin-top: 36px; }
+    .queue-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .queue-header h2 { margin: 0; }
+    label { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+    select { min-height: 44px; max-width: 100%; padding: 8px 12px; color: #16181d; background: #fff; border: 1px solid var(--line); border-radius: 6px; font: inherit; }
+    select:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+    caption { text-align: left; margin-bottom: 12px; color: #5d626d; }
+    th, td { border-bottom: 1px solid var(--line); padding: 12px 16px 12px 0; vertical-align: top; }
+    thead th { color: #16181d; }
+    tbody th { font-weight: 600; }
+    [hidden] { display: none; }
+    footer { border-top: 1px solid var(--line); margin-top: 32px; padding-top: 16px; }
+    @media (max-width: 560px) {
+      main { width: calc(100% - 32px); margin-block: 24px; }
+      .metrics { grid-template-columns: 1fr; gap: 16px; }
+      .metrics div { border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+      dd { font-size: 28px; }
+      .overview { grid-template-columns: 1fr; gap: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Support queue dashboard</h1>
+      <p>Friday handoff, 2 October 2026 at 16:00 UTC. Billing needs one more person before the evening shift.</p>
+      <p class="note">Fictional snapshot. The chart and team filter use only data in this file, with no network requests.</p>
+    </header>
+
+    <dl class="metrics" aria-label="All-team snapshot">
+      <div><dt>Open tickets</dt><dd>42</dd><p>Down from 57 on Monday</p></div>
+      <div><dt>Resolved this week</dt><dd>186</dd><p>159 last week</p></div>
+      <div><dt>Median first reply</dt><dd>24 min</dd><p>Target is under 30 minutes</p></div>
+    </dl>
+
+    <div class="overview">
+      <section aria-labelledby="chart-title">
+        <h2 id="chart-title">Open tickets by team</h2>
+        <figure>
+          <ul class="bars" aria-label="Ticket counts, all teams">
+            <li><span>Billing</span><div class="track" aria-hidden="true"><div class="fill" style="width: 100%"></div></div><span class="count">19</span></li>
+            <li><span>Platform</span><div class="track" aria-hidden="true"><div class="fill" style="width: 73.7%"></div></div><span class="count">14</span></li>
+            <li><span>Accounts</span><div class="track" aria-hidden="true"><div class="fill" style="width: 47.4%"></div></div><span class="count">9</span></li>
+          </ul>
+          <figcaption>All 42 open tickets. Values stay visible without a chart library or JavaScript.</figcaption>
+        </figure>
+      </section>
+      <aside class="handoff" aria-labelledby="handoff-title">
+        <h2 id="handoff-title">For the next shift</h2>
+        <p>Billing has 7 tickets older than two days. Prioritize duplicate charges before invoice exports.</p>
+        <p class="note">Platform has no urgent incidents. Account recovery is within the reply target.</p>
+      </aside>
+    </div>
+
+    <section class="queues" aria-labelledby="queue-title">
+      <div class="queue-header">
+        <h2 id="queue-title">Queue detail</h2>
+        <label>Team
+          <select id="team-filter">
+            <option value="all">All teams</option>
+            <option value="billing">Billing</option>
+            <option value="platform">Platform</option>
+            <option value="accounts">Accounts</option>
+          </select>
+        </label>
+      </div>
+      <div class="table-scroll" role="region" aria-label="Support queues" tabindex="0">
+        <table>
+          <caption id="queue-summary" aria-live="polite">6 queues, 42 open tickets</caption>
+          <thead><tr><th scope="col">Queue</th><th scope="col">Team</th><th scope="col">Open</th><th scope="col">Oldest</th></tr></thead>
+          <tbody>
+            <tr data-team="billing" data-open="11"><th scope="row">Duplicate charges</th><td>Billing</td><td>11</td><td>3 days</td></tr>
+            <tr data-team="billing" data-open="8"><th scope="row">Invoice exports</th><td>Billing</td><td>8</td><td>2 days</td></tr>
+            <tr data-team="platform" data-open="9"><th scope="row">Build failures</th><td>Platform</td><td>9</td><td>1 day</td></tr>
+            <tr data-team="platform" data-open="5"><th scope="row">Slow previews</th><td>Platform</td><td>5</td><td>6 hours</td></tr>
+            <tr data-team="accounts" data-open="6"><th scope="row">Account recovery</th><td>Accounts</td><td>6</td><td>4 hours</td></tr>
+            <tr data-team="accounts" data-open="3"><th scope="row">Team invitations</th><td>Accounts</td><td>3</td><td>2 hours</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer><p class="note">Try the team filter. It changes the queue table and ticket count; the overview remains the full snapshot.</p></footer>
+  </main>
+  <script>
+    const teamFilter = document.querySelector("#team-filter");
+    const queueSummary = document.querySelector("#queue-summary");
+    const queueRows = [...document.querySelectorAll("[data-team]")];
+
+    teamFilter.addEventListener("change", () => {
+      const selectedTeam = teamFilter.value;
+      let visibleQueues = 0;
+      let openTickets = 0;
+
+      for (const row of queueRows) {
+        const isVisible = selectedTeam === "all" || row.dataset.team === selectedTeam;
+        row.hidden = !isVisible;
+
+        if (!isVisible) {
+          continue;
+        }
+
+        visibleQueues += 1;
+        openTickets += Number(row.dataset.open);
+      }
+
+      queueSummary.textContent = `${visibleQueues} queues, ${openTickets} open tickets`;
+    });
+  </script>
+</body>
+</html>

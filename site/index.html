@@ -163,6 +163,7 @@
       width: 100%;
       max-width: 540px;
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 12px;
       padding: 8px 8px 8px 17px;
@@ -172,16 +173,17 @@
       box-shadow: 0 12px 34px color-mix(in srgb, var(--ink) 8%, transparent);
     }
     .command code {
-      flex: 1;
+      flex: 1 1 16rem;
       min-width: 0;
-      overflow: hidden;
       color: var(--ink);
       font-size: 14px;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      overflow-wrap: anywhere;
+      white-space: normal;
+      user-select: all;
     }
     .command code::before { content: "$ "; color: var(--accent); }
     .copy-button {
+      flex-shrink: 0;
       min-height: 42px;
       padding: 0 16px;
       border: 0;
@@ -547,12 +549,32 @@
     const status = document.querySelector(".copy-status");
 
     copyButton?.addEventListener("click", async () => {
+      const commandText = command?.dataset.command;
+
+      if (!commandText || !status) {
+        return;
+      }
+
       try {
-        await navigator.clipboard.writeText(command.dataset.command);
+        await navigator.clipboard.writeText(commandText);
+
         copyButton.textContent = "Copied";
         status.textContent = "Command copied to clipboard.";
       } catch {
+        copyButton.textContent = "Copy command";
         status.textContent = "Copy failed. Select the command manually.";
+
+        const commandCode = command.querySelector("code");
+        const selection = window.getSelection();
+
+        if (commandCode && selection) {
+          const commandRange = document.createRange();
+          commandRange.selectNodeContents(commandCode);
+          selection.removeAllRanges();
+          selection.addRange(commandRange);
+
+          status.textContent = "Copy failed. The command is selected; copy it manually.";
+        }
       }
     });
 
