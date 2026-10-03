@@ -11,7 +11,7 @@ export type CliCommand =
   | { command: "viewer"; action?: "status" | "stop" }
   | { command: "remote init"; options: RemoteInitOptions & { json: boolean } }
   | { command: "remote publish" | "remote status"; json: boolean }
-  | { command: "remote reconcile"; adopt: boolean; json: boolean }
+  | { command: "remote reconcile"; adopt: boolean; recoverLock: boolean; json: boolean }
   | { command: "remote revoke"; yes: boolean; json: boolean };
 
 export function parseCommand(argv: string[]): CliCommand {
@@ -121,8 +121,12 @@ export function parseCommand(argv: string[]): CliCommand {
     }
 
     case "remote reconcile": {
-      const { values } = parseArgs({ args, options: { adopt: { type: "boolean" }, json: { type: "boolean" } } });
-      return { command: name, adopt: values.adopt ?? false, json: values.json ?? false };
+      const { values } = parseArgs({
+        args,
+        options: { adopt: { type: "boolean" }, "recover-lock": { type: "boolean" }, json: { type: "boolean" } },
+      });
+
+      return { command: name, adopt: values.adopt ?? false, recoverLock: values["recover-lock"] ?? false, json: values.json ?? false };
     }
 
     case "remote revoke": {

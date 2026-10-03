@@ -59,6 +59,10 @@ html-inbox remote reconcile
 
 Reconciliation checks Cloudflare deployment history for the recorded snapshot digest and avoids a duplicate deployment when the earlier request succeeded remotely.
 
+If reconciliation reports an abandoned mutation lock, confirm the previous command and its child processes terminated on this machine, then run `html-inbox remote reconcile --recover-lock` with the same inbox home. Recovery verifies the lock record and requires the recorded PID to be absent. A live or reused PID and an inconclusive process check block recovery regardless of lock age.
+
+For an empty, partial, malformed, or incomplete record, an interrupted recovery guard, or a home shared across machines, follow [manual lock recovery](../../docs/remote-migration.md#manual-lock-recovery). Keep all commands and automation using that home stopped while backing up its private remote directory and removing only the two lock paths. Preserve the state, operation journal, and snapshot. If exclusive access cannot be established, leave the locks in place and report the blocker.
+
 If reconciliation reports that an ambiguously created project now exists, stop and explain that adopting it authorizes HTML Inbox to replace its complete deployed contents. After the user explicitly confirms that project, run `html-inbox remote reconcile --adopt`. Never adopt automatically or loop plain reconciliation.
 
 Recovery is complete when status reports no pending operation and its local receipt agrees with the resolved Cloudflare deployment.
