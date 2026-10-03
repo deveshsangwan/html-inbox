@@ -9,16 +9,19 @@ import { loadPublishInput, PublishRequest } from "./publish-input";
 import { ensurePrivateDirectory } from "./private-storage";
 import { RemoteState, RemoteStatus, RemoteWorkflow } from "./remote-workflow";
 import { exportStaticSnapshot, StaticSnapshotResult } from "./static-export";
-import { ensureViewer, getViewerStatus, startViewer, stopViewer } from "./viewer-server";
+import { ensureViewer, getViewerStatus, resolveViewerConfiguration, startViewer, stopViewer } from "./viewer-server";
 import { parseCommand, type CliCommand } from "./cli-args";
 import { isRecord } from "./validation";
 import { containsPath } from "./path-containment";
+import { parseViewerNetworkConfig } from "./viewer-network";
+import { getViewerServiceStatus, installViewerService, resolveViewerServiceHome, uninstallViewerService } from "./viewer-service";
+import { configureViewerServiceLogging } from "./viewer-service-log";
 
 export const USAGE = `Usage: html-inbox <command> [options]
 
 Commands:
   publish <file.html> --title <title> --type <type>
-      Store an HTML document and print its local viewer URL.
+      Store an HTML document and print its active viewer URL.
 
   list [--json]
       List locally stored documents.
@@ -37,12 +40,30 @@ Commands:
   remote revoke [--yes] [--json]
       Configure and manage a private capability inbox on Cloudflare Pages.
 
-  viewer [status|stop]
-      Run the local viewer in the foreground.
+  viewer [--foreground] [--loopback|--lan|--tailscale] [--host <ip>] [--port <port>]
+      Start or reuse a background viewer after verifying readiness.
+      --foreground stays attached. First startup is loopback-only.
+      LAN trusts all reachable readers; Tailscale uses existing HTTPS Serve.
+      Omitted networking options reuse the saved configuration.
+
+  viewer status
+  viewer stop
+      Inspect or stop the verified viewer through its local control endpoint.
+
+  viewer service install [--user <normal-user>] [viewer networking options]
+  viewer service uninstall [--user <normal-user>]
+  viewer service status [--user <normal-user>]
+      Manage boot startup with systemd or a macOS LaunchDaemon.
+      Install and uninstall require administrator privileges; the viewer runs as a normal user.
 
 Options:
   -h, --help       Show this help.
-  -v, --version    Print the installed version.`;
+  -v, --version    Print the installed version.
+
+Environment:
+  HTML_INBOX_HOME                 Library directory, default ~/.html-inbox.
+  HTML_INBOX_PORT                 Port override, default 3217 on first startup.
+  HTML_INBOX_TAILSCALE_COMMAND    Path to an existing Tailscale executable.`;
 
 export async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
   const parsed = parseCommand(argv);
@@ -94,23 +115,60 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     return;
   }
 
+  if (command === "viewer service") {
+    const home = await resolveViewerServiceHome({ home: process.env.HTML_INBOX_HOME, user: parsed.user });
+    if (parsed.action === "status") {
+      console.log(JSON.stringify(await getViewerServiceStatus({ home }), null, 2));
+      return;
+    }
+
+    if (parsed.action === "uninstall") {
+      console.log(JSON.stringify(await uninstallViewerService({ home }), null, 2));
+      return;
+    }
+
+    const saved = await resolveViewerConfiguration(home);
+    const config = await resolveViewerConfiguration(home, {
+      port: parsed.port ?? (process.env.HTML_INBOX_PORT ? getViewerPort() : saved.port),
+      exposure: parsed.exposure,
+      host: parsed.host,
+    });
+    console.log(JSON.stringify(await installViewerService({ home, ...config, user: parsed.user }), null, 2));
+    return;
+  }
+
   if (command === "viewer") {
     const home = getInboxHome();
-    const port = getViewerPort();
-    const action = parsed.action;
-    if (action === "status") {
-      console.log(JSON.stringify(await getViewerStatus(home, port), null, 2));
+    const environmentPort = process.env.HTML_INBOX_PORT ? getViewerPort() : undefined;
+    if (parsed.action === "status") {
+      console.log(JSON.stringify(await getViewerStatus(home, environmentPort), null, 2));
       return;
     }
-    if (action === "stop") {
-      console.log(JSON.stringify(await stopViewer(home, port), null, 2));
+
+    if (parsed.action === "stop") {
+      console.log(JSON.stringify(await stopViewer(home, environmentPort), null, 2));
       return;
     }
-    if (action) {
-      throw new Error(`Unknown viewer action: ${action}`);
+
+    const selectedPort = parsed.port ?? environmentPort;
+    const input = parsed.exposure || parsed.host
+      ? { port: selectedPort ?? (await resolveViewerConfiguration(home)).port, exposure: parsed.exposure, host: parsed.host }
+      : selectedPort;
+    if (parsed.foreground) {
+      if (process.env.HTML_INBOX_VIEWER_SERVICE_LOG === "1") {
+        await configureViewerServiceLogging(home);
+      }
+
+      const workerConfig: unknown = process.env.HTML_INBOX_VIEWER_CONFIG
+        ? JSON.parse(process.env.HTML_INBOX_VIEWER_CONFIG)
+        : await resolveViewerConfiguration(home, input);
+      const config = parseViewerNetworkConfig(workerConfig);
+      await startViewer(new LocalDocumentBackend(home), home, config);
+      console.error(`html-inbox viewer listening on ${(await getViewerStatus(home)).url}`);
+      return;
     }
-    await startViewer(new LocalDocumentBackend(home), home, port);
-    console.error(`html-inbox viewer listening on http://127.0.0.1:${port}`);
+
+    console.log((await ensureViewer(home, input)).url);
     return;
   }
 
@@ -128,7 +186,7 @@ export function getCliVersion(): string {
 
 export async function publishCommand(args: PublishRequest): Promise<string> {
   const home = getInboxHome();
-  const port = getViewerPort();
+  const port = process.env.HTML_INBOX_PORT ? getViewerPort() : undefined;
   const backend = new LocalDocumentBackend(home);
   const { input, warnings } = await loadPublishInput(args);
 
@@ -136,9 +194,9 @@ export async function publishCommand(args: PublishRequest): Promise<string> {
     console.warn(`html-inbox: ${warning}`);
   }
 
-  await ensureViewer(home, port);
+  const viewer = await ensureViewer(home, port);
   const metadata = await backend.publish(input);
-  return `http://127.0.0.1:${port}/documents/${metadata.id}`;
+  return `${viewer.url}/documents/${metadata.id}`;
 }
 
 export function formatDocumentList(documents: DocumentMetadata[], json: boolean): string {

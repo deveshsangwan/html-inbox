@@ -9,11 +9,12 @@ import {
   stat,
   writeFile,
 } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { tmpdir, userInfo } from "node:os";
 import http from "node:http";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
+import { createPackageTailscaleFixture } from "./package-tailscale-fixture.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const temporaryRoot = await mkdtemp(path.join(tmpdir(), "html-inbox-package-"));
@@ -81,6 +82,8 @@ try {
   const help = (await run(process.execPath, [executable, "--help"], consumerRoot)).output;
   assert.match(help, /remote init --account/);
   assert.match(help, /export --out <directory>/);
+  assert.match(help, /viewer \[--foreground\]/);
+  assert.match(help, /viewer service install/);
 
   const isolatedHome = path.join(temporaryRoot, "home");
   const viewerPort = await findAvailablePort();
@@ -173,10 +176,87 @@ try {
   await viewer.close();
   const viewerStatus = await runInstalledCli(["viewer", "status"]);
   assert.equal(JSON.parse(viewerStatus.stdout).state, "stopped");
-  console.log("Installed package publish, list, viewer content, populated export, and viewer shutdown passed.");
+
+  const backgroundStarts = await Promise.all([
+    runInstalledCli(["viewer"]),
+    runInstalledCli(["viewer"]),
+    runInstalledCli(["viewer"]),
+  ]);
+  for (const started of backgroundStarts) {
+    assert.equal(started.stdout.trim(), viewer.origin);
+  }
+
+  const backgroundStatus = JSON.parse((await runInstalledCli(["viewer", "status"])).stdout);
+  assert.equal(backgroundStatus.state, "running");
+  assert.equal(typeof backgroundStatus.pid, "number");
+  assert.equal((await fetch(`${viewer.origin}/health`)).status, 200);
+  assert.equal(JSON.parse((await runInstalledCli(["viewer", "status"])).stdout).pid, backgroundStatus.pid);
+  assert.equal(JSON.parse((await runInstalledCli(["viewer", "stop"])).stdout).state, "stopped");
+
+  const restartedPublish = await runInstalledCli(
+    ["publish", sourcePath, "--title", "Published after stop", "--type", "report"],
+  );
+  assert.equal((await fetch(restartedPublish.stdout.trim())).status, 200);
+  assert.equal(JSON.parse((await runInstalledCli(["viewer", "stop"])).stdout).state, "stopped");
+
+  await runInstalledCli(["viewer", "--lan", "--host", "127.0.0.1", "--port", String(viewerPort)]);
+  assert.equal(JSON.parse((await runInstalledCli(["viewer", "status"])).stdout).exposure, "lan");
+  const lanPublish = await runInstalledCli(["publish", sourcePath, "--title", "LAN report", "--type", "report"]);
+  assert.equal(new URL(lanPublish.stdout.trim()).origin, viewer.origin);
+  assert.equal((await fetch(lanPublish.stdout.trim())).status, 200);
+  assert.deepEqual(await (await fetch(`${viewer.origin}/health`)).json(), { ok: true });
+  assert.equal(JSON.parse((await runInstalledCli(["viewer", "stop"])).stdout).state, "stopped");
+
+  await runInstalledCli(["viewer", "--loopback"]);
+  assert.equal(JSON.parse((await runInstalledCli(["viewer", "status"])).stdout).exposure, "loopback");
+  await runInstalledCli(["viewer", "stop"]);
+
+  if (process.platform !== "win32") {
+    const fixture = await createPackageTailscaleFixture(path.join(temporaryRoot, "recording-tailscale"));
+    const runTailscaleCli = (args) => run(process.execPath, [executable, ...args], consumerRoot, {
+      ...cliEnvironment,
+      HTML_INBOX_TAILSCALE_COMMAND: fixture.executable,
+    });
+    const tailnetOrigin = `https://${fixture.hostname}`;
+    assert.equal((await runTailscaleCli(["viewer", "--tailscale"])).stdout.trim(), tailnetOrigin);
+    const tailscaleStatus = JSON.parse((await runTailscaleCli(["viewer", "status"])).stdout);
+    assert.equal(tailscaleStatus.state, "running");
+    assert.equal(tailscaleStatus.exposure, "tailscale");
+    assert.equal("controlUrl" in tailscaleStatus, false);
+    assert.equal((await runTailscaleCli(["viewer"])).stdout.trim(), tailnetOrigin);
+    assert.equal(JSON.parse((await runTailscaleCli(["viewer", "status"])).stdout).pid, tailscaleStatus.pid);
+
+    const tailnetPublish = await runTailscaleCli(["publish", sourcePath, "--title", "Tailnet report", "--type", "report"]);
+    const tailnetDocument = new URL(tailnetPublish.stdout.trim());
+    assert.equal(tailnetDocument.origin, tailnetOrigin);
+    const proxiedContent = await readWithHost(new URL(`${tailnetDocument.pathname}/content`, viewer.origin), fixture.hostname);
+    assert.equal(proxiedContent.statusCode, 200);
+    assert.deepEqual(proxiedContent.body, originalHtml);
+    assert.match(proxiedContent.headers["content-security-policy"], /sandbox allow-scripts/);
+
+    assert.equal(JSON.parse((await runTailscaleCli(["viewer", "stop"])).stdout).state, "stopped");
+    assert.deepEqual(JSON.parse(await readFile(fixture.configPath, "utf8")), fixture.originalConfig);
+    await assert.rejects(readFile(path.join(isolatedHome, "tailscale-serve.json")), { code: "ENOENT" });
+    const commands = (await readFile(fixture.commandsPath, "utf8")).trim().split("\n").map((line) => JSON.parse(line));
+    assert.deepEqual(commands.filter((args) => args[0] === "serve" && args[1] !== "status"), [
+      ["serve", "--bg", "--yes", "--https=443", "--set-path=/", `http://127.0.0.1:${viewerPort}`],
+      ["serve", "--bg", "--yes", "--https=443", "--set-path=/", "off"],
+    ]);
+    console.log("Installed package Tailscale startup, publishing, reuse, and scoped cleanup passed with a recording executable.");
+  }
+
+  if ((process.platform === "linux" || process.platform === "darwin") && process.getuid?.() !== 0) {
+    await assert.rejects(runInstalledCli(["viewer", "service", "install", "--user", userInfo().username]), /administrator privileges/);
+  }
+
+  console.log("Installed package foreground, detached concurrency, LAN, exposure reset, publish restart, content, export, and shutdown passed.");
 } finally {
   try {
     await viewer?.close();
+    const installedExecutable = path.join(temporaryRoot, "consumer", "node_modules", "html-inbox", "bundle", "index.js");
+    await run(process.execPath, [installedExecutable, "viewer", "stop"], temporaryRoot, {
+      HTML_INBOX_HOME: path.join(temporaryRoot, "home"),
+    }).catch(() => {});
   } finally {
     if (process.env.HTML_INBOX_KEEP_PACKAGE_SMOKE !== "1") {
       await rm(temporaryRoot, { recursive: true, force: true });
@@ -231,8 +311,21 @@ async function findAvailablePort() {
   return address.port;
 }
 
+async function readWithHost(url, host) {
+  return new Promise((resolve, reject) => {
+    const request = http.get(url, { headers: { Host: host }, timeout: 3000 }, (response) => {
+      const chunks = [];
+      response.on("data", (chunk) => chunks.push(chunk));
+      response.once("error", reject);
+      response.once("end", () => resolve({ statusCode: response.statusCode, headers: response.headers, body: Buffer.concat(chunks) }));
+    });
+    request.once("timeout", () => request.destroy(new Error("Recorded proxy request timed out")));
+    request.once("error", reject);
+  });
+}
+
 async function startInstalledViewer(executable, cwd, env) {
-  const child = spawn(process.execPath, [executable, "viewer"], {
+  const child = spawn(process.execPath, [executable, "viewer", "--foreground"], {
     cwd,
     env: { ...process.env, ...env },
     stdio: ["ignore", "ignore", "pipe"],
@@ -264,26 +357,17 @@ async function startInstalledViewer(executable, cwd, env) {
         throw new Error(`Installed viewer exited before readiness.\n${failure ?? stderr}`);
       }
 
-      const response = await fetch(`${origin}/health`, {
+      const record = await readFile(path.join(env.HTML_INBOX_HOME, "viewer.json"), "utf8")
+        .then((value) => JSON.parse(value)).catch(() => null);
+      const response = record && await fetch(record.controlUrl, {
         signal: AbortSignal.timeout(500),
       }).catch(() => null);
       if (response?.ok) {
-        assert.deepEqual(await response.json(), { ok: true });
-        const recordContents = await readFile(path.join(env.HTML_INBOX_HOME, "viewer.json"), "utf8").catch((error) => {
-          if (error.code === "ENOENT") return null;
+        const health = await response.json();
+        assert.equal(health.ok, true);
+        assert.equal(health.pid, child.pid);
 
-          throw error;
-        });
-        if (recordContents) {
-          const record = JSON.parse(recordContents);
-          const controlResponse = await fetch(record.controlUrl, { signal: AbortSignal.timeout(500) });
-          const health = await controlResponse.json();
-          assert.equal(controlResponse.status, 200);
-          assert.equal(health.ok, true);
-          assert.equal(health.pid, child.pid);
-
-          return { origin, close };
-        }
+        return { origin, close };
       }
 
       await delay(50);

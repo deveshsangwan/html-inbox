@@ -1,6 +1,6 @@
 # ADR 0001: Publish remote inboxes as static snapshots
 
-Status: accepted
+Status: accepted. The original loopback-only deployment restriction is amended by the explicit live self-hosting modes described below; the static snapshot decision remains in force.
 
 ## Context
 
@@ -14,7 +14,9 @@ A remotely reachable server would need authentication, authorization, tenant iso
 
 ### Local ownership
 
-The local library remains the only source of truth and the only mutable document store. The CLI is the only remote-publishing administrator. The loopback viewer is never exposed to a LAN, VPN, container wildcard mapping, tunnel, or public listener.
+The local library remains the only source of truth and the only mutable document store. The CLI is the only remote-publishing administrator.
+
+The viewer remains loopback-only by default. Explicit LAN mode exposes the read-only live library to everyone who can reach its port. Explicit Tailscale mode exposes the read-only live library through HTTPS Serve under the user's tailnet policy, with a loopback backend. Neither mode exposes publishing, deletion, or process management. Process health uses a separate local control endpoint. These modes are independent of capability-protected static snapshots; they do not change snapshot deployment or revocation semantics. See the [architecture](../architecture.md#viewer) and [threat model](../threat-model.md#live-self-hosting).
 
 ### Provider-independent snapshot
 
@@ -101,7 +103,7 @@ Costs:
 - Expiry, vanity links, redirects, and multiple inbox capabilities
 - Analytics, reactions, Workers, KV, and D1
 - Markdown, directory publishing, build-command execution, and auto-sync
-- Browser mutation routes, remote editing, background services, MCP, and extensions
+- Browser mutation routes, remote editing, MCP, and extensions
 - Multi-user or organization-hosted administration
 
 ## References

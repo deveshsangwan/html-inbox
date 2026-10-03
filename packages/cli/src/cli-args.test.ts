@@ -60,3 +60,27 @@ test("abandoned lock recovery is explicit and restricted to reconciliation", () 
     assert.throws(() => parseCommand(["remote", command, "--recover-lock"]), /Unknown option/);
   }
 });
+
+test("viewer startup and service installation accept explicit exposure and reject mixed actions", () => {
+  assert.deepEqual(parseCommand(["viewer"]), { command: "viewer" });
+  assert.deepEqual(parseCommand(["viewer", "--foreground", "--lan", "--host=192.168.1.4", "--port=4567"]), {
+    command: "viewer", foreground: true, exposure: "lan", host: "192.168.1.4", port: 4567,
+  });
+  assert.deepEqual(parseCommand(["viewer", "service", "install", "--user=alice", "--loopback", "--port=3217"]), {
+    command: "viewer service", action: "install", user: "alice", exposure: "loopback", port: 3217,
+  });
+  assert.deepEqual(parseCommand(["viewer", "service", "uninstall", "--user=alice"]), {
+    command: "viewer service", action: "uninstall", user: "alice",
+  });
+
+  for (const args of [
+    ["viewer", "--loopback", "--lan"], ["viewer", "--lan", "--tailscale"],
+    ["viewer", "--port=0"], ["viewer", "--port=1.5"], ["viewer", "--port=1e3"], ["viewer", "--port="],
+    ["viewer", "status", "--foreground"], ["viewer", "stop", "--port=4567"],
+    ["viewer", "--user=alice"], ["viewer", "service"], ["viewer", "service", "install", "--user="],
+    ["viewer", "service", "status", "--lan"], ["viewer", "service", "uninstall", "--foreground"],
+    ["viewer", "service", "install", "--lan", "--tailscale"],
+  ]) {
+    assert.throws(() => parseCommand(args), Error, args.join(" "));
+  }
+});
