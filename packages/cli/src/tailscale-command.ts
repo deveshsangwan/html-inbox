@@ -16,10 +16,13 @@ export async function resolveTailscaleExecutable(
   }
 
   const hasPath = path.isAbsolute(executable) || executable.includes(path.sep);
-  const directories = hasPath ? [""] : (process.env.PATH ?? "").split(path.delimiter);
-  const extensions = process.platform === "win32" && !path.extname(executable)
-    ? (process.env.PATHEXT ?? ".EXE;.CMD").split(";")
-    : [""];
+  const directories = hasPath
+    ? [""]
+    : (process.env.PATH ?? "").split(path.delimiter);
+  const extensions =
+    process.platform === "win32" && !path.extname(executable)
+      ? (process.env.PATHEXT ?? ".EXE;.CMD").split(";")
+      : [""];
 
   for (const directory of directories) {
     for (const extension of extensions) {
@@ -53,7 +56,13 @@ export async function runTailscale(
     const child = execFile(
       executable,
       args,
-      { encoding: "utf8", timeout: timeoutMs, killSignal: "SIGKILL", maxBuffer: 1024 * 1024, windowsHide: true },
+      {
+        encoding: "utf8",
+        timeout: timeoutMs,
+        killSignal: "SIGKILL",
+        maxBuffer: 1024 * 1024,
+        windowsHide: true,
+      },
       (error, stdout, stderr) => {
         if (!error) {
           resolve(stdout);
@@ -61,15 +70,23 @@ export async function runTailscale(
         }
 
         const detail = stderr.trim() || error.message;
-        const advice = /access denied|permission denied|not permitted|403/i.test(detail)
-          ? "Ask the server administrator to grant this normal user Tailscale operator access. HTML Inbox does not elevate privileges."
-          : /unknown flag|unknown command|flag provided but not defined/i.test(detail)
-            ? "Use a Tailscale client supporting serve status --json, --bg, --yes, --https and --set-path."
-            : /https|certificate|magicdns/i.test(detail)
-              ? "Ask the tailnet administrator to enable MagicDNS and HTTPS certificates, then retry."
-              : "Check that the existing Tailscale daemon is running, signed in and connected, then retry.";
+        const advice =
+          /access denied|permission denied|not permitted|403/i.test(detail)
+            ? "Ask the server administrator to grant this normal user Tailscale operator access. HTML Inbox does not elevate privileges."
+            : /unknown flag|unknown command|flag provided but not defined/i.test(
+                  detail,
+                )
+              ? "Use a Tailscale client supporting serve status --json, --bg, --yes, --https and --set-path."
+              : /https|certificate|magicdns/i.test(detail)
+                ? "Ask the tailnet administrator to enable MagicDNS and HTTPS certificates, then retry."
+                : "Check that the existing Tailscale daemon is running, signed in and connected, then retry.";
 
-        reject(new Error(`Tailscale ${args.slice(0, 2).join(" ")} failed: ${detail.slice(0, 2000)}. ${advice}`, { cause: error }));
+        reject(
+          new Error(
+            `Tailscale ${args.slice(0, 2).join(" ")} failed: ${detail.slice(0, 2000)}. ${advice}`,
+            { cause: error },
+          ),
+        );
       },
     );
 

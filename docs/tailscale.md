@@ -64,6 +64,8 @@ Retry `viewer stop` after restoring the existing client connection or permission
 
 Mutations use a private temporary node lock shared across inbox homes for the same normal user. Another HTML Inbox operation receives a retry error instead of racing a root claim. A crashed operation can leave this lock directory. Inspect its `owner.json`, confirm that PID has exited, and remove only the named stale directory. External CLI changes can still happen between inspections. Tailscale's own configuration update uses an ETag, and HTML Inbox verifies the full unrelated configuration afterward; it cannot make separate CLI invocations into one atomic transaction.
 
+SIGKILL during a command is an explicit recovery limit. The worker cannot release its temporary lock, so parent rollback may preserve a pending journal and report the stale lock instead of removing the route automatically. First confirm that the worker and its command process group have exited, then remove only the identified lock directory and retry `viewer stop`. The module never kills a PID from a stale record and does not reclaim locks automatically. This avoids a recovery race that could remove another process's new lock. Normal exceptions and graceful shutdown release the lock and attempt scoped cleanup.
+
 ## CLI assumptions and verification
 
 The implementation follows the official [Serve CLI reference](https://tailscale.com/docs/reference/tailscale-cli/serve) and current Tailscale source inspected on 2026-10-04 at commit [`9128778b6515f32e13d92e7380044fe025f9b08e`](https://github.com/tailscale/tailscale/commit/9128778b6515f32e13d92e7380044fe025f9b08e), dated 2026-10-02:

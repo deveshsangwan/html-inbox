@@ -74,13 +74,26 @@ setTimeout(finish, scenario.delayOperation === operation ? scenario.delayMs : 0)
 function connectedStatus() {
   return {
     BackendState: "Running",
-    Self: { ID: randomUUID(), DNSName: `${TAILSCALE_TEST_HOSTNAME}.`, Online: true, Expired: false, CapMap: { https: [] } },
-    CurrentTailnet: { MagicDNSSuffix: "example-tailnet.ts.net", MagicDNSEnabled: true },
+    Self: {
+      ID: randomUUID(),
+      DNSName: `${TAILSCALE_TEST_HOSTNAME}.`,
+      Online: true,
+      Expired: false,
+      CapMap: { https: [] },
+    },
+    CurrentTailnet: {
+      MagicDNSSuffix: "example-tailnet.ts.net",
+      MagicDNSEnabled: true,
+    },
     CertDomains: [TAILSCALE_TEST_HOSTNAME],
   };
 }
 
-export async function recordingTailscale(t: TestContext, config: unknown = {}, health: unknown = { ok: true }) {
+export async function recordingTailscale(
+  t: TestContext,
+  config: unknown = {},
+  health: unknown = { ok: true },
+) {
   const home = await temporaryHome(t);
   const executable = path.join(home, "recording ; tailscale.cjs");
   const scenarioPath = path.join(home, "scenario.json");
@@ -90,7 +103,8 @@ export async function recordingTailscale(t: TestContext, config: unknown = {}, h
   await writeFile(scenarioPath, JSON.stringify({ status, config }));
 
   const reader = http.createServer((request, response) => {
-    const body = typeof health === "function" ? health(request) : health;
+    const body: unknown =
+      typeof health === "function" ? health(request) : health;
     response.writeHead(200, { "Content-Type": "application/json" });
     response.end(JSON.stringify(body));
   });
@@ -102,7 +116,12 @@ export async function recordingTailscale(t: TestContext, config: unknown = {}, h
   const address = reader.address();
   assert(address && typeof address !== "string");
 
-  const options = { home, backendPort: address.port, instanceId: randomUUID(), processId: randomUUID() };
+  const options = {
+    home,
+    backendPort: address.port,
+    instanceId: randomUUID(),
+    processId: randomUUID(),
+  };
   const command = { executable };
   const update = async (changes: Record<string, unknown>) => {
     const scenario: unknown = JSON.parse(await readFile(scenarioPath, "utf8"));
@@ -115,7 +134,9 @@ export async function recordingTailscale(t: TestContext, config: unknown = {}, h
     return parseServeConfig(JSON.stringify(scenario.config));
   };
   const commands = async () => {
-    const lines = (await readFile(path.join(home, "commands.jsonl"), "utf8").catch(() => "")).trim();
+    const lines = (
+      await readFile(path.join(home, "commands.jsonl"), "utf8").catch(() => "")
+    ).trim();
     const result: string[][] = [];
     for (const line of lines ? lines.split("\n") : []) {
       const value: unknown = JSON.parse(line);
@@ -131,11 +152,23 @@ export async function recordingTailscale(t: TestContext, config: unknown = {}, h
     return result;
   };
   const journal = async () => {
-    const value: unknown = JSON.parse(await readFile(path.join(home, "tailscale-serve.json"), "utf8"));
+    const value: unknown = JSON.parse(
+      await readFile(path.join(home, "tailscale-serve.json"), "utf8"),
+    );
     assert(isRecord(value));
     return value;
   };
 
-  return { home, executable, status, options, command, update, liveConfig, commands, journal, reader };
+  return {
+    home,
+    executable,
+    status,
+    options,
+    command,
+    update,
+    liveConfig,
+    commands,
+    journal,
+    reader,
+  };
 }
-
