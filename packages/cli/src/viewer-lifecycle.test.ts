@@ -69,8 +69,10 @@ test("status polling cannot take the port from a starting viewer", async (t) => 
     t.mock.method(probe, "close", (callback?: (error?: Error) => void) => {
       beginStartup();
       void startupOutcome.then(() => closeProbe(callback));
+
       return probe;
     });
+
     return probe;
   });
 
