@@ -32,10 +32,22 @@ test("Serve verifies URL, owns a private route, repeats idempotently and preserv
     TCP: { "443": { HTTPS: true }, "8443": { HTTPS: true } },
     Web: {
       [`${HOSTNAME}:443`]: {
-        Handlers: { "/metrics": { Proxy: "http://127.0.0.1:9000" } },
+        Handlers: {
+          "/metrics": { Proxy: "http://127.0.0.1:9000" },
+          "/assets-other": { Text: "separate namespace" },
+          "/documents-archive": { Text: "separate namespace" },
+          "/healthcheck": { Text: "separate route" },
+          "/health/details": { Text: "does not match /health" },
+          "/%61ssets/viewer.js": { Text: "mount keys are not URL decoded" },
+        },
       },
       [`${HOSTNAME}:8443`]: {
-        Handlers: { "/": { Text: "public existing service" } },
+        Handlers: {
+          "/": { Text: "public existing service" },
+          "/assets/viewer.js": { Text: "another port" },
+          "/documents/": { Text: "another port" },
+          "/health": { Text: "another port" },
+        },
       },
     },
     AllowFunnel: { [`${HOSTNAME}:8443`]: true },
@@ -47,7 +59,12 @@ test("Serve verifies URL, owns a private route, repeats idempotently and preserv
         TCP: { "443": { HTTPS: true } },
         Web: {
           "other.example-tailnet.ts.net:443": {
-            Handlers: { "/": { Text: "service" } },
+            Handlers: {
+              "/": { Text: "service" },
+              "/assets/viewer.js": { Text: "named service" },
+              "/documents/": { Text: "named service" },
+              "/health": { Text: "named service" },
+            },
           },
         },
       },
@@ -273,6 +290,166 @@ test("start rechecks a route claimed after preparation and never overwrites it",
   assert.deepEqual(await f.liveConfig(), occupied);
   assert.deepEqual(mutations(await f.commands()), []);
   await assert.rejects(f.journal(), /ENOENT/);
+});
+
+test("prepare refuses mounts shadowing reader namespaces, ancestors and canonical aliases", recordingTestOptions, async (t) => {
+  const f = await fixture(t);
+  const mounts = [
+    "/assets",
+    "/assets/",
+    "/assets/viewer.js",
+    "/assets/viewer.js/",
+    "/assets/viewer.css",
+    "/documents",
+    "/documents/",
+    "/documents/report/content",
+    "/documents/report/content/",
+    "/health",
+    "/health/",
+    "//",
+    "/assets//viewer.js",
+    "/other/../assets/viewer.js",
+    "/documents/./report/content",
+    "/other/../documents/report",
+    "/other/../health",
+    "/health/.",
+  ];
+  for (const mount of mounts) {
+    const config = {
+      TCP: { "443": { HTTPS: true } },
+      Web: {
+        [`${HOSTNAME}:443`]: {
+          Handlers: { [mount]: { Proxy: "http://127.0.0.1:9000" } },
+        },
+      },
+    };
+    await f.update({ config });
+    await assert.rejects(
+      prepareTailscale(f.options, f.command),
+      /conflicts with HTML Inbox's reserved reader routes/,
+      mount,
+    );
+    assert.deepEqual(await f.liveConfig(), config);
+  }
+
+  assert.deepEqual(mutations(await f.commands()), []);
+  await assert.rejects(f.journal(), /ENOENT/);
+});
+
+test("start rechecks shadow mounts added after preparation before recording or mutation", recordingTestOptions, async (t) => {
+  const f = await fixture(t);
+  const prepared = await prepareTailscale(f.options, f.command);
+  for (const mount of ["/assets/viewer.js", "/documents/", "/health/", "//"]) {
+    const config = {
+      TCP: { "443": { HTTPS: true } },
+      Web: {
+        [`${HOSTNAME}:443`]: { Handlers: { [mount]: { Text: "new route" } } },
+      },
+    };
+    await f.update({ config });
+    await assert.rejects(
+      startTailscale(prepared),
+      /conflicts with HTML Inbox's reserved reader routes/,
+      mount,
+    );
+    assert.deepEqual(await f.liveConfig(), config);
+  }
+
+  assert.deepEqual(mutations(await f.commands()), []);
+  await assert.rejects(f.journal(), /ENOENT/);
+});
+
+test("external reader shadows cause status drift while scoped cleanup preserves every shadow", recordingTestOptions, async (t) => {
+  const f = await fixture(t);
+  const prepared = await prepareTailscale(f.options, f.command);
+  await startTailscale(prepared);
+  const root = { Proxy: `http://127.0.0.1:${f.options.backendPort}` };
+  const mounts = ["/assets/viewer.js", "/documents/", "/health/", "//"];
+  for (const mount of mounts) {
+    await f.update({
+      config: {
+        TCP: { "443": { HTTPS: true } },
+        Web: {
+          [`${HOSTNAME}:443`]: {
+            Handlers: { "/": root, [mount]: { Text: "external route" } },
+          },
+        },
+      },
+    });
+    const status = await getTailscaleStatus(f.home);
+    assert.equal(status.state, "drift", mount);
+    assert.equal(status.url, undefined);
+    assert.match(status.reason ?? "", /reserved reader routes/);
+    await assert.rejects(prepareTailscale(f.options, f.command), /reserved reader routes/);
+    await assert.rejects(startTailscale(prepared), /reserved reader routes/);
+    assert.equal((await f.journal()).phase, "active");
+  }
+
+  const remaining = {
+    TCP: { "443": { HTTPS: true } },
+    Web: {
+      [`${HOSTNAME}:443`]: {
+        Handlers: Object.fromEntries(
+          [...mounts, "/metrics"].map((mount) => [mount, { Text: "external route" }]),
+        ),
+      },
+    },
+  };
+  await f.update({
+    config: {
+      ...remaining,
+      Web: {
+        [`${HOSTNAME}:443`]: {
+          Handlers: { "/": root, ...remaining.Web[`${HOSTNAME}:443`].Handlers },
+        },
+      },
+    },
+  });
+  assert.deepEqual(await cleanupTailscale(f.home, f.options), { state: "stopped" });
+  assert.deepEqual(await f.liveConfig(), remaining);
+  await assert.rejects(f.journal(), /ENOENT/);
+  assert.deepEqual(mutations(await f.commands()).map((args) => args.at(-1)), [
+    root.Proxy,
+    "off",
+  ]);
+});
+
+test("postmutation reader shadows refuse readiness and roll back only the verified root", recordingTestOptions, async (t) => {
+  for (const mount of ["/assets/viewer.js/", "/documents/", "/health/"]) {
+    const f = await fixture(t);
+    const prepared = await prepareTailscale(f.options, f.command);
+    const remaining = {
+      TCP: { "443": { HTTPS: true } },
+      Web: {
+        [`${HOSTNAME}:443`]: { Handlers: { [mount]: { Text: "external route" } } },
+      },
+    };
+    await f.update({
+      afterServeConfig: {
+        ...remaining,
+        Web: {
+          [`${HOSTNAME}:443`]: {
+            Handlers: {
+              "/": { Proxy: `http://127.0.0.1:${f.options.backendPort}` },
+              ...remaining.Web[`${HOSTNAME}:443`].Handlers,
+            },
+          },
+        },
+      },
+    });
+    await assert.rejects(
+      startTailscale(prepared),
+      /reserved reader routes.*owned route was cleaned up/,
+      mount,
+    );
+    assert.deepEqual(await f.liveConfig(), remaining);
+    assert.deepEqual(await getTailscaleStatus(f.home), { state: "stopped" });
+    await assert.rejects(f.journal(), /ENOENT/);
+    assert.equal(mutations(await f.commands()).length, 2);
+    assert.deepEqual(mutations(await f.commands()).at(-1), [
+      "serve", "--bg", "--yes", "--https=443", "--set-path=/", "off",
+    ]);
+  }
 });
 
 test("reader identity metadata cannot be proxied even with a spoofed loopback Host", recordingTestOptions, async (t) => {

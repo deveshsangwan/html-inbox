@@ -7,6 +7,7 @@ import {
   type TailscaleCommandOptions,
 } from "./tailscale-command";
 import {
+  assertReaderRoutesAvailable,
   assertSafeListener,
   getRoute,
   parseServeConfig,
@@ -132,6 +133,7 @@ export async function startTailscale(
       assertSameNode(await readNode(executable, command.timeoutMs), actual);
       const after = await readConfig(executable, command.timeoutMs);
       assertOwnedRoute(after, ownership);
+      assertReaderRoutesAvailable(after, actual.hostname);
       if (
         !isDeepStrictEqual(
           unrelatedConfig(before, actual.hostname),
@@ -197,6 +199,7 @@ export async function getTailscaleStatus(
     const config = await readConfig(executable, command.timeoutMs);
     try {
       assertOwnedRoute(config, ownership);
+      assertReaderRoutesAvailable(config, ownership.hostname);
     } catch (error) {
       return { state: "drift", reason: describeError(error) };
     }
@@ -313,6 +316,8 @@ function assertAvailableRoute(
   ownership: TailscaleOwnership | undefined,
 ): void {
   assertSafeListener(config, node.hostname);
+  assertReaderRoutesAvailable(config, node.hostname);
+
   if (ownership) {
     assertSameNode(node, ownership);
     if (ownership.instanceId !== options.instanceId) {

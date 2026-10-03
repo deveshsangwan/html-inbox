@@ -52,13 +52,17 @@ The private `tailscale-serve.json` journal has mode `0600` in the `0700` inbox h
 
 Startup preserves unrelated path mounts, ports, named Services and foreground configurations. An occupied root route, TCP/HTTP listener on 443, foreground listener on 443, Funnel configuration on 443 or shared hostname listener causes refusal. Malformed JSON or an unknown routing field also causes refusal. Existing Funnel access on other ports remains unchanged.
 
+On the reader's hostname and port 443, mounts at or below `/assets` and `/documents`, and mounts matching `/health`, conflict with the reader. This includes trailing-slash and cleaned path aliases. Serve checks exact paths before walking cleaned parent paths, with both trailing-slash and plain mounts, so `/documents/` can intercept every document and `/assets/viewer.js/` can intercept the viewer script. The root alias `//` also takes precedence over `/` during that parent walk. Startup checks these conflicts during preflight, immediately before mutation and afterward. Mount keys are not URL-decoded. Separate namespaces such as `/assets-other`, `/documents-archive` and `/metrics`, and descendants such as `/health/details`, remain untouched, as do mounts on other ports and named Services.
+
 Cleanup first checks the journal, expected process owner, connected node and live route. Its only mutation is:
 
 ```text
 tailscale serve --bg --yes --https=443 --set-path=/ off
 ```
 
-The explicit root path is essential. Omitting `--set-path` can remove every path mount on that host and port. Cleanup verifies route removal and preservation of the rest of the configuration before deleting the journal. It never runs `serve reset`, `funnel`, `set-raw`, `set-config` or `clear`. If the route already disappeared, it clears the journal without a Tailscale mutation. If the route, node or configuration changed, it leaves the journal and reports the reason.
+The explicit root path is essential. Omitting `--set-path` can remove every path mount on that host and port. Cleanup verifies route removal and preservation of the rest of the configuration before deleting the journal. It never runs `serve reset`, `funnel`, `set-raw`, `set-config` or `clear`. If the route already disappeared, it clears the journal without a Tailscale mutation. If exact root ownership, connected node identity or Serve/Funnel listener safety cannot be verified, it leaves the journal and reports the reason.
+
+An external mount that shadows a reader route makes status report `drift` without a URL and blocks startup. Cleanup can still remove the exactly verified owned root route while preserving that external mount. Reader-route availability and cleanup ownership are separate checks; move the conflicting mount manually before starting the viewer again.
 
 Retry `viewer stop` after restoring the existing client connection or permissions. Inspect `tailscale serve status --json` and the private journal when recovering drift. Do not use a global reset. A failed startup attempts the same verified, scoped cleanup; if it cannot verify ownership, it leaves the pending journal and reports both failures.
 
@@ -72,6 +76,7 @@ The implementation follows the official [Serve CLI reference](https://tailscale.
 
 - [`cmd/tailscale/cli/serve_v2.go`](https://github.com/tailscale/tailscale/blob/9128778b6515f32e13d92e7380044fe025f9b08e/cmd/tailscale/cli/serve_v2.go) defines `serve status --json`, `--bg`, `--yes`, `--https`, `--set-path`, route updates and scoped `off` behavior.
 - [`ipn/serve.go`](https://github.com/tailscale/tailscale/blob/9128778b6515f32e13d92e7380044fe025f9b08e/ipn/serve.go) defines `TCP`, `Web`, `AllowFunnel`, `Foreground` and `Services`, including handler JSON and removal behavior.
+- [`ipn/ipnlocal/serve.go`](https://github.com/tailscale/tailscale/blob/9128778b6515f32e13d92e7380044fe025f9b08e/ipn/ipnlocal/serve.go) defines `getServeHandler`: exact request paths take precedence, followed by cleaned trailing-slash and plain ancestor mounts. Recording regressions cover reserved reader mounts, canonical aliases, status drift and cleanup that preserves external shadow mounts.
 - [`ipn/ipnstate/ipnstate.go`](https://github.com/tailscale/tailscale/blob/9128778b6515f32e13d92e7380044fe025f9b08e/ipn/ipnstate/ipnstate.go) defines `BackendState`, `Self.ID`, `Self.DNSName`, `Self.Online`, `CurrentTailnet.MagicDNSEnabled`, `MagicDNSSuffix` and `CertDomains`.
 - [`cmd/tailscale/cli/serve_legacy.go`](https://github.com/tailscale/tailscale/blob/9128778b6515f32e13d92e7380044fe025f9b08e/cmd/tailscale/cli/serve_legacy.go) still implements JSON status and the feature-consent check. [`tailcfg/nodecap/nodecap.go`](https://github.com/tailscale/tailscale/blob/9128778b6515f32e13d92e7380044fe025f9b08e/tailcfg/nodecap/nodecap.go) defines the `https` capability key.
 

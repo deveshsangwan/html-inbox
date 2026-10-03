@@ -1,3 +1,4 @@
+import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { isRecord } from "./validation";
 
@@ -341,6 +342,34 @@ export function routeMatches(
   proxy: string,
 ): boolean {
   return isDeepStrictEqual(getRoute(config, hostname), { Proxy: proxy });
+}
+
+export function assertReaderRoutesAvailable(
+  config: ServeConfig,
+  hostname: string,
+): void {
+  const handlers = config.Web?.[`${hostname}:443`]?.Handlers ?? {};
+  for (const mount of Object.keys(handlers)) {
+    if (mount === "/") {
+      continue;
+    }
+
+    // Serve tries the exact path, then cleaned slash/plain ancestors. Reserve
+    // aliases too: an exact noncanonical mount can intercept a reader URL alias.
+    const canonicalMount = path.posix.normalize(mount).replace(/\/$/, "") || "/";
+    if (
+      canonicalMount === "/" ||
+      canonicalMount === "/assets" ||
+      canonicalMount.startsWith("/assets/") ||
+      canonicalMount === "/documents" ||
+      canonicalMount.startsWith("/documents/") ||
+      canonicalMount === "/health"
+    ) {
+      throw new Error(
+        `Tailscale Serve mount ${JSON.stringify(mount)} conflicts with HTML Inbox's reserved reader routes on ${hostname}:443; inspect tailscale serve status --json and move that mount before starting the viewer`,
+      );
+    }
+  }
 }
 
 export function assertSafeListener(
