@@ -74,12 +74,8 @@ export async function getViewerStatus(
   const url = `http://${HOST}:${port}`;
   const health = await getHealth(port);
   if (health.state === "unavailable") {
-    try {
-      await assertPortAvailable(port);
-      return { state: "stopped", url };
-    } catch {
-      return { state: "conflict", url };
-    }
+    const isListening = await isPortListening(port);
+    return { state: isListening ? "conflict" : "stopped", url };
   }
   if (health.state === "incompatible") {
     return { state: "incompatible", url };
@@ -411,6 +407,23 @@ function isAllowedHost(hostHeader: string | undefined, port: number): boolean {
     allowedHosts.push(HOST, "localhost");
   }
   return allowedHosts.includes(normalized);
+}
+
+async function isPortListening(port: number): Promise<boolean> {
+  // Status checks must not bind a port that a viewer may be starting on.
+  return new Promise((resolve) => {
+    const socket = net.createConnection({ port, host: HOST });
+    const finish = (isListening: boolean) => {
+      socket.destroy();
+      resolve(isListening);
+    };
+
+    socket.once("connect", () => finish(true));
+    socket.once("error", (error: NodeJS.ErrnoException) => {
+      finish(error.code !== "ECONNREFUSED");
+    });
+    socket.setTimeout(400, () => finish(true));
+  });
 }
 
 async function assertPortAvailable(port: number): Promise<void> {
