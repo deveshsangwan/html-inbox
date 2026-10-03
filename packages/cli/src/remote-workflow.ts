@@ -1,34 +1,45 @@
 import { randomUUID } from "node:crypto";
-import { open, readFile, readdir, rm } from "node:fs/promises";
+import { readdir, rm } from "node:fs/promises";
 import path from "node:path";
-import { DocumentBackend } from "./documents";
+import type { DocumentBackend } from "./documents";
 import {
-  CloudflareDeployMetadata,
-  CloudflareDeployReceipt,
-  CloudflareDeploymentSummary,
   CloudflarePagesAdapter,
-  CloudflareProjectSummary,
-  CloudflareSnapshotRef,
   receiptFromDeployment,
-  parseWranglerDeployUrls,
+  type CloudflareDeployMetadata,
+  type CloudflareDeployReceipt,
+  type CloudflareDeploymentSummary,
+  type CloudflareProjectSummary,
+  type CloudflareSnapshotRef,
 } from "./cloudflare-pages";
 import {
-  assertInboxCapability,
   assertUuidV4,
-  isRecord,
   normalizeCloudflareBranch,
   normalizeCloudflareProjectRef,
   sameCloudflareProject,
   type CloudflareProjectRef,
 } from "./validation";
-import {
-  ensurePrivateDirectory,
-  hardenPrivateFile,
-  writeAtomicPrivateJson,
-} from "./private-storage";
+import { ensurePrivateDirectory, writeAtomicPrivateJson } from "./private-storage";
 import { exportStaticSnapshot, generateInboxCapability } from "./static-export";
+import { acquireRemoteLock } from "./remote-lock";
+import {
+  REMOTE_SCHEMA_VERSION,
+  parseRemoteReceipt,
+  readRemoteOperation,
+  readRemoteState,
+  type CompletedSnapshotOperation,
+  type InitOperation,
+  type PreparedSnapshotOperation,
+  type RemoteOperation,
+  type RemoteState,
+} from "./remote-records";
 
-const REMOTE_SCHEMA_VERSION = 1;
+export {
+  parseRemoteState,
+  parseRemoteOperation,
+  type RemoteDeploymentRecord,
+  type RemoteState,
+  type RemoteOperation,
+} from "./remote-records";
 
 export interface RemoteDeploymentPort {
   listProjects(
@@ -51,59 +62,6 @@ export interface RemoteDeploymentPort {
     cwd: string,
   ): Promise<CloudflareDeploymentSummary[]>;
 }
-
-export interface RemoteDeploymentRecord {
-  operationId: string;
-  kind: "publish" | "revoke";
-  snapshotHash: string;
-  completedAt: string;
-  receipt: CloudflareDeployReceipt;
-}
-
-export interface RemoteState {
-  schemaVersion: typeof REMOTE_SCHEMA_VERSION;
-  ownerId: string;
-  target: CloudflareProjectRef;
-  branch: string;
-  capability: string;
-  revoked: boolean;
-  configuredAt: string;
-  updatedAt: string;
-  lastDeployment?: RemoteDeploymentRecord;
-}
-
-interface OperationBase {
-  schemaVersion: typeof REMOTE_SCHEMA_VERSION;
-  id: string;
-  target: CloudflareProjectRef;
-  branch: string;
-  ownerId: string;
-  capability: string;
-  attempts: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-type InitOperation = OperationBase & {
-  kind: "init";
-  phase: "prepared" | "remote-succeeded";
-  adopt: boolean;
-};
-
-type SnapshotIntent = OperationBase & { snapshotHash: string } & (
-    | { kind: "publish" }
-    | { kind: "revoke"; previousCapability: string }
-  );
-
-type PreparedSnapshotOperation = SnapshotIntent & { phase: "prepared" };
-type CompletedSnapshotOperation = SnapshotIntent & {
-  phase: "remote-succeeded";
-  receipt: CloudflareDeployReceipt;
-};
-export type RemoteOperation =
-  | InitOperation
-  | PreparedSnapshotOperation
-  | CompletedSnapshotOperation;
 
 export interface RemoteStatus {
   configured: boolean;
@@ -419,7 +377,7 @@ export class RemoteWorkflow {
     const completed: CompletedSnapshotOperation = {
       ...operation,
       phase: "remote-succeeded",
-      receipt: parseReceipt(receipt, operation),
+      receipt: parseRemoteReceipt(receipt, operation),
       updatedAt: this.now(),
     };
     await this.writeOperation(completed);
@@ -495,6 +453,7 @@ export class RemoteWorkflow {
   private async withMutationLock<T>(action: () => Promise<T>): Promise<T> {
     await this.prepareRemoteStorage();
     const release = await acquireRemoteLock(this.lockPath);
+
     try {
       await this.cleanupOrphanWork();
       return await action();
@@ -541,11 +500,11 @@ export class RemoteWorkflow {
   }
 
   private async readState(): Promise<RemoteState | null> {
-    return readPrivateJson(this.statePath, parseRemoteState);
+    return readRemoteState(this.statePath);
   }
 
   private async readOperation(): Promise<RemoteOperation | null> {
-    return readPrivateJson(this.operationPath, parseRemoteOperation);
+    return readRemoteOperation(this.operationPath);
   }
 
   private async writeOperation(operation: RemoteOperation): Promise<void> {
@@ -560,268 +519,6 @@ export class RemoteWorkflow {
   private snapshotDir(id: string): string {
     return path.join(this.workDir(id), "snapshot");
   }
-}
-
-async function acquireRemoteLock(
-  lockPath: string,
-): Promise<() => Promise<void>> {
-  const token = randomUUID();
-  try {
-    const handle = await open(lockPath, "wx", 0o600);
-    try {
-      await handle.writeFile(
-        `${JSON.stringify({
-          pid: process.pid,
-          token,
-          createdAt: new Date().toISOString(),
-        })}\n`,
-      );
-    } catch (error) {
-      await handle.close();
-      await rm(lockPath, { force: true });
-      throw error;
-    }
-    return async () => {
-      await handle.close();
-      try {
-        const record: unknown = JSON.parse(await readFile(lockPath, "utf8"));
-        if (isRecord(record) && record.token === token)
-          await rm(lockPath, { force: true });
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-          process.emitWarning(
-            `Could not release remote mutation lock: ${(error as Error).message}`,
-          );
-        }
-      }
-    };
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
-    await hardenPrivateFile(lockPath);
-    let record: Record<string, unknown>;
-    try {
-      const parsed: unknown = JSON.parse(await readFile(lockPath, "utf8"));
-      if (!isRecord(parsed)) throw new Error("invalid lock record");
-      record = parsed;
-    } catch {
-      throw staleLockError(lockPath);
-    }
-    if (typeof record.pid === "number" && isProcessAlive(record.pid)) {
-      throw new Error(
-        `Another HTML Inbox remote command is running (pid ${record.pid})`,
-      );
-    }
-    // Removing a stale lock automatically could race a process starting its operation.
-    throw staleLockError(lockPath);
-  }
-}
-
-function staleLockError(lockPath: string): Error {
-  return new Error(
-    `Stale HTML Inbox remote lock found at ${lockPath}; remove it after confirming no command is running`,
-  );
-}
-
-function isProcessAlive(pid: number): boolean {
-  if (!Number.isInteger(pid) || pid <= 0) return false;
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return (error as NodeJS.ErrnoException).code === "EPERM";
-  }
-}
-
-async function readPrivateJson<T>(
-  filePath: string,
-  parse: (value: unknown) => T,
-): Promise<T | null> {
-  try {
-    await hardenPrivateFile(filePath);
-    return parse(JSON.parse(await readFile(filePath, "utf8")));
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
-    if (error instanceof SyntaxError)
-      throw new Error(`Remote state is corrupt: ${filePath}`);
-    throw error;
-  }
-}
-
-export function parseRemoteState(value: unknown): RemoteState {
-  const record = parseSchema(value, "state");
-  const ownerId = parseUuid(record.ownerId, "remote owner ID");
-  const capability = parseCapability(record.capability);
-  const target = normalizeCloudflareProjectRef(record.target);
-  const branch = normalizeCloudflareBranch(parseString(record.branch));
-  if (typeof record.revoked !== "boolean")
-    throw new Error("Remote revoked flag is invalid");
-
-  const state: RemoteState = {
-    schemaVersion: REMOTE_SCHEMA_VERSION,
-    ownerId,
-    capability,
-    target,
-    branch,
-    revoked: record.revoked,
-    configuredAt: parseTimestamp(record.configuredAt),
-    updatedAt: parseTimestamp(record.updatedAt),
-  };
-  if (record.lastDeployment !== undefined) {
-    const deployment = record.lastDeployment;
-    if (
-      !isRecord(deployment) ||
-      (deployment.kind !== "publish" && deployment.kind !== "revoke")
-    ) {
-      throw new Error("Remote deployment record is invalid");
-    }
-    if (state.revoked !== (deployment.kind === "revoke"))
-      throw new Error("Remote deployment kind conflicts with state");
-    state.lastDeployment = {
-      operationId: parseUuid(
-        deployment.operationId,
-        "remote deployment operation ID",
-      ),
-      kind: deployment.kind,
-      snapshotHash: parseDigest(deployment.snapshotHash),
-      completedAt: parseTimestamp(deployment.completedAt),
-      receipt: parseReceipt(deployment.receipt, state),
-    };
-  } else if (state.revoked) {
-    throw new Error("Revoked remote state has no deployment");
-  }
-  return state;
-}
-
-export function parseRemoteOperation(value: unknown): RemoteOperation {
-  const record = parseSchema(value, "operation");
-  if (record.phase !== "prepared" && record.phase !== "remote-succeeded")
-    throw new Error("Remote operation phase is invalid");
-  if (
-    typeof record.attempts !== "number" ||
-    !Number.isSafeInteger(record.attempts) ||
-    record.attempts < 0
-  )
-    throw new Error("Remote operation attempts are invalid");
-  const base: OperationBase = {
-    schemaVersion: REMOTE_SCHEMA_VERSION,
-    id: parseUuid(record.id, "operation ID"),
-    ownerId: parseUuid(record.ownerId, "remote owner ID"),
-    capability: parseCapability(record.capability),
-    target: normalizeCloudflareProjectRef(record.target),
-    branch: normalizeCloudflareBranch(parseString(record.branch)),
-    attempts: record.attempts,
-    createdAt: parseTimestamp(record.createdAt),
-    updatedAt: parseTimestamp(record.updatedAt),
-  };
-
-  if (record.kind === "init") {
-    if (
-      typeof record.adopt !== "boolean" ||
-      record.snapshotHash !== undefined ||
-      record.receipt !== undefined ||
-      record.previousCapability !== undefined
-    )
-      throw new Error("Remote init intent is invalid");
-    return { ...base, kind: "init", phase: record.phase, adopt: record.adopt };
-  }
-  if (record.adopt !== undefined)
-    throw new Error("Remote deployment has an adoption decision");
-  const snapshotHash = parseDigest(record.snapshotHash);
-  let intent: SnapshotIntent;
-  if (record.kind === "revoke") {
-    const previousCapability = parseCapability(record.previousCapability);
-    if (previousCapability === base.capability)
-      throw new Error("Remote revoke must replace its capability");
-    intent = { ...base, snapshotHash, kind: "revoke", previousCapability };
-  } else if (
-    record.kind === "publish" &&
-    record.previousCapability === undefined
-  ) {
-    intent = { ...base, snapshotHash, kind: "publish" };
-  } else {
-    throw new Error("Remote operation kind is invalid");
-  }
-
-  if (record.phase === "remote-succeeded") {
-    return {
-      ...intent,
-      phase: record.phase,
-      receipt: parseReceipt(record.receipt, base),
-    };
-  }
-  if (record.receipt !== undefined)
-    throw new Error("Prepared remote operation contains a receipt");
-  return { ...intent, phase: "prepared" };
-}
-
-function parseSchema(value: unknown, label: string) {
-  if (!isRecord(value) || value.schemaVersion !== REMOTE_SCHEMA_VERSION)
-    throw new Error(`Remote ${label} schema is unsupported`);
-  return value;
-}
-
-function parseString(value: unknown): string {
-  if (typeof value !== "string")
-    throw new Error("Remote field must be a string");
-  return value;
-}
-
-function parseUuid(value: unknown, label: string): string {
-  const result = parseString(value);
-  assertUuidV4(result, label);
-  return result;
-}
-
-function parseCapability(value: unknown): string {
-  const result = parseString(value);
-  assertInboxCapability(result);
-  return result;
-}
-
-function parseTimestamp(value: unknown): string {
-  const result = parseString(value);
-  if (
-    !/^\d{4}-\d{2}-\d{2}T/.test(result) ||
-    !Number.isFinite(Date.parse(result))
-  )
-    throw new Error("Remote timestamp is invalid");
-  return result;
-}
-
-function parseDigest(value: unknown): string {
-  const result = parseString(value);
-  if (!/^[0-9a-f]{64}$/.test(result))
-    throw new Error("Remote snapshot hash is invalid");
-  return result;
-}
-
-function parseReceipt(
-  value: unknown,
-  intent: { target: CloudflareProjectRef; branch: string; capability: string },
-): CloudflareDeployReceipt {
-  if (!isRecord(value)) throw new Error("Remote deployment receipt is invalid");
-  const target = normalizeCloudflareProjectRef(value.target);
-  const branch = normalizeCloudflareBranch(parseString(value.branch));
-  const urls = parseWranglerDeployUrls(parseString(value.deploymentUrl));
-  const inboxPath = `/i/${intent.capability}/`;
-  if (
-    !sameCloudflareProject(target, intent.target) ||
-    branch !== intent.branch ||
-    new URL(urls.deploymentUrl).origin !== urls.deploymentUrl ||
-    value.deploymentUrl !== urls.deploymentUrl ||
-    value.projectUrl !== urls.projectUrl ||
-    value.deploymentInboxUrl !== `${urls.deploymentUrl}${inboxPath}` ||
-    value.projectInboxUrl !== `${urls.projectUrl}${inboxPath}`
-  ) {
-    throw new Error("Remote deployment receipt does not match its intent");
-  }
-  return {
-    target,
-    branch,
-    ...urls,
-    deploymentInboxUrl: `${urls.deploymentUrl}${inboxPath}`,
-    projectInboxUrl: `${urls.projectUrl}${inboxPath}`,
-  };
 }
 
 function assertOperationMatchesState(
