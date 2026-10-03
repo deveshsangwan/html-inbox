@@ -71,6 +71,10 @@ export function parseTailscaleNode(text: string, requireServe = true): Tailscale
     throw new Error("Tailscale HTTPS certificates are unavailable for this node; ask the tailnet administrator to enable HTTPS before retrying");
   }
 
+  if (requireServe && (!isRecord(value.Self.CapMap) || !Object.hasOwn(value.Self.CapMap, "https"))) {
+    throw new Error("Tailscale node has no enabled HTTPS capability; ask the tailnet administrator to enable HTTPS. HTML Inbox will not start the CLI's consent flow.");
+  }
+
   return { nodeId: value.Self.ID, hostname };
 }
 
@@ -101,7 +105,7 @@ function parseJson(text: string, label: string): unknown {
 
 function assertKeys(value: Record<string, unknown>, keys: string[], label: string): void {
   if (Object.keys(value).some((key) => !keys.includes(key))) {
-    throw new Error(`Tailscale ${label} contains an unsupported field; no configuration was changed`);
+    throw new Error(`Tailscale ${label} contains an unsupported field; its routing contract cannot be verified`);
   }
 }
 

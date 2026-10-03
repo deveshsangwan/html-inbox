@@ -166,7 +166,7 @@ async function cleanupOwnedRoute(home: string, expectedOwner: TailscaleOwner | u
   }
 
   assertOwnedRoute(before, ownership);
-  await runTailscale(executable, ["serve", "--yes", "--https=443", "--set-path=/", "off"], command.timeoutMs);
+  await runTailscale(executable, ["serve", "--bg", "--yes", "--https=443", "--set-path=/", "off"], command.timeoutMs);
 
   assertSameNode(await readNode(executable, command.timeoutMs, false), ownership);
   const after = await readConfig(executable, command.timeoutMs);

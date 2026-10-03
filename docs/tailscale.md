@@ -4,6 +4,8 @@ HTML Inbox uses an existing installed, signed-in Tailscale CLI. It never install
 
 Before using explicit Tailscale exposure, the node must be running, online and unexpired. Its connected tailnet must have MagicDNS enabled and HTTPS certificates available for its exact device hostname. The normal user running HTML Inbox needs permission to manage Serve through the existing daemon. If permission is denied, ask the server administrator to grant that user operator access. HTML Inbox never runs sudo. See the official [Serve guide](https://tailscale.com/docs/features/tailscale-serve) and [HTTPS prerequisites](https://tailscale.com/docs/how-to/set-up-https-certificates).
 
+The connected node must also advertise its already-enabled `https` capability in `Self.CapMap`. The current CLI checks that capability before its feature-consent flow. HTML Inbox refuses startup if it is absent, even if a certificate domain appears in status, so the integration cannot start that consent flow.
+
 The reader binds to `127.0.0.1`. Serve terminates tailnet HTTPS on the connected node's hostname at port 443 and proxies the root route to the reader's loopback port. HTML Inbox verifies the node ID, device hostname, HTTPS listener and exact proxy target before returning `https://device.tailnet.ts.net`. It does not parse the human-readable URL printed by the CLI.
 
 The HTTP foundation must allow the exact prepared hostname, ignore forwarded and Tailscale identity headers for authorization, and return only `{"ok":true}` from the reader's `/health`. Identity belongs to the separate private loopback control endpoint. The module checks reader health with both the tailnet Host and a loopback Host before configuring Serve. A reader exposing process or inbox identity fails this check.
@@ -53,7 +55,7 @@ Startup preserves unrelated path mounts, ports, named Services and foreground co
 Cleanup first checks the journal, expected process owner, connected node and live route. Its only mutation is:
 
 ```text
-tailscale serve --yes --https=443 --set-path=/ off
+tailscale serve --bg --yes --https=443 --set-path=/ off
 ```
 
 The explicit root path is essential. Omitting `--set-path` can remove every path mount on that host and port. Cleanup verifies route removal and preservation of the rest of the configuration before deleting the journal. It never runs `serve reset`, `funnel`, `set-raw`, `set-config` or `clear`. If the route already disappeared, it clears the journal without a Tailscale mutation. If the route, node or configuration changed, it leaves the journal and reports the reason.
@@ -69,6 +71,7 @@ The implementation follows the official [Serve CLI reference](https://tailscale.
 - [`cmd/tailscale/cli/serve_v2.go`](https://github.com/tailscale/tailscale/blob/9128778b6515f32e13d92e7380044fe025f9b08e/cmd/tailscale/cli/serve_v2.go) defines `serve status --json`, `--bg`, `--yes`, `--https`, `--set-path`, route updates and scoped `off` behavior.
 - [`ipn/serve.go`](https://github.com/tailscale/tailscale/blob/9128778b6515f32e13d92e7380044fe025f9b08e/ipn/serve.go) defines `TCP`, `Web`, `AllowFunnel`, `Foreground` and `Services`, including handler JSON and removal behavior.
 - [`ipn/ipnstate/ipnstate.go`](https://github.com/tailscale/tailscale/blob/9128778b6515f32e13d92e7380044fe025f9b08e/ipn/ipnstate/ipnstate.go) defines `BackendState`, `Self.ID`, `Self.DNSName`, `Self.Online`, `CurrentTailnet.MagicDNSEnabled`, `MagicDNSSuffix` and `CertDomains`.
+- [`cmd/tailscale/cli/serve_legacy.go`](https://github.com/tailscale/tailscale/blob/9128778b6515f32e13d92e7380044fe025f9b08e/cmd/tailscale/cli/serve_legacy.go) still implements JSON status and the feature-consent check. [`tailcfg/nodecap/nodecap.go`](https://github.com/tailscale/tailscale/blob/9128778b6515f32e13d92e7380044fe025f9b08e/tailcfg/nodecap/nodecap.go) defines the `https` capability key.
 
 Compatibility is based on these command and JSON contracts, with no hardcoded v1.96.5 minimum. The Serve syntax changed in v1.52. Unsupported flags or JSON produce an actionable error, and the integration will not silently adopt a different schema. Commands execute directly with closed stdin, bounded output and a timeout. No setup or consent prompt is accepted.
 
