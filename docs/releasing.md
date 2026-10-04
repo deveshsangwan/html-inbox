@@ -29,13 +29,13 @@ cd packages/cli
 npm pack --pack-destination ../../artifacts
 cd ../..
 node scripts/package-smoke.mjs artifacts/html-inbox-0.2.0.tgz
-npm publish artifacts/html-inbox-0.2.0.tgz --dry-run --access public --registry=https://registry.npmjs.org/
+npm publish ./artifacts/html-inbox-0.2.0.tgz --dry-run --access public --registry=https://registry.npmjs.org/
 ```
 
 After the file list and installed-package checks pass, publish that exact archive:
 
 ```sh
-npm publish artifacts/html-inbox-0.2.0.tgz --access public --registry=https://registry.npmjs.org/
+npm publish ./artifacts/html-inbox-0.2.0.tgz --access public --registry=https://registry.npmjs.org/
 ```
 
 Complete any npm authentication or 2FA challenge. Local publication does not claim GitHub provenance. A dry run validates the archive; it does not prove that npm will authorize the real publish.

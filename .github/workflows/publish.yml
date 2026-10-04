@@ -87,7 +87,7 @@ jobs:
       - name: Publish verified artifact with npm trusted publishing
         env:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
-        run: npm publish "html-inbox-${RELEASE_VERSION}.tgz" --access public --registry=https://registry.npmjs.org/
+        run: npm publish "./html-inbox-${RELEASE_VERSION}.tgz" --access public --registry=https://registry.npmjs.org/
 
       - name: Verify published version
         env:
