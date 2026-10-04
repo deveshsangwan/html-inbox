@@ -36,7 +36,7 @@ jobs:
       - name: Install pinned dependencies
         run: pnpm install --frozen-lockfile
       - name: Verify website integrity
-        run: node scripts/verify-site.mjs
+        run: pnpm test:site
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:

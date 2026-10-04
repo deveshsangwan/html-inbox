@@ -10,7 +10,7 @@
     "test": "pnpm build && node scripts/run-unit-tests.mjs",
     "test:package": "node scripts/package-smoke.mjs",
     "verify": "pnpm test && node scripts/run-browser-tests.mjs && pnpm test:site && pnpm test:package",
-    "test:site": "node scripts/verify-site.mjs",
+    "test:site": "node scripts/verify-site.mjs && node --test scripts/site-theme.test.mjs",
     "html-inbox": "node packages/cli/dist/index.js",
     "test:browser": "pnpm build && node scripts/run-browser-tests.mjs"
   },

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#f8fafc" />
     <meta
       name="description"
@@ -14,6 +14,7 @@
       rel="canonical"
       href="https://deveshsangwan.github.io/html-inbox/docs/security-storage.html"
     />
+    <script src="../assets/theme.js"></script>
     <link rel="stylesheet" href="../assets/site.css" />
     <link rel="stylesheet" href="../assets/docs.css" />
   </head>
@@ -40,6 +41,31 @@
           <a class="nav-cta" href="https://www.npmjs.com/package/html-inbox"
             >npm package</a
           >
+          <button
+            class="theme-toggle"
+            type="button"
+            data-theme-toggle
+            aria-label="Switch to dark mode"
+            hidden
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle
+                cx="10"
+                cy="10"
+                r="7"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path d="M10 3a7 7 0 0 1 0 14V3Z" fill="currentColor" />
+            </svg>
+            <span data-theme-label>Dark mode</span>
+          </button>
         </nav>
       </div>
     </header>

@@ -60,4 +60,4 @@ jobs:
         run: node scripts/package-smoke.mjs
 
       - name: Website integrity
-        run: node scripts/verify-site.mjs
+        run: node scripts/verify-site.mjs && node --test scripts/site-theme.test.mjs

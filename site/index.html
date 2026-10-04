@@ -3,13 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#f8fafc" />
     <meta
       name="description"
       content="Save generated HTML reports, notes and dashboards in one searchable library. Read locally, on your LAN or through Tailscale."
     />
     <title>HTML Inbox | A home for the HTML you make</title>
+    <script src="assets/theme.js"></script>
     <link rel="stylesheet" href="assets/site.css" />
     <script src="assets/site.js" defer></script>
   </head>
@@ -33,6 +34,31 @@
         <div class="nav-links">
           <a href="docs/">Documentation</a>
           <a href="https://github.com/deveshsangwan/html-inbox">GitHub</a>
+          <button
+            class="theme-toggle"
+            type="button"
+            data-theme-toggle
+            aria-label="Switch to dark mode"
+            hidden
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle
+                cx="10"
+                cy="10"
+                r="7"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path d="M10 3a7 7 0 0 1 0 14V3Z" fill="currentColor" />
+            </svg>
+            <span data-theme-label>Dark mode</span>
+          </button>
         </div>
       </nav>
     </header>
