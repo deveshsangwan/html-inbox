@@ -227,10 +227,14 @@
 &lt;/script&gt;</code></pre>
         </div>
         <p>
-          Other remote script URLs produce warnings and are blocked. An allowed
-          script host does not make its images or stylesheets allowed. CDN
-          scripts require internet access and may change within their allowed
-          major version. Offline rendering is not guaranteed.
+          The compatibility checker warns about other remote script URLs. The
+          browser blocks URLs outside the script CSP, which also allows the
+          Tailwind origin and Mermaid's version-11 <code>/dist/</code> prefix so
+          their dependencies can load. A warning does not necessarily mean the
+          browser will block that URL. Use the supported entry points above. An
+          allowed script host does not make its images or stylesheets allowed.
+          CDN scripts require internet access and may change within their
+          allowed major version. Offline rendering is not guaranteed.
         </p>
         <h2 id="navigation">Choose supported navigation</h2>
         <p>
@@ -249,10 +253,12 @@
         </p>
         <h2 id="warnings">Understand warnings and errors</h2>
         <p>
-          A validation error prevents publishing. A warning means the source
-          uses a resource or feature the served CSP blocks; the document is
-          still stored. Fix the source and publish a new record when a warning
-          affects the report.
+          A validation error prevents publishing. Warnings flag potential
+          compatibility issues, and the document is still stored. Many warned
+          requests or features are blocked by the served CSP, but warnings can
+          also identify unsupported entry points or URL text without a request.
+          Inspect the rendered report, fix the source, and publish a new record
+          when a warning affects it.
         </p>
         <p>
           Typical warnings include relative assets, external assets outside the
@@ -267,7 +273,7 @@
           <code>allow-scripts</code> only. They receive an opaque origin and
           cannot access the viewer DOM or its same-origin storage. The CSP
           blocks fetch connections, forms, nested frames, objects, and non-data
-          media, while allowing inline scripts and the supported CDN entries.
+          media, while allowing inline scripts and the configured CDN sources.
         </p>
         <aside class="docs-note">
           <p>

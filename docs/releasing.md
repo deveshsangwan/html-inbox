@@ -57,6 +57,16 @@ The package owner must configure a trusted publisher once in [html-inbox package
 
 The workflow file must already exist on GitHub. New trusted-publisher configurations can allow staged publishing alone; this workflow uses direct publishing, so select its permission explicitly. See the [current npm trusted-publisher documentation](https://docs.npmjs.com/trusted-publishers/).
 
+With npm 11.15.0 or newer, the authenticated owner can configure the same relationship through the [npm trust command](https://docs.npmjs.com/cli/v11/commands/npm-trust/):
+
+```sh
+npm trust list html-inbox --registry=https://registry.npmjs.org/
+npm trust github html-inbox --repo deveshsangwan/html-inbox --file publish.yml \
+  --allow-publish --yes --registry=https://registry.npmjs.org/
+```
+
+Complete the browser 2FA challenge. Inspect existing relationships first; preserve unrelated configurations and do not revoke one simply to retry setup. Once the matching relationship is configured, no repeated setup is needed for subsequent releases.
+
 For a future release, merge the reviewed version change into main. Open Actions, choose **Publish npm release**, select **Run workflow** on main, and enter the exact package version. The workflow refuses a mismatched or non-stable version. It has a manual trigger so merging code or pushing an artifact tag does not publish unexpectedly. Successful trusted publishing from this public repository produces npm provenance automatically.
 
 The existing [Package release artifact workflow](../.github/workflows/package.yml) still creates verified archives on `v<version>` tags or manual runs and never publishes to npm. Website deployment, package artifact generation, and npm publication are separate workflows.
