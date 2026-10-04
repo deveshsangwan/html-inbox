@@ -6,6 +6,7 @@ on:
     paths:
       - "site/**"
       - ".github/workflows/pages.yml"
+      - "scripts/verify-site.mjs"
   workflow_dispatch:
 
 permissions:
@@ -26,6 +27,16 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install pinned dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Verify website integrity
+        run: node scripts/verify-site.mjs
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:

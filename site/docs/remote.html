@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta
+      name="description"
+      content="Export a provider-independent snapshot or publish to Cloudflare Pages, adopt projects safely, reconcile failures, and understand revocation limits."
+    />
+    <title>Export and publish static snapshots | HTML Inbox docs</title>
+    <link
+      rel="canonical"
+      href="https://deveshsangwan.github.io/html-inbox/docs/remote.html"
+    />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/docs.css" />
+  </head>
+  <body class="docs-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav">
+        <a class="brand" href="../index.html" aria-label="HTML Inbox home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M3.5 4h13v12h-13zM3.5 11h3.25l1.5 2h3.5l1.5-2h3.25"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>HTML Inbox</span>
+        </a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" aria-current="true">Docs</a>
+          <a href="https://github.com/deveshsangwan/html-inbox">GitHub</a>
+          <a class="nav-cta" href="https://www.npmjs.com/package/html-inbox"
+            >npm package</a
+          >
+        </nav>
+      </div>
+    </header>
+    <div class="shell docs-layout">
+      <aside class="docs-sidebar">
+        <nav class="docs-nav" aria-label="Documentation">
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Use HTML Inbox</p>
+            <ul>
+              <li><a href="index.html">Getting started</a></li>
+              <li><a href="publishing.html">Publish documents</a></li>
+              <li><a href="html-compatibility.html">HTML compatibility</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Run and share</p>
+            <ul>
+              <li><a href="viewer.html">Viewer</a></li>
+              <li><a href="lan.html">LAN access</a></li>
+              <li><a href="tailscale.html">Tailscale access</a></li>
+              <li><a href="boot-services.html">Boot services</a></li>
+              <li>
+                <a href="remote.html" aria-current="page"
+                  >Static and remote publishing</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Reference</p>
+            <ul>
+              <li><a href="security-storage.html">Security and storage</a></li>
+              <li><a href="cli-reference.html">CLI reference</a></li>
+              <li><a href="troubleshooting.html">Troubleshooting</a></li>
+              <li><a href="development.html">Development</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+      <main class="docs-article" id="main">
+        <details class="docs-mobile-nav">
+          <summary>Documentation navigation</summary>
+          <nav class="docs-nav" aria-label="Mobile documentation">
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Use HTML Inbox</p>
+              <ul>
+                <li><a href="index.html">Getting started</a></li>
+                <li><a href="publishing.html">Publish documents</a></li>
+                <li>
+                  <a href="html-compatibility.html">HTML compatibility</a>
+                </li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Run and share</p>
+              <ul>
+                <li><a href="viewer.html">Viewer</a></li>
+                <li><a href="lan.html">LAN access</a></li>
+                <li><a href="tailscale.html">Tailscale access</a></li>
+                <li><a href="boot-services.html">Boot services</a></li>
+                <li>
+                  <a href="remote.html" aria-current="page"
+                    >Static and remote publishing</a
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Reference</p>
+              <ul>
+                <li>
+                  <a href="security-storage.html">Security and storage</a>
+                </li>
+                <li><a href="cli-reference.html">CLI reference</a></li>
+                <li><a href="troubleshooting.html">Troubleshooting</a></li>
+                <li><a href="development.html">Development</a></li>
+              </ul>
+            </div>
+          </nav>
+        </details>
+        <p class="docs-eyebrow">HTML Inbox documentation</p>
+        <h1>Export and publish static snapshots</h1>
+        <p class="docs-lead">
+          A snapshot contains the complete library at a point in time. It is
+          separate from the live loopback, LAN, or Tailscale viewer and does not
+          move your local documents.
+        </p>
+
+        <h2 id="static-export">Export without a provider</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox export --out ./html-inbox-export</code></pre>
+        </div>
+        <p>
+          The command builds a static inbox with browser-side search, original
+          document bytes, a manifest, and security policy metadata. It prints
+          the document count, snapshot hash, and inbox path
+          <code>/i/&lt;capability&gt;/</code>. The site's root deliberately has
+          no inbox listing.
+        </p>
+        <p>
+          The output must be outside <code>HTML_INBOX_HOME</code> and cannot
+          contain it. A recognized prior export can be replaced through staging;
+          an unrelated directory is refused. Protect the output and its parent,
+          since staging and backup paths can contain the full snapshot.
+        </p>
+        <p>
+          For automation, use <code>--json</code>. Normally let the exporter
+          generate the 128-bit capability. <code>--capability</code> can
+          reproduce a known path, but it must be a canonical 22-character
+          base64url encoding of exactly 16 bytes.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox export --out ./html-inbox-export --json</code></pre>
+        </div>
+        <p>
+          A generic host must install the policies recorded in
+          <code>security-headers.json</code> on every corresponding route and
+          alias. Copying HTML alone does not install those response headers.
+          Opening files through <code>file://</code> does not provide the served
+          CSP. The built-in Cloudflare adapter applies the required hosting
+          policies.
+        </p>
+        <aside class="docs-note">
+          <p>
+            Anyone who receives the capability URL can read and reshare the
+            complete snapshot. It is an unlisted bearer link, not a login or
+            recipient authentication. Browser history, screenshots, copied
+            links, and logging can expose it.
+          </p>
+        </aside>
+        <h2 id="cloudflare-pages">Configure your Cloudflare Pages project</h2>
+        <p>
+          Authenticate the pinned Wrangler CLI once using its browser login.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>npx --yes wrangler@4.86.0 login</code></pre>
+        </div>
+        <p>
+          For non-interactive commands, supply
+          <code>CLOUDFLARE_API_TOKEN</code> with Account / Cloudflare Pages /
+          Edit permission through the environment. The account ID is explicit
+          configuration, not a secret. HTML Inbox does not store the token in
+          its records or pass it as a command argument.
+        </p>
+        <p>
+          Use a dedicated Pages project. Replace the placeholders with your
+          32-character hexadecimal Cloudflare account ID and intended project
+          name.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox remote init \
+  --account &lt;cloudflare-account-id&gt; \
+  --project &lt;pages-project-name&gt;
+html-inbox remote publish
+html-inbox remote status</code></pre>
+        </div>
+        <p>
+          <code>remote init</code> creates a missing project. An existing
+          project requires <code>--adopt</code> because publishing replaces its
+          complete contents. The default production branch is <code>main</code>;
+          <code>--branch</code> selects another branch only when it agrees with
+          the Pages project's production branch.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox remote init \
+  --account &lt;cloudflare-account-id&gt; \
+  --project &lt;existing-pages-project&gt; \
+  --adopt</code></pre>
+        </div>
+        <p>
+          Inspect the account and project before adoption. The export ownership
+          marker is not proof that a remote project belongs to HTML Inbox.
+        </p>
+        <h2 id="publish-updates">Publish later changes</h2>
+        <p>
+          <code>remote publish</code> deploys every current local document as a
+          complete new snapshot and prints the production capability URL. Local
+          publishing and deletion do not deploy automatically.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox remote publish
+html-inbox remote status --json</code></pre>
+        </div>
+        <p>
+          The local library remains the source of truth. Remove documents you do
+          not intend to share before publishing. Open the production capability
+          URL, test search and a document, and share that path rather than the
+          site's root.
+        </p>
+        <h2 id="hosting-limits">Keep the snapshot within hosting limits</h2>
+        <p>
+          The current Cloudflare adapter checks a maximum of 20,000 upload files
+          and 25 MiB per file before deployment. Generated viewer, document,
+          manifest, and policy files all contribute to the upload, so file count
+          is not the same as document count. Increasing
+          <code>HTML_INBOX_MAX_BYTES</code> can let a local document exceed the
+          remote file limit.
+        </p>
+        <p>
+          The adapter also bounds generated <code>_headers</code> rules and
+          lines. If a snapshot cannot fit the supported hosting policy,
+          publishing fails rather than dropping security headers. Reduce the
+          library or document size before retrying.
+        </p>
+        <h2 id="reconcile">Recover an ambiguous operation</h2>
+        <p>
+          Remote mutations record durable intent under the private inbox before
+          the external request. A timeout can occur after Cloudflare accepted a
+          deployment. Reconcile the preserved operation instead of repeatedly
+          starting a new publish.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox remote status
+html-inbox remote reconcile
+html-inbox remote status</code></pre>
+        </div>
+        <p>
+          Reconciliation checks deployment history for the operation ID and
+          snapshot digest before retrying. If ambiguous project creation
+          discovers an existing project, reconciliation requires
+          <code>--adopt</code> after you inspect the target. Lock recovery never
+          grants adoption automatically.
+        </p>
+        <h2 id="recover-lock">Recover a terminated remote command</h2>
+        <p>
+          A killed command can leave <code>remote/mutation.lock</code>. After
+          confirming that the previous command and its child processes exited,
+          use the same machine and inbox to request explicit recovery.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox remote status
+html-inbox remote reconcile --recover-lock
+html-inbox remote status</code></pre>
+        </div>
+        <p>
+          Recovery needs a complete valid lock record and an OS check that its
+          PID no longer exists. A live or reused PID, malformed record,
+          permission failure, or inconclusive check blocks recovery. The CLI
+          sends no termination signal and does not use lock age as proof.
+        </p>
+        <p>
+          For a malformed lock, an interrupted recovery guard, or a home shared
+          by multiple machines, stop all commands using that home and verify
+          their processes exited. Back up the complete private
+          <code>remote</code> directory. Remove only
+          <code>mutation.lock</code> and <code>mutation.lock.recovery</code>,
+          preserving <code>state.json</code>, <code>operation.json</code>, and
+          <code>work</code>. Then run <code>remote reconcile</code>. If you
+          cannot establish that all commands stopped, leave the locks in place.
+        </p>
+        <h2 id="revoke">Revoke the production link</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox remote revoke</code></pre>
+        </div>
+        <p>
+          Revoke asks for confirmation, then replaces the production route with
+          a new undisclosed empty capability. Use <code>--yes</code> for
+          non-interactive operation; <code>--json</code> provides structured
+          output.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox remote revoke --yes --json</code></pre>
+        </div>
+        <p>
+          Revocation does not erase older immutable Cloudflare deployment URLs,
+          recipient copies, or exports. Prune sensitive historical deployments
+          in Cloudflare before treating old content as inaccessible. Deleting
+          local documents or removing local remote state does not revoke an
+          already deployed snapshot.
+        </p>
+        <p>
+          See
+          <a href="security-storage.html#remote">remote security limits</a> and
+          the
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/remote-migration.md"
+            >source recovery guide</a
+          >
+          for the longer manual recovery procedure.
+        </p>
+
+        <nav class="docs-page-links" aria-label="Adjacent documentation pages">
+          <a href="boot-services.html">Previous: Boot services</a
+          ><a href="security-storage.html">Next: Security and storage</a>
+        </nav>
+        <p class="docs-source">
+          See a mistake?
+          <a href="https://github.com/deveshsangwan/html-inbox/issues"
+            >Report a documentation issue</a
+          >.
+        </p>
+      </main>
+      <aside class="docs-toc">
+        <nav aria-label="On this page">
+          <p class="docs-toc-label">On this page</p>
+          <ul>
+            <li><a href="#static-export">Export without a provider</a></li>
+            <li>
+              <a href="#cloudflare-pages"
+                >Configure your Cloudflare Pages project</a
+              >
+            </li>
+            <li><a href="#publish-updates">Publish later changes</a></li>
+            <li>
+              <a href="#hosting-limits"
+                >Keep the snapshot within hosting limits</a
+              >
+            </li>
+            <li><a href="#reconcile">Recover an ambiguous operation</a></li>
+            <li>
+              <a href="#recover-lock">Recover a terminated remote command</a>
+            </li>
+            <li><a href="#revoke">Revoke the production link</a></li>
+          </ul>
+        </nav>
+      </aside>
+    </div>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span
+          >HTML Inbox ·
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/LICENSE"
+            >MIT license</a
+          ></span
+        ><a href="https://github.com/deveshsangwan/html-inbox"
+          >Source on GitHub</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>

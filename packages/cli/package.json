@@ -1,6 +1,6 @@
 {
   "name": "html-inbox",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A local-first CLI that stores, previews, and publishes generated HTML documents.",
   "license": "MIT",
   "repository": {
@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/deveshsangwan/html-inbox/issues"
   },
-  "homepage": "https://github.com/deveshsangwan/html-inbox#readme",
+  "homepage": "https://deveshsangwan.github.io/html-inbox/",
   "keywords": [
     "html",
     "reports",

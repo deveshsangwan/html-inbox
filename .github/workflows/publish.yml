@@ -1,0 +1,95 @@
+name: Publish npm release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Package version to verify and publish"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out release
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org/
+
+      - name: Verify release version
+        id: release
+        env:
+          EXPECTED_VERSION: ${{ inputs.version }}
+        run: |
+          node --input-type=module <<'JS'
+          import { appendFileSync, readFileSync } from "node:fs";
+          if (process.env.GITHUB_REF !== "refs/heads/main") {
+            throw new Error("Publish reviewed releases from the main branch");
+          }
+
+          const { version } = JSON.parse(readFileSync("packages/cli/package.json", "utf8"));
+          if (!/^\d+\.\d+\.\d+$/.test(version)) {
+            throw new Error("This workflow publishes stable semantic versions only");
+          }
+
+          if (process.env.EXPECTED_VERSION !== version) {
+            throw new Error(`Requested ${process.env.EXPECTED_VERSION} does not match package ${version}`);
+          }
+
+          appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);
+          JS
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install pinned dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install test browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Verify source and browser behavior
+        run: pnpm test && node scripts/run-browser-tests.mjs && pnpm test:site
+
+      - name: Pack release artifact
+        working-directory: packages/cli
+        run: npm pack --pack-destination ../..
+
+      - name: Verify exact release artifact
+        env:
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: node scripts/package-smoke.mjs "html-inbox-${RELEASE_VERSION}.tgz"
+
+      - name: Upload verified artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: html-inbox-v${{ steps.release.outputs.version }}
+          path: html-inbox-${{ steps.release.outputs.version }}.tgz
+          if-no-files-found: error
+
+      - name: Publish verified artifact with npm trusted publishing
+        env:
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: npm publish "./html-inbox-${RELEASE_VERSION}.tgz" --access public --registry=https://registry.npmjs.org/
+
+      - name: Verify published version
+        env:
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: npm view "html-inbox@${RELEASE_VERSION}" version dist.integrity --registry=https://registry.npmjs.org/

@@ -9,7 +9,7 @@ Remote publishing does not move or mutate the local library. `~/.html-inbox/docu
 3. Inspect a provider-independent export with `html-inbox export --out ./html-inbox-export`.
 4. Treat every document in the local library as part of one shared remote capability. Delete anything that should not be in that snapshot.
 
-The updated viewer uses protocol version 2 to match shutdown requests to a specific process. Stop an older foreground viewer with Ctrl-C before upgrading, or use the previous CLI to stop its detached viewer. A new CLI refuses to reuse an incompatible viewer.
+The updated viewer uses protocol version 3 and a private loopback control endpoint to match shutdown requests to a specific process. Stop an older foreground viewer with Ctrl-C before upgrading, or use the previous CLI to stop its detached viewer. A new CLI refuses to reuse or signal an incompatible viewer. Documents remain in the existing inbox.
 
 ## Configure Cloudflare
 

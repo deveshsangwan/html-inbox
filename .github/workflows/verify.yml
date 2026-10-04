@@ -58,3 +58,6 @@ jobs:
 
       - name: Package smoke test
         run: node scripts/package-smoke.mjs
+
+      - name: Website integrity
+        run: node scripts/verify-site.mjs

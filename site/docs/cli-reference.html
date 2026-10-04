@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta
+      name="description"
+      content="Complete HTML Inbox command syntax, supported flags, JSON output, metadata limits, and public environment variables."
+    />
+    <title>CLI reference | HTML Inbox docs</title>
+    <link
+      rel="canonical"
+      href="https://deveshsangwan.github.io/html-inbox/docs/cli-reference.html"
+    />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/docs.css" />
+  </head>
+  <body class="docs-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav">
+        <a class="brand" href="../index.html" aria-label="HTML Inbox home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M3.5 4h13v12h-13zM3.5 11h3.25l1.5 2h3.5l1.5-2h3.25"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>HTML Inbox</span>
+        </a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" aria-current="true">Docs</a>
+          <a href="https://github.com/deveshsangwan/html-inbox">GitHub</a>
+          <a class="nav-cta" href="https://www.npmjs.com/package/html-inbox"
+            >npm package</a
+          >
+        </nav>
+      </div>
+    </header>
+    <div class="shell docs-layout">
+      <aside class="docs-sidebar">
+        <nav class="docs-nav" aria-label="Documentation">
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Use HTML Inbox</p>
+            <ul>
+              <li><a href="index.html">Getting started</a></li>
+              <li><a href="publishing.html">Publish documents</a></li>
+              <li><a href="html-compatibility.html">HTML compatibility</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Run and share</p>
+            <ul>
+              <li><a href="viewer.html">Viewer</a></li>
+              <li><a href="lan.html">LAN access</a></li>
+              <li><a href="tailscale.html">Tailscale access</a></li>
+              <li><a href="boot-services.html">Boot services</a></li>
+              <li><a href="remote.html">Static and remote publishing</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Reference</p>
+            <ul>
+              <li><a href="security-storage.html">Security and storage</a></li>
+              <li>
+                <a href="cli-reference.html" aria-current="page"
+                  >CLI reference</a
+                >
+              </li>
+              <li><a href="troubleshooting.html">Troubleshooting</a></li>
+              <li><a href="development.html">Development</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+      <main class="docs-article" id="main">
+        <details class="docs-mobile-nav">
+          <summary>Documentation navigation</summary>
+          <nav class="docs-nav" aria-label="Mobile documentation">
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Use HTML Inbox</p>
+              <ul>
+                <li><a href="index.html">Getting started</a></li>
+                <li><a href="publishing.html">Publish documents</a></li>
+                <li>
+                  <a href="html-compatibility.html">HTML compatibility</a>
+                </li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Run and share</p>
+              <ul>
+                <li><a href="viewer.html">Viewer</a></li>
+                <li><a href="lan.html">LAN access</a></li>
+                <li><a href="tailscale.html">Tailscale access</a></li>
+                <li><a href="boot-services.html">Boot services</a></li>
+                <li><a href="remote.html">Static and remote publishing</a></li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Reference</p>
+              <ul>
+                <li>
+                  <a href="security-storage.html">Security and storage</a>
+                </li>
+                <li>
+                  <a href="cli-reference.html" aria-current="page"
+                    >CLI reference</a
+                  >
+                </li>
+                <li><a href="troubleshooting.html">Troubleshooting</a></li>
+                <li><a href="development.html">Development</a></li>
+              </ul>
+            </div>
+          </nav>
+        </details>
+        <p class="docs-eyebrow">HTML Inbox documentation</p>
+        <h1>CLI reference</h1>
+        <p class="docs-lead">
+          Commands operate on the library selected by HTML_INBOX_HOME. Run
+          html-inbox --help for the installed command set and html-inbox
+          --version to identify the release.
+        </p>
+
+        <h2 id="global">Help and version</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox --help
+html-inbox -h
+html-inbox --version
+html-inbox -v</code></pre>
+        </div>
+        <p>
+          Help and version are top-level commands. Unknown commands and
+          unsupported flags return an error. The CLI has no browser
+          administration API.
+        </p>
+        <h2 id="documents">Documents</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Document command syntax"
+          ><code>html-inbox publish &lt;file.html&gt; --title &lt;title&gt; --type &lt;type&gt;
+html-inbox list [--json]
+html-inbox delete &lt;id&gt; [--force] [--json]</code></pre>
+        </div>
+        <p>
+          <code>publish</code> requires one regular UTF-8 <code>.html</code> or
+          <code>.htm</code> file and both metadata flags. It prints a document
+          URL. It does not accept stdin, JSON input, or <code>--json</code>.
+          Title and type are non-empty text labels, limited to 200 and 64
+          characters.
+        </p>
+        <p>
+          <code>list</code> prints metadata in newest-first order, as
+          tab-separated text or JSON. <code>delete</code> requires the document
+          ID, asks for confirmation unless <code>--force</code> is supplied, and
+          reports metadata plus reclaimed bytes with <code>--json</code>.
+          Non-interactive deletion needs <code>--force</code>.
+        </p>
+        <h2 id="viewer">Viewer</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Viewer command syntax"
+          ><code>html-inbox viewer [--foreground] [--loopback | --lan | --tailscale] [--host &lt;ip&gt;] [--port &lt;port&gt;]
+html-inbox viewer status
+html-inbox viewer stop</code></pre>
+        </div>
+        <div class="docs-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Option</th>
+                <th scope="col">Behavior</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--foreground</code></td>
+                <td>
+                  Stay attached for debugging or an external manager. Default
+                  startup is detached and returns after readiness.
+                </td>
+              </tr>
+              <tr>
+                <td><code>--loopback</code></td>
+                <td>
+                  Choose local-only exposure. Default bind
+                  <code>127.0.0.1</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>--lan</code></td>
+                <td>
+                  Choose live LAN readers. Default bind <code>0.0.0.0</code>;
+                  all reachable readers are trusted.
+                </td>
+              </tr>
+              <tr>
+                <td><code>--tailscale</code></td>
+                <td>
+                  Use the existing client's HTTPS Serve root on 443 with a
+                  <code>127.0.0.1</code> backend.
+                </td>
+              </tr>
+              <tr>
+                <td><code>--host &lt;ip&gt;</code></td>
+                <td>
+                  Select an IPv4 or IPv6 bind address. No DNS names or IPv6
+                  scope identifiers. Loopback mode needs a loopback IP;
+                  Tailscale needs exactly <code>127.0.0.1</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>--port &lt;port&gt;</code></td>
+                <td>
+                  Integer 1 through 65535. Overrides
+                  <code>HTML_INBOX_PORT</code>. In Tailscale mode this is the
+                  backend port.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Exposure flags are mutually exclusive. Omitted networking options
+          reuse the inbox's saved configuration, or loopback port 3217 on first
+          startup. Stop the active viewer before changing configuration.
+          <code>status</code> and <code>stop</code> accept no startup flags and
+          print JSON without a <code>--json</code> option.
+        </p>
+        <h2 id="service">Boot services</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Service command syntax"
+          ><code>html-inbox viewer service install [--user &lt;normal-user&gt;] [--loopback | --lan | --tailscale] [--host &lt;ip&gt;] [--port &lt;port&gt;]
+html-inbox viewer service uninstall [--user &lt;normal-user&gt;]
+html-inbox viewer service status [--user &lt;normal-user&gt;]</code></pre>
+        </div>
+        <p>
+          Install and uninstall require administrator privileges on Linux with
+          systemd or macOS. The viewer runs as the selected normal account.
+          <code>--user</code> or sudo's <code>SUDO_USER</code> selects that
+          account; root itself is refused. Only install accepts networking
+          options. All service commands print JSON.
+        </p>
+        <p>
+          Use the same absolute <code>HTML_INBOX_HOME</code> for a custom inbox.
+          See <a href="boot-services.html">boot services</a> for stable
+          executable paths, permissions, and sudo examples.
+        </p>
+        <h2 id="export">Static export</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Static export syntax"
+          ><code>html-inbox export --out &lt;directory&gt; [--capability &lt;value&gt;] [--json]</code></pre>
+        </div>
+        <p>
+          <code>--out</code> is required and must be outside the inbox, must not
+          contain it, and must not be a filesystem root. Recognized earlier
+          exports may be replaced; unrelated directories are refused. Optional
+          capability values must encode exactly 128 bits in canonical
+          22-character base64url form. Omit the flag to generate a capability.
+        </p>
+        <h2 id="remote">Cloudflare remote commands</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Remote command syntax"
+          ><code>html-inbox remote init --account &lt;id&gt; --project &lt;name&gt; [--branch &lt;name&gt;] [--adopt] [--json]
+html-inbox remote publish [--json]
+html-inbox remote status [--json]
+html-inbox remote reconcile [--adopt] [--recover-lock] [--json]
+html-inbox remote revoke [--yes] [--json]</code></pre>
+        </div>
+        <div class="docs-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Command or option</th>
+                <th scope="col">Behavior</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>remote init</code></td>
+                <td>
+                  Configure one Pages target. Account ID is 32 hexadecimal
+                  characters. Project names use 1 to 63 lowercase letters,
+                  digits, or hyphens, with a letter or digit at each end.
+                </td>
+              </tr>
+              <tr>
+                <td><code>--branch</code></td>
+                <td>
+                  Default <code>main</code>. Must agree with the Pages
+                  production branch. Uses 1 to 128 safe characters; invalid
+                  traversal or leading/trailing separators are refused.
+                </td>
+              </tr>
+              <tr>
+                <td><code>--adopt</code></td>
+                <td>
+                  Explicitly accept an existing Pages project for
+                  complete-content replacement. Reconciliation may need separate
+                  adoption after ambiguous creation.
+                </td>
+              </tr>
+              <tr>
+                <td><code>remote publish</code></td>
+                <td>
+                  Deploy the complete current local library as a static
+                  snapshot.
+                </td>
+              </tr>
+              <tr>
+                <td><code>remote status</code></td>
+                <td>
+                  Read configured target, deployment state, and preserved
+                  operation intent.
+                </td>
+              </tr>
+              <tr>
+                <td><code>remote reconcile</code></td>
+                <td>
+                  Inspect deployment history and recover preserved intent before
+                  retrying.
+                </td>
+              </tr>
+              <tr>
+                <td><code>--recover-lock</code></td>
+                <td>
+                  Verify and replace a valid abandoned remote mutation lock. No
+                  termination signal or age-based takeover.
+                </td>
+              </tr>
+              <tr>
+                <td><code>remote revoke</code></td>
+                <td>
+                  Rotate away from the production capability route. Older
+                  immutable deployment URLs can remain readable.
+                </td>
+              </tr>
+              <tr>
+                <td><code>--yes</code></td>
+                <td>
+                  Confirm revoke without an interactive prompt. Required for
+                  non-interactive revoke.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          JSON remote output includes capabilities and deployment URLs. Protect
+          captured output. Authentication comes from Wrangler's existing login
+          or the Cloudflare token environment, not an HTML Inbox password.
+        </p>
+        <h2 id="environment">Environment variables</h2>
+        <div class="docs-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Variable</th>
+                <th scope="col">Default and purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>HTML_INBOX_HOME</code></td>
+                <td>
+                  <code>~/.html-inbox</code>. Selects library and private
+                  operational state. Relative paths resolve against the working
+                  directory. Boot operations default to the selected normal
+                  account's home.
+                </td>
+              </tr>
+              <tr>
+                <td><code>HTML_INBOX_PORT</code></td>
+                <td>
+                  An explicit port override. Without it, use the saved port or
+                  <code>3217</code> on first startup. Integer 1 through 65535.
+                </td>
+              </tr>
+              <tr>
+                <td><code>HTML_INBOX_MAX_BYTES</code></td>
+                <td>
+                  <code>10485760</code>, or 10 MiB. Positive safe integer byte
+                  limit for a published document.
+                </td>
+              </tr>
+              <tr>
+                <td><code>HTML_INBOX_TAILSCALE_COMMAND</code></td>
+                <td>
+                  Existing Tailscale executable path; otherwise resolve
+                  <code>tailscale</code> on PATH. Explicit overrides apply to
+                  startup, status, and cleanup; the successful absolute path is
+                  saved.
+                </td>
+              </tr>
+              <tr>
+                <td><code>CLOUDFLARE_API_TOKEN</code></td>
+                <td>
+                  Optional non-interactive Wrangler credential with Account /
+                  Cloudflare Pages / Edit permission. No token is stored in HTML
+                  Inbox records.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          For boot definitions, selected <code>NODE_OPTIONS</code>,
+          <code>NODE_EXTRA_CA_CERTS</code>, <code>SSL_CERT_FILE</code>, and
+          <code>SSL_CERT_DIR</code> values may be preserved. They are visible in
+          the definition and must not contain secrets. Internal worker variables
+          are not user configuration.
+        </p>
+        <p>
+          Unix-shell environment prefixes in these docs are not PowerShell
+          syntax. Set a value there with
+          <code>$env:HTML_INBOX_HOME = 'C:\Users\Alice\.html-inbox'</code>, then
+          run the CLI normally.
+        </p>
+
+        <nav class="docs-page-links" aria-label="Adjacent documentation pages">
+          <a href="security-storage.html">Previous: Security and storage</a
+          ><a href="troubleshooting.html">Next: Troubleshooting</a>
+        </nav>
+        <p class="docs-source">
+          See a mistake?
+          <a href="https://github.com/deveshsangwan/html-inbox/issues"
+            >Report a documentation issue</a
+          >.
+        </p>
+      </main>
+      <aside class="docs-toc">
+        <nav aria-label="On this page">
+          <p class="docs-toc-label">On this page</p>
+          <ul>
+            <li><a href="#global">Help and version</a></li>
+            <li><a href="#documents">Documents</a></li>
+            <li><a href="#viewer">Viewer</a></li>
+            <li><a href="#service">Boot services</a></li>
+            <li><a href="#export">Static export</a></li>
+            <li><a href="#remote">Cloudflare remote commands</a></li>
+            <li><a href="#environment">Environment variables</a></li>
+          </ul>
+        </nav>
+      </aside>
+    </div>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span
+          >HTML Inbox ·
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/LICENSE"
+            >MIT license</a
+          ></span
+        ><a href="https://github.com/deveshsangwan/html-inbox"
+          >Source on GitHub</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>
