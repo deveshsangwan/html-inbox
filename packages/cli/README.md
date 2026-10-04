@@ -17,7 +17,7 @@ Or run it without a global install:
 npx html-inbox --help
 ```
 
-The full setup, security model, static export format, and remote publishing workflow are documented in the [project repository](https://github.com/deveshsangwan/html-inbox#readme).
+Read the [documentation website](https://deveshsangwan.github.io/html-inbox/docs/) for installation, publishing, self-hosting, static sharing, command reference, and troubleshooting. Source and maintainer guides are in the [project repository](https://github.com/deveshsangwan/html-inbox#readme).
 
 Start or reuse a background viewer, inspect it, and stop it:
 

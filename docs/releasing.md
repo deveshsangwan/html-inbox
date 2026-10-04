@@ -1,69 +1,76 @@
 # Releasing HTML Inbox
 
-The repository remains a pnpm workspace for development, but the published `html-inbox` package contains one self-contained ncc executable and no runtime package dependencies. End-user documentation uses npm and the installed `html-inbox` command; pnpm appears here only because this checklist operates the source workspace and its lockfile.
+The source workspace uses Node.js 24, Corepack, and the pinned pnpm lockfile. The published `html-inbox` CLI supports Node.js 20 or newer and contains one self-contained ncc executable with no runtime package dependencies. Publish `packages/cli`, never the private workspace root.
 
-## Set up the npm account
+## Prepare a version
 
-1. Create an account at [npmjs.com](https://www.npmjs.com/signup) if needed, and verify its email address.
-2. [Enable two-factor authentication](https://docs.npmjs.com/configuring-two-factor-authentication/) on the account that will own the package. Interactive publishing requires 2FA.
-3. Sign in from the terminal in the environment that will publish the package:
+1. Update `packages/cli/package.json` and `CHANGELOG.md` together. Never reuse a version that npm has accepted.
+2. Tell users about upgrade requirements. For 0.2.0, stop viewers started by 0.1.0 with the old CLI before upgrading. The private process-control protocol changed; stored documents remain intact.
+3. From a clean checkout, run:
 
    ```sh
-   npm login --registry=https://registry.npmjs.org/
-   npm whoami --registry=https://registry.npmjs.org/
+   corepack pnpm install --frozen-lockfile
+   corepack pnpm exec playwright install chromium
+   corepack pnpm verify
    ```
 
-   Complete the browser login yourself and confirm that `whoami` reports the intended owner. Keep passwords, tokens, and recovery codes out of source files and chat.
-4. Check the package name with `npm view html-inbox --registry=https://registry.npmjs.org/`. An `E404` means no visible package exists; it does not guarantee the registry will accept the name. If another account owns it, obtain publishing access or choose a different name before packing.
+4. Review the change, commit it, and record the exact release commit. Keep the website guides consistent with the released commands.
+5. Inspect the packed files. The package should contain `bundle/index.js`, `README.md`, `LICENSE`, and `package.json`, with no runtime dependencies, credentials, inbox documents, or source tests.
 
-The package to publish is `packages/cli`, currently version `0.1.0`. The workspace root is private and must not be published. The first successful publish creates the package on npm; there is no separate package creation step on the website. See [npm's public package publishing guide](https://docs.npmjs.com/creating-and-publishing-unscoped-public-packages/).
+## Publish locally
 
-## Prepare
+Authenticate the package owner on the machine that will publish. Run `npm login --registry=https://registry.npmjs.org/` yourself, complete its browser sign-in, and check `npm whoami --registry=https://registry.npmjs.org/`. A 401 means the publishing session needs to be restored. Keep tokens, passwords, and recovery codes out of repository files and chat.
 
-1. Update the package version and `CHANGELOG.md` together.
-2. Use Node.js 24 and run `corepack pnpm install --frozen-lockfile` from a clean checkout.
-3. Install the test browser with `corepack pnpm exec playwright install chromium`, then run `corepack pnpm verify`. This builds and tests the source, packs the CLI, installs it into a temporary consumer, and exercises the installed binary.
-4. Inspect `npm pack --dry-run` from `packages/cli`. The archive should contain only `bundle/index.js`, `README.md`, `LICENSE`, and `package.json`.
-5. Confirm the npm name immediately before the first release with `npm view html-inbox`; availability can change.
-
-## Produce an artifact
-
-Push a `v<version>` tag or run the Package release artifact workflow manually. The workflow repeats the full verification gate and uploads the `.tgz` without publishing it.
-
-To build the same artifact locally after the verification gate, run these commands from the repository root. Replace `0.1.0` with the package version for later releases:
+Build and test the same archive you will publish. These commands are for version 0.2.0; replace that version for subsequent releases:
 
 ```sh
 mkdir -p artifacts
 cd packages/cli
 npm pack --pack-destination ../../artifacts
 cd ../..
-node scripts/package-smoke.mjs artifacts/html-inbox-0.1.0.tgz
-npm publish ./artifacts/html-inbox-0.1.0.tgz --dry-run --access public --registry=https://registry.npmjs.org/
+node scripts/package-smoke.mjs artifacts/html-inbox-0.2.0.tgz
+npm publish artifacts/html-inbox-0.2.0.tgz --dry-run --access public --registry=https://registry.npmjs.org/
 ```
 
-Inspect the packed file list. Test and publish the same tarball so a rebuild cannot change the artifact between verification and publication. Local `artifacts/` files are ignored by Git.
-
-## Publish deliberately
-
-After verifying the downloaded tarball and authenticating the intended npm account, publish that exact artifact:
+After the file list and installed-package checks pass, publish that exact archive:
 
 ```sh
-npm publish ./artifacts/html-inbox-0.1.0.tgz --access public --registry=https://registry.npmjs.org/
+npm publish artifacts/html-inbox-0.2.0.tgz --access public --registry=https://registry.npmjs.org/
 ```
 
-Complete npm's 2FA challenge when prompted. After npm reports success, confirm the version and test installation from the registry:
+Complete any npm authentication or 2FA challenge. Local publication does not claim GitHub provenance. A dry run validates the archive; it does not prove that npm will authorize the real publish.
+
+## Set up future GitHub publishing
+
+The [Publish npm release workflow](../.github/workflows/publish.yml) verifies source and browser tests, builds a tarball, runs installed-package smoke against that exact tarball, uploads it as an artifact, and publishes it through npm's trusted-publishing identity. It runs on GitHub-hosted Linux with Node.js 24 and grants `id-token: write` only to its publishing job. It needs no npm token secret.
+
+The package owner must configure a trusted publisher once in [html-inbox package settings](https://www.npmjs.com/package/html-inbox/access). Use these exact values:
+
+| Setting | Value |
+| --- | --- |
+| Publisher | GitHub Actions |
+| Organization or user | `deveshsangwan` |
+| Repository | `html-inbox` |
+| Workflow filename | `publish.yml` |
+| Environment name | Leave blank |
+| Allowed actions | Enable direct `npm publish` |
+
+The workflow file must already exist on GitHub. New trusted-publisher configurations can allow staged publishing alone; this workflow uses direct publishing, so select its permission explicitly. See the [current npm trusted-publisher documentation](https://docs.npmjs.com/trusted-publishers/).
+
+For a future release, merge the reviewed version change into main. Open Actions, choose **Publish npm release**, select **Run workflow** on main, and enter the exact package version. The workflow refuses a mismatched or non-stable version. It has a manual trigger so merging code or pushing an artifact tag does not publish unexpectedly. Successful trusted publishing from this public repository produces npm provenance automatically.
+
+The existing [Package release artifact workflow](../.github/workflows/package.yml) still creates verified archives on `v<version>` tags or manual runs and never publishes to npm. Website deployment, package artifact generation, and npm publication are separate workflows.
+
+## Verify the public release
+
+After publishing, inspect npm's version, tag, and integrity and exercise the public package:
 
 ```sh
-npm view html-inbox@0.1.0 version dist.integrity --registry=https://registry.npmjs.org/
-npm exec --yes --registry=https://registry.npmjs.org/ --package=html-inbox@0.1.0 -- html-inbox --version
+npm view html-inbox@0.2.0 version dist.integrity --registry=https://registry.npmjs.org/
+npm view html-inbox dist-tags --json --registry=https://registry.npmjs.org/
+npm exec --yes --registry=https://registry.npmjs.org/ --package=html-inbox@0.2.0 -- html-inbox --version
 ```
 
-The public package page is [npmjs.com/package/html-inbox](https://www.npmjs.com/package/html-inbox). Once publication is confirmed, date the changelog entry and update the README's first-release installation wording. Record the release with a matching Git tag. For later releases, increment the version and repeat the verification, packing, and publication steps.
+Compare `dist.integrity` with the tested archive's SHA-512 integrity. Confirm that `latest` points to the intended stable version. Record a matching `v<version>` Git tag at the reviewed release commit and attach the tested archive to release notes when creating a GitHub release.
 
-Registry publication is intentionally not automatic: Git tags, GitHub artifacts, and npm publication are separate external side effects. Provenance requires publishing from a supported cloud CI runner, so the current manual path does not claim it. Do not reuse a version after any registry publish succeeds.
-
-## Optional trusted publishing for later releases
-
-[npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) lets GitHub Actions publish through OIDC without an npm token. After the first release, configure a trusted publisher in the package's npm settings for GitHub user `deveshsangwan` and repository `html-inbox`. A publishing workflow must exist before selecting its filename and must grant `id-token: write`, run verification, and publish the tested tarball with a supported npm CLI. Enable the publisher's direct `npm publish` permission if using direct releases.
-
-The existing `package.yml` only builds artifacts. Adding a trusted publisher alone does not make that workflow publish. A future publishing workflow and its trigger should be configured together with the npm settings.
+If npm reports an error after uploading, query the exact version before retrying. A version that already exists cannot be overwritten or republished. Preserve the tested artifact and command output while determining whether the upload completed.

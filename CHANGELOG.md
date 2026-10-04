@@ -2,6 +2,19 @@
 
 All notable changes to HTML Inbox will be documented here.
 
+## 0.2.0 - 2026-10-04
+
+- Start or reuse a background viewer from both `viewer` and `publish`, with `--foreground` for debugging and service managers.
+- Add explicit LAN access with configurable IP addresses and ports, current network URLs, and strict Host validation.
+- Add HTTPS access through an existing Tailscale Serve client, with verified route ownership and scoped cleanup that preserves unrelated services.
+- Add boot service installation, removal, and status for Linux systemd system services and macOS LaunchDaemons, running as a selected normal user before login.
+- Keep reader health anonymous and verify process management through a private loopback control endpoint.
+- Improve concurrent startup, failed-child cleanup, shutdown, private diagnostics, and service privilege boundaries across supported platforms.
+- Replace the source-checkout landing page with npm-first installation and a complete documentation website.
+- Add a GitHub Actions trusted-publishing workflow for subsequent npm releases.
+
+Stop any viewer started by version 0.1.0 before upgrading. The private process-control protocol changed, and version 0.2.0 refuses to signal an older process it cannot verify. Inbox documents are preserved.
+
 ## 0.1.0 - 2026-10-04
 
 - Added a private local HTML library with atomic bounded storage, search, deletion, and viewer lifecycle controls.
