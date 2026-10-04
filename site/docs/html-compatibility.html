@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta
+      name="description"
+      content="Supported HTML resources, Tailwind and Mermaid entry URLs, navigation, validation warnings, and sandbox limitations."
+    />
+    <title>Write HTML that renders | HTML Inbox docs</title>
+    <link
+      rel="canonical"
+      href="https://deveshsangwan.github.io/html-inbox/docs/html-compatibility.html"
+    />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/docs.css" />
+  </head>
+  <body class="docs-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav">
+        <a class="brand" href="../index.html" aria-label="HTML Inbox home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M3.5 4h13v12h-13zM3.5 11h3.25l1.5 2h3.5l1.5-2h3.25"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>HTML Inbox</span>
+        </a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" aria-current="true">Docs</a>
+          <a href="https://github.com/deveshsangwan/html-inbox">GitHub</a>
+          <a class="nav-cta" href="https://www.npmjs.com/package/html-inbox"
+            >npm package</a
+          >
+        </nav>
+      </div>
+    </header>
+    <div class="shell docs-layout">
+      <aside class="docs-sidebar">
+        <nav class="docs-nav" aria-label="Documentation">
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Use HTML Inbox</p>
+            <ul>
+              <li><a href="index.html">Getting started</a></li>
+              <li><a href="publishing.html">Publish documents</a></li>
+              <li>
+                <a href="html-compatibility.html" aria-current="page"
+                  >HTML compatibility</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Run and share</p>
+            <ul>
+              <li><a href="viewer.html">Viewer</a></li>
+              <li><a href="lan.html">LAN access</a></li>
+              <li><a href="tailscale.html">Tailscale access</a></li>
+              <li><a href="boot-services.html">Boot services</a></li>
+              <li><a href="remote.html">Static and remote publishing</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Reference</p>
+            <ul>
+              <li><a href="security-storage.html">Security and storage</a></li>
+              <li><a href="cli-reference.html">CLI reference</a></li>
+              <li><a href="troubleshooting.html">Troubleshooting</a></li>
+              <li><a href="development.html">Development</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+      <main class="docs-article" id="main">
+        <details class="docs-mobile-nav">
+          <summary>Documentation navigation</summary>
+          <nav class="docs-nav" aria-label="Mobile documentation">
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Use HTML Inbox</p>
+              <ul>
+                <li><a href="index.html">Getting started</a></li>
+                <li><a href="publishing.html">Publish documents</a></li>
+                <li>
+                  <a href="html-compatibility.html" aria-current="page"
+                    >HTML compatibility</a
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Run and share</p>
+              <ul>
+                <li><a href="viewer.html">Viewer</a></li>
+                <li><a href="lan.html">LAN access</a></li>
+                <li><a href="tailscale.html">Tailscale access</a></li>
+                <li><a href="boot-services.html">Boot services</a></li>
+                <li><a href="remote.html">Static and remote publishing</a></li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Reference</p>
+              <ul>
+                <li>
+                  <a href="security-storage.html">Security and storage</a>
+                </li>
+                <li><a href="cli-reference.html">CLI reference</a></li>
+                <li><a href="troubleshooting.html">Troubleshooting</a></li>
+                <li><a href="development.html">Development</a></li>
+              </ul>
+            </div>
+          </nav>
+        </details>
+        <p class="docs-eyebrow">HTML Inbox documentation</p>
+        <h1>Write HTML that renders</h1>
+        <p class="docs-lead">
+          Keep each report self-contained. HTML Inbox stores the original file
+          without rewriting it, and the served document policy controls which
+          resources can run.
+        </p>
+
+        <h2 id="embedded-resources">Embed resources in the document</h2>
+        <p>
+          HTML Inbox does not copy files beside your source. A reference to
+          <code>chart.png</code>, <code>styles.css</code>, or
+          <code>app.js</code> produces an advisory warning and the viewer blocks
+          the request. Paths beginning with <code>./</code>, <code>../</code>,
+          or <code>/</code> have the same limitation.
+        </p>
+        <div class="docs-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Resource</th>
+                <th scope="col">Supported approach</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>CSS</td>
+                <td>
+                  Use a <code>&lt;style&gt;</code> element. External stylesheets
+                  and CSS network requests are blocked.
+                </td>
+              </tr>
+              <tr>
+                <td>JavaScript</td>
+                <td>
+                  Use an inline <code>&lt;script&gt;</code>, or a supported CDN
+                  entry below. Attach events from the script.
+                </td>
+              </tr>
+              <tr>
+                <td>Images, media, fonts</td>
+                <td>
+                  Embed the bytes in a <code>data:</code> URL. Embed every
+                  candidate in <code>srcset</code>.
+                </td>
+              </tr>
+              <tr>
+                <td>SVG symbols</td>
+                <td>
+                  Define the symbol in the same document and reference
+                  <code>&lt;use href="#symbol"&gt;</code>.
+                </td>
+              </tr>
+              <tr>
+                <td>Frames and objects</td>
+                <td>Blocked, including data URLs.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Inline CSS and JavaScript example"
+          ><code>&lt;style&gt;
+  body { font: 16px/1.6 system-ui; padding: 2rem; }
+  .complete { color: #176241; }
+&lt;/style&gt;
+&lt;button id=&quot;complete&quot;&gt;Mark complete&lt;/button&gt;
+&lt;script&gt;
+  document.querySelector(&#x27;#complete&#x27;).addEventListener(&#x27;click&#x27;, (event) =&gt; {
+    event.currentTarget.classList.add(&#x27;complete&#x27;);
+  });
+&lt;/script&gt;</code></pre>
+        </div>
+        <h2 id="supported-cdns">Use supported CDN scripts</h2>
+        <p>These script entry URLs are supported by the document CSP.</p>
+        <ul>
+          <li>
+            <code>https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4</code>
+          </li>
+          <li>
+            <code>https://cdn.tailwindcss.com</code>, including its supported
+            <code>?plugins=</code> query.
+          </li>
+          <li>
+            <code
+              >https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs</code
+            >
+          </li>
+        </ul>
+        <p>
+          Use the Mermaid entry in a module script or an inline module import.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Mermaid example"
+          ><code>&lt;pre class=&quot;mermaid&quot;&gt;flowchart LR
+  Generate --&gt; Publish --&gt; Read
+&lt;/pre&gt;
+&lt;script type=&quot;module&quot;&gt;
+  import mermaid from &#x27;https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs&#x27;;
+  mermaid.initialize({ startOnLoad: true });
+&lt;/script&gt;</code></pre>
+        </div>
+        <p>
+          Other remote script URLs produce warnings and are blocked. An allowed
+          script host does not make its images or stylesheets allowed. CDN
+          scripts require internet access and may change within their allowed
+          major version. Offline rendering is not guaranteed.
+        </p>
+        <h2 id="navigation">Choose supported navigation</h2>
+        <p>
+          HTTPS links, relative links, and fragment links in
+          <code>&lt;a href&gt;</code> and <code>&lt;area href&gt;</code> are
+          allowed. Relative links resolve against the stored document URL, not
+          the original source directory. Use fragments for sections within the
+          report.
+        </p>
+        <p>
+          Document links stay inside the preview frame. Popup,
+          <code>_blank</code>, and top-page navigation permissions are absent.
+          Literal <code>javascript:</code>, <code>vbscript:</code>, and
+          navigable <code>data:</code> URLs are rejected, as are unsupported
+          anchor schemes and <code>&lt;meta http-equiv="refresh"&gt;</code>.
+        </p>
+        <h2 id="warnings">Understand warnings and errors</h2>
+        <p>
+          A validation error prevents publishing. A warning means the source
+          uses a resource or feature the served CSP blocks; the document is
+          still stored. Fix the source and publish a new record when a warning
+          affects the report.
+        </p>
+        <p>
+          Typical warnings include relative assets, external assets outside the
+          script allowlist, inline event attributes, and
+          <code>&lt;base&gt;</code>. Validation parses markup but does not
+          inspect every CSS request or reliably detect URLs assembled by script.
+          The browser policy still applies to those requests.
+        </p>
+        <h2 id="document-isolation">Know the isolation limits</h2>
+        <p>
+          Documents render in a sandboxed iframe with
+          <code>allow-scripts</code> only. They receive an opaque origin and
+          cannot access the viewer DOM or its same-origin storage. The CSP
+          blocks fetch connections, forms, nested frames, objects, and non-data
+          media, while allowing inline scripts and the supported CDN entries.
+        </p>
+        <aside class="docs-note">
+          <p>
+            Validation is a compatibility and policy check, not sanitization.
+            Allowed script can consume CPU or memory and can navigate its own
+            frame. Author markup or script can put content in a destination URL
+            or override the default no-referrer policy.
+          </p>
+        </aside>
+        <p>
+          Read reports through the served viewer or properly configured static
+          host. Opening a stored HTML file directly from disk does not provide
+          the viewer's response headers and CSP. See
+          <a href="security-storage.html#documents">security limits</a> before
+          opening an untrusted report.
+        </p>
+
+        <nav class="docs-page-links" aria-label="Adjacent documentation pages">
+          <a href="publishing.html">Previous: Publish documents</a
+          ><a href="viewer.html">Next: Viewer</a>
+        </nav>
+        <p class="docs-source">
+          See a mistake?
+          <a href="https://github.com/deveshsangwan/html-inbox/issues"
+            >Report a documentation issue</a
+          >.
+        </p>
+      </main>
+      <aside class="docs-toc">
+        <nav aria-label="On this page">
+          <p class="docs-toc-label">On this page</p>
+          <ul>
+            <li>
+              <a href="#embedded-resources">Embed resources in the document</a>
+            </li>
+            <li><a href="#supported-cdns">Use supported CDN scripts</a></li>
+            <li><a href="#navigation">Choose supported navigation</a></li>
+            <li><a href="#warnings">Understand warnings and errors</a></li>
+            <li><a href="#document-isolation">Know the isolation limits</a></li>
+          </ul>
+        </nav>
+      </aside>
+    </div>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span
+          >HTML Inbox ·
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/LICENSE"
+            >MIT license</a
+          ></span
+        ><a href="https://github.com/deveshsangwan/html-inbox"
+          >Source on GitHub</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta
+      name="description"
+      content="Install, inspect, update, and remove systemd system services or macOS LaunchDaemons with normal-user execution and preserved configuration."
+    />
+    <title>Start the viewer before login | HTML Inbox docs</title>
+    <link
+      rel="canonical"
+      href="https://deveshsangwan.github.io/html-inbox/docs/boot-services.html"
+    />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/docs.css" />
+  </head>
+  <body class="docs-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav">
+        <a class="brand" href="../index.html" aria-label="HTML Inbox home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M3.5 4h13v12h-13zM3.5 11h3.25l1.5 2h3.5l1.5-2h3.25"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>HTML Inbox</span>
+        </a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" aria-current="true">Docs</a>
+          <a href="https://github.com/deveshsangwan/html-inbox">GitHub</a>
+          <a class="nav-cta" href="https://www.npmjs.com/package/html-inbox"
+            >npm package</a
+          >
+        </nav>
+      </div>
+    </header>
+    <div class="shell docs-layout">
+      <aside class="docs-sidebar">
+        <nav class="docs-nav" aria-label="Documentation">
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Use HTML Inbox</p>
+            <ul>
+              <li><a href="index.html">Getting started</a></li>
+              <li><a href="publishing.html">Publish documents</a></li>
+              <li><a href="html-compatibility.html">HTML compatibility</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Run and share</p>
+            <ul>
+              <li><a href="viewer.html">Viewer</a></li>
+              <li><a href="lan.html">LAN access</a></li>
+              <li><a href="tailscale.html">Tailscale access</a></li>
+              <li>
+                <a href="boot-services.html" aria-current="page"
+                  >Boot services</a
+                >
+              </li>
+              <li><a href="remote.html">Static and remote publishing</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Reference</p>
+            <ul>
+              <li><a href="security-storage.html">Security and storage</a></li>
+              <li><a href="cli-reference.html">CLI reference</a></li>
+              <li><a href="troubleshooting.html">Troubleshooting</a></li>
+              <li><a href="development.html">Development</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+      <main class="docs-article" id="main">
+        <details class="docs-mobile-nav">
+          <summary>Documentation navigation</summary>
+          <nav class="docs-nav" aria-label="Mobile documentation">
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Use HTML Inbox</p>
+              <ul>
+                <li><a href="index.html">Getting started</a></li>
+                <li><a href="publishing.html">Publish documents</a></li>
+                <li>
+                  <a href="html-compatibility.html">HTML compatibility</a>
+                </li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Run and share</p>
+              <ul>
+                <li><a href="viewer.html">Viewer</a></li>
+                <li><a href="lan.html">LAN access</a></li>
+                <li><a href="tailscale.html">Tailscale access</a></li>
+                <li>
+                  <a href="boot-services.html" aria-current="page"
+                    >Boot services</a
+                  >
+                </li>
+                <li><a href="remote.html">Static and remote publishing</a></li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Reference</p>
+              <ul>
+                <li>
+                  <a href="security-storage.html">Security and storage</a>
+                </li>
+                <li><a href="cli-reference.html">CLI reference</a></li>
+                <li><a href="troubleshooting.html">Troubleshooting</a></li>
+                <li><a href="development.html">Development</a></li>
+              </ul>
+            </div>
+          </nav>
+        </details>
+        <p class="docs-eyebrow">HTML Inbox documentation</p>
+        <h1>Start the viewer before login</h1>
+        <p class="docs-lead">
+          Install boot configuration explicitly. Linux uses a systemd system
+          service; macOS uses a LaunchDaemon. Both run the viewer as a selected
+          normal user before anyone logs in.
+        </p>
+
+        <h2 id="prerequisites">Choose stable paths and an account</h2>
+        <p>
+          Install Node.js 20 or newer and HTML Inbox at paths that will remain
+          available across reboot. From the intended user's shell, locate the
+          executables.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>command -v node
+command -v html-inbox</code></pre>
+        </div>
+        <p>
+          The following examples use Alice's resolved absolute paths. Replace
+          them with your own. The CLI records the actual Node binary and package
+          entry path, so moving a package or deleting a Node version directory
+          requires service reinstallation.
+        </p>
+        <p>
+          Linux requires systemd as the system service manager. macOS uses the
+          system launchd domain. Windows supports the ordinary CLI and viewer,
+          but these service commands do not install Windows boot services.
+        </p>
+        <h2 id="install">Install a loopback service</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>sudo /absolute/path/to/node /absolute/path/to/html-inbox \
+  viewer service install --user alice --loopback --port 3217</code></pre>
+        </div>
+        <p>
+          Installation requires administrator privileges. The viewer itself
+          cannot run as root. <code>--user</code> selects the normal account; a
+          sudo invocation may also use <code>SUDO_USER</code>. A root shell
+          without a selected normal account must supply <code>--user</code>.
+        </p>
+        <p>
+          The default library is the selected user's <code>~/.html-inbox</code>,
+          even if sudo sets <code>HOME</code> to <code>/root</code>. Stop an
+          existing detached viewer for that inbox before installing the service.
+          Installation reports success only after the manager PID matches a
+          healthy viewer.
+        </p>
+        <p>
+          Normal <code>viewer</code> startup never installs or changes a boot
+          service. A user's login service would start too late; HTML Inbox
+          installs a system service or LaunchDaemon for the before-login
+          requirement.
+        </p>
+        <h2 id="custom-inbox">Keep a custom inbox</h2>
+        <p>
+          Use the same absolute inbox path for installation, status, and
+          removal. Its parent must already exist. An existing inbox must belong
+          to the selected user; installation can create a missing inbox for that
+          user without recursively changing document ownership.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>sudo env HTML_INBOX_HOME=/home/alice/inboxes/reports \
+  /absolute/path/to/node /absolute/path/to/html-inbox \
+  viewer service install --user alice --lan --host 0.0.0.0 --port 4321
+
+HTML_INBOX_HOME=/home/alice/inboxes/reports html-inbox viewer service status</code></pre>
+        </div>
+        <p>
+          Choose <code>--loopback</code>, <code>--lan</code>, or
+          <code>--tailscale</code> deliberately. If networking options are
+          omitted, installation uses the selected inbox's saved configuration.
+          LAN still trusts every reachable reader.
+        </p>
+        <h2 id="tailscale">Use Tailscale at boot</h2>
+        <p>
+          Configure and sign in to Tailscale separately. The selected normal
+          account must be able to use the existing client and Serve at boot. An
+          executable override helps when sudo's PATH differs from the user's
+          PATH.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>sudo env HTML_INBOX_TAILSCALE_COMMAND=/absolute/path/to/tailscale \
+  /absolute/path/to/node /absolute/path/to/html-inbox \
+  viewer service install --user alice --tailscale --port 3217</code></pre>
+        </div>
+        <p>
+          The service preserves the absolute Tailscale executable. It resolves
+          the connected hostname on startup, rather than freezing an old
+          hostname in the definition. Missing connectivity, prerequisites, or
+          permissions can prevent readiness.
+        </p>
+        <h2 id="preserved-configuration">
+          Understand the preserved configuration
+        </h2>
+        <p>
+          The definition records the selected user, inbox, port, exposure, host,
+          Node and CLI paths, and Tailscale path when needed. It sets the user's
+          real HOME and a PATH assembled from resolved directories. It preserves
+          <code>NODE_OPTIONS</code>, <code>NODE_EXTRA_CA_CERTS</code>,
+          <code>SSL_CERT_FILE</code>, and <code>SSL_CERT_DIR</code> if present
+          during installation. Other shell variables and secrets are not copied.
+        </p>
+        <p>
+          Definitions are readable for status checks. Do not put secrets in
+          those preserved values. The inbox must also be accessible before
+          login; a home directory encrypted or mounted only after login cannot
+          meet this boot requirement. The installer does not configure mounts or
+          encryption.
+        </p>
+        <p>
+          Only one boot service definition is managed per machine. Commands for
+          another inbox refuse to replace or remove it. Reinstalling matching
+          settings is idempotent; changing settings updates a verified owned
+          definition. Unrelated, modified, symlinked, and hard-linked
+          definitions are refused. Failed operations attempt rollback and report
+          incomplete rollback explicitly.
+        </p>
+        <h2 id="diagnostics">Check status and logs</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox viewer service status</code></pre>
+        </div>
+        <p>
+          Status checks both the service manager and private viewer readiness.
+          Status and readiness execute the CLI under the selected normal
+          account, including its Tailscale checks. The administrator process
+          does not execute an inbox-configured Tailscale path as root.
+        </p>
+        <div class="docs-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Platform</th>
+                <th scope="col">Definition and diagnostics</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Linux</td>
+                <td>
+                  <code>/etc/systemd/system/html-inbox-viewer.service</code>.
+                  Inspect
+                  <code>journalctl --unit=html-inbox-viewer.service</code>, with
+                  administrator access if needed.
+                </td>
+              </tr>
+              <tr>
+                <td>macOS</td>
+                <td>
+                  <code>/Library/LaunchDaemons/com.html-inbox.viewer.plist</code
+                  >. Inspect
+                  <code>launchctl print system/com.html-inbox.viewer</code> and
+                  the selected inbox's <code>viewer.log</code>.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Linux writes service output to the journal. The macOS foreground
+          worker opens its private log after switching to the selected user.
+          Neither the installer nor boot manager opens an inbox log as
+          administrator. An unsafe log path fails startup; run foreground mode
+          as the selected user to inspect and correct the file error.
+        </p>
+        <p>
+          Both services restart failed processes and allow 120 seconds for
+          graceful shutdown, including scoped Tailscale cleanup. Commands
+          waiting for manager stop or restart allow 150 seconds.
+        </p>
+        <h2 id="remove">Remove boot startup</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>sudo /absolute/path/to/node /absolute/path/to/html-inbox \
+  viewer service uninstall --user alice</code></pre>
+        </div>
+        <p>
+          Uninstall stops and disables the owned service and removes its
+          definition. It preserves documents, private records, and logs. Include
+          the same <code>HTML_INBOX_HOME</code> for a custom library.
+        </p>
+        <p>
+          <code>viewer stop</code> does not remove boot configuration. Use
+          service uninstall when you want to prevent startup at the next boot or
+          a later manager restart.
+        </p>
+        <h2 id="updating">Update a service installation</h2>
+        <p>
+          Uninstall the service with the old CLI before upgrading, then install
+          the updated CLI and reinstall the service as the same normal account
+          with the intended inbox and exposure. This avoids incompatible old
+          process records and stale executable paths.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>sudo /absolute/path/to/node /absolute/path/to/html-inbox \
+  viewer service uninstall --user alice
+npm install --global html-inbox@latest
+sudo /absolute/path/to/node /absolute/path/to/html-inbox \
+  viewer service install --user alice --loopback --port 3217</code></pre>
+        </div>
+        <p>
+          Run npm under the account and installation method you normally use.
+          Replace the final example's networking options with the exposure you
+          intend to preserve.
+        </p>
+
+        <nav class="docs-page-links" aria-label="Adjacent documentation pages">
+          <a href="tailscale.html">Previous: Tailscale access</a
+          ><a href="remote.html">Next: Static and remote publishing</a>
+        </nav>
+        <p class="docs-source">
+          See a mistake?
+          <a href="https://github.com/deveshsangwan/html-inbox/issues"
+            >Report a documentation issue</a
+          >.
+        </p>
+      </main>
+      <aside class="docs-toc">
+        <nav aria-label="On this page">
+          <p class="docs-toc-label">On this page</p>
+          <ul>
+            <li>
+              <a href="#prerequisites">Choose stable paths and an account</a>
+            </li>
+            <li><a href="#install">Install a loopback service</a></li>
+            <li><a href="#custom-inbox">Keep a custom inbox</a></li>
+            <li><a href="#tailscale">Use Tailscale at boot</a></li>
+            <li>
+              <a href="#preserved-configuration"
+                >Understand the preserved configuration</a
+              >
+            </li>
+            <li><a href="#diagnostics">Check status and logs</a></li>
+            <li><a href="#remove">Remove boot startup</a></li>
+            <li><a href="#updating">Update a service installation</a></li>
+          </ul>
+        </nav>
+      </aside>
+    </div>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span
+          >HTML Inbox ·
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/LICENSE"
+            >MIT license</a
+          ></span
+        ><a href="https://github.com/deveshsangwan/html-inbox"
+          >Source on GitHub</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>

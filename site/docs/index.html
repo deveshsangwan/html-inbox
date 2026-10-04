@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta
+      name="description"
+      content="Install HTML Inbox with npm, publish a first HTML report, browse the local library, and update safely."
+    />
+    <title>Start with one HTML file | HTML Inbox docs</title>
+    <link
+      rel="canonical"
+      href="https://deveshsangwan.github.io/html-inbox/docs/index.html"
+    />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/docs.css" />
+  </head>
+  <body class="docs-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav">
+        <a class="brand" href="../index.html" aria-label="HTML Inbox home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M3.5 4h13v12h-13zM3.5 11h3.25l1.5 2h3.5l1.5-2h3.25"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>HTML Inbox</span>
+        </a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" aria-current="true">Docs</a>
+          <a href="https://github.com/deveshsangwan/html-inbox">GitHub</a>
+          <a class="nav-cta" href="https://www.npmjs.com/package/html-inbox"
+            >npm package</a
+          >
+        </nav>
+      </div>
+    </header>
+    <div class="shell docs-layout">
+      <aside class="docs-sidebar">
+        <nav class="docs-nav" aria-label="Documentation">
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Use HTML Inbox</p>
+            <ul>
+              <li>
+                <a href="index.html" aria-current="page">Getting started</a>
+              </li>
+              <li><a href="publishing.html">Publish documents</a></li>
+              <li><a href="html-compatibility.html">HTML compatibility</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Run and share</p>
+            <ul>
+              <li><a href="viewer.html">Viewer</a></li>
+              <li><a href="lan.html">LAN access</a></li>
+              <li><a href="tailscale.html">Tailscale access</a></li>
+              <li><a href="boot-services.html">Boot services</a></li>
+              <li><a href="remote.html">Static and remote publishing</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Reference</p>
+            <ul>
+              <li><a href="security-storage.html">Security and storage</a></li>
+              <li><a href="cli-reference.html">CLI reference</a></li>
+              <li><a href="troubleshooting.html">Troubleshooting</a></li>
+              <li><a href="development.html">Development</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+      <main class="docs-article" id="main">
+        <details class="docs-mobile-nav">
+          <summary>Documentation navigation</summary>
+          <nav class="docs-nav" aria-label="Mobile documentation">
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Use HTML Inbox</p>
+              <ul>
+                <li>
+                  <a href="index.html" aria-current="page">Getting started</a>
+                </li>
+                <li><a href="publishing.html">Publish documents</a></li>
+                <li>
+                  <a href="html-compatibility.html">HTML compatibility</a>
+                </li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Run and share</p>
+              <ul>
+                <li><a href="viewer.html">Viewer</a></li>
+                <li><a href="lan.html">LAN access</a></li>
+                <li><a href="tailscale.html">Tailscale access</a></li>
+                <li><a href="boot-services.html">Boot services</a></li>
+                <li><a href="remote.html">Static and remote publishing</a></li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Reference</p>
+              <ul>
+                <li>
+                  <a href="security-storage.html">Security and storage</a>
+                </li>
+                <li><a href="cli-reference.html">CLI reference</a></li>
+                <li><a href="troubleshooting.html">Troubleshooting</a></li>
+                <li><a href="development.html">Development</a></li>
+              </ul>
+            </div>
+          </nav>
+        </details>
+        <p class="docs-eyebrow">HTML Inbox documentation</p>
+        <h1>Start with one HTML file</h1>
+        <p class="docs-lead">
+          Install HTML Inbox, publish a report, and keep it in a searchable
+          local library. You need Node.js 20 or newer. You do not need a source
+          checkout.
+        </p>
+
+        <h2 id="install">Install the CLI</h2>
+        <p>
+          Install the latest published package from npm. These docs describe the
+          0.2 release, including background viewers and live self-hosting. Check
+          your installed version if a command is unavailable.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>node --version
+npm install --global html-inbox@latest
+html-inbox --version
+html-inbox --help</code></pre>
+        </div>
+        <p>
+          For occasional use, <code>npx html-inbox --help</code> runs the npm
+          package without a global install. The examples in this guide use the
+          installed <code>html-inbox</code> command. The CLI supports Linux,
+          macOS, and Windows. Boot service installation supports Linux with
+          systemd and macOS.
+        </p>
+        <h2 id="first-document">Publish your first document</h2>
+        <p>
+          Save a UTF-8 file named <code>report.html</code>. Here is a complete
+          document you can use.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Example HTML document"
+          ><code>&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;utf-8&quot;&gt;
+  &lt;title&gt;Project update&lt;/title&gt;
+  &lt;style&gt;body { font: 18px/1.6 system-ui; max-width: 42rem; margin: 3rem auto; padding: 0 1rem; }&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Project update&lt;/h1&gt;
+  &lt;p&gt;The migration is ready for review.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        </div>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox publish ./report.html --title &quot;Project update&quot; --type report</code></pre>
+        </div>
+        <p>
+          Open the document URL printed by the command. HTML Inbox validates the
+          file, stores its original bytes, and starts or reuses the viewer. A
+          new library lives at <code>~/.html-inbox</code> and first startup
+          listens on <code>127.0.0.1:3217</code>.
+        </p>
+        <p>
+          The viewer runs in the background and keeps running when the terminal
+          closes. Publish more files to add them to the same library. Every
+          publish creates a new document with its own ID.
+        </p>
+        <h2 id="find-documents">Find and manage documents</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox viewer
+html-inbox list
+html-inbox viewer status</code></pre>
+        </div>
+        <p>
+          <code>viewer</code> prints the inbox URL. Search in the browser by
+          title, type, or original file name. Use a document ID from
+          <code>list</code> when you want to remove a document.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox delete &lt;document-id&gt;
+html-inbox viewer stop</code></pre>
+        </div>
+        <p>
+          Deletion asks for confirmation in an interactive terminal. Stopping
+          the viewer preserves your library. Start it again whenever you need
+          it.
+        </p>
+        <h2 id="next-step">Choose where readers can open it</h2>
+        <div class="docs-cards">
+          <a class="docs-card" href="publishing.html"
+            ><strong>Publish documents</strong
+            ><span
+              >Files, metadata, generation workflows, and JSON output for
+              automation.</span
+            ></a
+          >
+          <a class="docs-card" href="viewer.html"
+            ><strong>Run the viewer</strong
+            ><span
+              >Background startup, foreground mode, status, and process
+              ownership.</span
+            ></a
+          >
+          <a class="docs-card" href="lan.html"
+            ><strong>Read on your LAN</strong
+            ><span
+              >Expose the live library to devices that can reach your
+              server.</span
+            ></a
+          >
+          <a class="docs-card" href="tailscale.html"
+            ><strong>Read through Tailscale</strong
+            ><span
+              >HTTPS in your existing tailnet, with a loopback backend.</span
+            ></a
+          >
+          <a class="docs-card" href="boot-services.html"
+            ><strong>Start before login</strong
+            ><span
+              >Install a systemd system service or macOS LaunchDaemon.</span
+            ></a
+          >
+          <a class="docs-card" href="remote.html"
+            ><strong>Publish a static snapshot</strong
+            ><span
+              >Export the library or deploy it to your Cloudflare Pages
+              project.</span
+            ></a
+          >
+        </div>
+        <p>
+          Before storing sensitive reports or sharing a library, read
+          <a href="security-storage.html">security and storage</a>. LAN mode has
+          no login, and remote snapshot URLs are bearer links.
+        </p>
+        <h2 id="update">Update an installation</h2>
+        <p>
+          Stop an old viewer before upgrading. The 0.2 private process-control
+          protocol differs from earlier releases, and the new CLI refuses to
+          signal a process it cannot verify.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox viewer stop
+npm install --global html-inbox@latest
+html-inbox --version
+html-inbox viewer</code></pre>
+        </div>
+        <p>
+          For an old foreground viewer, stop it with Ctrl-C. If you installed a
+          boot service,
+          <a href="boot-services.html#updating"
+            >uninstall and reinstall it during the update</a
+          >
+          so its executable paths remain correct. Upgrading the CLI preserves
+          your documents. Saved exposure settings continue to apply.
+        </p>
+
+        <nav class="docs-page-links" aria-label="Adjacent documentation pages">
+          <a href="publishing.html">Next: Publish documents</a>
+        </nav>
+        <p class="docs-source">
+          See a mistake?
+          <a href="https://github.com/deveshsangwan/html-inbox/issues"
+            >Report a documentation issue</a
+          >.
+        </p>
+      </main>
+      <aside class="docs-toc">
+        <nav aria-label="On this page">
+          <p class="docs-toc-label">On this page</p>
+          <ul>
+            <li><a href="#install">Install the CLI</a></li>
+            <li><a href="#first-document">Publish your first document</a></li>
+            <li><a href="#find-documents">Find and manage documents</a></li>
+            <li><a href="#next-step">Choose where readers can open it</a></li>
+            <li><a href="#update">Update an installation</a></li>
+          </ul>
+        </nav>
+      </aside>
+    </div>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span
+          >HTML Inbox ·
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/LICENSE"
+            >MIT license</a
+          ></span
+        ><a href="https://github.com/deveshsangwan/html-inbox"
+          >Source on GitHub</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>

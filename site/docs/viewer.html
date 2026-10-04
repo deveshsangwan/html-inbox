@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta
+      name="description"
+      content="Start, reuse, inspect, and stop a background viewer, run foreground mode, and preserve inbox and exposure settings."
+    />
+    <title>Run the live viewer | HTML Inbox docs</title>
+    <link
+      rel="canonical"
+      href="https://deveshsangwan.github.io/html-inbox/docs/viewer.html"
+    />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/docs.css" />
+  </head>
+  <body class="docs-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav">
+        <a class="brand" href="../index.html" aria-label="HTML Inbox home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M3.5 4h13v12h-13zM3.5 11h3.25l1.5 2h3.5l1.5-2h3.25"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>HTML Inbox</span>
+        </a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" aria-current="true">Docs</a>
+          <a href="https://github.com/deveshsangwan/html-inbox">GitHub</a>
+          <a class="nav-cta" href="https://www.npmjs.com/package/html-inbox"
+            >npm package</a
+          >
+        </nav>
+      </div>
+    </header>
+    <div class="shell docs-layout">
+      <aside class="docs-sidebar">
+        <nav class="docs-nav" aria-label="Documentation">
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Use HTML Inbox</p>
+            <ul>
+              <li><a href="index.html">Getting started</a></li>
+              <li><a href="publishing.html">Publish documents</a></li>
+              <li><a href="html-compatibility.html">HTML compatibility</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Run and share</p>
+            <ul>
+              <li><a href="viewer.html" aria-current="page">Viewer</a></li>
+              <li><a href="lan.html">LAN access</a></li>
+              <li><a href="tailscale.html">Tailscale access</a></li>
+              <li><a href="boot-services.html">Boot services</a></li>
+              <li><a href="remote.html">Static and remote publishing</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Reference</p>
+            <ul>
+              <li><a href="security-storage.html">Security and storage</a></li>
+              <li><a href="cli-reference.html">CLI reference</a></li>
+              <li><a href="troubleshooting.html">Troubleshooting</a></li>
+              <li><a href="development.html">Development</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+      <main class="docs-article" id="main">
+        <details class="docs-mobile-nav">
+          <summary>Documentation navigation</summary>
+          <nav class="docs-nav" aria-label="Mobile documentation">
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Use HTML Inbox</p>
+              <ul>
+                <li><a href="index.html">Getting started</a></li>
+                <li><a href="publishing.html">Publish documents</a></li>
+                <li>
+                  <a href="html-compatibility.html">HTML compatibility</a>
+                </li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Run and share</p>
+              <ul>
+                <li><a href="viewer.html" aria-current="page">Viewer</a></li>
+                <li><a href="lan.html">LAN access</a></li>
+                <li><a href="tailscale.html">Tailscale access</a></li>
+                <li><a href="boot-services.html">Boot services</a></li>
+                <li><a href="remote.html">Static and remote publishing</a></li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Reference</p>
+              <ul>
+                <li>
+                  <a href="security-storage.html">Security and storage</a>
+                </li>
+                <li><a href="cli-reference.html">CLI reference</a></li>
+                <li><a href="troubleshooting.html">Troubleshooting</a></li>
+                <li><a href="development.html">Development</a></li>
+              </ul>
+            </div>
+          </nav>
+        </details>
+        <p class="docs-eyebrow">HTML Inbox documentation</p>
+        <h1>Run the live viewer</h1>
+        <p class="docs-lead">
+          The viewer reads the current local library. It runs in the background
+          by default, while publishing, deletion, and process control stay in
+          the CLI.
+        </p>
+
+        <h2 id="background">Start in the background</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox viewer</code></pre>
+        </div>
+        <p>
+          The command starts a detached process or reuses the viewer for this
+          inbox. It returns after a private readiness check and prints a usable
+          inbox URL. The process survives terminal closure.
+          <code>publish</code> uses the same startup path and returns a document
+          URL for the active exposure.
+        </p>
+        <p>
+          First startup binds <code>127.0.0.1</code> on port <code>3217</code>.
+          The last successful port, address, and exposure are saved in the
+          selected inbox. Later starts and publishing reuse them, even after
+          <code>viewer stop</code>.
+        </p>
+        <h2 id="configuration">Select the inbox and port</h2>
+        <p>
+          Set <code>HTML_INBOX_HOME</code> to use another library. Keep that
+          value consistent across publishing, status, stop, and service
+          commands. A relative path resolves against the current directory, so
+          an absolute path is clearer for automation.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>HTML_INBOX_HOME=/home/alice/inboxes/reports html-inbox viewer --port 4321</code></pre>
+        </div>
+        <p>
+          <code>--port</code> overrides <code>HTML_INBOX_PORT</code>. An
+          explicit environment port overrides the saved port. Valid CLI ports
+          are integers from 1 through 65535. Without either override, the saved
+          configuration applies, or port 3217 on first startup.
+        </p>
+        <h2 id="foreground">Keep it attached</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox viewer --foreground</code></pre>
+        </div>
+        <p>
+          Use foreground mode for debugging, containers, or your own service
+          manager. It stays attached and reports errors in the terminal. Stop it
+          with Ctrl-C. A foreground start refuses to take over an already
+          running viewer; stop the existing process first.
+        </p>
+        <p>
+          The detached child runs foreground mode internally. Repeated and
+          concurrent background starts coordinate through the inbox startup
+          lock. Process records and private control health identify the inbox
+          and the specific viewer process before reuse or signaling.
+        </p>
+        <h2 id="status-stop">Inspect and stop it</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox viewer status
+html-inbox viewer stop</code></pre>
+        </div>
+        <p>
+          Both commands print JSON. Status reports state, exposure, port, URLs,
+          and a PID when verified. States include <code>running</code>,
+          <code>stopped</code>, <code>conflict</code>, and
+          <code>incompatible</code>. A reported URL is usable only when the
+          state is running.
+        </p>
+        <p>
+          Stop checks the private process record against control health before
+          sending a signal. It waits for shutdown and verified Tailscale cleanup
+          when needed. A conflicting service, mismatched inbox, older control
+          protocol, or unverified process is refused. The CLI does not kill a
+          process solely because its PID appears in a saved record.
+        </p>
+        <p>
+          <code>status</code> and <code>stop</code> do not accept startup flags.
+          Omit <code>HTML_INBOX_PORT</code> to use the saved active port, or
+          keep its explicit value consistent with the viewer you intend to
+          manage.
+        </p>
+        <h2 id="exposure">Change reader exposure</h2>
+        <p>
+          Choose one of <code>--loopback</code>, <code>--lan</code>, or
+          <code>--tailscale</code>. Stop the current viewer before changing its
+          exposure, port, or host.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox viewer stop
+html-inbox viewer --lan</code></pre>
+        </div>
+        <p>
+          To return to loopback, stop it and start with <code>--loopback</code>.
+          That choice also replaces the saved exposure.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox viewer stop
+html-inbox viewer --loopback</code></pre>
+        </div>
+        <p>
+          <a href="lan.html">LAN access</a> exposes the entire live library over
+          HTTP to every reachable reader.
+          <a href="tailscale.html">Tailscale access</a> uses HTTPS Serve and
+          your existing tailnet policy. No mode adds browser administration or
+          mutation routes.
+        </p>
+        <h2 id="diagnostics">Find startup diagnostics</h2>
+        <p>
+          Detached startup writes diagnostics to <code>viewer.log</code> inside
+          the private inbox. Failed startup reports that path. The default
+          reader's <code>/health</code> returns only <code>{"ok":true}</code>;
+          it is not a process identity check. The separate secret loopback
+          control URL belongs in protected local records and should not be
+          shared.
+        </p>
+        <p>
+          See
+          <a href="troubleshooting.html#viewer">viewer troubleshooting</a> for
+          port conflicts, old records, and failed startup. Boot-manager logging
+          differs; see
+          <a href="boot-services.html#diagnostics">service diagnostics</a>.
+        </p>
+
+        <nav class="docs-page-links" aria-label="Adjacent documentation pages">
+          <a href="html-compatibility.html">Previous: HTML compatibility</a
+          ><a href="lan.html">Next: LAN access</a>
+        </nav>
+        <p class="docs-source">
+          See a mistake?
+          <a href="https://github.com/deveshsangwan/html-inbox/issues"
+            >Report a documentation issue</a
+          >.
+        </p>
+      </main>
+      <aside class="docs-toc">
+        <nav aria-label="On this page">
+          <p class="docs-toc-label">On this page</p>
+          <ul>
+            <li><a href="#background">Start in the background</a></li>
+            <li><a href="#configuration">Select the inbox and port</a></li>
+            <li><a href="#foreground">Keep it attached</a></li>
+            <li><a href="#status-stop">Inspect and stop it</a></li>
+            <li><a href="#exposure">Change reader exposure</a></li>
+            <li><a href="#diagnostics">Find startup diagnostics</a></li>
+          </ul>
+        </nav>
+      </aside>
+    </div>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span
+          >HTML Inbox ·
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/LICENSE"
+            >MIT license</a
+          ></span
+        ><a href="https://github.com/deveshsangwan/html-inbox"
+          >Source on GitHub</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>

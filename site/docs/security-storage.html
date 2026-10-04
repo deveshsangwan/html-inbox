@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta
+      name="description"
+      content="Understand sandbox and sharing limits, private storage, Windows ACL prerequisites, backup precautions, and bearer-link security."
+    />
+    <title>Protect the library and its readers | HTML Inbox docs</title>
+    <link
+      rel="canonical"
+      href="https://deveshsangwan.github.io/html-inbox/docs/security-storage.html"
+    />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/docs.css" />
+  </head>
+  <body class="docs-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav">
+        <a class="brand" href="../index.html" aria-label="HTML Inbox home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M3.5 4h13v12h-13zM3.5 11h3.25l1.5 2h3.5l1.5-2h3.25"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>HTML Inbox</span>
+        </a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" aria-current="true">Docs</a>
+          <a href="https://github.com/deveshsangwan/html-inbox">GitHub</a>
+          <a class="nav-cta" href="https://www.npmjs.com/package/html-inbox"
+            >npm package</a
+          >
+        </nav>
+      </div>
+    </header>
+    <div class="shell docs-layout">
+      <aside class="docs-sidebar">
+        <nav class="docs-nav" aria-label="Documentation">
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Use HTML Inbox</p>
+            <ul>
+              <li><a href="index.html">Getting started</a></li>
+              <li><a href="publishing.html">Publish documents</a></li>
+              <li><a href="html-compatibility.html">HTML compatibility</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Run and share</p>
+            <ul>
+              <li><a href="viewer.html">Viewer</a></li>
+              <li><a href="lan.html">LAN access</a></li>
+              <li><a href="tailscale.html">Tailscale access</a></li>
+              <li><a href="boot-services.html">Boot services</a></li>
+              <li><a href="remote.html">Static and remote publishing</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Reference</p>
+            <ul>
+              <li>
+                <a href="security-storage.html" aria-current="page"
+                  >Security and storage</a
+                >
+              </li>
+              <li><a href="cli-reference.html">CLI reference</a></li>
+              <li><a href="troubleshooting.html">Troubleshooting</a></li>
+              <li><a href="development.html">Development</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+      <main class="docs-article" id="main">
+        <details class="docs-mobile-nav">
+          <summary>Documentation navigation</summary>
+          <nav class="docs-nav" aria-label="Mobile documentation">
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Use HTML Inbox</p>
+              <ul>
+                <li><a href="index.html">Getting started</a></li>
+                <li><a href="publishing.html">Publish documents</a></li>
+                <li>
+                  <a href="html-compatibility.html">HTML compatibility</a>
+                </li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Run and share</p>
+              <ul>
+                <li><a href="viewer.html">Viewer</a></li>
+                <li><a href="lan.html">LAN access</a></li>
+                <li><a href="tailscale.html">Tailscale access</a></li>
+                <li><a href="boot-services.html">Boot services</a></li>
+                <li><a href="remote.html">Static and remote publishing</a></li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Reference</p>
+              <ul>
+                <li>
+                  <a href="security-storage.html" aria-current="page"
+                    >Security and storage</a
+                  >
+                </li>
+                <li><a href="cli-reference.html">CLI reference</a></li>
+                <li><a href="troubleshooting.html">Troubleshooting</a></li>
+                <li><a href="development.html">Development</a></li>
+              </ul>
+            </div>
+          </nav>
+        </details>
+        <p class="docs-eyebrow">HTML Inbox documentation</p>
+        <h1>Protect the library and its readers</h1>
+        <p class="docs-lead">
+          HTML Inbox is local-first single-user software. Reader exposure is
+          deliberate, documents stay untrusted, and filesystem privacy is part
+          of operating it safely.
+        </p>
+
+        <h2 id="documents">Treat document HTML as untrusted</h2>
+        <p>
+          The CLI preserves original HTML rather than sanitizing or rewriting
+          it. Published documents render inside an opaque-origin iframe with
+          <code>allow-scripts</code> only. Response CSP controls resource
+          loading, and escaped metadata keeps titles and file names from
+          becoming viewer markup.
+        </p>
+        <p>
+          The sandbox prevents access to the viewer DOM and same-origin storage
+          and omits popup, top-navigation, and form permissions. It does not
+          prevent allowed script from consuming CPU or memory or navigating its
+          own preview frame. Static validation cannot reliably detect every URL
+          assembled by script.
+        </p>
+        <p>
+          Responses default to <code>no-referrer</code>, but author markup or
+          script can override that policy or place data directly in a
+          destination URL. Supported third-party CDN scripts can observe
+          resource requests and remain a supply-chain dependency. Read
+          <a href="html-compatibility.html">HTML compatibility</a> for what the
+          served policy allows.
+        </p>
+        <p>
+          Do not open stored document HTML directly in a browser from disk. That
+          bypasses the served response headers and CSP.
+        </p>
+        <h2 id="live-exposure">Choose a live-reader boundary</h2>
+        <div class="docs-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Mode</th>
+                <th scope="col">Reader access</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Loopback</td>
+                <td>
+                  First-start default on <code>127.0.0.1</code>. Processes and
+                  people able to reach your local account's viewer can read the
+                  library.
+                </td>
+              </tr>
+              <tr>
+                <td>LAN</td>
+                <td>
+                  Every device able to reach the selected HTTP port can read the
+                  full live library. No login, password, or token.
+                </td>
+              </tr>
+              <tr>
+                <td>Tailscale</td>
+                <td>
+                  HTTPS through the existing client, with reader access governed
+                  by your tailnet policy. No public Funnel is enabled.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Host validation checks the configured addresses and explicit trusted
+          tailnet hostname. It does not authenticate a reader. Forwarding or
+          Tailscale identity headers grant no access. All reader routes remain
+          read-only; administration stays in the local CLI.
+        </p>
+        <p>
+          Public <code>/health</code> exposes only anonymous success. Process
+          readiness and identity are restricted to a separate secret loopback
+          control URL stored in private local records. Do not copy those records
+          into a public site or share control URLs.
+        </p>
+        <h2 id="storage">Know where data lives</h2>
+        <p>
+          The default inbox is <code>~/.html-inbox</code>.
+          <code>HTML_INBOX_HOME</code> selects another library. Original HTML is
+          stored at <code>documents/&lt;id&gt;/index.html</code> and metadata at
+          <code>documents/&lt;id&gt;/metadata.json</code>.
+        </p>
+        <p>
+          The inbox also contains saved viewer configuration, process records,
+          logs, identity and startup locks, optional Tailscale ownership, and
+          optional remote state. Remote records contain capability secrets;
+          temporary snapshot work can contain the complete library. Treat them
+          as sensitive even when the reports themselves are public.
+        </p>
+        <p>
+          On POSIX filesystems that enforce permissions, managed directories use
+          <code>0700</code> and files use <code>0600</code>. Existing managed
+          paths are tightened when accessed. Symlink and regular-file checks
+          protect managed paths, and the process records have additional
+          descriptor and link-count checks.
+        </p>
+        <p>
+          These protections do not encrypt content, change existing ownership
+          recursively, or protect against privileged administrators and
+          processes running as the same account. A filesystem that ignores Unix
+          mode bits cannot provide the POSIX privacy guarantee.
+        </p>
+        <h2 id="windows">Prepare Windows storage</h2>
+        <p>
+          The installed CLI and ordinary viewer work on Windows. Node's Unix
+          mode calls do not install or verify owner-only Windows ACLs. Privacy
+          depends on existing and inherited filesystem ACLs, including those on
+          files moved into the inbox.
+        </p>
+        <ol>
+          <li>
+            Choose a protected local NTFS directory under your user profile.
+            Avoid public, shared, network, or synced locations for sensitive
+            reports.
+          </li>
+          <li>
+            Before first use, create the directory and inspect Properties,
+            Security, Advanced. Keep access for your account and trusted system
+            or administrator accounts. Remove broad grants such as Everyone,
+            Users, or Authenticated Users, including unwanted inherited grants.
+          </li>
+          <li>
+            Apply the intended restrictions to files and subdirectories. Inspect
+            existing content, disabled inheritance, and permissive explicit
+            child grants. Recheck after a restore or move.
+          </li>
+          <li>
+            Protect separate export paths and their parents. Remote operations
+            also need protected operating-system temporary storage for
+            short-lived Wrangler logs.
+          </li>
+        </ol>
+        <p>
+          For a custom PowerShell inbox, set the environment and inspect both
+          root and child ACLs. These commands display permissions; they do not
+          repair them.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="PowerShell storage inspection"
+          ><code>$env:HTML_INBOX_HOME = Join-Path $env:LOCALAPPDATA &#x27;html-inbox&#x27;
+icacls &quot;$env:HTML_INBOX_HOME&quot;
+icacls &quot;$env:HTML_INBOX_HOME&quot; /T</code></pre>
+        </div>
+        <p>
+          Resolve inspection errors before using sensitive content.
+          <code>icacls /verify</code> checks ACL structure, not confidentiality.
+          The
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/threat-model.md#windows-storage-prerequisites"
+            >complete Windows prerequisites</a
+          >
+          explain inheritance and the affected paths.
+        </p>
+        <h2 id="backup">Back up and restore deliberately</h2>
+        <p>
+          Back up the complete selected inbox to preserve documents, metadata,
+          configuration, and remote intent. Keep the backup as private as the
+          original. Stop the viewer and any remote command or automation first
+          so your copy is not racing file changes.
+        </p>
+        <p>
+          Do not run an old active process record or copy locks as evidence that
+          a process is alive on another machine. During restore, keep original
+          HTML and metadata together. Review startup records and retained
+          Tailscale or remote ownership before using a restored library; follow
+          <a href="troubleshooting.html">recovery guidance</a> rather than
+          deleting journals to bypass safety checks.
+        </p>
+        <p>
+          Restoring remote capabilities can reintroduce sensitive bearer
+          information. Recheck Windows ACLs throughout the restored subtree. A
+          backup on an open share or synced folder can expose the complete
+          library.
+        </p>
+        <h2 id="remote">Understand static snapshot privacy</h2>
+        <p>
+          Static capabilities contain 128 random bits and the site root has no
+          inbox listing. They are bearer secrets, not authentication. Anyone
+          with the full path can read and reshare all published documents.
+        </p>
+        <p>
+          Production revoke rotates away from the old route but does not erase
+          immutable deployment history or recipient copies. The Cloudflare
+          account ID is not secret; credentials come from Wrangler's login store
+          or <code>CLOUDFLARE_API_TOKEN</code> and are not written into HTML
+          Inbox remote state.
+        </p>
+        <h2 id="scope">Know the unsupported guarantees</h2>
+        <p>
+          HTML Inbox does not provide multi-user roles, recipient
+          authentication, fine-grained document permissions, synchronization,
+          malware scanning, guaranteed secret-link confidentiality, or
+          guaranteed erasure. It does not fully contain navigation by allowed
+          document scripts or in-frame resource exhaustion.
+        </p>
+        <p>
+          See the
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/threat-model.md"
+            >threat model</a
+          >
+          and
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/architecture.md"
+            >architecture</a
+          >
+          for the source-level security boundaries.
+        </p>
+
+        <nav class="docs-page-links" aria-label="Adjacent documentation pages">
+          <a href="remote.html">Previous: Static and remote publishing</a
+          ><a href="cli-reference.html">Next: CLI reference</a>
+        </nav>
+        <p class="docs-source">
+          See a mistake?
+          <a href="https://github.com/deveshsangwan/html-inbox/issues"
+            >Report a documentation issue</a
+          >.
+        </p>
+      </main>
+      <aside class="docs-toc">
+        <nav aria-label="On this page">
+          <p class="docs-toc-label">On this page</p>
+          <ul>
+            <li><a href="#documents">Treat document HTML as untrusted</a></li>
+            <li><a href="#live-exposure">Choose a live-reader boundary</a></li>
+            <li><a href="#storage">Know where data lives</a></li>
+            <li><a href="#windows">Prepare Windows storage</a></li>
+            <li><a href="#backup">Back up and restore deliberately</a></li>
+            <li><a href="#remote">Understand static snapshot privacy</a></li>
+            <li><a href="#scope">Know the unsupported guarantees</a></li>
+          </ul>
+        </nav>
+      </aside>
+    </div>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span
+          >HTML Inbox ·
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/LICENSE"
+            >MIT license</a
+          ></span
+        ><a href="https://github.com/deveshsangwan/html-inbox"
+          >Source on GitHub</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>

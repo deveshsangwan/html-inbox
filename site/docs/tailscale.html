@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta
+      name="description"
+      content="Use an existing Tailscale client for verified HTTPS Serve, preserve unrelated routes, and recover drift or crash-left ownership locks."
+    />
+    <title>Use HTTPS inside your tailnet | HTML Inbox docs</title>
+    <link
+      rel="canonical"
+      href="https://deveshsangwan.github.io/html-inbox/docs/tailscale.html"
+    />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/docs.css" />
+  </head>
+  <body class="docs-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav">
+        <a class="brand" href="../index.html" aria-label="HTML Inbox home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M3.5 4h13v12h-13zM3.5 11h3.25l1.5 2h3.5l1.5-2h3.25"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>HTML Inbox</span>
+        </a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" aria-current="true">Docs</a>
+          <a href="https://github.com/deveshsangwan/html-inbox">GitHub</a>
+          <a class="nav-cta" href="https://www.npmjs.com/package/html-inbox"
+            >npm package</a
+          >
+        </nav>
+      </div>
+    </header>
+    <div class="shell docs-layout">
+      <aside class="docs-sidebar">
+        <nav class="docs-nav" aria-label="Documentation">
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Use HTML Inbox</p>
+            <ul>
+              <li><a href="index.html">Getting started</a></li>
+              <li><a href="publishing.html">Publish documents</a></li>
+              <li><a href="html-compatibility.html">HTML compatibility</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Run and share</p>
+            <ul>
+              <li><a href="viewer.html">Viewer</a></li>
+              <li><a href="lan.html">LAN access</a></li>
+              <li>
+                <a href="tailscale.html" aria-current="page"
+                  >Tailscale access</a
+                >
+              </li>
+              <li><a href="boot-services.html">Boot services</a></li>
+              <li><a href="remote.html">Static and remote publishing</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Reference</p>
+            <ul>
+              <li><a href="security-storage.html">Security and storage</a></li>
+              <li><a href="cli-reference.html">CLI reference</a></li>
+              <li><a href="troubleshooting.html">Troubleshooting</a></li>
+              <li><a href="development.html">Development</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+      <main class="docs-article" id="main">
+        <details class="docs-mobile-nav">
+          <summary>Documentation navigation</summary>
+          <nav class="docs-nav" aria-label="Mobile documentation">
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Use HTML Inbox</p>
+              <ul>
+                <li><a href="index.html">Getting started</a></li>
+                <li><a href="publishing.html">Publish documents</a></li>
+                <li>
+                  <a href="html-compatibility.html">HTML compatibility</a>
+                </li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Run and share</p>
+              <ul>
+                <li><a href="viewer.html">Viewer</a></li>
+                <li><a href="lan.html">LAN access</a></li>
+                <li>
+                  <a href="tailscale.html" aria-current="page"
+                    >Tailscale access</a
+                  >
+                </li>
+                <li><a href="boot-services.html">Boot services</a></li>
+                <li><a href="remote.html">Static and remote publishing</a></li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Reference</p>
+              <ul>
+                <li>
+                  <a href="security-storage.html">Security and storage</a>
+                </li>
+                <li><a href="cli-reference.html">CLI reference</a></li>
+                <li><a href="troubleshooting.html">Troubleshooting</a></li>
+                <li><a href="development.html">Development</a></li>
+              </ul>
+            </div>
+          </nav>
+        </details>
+        <p class="docs-eyebrow">HTML Inbox documentation</p>
+        <h1>Use HTTPS inside your tailnet</h1>
+        <p class="docs-lead">
+          HTML Inbox integrates with an existing signed-in Tailscale client.
+          Tailscale Serve terminates HTTPS and proxies the live viewer on
+          loopback.
+        </p>
+
+        <h2 id="prerequisites">Prepare the existing client</h2>
+        <p>
+          Install Tailscale and sign in separately before running HTML Inbox.
+          The client must be connected, MagicDNS and HTTPS must already be
+          available, and the account running the viewer must have permission to
+          use Serve. HTML Inbox checks these prerequisites without accepting
+          setup or consent prompts.
+        </p>
+        <p>
+          Reader access follows your tailnet policy. HTML Inbox does not install
+          Tailscale, log in, change ACLs, grant operator permissions, enable
+          public Funnel, or reset Serve configuration.
+        </p>
+        <p>
+          See Tailscale's
+          <a href="https://tailscale.com/docs/features/tailscale-serve"
+            >Serve guide</a
+          >
+          and
+          <a href="https://tailscale.com/docs/how-to/set-up-https-certificates"
+            >HTTPS setup guide</a
+          >
+          if you need to configure those prerequisites yourself.
+        </p>
+        <h2 id="start">Start Tailscale mode</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox viewer stop
+html-inbox viewer --tailscale</code></pre>
+        </div>
+        <p>
+          The backend binds exactly <code>127.0.0.1</code>. Serve owns the root
+          route on HTTPS port 443 for the connected device's exact hostname. The
+          command returns a verified URL such as
+          <code>https://server.example-tailnet.ts.net</code>. It verifies the
+          client state and proxy route rather than trusting a URL printed by the
+          client.
+        </p>
+        <p>
+          <code>--port</code> selects the loopback backend port, not a different
+          public HTTPS port. <code>--host</code> must remain
+          <code>127.0.0.1</code> in this mode.
+        </p>
+        <p>
+          When the intended executable is not on PATH, set an explicit existing
+          path. Successful startup saves its absolute path for detached restarts
+          and boot configuration.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>HTML_INBOX_TAILSCALE_COMMAND=/absolute/path/to/tailscale \
+  html-inbox viewer --tailscale --port 4321</code></pre>
+        </div>
+        <h2 id="configuration-ownership">Preserve existing services</h2>
+        <p>
+          HTML Inbox inspects the complete Serve and Funnel configuration before
+          changing it. An occupied root route or conflicting port-443 listener
+          is refused. Mounts that intercept the viewer's <code>/assets</code>,
+          <code>/documents</code>, or <code>/health</code> routes also conflict,
+          including relevant cleaned path and trailing-slash aliases.
+        </p>
+        <p>
+          Unrelated mounts, other ports, named services, and unrelated Funnel
+          settings remain unchanged. A matching proxy target without HTML
+          Inbox's private ownership journal is still someone else's route and
+          will not be adopted.
+        </p>
+        <p>
+          The journal at <code>tailscale-serve.json</code> in the inbox records
+          the connected node, hostname, exact route and backend, executable, and
+          inbox/process identities. It records pending intent before startup and
+          active ownership after verification. Keep this file private and
+          preserve it during recovery.
+        </p>
+        <h2 id="status-stop">Inspect and clean up</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox viewer status
+html-inbox viewer stop</code></pre>
+        </div>
+        <p>
+          Status reports drift or unavailability if client state or the live
+          route no longer matches. It does not report a stale HTTPS URL as
+          ready. Stop verifies ownership and removes only the recorded root
+          route, then verifies that unrelated configuration survived.
+        </p>
+        <p>
+          The scoped removal uses
+          <code>tailscale serve --bg --yes --https=443 --set-path=/ off</code>.
+          HTML Inbox never uses a global Serve reset. If the route already
+          disappeared, verified cleanup can clear its journal without a
+          mutation. If ownership is uncertain, it retains the journal and
+          reports the reason.
+        </p>
+        <p>
+          A failed startup uses the same scoped cleanup. Switching to loopback
+          or LAN also requires retained Tailscale ownership to be resolved
+          before a backend port is reused. Restore the existing client's
+          connectivity or permissions, then retry <code>viewer stop</code>.
+        </p>
+        <h2 id="drift">Recover configuration drift</h2>
+        <p>
+          Inspect the current Serve configuration and the error before changing
+          anything.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>tailscale serve status --json
+html-inbox viewer status</code></pre>
+        </div>
+        <p>
+          If another service added a mount that shadows a viewer route, move
+          that conflicting mount yourself. HTML Inbox can still remove its
+          exactly verified root route while preserving the external mount. A
+          changed node, hostname, root target, or unsafe listener is not treated
+          as owned cleanup.
+        </p>
+        <p>
+          If the recorded executable moved, set
+          <code>HTML_INBOX_TAILSCALE_COMMAND</code> to the intended current
+          executable for status and stop. An explicit override takes precedence
+          during recovery; it does not bypass node or route ownership checks.
+        </p>
+        <h2 id="crash-lock">Recover a lock left by a forced kill</h2>
+        <p>
+          Mutations share one lock for the connected node across all inbox homes
+          used by the same OS account. It lives under that account's native home
+          at <code>.html-inbox-tailscale/&lt;node-hash&gt;.lock</code>. Changing
+          <code>HOME</code>, <code>TMPDIR</code>, or
+          <code>HTML_INBOX_HOME</code> does not select a different lock.
+        </p>
+        <p>
+          Graceful shutdown releases the lock. SIGKILL or a crashed command can
+          leave it behind and retain a pending ownership journal. The error
+          reports the exact lock path.
+        </p>
+        <ol>
+          <li>
+            Stop automation using this account and node. Verify that the viewer
+            worker and its Tailscale command process group have exited. A saved
+            PID alone does not establish process identity.
+          </li>
+          <li>
+            Inspect <code>owner.json</code> in the reported lock directory.
+            Remove only that verified stale node lock directory. Preserve the
+            <code>.html-inbox-tailscale</code> parent and the inbox's
+            <code>tailscale-serve.json</code>.
+          </li>
+          <li>
+            Retry <code>html-inbox viewer stop</code>. It rechecks the exact
+            owned route before removing it.
+          </li>
+        </ol>
+        <p>
+          The CLI does not automatically reclaim a stale node lock or kill a PID
+          from its record. If you cannot establish that the previous processes
+          have exited, leave the lock in place. Do not use a global reset to get
+          past it.
+        </p>
+        <h2 id="platform-boundaries">Account storage and compatibility</h2>
+        <p>
+          On POSIX, the account home must belong to the current UID and must not
+          be writable by other users; the private lock directories use
+          <code>0700</code> and the owner record uses <code>0600</code>. On
+          Windows, the lock uses the native account profile and inherited ACLs
+          with symlink/junction and available identity checks. HTML Inbox does
+          not audit NTFS ACLs. Follow
+          <a href="security-storage.html#windows"
+            >Windows storage prerequisites</a
+          >.
+        </p>
+        <p>
+          Compatibility follows the reviewed current Serve command and JSON
+          contracts, with no hardcoded Tailscale minimum version. Unsupported
+          flags, unknown routing fields, malformed output, timeout, and
+          permission failures produce errors rather than a fallback
+          configuration. The
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/tailscale.md"
+            >source integration notes</a
+          >
+          record the exact reviewed official source and CLI contracts.
+        </p>
+
+        <nav class="docs-page-links" aria-label="Adjacent documentation pages">
+          <a href="lan.html">Previous: LAN access</a
+          ><a href="boot-services.html">Next: Boot services</a>
+        </nav>
+        <p class="docs-source">
+          See a mistake?
+          <a href="https://github.com/deveshsangwan/html-inbox/issues"
+            >Report a documentation issue</a
+          >.
+        </p>
+      </main>
+      <aside class="docs-toc">
+        <nav aria-label="On this page">
+          <p class="docs-toc-label">On this page</p>
+          <ul>
+            <li><a href="#prerequisites">Prepare the existing client</a></li>
+            <li><a href="#start">Start Tailscale mode</a></li>
+            <li>
+              <a href="#configuration-ownership">Preserve existing services</a>
+            </li>
+            <li><a href="#status-stop">Inspect and clean up</a></li>
+            <li><a href="#drift">Recover configuration drift</a></li>
+            <li>
+              <a href="#crash-lock">Recover a lock left by a forced kill</a>
+            </li>
+            <li>
+              <a href="#platform-boundaries"
+                >Account storage and compatibility</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </aside>
+    </div>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span
+          >HTML Inbox ·
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/LICENSE"
+            >MIT license</a
+          ></span
+        ><a href="https://github.com/deveshsangwan/html-inbox"
+          >Source on GitHub</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>

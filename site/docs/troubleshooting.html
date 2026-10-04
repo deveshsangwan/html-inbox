@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta
+      name="description"
+      content="Troubleshoot startup, upgrade records, blocked HTML, LAN reachability, Tailscale cleanup, boot services, remote locks, and storage refusals."
+    />
+    <title>Resolve a failure without losing state | HTML Inbox docs</title>
+    <link
+      rel="canonical"
+      href="https://deveshsangwan.github.io/html-inbox/docs/troubleshooting.html"
+    />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/docs.css" />
+  </head>
+  <body class="docs-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav">
+        <a class="brand" href="../index.html" aria-label="HTML Inbox home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M3.5 4h13v12h-13zM3.5 11h3.25l1.5 2h3.5l1.5-2h3.25"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>HTML Inbox</span>
+        </a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" aria-current="true">Docs</a>
+          <a href="https://github.com/deveshsangwan/html-inbox">GitHub</a>
+          <a class="nav-cta" href="https://www.npmjs.com/package/html-inbox"
+            >npm package</a
+          >
+        </nav>
+      </div>
+    </header>
+    <div class="shell docs-layout">
+      <aside class="docs-sidebar">
+        <nav class="docs-nav" aria-label="Documentation">
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Use HTML Inbox</p>
+            <ul>
+              <li><a href="index.html">Getting started</a></li>
+              <li><a href="publishing.html">Publish documents</a></li>
+              <li><a href="html-compatibility.html">HTML compatibility</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Run and share</p>
+            <ul>
+              <li><a href="viewer.html">Viewer</a></li>
+              <li><a href="lan.html">LAN access</a></li>
+              <li><a href="tailscale.html">Tailscale access</a></li>
+              <li><a href="boot-services.html">Boot services</a></li>
+              <li><a href="remote.html">Static and remote publishing</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Reference</p>
+            <ul>
+              <li><a href="security-storage.html">Security and storage</a></li>
+              <li><a href="cli-reference.html">CLI reference</a></li>
+              <li>
+                <a href="troubleshooting.html" aria-current="page"
+                  >Troubleshooting</a
+                >
+              </li>
+              <li><a href="development.html">Development</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+      <main class="docs-article" id="main">
+        <details class="docs-mobile-nav">
+          <summary>Documentation navigation</summary>
+          <nav class="docs-nav" aria-label="Mobile documentation">
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Use HTML Inbox</p>
+              <ul>
+                <li><a href="index.html">Getting started</a></li>
+                <li><a href="publishing.html">Publish documents</a></li>
+                <li>
+                  <a href="html-compatibility.html">HTML compatibility</a>
+                </li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Run and share</p>
+              <ul>
+                <li><a href="viewer.html">Viewer</a></li>
+                <li><a href="lan.html">LAN access</a></li>
+                <li><a href="tailscale.html">Tailscale access</a></li>
+                <li><a href="boot-services.html">Boot services</a></li>
+                <li><a href="remote.html">Static and remote publishing</a></li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Reference</p>
+              <ul>
+                <li>
+                  <a href="security-storage.html">Security and storage</a>
+                </li>
+                <li><a href="cli-reference.html">CLI reference</a></li>
+                <li>
+                  <a href="troubleshooting.html" aria-current="page"
+                    >Troubleshooting</a
+                  >
+                </li>
+                <li><a href="development.html">Development</a></li>
+              </ul>
+            </div>
+          </nav>
+        </details>
+        <p class="docs-eyebrow">HTML Inbox documentation</p>
+        <h1>Resolve a failure without losing state</h1>
+        <p class="docs-lead">
+          Start with the reported error and the selected inbox. Safety refusals
+          preserve records and owned routes when the CLI cannot establish that a
+          process or external configuration belongs to it.
+        </p>
+
+        <h2 id="viewer">Viewer does not start</h2>
+        <p>
+          Check the installed version, configuration, and private status first.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox --version
+html-inbox viewer status
+html-inbox viewer --foreground</code></pre>
+        </div>
+        <p>
+          Foreground mode is useful after the existing viewer has stopped. A
+          background startup failure reports <code>viewer.log</code> under the
+          inbox. Inspect that private log for the original error rather than
+          deleting records and starting again.
+        </p>
+        <p>
+          If the port belongs to another service or inbox, choose an unused
+          port. HTML Inbox will not stop that service. If the current viewer is
+          verified and you intend to change it, stop it first.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox viewer --port 4321</code></pre>
+        </div>
+        <p>
+          Use the same <code>HTML_INBOX_HOME</code> across commands. An explicit
+          <code>HTML_INBOX_PORT</code> must match the intended active port for
+          status and stop; unset it when you want the saved configuration.
+          Repeated starts reuse a healthy matching viewer, while explicit
+          conflicting configuration is refused.
+        </p>
+        <h2 id="upgrade">Older viewer record blocks an upgrade</h2>
+        <p>
+          Stop the old process with its previous executable before installing a
+          newer release. For an old foreground process, use Ctrl-C. The new CLI
+          refuses an older private control protocol rather than signaling an
+          unverified PID.
+        </p>
+        <p>
+          If the older viewer already exited but left <code>viewer.json</code>,
+          verify that its recorded process is gone and its listening port is
+          unused. Then remove only that stale <code>viewer.json</code> from the
+          selected inbox and retry. Preserve documents, saved configuration, and
+          other journals. A PID record by itself is not proof of process
+          identity.
+        </p>
+        <h2 id="rendering">A report is blank or missing assets</h2>
+        <p>
+          Read the publish warnings. Relative assets are not copied, external
+          images and stylesheets are blocked, and only the documented Tailwind
+          and Mermaid script entries are supported. Embed CSS, script, and data
+          URLs into the HTML, then publish a new record.
+        </p>
+        <p>
+          Replace inline event attributes such as <code>onclick</code> with
+          listeners in a script. Check that a CDN-dependent report has internet
+          access. <code>_blank</code> and top-page navigation are blocked by the
+          frame sandbox. See
+          <a href="html-compatibility.html">HTML compatibility</a>.
+        </p>
+        <h2 id="lan">A LAN device cannot connect</h2>
+        <p>
+          Confirm the active mode and current URLs with
+          <code>viewer status</code>. Use the concrete IP, not
+          <code>0.0.0.0</code> or <code>::</code>, in a browser. Check the
+          server's assigned address, client routing, and firewall TCP port
+          rules. HTML Inbox does not configure firewall or router access.
+        </p>
+        <p>
+          If address discovery reports no usable interfaces, choose a valid
+          explicit IP with <code>--host</code>. DNS aliases, unexpected Host
+          values, forwarded-host headers, wrong ports, and scoped IPv6
+          authorities are refused. Use the emitted authority instead of putting
+          a general reverse proxy in front of it.
+        </p>
+        <h2 id="tailscale">Tailscale startup or stop fails</h2>
+        <p>
+          Confirm the existing client is installed, signed in, connected,
+          permitted for Serve, and has MagicDNS and HTTPS already enabled. HTML
+          Inbox will not run login, provisioning, or consent. Check
+          <code>tailscale serve status --json</code> for conflicting root,
+          port-443, or reserved reader mounts.
+        </p>
+        <p>
+          Restore the client or permissions and retry
+          <code>viewer stop</code> when cleanup was retained. A moved executable
+          can be selected explicitly with
+          <code>HTML_INBOX_TAILSCALE_COMMAND</code>. Do not remove the journal
+          or use a global reset to bypass ownership checks.
+        </p>
+        <p>
+          After a forced kill, an exact node-lock path may require deliberate
+          manual recovery. Verify the worker and command processes exited,
+          remove only that stale node lock, preserve the journal, and retry
+          stop. See
+          <a href="tailscale.html#crash-lock">Tailscale crash-lock recovery</a>.
+        </p>
+        <h2 id="boot">A boot service is not healthy</h2>
+        <p>
+          Run <code>viewer service status</code> with the same custom home if
+          one was installed. Inspect Linux journal output or the selected macOS
+          inbox log. Ensure the installed Node, CLI, Tailscale, and certificate
+          paths remain available to the normal account.
+        </p>
+        <p>
+          Stop an ordinary detached viewer before service installation. A
+          login-only encrypted or unmounted home cannot provide before-login
+          startup. Unrelated or edited definitions are refused; restore the
+          exact owned definition or resolve the external service yourself.
+          Failed manager operations report rollback failures rather than
+          claiming success.
+        </p>
+        <p>
+          See <a href="boot-services.html#diagnostics">boot diagnostics</a>.
+          Boot service installation is unsupported on Windows; ordinary viewer
+          commands still work.
+        </p>
+        <h2 id="remote">Remote publishing is incomplete</h2>
+        <p>
+          Check Wrangler authentication and the explicit account/project.
+          Existing projects require deliberate adoption, and their production
+          branch must match the configured branch. If a remote request may have
+          succeeded, read status and reconcile instead of repeated publishing.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox remote status
+html-inbox remote reconcile</code></pre>
+        </div>
+        <p>
+          An abandoned mutation lock needs <code>--recover-lock</code> only
+          after the previous command and children exited. Malformed locks, live
+          or reused PIDs, shared-machine uncertainty, and recovery guards need
+          the <a href="remote.html#recover-lock">manual recovery procedure</a>.
+          Keep operation journals and snapshot work so reconciliation can use
+          the original intent.
+        </p>
+        <h2 id="storage">Storage is unsafe or inaccessible</h2>
+        <p>
+          Check ownership, regular-file/directory requirements, symlinks, and
+          reported permissions. Do not make the whole inbox world-readable to
+          get past a failure. On Windows, inspect root and child ACLs,
+          especially after restoring or moving data.
+        </p>
+        <p>
+          An unsafe private log, hard-linked process record, symlinked managed
+          path, or account-home node lock can prevent startup deliberately.
+          Correct the specific path under the owning account and preserve
+          documents and journals. See
+          <a href="security-storage.html">security and storage</a>.
+        </p>
+        <h2 id="report">Report a reproducible problem</h2>
+        <p>
+          Include the CLI and Node versions, operating system, exact command
+          with secrets removed, and the error. State the exposure mode and
+          whether you use a custom inbox or boot service. Do not post capability
+          URLs, private control URLs, API tokens, report contents, or complete
+          private records.
+        </p>
+        <p>
+          Open a
+          <a href="https://github.com/deveshsangwan/html-inbox/issues"
+            >GitHub issue</a
+          >
+          with a minimal safe HTML sample when rendering is involved. Redact
+          diagnostics before sharing them.
+        </p>
+
+        <nav class="docs-page-links" aria-label="Adjacent documentation pages">
+          <a href="cli-reference.html">Previous: CLI reference</a
+          ><a href="development.html">Next: Development</a>
+        </nav>
+        <p class="docs-source">
+          See a mistake?
+          <a href="https://github.com/deveshsangwan/html-inbox/issues"
+            >Report a documentation issue</a
+          >.
+        </p>
+      </main>
+      <aside class="docs-toc">
+        <nav aria-label="On this page">
+          <p class="docs-toc-label">On this page</p>
+          <ul>
+            <li><a href="#viewer">Viewer does not start</a></li>
+            <li>
+              <a href="#upgrade">Older viewer record blocks an upgrade</a>
+            </li>
+            <li>
+              <a href="#rendering">A report is blank or missing assets</a>
+            </li>
+            <li><a href="#lan">A LAN device cannot connect</a></li>
+            <li><a href="#tailscale">Tailscale startup or stop fails</a></li>
+            <li><a href="#boot">A boot service is not healthy</a></li>
+            <li><a href="#remote">Remote publishing is incomplete</a></li>
+            <li><a href="#storage">Storage is unsafe or inaccessible</a></li>
+            <li><a href="#report">Report a reproducible problem</a></li>
+          </ul>
+        </nav>
+      </aside>
+    </div>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span
+          >HTML Inbox ·
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/LICENSE"
+            >MIT license</a
+          ></span
+        ><a href="https://github.com/deveshsangwan/html-inbox"
+          >Source on GitHub</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta
+      name="description"
+      content="Develop HTML Inbox with the pinned source toolchain, run verification, find modules, understand security boundaries, and follow the release guide."
+    />
+    <title>Work on HTML Inbox | HTML Inbox docs</title>
+    <link
+      rel="canonical"
+      href="https://deveshsangwan.github.io/html-inbox/docs/development.html"
+    />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/docs.css" />
+  </head>
+  <body class="docs-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav">
+        <a class="brand" href="../index.html" aria-label="HTML Inbox home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M3.5 4h13v12h-13zM3.5 11h3.25l1.5 2h3.5l1.5-2h3.25"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>HTML Inbox</span>
+        </a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" aria-current="true">Docs</a>
+          <a href="https://github.com/deveshsangwan/html-inbox">GitHub</a>
+          <a class="nav-cta" href="https://www.npmjs.com/package/html-inbox"
+            >npm package</a
+          >
+        </nav>
+      </div>
+    </header>
+    <div class="shell docs-layout">
+      <aside class="docs-sidebar">
+        <nav class="docs-nav" aria-label="Documentation">
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Use HTML Inbox</p>
+            <ul>
+              <li><a href="index.html">Getting started</a></li>
+              <li><a href="publishing.html">Publish documents</a></li>
+              <li><a href="html-compatibility.html">HTML compatibility</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Run and share</p>
+            <ul>
+              <li><a href="viewer.html">Viewer</a></li>
+              <li><a href="lan.html">LAN access</a></li>
+              <li><a href="tailscale.html">Tailscale access</a></li>
+              <li><a href="boot-services.html">Boot services</a></li>
+              <li><a href="remote.html">Static and remote publishing</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Reference</p>
+            <ul>
+              <li><a href="security-storage.html">Security and storage</a></li>
+              <li><a href="cli-reference.html">CLI reference</a></li>
+              <li><a href="troubleshooting.html">Troubleshooting</a></li>
+              <li>
+                <a href="development.html" aria-current="page">Development</a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+      <main class="docs-article" id="main">
+        <details class="docs-mobile-nav">
+          <summary>Documentation navigation</summary>
+          <nav class="docs-nav" aria-label="Mobile documentation">
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Use HTML Inbox</p>
+              <ul>
+                <li><a href="index.html">Getting started</a></li>
+                <li><a href="publishing.html">Publish documents</a></li>
+                <li>
+                  <a href="html-compatibility.html">HTML compatibility</a>
+                </li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Run and share</p>
+              <ul>
+                <li><a href="viewer.html">Viewer</a></li>
+                <li><a href="lan.html">LAN access</a></li>
+                <li><a href="tailscale.html">Tailscale access</a></li>
+                <li><a href="boot-services.html">Boot services</a></li>
+                <li><a href="remote.html">Static and remote publishing</a></li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Reference</p>
+              <ul>
+                <li>
+                  <a href="security-storage.html">Security and storage</a>
+                </li>
+                <li><a href="cli-reference.html">CLI reference</a></li>
+                <li><a href="troubleshooting.html">Troubleshooting</a></li>
+                <li>
+                  <a href="development.html" aria-current="page">Development</a>
+                </li>
+              </ul>
+            </div>
+          </nav>
+        </details>
+        <p class="docs-eyebrow">HTML Inbox documentation</p>
+        <h1>Work on HTML Inbox</h1>
+        <p class="docs-lead">
+          Use Node.js 24 for the source workspace and its release tooling. The
+          published CLI continues to support Node.js 20 or newer.
+        </p>
+
+        <h2 id="source-checkout">Set up a source checkout</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>git clone https://github.com/deveshsangwan/html-inbox.git
+cd html-inbox
+corepack enable
+corepack pnpm install --frozen-lockfile
+corepack pnpm build
+corepack pnpm html-inbox --help</code></pre>
+        </div>
+        <p>
+          The workspace pins pnpm in <code>package.json</code> and commits its
+          lockfile. Use the pinned Corepack-managed version. The npm package is
+          a self-contained executable with no runtime package dependencies; the
+          source workspace has build and test dependencies.
+        </p>
+        <p>
+          Installed-user examples use <code>html-inbox</code>. From the checkout
+          root, substitute <code>corepack pnpm html-inbox</code> for that
+          command.
+        </p>
+        <h2 id="verification">Run the verification gate</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>corepack pnpm exec playwright install chromium
+corepack pnpm verify</code></pre>
+        </div>
+        <p>
+          The gate performs a clean build, unit and integration tests, Chromium
+          browser tests, and an installed-package smoke test. For focused work,
+          run <code>corepack pnpm test</code> for source tests or
+          <code>corepack pnpm build</code> before testing compiled files.
+        </p>
+        <p>
+          Do not run compiled source tests concurrently with a clean build or
+          package smoke in the same checkout, since those commands replace build
+          output. Platform recording tests use temporary executables and paths.
+          They are not proof of a real reboot, physical LAN reachability, or
+          tailnet certificate issuance.
+        </p>
+        <h2 id="source-map">Find the relevant source</h2>
+        <div class="docs-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Area</th>
+                <th scope="col">Location</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>CLI and input</td>
+                <td>
+                  <code>packages/cli/src/index.ts</code>,
+                  <code>cli-args.ts</code>, <code>publish-input.ts</code>
+                </td>
+              </tr>
+              <tr>
+                <td>Documents and storage</td>
+                <td>
+                  <code>backend.ts</code>, <code>documents.ts</code>,
+                  <code>private-storage.ts</code>
+                </td>
+              </tr>
+              <tr>
+                <td>Viewer and network</td>
+                <td>
+                  <code>viewer-server.ts</code>,
+                  <code>viewer-http-server.ts</code>,
+                  <code>viewer-network.ts</code>
+                </td>
+              </tr>
+              <tr>
+                <td>Tailscale and services</td>
+                <td>
+                  <code>viewer-tailscale.ts</code>, <code>tailscale-*.ts</code>,
+                  <code>viewer-service*.ts</code>
+                </td>
+              </tr>
+              <tr>
+                <td>Static and remote publishing</td>
+                <td>
+                  <code>static-export.ts</code>,
+                  <code>remote-workflow.ts</code>, <code>cloudflare-*.ts</code>
+                </td>
+              </tr>
+              <tr>
+                <td>Public website</td>
+                <td>
+                  <code>site/</code>. Plain static HTML, CSS, and JavaScript
+                  deployed by GitHub Pages.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Read the
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/architecture.md"
+            >architecture</a
+          >,
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/threat-model.md"
+            >threat model</a
+          >, and
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/adr/0001-static-remote-inbox.md"
+            >static remote inbox ADR</a
+          >
+          before changing validation, storage, rendering, or reader exposure.
+        </p>
+        <h2 id="contribute">Keep changes reviewable</h2>
+        <p>
+          Use clear names and direct functions. Validate untrusted data at
+          boundaries, then rely on the validated shape. Separate logical steps
+          in function bodies and visually isolate guards. Prefer TypeScript
+          inference for implementation details and useful explicit contracts at
+          public boundaries.
+        </p>
+        <p>
+          Keep the viewer read-only, preserve metadata escaping and document
+          isolation, and exercise process identity before adding any process
+          action. Changes to external integration should use recording commands
+          and temporary paths in tests, with real host checks performed
+          deliberately.
+        </p>
+        <p>
+          Use
+          <a href="https://github.com/deveshsangwan/html-inbox/issues"
+            >issues</a
+          >
+          for reproducible problems and proposals and
+          <a href="https://github.com/deveshsangwan/html-inbox/pulls"
+            >pull requests</a
+          >
+          for changes. Include the behavior and relevant validation rather than
+          only a list of touched files.
+        </p>
+        <h2 id="releases">Release the package</h2>
+        <p>
+          Only <code>packages/cli</code> is publishable; the workspace root is
+          private. A release needs a matching package version and changelog,
+          full verification, inspected tarball contents, and a smoke test of the
+          exact tarball to be published.
+        </p>
+        <p>
+          The
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/releasing.md"
+            >release guide</a
+          >
+          is the authoritative maintainer procedure for npm authentication,
+          trusted GitHub publishing, artifact verification, tags, and registry
+          checks. Use it before publishing and never reuse a version that
+          reached npm.
+        </p>
+        <h2 id="license">License and project links</h2>
+        <p>
+          HTML Inbox is
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/LICENSE"
+            >MIT licensed</a
+          >. The
+          <a href="https://github.com/deveshsangwan/html-inbox"
+            >source repository</a
+          >
+          and
+          <a href="https://www.npmjs.com/package/html-inbox">npm package</a>
+          contain the current released code and package metadata.
+        </p>
+
+        <nav class="docs-page-links" aria-label="Adjacent documentation pages">
+          <a href="troubleshooting.html">Previous: Troubleshooting</a>
+        </nav>
+        <p class="docs-source">
+          See a mistake?
+          <a href="https://github.com/deveshsangwan/html-inbox/issues"
+            >Report a documentation issue</a
+          >.
+        </p>
+      </main>
+      <aside class="docs-toc">
+        <nav aria-label="On this page">
+          <p class="docs-toc-label">On this page</p>
+          <ul>
+            <li><a href="#source-checkout">Set up a source checkout</a></li>
+            <li><a href="#verification">Run the verification gate</a></li>
+            <li><a href="#source-map">Find the relevant source</a></li>
+            <li><a href="#contribute">Keep changes reviewable</a></li>
+            <li><a href="#releases">Release the package</a></li>
+            <li><a href="#license">License and project links</a></li>
+          </ul>
+        </nav>
+      </aside>
+    </div>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span
+          >HTML Inbox ·
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/LICENSE"
+            >MIT license</a
+          ></span
+        ><a href="https://github.com/deveshsangwan/html-inbox"
+          >Source on GitHub</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>

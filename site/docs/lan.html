@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta
+      name="description"
+      content="Expose the live library on a chosen LAN IP and port, understand unauthenticated reader trust, and troubleshoot network URLs."
+    />
+    <title>Read the inbox on your LAN | HTML Inbox docs</title>
+    <link
+      rel="canonical"
+      href="https://deveshsangwan.github.io/html-inbox/docs/lan.html"
+    />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/docs.css" />
+  </head>
+  <body class="docs-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav">
+        <a class="brand" href="../index.html" aria-label="HTML Inbox home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M3.5 4h13v12h-13zM3.5 11h3.25l1.5 2h3.5l1.5-2h3.25"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>HTML Inbox</span>
+        </a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" aria-current="true">Docs</a>
+          <a href="https://github.com/deveshsangwan/html-inbox">GitHub</a>
+          <a class="nav-cta" href="https://www.npmjs.com/package/html-inbox"
+            >npm package</a
+          >
+        </nav>
+      </div>
+    </header>
+    <div class="shell docs-layout">
+      <aside class="docs-sidebar">
+        <nav class="docs-nav" aria-label="Documentation">
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Use HTML Inbox</p>
+            <ul>
+              <li><a href="index.html">Getting started</a></li>
+              <li><a href="publishing.html">Publish documents</a></li>
+              <li><a href="html-compatibility.html">HTML compatibility</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Run and share</p>
+            <ul>
+              <li><a href="viewer.html">Viewer</a></li>
+              <li><a href="lan.html" aria-current="page">LAN access</a></li>
+              <li><a href="tailscale.html">Tailscale access</a></li>
+              <li><a href="boot-services.html">Boot services</a></li>
+              <li><a href="remote.html">Static and remote publishing</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Reference</p>
+            <ul>
+              <li><a href="security-storage.html">Security and storage</a></li>
+              <li><a href="cli-reference.html">CLI reference</a></li>
+              <li><a href="troubleshooting.html">Troubleshooting</a></li>
+              <li><a href="development.html">Development</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+      <main class="docs-article" id="main">
+        <details class="docs-mobile-nav">
+          <summary>Documentation navigation</summary>
+          <nav class="docs-nav" aria-label="Mobile documentation">
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Use HTML Inbox</p>
+              <ul>
+                <li><a href="index.html">Getting started</a></li>
+                <li><a href="publishing.html">Publish documents</a></li>
+                <li>
+                  <a href="html-compatibility.html">HTML compatibility</a>
+                </li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Run and share</p>
+              <ul>
+                <li><a href="viewer.html">Viewer</a></li>
+                <li><a href="lan.html" aria-current="page">LAN access</a></li>
+                <li><a href="tailscale.html">Tailscale access</a></li>
+                <li><a href="boot-services.html">Boot services</a></li>
+                <li><a href="remote.html">Static and remote publishing</a></li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Reference</p>
+              <ul>
+                <li>
+                  <a href="security-storage.html">Security and storage</a>
+                </li>
+                <li><a href="cli-reference.html">CLI reference</a></li>
+                <li><a href="troubleshooting.html">Troubleshooting</a></li>
+                <li><a href="development.html">Development</a></li>
+              </ul>
+            </div>
+          </nav>
+        </details>
+        <p class="docs-eyebrow">HTML Inbox documentation</p>
+        <h1>Read the inbox on your LAN</h1>
+        <p class="docs-lead">
+          Choose LAN exposure explicitly when other devices should read the live
+          library. Every device that can reach the listening port can browse,
+          search, and open every document.
+        </p>
+
+        <h2 id="start">Start LAN mode</h2>
+        <p>Stop any existing viewer for this inbox, then start LAN mode.</p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox viewer stop
+html-inbox viewer --lan</code></pre>
+        </div>
+        <p>
+          The default LAN bind address is <code>0.0.0.0</code>. The CLI reports
+          concrete IPv4 interface URLs such as
+          <code>http://192.168.1.20:3217</code>, not the wildcard address. Open
+          a reported URL on another device connected to the same network.
+        </p>
+        <aside class="docs-note">
+          <p>
+            LAN mode has no password, login, or shared reader token. Traffic
+            uses HTTP. Choose this mode only when you trust everyone who can
+            reach the port to read the complete library, including document
+            metadata.
+          </p>
+        </aside>
+        <h2 id="selected-address">Choose an address and port</h2>
+        <p>
+          On a server with several interfaces, bind the IP address you intend to
+          expose. Replace this example with an address assigned to your server.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox viewer --lan --host 192.168.1.20 --port 4321</code></pre>
+        </div>
+        <p>
+          <code>--host</code> accepts an IPv4 or IPv6 address, not a DNS name.
+          Scoped IPv6 addresses containing <code>%</code> are not supported.
+          <code>--port</code> overrides the port environment variable and saved
+          configuration.
+        </p>
+        <p>
+          Use <code>--host ::</code> for an IPv6 wildcard bind. The CLI reports
+          usable IPv6 and IPv4 interface URLs where available, with brackets
+          around IPv6 authorities. Actual dual-stack availability depends on the
+          operating system. Loopback, scoped, and multicast addresses do not
+          become advertised network URLs.
+        </p>
+        <p>
+          A wildcard viewer refreshes accepted interface authorities when
+          addresses change. Status and publishing derive current interface URLs.
+          If there are no usable network addresses, they give an actionable
+          error rather than printing an old address. Select an explicit assigned
+          IP with <code>--host</code> when that is appropriate.
+        </p>
+        <h2 id="network-reachability">Check network reachability</h2>
+        <p>
+          The operating system firewall and your network determine reachability.
+          HTML Inbox does not change either. Confirm that the server owns the
+          printed IP, that the client can route to it, and that the selected TCP
+          port is permitted for the intended network.
+        </p>
+        <p>
+          Do not forward the LAN port to the public internet. For encrypted
+          access within an existing tailnet, use
+          <a href="tailscale.html">Tailscale mode</a>. HTML Inbox has no general
+          reverse-proxy mode: arbitrary Host or forwarded-host headers are not
+          accepted.
+        </p>
+        <h2 id="reader-boundary">Keep management local</h2>
+        <p>
+          LAN readers can browse and search the inbox and open documents. They
+          cannot publish, delete, start, stop, or configure a service through
+          the browser. Run those commands locally under the account that owns
+          the inbox.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox publish ./report.html --title &quot;New report&quot; --type report
+html-inbox viewer status</code></pre>
+        </div>
+        <p>
+          Publishing reuses the exposed viewer and prints a network document
+          URL. Other readers see the new record immediately. The original
+          sandbox, CSP, metadata escaping, storage checks, and Host validation
+          continue to apply.
+        </p>
+        <p>
+          Host validation limits request authorities; it does not authenticate
+          readers. Client-supplied forwarding or Tailscale identity headers
+          grant no access. Public reader health is anonymous, and process
+          identity remains on a separate protected local control path.
+        </p>
+        <h2 id="stop">Stop sharing</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox viewer stop
+html-inbox viewer --loopback</code></pre>
+        </div>
+        <p>
+          Stopping preserves the documents. Starting with
+          <code>--loopback</code> changes the saved mode for later starts and
+          publishing. If a boot service is installed, update or uninstall its
+          definition too; ordinary viewer stop does not remove boot
+          configuration.
+        </p>
+
+        <nav class="docs-page-links" aria-label="Adjacent documentation pages">
+          <a href="viewer.html">Previous: Viewer</a
+          ><a href="tailscale.html">Next: Tailscale access</a>
+        </nav>
+        <p class="docs-source">
+          See a mistake?
+          <a href="https://github.com/deveshsangwan/html-inbox/issues"
+            >Report a documentation issue</a
+          >.
+        </p>
+      </main>
+      <aside class="docs-toc">
+        <nav aria-label="On this page">
+          <p class="docs-toc-label">On this page</p>
+          <ul>
+            <li><a href="#start">Start LAN mode</a></li>
+            <li><a href="#selected-address">Choose an address and port</a></li>
+            <li>
+              <a href="#network-reachability">Check network reachability</a>
+            </li>
+            <li><a href="#reader-boundary">Keep management local</a></li>
+            <li><a href="#stop">Stop sharing</a></li>
+          </ul>
+        </nav>
+      </aside>
+    </div>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span
+          >HTML Inbox ·
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/LICENSE"
+            >MIT license</a
+          ></span
+        ><a href="https://github.com/deveshsangwan/html-inbox"
+          >Source on GitHub</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>

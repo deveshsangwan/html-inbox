@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta
+      name="description"
+      content="Publish UTF-8 HTML files with metadata, browse and search the library, delete documents, and use CLI output in scripts."
+    />
+    <title>Publish and manage documents | HTML Inbox docs</title>
+    <link
+      rel="canonical"
+      href="https://deveshsangwan.github.io/html-inbox/docs/publishing.html"
+    />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/docs.css" />
+  </head>
+  <body class="docs-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav">
+        <a class="brand" href="../index.html" aria-label="HTML Inbox home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M3.5 4h13v12h-13zM3.5 11h3.25l1.5 2h3.5l1.5-2h3.25"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>HTML Inbox</span>
+        </a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" aria-current="true">Docs</a>
+          <a href="https://github.com/deveshsangwan/html-inbox">GitHub</a>
+          <a class="nav-cta" href="https://www.npmjs.com/package/html-inbox"
+            >npm package</a
+          >
+        </nav>
+      </div>
+    </header>
+    <div class="shell docs-layout">
+      <aside class="docs-sidebar">
+        <nav class="docs-nav" aria-label="Documentation">
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Use HTML Inbox</p>
+            <ul>
+              <li><a href="index.html">Getting started</a></li>
+              <li>
+                <a href="publishing.html" aria-current="page"
+                  >Publish documents</a
+                >
+              </li>
+              <li><a href="html-compatibility.html">HTML compatibility</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Run and share</p>
+            <ul>
+              <li><a href="viewer.html">Viewer</a></li>
+              <li><a href="lan.html">LAN access</a></li>
+              <li><a href="tailscale.html">Tailscale access</a></li>
+              <li><a href="boot-services.html">Boot services</a></li>
+              <li><a href="remote.html">Static and remote publishing</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Reference</p>
+            <ul>
+              <li><a href="security-storage.html">Security and storage</a></li>
+              <li><a href="cli-reference.html">CLI reference</a></li>
+              <li><a href="troubleshooting.html">Troubleshooting</a></li>
+              <li><a href="development.html">Development</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+      <main class="docs-article" id="main">
+        <details class="docs-mobile-nav">
+          <summary>Documentation navigation</summary>
+          <nav class="docs-nav" aria-label="Mobile documentation">
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Use HTML Inbox</p>
+              <ul>
+                <li><a href="index.html">Getting started</a></li>
+                <li>
+                  <a href="publishing.html" aria-current="page"
+                    >Publish documents</a
+                  >
+                </li>
+                <li>
+                  <a href="html-compatibility.html">HTML compatibility</a>
+                </li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Run and share</p>
+              <ul>
+                <li><a href="viewer.html">Viewer</a></li>
+                <li><a href="lan.html">LAN access</a></li>
+                <li><a href="tailscale.html">Tailscale access</a></li>
+                <li><a href="boot-services.html">Boot services</a></li>
+                <li><a href="remote.html">Static and remote publishing</a></li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Reference</p>
+              <ul>
+                <li>
+                  <a href="security-storage.html">Security and storage</a>
+                </li>
+                <li><a href="cli-reference.html">CLI reference</a></li>
+                <li><a href="troubleshooting.html">Troubleshooting</a></li>
+                <li><a href="development.html">Development</a></li>
+              </ul>
+            </div>
+          </nav>
+        </details>
+        <p class="docs-eyebrow">HTML Inbox documentation</p>
+        <h1>Publish and manage documents</h1>
+        <p class="docs-lead">
+          HTML Inbox stores the original HTML and separate metadata. Publishing
+          and deletion are local CLI operations, including when readers use LAN
+          or Tailscale.
+        </p>
+
+        <h2 id="publish">Publish a file</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox publish ./report.html \
+  --title &quot;Quarterly migration report&quot; \
+  --type report</code></pre>
+        </div>
+        <p>
+          The file must be a regular UTF-8 <code>.html</code> or
+          <code>.htm</code> file. The CLI requires both <code>--title</code> and
+          <code>--type</code>. Type is a label you choose, such as
+          <code>report</code>, <code>note</code>, or <code>dashboard</code>; it
+          does not select a renderer.
+        </p>
+        <div class="docs-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Field</th>
+                <th scope="col">Limit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Title</td>
+                <td>1 to 200 characters; must contain non-whitespace text.</td>
+              </tr>
+              <tr>
+                <td>Type</td>
+                <td>1 to 64 characters; must contain non-whitespace text.</td>
+              </tr>
+              <tr>
+                <td>Source file name</td>
+                <td>At most 255 characters. Taken from the file path.</td>
+              </tr>
+              <tr>
+                <td>HTML file</td>
+                <td>
+                  10 MiB by default, or the positive byte limit in
+                  <code>HTML_INBOX_MAX_BYTES</code>.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Publishing validates input and ensures a healthy viewer before adding
+          the new record. The command prints a document URL on stdout.
+          Compatibility warnings go to stderr and do not prevent storage. An
+          invalid file or failed viewer startup returns an error.
+        </p>
+        <p>
+          Each publish creates a new ID, including when the title or file name
+          matches an earlier document. To replace a report, publish the revised
+          file, check its new URL, and delete the previous ID deliberately.
+        </p>
+        <h2 id="examples">Use generated HTML</h2>
+        <p>
+          Ask your generator to produce one complete HTML document with embedded
+          CSS and assets. Save it as a file, then publish it. Sibling asset
+          files are not copied.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>your-generator &gt; report.html
+html-inbox publish ./report.html --title &quot;Generated report&quot; --type report</code></pre>
+        </div>
+        <p>
+          <code>your-generator</code> is a placeholder for your own tool. HTML
+          Inbox does not read publish input from stdin and does not accept a
+          JSON publish request. A generator that returns JSON must first extract
+          its HTML field into a <code>.html</code> file.
+        </p>
+        <p>
+          For a report with interactive controls, attach events from an inline
+          script. Inline <code>onclick</code> attributes are blocked. See
+          <a href="html-compatibility.html">HTML compatibility</a> for embedded
+          images, Tailwind, Mermaid, and navigation.
+        </p>
+        <h2 id="browse">Browse and search</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox viewer
+html-inbox list</code></pre>
+        </div>
+        <p>
+          Open the inbox URL from <code>viewer</code>. The live viewer searches
+          document title, type, and source file name. It does not perform
+          full-text search of document HTML. The browser has no publish, delete,
+          or process-management controls.
+        </p>
+        <p>
+          The plain-text list contains tab-separated ID, type, creation time,
+          and title. JSON includes the complete stored metadata.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox list --json</code></pre>
+        </div>
+        <h2 id="delete">Delete a document</h2>
+        <p>
+          Copy its ID from <code>list</code>, then run the delete command.
+          Confirmation defaults to no.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox delete &lt;document-id&gt;</code></pre>
+        </div>
+        <p>
+          For automation, use <code>--force</code>. <code>--json</code> changes
+          successful output to JSON with the metadata and reclaimed byte count;
+          it does not remove the confirmation requirement.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox delete &lt;document-id&gt; --force --json</code></pre>
+        </div>
+        <p>
+          Deletion removes the local record from the live library. It does not
+          update an existing static export or Cloudflare deployment. Run
+          <code>remote publish</code> to replace the remote snapshot with the
+          current library, and consider
+          <a href="remote.html#revoke">historical deployment limits</a> before
+          assuming older content is inaccessible.
+        </p>
+        <h2 id="automation">Use output in scripts</h2>
+        <p>
+          Capture the publish URL from stdout. Keep warnings visible on stderr
+          so you can spot blocked resources.
+        </p>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Terminal command"
+          ><code>html-inbox publish ./report.html --title &quot;Daily report&quot; --type report &gt; report-url.txt
+html-inbox list --json &gt; documents.json</code></pre>
+        </div>
+        <p>
+          <code>publish</code> has no <code>--json</code> option.
+          <code>list</code>, <code>delete</code>, <code>export</code>, and
+          remote commands support <code>--json</code>. Viewer and service status
+          commands already print JSON without a flag. CLI errors return a
+          nonzero exit status. A status command can succeed while reporting a
+          stopped, conflicting, incompatible, or failed state; inspect its JSON
+          state before treating the viewer as ready.
+        </p>
+
+        <nav class="docs-page-links" aria-label="Adjacent documentation pages">
+          <a href="index.html">Previous: Getting started</a
+          ><a href="html-compatibility.html">Next: HTML compatibility</a>
+        </nav>
+        <p class="docs-source">
+          See a mistake?
+          <a href="https://github.com/deveshsangwan/html-inbox/issues"
+            >Report a documentation issue</a
+          >.
+        </p>
+      </main>
+      <aside class="docs-toc">
+        <nav aria-label="On this page">
+          <p class="docs-toc-label">On this page</p>
+          <ul>
+            <li><a href="#publish">Publish a file</a></li>
+            <li><a href="#examples">Use generated HTML</a></li>
+            <li><a href="#browse">Browse and search</a></li>
+            <li><a href="#delete">Delete a document</a></li>
+            <li><a href="#automation">Use output in scripts</a></li>
+          </ul>
+        </nav>
+      </aside>
+    </div>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span
+          >HTML Inbox ·
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/LICENSE"
+            >MIT license</a
+          ></span
+        ><a href="https://github.com/deveshsangwan/html-inbox"
+          >Source on GitHub</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>
