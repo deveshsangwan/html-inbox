@@ -217,7 +217,8 @@ test("Windows PowerShell falls back for an unsupported installed shim without ru
 
 async function createExecutables(t, { version, installedFailure = false, npmFailure = false, fallbackVersion = "0.2.0" }) {
   const cwd = await mkdtemp(path.join(tmpdir(), "html-inbox skill resolution "));
-  t.after(() => rm(cwd, { recursive: true, force: true }));
+  // Windows can briefly retain an executable lock after its child process closes.
+  t.after(() => rm(cwd, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
   const bin = path.join(cwd, "bin");
   await mkdir(bin);
   const log = path.join(cwd, "commands.jsonl");

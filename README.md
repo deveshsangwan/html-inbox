@@ -8,7 +8,39 @@ HTML Inbox is local-first. Publishing, deletion, and process management stay in 
 
 The CLI is packaged as a self-contained `html-inbox` executable with no runtime package dependencies.
 
-## Install with npm
+## Set up your agent
+
+Start with the main skill if you want your agent to publish HTML and manage the viewer. The current skills CLI requires Node.js 22.20.0 or newer and npm for installation and updates:
+
+```sh
+npx skills add deveshsangwan/html-inbox --skill html-inbox -g
+```
+
+The skill installs agent instructions. The npm package supplies the executable. The installers are independent: adding a skill does not install a global CLI, and installing the CLI does not add a skill.
+
+On first use, the skill reuses a working, stable `html-inbox` 0.2.x executable or selects the tested fallback `npx --yes html-inbox@0.2.0`. It keeps that command prefix for the operation and preserves your inbox home, port, saved viewer exposure, and Tailscale executable override. The HTML Inbox runtime requires Node.js 20 or newer. The fallback needs npm and registry access or a cached package.
+
+`-g` installs the skill for your user across projects. Omit it to install in the current project. The installer lets you choose target agents; use `--agent codex` or `--agent claude-code` to choose explicitly:
+
+```sh
+npx skills add deveshsangwan/html-inbox --skill html-inbox --agent codex
+```
+
+List the repository's available skills without installing them:
+
+```sh
+npx skills add deveshsangwan/html-inbox --list
+```
+
+Cloudflare Pages setup, snapshot publishing, recovery, and revocation use an optional, separately installed skill:
+
+```sh
+npx skills add deveshsangwan/html-inbox --skill html-inbox-remote -g
+```
+
+The main skill covers the live viewer, LAN, Tailscale, and boot services. The remote skill covers complete static snapshots with bearer URLs. Each skill can be installed independently. See [agent setup](https://deveshsangwan.github.io/html-inbox/docs/agent-setup.html) for first use and the [official skills CLI](https://github.com/vercel-labs/skills#readme) for installer options.
+
+## Install the CLI for terminal use
 
 Node.js 20 or newer is required. Install the CLI globally:
 
@@ -23,7 +55,30 @@ For occasional use without a global install:
 npx html-inbox --help
 ```
 
-The operational examples below assume the installed `html-inbox` command; from a source checkout, run the same command as `corepack pnpm html-inbox ...`.
+You can add a skill later using the commands above. The operational examples below assume the installed `html-inbox` command; from a source checkout, run the same command as `corepack pnpm html-inbox ...`.
+
+## Update skills and the CLI
+
+Skill and CLI updates are separate. Update the global main skill by name:
+
+```sh
+npx skills update html-inbox -g
+```
+
+For a project installation, run `npx skills update html-inbox -p` from that project. Use `html-inbox-remote` in place of `html-inbox` to update the optional Cloudflare skill. Omitting the skill name updates all skills in the selected scope. Interactive `npx skills update` without scope flags prompts for project, global, or both; `skills check` is an update alias, not a read-only check.
+
+You can also rerun the original individual `skills add` command with the same scope and agent selection. Refresh the complete skill directory, including bundled references and scripts. The skill's npm fallback stays pinned to its tested version until updated skill instructions change it.
+
+Before changing CLI versions, stop an older viewer using the executable that started it. The new CLI refuses to control unverifiable older process records. Confirm the viewer has stopped before installing the new version. For a global install:
+
+```sh
+html-inbox viewer stop
+npm install --global html-inbox@latest
+html-inbox --version
+html-inbox viewer
+```
+
+Stop an old foreground viewer with Ctrl-C. If you use a boot service, follow the [service update instructions](https://deveshsangwan.github.io/html-inbox/docs/boot-services.html#updating) to uninstall and reinstall it when Node or CLI paths change. Updates preserve stored documents and saved exposure settings.
 
 ## Set up a source checkout for development
 
@@ -104,7 +159,7 @@ Boot services are installed explicitly. Linux uses a systemd system service; mac
 html-inbox viewer service status
 ```
 
-See the [service setup instructions](docs/self-hosting.md) for installation, removal, custom inbox paths, exposure configuration, and behavior under `sudo`. Keep the selected Node and CLI executable paths available across reboot. Removing a service preserves the library's documents.
+See the [service setup instructions](docs/self-hosting.md) for installation, removal, custom inbox paths, exposure configuration, and behavior under `sudo`. A boot service needs deliberately installed Node and CLI executables at stable absolute paths. Do not use an npm cache entry from the skill fallback as the persistent service executable. Keep the selected paths available across reboot. Removing a service preserves the library's documents.
 
 ## Export a static inbox
 
@@ -186,6 +241,8 @@ corepack pnpm verify
 ```
 
 `verify` runs a clean build, unit and integration tests, Chromium browser tests, and the package smoke test. Named tests exercise validation, storage, static export determinism, Cloudflare command recording, remote-operation recovery, security headers, and escaping of untrusted metadata. The browser suite checks theme persistence, search, and document isolation. CI installs dependencies and builds with Node 24, then tests the CLI on Node 20 and 24 on Linux and Node 24 on Windows.
+
+Documentation changes do not require an npm release. npm receives changes to `packages/cli/README.md` with the next normal package release.
 
 ## License
 

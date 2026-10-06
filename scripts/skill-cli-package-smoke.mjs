@@ -71,7 +71,8 @@ try {
   }
 
   if (!cleanupFailure) {
-    await rm(temporaryRoot, { recursive: true, force: true });
+    // Windows can briefly retain an executable lock after its child process closes.
+    await rm(temporaryRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 
   if (failure && cleanupFailure) {
