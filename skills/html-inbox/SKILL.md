@@ -9,6 +9,10 @@ Publish a finished HTML artifact into the local private document library. `publi
 
 This skill owns local publishing and viewer operation. For Cloudflare setup, remote publishing, recovery, or revocation, use [`html-inbox-remote`](../html-inbox-remote/SKILL.md).
 
+## Resolve the CLI
+
+Before running commands, follow [CLI resolution](./references/cli-resolution.md). It selects a compatible installed CLI or the pinned npm fallback and defines the `inbox` command used below. Keep that selected prefix and inbox environment for the whole operation.
+
 ## Publish
 
 ### 1. Fix the publish contract
@@ -24,10 +28,10 @@ This step is complete when the exact source path, title, and type are known and 
 Run:
 
 ```sh
-html-inbox publish ./report.html --title "SvelteKit Migration Report" --type report
+inbox publish ./report.html --title "SvelteKit Migration Report" --type report
 ```
 
-Quote paths and metadata when they contain shell-significant characters. Set `HTML_INBOX_HOME` or `HTML_INBOX_PORT` only when the user requested a non-default library or the default port is unavailable.
+Quote paths and metadata when they contain shell-significant characters. Preserve inherited `HTML_INBOX_HOME` and `HTML_INBOX_PORT`. Set or change either only when the user requested another library or port.
 
 Publishing is complete only when the command exits successfully and prints a URL such as `http://127.0.0.1:3217/documents/<id>`. Treat that printed URL as authoritative; do not construct or report one after a failed command.
 
@@ -60,7 +64,7 @@ When publishing succeeds with warnings, preserve the printed URL, report the war
 `publish` normally starts or reuses the viewer. Start it directly only when the user wants a long-running viewer process or when diagnosing startup:
 
 ```sh
-html-inbox viewer
+inbox viewer
 ```
 
 Defaults and overrides:
