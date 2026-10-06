@@ -55,7 +55,7 @@ if ($inboxInstalled) {
       $inboxExecutable = $inboxInstalled.Source
     }
   } catch {
-    Write-Warning "Installed HTML Inbox version check failed: $_"
+    [Console]::Error.WriteLine("Installed HTML Inbox version check failed: $_")
   }
 }
 
