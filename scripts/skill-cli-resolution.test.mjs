@@ -54,6 +54,20 @@ for (const shell of shells) {
     assert.equal((await fixture.commands()).at(-1).executable, "html-inbox");
   });
 
+  test(`${path.basename(shell)} preserves a single operation argument`, async (t) => {
+    for (const version of ["0.2.0", null]) {
+      const fixture = await createExecutables(t, { version });
+      const result = await runResolvedCli(resolution, ["--version"], { ...fixture, shell });
+      assert.equal(result.code, 0, result.stderr);
+      assert.equal(result.stdout.trim(), "0.2.0");
+
+      const commands = await fixture.commands();
+      assert.equal(commands.length, 2);
+      const prefix = version ? [] : ["--yes", "html-inbox@0.2.0"];
+      assert.deepEqual(commands.at(-1).args, [...prefix, "--version"]);
+    }
+  });
+
   if (/(?:pwsh|powershell)(?:\.exe)?$/.test(shell)) {
     test(`${path.basename(shell)} converts literal and variable numeric arguments to native strings`, async (t) => {
       for (const version of ["0.2.0", null]) {

@@ -27,7 +27,7 @@ export async function runResolvedCli(resolution, args, { cwd, env = {}, shell } 
     : "/bin/bash");
   const isPowerShell = /(?:^|[/\\])(?:pwsh|powershell)(?:\.exe)?$/.test(command);
   const shellArguments = isPowerShell
-    ? ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", `$ErrorActionPreference = 'Stop'\n${resolution.powershell}\n$operationArguments = ConvertFrom-Json $env:HTML_INBOX_TEST_ARGUMENTS\ninbox @operationArguments\nexit $LASTEXITCODE`]
+    ? ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", `$ErrorActionPreference = 'Stop'\n${resolution.powershell}\n$operationArguments = [string[]](ConvertFrom-Json $env:HTML_INBOX_TEST_ARGUMENTS)\ninbox @operationArguments\nexit $LASTEXITCODE`]
     : ["-c", `${resolution.bash}\ninbox "$@"`, "skill-operation", ...args];
 
   return runCommand(command, shellArguments, {
