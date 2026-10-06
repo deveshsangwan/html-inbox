@@ -11,8 +11,9 @@ export async function readResolution() {
   const remoteRunner = await readFile(new URL("../skills/html-inbox-remote/scripts/windows-cli.cjs", import.meta.url), "utf8");
   assert.equal(remoteRunner, runner, "Both skills must carry their own identical Windows dispatcher");
 
-  const bash = /```bash\n([\s\S]*?)\n```/.exec(reference)?.[1];
-  const powershell = /```powershell\n([\s\S]*?)\n```/.exec(reference)?.[1];
+  const shellExamples = reference.replaceAll("\r\n", "\n");
+  const bash = /```bash\n([\s\S]*?)\n```/.exec(shellExamples)?.[1];
+  const powershell = /```powershell\n([\s\S]*?)\n```/.exec(shellExamples)?.[1];
   assert(bash && powershell, "Both shell examples must be executable");
 
   const skillDirectory = fileURLToPath(new URL("../skills/html-inbox/", import.meta.url)).replaceAll("'", "''");

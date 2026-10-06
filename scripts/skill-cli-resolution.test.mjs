@@ -54,6 +54,26 @@ for (const shell of shells) {
     assert.equal((await fixture.commands()).at(-1).executable, "html-inbox");
   });
 
+  if (/(?:pwsh|powershell)(?:\.exe)?$/.test(shell)) {
+    test(`${path.basename(shell)} converts literal and variable numeric arguments to native strings`, async (t) => {
+      for (const version of ["0.2.0", null]) {
+        const fixture = await createExecutables(t, { version });
+        const result = await runCommand(shell, [
+          "-NoLogo", "-NoProfile", "-NonInteractive", "-Command",
+          `$ErrorActionPreference = 'Stop'\n${resolution.powershell}\ninbox viewer --port 4321\n$port = 4322\ninbox viewer --port $port\nexit $LASTEXITCODE`,
+        ], fixture);
+        assert.equal(result.code, 0, result.stderr);
+
+        const operations = (await fixture.commands()).slice(-2).map(({ args }) => args);
+        const prefix = version ? [] : ["--yes", "html-inbox@0.2.0"];
+        assert.deepEqual(operations, [
+          [...prefix, "viewer", "--port", "4321"],
+          [...prefix, "viewer", "--port", "4322"],
+        ]);
+      }
+    });
+  }
+
   for (const version of [null, "0.1.9", "0.3.0", "1.0.0", "0.2.0-beta.1", "0.2.0+build", "0.2.01", "v0.2.0", "0.2.0\nunexpected", "garbage"]) {
     test(`${path.basename(shell)} falls back for ${version === null ? "an absent executable" : version}`, async (t) => {
       const fixture = await createExecutables(t, { version });

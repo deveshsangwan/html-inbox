@@ -52,7 +52,8 @@ if (-not (Test-Path -LiteralPath $inboxRunner -PathType Leaf)) { throw "Missing 
 
 function inbox {
   $inboxPreviousInvocation = $env:HTML_INBOX_SKILL_INVOCATION
-  $env:HTML_INBOX_SKILL_INVOCATION = ConvertTo-Json -Compress -InputObject @{ command = $inboxExecutable; args = @($inboxPrefix + $args) }
+  $inboxInvocationArguments = [string[]]@($inboxPrefix + $args)
+  $env:HTML_INBOX_SKILL_INVOCATION = ConvertTo-Json -Compress -InputObject @{ command = $inboxExecutable; args = @($inboxInvocationArguments) }
 
   try {
     & $inboxNode.Source $inboxRunner
