@@ -58,7 +58,7 @@ npx skills update html-inbox -g
 
 For project scope, run `npx skills update html-inbox -p` from that project. Substitute `html-inbox-remote` to update the optional Cloudflare skill. Omitting the name updates all skills in the selected scope. Interactive `npx skills update` without scope flags prompts for scope; `skills check` is an update alias, not a read-only check.
 
-You can also rerun the original `skills add` command with the same scope and agent selection. Refresh the whole skill, including its bundled references. The npm fallback remains pinned until updated skill instructions change it.
+You can also rerun the original `skills add` command with the same scope and agent selection. Refresh the whole skill, including its bundled references and scripts. The npm fallback remains pinned until updated skill instructions change it.
 
 Before changing CLI versions, stop an older viewer with the executable that started it. The new CLI refuses unverified older process records. Confirm the viewer has stopped before installing the new version:
 
