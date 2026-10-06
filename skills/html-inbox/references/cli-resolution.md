@@ -85,7 +85,7 @@ if (-not $inboxExecutable) {
 }
 ```
 
-Use `inbox publish ...`, `inbox viewer`, `inbox viewer status`, `inbox viewer stop`, and `inbox remote ...` throughout the operation. The skill's command examples use this wrapper. In a new shell or later operation, resolve again with the same inbox environment. Inspect or stop a detached viewer through the selected CLI even when the earlier npx invocation has exited. If calling commands directly, replace `inbox` with the complete selected prefix, including `--yes html-inbox@0.2.0` for the fallback.
+Use `inbox publish ...`, `inbox viewer`, `inbox viewer status`, `inbox viewer stop`, and `inbox remote ...` throughout the operation. The skill's command examples use this wrapper. In a new shell or later operation, resolve again with the same inbox environment. Inspect or stop a detached viewer through the selected CLI even when the earlier npx invocation has exited. Bash/zsh commands can also use the complete selected prefix directly, including `--yes html-inbox@0.2.0` for the fallback. In Windows PowerShell, retain the `inbox` dispatcher for every invocation so argument transport stays intact.
 
 Service status can use the selected prefix. Boot service installation and removal are separate, explicitly requested administrator operations through stable absolute Node and CLI paths in the [self-hosting guide](https://github.com/deveshsangwan/html-inbox/blob/main/docs/self-hosting.md#start-at-boot). An npx cache path is not a durable service installation. A persistent CLI installation is needed only when the user chooses a boot service.
 
