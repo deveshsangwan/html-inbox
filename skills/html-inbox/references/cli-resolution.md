@@ -35,10 +35,10 @@ inbox() {
 
 ## PowerShell on Windows
 
-Resolve native applications rather than aliases, functions, or npm's `.ps1` shims. `npx.cmd` works without changing PowerShell's script execution policy. The call operator and argument array preserve paths and titles containing spaces:
+Replace `<installed-skill-directory>` with this skill's absolute installation path. Resolve native applications rather than aliases, functions, or npm's `.ps1` shims. The bundled [Windows dispatcher](../scripts/windows-cli.cjs) reads arguments as JSON and runs npm shims through their Node entry points. This avoids CMD reparsing filenames and titles containing shell-significant characters and works without changing PowerShell's script execution policy. Unsupported installed wrappers fail their check and select the npm fallback.
 
 ```powershell
-$inboxNode = Get-Command node -CommandType Application -ErrorAction Stop | Select-Object -First 1
+$inboxNode = Get-Command node.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1
 $inboxNodeVersion = ((& $inboxNode.Source --version) -join "`n").Trim()
 if ($LASTEXITCODE -ne 0 -or $inboxNodeVersion -notmatch '^v([0-9]+)\.' -or [int]$Matches[1] -lt 20) {
   throw "HTML Inbox requires Node.js 20 or newer"
@@ -47,29 +47,41 @@ if ($LASTEXITCODE -ne 0 -or $inboxNodeVersion -notmatch '^v([0-9]+)\.' -or [int]
 $inboxInstalled = Get-Command html-inbox -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
 $inboxExecutable = $null
 $inboxPrefix = @()
-if ($inboxInstalled) {
-  try {
-    $inboxVersion = ((& $inboxInstalled.Source --version) -join "`n").Trim()
+$inboxRunner = Join-Path '<installed-skill-directory>' 'scripts/windows-cli.cjs'
+if (-not (Test-Path -LiteralPath $inboxRunner -PathType Leaf)) { throw "Missing installed skill resource: $inboxRunner" }
 
-    if ($LASTEXITCODE -eq 0 -and $inboxVersion -match '^0\.2\.(0|[1-9][0-9]*)$') {
-      $inboxExecutable = $inboxInstalled.Source
+function inbox {
+  $inboxPreviousInvocation = $env:HTML_INBOX_SKILL_INVOCATION
+  $env:HTML_INBOX_SKILL_INVOCATION = ConvertTo-Json -Compress -InputObject @{ command = $inboxExecutable; args = @($inboxPrefix + $args) }
+
+  try {
+    & $inboxNode.Source $inboxRunner
+  } finally {
+    $env:HTML_INBOX_SKILL_INVOCATION = $inboxPreviousInvocation
+  }
+}
+
+if ($inboxInstalled) {
+  $inboxExecutable = $inboxInstalled.Source
+  try {
+    $inboxVersion = ((inbox --version) -join "`n").Trim()
+
+    if ($LASTEXITCODE -ne 0 -or $inboxVersion -notmatch '^0\.2\.(0|[1-9][0-9]*)$') {
+      $inboxExecutable = $null
     }
   } catch {
     [Console]::Error.WriteLine("Installed HTML Inbox version check failed: $_")
+    $inboxExecutable = $null
   }
 }
 
 if (-not $inboxExecutable) {
   $inboxExecutable = (Get-Command npx.cmd -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
   $inboxPrefix = @('--yes', 'html-inbox@0.2.0')
-  $inboxVersion = ((& $inboxExecutable @inboxPrefix --version) -join "`n").Trim()
+  $inboxVersion = ((inbox --version) -join "`n").Trim()
 
   if ($LASTEXITCODE -ne 0) { throw "HTML Inbox npm fallback failed; see the original npm error above" }
   if ($inboxVersion -cne '0.2.0') { throw "Unexpected HTML Inbox fallback version: $inboxVersion" }
-}
-
-function inbox {
-  & $inboxExecutable @inboxPrefix @args
 }
 ```
 

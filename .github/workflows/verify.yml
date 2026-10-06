@@ -50,6 +50,12 @@ jobs:
       - name: Unit and integration tests
         run: node scripts/run-unit-tests.mjs
 
+      - name: Skill CLI resolution
+        run: node --test scripts/skill-cli-resolution.test.mjs scripts/skill-cli-windows.test.mjs
+
+      - name: Pinned npm skill fallback
+        run: node scripts/skill-cli-package-smoke.mjs
+
       - name: Install browser
         run: node node_modules/playwright/cli.js install --with-deps chromium
 
