@@ -5,7 +5,19 @@ description: Deploy HTML Inbox snapshots to Cloudflare Pages. Use when the user 
 
 # Remote HTML Inbox
 
-Operate the remote static snapshot of the local HTML Inbox. The local library remains the document source of truth; this skill never edits stored documents. Use [`html-inbox`](../html-inbox/SKILL.md) when the request is only to publish a document locally or operate the localhost viewer.
+Operate a Cloudflare Pages static snapshot of the local HTML Inbox. The local library remains the document source of truth; this skill never edits stored documents. Local publishing or deletion changes the live library, while Cloudflare changes only after a successful remote snapshot operation.
+
+Live Tailscale access uses the local viewer through HTTPS Serve and follows tailnet policy. It does not upload a Cloudflare snapshot or use a Cloudflare capability link. Choose the requested sharing model before acting. This remote skill works independently for Cloudflare operations. If the user instead wants local publishing, background viewer operation, LAN, or live Tailscale access, install the optional main skill if absent:
+
+```sh
+npx skills add deveshsangwan/html-inbox --skill html-inbox
+```
+
+The current `skills@1.7.0` installer requires Node.js 22.20.0 or newer for skill installation or updates. HTML Inbox itself, including the fallback used by an already-installed skill, requires Node.js 20 or newer.
+
+Choose a supported agent explicitly when needed, for example by appending `--agent codex -y`. Verify that agent's installed directory contains `SKILL.md`, `references/cli-resolution.md`, and the bundled `scripts/windows-cli.cjs` before using it. Installer exit code zero alone does not prove every selected agent target succeeded.
+
+Then follow the installed `html-inbox` skill, or read its [repository guidance](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/SKILL.md). Neither skill requires a checkout or an installed sibling to read its linked resources.
 
 ## Resolve the CLI
 
@@ -35,7 +47,7 @@ Setup is complete when `remote init` succeeds and `inbox remote status` reports 
 
 ## Publish a snapshot
 
-Run `inbox remote status` first. If setup is missing, use the setup branch; if an operation is pending, use the recovery branch before publishing.
+Run `inbox remote status` first. Use the same selected CLI and `HTML_INBOX_HOME` throughout the operation, preserving existing port, exposure, and Tailscale settings. Cloudflare operations do not require starting or reconfiguring the live viewer. If setup is missing, use the setup branch; if an operation is pending, use the recovery branch before publishing.
 
 Publish the complete current library:
 
@@ -65,7 +77,7 @@ Reconciliation checks Cloudflare deployment history for the recorded snapshot di
 
 If reconciliation reports an abandoned mutation lock, confirm the previous command and its child processes terminated on this machine, then run `inbox remote reconcile --recover-lock` with the same inbox home. Recovery verifies the lock record and requires the recorded PID to be absent. A live or reused PID and an inconclusive process check block recovery regardless of lock age.
 
-For an empty, partial, malformed, or incomplete record, an interrupted recovery guard, or a home shared across machines, follow [manual lock recovery](../../docs/remote-migration.md#manual-lock-recovery). Keep all commands and automation using that home stopped while backing up its private remote directory and removing only the two lock paths. Preserve the state, operation journal, and snapshot. If exclusive access cannot be established, leave the locks in place and report the blocker.
+For an empty, partial, malformed, or incomplete record, an interrupted recovery guard, or a home shared across machines, follow [manual lock recovery](https://github.com/deveshsangwan/html-inbox/blob/main/docs/remote-migration.md#manual-lock-recovery). Keep all commands and automation using that home stopped while backing up its private remote directory and removing only the two lock paths. Preserve the state, operation journal, and snapshot. If exclusive access cannot be established, leave the locks in place and report the blocker.
 
 If reconciliation reports that an ambiguously created project now exists, stop and explain that adopting it authorizes HTML Inbox to replace its complete deployed contents. After the user explicitly confirms that project, run `inbox remote reconcile --adopt`. Never adopt automatically or loop plain reconciliation.
 
@@ -87,6 +99,6 @@ Revocation is complete when status reports the new empty production deployment a
 
 ## Security boundary
 
-A remote capability URL is an unlisted bearer link, not authentication. Anyone who receives it can read and reshare the complete snapshot. Reveal it only in the direct user handoff, and never claim revocation deleted Cloudflare deployment history.
+A remote capability URL is an unlisted bearer link, not authentication. Anyone who receives it can read and reshare the complete snapshot. Reveal the exact printed production reader URL only in the direct user handoff, and never claim revocation deleted Cloudflare deployment history. Keep private viewer control URLs, tokens, process records, and remote state out of reader handoffs. Report browser rendering only for checks actually performed.
 
-When the user is migrating an existing library or needs the full operational caveats, read [`docs/remote-migration.md`](../../docs/remote-migration.md) before acting.
+When the user is migrating an existing library or needs the full operational caveats, read the [remote migration guide](https://github.com/deveshsangwan/html-inbox/blob/main/docs/remote-migration.md) before acting.
