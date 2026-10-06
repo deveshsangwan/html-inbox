@@ -31,6 +31,9 @@ try {
   const version = await runCli(resolution, ["--version"], consumerRoot, environment);
   assert.equal(version.stdout.trim(), "0.2.0", "Fallback version gate must select the pinned release");
   await verifyCachedPackage(environment.npm_config_cache);
+  const help = await runCli(resolution, ["--help"], consumerRoot, environment);
+  assert.match(help.stdout, /viewer service install \[--user <normal-user>\] \[viewer networking options\]/);
+  assert.match(help.stdout, /viewer service uninstall \[--user <normal-user>\]/);
 
   const sourcePath = path.join(temporaryRoot, "registry report & notes.html");
   const originalHtml = Buffer.from("<!doctype html><html><head><title>Registry report</title></head><body><h1>Pinned registry content</h1><p>Detached viewer test.</p></body></html>\n");

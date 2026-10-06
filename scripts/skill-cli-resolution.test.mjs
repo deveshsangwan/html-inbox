@@ -132,8 +132,29 @@ test("skills reach their own resolver before operations and use its prefix", asy
     const skill = await readFile(new URL(`../skills/${name}/SKILL.md`, import.meta.url), "utf8");
     assert.match(skill, /\[CLI resolution\]\(\.\/references\/cli-resolution\.md\)/);
     assert(skill.indexOf("## Resolve the CLI") < skill.indexOf(name === "html-inbox" ? "## Publish" : "## Choose the operation"));
-    assert.doesNotMatch(skill, /\bhtml-inbox (?:publish|viewer|remote)\b/);
+    assertSelectedCommandExamples(skill);
     assert.match(skill, /\binbox (?:publish|remote init)\b/);
+  }
+});
+
+test("command examples exempt only stable absolute Node and CLI service administration", () => {
+  for (const example of [
+    "sudo /absolute/path/to/node /absolute/path/to/html-inbox viewer service install --user alice --loopback --port 3217",
+    "sudo /absolute/path/to/node /absolute/path/to/html-inbox viewer service uninstall --user alice",
+    'sudo env HTML_INBOX_HOME="/absolute/inbox with spaces" \\\n  /absolute/path/to/node /absolute/path/to/html-inbox \\\n  viewer service install --user alice',
+  ]) {
+    assertSelectedCommandExamples(example);
+  }
+
+  for (const example of [
+    "sudo node /absolute/path/to/html-inbox viewer service install --user alice",
+    "sudo /absolute/path/to/node html-inbox viewer service install --user alice",
+    "sudo /absolute/path/to/node ./html-inbox viewer service install --user alice",
+    "sudo /absolute/path/to/node /absolute/path/to/html-inbox viewer service status",
+    "html-inbox viewer service uninstall --user alice",
+    "html-inbox publish report.html",
+  ]) {
+    assert.throws(() => assertSelectedCommandExamples(example));
   }
 });
 
@@ -233,4 +254,12 @@ function assertPreservedEnvironment(commands, env) {
       CLOUDFLARE_API_TOKEN: env.CLOUDFLARE_API_TOKEN,
     });
   }
+}
+
+function assertSelectedCommandExamples(skill) {
+  const commands = skill.replace(/\\\r?\n[ \t]*/g, " ");
+  const stableAdministration = /\bsudo[ \t]+(?:env[ \t]+(?:[A-Za-z_][A-Za-z0-9_]*=(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s"']+)[ \t]+)+)?\/absolute\/path\/to\/node[ \t]+\/absolute\/path\/to\/html-inbox[ \t]+viewer[ \t]+service[ \t]+(?:install|uninstall)\b/g;
+  const ordinaryCommands = commands.replace(stableAdministration, "stable service administrator command");
+
+  assert.doesNotMatch(ordinaryCommands, /\bhtml-inbox (?:publish|viewer|remote)\b/);
 }

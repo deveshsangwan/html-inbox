@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -51,6 +51,37 @@ test("Windows dispatcher validates the JSON boundary before running a command", 
     assert(result.stderr.length > 0);
   }
 });
+
+for (const [fixtureName, prefixArguments] of [["npm-bundled-npx.cmd", []], ["npm-legacy-npx.cmd", ["prefix", "-g"]]]) {
+  for (const hasGlobalNpm of [false, true]) {
+    test(`Windows dispatcher runs ${fixtureName} with ${hasGlobalNpm ? "global" : "bundled"} npm`, async (t) => {
+      const fixture = await createShim(t);
+      await copyFile(new URL(`./fixtures/${fixtureName}`, import.meta.url), fixture.shim);
+      const npmBin = path.join(path.dirname(fixture.shim), "node_modules", "npm", "bin");
+      const prefix = path.join(fixture.root, "configured npm prefix");
+      await mkdir(npmBin, { recursive: true });
+      const prefixScript = prefixArguments.length ? "npm-cli.js" : "npm-prefix.js";
+      await writeFile(path.join(npmBin, prefixScript), `
+const assert = require("node:assert/strict");
+assert.deepEqual(process.argv.slice(2), ${JSON.stringify(prefixArguments)});
+console.log(${JSON.stringify(prefix)});
+`);
+      await writeFile(path.join(npmBin, "npx-cli.js"), 'console.log(JSON.stringify({ entry: "bundled", args: process.argv.slice(2) }));\n');
+      if (hasGlobalNpm) {
+        const globalBin = path.join(prefix, "node_modules", "npm", "bin");
+        await mkdir(globalBin, { recursive: true });
+        await writeFile(path.join(globalBin, "npx-cli.js"), 'console.log(JSON.stringify({ entry: "global", args: process.argv.slice(2) }));\n');
+      }
+
+      const args = ["--yes", "html-inbox@0.2.0", "publish", "R&D.html", "--title", '"Results" %PATH%'];
+      const result = await runCommand(process.execPath, [dispatcher], {
+        env: { HTML_INBOX_SKILL_INVOCATION: JSON.stringify({ command: fixture.shim, args }) },
+      });
+      assert.equal(result.code, 0, result.stderr);
+      assert.deepEqual(JSON.parse(result.stdout), { entry: hasGlobalNpm ? "global" : "bundled", args });
+    });
+  }
+}
 
 async function createShim(t) {
   const root = await mkdtemp(path.join(tmpdir(), "html-inbox Windows argv "));
