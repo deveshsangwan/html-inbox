@@ -35,7 +35,7 @@ for (const shell of shells) {
 
   test(`${path.basename(shell)} uses a compatible installed CLI and preserves arguments/environment`, async (t) => {
     const fixture = await createExecutables(t, { version: "0.2.0" });
-    const args = ["publish", "report&notes with spaces.html", "--title", 'R&D "results" %PATH% | $growth', "--type", "report"];
+    const args = ["publish", "report&notes with spaces.html", "--title", 'R&D "results" %PATH% | $growth Résumé δ', "--type", "report", ""];
     const result = await runResolvedCli(resolution, args, { ...fixture, shell });
     assert.equal(result.code, 0, result.stderr);
 
