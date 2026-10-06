@@ -2,7 +2,7 @@
 
 Resolve once before the first command in an operation. A global CLI installation is optional. Installing or updating this skill changes agent instructions and resources; npm installation changes the executable. Keep those installers independent and run either installer only when the user chooses it.
 
-Check `node --version` first. Use Node.js 20 or newer. The fallback also needs npm and access to its configured registry, or a cached copy of the pinned package. If a prerequisite is missing, report it and stop before publishing.
+Check `node --version` first. Use Node.js 20 or newer. The fallback also needs npm and access to its configured registry, or a cached copy of the pinned package. If a prerequisite is missing, report it and stop before publishing. These runtime requirements apply to an already-installed skill. Installing or updating it with the current `npx skills` installer requires Node.js 22.20.0 or newer.
 
 Use an installed `html-inbox` only when `--version` succeeds and its trimmed output matches `^0\.2\.(0|[1-9][0-9]*)$`. This accepts stable 0.2.x releases. Missing executables, failed checks, malformed versions, older versions, prereleases, and other minor or major versions select `npx --yes html-inbox@0.2.0`. Check that fallback's `--version` succeeds and prints exactly `0.2.0` before using it. Keep the version pinned; `latest` and unversioned npx are not this fallback.
 
