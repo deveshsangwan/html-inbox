@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta
+      name="description"
+      content="Install HTML Inbox agent skills, choose project or global scope, resolve the CLI on first use, and update skills separately from npm."
+    />
+    <title>Set up your agent | HTML Inbox docs</title>
+    <link
+      rel="canonical"
+      href="https://deveshsangwan.github.io/html-inbox/docs/agent-setup.html"
+    />
+    <script src="../assets/theme.js"></script>
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/docs.css" />
+    <script src="../assets/site.js" defer></script>
+  </head>
+  <body class="docs-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav">
+        <a class="brand" href="../index.html" aria-label="HTML Inbox home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M3.5 4h13v12h-13zM3.5 11h3.25l1.5 2h3.5l1.5-2h3.25"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>HTML Inbox</span>
+        </a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" aria-current="true">Docs</a>
+          <a href="https://github.com/deveshsangwan/html-inbox">GitHub</a>
+          <a class="nav-cta" href="https://www.npmjs.com/package/html-inbox"
+            >npm package</a
+          >
+          <button
+            class="theme-toggle"
+            type="button"
+            data-theme-toggle
+            aria-label="Switch to dark mode"
+            hidden
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle
+                cx="10"
+                cy="10"
+                r="7"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path d="M10 3a7 7 0 0 1 0 14V3Z" fill="currentColor" />
+            </svg>
+            <span data-theme-label>Dark mode</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+    <div class="shell docs-layout">
+      <aside class="docs-sidebar">
+        <nav class="docs-nav" aria-label="Documentation">
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Use HTML Inbox</p>
+            <ul>
+              <li>
+                <a href="index.html">Getting started</a>
+              </li>
+              <li><a href="agent-setup.html" aria-current="page">Agent setup</a></li>
+              <li><a href="publishing.html">Publish documents</a></li>
+              <li><a href="html-compatibility.html">HTML compatibility</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Run and share</p>
+            <ul>
+              <li><a href="viewer.html">Viewer</a></li>
+              <li><a href="lan.html">LAN access</a></li>
+              <li><a href="tailscale.html">Tailscale access</a></li>
+              <li><a href="boot-services.html">Boot services</a></li>
+              <li><a href="remote.html">Static and remote publishing</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Reference</p>
+            <ul>
+              <li><a href="security-storage.html">Security and storage</a></li>
+              <li><a href="cli-reference.html">CLI reference</a></li>
+              <li><a href="troubleshooting.html">Troubleshooting</a></li>
+              <li><a href="development.html">Development</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+      <main class="docs-article" id="main">
+        <details class="docs-mobile-nav">
+          <summary>Documentation navigation</summary>
+          <nav class="docs-nav" aria-label="Mobile documentation">
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Use HTML Inbox</p>
+              <ul>
+                <li>
+                  <a href="index.html">Getting started</a>
+                </li>
+                <li><a href="agent-setup.html" aria-current="page">Agent setup</a></li>
+              <li><a href="publishing.html">Publish documents</a></li>
+                <li>
+                  <a href="html-compatibility.html">HTML compatibility</a>
+                </li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Run and share</p>
+              <ul>
+                <li><a href="viewer.html">Viewer</a></li>
+                <li><a href="lan.html">LAN access</a></li>
+                <li><a href="tailscale.html">Tailscale access</a></li>
+                <li><a href="boot-services.html">Boot services</a></li>
+                <li><a href="remote.html">Static and remote publishing</a></li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Reference</p>
+              <ul>
+                <li>
+                  <a href="security-storage.html">Security and storage</a>
+                </li>
+                <li><a href="cli-reference.html">CLI reference</a></li>
+                <li><a href="troubleshooting.html">Troubleshooting</a></li>
+                <li><a href="development.html">Development</a></li>
+              </ul>
+            </div>
+          </nav>
+        </details>
+        <p class="docs-eyebrow">HTML Inbox documentation</p>
+        <h1>Set up your agent</h1>
+        <p class="docs-lead">
+          Start with the main skill to let your agent publish HTML and manage
+          the live viewer. The current skills installer needs Node.js 22.20.0
+          or newer and npm. The HTML Inbox CLI itself supports Node.js 20 or
+          newer. A source checkout and a global CLI installation are optional.
+        </p>
+
+        <h2 id="install">Install the main skill</h2>
+        <div class="command">
+          <code id="skill-command">npx skills add deveshsangwan/html-inbox --skill html-inbox -g</code>
+          <button
+            class="copy-button"
+            type="button"
+            data-copy-target="skill-command"
+            data-copy-status="skill-status"
+            hidden
+          >Copy command</button>
+        </div>
+        <p class="copy-status" id="skill-status" aria-live="polite"></p>
+        <p>
+          The skill supplies agent instructions for publishing, viewer
+          lifecycle, LAN, Tailscale, and boot-service setup. The npm
+          <code>html-inbox</code> package supplies the executable that performs
+          those operations.
+        </p>
+        <p>
+          The installers are independent. Adding a skill does not install a
+          global CLI, and installing the CLI does not add a skill. Manual
+          terminal users can <a href="index.html#install">install the CLI</a>
+          first and add agent instructions later.
+        </p>
+
+        <h2 id="scope">Choose project scope and target agents</h2>
+        <p>
+          <code>-g</code> installs in your user directory for use across projects.
+          Omit it to install in the current project. The installer lets you
+          choose target agents. Use <code>--agent</code> to choose explicitly,
+          such as <code>codex</code> or <code>claude-code</code>.
+        </p>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="Project skill installation command"><code>npx skills add deveshsangwan/html-inbox --skill html-inbox --agent codex</code></pre>
+        </div>
+        <p>
+          Add <code>-g</code> to that command if you want the same agent selection
+          globally. Add <code>--yes</code> only when you want to skip installer
+          confirmation prompts. Follow your agent's instructions for loading
+          newly installed skills. Choose a supported agent explicitly for
+          unattended installation, and check the installer's per-agent results.
+        </p>
+        <p>List available skills in the public repository without installing them:</p>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="List repository skills command"><code>npx skills add deveshsangwan/html-inbox --list</code></pre>
+        </div>
+        <p>
+          To inspect installed project skills, use <code>npx skills list</code>.
+          Use <code>npx skills list -g</code> for global installations.
+          See the <a href="https://github.com/vercel-labs/skills#readme">official skills CLI reference</a>
+          for supported agents and installer options.
+        </p>
+
+        <h2 id="first-use">Resolve the CLI on first use</h2>
+        <p>
+          Ask your agent to publish a finished HTML file, for example,
+          &quot;Publish ./report.html to HTML Inbox with the title Project update
+          and type report.&quot; The installed skill checks the CLI before
+          publishing.
+        </p>
+        <p>
+          A successful <code>html-inbox --version</code> returning a single
+          stable 0.2.x version selects the installed executable. A missing,
+          failed, malformed, older, prerelease, or newer minor or major version
+          selects the tested npm fallback. The skill checks that the fallback
+          reports exactly 0.2.0 before continuing.
+        </p>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="Pinned fallback verification command"><code>npx --yes html-inbox@0.2.0 --version</code></pre>
+        </div>
+        <p>
+          The fallback runs the package through npm without installing a global
+          command. It needs registry access or an already cached package. The
+          skill uses the same selected command prefix throughout the operation.
+          A download or startup failure must be resolved before the agent can
+          report a successful document URL.
+        </p>
+        <p>
+          <code>HTML_INBOX_HOME</code>, <code>HTML_INBOX_PORT</code>, and
+          <code>HTML_INBOX_TAILSCALE_COMMAND</code> keep their existing values.
+          First viewer startup uses loopback; later publishing and viewer starts
+          preserve saved exposure settings. Ordinary publishing does not add
+          LAN or Tailscale flags. The printed URL is authoritative.
+        </p>
+        <p>
+          A boot service needs deliberately installed Node and CLI executables
+          at stable absolute paths. An npm cache entry from the fallback is not
+          a durable service installation. If you choose boot startup, follow
+          <a href="boot-services.html">the explicit administrator setup guide</a>.
+          Ordinary skill use does not require this installation.
+        </p>
+
+        <h2 id="remote">Add the optional Cloudflare skill</h2>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="Optional Cloudflare skill installation command"><code>npx skills add deveshsangwan/html-inbox --skill html-inbox-remote -g</code></pre>
+        </div>
+        <p>
+          <code>html-inbox-remote</code> handles Cloudflare Pages setup, snapshot
+          publishing, recovery, and revocation. It installs independently of the
+          main skill and uses the same CLI-resolution rules. Omit <code>-g</code>
+          for project scope, and use <code>--agent</code> as above.
+        </p>
+        <p>
+          Cloudflare publishes the complete library as a static snapshot. Its
+          unlisted capability URL is a bearer link: anyone with it can read and
+          reshare that snapshot. It is separate from the live viewer served on
+          your <a href="lan.html">LAN</a> or through
+          <a href="tailscale.html">Tailscale</a>. Read
+          <a href="remote.html">static and remote publishing</a> before setup.
+        </p>
+
+        <h2 id="update">Update skills separately from the CLI</h2>
+        <p>Update the global main skill by name:</p>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="Global main skill update command"><code>npx skills update html-inbox -g</code></pre>
+        </div>
+        <p>For a project installation, run this from that project instead:</p>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="Project main skill update command"><code>npx skills update html-inbox -p</code></pre>
+        </div>
+        <p>
+          Substitute <code>html-inbox-remote</code> to update the optional
+          Cloudflare skill. Omitting the name updates all skills in the selected
+          scope. Interactive <code>npx skills update</code> without scope flags
+          prompts for project, global, or both. <code>--yes</code> skips that
+          prompt and auto-detects project scope when in a project, otherwise global. <code>skills check</code> is an update alias, not a
+          read-only check. These commands do not update the npm CLI.
+        </p>
+        <p>
+          You can also rerun the original individual <code>skills add</code>
+          command with the same scope and agent selection. Refresh the complete
+          skill directory, including bundled references, so CLI-resolution
+          guidance stays together. The fallback stays pinned until an updated
+          skill changes it. See the
+          <a href="https://github.com/vercel-labs/skills#skills-update">official update reference</a>.
+        </p>
+        <p>
+          Before changing CLI versions, stop an older viewer using the
+          executable that started it. Stop a foreground viewer with Ctrl-C.
+          The new CLI refuses unverifiable older process records. Confirm the
+          viewer has stopped before installing the new version. Follow
+          <a href="index.html#update">CLI update instructions</a> for npm and
+          <a href="boot-services.html#updating">service update instructions</a>
+          if you use boot startup. Updates preserve stored documents and saved
+          exposure settings.
+        </p>
+
+        <nav class="docs-page-links" aria-label="Adjacent documentation pages">
+          <a href="index.html">Getting started</a>
+          <a href="publishing.html">Next: Publish documents</a>
+        </nav>
+        <p class="docs-source">
+          See a mistake?
+          <a href="https://github.com/deveshsangwan/html-inbox/issues">Report a documentation issue</a>.
+        </p>
+      </main>
+      <aside class="docs-toc">
+        <nav aria-label="On this page">
+          <p class="docs-toc-label">On this page</p>
+          <ul>
+            <li><a href="#install">Install the main skill</a></li>
+            <li><a href="#scope">Scope and target agents</a></li>
+            <li><a href="#first-use">First-use CLI resolution</a></li>
+            <li><a href="#remote">Optional Cloudflare skill</a></li>
+            <li><a href="#update">Update skills and the CLI</a></li>
+          </ul>
+        </nav>
+      </aside>
+    </div>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span
+          >HTML Inbox ·
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/LICENSE"
+            >MIT license</a
+          ></span
+        ><a href="https://github.com/deveshsangwan/html-inbox"
+          >Source on GitHub</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>

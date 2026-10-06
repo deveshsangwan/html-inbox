@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#f8fafc" />
     <meta
       name="description"
-      content="Install HTML Inbox with npm, publish a first HTML report, browse the local library, and update safely."
+      content="Set up the HTML Inbox agent skill or install the CLI with npm, publish a first report, and update safely."
     />
     <title>Start with one HTML file | HTML Inbox docs</title>
     <link
@@ -17,6 +17,7 @@
     <script src="../assets/theme.js"></script>
     <link rel="stylesheet" href="../assets/site.css" />
     <link rel="stylesheet" href="../assets/docs.css" />
+    <script src="../assets/site.js" defer></script>
   </head>
   <body class="docs-page">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -78,6 +79,7 @@
               <li>
                 <a href="index.html" aria-current="page">Getting started</a>
               </li>
+              <li><a href="agent-setup.html">Agent setup</a></li>
               <li><a href="publishing.html">Publish documents</a></li>
               <li><a href="html-compatibility.html">HTML compatibility</a></li>
             </ul>
@@ -113,6 +115,7 @@
                 <li>
                   <a href="index.html" aria-current="page">Getting started</a>
                 </li>
+                <li><a href="agent-setup.html">Agent setup</a></li>
                 <li><a href="publishing.html">Publish documents</a></li>
                 <li>
                   <a href="html-compatibility.html">HTML compatibility</a>
@@ -145,12 +148,45 @@
         <p class="docs-eyebrow">HTML Inbox documentation</p>
         <h1>Start with one HTML file</h1>
         <p class="docs-lead">
-          Install HTML Inbox, publish a report, and keep it in a searchable
-          local library. You need Node.js 20 or newer. You do not need a source
-          checkout.
+          Set up your agent or install the CLI for terminal use, then publish a
+          report to your local library. The skills installer needs Node.js
+          22.20.0 or newer; the HTML Inbox CLI needs Node.js 20 or newer. Both
+          use npm. You do not need a source checkout.
         </p>
 
-        <h2 id="install">Install the CLI</h2>
+        <h2 id="agent-setup">Set up your agent</h2>
+        <p>
+          Start with the main skill when you want your agent to publish files
+          and manage the viewer. It installs agent instructions for your user
+          across projects.
+        </p>
+        <div class="command">
+          <code id="skill-command">npx skills add deveshsangwan/html-inbox --skill html-inbox -g</code>
+          <button
+            class="copy-button"
+            type="button"
+            data-copy-target="skill-command"
+            data-copy-status="skill-status"
+            hidden
+          >Copy command</button>
+        </div>
+        <p class="copy-status" id="skill-status" aria-live="polite"></p>
+        <p>
+          The skill and CLI installers are independent. Adding a skill does not
+          install a global executable. On first use, the skill reuses a working,
+          stable <code>html-inbox</code> 0.2.x CLI or selects
+          <code>npx --yes html-inbox@0.2.0</code> for the operation. The fallback
+          needs registry access or a cached package and preserves your existing
+          viewer settings.
+        </p>
+        <p>
+          See <a href="agent-setup.html">agent setup</a> for project installation,
+          target agents, the optional Cloudflare skill, and updates. If you want
+          to run commands yourself, install the CLI below. You can add a skill
+          later.
+        </p>
+
+        <h2 id="install">Install the CLI for terminal use</h2>
         <p>
           Install the latest published package from npm. These docs describe the
           0.2 release, including background viewers and live self-hosting. Check
@@ -168,8 +204,9 @@ html-inbox --help</code></pre>
         </div>
         <p>
           For occasional use, <code>npx html-inbox --help</code> runs the npm
-          package without a global install. The examples in this guide use the
-          installed <code>html-inbox</code> command. The CLI supports Linux,
+          package without a global install. Installing the npm package does not
+          install agent skills. The examples in this guide use the installed
+          <code>html-inbox</code> command. The CLI supports Linux,
           macOS, and Windows. Boot service installation supports Linux with
           systemd and macOS.
         </p>
@@ -292,9 +329,13 @@ html-inbox viewer stop</code></pre>
         </p>
         <h2 id="update">Update an installation</h2>
         <p>
-          Stop an old viewer before upgrading. The 0.2 private process-control
-          protocol differs from earlier releases, and the new CLI refuses to
-          signal a process it cannot verify.
+          Update agent instructions separately using the
+          <a href="agent-setup.html#update">skill update instructions</a>.
+          Before changing CLI versions, stop an old viewer using the executable
+          that started it. The 0.2 private process-control protocol differs from
+          earlier releases, and the new CLI refuses to
+          signal a process it cannot verify. Confirm the old viewer has stopped
+          before installing the new version.
         </p>
         <div class="docs-code">
           <pre
@@ -330,7 +371,8 @@ html-inbox viewer</code></pre>
         <nav aria-label="On this page">
           <p class="docs-toc-label">On this page</p>
           <ul>
-            <li><a href="#install">Install the CLI</a></li>
+            <li><a href="#agent-setup">Set up your agent</a></li>
+            <li><a href="#install">Install the CLI for terminal use</a></li>
             <li><a href="#first-document">Publish your first document</a></li>
             <li><a href="#find-documents">Find and manage documents</a></li>
             <li><a href="#next-step">Choose where readers can open it</a></li>

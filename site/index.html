@@ -69,9 +69,28 @@
           <h1 id="hero-title">A home for the HTML you make.</h1>
           <p class="landing-lead">
             Save generated reports, notes and dashboards in one searchable
-            library. Publish a file from your terminal, then read it in your
-            browser.
+            library. Publish with your agent or from your terminal, then read it
+            in your browser.
           </p>
+          <p class="landing-install-note">For your agent</p>
+          <div class="command landing-install">
+            <code id="skill-command">npx skills add deveshsangwan/html-inbox --skill html-inbox -g</code>
+            <button
+              class="copy-button"
+              type="button"
+              data-copy-target="skill-command"
+              data-copy-status="skill-status"
+              hidden
+            >
+              Copy command
+            </button>
+          </div>
+          <p class="copy-status" id="skill-status" aria-live="polite"></p>
+          <p class="landing-install-note">
+            Install agent instructions. The skill resolves the CLI on first use.
+            <a href="docs/agent-setup.html">Agent setup guide</a>
+          </p>
+          <p class="landing-install-note">For your terminal</p>
           <div class="command landing-install">
             <code id="install-command">npm install --global html-inbox</code>
             <button
@@ -86,7 +105,8 @@
           </div>
           <p class="copy-status" id="install-status" aria-live="polite"></p>
           <p class="landing-install-note">
-            Requires Node.js 20 or newer. Free and open source.
+            Skill installer: Node.js 22.20.0 or newer. CLI: Node.js 20 or newer.
+            Both need npm.
           </p>
           <div class="landing-hero-links">
             <a class="button" href="docs/">Publish your first document</a>
@@ -464,8 +484,8 @@
         <div>
           <h2 id="closing-title">Give your next report a place to land.</h2>
           <p>
-            Install the CLI, publish an HTML file and open the URL. The guides
-            walk through the rest.
+            Set up your agent or install the CLI, then publish an HTML file.
+            The guides walk through the rest.
           </p>
         </div>
         <a class="button" href="docs/">Get started</a>
