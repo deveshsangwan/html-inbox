@@ -229,6 +229,7 @@ Existing local users can follow the [remote migration guide](docs/remote-migrati
 Use Node.js 24 from the checkout root. Build or run the unit and integration tests:
 
 ```sh
+corepack pnpm typecheck
 corepack pnpm build
 corepack pnpm test
 ```
@@ -240,7 +241,17 @@ corepack pnpm exec playwright install chromium
 corepack pnpm verify
 ```
 
-`verify` runs a clean build, unit and integration tests, Chromium browser tests, and the package smoke test. Named tests exercise validation, storage, static export determinism, Cloudflare command recording, remote-operation recovery, security headers, and escaping of untrusted metadata. The browser suite checks theme persistence, search, and document isolation. CI installs dependencies and builds with Node 24, then tests the CLI on Node 20 and 24 on Linux and Node 24 on Windows.
+`verify` runs typechecking, a clean build, unit and integration tests, Chromium browser tests, website checks, and the package smoke test. Named tests exercise validation, storage, static export determinism, Cloudflare command recording, remote-operation recovery, security headers, and escaping of untrusted metadata. The browser suite checks theme persistence, search, and document isolation. CI installs dependencies, typechecks, and builds with Node 24, then tests the CLI on Node 20 and 24 on Linux and Node 24 on Windows.
+
+### TypeScript compiler
+
+`typecheck`, `build`, and the CLI package's `prepack` use [tsc-rs](https://github.com/pingdotgg/ts-rust/tree/v0.7.0), pinned to `0.7.0`, with the standard checker settings. The existing ES2022 target, Node16 modules and resolution, strict checks, Node types, declaration emit, and `src`/`dist` layout remain configured in the two tsconfigs. There are no project references, watch commands, or framework typechecks.
+
+`build` emits JavaScript and declarations. The CLI package's `bundle` command bundles `dist/index.js` with ncc; `npm pack` compiles and bundles through `prepack`. Keep the emitting build in validation: [upstream issue 86](https://github.com/pingdotgg/ts-rust/issues/86) can hide declaration diagnostics during `--noEmit` checks. The published CLI contains the ncc bundle, not the intermediate declarations.
+
+No repository code imports the TypeScript compiler API, so there is no direct `typescript` dependency. ncc retains its own bundled JavaScript TypeScript compiler for TypeScript inputs; this repository feeds it emitted JavaScript. That upstream implementation and editor language services are separate from the migrated CLI commands.
+
+Use the frozen lockfile and keep optional dependencies enabled. CI needs `@tsc-rs/linux-x64` on Linux and `@tsc-rs/win32-x64` on Windows; the npm package also supports macOS and Linux/Windows arm64. No Rust toolchain is needed. pnpm explicitly disables the optional `tsc-rs` postinstall optimization, so its Node launcher starts the native compiler without running dependency build scripts. Check the installed release with `corepack pnpm list tsc-rs --depth 0`; `tsc-rs --version` reports the underlying TypeScript `7.1.0-dev`, not `0.7.0`. To roll back, revert the migration commit with `git revert`, then reinstall with `corepack pnpm install --frozen-lockfile`.
 
 Documentation changes do not require an npm release. npm receives changes to `packages/cli/README.md` with the next normal package release.
 
