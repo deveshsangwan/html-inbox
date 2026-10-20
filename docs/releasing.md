@@ -86,3 +86,5 @@ npm exec --yes --registry=https://registry.npmjs.org/ --package=html-inbox@0.2.1
 Compare `dist.integrity` with the tested archive's SHA-512 integrity. Confirm that `latest` points to the intended stable version. Record a matching `v<version>` Git tag at the reviewed release commit and attach the tested archive to release notes when creating a GitHub release.
 
 If npm reports an error after uploading, query the exact version before retrying. A version that already exists cannot be overwritten or republished. Preserve the tested artifact and command output while determining whether the upload completed.
+
+npm may accept the upload before the version becomes publicly available. The publish workflow retries its registry lookup for up to five minutes and compares the public integrity with the verified archive. If verification times out after a successful upload, check the registry again; do not rerun publication just to repeat verification.
