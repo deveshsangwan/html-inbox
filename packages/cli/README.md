@@ -14,7 +14,7 @@ npx skills add deveshsangwan/html-inbox --skill html-inbox -g
 
 A skill supplies agent instructions; this npm package supplies the executable. The installers are independent. Adding a skill does not install a global CLI, and installing the CLI does not add a skill.
 
-On first use, the skill reuses a working, stable `html-inbox` 0.2.x executable or uses the tested `npx --yes html-inbox@0.2.0` fallback for the operation. It preserves your inbox home, port, saved viewer exposure, and Tailscale executable override. The HTML Inbox runtime requires Node.js 20 or newer. The fallback needs npm and registry access or a cached package.
+On first use, the skill reuses a working, stable `html-inbox` 0.2.x executable or uses its tested, version-pinned npm fallback for the operation. The [CLI resolution reference](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/cli-resolution.md) records the current pin. It preserves your inbox home, port, saved viewer exposure, and Tailscale executable override. The HTML Inbox runtime requires Node.js 20 or newer. The fallback needs npm and registry access or a cached package.
 
 `-g` installs for your user across projects. Omit it for the current project. Choose an agent interactively or add `--agent codex` or `--agent claude-code`:
 
@@ -112,7 +112,7 @@ html-inbox preferences --appearance dark
 html-inbox preferences --json
 ```
 
-The saved default lives in `<HTML_INBOX_HOME>/preferences.json`, or `~/.html-inbox/preferences.json` with the default home. Static exports capture it when created. Explicit agent setup offers this choice once and can be skipped; ordinary publishing never waits for an appearance question. Older CLIs, including the skill's pinned 0.2.0 fallback, lack `preferences`; the skill checks command support before using it.
+The saved default lives in `<HTML_INBOX_HOME>/preferences.json`, or `~/.html-inbox/preferences.json` with the default home. Static exports capture it when created. Explicit agent setup offers this choice once and can be skipped; ordinary publishing never waits for an appearance question. Older CLIs, including 0.2.0, lack `preferences`; the skill checks command support before using it.
 
 New documents generated with the skill include light and dark styles and follow viewer appearance, with an OS fallback when opened standalone. Existing HTML remains unchanged; hardcoded colors may need adaptation. Intentional white paper previews and chart or image colors stay authored. See the [document appearance contract](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/document-appearance.md) and [reusable template](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/assets/document-template.html).
 

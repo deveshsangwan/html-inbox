@@ -2,6 +2,16 @@
 
 All notable changes to HTML Inbox will be documented here.
 
+## 0.2.1 - 2026-10-20
+
+- Replace stacked viewer headers with a compact toolbar and responsive inbox list on mobile and desktop.
+- Add Hide frame and Show frame controls that preserve document scroll and interactive state.
+- Follow System appearance by default with saved Light and Dark browser overrides and an optional setup default through the new `preferences` command.
+- Keep theme-aware documents in sync with the viewer, fix transparent dark document backgrounds, and provide a reusable dual-theme skill template and examples.
+- Keep documents readable when the saved appearance file is invalid, logging the error and using System without overwriting the file.
+
+Restart a running viewer to load the new interface. Version 0.2.x viewers keep the same process-control protocol and preserve stored documents. Stop a viewer started by 0.1.0 with its original executable before upgrading.
+
 ## 0.2.0 - 2026-10-04
 
 - Start or reuse a background viewer from both `viewer` and `publish`, with `--foreground` for debugging and service managers.
