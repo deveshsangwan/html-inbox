@@ -246,6 +246,31 @@
           Ordinary skill use does not require this installation.
         </p>
 
+        <h2 id="appearance">Choose a setup appearance</h2>
+        <p>
+          During explicit setup, the agent offers an optional one-time choice
+          of System, Light, or Dark. System is preselected; skipping keeps it.
+          Ordinary publishing never waits for this question. The agent preserves
+          an existing setup preference unless you ask to change it.
+        </p>
+        <p>
+          The agent checks whether the selected CLI supports
+          <code>preferences</code> before saving the choice. The pinned 0.2.0
+          fallback predates this command and keeps the System fallback. A CLI
+          with preference support can save a different default:
+        </p>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="Set document appearance preference"><code>html-inbox preferences --appearance dark</code></pre>
+        </div>
+        <p>
+          New documents authored through the skill include both light and dark
+          styles. They follow the viewer appearance and use the OS when opened
+          standalone. The saved setup default applies when a browser has no
+          override. Reader appearance changes stay in that browser and do not
+          write back to the CLI; selecting System follows the reader's OS.
+          See <a href="viewer.html#appearance">viewer appearance</a>.
+        </p>
+
         <h2 id="remote">Add the optional Cloudflare skill</h2>
         <div class="docs-code">
           <pre role="region" tabindex="0" aria-label="Optional Cloudflare skill installation command"><code>npx skills add deveshsangwan/html-inbox --skill html-inbox-remote -g</code></pre>
@@ -317,6 +342,7 @@
             <li><a href="#install">Install the main skill</a></li>
             <li><a href="#scope">Scope and target agents</a></li>
             <li><a href="#first-use">First-use CLI resolution</a></li>
+            <li><a href="#appearance">Setup appearance</a></li>
             <li><a href="#remote">Optional Cloudflare skill</a></li>
             <li><a href="#update">Update skills and the CLI</a></li>
           </ul>

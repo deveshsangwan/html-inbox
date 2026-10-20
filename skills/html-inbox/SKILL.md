@@ -1,6 +1,6 @@
 ---
 name: html-inbox
-description: Publish HTML artifacts to HTML Inbox. Use when the user wants to publish or open a document, operate its background viewer, choose loopback, LAN, or Tailscale reader access, manage boot startup, or diagnose a rejected document.
+description: Publish HTML artifacts to HTML Inbox. Use when the user wants to publish or open a document, set up document appearance, operate its background viewer, choose loopback, LAN, or Tailscale reader access, manage boot startup, or diagnose a rejected document.
 ---
 
 # HTML Inbox
@@ -15,13 +15,33 @@ npx skills add deveshsangwan/html-inbox --skill html-inbox-remote
 
 The current `skills@1.7.0` installer requires Node.js 22.20.0 or newer for skill installation or updates. HTML Inbox itself, including the fallback used by an already-installed skill, requires Node.js 20 or newer.
 
-Choose a supported agent explicitly when needed, for example by appending `--agent codex -y`. Verify that agent's installed directory contains `SKILL.md`, `references/cli-resolution.md`, and the bundled `scripts/windows-cli.cjs` before using it. Installer exit code zero alone does not prove every selected agent target succeeded.
+Choose a supported agent explicitly when needed, for example by appending `--agent codex -y`. Verify that agent's installed directory contains `SKILL.md`, `references/cli-resolution.md`, `references/document-appearance.md`, `assets/document-template.html`, and the bundled `scripts/windows-cli.cjs` before using it. Installer exit code zero alone does not prove every selected agent target succeeded.
 
 Then follow the installed `html-inbox-remote` skill, or read its [repository guidance](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox-remote/SKILL.md). This skill requires neither a repository checkout nor that optional skill for live viewer operations.
 
 ## Resolve the CLI
 
 Before running commands, follow [CLI resolution](./references/cli-resolution.md). It selects a compatible installed CLI or the pinned npm fallback and defines the `inbox` command used below. Keep that selected prefix and inbox environment for the whole operation.
+
+## Set up appearance
+
+During an explicit HTML Inbox setup request, offer the optional appearance choice once: **System** by default, or **Light** or **Dark**. Skipping the question keeps System. Installation and ordinary publishing continue without this question.
+
+First check `inbox --help` for the `preferences` command. The pinned 0.2.0 fallback predates it. If absent, keep System and explain that saving a setup preference requires a CLI with `preferences` support; continue other authorized setup work. Keep the selected CLI and version pin unchanged.
+
+When supported, inspect `inbox preferences --json`. If the selected inbox home already contains `preferences.json`, preserve its preference and skip the setup question unless the user asks to change it. Otherwise, save the chosen value, or the default when skipped:
+
+```sh
+inbox preferences --appearance system
+```
+
+Use `light` or `dark` for an explicit override. Setup is complete when the saved preference matches the choice. Later explicit preference changes use the same command. Reader appearance changes are browser-local overrides; they do not write back to this CLI preference. Selecting System in the reader follows that device's OS even when the saved setup default differs.
+
+## Author documents
+
+When creating or adapting an HTML document for publishing, read [document appearance](./references/document-appearance.md) and use its [self-contained template](./assets/document-template.html). Generate both light and dark styles. The viewer selects their appearance; the standalone document follows the OS. Keep intentional image, chart, and paper colors intact.
+
+An existing finished file remains the publish source unless the user requests adaptation. Publishing does not rewrite stored HTML or convert old hardcoded colors.
 
 ## Publish
 

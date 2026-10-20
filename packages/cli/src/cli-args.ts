@@ -2,11 +2,13 @@ import { parseArgs } from "node:util";
 import type { PublishRequest } from "./publish-input";
 import type { RemoteInitOptions } from "./remote-workflow";
 import type { ViewerExposure, ViewerNetworkOptions } from "./viewer-network";
+import { parseAppearance, type Appearance } from "./preferences";
 
 export type CliCommand =
   | { command: "help" | "version" }
   | { command: "publish"; options: PublishRequest }
   | { command: "list"; json: boolean }
+  | { command: "preferences"; appearance?: Appearance; json: boolean }
   | { command: "delete"; id: string; force: boolean; json: boolean }
   | { command: "export"; options: { outputDir: string; capability?: string; json: boolean } }
   | { command: "viewer"; action?: "status" | "stop"; foreground?: boolean; port?: number; exposure?: ViewerExposure; host?: string }
@@ -54,6 +56,19 @@ export function parseCommand(argv: string[]): CliCommand {
     case "remote status": {
       const { values } = parseArgs({ args, options: { json: { type: "boolean" } } });
       return { command: name, json: values.json ?? false };
+    }
+
+    case "preferences": {
+      const { values } = parseArgs({
+        args,
+        options: { appearance: { type: "string" }, json: { type: "boolean" } },
+      });
+
+      return {
+        command: name,
+        ...(values.appearance === undefined ? {} : { appearance: parseAppearance(values.appearance) }),
+        json: values.json ?? false,
+      };
     }
 
     case "delete": {

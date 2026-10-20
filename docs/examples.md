@@ -10,6 +10,8 @@ corepack pnpm html-inbox publish ./examples/dashboard.html \
   --title "Support queue dashboard" --type dashboard
 corepack pnpm html-inbox publish ./examples/mermaid.html \
   --title "Document publishing flow" --type diagram
+corepack pnpm html-inbox publish ./skills/html-inbox/assets/document-template.html \
+  --title "Document appearance example" --type example
 ```
 
 If you use the installed CLI, replace `corepack pnpm html-inbox` with
@@ -21,6 +23,7 @@ if you have not built the CLI yet.
 | [report.html](../examples/report.html) | Read the rollout decision and results table. Open "How the measurements were taken". |
 | [dashboard.html](../examples/dashboard.html) | Select Billing, Platform, or Accounts. The queue table and its ticket count update locally. |
 | [mermaid.html](../examples/mermaid.html) | View the saved flowchart and expand its source. Choose "Render from source" to run Mermaid v11 in the preview. |
+| [document-template.html](../skills/html-inbox/assets/document-template.html) | Switch appearance and open the review notes. The surrounding report changes theme while the white paper preview keeps dark text. |
 
 All data is fictional. The report and dashboard need no network access.
 The Mermaid file includes a saved SVG rendered from its source, so it also
@@ -30,17 +33,21 @@ and source remain readable.
 
 The examples use inline CSS, native HTML controls, and scripts registered with
 `addEventListener`. They need no framework, external stylesheet, image, font,
-or data service. The viewer's appearance selector changes the viewer shell;
-each document keeps its own styling.
+or data service. All examples include light and dark styles and follow the
+viewer's selected appearance. System follows the reader's OS; Light and Dark
+override it. The Mermaid chart keeps its authored light palette while the
+surrounding document changes theme. The reusable template also demonstrates an
+intentional white paper preview. Open an example standalone to try its OS fallback.
 
 ## In the viewer
 
-These Chromium captures show the actual local viewer with the files above.
-The desktop images use a 1280 × 900 viewport, with a taller 1280 × 1300 capture
-for the flowchart. The narrow image uses 320 × 900. The narrow capture uses an
-extra copy of the report with a longer title to check wrapping.
+These Chromium captures show the actual local viewer with the examples and
+reusable appearance template above. Desktop captures use a 1280 × 900 viewport;
+the mobile capture uses 320 × 900. An extra report with a longer title checks
+that the compact toolbar truncates the title with an ellipsis. The full title
+remains available in Viewer options with the document metadata.
 
-![HTML Inbox listing the report, dashboard, and Mermaid example](assets/viewer-inbox.png)
+![Compact HTML Inbox list with the examples and appearance template](assets/viewer-inbox.png)
 
 ![Migration report open inside the local viewer](assets/viewer-report.png)
 
@@ -48,8 +55,14 @@ extra copy of the report with a longer title to check wrapping.
 
 ![Mermaid publishing flow open inside the local viewer](assets/viewer-mermaid.png)
 
-![Viewer at 320 pixels wide with a long report title and enlarged appearance controls](assets/viewer-narrow.png)
+![Compact mobile viewer at 320 pixels wide with a long report title truncated in the toolbar](assets/viewer-narrow.png)
 
-To check the controls, choose Light or Dark, reload, and confirm the choice
-persists. Keyboard users can tab to Appearance and use the arrow keys to switch
-options. Search the inbox for `dashboard` or `report` to find those examples.
+Open **Viewer options** to choose System, Light, or Dark and inspect document
+details. Choose Light or Dark, reload, and confirm that the viewer and document
+keep the selected appearance. Keyboard users can open the menu and tab to its
+appearance buttons. Browser choices stay on this origin and device.
+
+Choose **Hide frame** to give the document the available browser area, then use
+**Show frame** to restore the compact toolbar. An open disclosure or selected
+dashboard filter should stay unchanged. Search the inbox for `dashboard` or
+`report` to find those examples.

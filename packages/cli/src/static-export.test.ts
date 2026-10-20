@@ -8,6 +8,33 @@ import { exportStaticSnapshot } from "./static-export";
 import { DOCUMENT_CSP } from "./viewer-assets";
 import { temporaryHome } from "./test-fixtures";
 
+test("static snapshots carry an appearance default in shells and preserve document bytes", async (t) => {
+  const home = await temporaryHome(t);
+  const backend = new LocalDocumentBackend(home);
+  const originalBytes = Buffer.from("<!doctype html><html><body>Original document</body></html>");
+  const document = await backend.publish({
+    originalBytes,
+    title: "Theme report",
+    type: "report",
+    sourceFileName: "theme.html",
+  });
+  const snapshot = await exportStaticSnapshot(backend, {
+    outputDir: path.join(home, "snapshot"),
+    appearance: "dark",
+  });
+  const inboxDirectory = path.join(snapshot.outputDir, snapshot.inboxPath.slice(1));
+
+  for (const shellPath of ["index.html", `documents/${document.id}/index.html`]) {
+    const shell = await readFile(path.join(inboxDirectory, shellPath), "utf8");
+    assert.match(shell, /name="html-inbox-appearance" content="dark"/);
+  }
+
+  assert.deepEqual(
+    await readFile(path.join(inboxDirectory, "documents", document.id, "content", "index.html")),
+    originalBytes,
+  );
+});
+
 test("static export preserves bytes, metadata and atomic replacement", async (t) => {
   const home = await temporaryHome(t);
   const backend = new LocalDocumentBackend(home);

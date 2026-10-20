@@ -16,6 +16,7 @@ import { containsPath } from "./path-containment";
 import { parseViewerNetworkConfig } from "./viewer-network";
 import { getViewerServiceStatus, installViewerService, resolveViewerServiceHome, uninstallViewerService } from "./viewer-service";
 import { configureViewerServiceLogging } from "./viewer-service-log";
+import { readPreferences, setAppearancePreference } from "./preferences";
 
 export const USAGE = `Usage: html-inbox <command> [options]
 
@@ -25,6 +26,10 @@ Commands:
 
   list [--json]
       List locally stored documents.
+
+  preferences [--appearance <system|light|dark>] [--json]
+      Show or set the default viewer and generated-document appearance.
+      System follows device settings and is the default.
 
   delete <id> [--force] [--json]
       Delete a document after confirmation.
@@ -92,6 +97,15 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     return;
   }
 
+  if (command === "preferences") {
+    const home = getInboxHome();
+    const preferences = parsed.appearance === undefined
+      ? await readPreferences(home)
+      : await setAppearancePreference(home, parsed.appearance);
+    console.log(parsed.json ? JSON.stringify(preferences, null, 2) : `Appearance: ${preferences.appearance}`);
+    return;
+  }
+
   if (command === "delete") {
     await deleteCommand(parsed);
     return;
@@ -104,7 +118,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     assertExportOutsideHome(options.outputDir, home);
     const result = await exportStaticSnapshot(
       new LocalDocumentBackend(home),
-      options,
+      { ...options, appearance: (await readPreferences(home)).appearance },
     );
     console.log(formatStaticExportResult(result, options.json));
     return;

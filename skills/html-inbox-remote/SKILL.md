@@ -45,6 +45,12 @@ Prefer a dedicated project. If the project already exists, stop and explain that
 
 Setup is complete when `remote init` succeeds and `inbox remote status` reports the intended account and project with no pending operation.
 
+## Snapshot appearance
+
+Snapshots use the same compact document toolbar and Hide frame / Show frame controls as the live viewer. Their setup default comes from the local inbox at export time; each reader can select System, Light, or Dark in their own browser. Browser changes do not sync back to the CLI or other devices. A new export is needed to change the snapshot's saved default.
+
+Remote publishing preserves original document bytes. When asked to author or adapt documents, use the main skill's [document appearance reference](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/document-appearance.md). Older documents with hardcoded colors need individual adaptation; the remote operation does not convert them.
+
 ## Publish a snapshot
 
 Run `inbox remote status` first. Use the same selected CLI and `HTML_INBOX_HOME` throughout the operation, preserving existing port, exposure, and Tailscale settings. Cloudflare operations do not require starting or reconfiguring the live viewer. If setup is missing, use the setup branch; if an operation is pending, use the recovery branch before publishing.

@@ -11,6 +11,99 @@ import {
 } from "./viewer-server";
 import { temporaryHome } from "./test-fixtures";
 import { DOCUMENT_CSP } from "./viewer-assets";
+import { readPreferences, setAppearancePreference } from "./preferences";
+
+test("viewer falls back to system for unreadable preferences without repairing them", async (t) => {
+  const home = await temporaryHome(t);
+  const backend = new LocalDocumentBackend(home);
+  const originalBytes = Buffer.from("<!doctype html><html><body>Readable report</body></html>");
+  const metadata = await backend.publish({
+    originalBytes,
+    title: "Readable report",
+    type: "report",
+    sourceFileName: "readable.html",
+  });
+  const diagnostics: unknown[] = [];
+  t.mock.method(console, "error", (message: unknown) => {
+    diagnostics.push(message);
+  });
+  const server = await startViewer(backend, home, 0);
+  t.after(() => new Promise<void>((resolve, reject) => {
+    server.close((error) => error ? reject(error) : resolve());
+  }));
+  const address = server.address();
+  assert(address && typeof address !== "string");
+  const baseUrl = `http://127.0.0.1:${address.port}`;
+  const documentUrl = `${baseUrl}/documents/${metadata.id}`;
+  const preferencesPath = path.join(home, "preferences.json");
+  const invalidRecords = [
+    "{",
+    '{"schemaVersion":2,"appearance":"dark"}',
+    '{"schemaVersion":1,"appearance":"invalid"}',
+    " ".repeat(4097),
+  ];
+
+  for (const contents of invalidRecords) {
+    await writeFile(preferencesPath, contents);
+    const diagnosticCount = diagnostics.length;
+
+    for (const url of [baseUrl, documentUrl]) {
+      const response = await fetch(url);
+      assert.equal(response.status, 200);
+      assert.match(await response.text(), /name="html-inbox-appearance" content="system"/);
+    }
+
+    assert.equal(diagnostics.length, diagnosticCount + 2);
+    for (const diagnostic of diagnostics.slice(diagnosticCount)) {
+      assert.match(String(diagnostic), /^html-inbox: Ignoring unreadable preferences:/);
+    }
+
+    await assert.rejects(readPreferences(home));
+    await assert.rejects(setAppearancePreference(home, "dark"));
+    assert.equal(await readFile(preferencesPath, "utf8"), contents);
+  }
+
+  const content = await fetch(`${documentUrl}/content`);
+  assert.equal(content.status, 200);
+  assert.deepEqual(Buffer.from(await content.arrayBuffer()), originalBytes);
+  assert.equal(content.headers.get("content-security-policy"), DOCUMENT_CSP);
+});
+
+test("viewer reads the saved appearance without restarting or modifying documents", async (t) => {
+  const home = await temporaryHome(t);
+  const backend = new LocalDocumentBackend(home);
+  const originalBytes = Buffer.from("<!doctype html><html><body>Original report</body></html>");
+  const metadata = await backend.publish({
+    originalBytes,
+    title: "Appearance report",
+    type: "report",
+    sourceFileName: "appearance.html",
+  });
+  const server = await startViewer(backend, home, 0);
+  t.after(() => new Promise<void>((resolve, reject) => {
+    server.close((error) => error ? reject(error) : resolve());
+  }));
+  const address = server.address();
+  assert(address && typeof address !== "string");
+  const baseUrl = `http://127.0.0.1:${address.port}`;
+  const documentUrl = `${baseUrl}/documents/${metadata.id}`;
+  const systemIndex = await fetch(baseUrl);
+  assert.match(await systemIndex.text(), /name="html-inbox-appearance" content="system"/);
+
+  for (const appearance of ["dark", "light", "system"] as const) {
+    await setAppearancePreference(home, appearance);
+
+    for (const url of [baseUrl, documentUrl]) {
+      const response = await fetch(url);
+      assert.equal(response.status, 200);
+      assert.match(await response.text(), new RegExp(`name="html-inbox-appearance" content="${appearance}"`));
+    }
+  }
+
+  const content = await fetch(`${documentUrl}/content`);
+  assert.deepEqual(Buffer.from(await content.arrayBuffer()), originalBytes);
+  assert.equal(content.headers.get("content-security-policy"), DOCUMENT_CSP);
+});
 
 test("viewer serves isolated documents and searches metadata", async (t) => {
   const home = await temporaryHome(t);

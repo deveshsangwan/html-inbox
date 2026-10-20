@@ -15,6 +15,7 @@ test("publish accepts separated and equals options without changing metadata", (
 test("all commands reject unknown options and extra positional arguments", () => {
   for (const args of [
     ["list", "--unknown"], ["list", "extra"],
+    ["preferences", "extra"], ["preferences", "--unknown"],
     ["delete", "id", "extra", "--force"],
     ["publish", "one.html", "two.html", "--title=Title", "--type=report"],
     ["export", "--out=output", "extra"],
@@ -34,10 +35,28 @@ test("required and optional string flags reject missing or empty values", () => 
     ["publish", "report.html", "--title=", "--type=report"],
     ["publish", "report.html", "--title=Title"],
     ["delete"], ["export", "--out="], ["export", "--out=output", "--capability="],
+    ["preferences", "--appearance"], ["preferences", "--appearance="],
     ["remote", "init", "--account=id"],
     ["remote", "init", "--account=id", "--project=name", "--branch="],
   ]) {
     assert.throws(() => parseCommand(args), Error, args.join(" "));
+  }
+});
+
+test("preferences defaults to inspection and accepts only supported appearances", () => {
+  assert.deepEqual(parseCommand(["preferences"]), { command: "preferences", json: false });
+  assert.deepEqual(parseCommand(["preferences", "--json"]), { command: "preferences", json: true });
+
+  for (const appearance of ["system", "light", "dark"]) {
+    for (const flag of [["--appearance", appearance], [`--appearance=${appearance}`]]) {
+      assert.deepEqual(parseCommand(["preferences", ...flag, "--json"]), {
+        command: "preferences", appearance, json: true,
+      });
+    }
+  }
+
+  for (const appearance of ["auto", "Dark", " light", "dark "]) {
+    assert.throws(() => parseCommand(["preferences", `--appearance=${appearance}`]), /Appearance must be system, light, or dark/);
   }
 });
 

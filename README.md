@@ -130,6 +130,24 @@ html-inbox viewer stop
 
 Use `--json` with `list` or `delete` for automation. Non-interactive deletion requires `--force`. The viewer also supports server-rendered search across title, type, and source file name.
 
+## Reading documents and appearance
+
+The inbox has a compact searchable list. Documents open beneath a slim toolbar on mobile and desktop. **Hide frame** gives the document the available browser area; the small **Show frame** button restores the toolbar. The iframe remains mounted, preserving document state and scroll. Document metadata is available in the details menu.
+
+Appearance defaults to **System**, with **Light** and **Dark** overrides in the reader. The selected appearance applies to the inbox, frame, and documents that support it. Browser choices persist on that origin and device; they do not write to the CLI's preferences or sync across devices. Selecting System follows the reader's OS.
+
+Set the initial appearance for readers without a browser override:
+
+```sh
+html-inbox preferences --appearance system
+html-inbox preferences --appearance dark
+html-inbox preferences --json
+```
+
+The saved default lives in `<HTML_INBOX_HOME>/preferences.json`, or `~/.html-inbox/preferences.json` with the default home. Static exports capture it when created. Explicit agent setup offers this choice once and can be skipped; ordinary publishing never waits for an appearance question. Older CLIs, including the skill's pinned 0.2.0 fallback, lack `preferences`; the skill checks command support before using it.
+
+New documents generated with the skill include light and dark styles and follow viewer appearance, with an OS fallback when opened standalone. Existing HTML remains unchanged; hardcoded colors may need adaptation. Intentional white paper previews and chart or image colors stay authored. See the [document appearance contract](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/document-appearance.md) and [reusable template](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/assets/document-template.html).
+
 ## Serve the live inbox on a home server
 
 Expose the complete live library to devices that can reach a LAN port:
