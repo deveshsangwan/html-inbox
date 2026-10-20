@@ -67,6 +67,8 @@ npm trust github html-inbox --repo deveshsangwan/html-inbox --file publish.yml \
 
 Complete the browser 2FA challenge. Inspect existing relationships first; preserve unrelated configurations and do not revoke one simply to retry setup. Once the matching relationship is configured, no repeated setup is needed for subsequent releases.
 
+Complete the first successful publish within two days of creating the connection. Otherwise npm marks it expired and disables editing; delete that expired connection, recreate it with the values above, and publish before the new deadline.
+
 For a future release, merge the reviewed version change into main. Open Actions, choose **Publish npm release**, select **Run workflow** on main, and enter the exact package version. The workflow refuses a mismatched or non-stable version. It has a manual trigger so merging code or pushing an artifact tag does not publish unexpectedly. Successful trusted publishing from this public repository produces npm provenance automatically.
 
 The existing [Package release artifact workflow](../.github/workflows/package.yml) still creates verified archives on `v<version>` tags or manual runs and never publishes to npm. Website deployment, package artifact generation, and npm publication are separate workflows.
