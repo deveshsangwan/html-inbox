@@ -27,7 +27,7 @@ Before running commands, follow [CLI resolution](./references/cli-resolution.md)
 
 During an explicit HTML Inbox setup request, offer the optional appearance choice once: **System** by default, or **Light** or **Dark**. Skipping the question keeps System. Installation and ordinary publishing continue without this question.
 
-First check `inbox --help` for the `preferences` command. The pinned 0.2.0 fallback predates it. If absent, keep System and explain that saving a setup preference requires a CLI with `preferences` support; continue other authorized setup work. Keep the selected CLI and version pin unchanged.
+First check `inbox --help` for the `preferences` command. The pinned 0.2.1 fallback supports it, but an older installed 0.2.x executable may not. If absent, keep System and explain that saving a setup preference requires a CLI with `preferences` support; continue other authorized setup work. Keep the selected CLI and version pin unchanged.
 
 When supported, inspect `inbox preferences --json`. If the selected inbox home already contains `preferences.json`, preserve its preference and skip the setup question unless the user asks to change it. Otherwise, save the chosen value, or the default when skipped:
 

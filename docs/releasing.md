@@ -21,21 +21,21 @@ The source workspace uses Node.js 24, Corepack, and the pinned pnpm lockfile. Th
 
 Authenticate the package owner on the machine that will publish. Run `npm login --registry=https://registry.npmjs.org/` yourself, complete its browser sign-in, and check `npm whoami --registry=https://registry.npmjs.org/`. A 401 means the publishing session needs to be restored. Keep tokens, passwords, and recovery codes out of repository files and chat.
 
-Build and test the same archive you will publish. These commands are for version 0.2.0; replace that version for subsequent releases:
+Build and test the same archive you will publish. These commands are for version 0.2.1; replace that version for subsequent releases:
 
 ```sh
 mkdir -p artifacts
 cd packages/cli
 npm pack --pack-destination ../../artifacts
 cd ../..
-node scripts/package-smoke.mjs artifacts/html-inbox-0.2.0.tgz
-npm publish ./artifacts/html-inbox-0.2.0.tgz --dry-run --access public --registry=https://registry.npmjs.org/
+node scripts/package-smoke.mjs artifacts/html-inbox-0.2.1.tgz
+npm publish ./artifacts/html-inbox-0.2.1.tgz --dry-run --access public --registry=https://registry.npmjs.org/
 ```
 
 After the file list and installed-package checks pass, publish that exact archive:
 
 ```sh
-npm publish ./artifacts/html-inbox-0.2.0.tgz --access public --registry=https://registry.npmjs.org/
+npm publish ./artifacts/html-inbox-0.2.1.tgz --access public --registry=https://registry.npmjs.org/
 ```
 
 Complete any npm authentication or 2FA challenge. Local publication does not claim GitHub provenance. A dry run validates the archive; it does not prove that npm will authorize the real publish.
@@ -76,9 +76,9 @@ The existing [Package release artifact workflow](../.github/workflows/package.ym
 After publishing, inspect npm's version, tag, and integrity and exercise the public package:
 
 ```sh
-npm view html-inbox@0.2.0 version dist.integrity --registry=https://registry.npmjs.org/
+npm view html-inbox@0.2.1 version dist.integrity --registry=https://registry.npmjs.org/
 npm view html-inbox dist-tags --json --registry=https://registry.npmjs.org/
-npm exec --yes --registry=https://registry.npmjs.org/ --package=html-inbox@0.2.0 -- html-inbox --version
+npm exec --yes --registry=https://registry.npmjs.org/ --package=html-inbox@0.2.1 -- html-inbox --version
 ```
 
 Compare `dist.integrity` with the tested archive's SHA-512 integrity. Confirm that `latest` points to the intended stable version. Record a matching `v<version>` Git tag at the reviewed release commit and attach the tested archive to release notes when creating a GitHub release.
