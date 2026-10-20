@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Document appearance example</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      line-height: 1.6;
+      --background: light-dark(#ffffff, #11151c);
+      --text: light-dark(#252b36, #e6eaf1);
+      --muted: light-dark(#596273, #aeb7c7);
+      --surface: light-dark(#f4f6fa, #1c2330);
+      --border: light-dark(#d2d8e2, #414c5e);
+      --accent: light-dark(#3153bd, #9cb4ff);
+      color: var(--text);
+      background: var(--background);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--text); background: var(--background); }
+    main { width: min(100% - 32px, 760px); margin: 32px auto; }
+    h1, h2 { line-height: 1.2; }
+    h1 { font-size: clamp(28px, 5vw, 40px); }
+    h2 { font-size: 22px; }
+    a { color: var(--accent); }
+    .note { color: var(--muted); }
+    .card { margin-block: 24px; padding: 20px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); background: var(--surface); }
+    summary { min-height: 44px; cursor: pointer; color: var(--accent); }
+    summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+    .paper { color-scheme: light; color: #20242b; background: #fff; border: 1px solid #c9ced8; padding: 24px; }
+    .paper p { color: #424b58; }
+  </style>
+  <script>
+    window.addEventListener("message", (event) => {
+      if (event.source !== window.parent) {
+        return;
+      }
+
+      const appearance = event.data;
+
+      if (
+        appearance === null || typeof appearance !== "object" ||
+        appearance.type !== "html-inbox:appearance" ||
+        (appearance.theme !== "light" && appearance.theme !== "dark")
+      ) {
+        return;
+      }
+
+      document.documentElement.style.colorScheme = appearance.theme;
+    });
+  </script>
+</head>
+<body>
+  <main>
+    <h1>Project update</h1>
+    <p>This report follows the HTML Inbox appearance. Open it by itself and it follows your system settings.</p>
+    <p class="note">Replace this content while keeping matching text and background colors in both themes.</p>
+
+    <section class="card" aria-labelledby="status-title">
+      <h2 id="status-title">Ready for review</h2>
+      <p>The first release is ready. The supporting notes stay readable when appearance changes.</p>
+      <details>
+        <summary>Review notes</summary>
+        <p>This disclosure stays open when the frame is hidden or the appearance changes.</p>
+      </details>
+    </section>
+
+    <section aria-labelledby="paper-title">
+      <h2 id="paper-title">Print preview</h2>
+      <p class="note">This intentional white paper keeps its own paired dark text.</p>
+      <article class="paper" aria-label="White paper preview">
+        <h2>Release receipt</h2>
+        <p>Approved for the next staged rollout.</p>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

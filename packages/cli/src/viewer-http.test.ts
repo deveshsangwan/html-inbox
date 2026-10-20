@@ -11,6 +11,43 @@ import {
 } from "./viewer-server";
 import { temporaryHome } from "./test-fixtures";
 import { DOCUMENT_CSP } from "./viewer-assets";
+import { setAppearancePreference } from "./preferences";
+
+test("viewer reads the saved appearance without restarting or modifying documents", async (t) => {
+  const home = await temporaryHome(t);
+  const backend = new LocalDocumentBackend(home);
+  const originalBytes = Buffer.from("<!doctype html><html><body>Original report</body></html>");
+  const metadata = await backend.publish({
+    originalBytes,
+    title: "Appearance report",
+    type: "report",
+    sourceFileName: "appearance.html",
+  });
+  const server = await startViewer(backend, home, 0);
+  t.after(() => new Promise<void>((resolve, reject) => {
+    server.close((error) => error ? reject(error) : resolve());
+  }));
+  const address = server.address();
+  assert(address && typeof address !== "string");
+  const baseUrl = `http://127.0.0.1:${address.port}`;
+  const documentUrl = `${baseUrl}/documents/${metadata.id}`;
+  const systemIndex = await fetch(baseUrl);
+  assert.match(await systemIndex.text(), /name="html-inbox-appearance" content="system"/);
+
+  for (const appearance of ["dark", "light", "system"] as const) {
+    await setAppearancePreference(home, appearance);
+
+    for (const url of [baseUrl, documentUrl]) {
+      const response = await fetch(url);
+      assert.equal(response.status, 200);
+      assert.match(await response.text(), new RegExp(`name="html-inbox-appearance" content="${appearance}"`));
+    }
+  }
+
+  const content = await fetch(`${documentUrl}/content`);
+  assert.deepEqual(Buffer.from(await content.arrayBuffer()), originalBytes);
+  assert.equal(content.headers.get("content-security-policy"), DOCUMENT_CSP);
+});
 
 test("viewer serves isolated documents and searches metadata", async (t) => {
   const home = await temporaryHome(t);

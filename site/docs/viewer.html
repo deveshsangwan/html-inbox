@@ -148,6 +148,42 @@
           the CLI.
         </p>
 
+        <h2 id="reading">Read with more document space</h2>
+        <p>
+          Mobile and desktop use the same compact document toolbar. Back returns
+          to the searchable inbox; the details menu holds the filename, type,
+          and date. Choose <strong>Hide frame</strong> to give the document the
+          available browser area, then use the small <strong>Show frame</strong>
+          button to restore the toolbar. The document stays loaded and preserves
+          its scroll and interactive state. Browser controls remain visible.
+        </p>
+        <h2 id="appearance">Choose appearance</h2>
+        <p>
+          <strong>System</strong> is the default. Choose <strong>Light</strong>
+          or <strong>Dark</strong> to override it for this browser. The inbox,
+          toolbar, and supported documents follow the choice. Selecting System
+          follows this device's OS. Browser choices persist on the same origin
+          and device; they do not sync to other readers or the CLI.
+        </p>
+        <p>Set the initial preference for readers without a browser override:</p>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="Appearance preferences commands"><code>html-inbox preferences --appearance system
+html-inbox preferences --appearance dark
+html-inbox preferences --json</code></pre>
+        </div>
+        <p>
+          The CLI saves the default in <code>preferences.json</code> under the
+          selected inbox home. New static exports capture it when created.
+          Older CLIs, including the skill's pinned 0.2.0 fallback, lack this
+          command. Check <code>html-inbox --help</code> before using it.
+        </p>
+        <p>
+          New skill-generated documents include both themes. Existing documents
+          with hardcoded colors may need individual adaptation. Images, chart
+          colors, and intentional white paper previews keep their authored
+          appearance. Hiding the frame does not change the document theme.
+        </p>
+
         <h2 id="background">Start in the background</h2>
         <div class="docs-code">
           <pre
@@ -303,6 +339,8 @@ html-inbox viewer --loopback</code></pre>
         <nav aria-label="On this page">
           <p class="docs-toc-label">On this page</p>
           <ul>
+            <li><a href="#reading">Read with more space</a></li>
+            <li><a href="#appearance">Choose appearance</a></li>
             <li><a href="#background">Start in the background</a></li>
             <li><a href="#configuration">Select the inbox and port</a></li>
             <li><a href="#foreground">Keep it attached</a></li>

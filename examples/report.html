@@ -3,43 +3,53 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <title>SvelteKit migration report</title>
   <style>
     :root {
+      color-scheme: light dark;
+      --background: light-dark(#ffffff, #11151c);
+      --text: light-dark(#3d434f, #e6eaf1);
+      --heading: light-dark(#16181d, #f0f3f8);
+      --muted: light-dark(#5d626d, #aeb7c7);
+      --surface: light-dark(#f4f6ff, #1c2330);
+      --success: light-dark(#245d45, #85d4ad);
+      --pending: light-dark(#795415, #f0c87a);
+
       font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: #3d434f;
-      background: #fff;
+      color: var(--text);
+      background: var(--background);
       line-height: 1.6;
-      --accent: #3858c7;
-      --line: #d7dbe4;
+      --accent: light-dark(#3858c7, #9cb4ff);
+      --line: light-dark(#d7dbe4, #414c5e);
     }
     * { box-sizing: border-box; }
-    body { margin: 0; }
+    body { margin: 0; color: var(--text); background: var(--background); }
     main { width: min(100% - 40px, 860px); margin: 40px auto; }
-    h1, h2, h3 { color: #16181d; line-height: 1.2; }
+    h1, h2, h3 { color: var(--heading); line-height: 1.2; }
     h1 { margin: 0 0 16px; font-size: clamp(28px, 5vw, 42px); letter-spacing: -.04em; }
     h2 { margin: 0 0 18px; font-size: 23px; letter-spacing: -.02em; }
     h3 { margin: 0 0 8px; font-size: 17px; }
     p { margin: 0 0 16px; max-width: 72ch; }
     header { padding-bottom: 24px; border-bottom: 2px solid var(--accent); }
-    .byline, .note { color: #5d626d; font-size: 14px; }
+    .byline, .note { color: var(--muted); font-size: 14px; }
     .byline { margin-bottom: 12px; }
-    .decision { margin: 24px 0; padding: 20px; border-left: 3px solid var(--accent); background: #f4f6ff; }
+    .decision { margin: 24px 0; padding: 20px; border-left: 3px solid var(--accent); background: var(--surface); }
     .decision p { margin-bottom: 0; }
     .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin: 28px 0; }
     .metrics div { padding-bottom: 16px; border-bottom: 1px solid var(--line); }
     dt { font-size: 14px; }
-    dd { margin: 6px 0 0; color: #16181d; font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
-    dd small { color: #5d626d; font-size: 14px; font-weight: 400; }
+    dd { margin: 6px 0 0; color: var(--heading); font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    dd small { color: var(--muted); font-size: 14px; font-weight: 400; }
     section { margin-top: 32px; }
     .table-scroll { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-    caption { margin-bottom: 12px; text-align: left; color: #5d626d; }
+    caption { margin-bottom: 12px; text-align: left; color: var(--muted); }
     th, td { padding: 12px 14px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
-    thead th { color: #16181d; }
+    thead th { color: var(--heading); }
     tbody th { font-weight: 600; }
-    .status { color: #245d45; font-weight: 600; }
-    .pending { color: #795415; }
+    .status { color: var(--success); font-weight: 600; }
+    .pending { color: var(--pending); }
     ol { padding-left: 24px; }
     li { margin-bottom: 14px; }
     details { margin-top: 24px; border: 1px solid var(--line); border-radius: 8px; }
@@ -54,6 +64,25 @@
       dd { white-space: nowrap; }
     }
   </style>
+  <script>
+    window.addEventListener("message", (event) => {
+      if (event.source !== window.parent) {
+        return;
+      }
+
+      const appearance = event.data;
+
+      if (
+        appearance === null || typeof appearance !== "object" ||
+        appearance.type !== "html-inbox:appearance" ||
+        (appearance.theme !== "light" && appearance.theme !== "dark")
+      ) {
+        return;
+      }
+
+      document.documentElement.style.colorScheme = appearance.theme;
+    });
+  </script>
 </head>
 <body>
   <main>

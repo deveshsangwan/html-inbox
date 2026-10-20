@@ -8,6 +8,7 @@ import { LocalDocumentBackend } from "../packages/cli/dist/backend.js";
 import { exportStaticSnapshot } from "../packages/cli/dist/static-export.js";
 import { startViewer } from "../packages/cli/dist/viewer-server.js";
 import { validateHtml } from "../packages/cli/dist/html-validation.js";
+import { readPreferences, setAppearancePreference } from "../packages/cli/dist/preferences.js";
 
 export const isolationHtml = `<!doctype html><html><body>
   <h1>Quarterly results</h1><p id="isolation">loading</p><p id="network">loading</p>
@@ -56,7 +57,7 @@ export async function publishLibraryFixtures(backend) {
   return documents;
 }
 
-export async function createBrowserFixture(t, mode, publishDocuments) {
+export async function createBrowserFixture(t, mode, publishDocuments, options = {}) {
   const root = await mkdtemp(path.join(tmpdir(), "html-inbox-browser-"));
   let server;
   let browser;
@@ -75,13 +76,20 @@ export async function createBrowserFixture(t, mode, publishDocuments) {
   });
 
   const home = path.join(root, "home");
+  if (options.appearance !== undefined) {
+    await setAppearancePreference(home, options.appearance);
+  }
+
   const backend = new LocalDocumentBackend(home);
   const documents = await publishDocuments(backend);
   const requests = [];
   let inboxPath = "";
 
   if (mode === "static") {
-    const snapshot = await exportStaticSnapshot(backend, { outputDir: path.join(root, "snapshot") });
+    const snapshot = await exportStaticSnapshot(backend, {
+      outputDir: path.join(root, "snapshot"),
+      appearance: (await readPreferences(home)).appearance,
+    });
     assert.equal(snapshot.manifest.documentCount, documents.length);
     inboxPath = snapshot.inboxPath;
     server = await startStaticServer(snapshot, requests);
@@ -102,7 +110,7 @@ export async function createBrowserFixture(t, mode, publishDocuments) {
   const page = await context.newPage();
   page.setDefaultTimeout(10_000);
 
-  return { page, context, documents, requests, origin, inboxUrl: `${origin}${inboxPath}/` };
+  return { page, context, documents, requests, origin, home, inboxUrl: `${origin}${inboxPath}/` };
 }
 
 async function startStaticServer(snapshot, requests) {

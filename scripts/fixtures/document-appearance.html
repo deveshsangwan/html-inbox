@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root { color-scheme: light dark; }
+    html, body { background: transparent; }
+    body { margin: 16px; color: #18202c; font-family: system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) { body { color: #e7e9ef; } }
+    #paper { background: #fff; color: #111; padding: 16px; }
+    #spacer { height: 2000px; }
+  </style>
+</head>
+<body>
+  <h1>Theme-aware document</h1>
+  <p>The canvas stays transparent while the text follows the viewer appearance.</p>
+  <button id="increment" type="button">Increment</button>
+  <output id="counter">0</output>
+  <section id="paper">A paper preview keeps its original white background and black text.</section>
+  <div id="spacer"></div>
+  <p>End of document</p>
+  <script>
+    const systemAppearance = matchMedia('(prefers-color-scheme: dark)');
+    const reflectAppearance = () => {
+      document.documentElement.dataset.nativeTheme = systemAppearance.matches ? 'dark' : 'light';
+    };
+
+    reflectAppearance();
+    systemAppearance.addEventListener('change', reflectAppearance);
+    document.querySelector('#increment').addEventListener('click', () => {
+      const counter = document.querySelector('#counter');
+      counter.value = String(Number(counter.value) + 1);
+    });
+
+    addEventListener('message', (event) => {
+      if (event.source !== parent || event.data?.type !== 'html-inbox:appearance') return;
+      if (event.data.theme !== 'light' && event.data.theme !== 'dark') return;
+
+      document.documentElement.dataset.bridgeTheme = event.data.theme;
+    });
+  </script>
+</body>
+</html>

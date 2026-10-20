@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 import {
   createBrowserFixture,
@@ -29,18 +30,18 @@ for (const mode of ["local", "static"]) {
     assert.equal(response.status(), 200);
     await assertTheme(page, "dark");
 
-    await page.getByText("Light", { exact: true }).click();
+    await chooseAppearance(page, "Light");
     await page.reload();
     await assertTheme(page, "light");
-    await page.getByText("Dark", { exact: true }).click();
+    await chooseAppearance(page, "Dark");
     await page.reload();
     await assertTheme(page, "dark");
-    await page.getByText("System", { exact: true }).click();
+    await chooseAppearance(page, "System");
     await page.emulateMedia({ colorScheme: "light" });
     await assertTheme(page, "light");
     await page.emulateMedia({ colorScheme: "dark" });
     await assertTheme(page, "dark");
-    await page.getByText("Light", { exact: true }).click();
+    await chooseAppearance(page, "Light");
 
     const documentPath = `${new URL(inboxUrl).pathname}documents/${documents[0].id}${mode === "static" ? "/" : ""}`;
     await page.getByRole("link", { name: "Quarterly Report", exact: true }).click();
@@ -75,6 +76,161 @@ for (const mode of ["local", "static"]) {
       assert.equal(await page.getByText("Quarterly Report", { exact: true }).count(), 0);
     }
   });
+}
+
+for (const mode of ["local", "static"]) {
+  for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 1000 }]) {
+    test(`${mode} compact viewer preserves document state and appearance at ${viewport.width}px`, { timeout: 30_000 }, async (t) => {
+      const { page, inboxUrl, documents } = await createBrowserFixture(t, mode, publishAppearanceDocument);
+      await page.setViewportSize(viewport);
+      await page.goto(inboxUrl);
+      await assertTheme(page, "dark");
+      assert.equal(await page.locator("[data-hide-frame], [data-show-frame]").count(), 0);
+      await assertNoOuterOverflow(page);
+
+      await page.getByRole("link", { name: documents[0].title, exact: true }).click();
+      const documentFrame = page.locator("[data-document-frame]");
+      const frame = page.frameLocator("[data-document-frame]");
+      await frame.getByRole("heading", { name: "Theme-aware document" }).waitFor();
+      await assertDocumentTheme(frame, "dark");
+      assert.equal(await page.locator("body").getAttribute("data-frame-hidden"), null);
+      assert.equal(await page.getByText("document-appearance.html", { exact: true }).isVisible(), false);
+      assert.equal(await page.getByRole("button", { name: "Hide frame", exact: true }).isVisible(), true);
+      const compactBounds = await documentFrame.boundingBox();
+      assert(compactBounds.y <= 80, `Compact toolbar uses ${compactBounds.y}px above document`);
+      assert(compactBounds.height >= viewport.height * 0.85, "Document should occupy at least 85% of the viewport");
+      await assertNoOuterOverflow(page);
+
+      const fallbackBackground = await documentFrame.evaluate((element) => getComputedStyle(element).backgroundColor);
+      const fallbackChannels = fallbackBackground.match(/[\d.]+/g).map(Number);
+      assert(fallbackChannels.slice(0, 3).every((channel) => channel < 128), `Dark canvas must not be white: ${fallbackBackground}`);
+      assert.equal(fallbackChannels.length < 4 || fallbackChannels[3] > 0, true, "Document needs an opaque canvas fallback");
+      assert.equal(await frame.locator("body").evaluate((element) => getComputedStyle(element).backgroundColor), "rgba(0, 0, 0, 0)");
+      assert.equal(await frame.locator("body").evaluate((element) => getComputedStyle(element).color), "rgb(231, 233, 239)");
+      assert.deepEqual(await frame.locator("#paper").evaluate((element) => {
+        const style = getComputedStyle(element);
+
+        return { background: style.backgroundColor, color: style.color };
+      }), { background: "rgb(255, 255, 255)", color: "rgb(17, 17, 17)" });
+
+      const originalFrame = await documentFrame.elementHandle();
+      await frame.getByRole("button", { name: "Increment" }).click();
+      const viewerMenu = page.locator("details[data-viewer-menu]");
+      const menuToggle = viewerMenu.locator("summary");
+      await menuToggle.click();
+      await frame.getByRole("heading", { name: "Theme-aware document" }).click({ position: { x: 2, y: 2 } });
+      await page.locator("details[data-viewer-menu]:not([open])").waitFor();
+      assert.equal(await documentFrame.evaluate((element, original) => element === original, originalFrame), true);
+      assert.equal(await frame.locator("#counter").textContent(), "1");
+      assert.equal(await documentFrame.getAttribute("sandbox"), "allow-scripts");
+
+      await menuToggle.click();
+      await page.getByRole("radio", { name: "System", exact: true }).focus();
+      await page.keyboard.press("Escape");
+      assert.equal(await viewerMenu.getAttribute("open"), null);
+      assert.equal(await menuToggle.evaluate((element) => element === document.activeElement), true);
+
+      await frame.locator("body").evaluate(() => scrollTo(0, 350));
+      const initialScroll = await frame.locator("body").evaluate(() => scrollY);
+      assert(initialScroll >= 350);
+      await page.getByRole("button", { name: "Hide frame", exact: true }).click();
+      await page.locator("body[data-frame-hidden]").waitFor();
+      assert.equal(await page.getByRole("button", { name: "Show frame", exact: true }).evaluate((element) => element === document.activeElement), true);
+      const hiddenBounds = await documentFrame.boundingBox();
+      assert.deepEqual(hiddenBounds, { x: 0, y: 0, width: viewport.width, height: viewport.height });
+      assert.equal(await documentFrame.evaluate((element, original) => element === original, originalFrame), true);
+      assert.equal(await frame.locator("#counter").textContent(), "1");
+      assert.equal(await frame.locator("body").evaluate(() => scrollY), initialScroll);
+      await assertNoOuterOverflow(page);
+
+      await page.getByRole("button", { name: "Show frame", exact: true }).click();
+      assert.equal(await page.locator("body").getAttribute("data-frame-hidden"), null);
+      assert.equal(await page.getByRole("button", { name: "Hide frame", exact: true }).evaluate((element) => element === document.activeElement), true);
+      assert.equal(await documentFrame.evaluate((element, original) => element === original, originalFrame), true);
+      assert.equal(await frame.locator("#counter").textContent(), "1");
+      assert.equal(await frame.locator("body").evaluate(() => scrollY), initialScroll);
+
+      // Playwright's forced media preference bypasses iframe color-scheme inheritance.
+      await page.emulateMedia({ colorScheme: null });
+      await chooseAppearance(page, "Light");
+      await assertTheme(page, "light");
+      await assertDocumentTheme(frame, "light");
+      await page.reload();
+      await assertTheme(page, "light");
+      await assertDocumentTheme(frame, "light");
+      await chooseAppearance(page, "System");
+      await page.emulateMedia({ colorScheme: "dark" });
+      await assertDocumentTheme(frame, "dark");
+      await page.emulateMedia({ colorScheme: "light" });
+      await assertTheme(page, "light");
+      await assertDocumentTheme(frame, "light");
+      await page.emulateMedia({ colorScheme: null });
+      await chooseAppearance(page, "Dark");
+      await assertTheme(page, "dark");
+      await assertDocumentTheme(frame, "dark");
+      await page.getByRole("link", { name: "Back to inbox" }).click();
+      await assertTheme(page, "dark");
+      assert.equal(await page.locator("[data-hide-frame], [data-show-frame]").count(), 0);
+      await assertNoOuterOverflow(page);
+    });
+  }
+
+  test(`${mode} setup appearance is the default until this browser overrides it`, { timeout: 30_000 }, async (t) => {
+    const { page, inboxUrl, documents } = await createBrowserFixture(t, mode, publishAppearanceDocument, { appearance: "dark" });
+    await page.emulateMedia({ colorScheme: null });
+    await page.goto(inboxUrl);
+    await assertTheme(page, "dark");
+    await page.getByRole("link", { name: documents[0].title, exact: true }).click();
+    await assertDocumentTheme(page.frameLocator("[data-document-frame]"), "dark");
+    await chooseAppearance(page, "Light");
+    await page.reload();
+    await assertTheme(page, "light");
+    await page.getByRole("link", { name: "Back to inbox" }).click();
+    await assertTheme(page, "light");
+    await chooseAppearance(page, "System");
+    await page.emulateMedia({ colorScheme: "light" });
+    await assertTheme(page, "light");
+    await page.reload();
+    await assertTheme(page, "light");
+    await page.emulateMedia({ colorScheme: "dark" });
+    await assertTheme(page, "dark");
+  });
+}
+
+async function publishAppearanceDocument(backend) {
+  const html = await readFile(new URL("./fixtures/document-appearance.html", import.meta.url), "utf8");
+  const title = "A long document title that should leave room for controls on every phone and desktop screen";
+
+  return [await publishBrowserDocument(backend, title, "document-appearance.html", html)];
+}
+
+async function chooseAppearance(page, appearance) {
+  const menu = page.locator("details[data-viewer-menu]");
+
+  if (await menu.getAttribute("open") === null) {
+    await menu.locator("summary").click();
+  }
+
+  await page.getByText(appearance, { exact: true }).click();
+
+  if (await menu.getAttribute("open") !== null) {
+    await menu.locator("summary").click();
+  }
+}
+
+async function assertDocumentTheme(frame, theme) {
+  await frame.locator(`html[data-native-theme="${theme}"][data-bridge-theme="${theme}"]`).waitFor();
+}
+
+async function assertNoOuterOverflow(page) {
+  const dimensions = await page.evaluate(() => ({
+    width: innerWidth,
+    height: innerHeight,
+    scrollWidth: document.documentElement.scrollWidth,
+    scrollHeight: document.documentElement.scrollHeight,
+  }));
+  assert(dimensions.scrollWidth <= dimensions.width, `Horizontal overflow: ${JSON.stringify(dimensions)}`);
+  assert(dimensions.scrollHeight <= dimensions.height, `Outer page scrolls: ${JSON.stringify(dimensions)}`);
 }
 
 test("generated static inbox searches title, type, and file without server queries", { timeout: 30_000 }, async (t) => {

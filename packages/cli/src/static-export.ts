@@ -15,6 +15,7 @@ import {
   VIEWER_STYLES,
 } from "./viewer-assets";
 import { renderDocumentShell, renderIndex } from "./viewer-render";
+import type { Appearance } from "./preferences";
 
 const SNAPSHOT_SCHEMA_VERSION = 1;
 const OWNERSHIP_MARKER_PATH = "__html-inbox/ownership.json";
@@ -29,6 +30,7 @@ export interface StaticSnapshotOptions {
   capability?: string;
   ownerId?: string;
   generatedAt?: string;
+  appearance?: Appearance;
 }
 
 export interface SnapshotFile {
@@ -104,12 +106,13 @@ export async function exportStaticSnapshot(
       basePath: inboxPath,
       clientSearch: true,
       timeZone: "UTC",
+      appearance: options.appearance,
     }));
     await writeFile(`${inboxPath.slice(1)}/assets/viewer.css`, VIEWER_STYLES);
     await writeFile(`${inboxPath.slice(1)}/assets/viewer.js`, VIEWER_SCRIPT);
 
     for (const metadata of documents) {
-      await addDocumentFiles(writeFile, source, metadata, inboxPath);
+      await addDocumentFiles(writeFile, source, metadata, inboxPath, options.appearance);
     }
 
     await writeFile(
@@ -146,6 +149,7 @@ async function addDocumentFiles(
   source: SnapshotDocumentSource,
   metadata: DocumentMetadata,
   inboxPath: string,
+  appearance?: Appearance,
 ): Promise<void> {
   const document = await source.getDocument(metadata.id);
   if (!document) {
@@ -158,7 +162,7 @@ async function addDocumentFiles(
   const documentPath = `${inboxPath.slice(1)}/documents/${metadata.id}`;
   await writeFile(
     `${documentPath}/index.html`,
-    renderDocumentShell(metadata, { basePath: inboxPath, timeZone: "UTC" }),
+    renderDocumentShell(metadata, { basePath: inboxPath, timeZone: "UTC", appearance }),
   );
   await writeFile(`${documentPath}/content/index.html`, document.originalBytes);
 }

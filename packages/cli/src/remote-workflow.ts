@@ -20,6 +20,7 @@ import {
 } from "./validation";
 import { ensurePrivateDirectory, writeAtomicPrivateJson } from "./private-storage";
 import { exportStaticSnapshot, generateInboxCapability } from "./static-export";
+import { readPreferences } from "./preferences";
 import { acquireRemoteLock } from "./remote-lock";
 import {
   REMOTE_SCHEMA_VERSION,
@@ -103,7 +104,7 @@ export class RemoteWorkflow {
 
   constructor(
     private readonly backend: DocumentBackend,
-    home: string,
+    private readonly home: string,
     private readonly deployment: RemoteDeploymentPort = new CloudflarePagesAdapter(),
     private readonly now: () => string = () => new Date().toISOString(),
   ) {
@@ -329,6 +330,7 @@ export class RemoteWorkflow {
         capability,
         ownerId: state.ownerId,
         generatedAt: this.now(),
+        appearance: (await readPreferences(this.home)).appearance,
       },
     );
     const timestamp = this.now();

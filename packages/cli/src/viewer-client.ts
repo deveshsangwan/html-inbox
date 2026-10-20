@@ -4,12 +4,31 @@ export function initializeViewer(): void {
   const media = window.matchMedia("(prefers-color-scheme: dark)");
   const modes = new Set(["system", "light", "dark"]);
 
+  const configuredMode = document
+    .querySelector('meta[name="html-inbox-appearance"]')
+    ?.getAttribute("content");
+  const defaultMode =
+    configuredMode && modes.has(configuredMode) ? configuredMode : "system";
+
   const readMode = () => {
     try {
       const saved = window.localStorage.getItem(storageKey);
-      return saved && modes.has(saved) ? saved : "system";
+
+      return saved && modes.has(saved) ? saved : defaultMode;
     } catch {
-      return "system";
+      return defaultMode;
+    }
+  };
+
+  const notifyDocument = () => {
+    const frame = document.querySelector("[data-document-frame]");
+
+    if (frame instanceof HTMLIFrameElement) {
+      // The sandbox intentionally gives documents an opaque origin.
+      frame.contentWindow?.postMessage(
+        { type: "html-inbox:appearance", theme: root.dataset.theme },
+        "*",
+      );
     }
   };
 
@@ -18,6 +37,13 @@ export function initializeViewer(): void {
       mode === "system" ? (media.matches ? "dark" : "light") : mode;
     root.dataset.theme = resolved;
     root.style.colorScheme = resolved;
+
+    document
+      .querySelectorAll<HTMLInputElement>("[data-theme-option]")
+      .forEach((option) => {
+        option.checked = option.value === mode;
+      });
+    notifyDocument();
   };
 
   let mode = readMode();
@@ -29,14 +55,101 @@ export function initializeViewer(): void {
       .forEach((option) => {
         option.checked = option.value === mode;
         option.addEventListener("change", () => {
-          if (!option.checked || !modes.has(option.value)) return;
+          if (!option.checked || !modes.has(option.value)) {
+            return;
+          }
+
           mode = option.value;
+
           try {
             window.localStorage.setItem(storageKey, mode);
           } catch {}
+
           applyMode(mode);
         });
       });
+
+    const frame = document.querySelector("[data-document-frame]");
+
+    if (frame instanceof HTMLIFrameElement) {
+      frame.addEventListener("load", notifyDocument);
+      notifyDocument();
+    }
+
+    const hideFrame = document.querySelector("[data-hide-frame]");
+    const showFrame = document.querySelector("[data-show-frame]");
+
+    if (
+      hideFrame instanceof HTMLButtonElement &&
+      showFrame instanceof HTMLButtonElement
+    ) {
+      hideFrame.addEventListener("click", () => {
+        document
+          .querySelectorAll<HTMLDetailsElement>("[data-viewer-menu]")
+          .forEach((menu) => {
+            menu.open = false;
+          });
+
+        document.body.dataset.frameHidden = "";
+        showFrame.hidden = false;
+        showFrame.focus({ preventScroll: true });
+      });
+
+      showFrame.addEventListener("click", () => {
+        delete document.body.dataset.frameHidden;
+        showFrame.hidden = true;
+        hideFrame.focus({ preventScroll: true });
+      });
+    }
+
+    const menus = Array.from(
+      document.querySelectorAll<HTMLDetailsElement>("[data-viewer-menu]"),
+    );
+
+    if (frame instanceof HTMLIFrameElement) {
+      window.addEventListener("blur", () => {
+        // The sandbox prevents document clicks from reaching the viewer.
+        // Wait for focus to settle before identifying a click inside the frame.
+        window.setTimeout(() => {
+          if (document.activeElement !== frame) {
+            return;
+          }
+
+          menus.forEach((menu) => {
+            menu.open = false;
+          });
+        }, 0);
+      });
+    }
+
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      menus.forEach((menu) => {
+        if (!menu.contains(target)) {
+          menu.open = false;
+        }
+      });
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      menus.forEach((menu) => {
+        if (!menu.open) {
+          return;
+        }
+
+        menu.open = false;
+        menu.querySelector("summary")?.focus();
+      });
+    });
 
     const dateFormatter = new Intl.DateTimeFormat(undefined, {
       dateStyle: "medium",
@@ -121,5 +234,14 @@ export function initializeViewer(): void {
   media.addEventListener("change", () => {
     if (mode === "system") applyMode(mode);
   });
+  window.addEventListener("storage", (event) => {
+    if (event.key !== storageKey && event.key !== null) {
+      return;
+    }
+
+    mode = readMode();
+    applyMode(mode);
+  });
+
   document.addEventListener("DOMContentLoaded", initialize, { once: true });
 }

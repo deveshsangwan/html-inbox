@@ -8,6 +8,7 @@ import {
   VIEWER_STYLES,
 } from "./viewer-assets";
 import { renderDocumentShell, renderIndex } from "./viewer-render";
+import { readPreferences } from "./preferences";
 import {
   getViewerUrls,
   isAllowedViewerHost,
@@ -35,6 +36,7 @@ export async function startViewerHttpServer(
   backend: DocumentBackend,
   configuration: ViewerNetworkConfig,
   health: ViewerControlHealth,
+  preferencesHome?: string,
 ): Promise<ViewerHttpServer> {
   let config = resolveViewerNetworkConfig(configuration);
   let urls = getViewerUrls(config);
@@ -52,7 +54,7 @@ export async function startViewerHttpServer(
       }
     }
 
-    void routeReaderRequest(backend, config, urls, request, response).catch((error: unknown) => {
+    void routeReaderRequest(backend, config, urls, request, response, preferencesHome).catch((error: unknown) => {
       console.error(error);
 
       if (response.headersSent) {
@@ -109,6 +111,7 @@ async function routeReaderRequest(
   urls: readonly string[],
   request: IncomingMessage,
   response: ServerResponse,
+  preferencesHome?: string,
 ): Promise<void> {
   if (!hasSingleHost(request) || !isAllowedViewerHost(request.headers.host, config, urls)) {
     sendText(response, 421, "Misdirected Request");
@@ -142,7 +145,8 @@ async function routeReaderRequest(
   if (url.pathname === "/") {
     const documents = await backend.listDocuments();
     const query = (url.searchParams.get("q") ?? "").trim().slice(0, 200);
-    sendHtml(response, renderIndex(documents, query), SHELL_CSP);
+    const preferences = preferencesHome ? await readPreferences(preferencesHome) : undefined;
+    sendHtml(response, renderIndex(documents, query, preferences), SHELL_CSP);
     return;
   }
 
@@ -170,7 +174,8 @@ async function routeReaderRequest(
     return;
   }
 
-  sendHtml(response, renderDocumentShell(metadata), SHELL_CSP);
+  const preferences = preferencesHome ? await readPreferences(preferencesHome) : undefined;
+  sendHtml(response, renderDocumentShell(metadata, preferences), SHELL_CSP);
 }
 
 function routeControlRequest(

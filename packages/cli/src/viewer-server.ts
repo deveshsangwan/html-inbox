@@ -253,7 +253,7 @@ export async function startViewer(
       }
 
       const config = prepared ? { ...initialConfig, tailscaleHostname: prepared.hostname } : initialConfig;
-      reader = await startViewerHttpServer(backend, config, health);
+      reader = await startViewerHttpServer(backend, config, health, home);
       reader.server.once("close", () => { void close().catch(reportShutdownFailure); });
       if (closing) {
         return;
