@@ -219,10 +219,10 @@
           stable 0.2.x version selects the installed executable. A missing,
           failed, malformed, older, prerelease, or newer minor or major version
           selects the tested npm fallback. The skill checks that the fallback
-          reports exactly 0.2.0 before continuing.
+          reports exactly 0.2.1 before continuing.
         </p>
         <div class="docs-code">
-          <pre role="region" tabindex="0" aria-label="Pinned fallback verification command"><code>npx --yes html-inbox@0.2.0 --version</code></pre>
+          <pre role="region" tabindex="0" aria-label="Pinned fallback verification command"><code>npx --yes html-inbox@0.2.1 --version</code></pre>
         </div>
         <p>
           The fallback runs the package through npm without installing a global
@@ -255,9 +255,9 @@
         </p>
         <p>
           The agent checks whether the selected CLI supports
-          <code>preferences</code> before saving the choice. The pinned 0.2.0
-          fallback predates this command and keeps the System fallback. A CLI
-          with preference support can save a different default:
+          <code>preferences</code> before saving the choice. The pinned 0.2.1
+          fallback supports this command; an older installed CLI such as 0.2.0
+          may not. A CLI with preference support can save a different default:
         </p>
         <div class="docs-code">
           <pre role="region" tabindex="0" aria-label="Set document appearance preference"><code>html-inbox preferences --appearance dark</code></pre>

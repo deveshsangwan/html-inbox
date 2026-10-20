@@ -59,11 +59,11 @@ for (const shell of shells) {
       const fixture = await createExecutables(t, { version });
       const result = await runResolvedCli(resolution, ["--version"], { ...fixture, shell });
       assert.equal(result.code, 0, result.stderr);
-      assert.equal(result.stdout.trim(), "0.2.0");
+      assert.equal(result.stdout.trim(), version ?? "0.2.1");
 
       const commands = await fixture.commands();
       assert.equal(commands.length, 2);
-      const prefix = version ? [] : ["--yes", "html-inbox@0.2.0"];
+      const prefix = version ? [] : ["--yes", "html-inbox@0.2.1"];
       assert.deepEqual(commands.at(-1).args, [...prefix, "--version"]);
     }
   });
@@ -79,7 +79,7 @@ for (const shell of shells) {
         assert.equal(result.code, 0, result.stderr);
 
         const operations = (await fixture.commands()).slice(-2).map(({ args }) => args);
-        const prefix = version ? [] : ["--yes", "html-inbox@0.2.0"];
+        const prefix = version ? [] : ["--yes", "html-inbox@0.2.1"];
         assert.deepEqual(operations, [
           [...prefix, "viewer", "--port", "4321"],
           [...prefix, "viewer", "--port", "4322"],
@@ -100,7 +100,7 @@ for (const shell of shells) {
       const npmCommands = commands.filter(({ executable }) => executable === "npx");
       assert.equal(npmCommands.length, 10);
       for (const command of npmCommands) {
-        assert.deepEqual(command.args.slice(0, 2), ["--yes", "html-inbox@0.2.0"]);
+        assert.deepEqual(command.args.slice(0, 2), ["--yes", "html-inbox@0.2.1"]);
       }
       assert.equal(commands.filter(({ executable, args }) => executable === "html-inbox" && args[0] !== "--version").length, 0);
       assertPreservedEnvironment(commands, fixture.env);
@@ -112,7 +112,7 @@ for (const shell of shells) {
     const result = await runResolvedCli(resolution, ["publish", "report.html"], { ...fixture, shell });
     assert.equal(result.code, 0, result.stderr);
     assert.match(result.stderr, /installed executable failed/);
-    assert.deepEqual((await fixture.commands()).at(-1).args, ["--yes", "html-inbox@0.2.0", "publish", "report.html"]);
+    assert.deepEqual((await fixture.commands()).at(-1).args, ["--yes", "html-inbox@0.2.1", "publish", "report.html"]);
   });
 
   test(`${path.basename(shell)} preserves npm failure and never attempts publishing`, async (t) => {
@@ -121,11 +121,11 @@ for (const shell of shells) {
     assert.notEqual(result.code, 0);
     assert.match(result.stderr, /npm error ECONNREFUSED original-registry-failure/);
     assert.equal(result.stdout, "");
-    assert.deepEqual((await fixture.commands()).map(({ args }) => args), [["--yes", "html-inbox@0.2.0", "--version"]]);
+    assert.deepEqual((await fixture.commands()).map(({ args }) => args), [["--yes", "html-inbox@0.2.1", "--version"]]);
   });
 
   test(`${path.basename(shell)} rejects an unexpected fallback version before publishing`, async (t) => {
-    const fixture = await createExecutables(t, { version: null, fallbackVersion: "0.2.1" });
+    const fixture = await createExecutables(t, { version: null, fallbackVersion: "0.2.0" });
     const result = await runResolvedCli(resolution, ["publish", "report.html"], { ...fixture, shell });
     assert.notEqual(result.code, 0);
     assert.match(result.stderr, /Unexpected HTML Inbox fallback version/);
@@ -154,8 +154,8 @@ for (const shell of shells) {
       const result = await runResolvedCli(shadowed, args, { ...fixture, shell });
       assert.equal(result.code, 0, result.stderr);
       assert.deepEqual((await fixture.commands()).map(({ args }) => args), [
-        ["--yes", "html-inbox@0.2.0", "--version"],
-        ["--yes", "html-inbox@0.2.0", ...args],
+        ["--yes", "html-inbox@0.2.1", "--version"],
+        ["--yes", "html-inbox@0.2.1", ...args],
       ]);
     });
   }
@@ -215,7 +215,7 @@ test("Windows PowerShell falls back for an unsupported installed shim without ru
   await assert.rejects(readFile(marker), { code: "ENOENT" });
 });
 
-async function createExecutables(t, { version, installedFailure = false, npmFailure = false, fallbackVersion = "0.2.0" }) {
+async function createExecutables(t, { version, installedFailure = false, npmFailure = false, fallbackVersion = "0.2.1" }) {
   const cwd = await mkdtemp(path.join(tmpdir(), "html-inbox skill resolution "));
   // Windows can briefly retain an executable lock after its child process closes.
   t.after(() => rm(cwd, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));

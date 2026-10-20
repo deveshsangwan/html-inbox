@@ -4,7 +4,7 @@ Resolve once before the first command in an operation. A global CLI installation
 
 Check `node --version` first. Use Node.js 20 or newer. The fallback also needs npm and access to its configured registry, or a cached copy of the pinned package. If a prerequisite is missing, report it and stop before publishing. These runtime requirements apply to an already-installed skill. Installing or updating it with the current `npx skills` installer requires Node.js 22.20.0 or newer.
 
-Use an installed `html-inbox` only when `--version` succeeds and its trimmed output matches `^0\.2\.(0|[1-9][0-9]*)$`. This accepts stable 0.2.x releases. Missing executables, failed checks, malformed versions, older versions, prereleases, and other minor or major versions select `npx --yes html-inbox@0.2.0`. Check that fallback's `--version` succeeds and prints exactly `0.2.0` before using it. Keep the version pinned; `latest` and unversioned npx are not this fallback.
+Use an installed `html-inbox` only when `--version` succeeds and its trimmed output matches `^0\.2\.(0|[1-9][0-9]*)$`. This accepts stable 0.2.x releases. Missing executables, failed checks, malformed versions, older versions, prereleases, and other minor or major versions select `npx --yes html-inbox@0.2.1`. Check that fallback's `--version` succeeds and prints exactly `0.2.1` before using it. Keep the version pinned; `latest` and unversioned npx are not this fallback.
 
 Keep `HTML_INBOX_HOME`, `HTML_INBOX_PORT`, `HTML_INBOX_TAILSCALE_COMMAND`, and inherited authentication/environment settings unchanged for the check and every subsequent command. Preserve the selected library's `viewer-config.json`. Ordinary publish/start calls omit networking flags so the CLI retains saved exposure. A fallback does not authorize an exposure change.
 
@@ -19,10 +19,10 @@ inbox_cli=(html-inbox)
 if inbox_version=$(command html-inbox --version) && [[ $inbox_version =~ ^[[:space:]]*0[.]2[.](0|[1-9][0-9]*)[[:space:]]*$ ]]; then
   inbox_cli=(html-inbox)
 else
-  inbox_cli=(npx --yes html-inbox@0.2.0)
+  inbox_cli=(npx --yes html-inbox@0.2.1)
   inbox_version=$(command "${inbox_cli[@]}" --version) || exit 1
 
-  if [[ ! $inbox_version =~ ^[[:space:]]*0[.]2[.]0[[:space:]]*$ ]]; then
+  if [[ ! $inbox_version =~ ^[[:space:]]*0[.]2[.]1[[:space:]]*$ ]]; then
     printf 'Unexpected HTML Inbox fallback version: %s\n' "$inbox_version" >&2
     exit 1
   fi
@@ -78,15 +78,15 @@ if ($inboxInstalled) {
 
 if (-not $inboxExecutable) {
   $inboxExecutable = (Get-Command npx.cmd -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
-  $inboxPrefix = @('--yes', 'html-inbox@0.2.0')
+  $inboxPrefix = @('--yes', 'html-inbox@0.2.1')
   $inboxVersion = ((inbox --version) -join "`n").Trim()
 
   if ($LASTEXITCODE -ne 0) { throw "HTML Inbox npm fallback failed; see the original npm error above" }
-  if ($inboxVersion -cne '0.2.0') { throw "Unexpected HTML Inbox fallback version: $inboxVersion" }
+  if ($inboxVersion -cne '0.2.1') { throw "Unexpected HTML Inbox fallback version: $inboxVersion" }
 }
 ```
 
-Use `inbox publish ...`, `inbox viewer`, `inbox viewer status`, `inbox viewer stop`, and `inbox remote ...` throughout the operation. The skill's command examples use this wrapper. In a new shell or later operation, resolve again with the same inbox environment. Inspect or stop a detached viewer through the selected CLI even when the earlier npx invocation has exited. Bash/zsh commands can also use the complete selected prefix directly, including `--yes html-inbox@0.2.0` for the fallback. In Windows PowerShell, retain the `inbox` dispatcher for every invocation so argument transport stays intact.
+Use `inbox publish ...`, `inbox viewer`, `inbox viewer status`, `inbox viewer stop`, and `inbox remote ...` throughout the operation. The skill's command examples use this wrapper. In a new shell or later operation, resolve again with the same inbox environment. Inspect or stop a detached viewer through the selected CLI even when the earlier npx invocation has exited. Bash/zsh commands can also use the complete selected prefix directly, including `--yes html-inbox@0.2.1` for the fallback. In Windows PowerShell, retain the `inbox` dispatcher for every invocation so argument transport stays intact.
 
 Service status can use the selected prefix. Boot service installation and removal are separate, explicitly requested administrator operations through stable absolute Node and CLI paths in the [self-hosting guide](https://github.com/deveshsangwan/html-inbox/blob/main/docs/self-hosting.md#start-at-boot). An npx cache path is not a durable service installation. A persistent CLI installation is needed only when the user chooses a boot service.
 

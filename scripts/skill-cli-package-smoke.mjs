@@ -27,13 +27,16 @@ try {
   assert.deepEqual(await readdir(consumerRoot), [], "Fallback must start outside an npm project");
   assert.deepEqual(await readdir(environment.npm_config_cache), [], "Fallback must start with a fresh npm cache");
 
-  console.log("Checking documented resolver with npx --yes html-inbox@0.2.0 and an empty consumer/cache.");
+  console.log("Checking documented resolver with npx --yes html-inbox@0.2.1 and an empty consumer/cache.");
   const version = await runCli(resolution, ["--version"], consumerRoot, environment);
-  assert.equal(version.stdout.trim(), "0.2.0", "Fallback version gate must select the pinned release");
+  assert.equal(version.stdout.trim(), "0.2.1", "Fallback version gate must select the pinned release");
   await verifyCachedPackage(environment.npm_config_cache);
   const help = await runCli(resolution, ["--help"], consumerRoot, environment);
   assert.match(help.stdout, /viewer service install \[--user <normal-user>\] \[viewer networking options\]/);
   assert.match(help.stdout, /viewer service uninstall \[--user <normal-user>\]/);
+  assert.match(help.stdout, /preferences \[--appearance <system\|light\|dark>\] \[--json\]/);
+  const preferences = await runCli(resolution, ["preferences", "--json"], consumerRoot, environment);
+  assert.deepEqual(JSON.parse(preferences.stdout), { appearance: "system" });
 
   const sourcePath = path.join(temporaryRoot, "registry report & notes.html");
   const originalHtml = Buffer.from("<!doctype html><html><head><title>Registry report</title></head><body><h1>Pinned registry content</h1><p>Detached viewer test.</p></body></html>\n");
@@ -192,7 +195,7 @@ async function verifyCachedPackage(cache) {
 
   assert.equal(packages.length, 1, "Fresh npx cache must contain one real registry installation");
   assert.equal(packages[0].name, "html-inbox");
-  assert.equal(packages[0].version, "0.2.0");
+  assert.equal(packages[0].version, "0.2.1");
   assert.deepEqual(packages[0].bin, { "html-inbox": "bundle/index.js" });
 }
 

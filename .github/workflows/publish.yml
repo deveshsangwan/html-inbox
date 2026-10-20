@@ -92,4 +92,31 @@ jobs:
       - name: Verify published version
         env:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
-        run: npm view "html-inbox@${RELEASE_VERSION}" version dist.integrity --registry=https://registry.npmjs.org/
+        run: |
+          expected_integrity=$(node --input-type=module <<'JS'
+          import { createHash } from "node:crypto";
+          import { readFileSync } from "node:fs";
+          const archive = readFileSync(`html-inbox-${process.env.RELEASE_VERSION}.tgz`);
+          console.log(`sha512-${createHash("sha512").update(archive).digest("base64")}`);
+          JS
+          )
+
+          for attempt in {1..20}; do
+            if published_integrity=$(npm view "html-inbox@${RELEASE_VERSION}" dist.integrity --prefer-online --registry=https://registry.npmjs.org/); then
+              if [ "$published_integrity" != "$expected_integrity" ]; then
+                echo "Published package integrity differs from the verified archive" >&2
+                exit 1
+              fi
+
+              echo "Verified html-inbox@${RELEASE_VERSION}: ${published_integrity}"
+              exit 0
+            fi
+
+            if [ "$attempt" -eq 20 ]; then
+              echo "Published version is still unavailable after 20 checks; inspect npm before retrying publication" >&2
+              exit 1
+            fi
+
+            echo "Waiting for npm to process the published package, check ${attempt}/20"
+            sleep 15
+          done
