@@ -75,6 +75,8 @@ The inbox list uses a compact header and responsive document rows. A document sh
 
 `preferences.json` under the selected inbox home stores the setup appearance, `system`, `light`, or `dark`. A missing file resolves to System. `preferences --json` reads without creating a file; an explicit `--appearance` writes the preference. Reader routes remain read-only. The shell embeds the saved default for readers without a browser override, and a static export captures it at export time. Browser-local appearance overrides take priority, with System resolving against that reader's OS. They never update the local preferences file.
 
+Live viewer shells log unreadable preference errors and fall back to System so appearance settings cannot prevent reading documents. The invalid file is preserved; CLI preference commands and export paths retain strict validation.
+
 The viewer passes its resolved appearance to the sandboxed iframe with `{ type: "html-inbox:appearance", theme: "light" | "dark" }` on iframe load and theme changes. Documents opt in with a validated message listener and paired palettes. The opaque-origin sandbox and CSP remain intact; no parent DOM or storage access is required. The skill's [appearance reference](../skills/html-inbox/references/document-appearance.md) defines this contract and links a reusable template.
 
 Document content remains original bytes. The iframe canvas follows the viewer's color scheme instead of forcing a white backing behind dark document text. This fixes transparent-canvas contrast but cannot convert arbitrary hardcoded palettes. New skill-generated documents support both themes, and their standalone fallback follows the OS. Authored photos, chart series, and intentional white paper previews retain their colors.

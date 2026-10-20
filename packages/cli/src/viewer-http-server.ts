@@ -8,7 +8,7 @@ import {
   VIEWER_STYLES,
 } from "./viewer-assets";
 import { renderDocumentShell, renderIndex } from "./viewer-render";
-import { readPreferences } from "./preferences";
+import { readPreferences, type Appearance } from "./preferences";
 import {
   getViewerUrls,
   isAllowedViewerHost,
@@ -145,7 +145,7 @@ async function routeReaderRequest(
   if (url.pathname === "/") {
     const documents = await backend.listDocuments();
     const query = (url.searchParams.get("q") ?? "").trim().slice(0, 200);
-    const preferences = preferencesHome ? await readPreferences(preferencesHome) : undefined;
+    const preferences = await readViewerPreferences(preferencesHome);
     sendHtml(response, renderIndex(documents, query, preferences), SHELL_CSP);
     return;
   }
@@ -174,8 +174,23 @@ async function routeReaderRequest(
     return;
   }
 
-  const preferences = preferencesHome ? await readPreferences(preferencesHome) : undefined;
+  const preferences = await readViewerPreferences(preferencesHome);
   sendHtml(response, renderDocumentShell(metadata, preferences), SHELL_CSP);
+}
+
+async function readViewerPreferences(home?: string): Promise<{ appearance: Appearance } | undefined> {
+  if (!home) {
+    return undefined;
+  }
+
+  try {
+    return await readPreferences(home);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`html-inbox: Ignoring unreadable preferences: ${message}`);
+
+    return { appearance: "system" };
+  }
 }
 
 function routeControlRequest(
