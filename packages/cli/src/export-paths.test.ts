@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
-import { mkdir, readFile, symlink } from "node:fs/promises";
+import { mkdir, readFile, realpath, symlink } from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 import { assertExportOutsideHome } from "./index";
@@ -84,7 +84,9 @@ test("export command accepts a sibling output and rejects overlap", async (t) =>
   assert.equal(exported.status, 0, exported.stderr);
   assert.match(await readFile(path.join(output, "index.html"), "utf8"), /HTML Inbox/);
 
-  for (const overlappingOutput of [home, root, path.join(home, "export")]) {
+  const canonicalHome = await realpath(home);
+  const canonicalRoot = await realpath(root);
+  for (const overlappingOutput of [home, root, path.join(home, "export"), canonicalHome, canonicalRoot]) {
     const rejected = spawnSync(
       process.execPath,
       [executable, "export", "--out", overlappingOutput],

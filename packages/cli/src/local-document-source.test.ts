@@ -45,7 +45,7 @@ test("source reads original metadata and bytes without changing files, directori
 });
 
 test("missing sources and identities remain absent", async (t) => {
-  const parent = await temporaryHome(t);
+  const parent = await realpath(await temporaryHome(t));
   const home = path.join(parent, "absent");
   const source = new LocalDocumentSource({ home, instanceId: randomUUID() });
   await assert.rejects(source.listDocuments(), { code: "ENOENT" });

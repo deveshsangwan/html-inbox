@@ -307,7 +307,7 @@ function resolveExistingPath(value: string): string {
   const missing: string[] = [];
   for (;;) {
     try {
-      return path.join(realpathSync(current), ...missing.reverse());
+      return path.join(realpathSync.native(current), ...missing.reverse());
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
       const parent = path.dirname(current);

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rename, rm, stat } from "node:fs/promises";
+import { mkdtemp, realpath, rename, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -10,7 +10,7 @@ import { startHub } from "../packages/cli/dist/hub.js";
 import { isolationHtml } from "./browser-fixtures.mjs";
 
 test("hub reads colliding source IDs with search, filters, isolation and partial failure", { timeout: 30_000 }, async (t) => {
-  const root = await mkdtemp(path.join(tmpdir(), "html-inbox-hub-browser-"));
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-hub-browser-")));
   let browser;
   let hub;
   t.after(async () => {
