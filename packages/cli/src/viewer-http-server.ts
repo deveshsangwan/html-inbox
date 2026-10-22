@@ -189,7 +189,10 @@ async function routeReaderRequest(
       const sources = await Promise.all(reader.mounts.map(async ({ name, source }) => {
         try {
           return { name, available: true, documents: await source.listDocuments() };
-        } catch {
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          console.error(`html-inbox: Hub source ${name} unavailable: ${message}`);
+
           return { name, available: false, documents: [] };
         }
       }));
@@ -247,6 +250,9 @@ async function routeReaderRequest(
     if (!("mounts" in reader)) {
       throw error;
     }
+
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`html-inbox: Hub source ${sourceName} unavailable: ${message}`);
 
     sendText(response, 503, "Inbox unavailable. Results may be incomplete.");
   }

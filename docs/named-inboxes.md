@@ -58,6 +58,8 @@ html-inbox inbox default home
 html-inbox inbox default --clear
 ```
 
+If the default record is malformed, clear it or set a healthy named inbox again to recover.
+
 Library ports still need to differ. Configure a new viewer on a free port explicitly, then ordinary publishes reuse its saved configuration:
 
 ```sh
@@ -82,7 +84,7 @@ html-inbox hub --config /absolute/path/to/reading-hub.json --port 4322
 
 The hub serves one combined list and search over all selected inboxes, with inbox badges and a source filter. Document links contain the source name plus original document ID, so identical IDs in different libraries remain distinct. Content routes return the original bytes through the existing sandbox and CSP. Standalone viewer and export URLs retain their existing forms.
 
-Source viewers may be stopped. The hub reads existing files directly without creating directories, changing permission modes, writing preferences, or copying runtime records. A missing source never becomes a new empty library. Unavailable or mismatched sources produce an incomplete-results notice while healthy sources remain readable. Reader output contains selected source names and availability, without catalog paths, control endpoints, or detailed filesystem errors.
+Source viewers may be stopped. The hub reads existing files directly without creating directories, changing permission modes, writing preferences, or copying runtime records. A missing source never becomes a new empty library. Unavailable or mismatched sources produce an incomplete-results notice while healthy sources remain readable. Reader output contains selected source names and availability, without catalog paths, control endpoints, or detailed filesystem errors. The foreground hub writes source names and detailed failure causes to stderr for operator diagnosis.
 
 A corrupt committed record makes its source unavailable rather than presenting a partial source as complete. Hub content reads use `HTML_INBOX_MAX_BYTES`, default 10 MiB per document. Set the same larger limit when reading libraries that were intentionally published with a larger limit. These source results are a reading view, not an authoritative inventory for deleting or replicating documents.
 

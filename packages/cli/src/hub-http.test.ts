@@ -76,6 +76,11 @@ test("hub reads stopped viewers, namespaces colliding IDs, and preserves origina
 });
 
 test("hub isolates unavailable, corrupt, mismatched, and replaced roots without leaking diagnostics", async (t) => {
+  const diagnostics: string[] = [];
+  t.mock.method(console, "error", (message: unknown) => {
+    diagnostics.push(String(message));
+  });
+
   const healthy = await hubSource(t, "healthy", "Still available");
   const mismatched = await hubSource(t, "mismatched", "Hidden UUID report");
   const corrupt = await hubSource(t, "corrupt", "Hidden corrupt report");
@@ -97,6 +102,7 @@ test("hub isolates unavailable, corrupt, mismatched, and replaced roots without 
   await rename(replaced.config.home, previousRoot);
   await mkdir(replaced.config.home);
   await writeFile(path.join(replaced.config.home, "instance-id"), replaced.config.instanceId);
+  diagnostics.length = 0;
 
   const response = await fetch(baseUrl);
   assert.equal(response.status, 200);
@@ -108,12 +114,21 @@ test("hub isolates unavailable, corrupt, mismatched, and replaced roots without 
     assert.equal(html.includes(hidden), false, hidden);
   }
 
+  assert.equal(diagnostics.length, 4);
+  assert(diagnostics.some((message) => message.includes("Hub source mismatched unavailable: Source instance identity does not match")));
+  assert(diagnostics.some((message) => message.includes("Hub source replaced unavailable: Source root was replaced")));
+  assert(diagnostics.some((message) => message.includes("Hub source missing unavailable: ENOENT:")));
+  assert(diagnostics.some((message) => message.startsWith("html-inbox: Hub source corrupt unavailable: ")));
+
   for (const name of ["mismatched", "corrupt", "replaced", "missing"]) {
     for (const suffix of ["", "/content"]) {
+      diagnostics.length = 0;
       const unavailable = await fetch(`${baseUrl}/sources/${name}/documents/shared-id${suffix}`);
       assert.equal(unavailable.status, 503);
       assert.equal(await unavailable.text(), "Inbox unavailable. Results may be incomplete.");
       assert.equal(unavailable.headers.get("cache-control"), "no-store");
+      assert.equal(diagnostics.length, 1);
+      assert(diagnostics[0]?.startsWith(`html-inbox: Hub source ${name} unavailable: `));
     }
   }
 
