@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { cp, mkdtemp, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -7,6 +8,7 @@ import { promisify } from "node:util";
 import { test } from "node:test";
 import { availablePort, temporaryHome } from "./test-fixtures";
 import { stopViewer } from "./viewer-server";
+import { LocalDocumentBackend } from "./backend";
 
 const executeFile = promisify(execFile);
 
@@ -85,4 +87,37 @@ test("catalog CLI retains missing and conflicting entries without recreating the
   assert.equal(missing[0].state, "missing");
   await assert.rejects(run("list", "--inbox=home"));
   await assert.rejects(readFile(path.join(home, "instance-id")), { code: "ENOENT" });
+});
+
+test("unbound legacy CLI operations validate a registered home before reading or deleting", async (t) => {
+  const root = await realpath(await temporaryHome(t));
+  const home = path.join(root, ".html-inbox");
+  const env = {
+    ...process.env,
+    HOME: root,
+    USERPROFILE: root,
+    HTML_INBOX_CATALOG_HOME: path.join(root, "catalog"),
+    HTML_INBOX_HOME: undefined,
+    HTML_INBOX_NAME: undefined,
+  };
+  const run = (...args: string[]) => executeFile(process.execPath, [path.join(__dirname, "index.js"), ...args], { env });
+  assert.deepEqual(JSON.parse((await run("list", "--json")).stdout), []);
+  await run("inbox", "register", "personal", "--home", home);
+  const registeredListing = await run("list", "--json");
+
+  const moved = path.join(root, "moved");
+  await rename(home, moved);
+  await assert.rejects(run("list", "--json"), /Cannot inspect registered inbox personal/);
+  await assert.rejects(readFile(path.join(home, "instance-id")), { code: "ENOENT" });
+
+  await cp(moved, home, { recursive: true });
+  await writeFile(path.join(home, "instance-id"), randomUUID());
+  const metadata = await new LocalDocumentBackend(home).publish({
+    originalBytes: Buffer.from("<!doctype html><html><body>Replacement library</body></html>"),
+    title: "Replacement report", type: "report", sourceFileName: "replacement.html",
+  });
+  await assert.rejects(run("list", "--json"), /missing or different identity/);
+  await assert.rejects(run("delete", metadata.id, "--force"), /missing or different identity/);
+  assert.match(await readFile(path.join(home, "documents", metadata.id, "index.html"), "utf8"), /Replacement library/);
+  assert.match(registeredListing.stderr, /Inbox personal/);
 });

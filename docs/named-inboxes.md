@@ -39,7 +39,9 @@ The CLI resolves selection once per operation, in this order:
 3. The configured default name.
 4. Legacy `~/.html-inbox` when no selection or default is configured.
 
-An explicit selection overrides the entire environment selection tier. A name and home supplied together in one tier must identify the same registered location. Unknown names, missing registered homes, invalid identities, and invalid defaults fail without falling back. Explicit homes must be absolute. Relative `HTML_INBOX_HOME` retains its legacy interpretation relative to the command's working directory. There is no mutable current or last-used inbox and no project binding in this version.
+An explicit selection overrides the entire environment selection tier. A name and home supplied together in one tier must identify the same registered location. Unknown names, missing registered homes, invalid identities, and invalid selected defaults fail without falling back. Explicitly bound operations do not read an unused default. Explicit homes must be absolute. Relative `HTML_INBOX_HOME` retains its legacy interpretation relative to the command's working directory. There is no mutable current or last-used inbox and no project binding in this version.
+
+Registering `~/.html-inbox` also protects unbound legacy operations. They retain that library's name and expected identity, so a missing or replaced registered home fails instead of becoming a new library. A genuinely unregistered legacy home keeps its existing first-use behavior.
 
 For a thread that should always publish to Development, bind its process environment:
 

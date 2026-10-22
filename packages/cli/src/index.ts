@@ -112,10 +112,11 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     return;
   }
 
-  const selection = await resolveInboxSelection(parsed);
-  const home = parsed.command === "viewer service" && selection.source === "legacy"
+  const legacyHome = parsed.command === "viewer service"
     ? await resolveViewerServiceHome({ user: parsed.user })
-    : selection.home;
+    : undefined;
+  const selection = await resolveInboxSelection(parsed, process.env, legacyHome);
+  const home = selection.home;
   if (selection.name) {
     console.error(`html-inbox: Inbox ${selection.name} (${home})`);
   }
@@ -164,14 +165,13 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
   }
 
   if (command === "viewer service") {
-    const serviceHome = await resolveViewerServiceHome({ home, user: parsed.user });
     if (parsed.action === "status") {
-      console.log(JSON.stringify(await getViewerServiceStatus({ home: serviceHome }), null, 2));
+      console.log(JSON.stringify(await getViewerServiceStatus({ home }), null, 2));
       return;
     }
 
     if (parsed.action === "uninstall") {
-      console.log(JSON.stringify(await uninstallViewerService({ home: serviceHome }), null, 2));
+      console.log(JSON.stringify(await uninstallViewerService({ home }), null, 2));
       return;
     }
 
