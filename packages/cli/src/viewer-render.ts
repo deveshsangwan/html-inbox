@@ -6,6 +6,9 @@ export interface ViewerRenderOptions {
   basePath?: string;
   clientSearch?: boolean;
   timeZone?: string;
+  inboxName?: string;
+  homePath?: string;
+  documentBasePath?: string;
 }
 
 export function renderIndex(
@@ -14,44 +17,93 @@ export function renderIndex(
   options: ViewerRenderOptions = {},
 ): string {
   const basePath = options.basePath ?? "";
-  const homePath = basePath ? `${basePath}/` : "/";
+  const documents = allDocuments.map((metadata) => ({
+    metadata,
+    documentPath: `${basePath}/documents/${metadata.id}${basePath ? "/" : ""}`,
+  }));
+
+  return renderLibrary(documents, query, options);
+}
+
+export interface HubInboxListing {
+  name: string;
+  available: boolean;
+  documents: DocumentMetadata[];
+}
+
+interface LibraryDocument {
+  metadata: DocumentMetadata;
+  documentPath: string;
+  inboxName?: string;
+}
+
+export function renderHubIndex(
+  sources: HubInboxListing[],
+  query: string,
+  inbox: string,
+  options: ViewerRenderOptions = {},
+): string {
+  const documents = sources.flatMap((source) => source.documents.map((metadata) => ({
+    metadata,
+    inboxName: source.name,
+    documentPath: `/sources/${source.name}/documents/${metadata.id}`,
+  })));
+  documents.sort((left, right) => right.metadata.createdAt.localeCompare(left.metadata.createdAt) ||
+    left.inboxName.localeCompare(right.inboxName) || left.metadata.id.localeCompare(right.metadata.id));
+
+  return renderLibrary(documents.filter((document) => !inbox || document.inboxName === inbox), query, options, { sources, inbox });
+}
+
+function renderLibrary(
+  allDocuments: LibraryDocument[],
+  query: string,
+  options: ViewerRenderOptions,
+  hub?: { sources: HubInboxListing[]; inbox: string },
+): string {
+  const basePath = options.basePath ?? "";
+  const homePath = options.homePath ?? (basePath ? `${basePath}/` : "/");
   query = query.trim().slice(0, 200);
   const normalizedQuery = query.toLowerCase();
   const documents = normalizedQuery
     ? allDocuments.filter((document) =>
-        [document.title, document.type, document.sourceFileName]
+        [document.metadata.title, document.metadata.type, document.metadata.sourceFileName, ...(document.inboxName ? [document.inboxName] : [])]
           .join(" ")
           .toLowerCase()
           .includes(normalizedQuery),
       )
     : allDocuments;
+  const hasUnavailableInboxes = hub?.sources.some((source) => !source.available) ?? false;
   const documentContent =
     documents.length === 0
       ? `<section class="empty-state" aria-labelledby="empty-title">
-          <h2 id="empty-title">${query ? "No matching documents" : "No documents yet"}</h2>
+          <h2 id="empty-title">${hasUnavailableInboxes ? "No readable documents" : query ? "No matching documents" : "No documents yet"}</h2>
           <p>${
             query
               ? "Try another title, type, or source file name."
-              : "Publish an HTML file from the CLI. It will appear here with its title, type, and source file."
+              : hasUnavailableInboxes
+                ? "Retry when the selected inboxes are available."
+                : hub
+                  ? "Publish an HTML file to a selected inbox. It will appear here with its title, type, and source file."
+                  : "Publish an HTML file from the CLI. It will appear here with its title, type, and source file."
           }</p>
           ${
-            query
+            query || hasUnavailableInboxes
               ? ""
-              : '<code>html-inbox publish ./document.html --title "My document" --type report</code>'
+              : `<code>html-inbox publish ./document.html${hub?.sources[0] ? ` --inbox ${escapeHtml(hub.sources[0].name)}` : ""} --title "My document" --type report</code>`
           }
         </section>`
       : `<ol class="document-list" aria-label="Published documents">${documents
           .map(
             (document) =>
               `<li class="doc" data-search-text="${escapeHtml(
-                [document.title, document.type, document.sourceFileName]
+                [document.metadata.title, document.metadata.type, document.metadata.sourceFileName, ...(document.inboxName ? [document.inboxName] : [])]
                   .join(" ")
                   .toLowerCase(),
               )}">
-                <a class="doc__title" href="${basePath}/documents/${escapeHtml(document.id)}${basePath ? "/" : ""}">${escapeHtml(document.title)}</a>
-                <time class="document-date" datetime="${escapeHtml(document.createdAt)}" data-local-date>${escapeHtml(formatDate(document.createdAt, options.timeZone))}</time>
-                <span class="doc__source" title="${escapeHtml(document.sourceFileName)}">${escapeHtml(document.sourceFileName)}</span>
-                <span class="document-type">${escapeHtml(document.type)}</span>
+                <a class="doc__title" href="${escapeHtml(document.documentPath)}">${escapeHtml(document.metadata.title)}${document.inboxName ? ` <span class="inbox-badge">${escapeHtml(document.inboxName)}</span>` : ""}</a>
+                <time class="document-date" datetime="${escapeHtml(document.metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(document.metadata.createdAt, options.timeZone))}</time>
+                <span class="doc__source" title="${escapeHtml(document.metadata.sourceFileName)}">${escapeHtml(document.metadata.sourceFileName)}</span>
+                <span class="document-type">${escapeHtml(document.metadata.type)}</span>
               </li>`,
           )
           .join("")}</ol>`;
@@ -61,15 +113,15 @@ export function renderIndex(
     : `${documents.length} ${documents.length === 1 ? "document" : "documents"}`;
 
   return page(
-    "HTML Inbox",
+    options.inboxName ? `${options.inboxName} | HTML Inbox` : "HTML Inbox",
     `<main class="library" id="main-content">
       <header class="library__bar">
         ${renderBrand(homePath)}
-        <h1 class="library__title">Inbox</h1>
+        <h1 class="library__title">${escapeHtml(options.inboxName ?? "Inbox")}</h1>
         <form class="search" role="search" method="get" action="${homePath}" ${options.clientSearch ? "data-client-search" : ""}>
           <label class="visually-hidden" for="document-search">Search documents</label>
           <div class="search__control">
-            <input id="document-search" name="q" type="search" value="${escapeHtml(query)}" placeholder="Search title, type, or file" maxlength="200">
+            ${hub ? `${renderInboxFilter(hub.sources, hub.inbox)}\n            ` : ""}<input id="document-search" name="q" type="search" value="${escapeHtml(query)}" placeholder="Search title, type, or file" maxlength="200">
             <button class="search__button" type="submit" data-search-submit>Search</button>
             ${
               options.clientSearch
@@ -77,14 +129,14 @@ export function renderIndex(
                     query ? "" : " hidden"
                   }>Clear</a>`
                 : query
-                  ? `<a class="search__clear" href="${homePath}">Clear</a>`
+                  ? `<a class="search__clear" href="${hub?.inbox ? `/?inbox=${encodeURIComponent(hub.inbox)}` : homePath}">Clear</a>`
                   : ""
             }
           </div>
         </form>
         ${renderAppearanceMenu()}
       </header>
-      <p class="document-count" aria-live="polite" data-document-count>${countLabel}</p>
+      ${hub ? renderAvailability(hub.sources) : ""}<p class="document-count" aria-live="polite" data-document-count>${countLabel}</p>
       ${
         options.clientSearch && allDocuments.length > 0
           ? '<section class="empty-state" aria-labelledby="client-empty-title" data-client-empty hidden><h2 id="client-empty-title">No matching documents</h2><p>Try another title, type, or source file name.</p></section>'
@@ -104,9 +156,10 @@ export function renderDocumentShell(
   options: ViewerRenderOptions = {},
 ): string {
   const basePath = options.basePath ?? "";
-  const homePath = basePath ? `${basePath}/` : "/";
-  const contentPath = basePath
-    ? `${basePath}/documents/${escapeHtml(metadata.id)}/content/`
+  const homePath = options.homePath ?? (basePath ? `${basePath}/` : "/");
+  const documentBasePath = options.documentBasePath ?? basePath;
+  const contentPath = documentBasePath
+    ? `${documentBasePath}/documents/${escapeHtml(metadata.id)}/content${options.documentBasePath ? "" : "/"}`
     : `/documents/${escapeHtml(metadata.id)}/content`;
 
   return page(
@@ -123,7 +176,7 @@ export function renderDocumentShell(
             <section class="document-details" aria-labelledby="document-details-title">
               <h2 id="document-details-title">Document details</h2>
               <dl>
-                <dt>Title</dt><dd>${escapeHtml(metadata.title)}</dd>
+                ${options.inboxName ? `<dt>Inbox</dt><dd>${escapeHtml(options.inboxName)}</dd>\n                ` : ""}<dt>Title</dt><dd>${escapeHtml(metadata.title)}</dd>
                 <dt>File</dt><dd>${escapeHtml(metadata.sourceFileName)}</dd>
                 <dt>Type</dt><dd>${escapeHtml(metadata.type)}</dd>
                 <dt>Published</dt><dd><time datetime="${escapeHtml(metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(metadata.createdAt, options.timeZone))}</time></dd>
@@ -142,6 +195,23 @@ export function renderDocumentShell(
     options.appearance ?? "system",
     "document-page",
   );
+}
+
+function renderInboxFilter(sources: HubInboxListing[], selected: string): string {
+  return `<label class="visually-hidden" for="inbox-filter">Inbox</label>
+            <select id="inbox-filter" name="inbox" aria-label="Inbox">
+              <option value="">All selected inboxes</option>
+              ${sources.map((source) => `<option value="${escapeHtml(source.name)}"${source.name === selected ? " selected" : ""}>${escapeHtml(source.name)}</option>`).join("")}
+            </select>`;
+}
+
+function renderAvailability(sources: HubInboxListing[]): string {
+  const unavailable = sources.filter((source) => !source.available);
+  if (unavailable.length === 0) {
+    return "";
+  }
+
+  return `<p class="inbox-availability" role="status">Some inboxes are unavailable. Results are incomplete. Unavailable: ${unavailable.map((source) => escapeHtml(source.name)).join(", ")}.</p>\n      `;
 }
 
 function page(

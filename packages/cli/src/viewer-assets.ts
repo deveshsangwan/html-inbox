@@ -188,6 +188,9 @@ h1 { margin: 0; color: var(--text-strong); font-weight: 650; letter-spacing: -0.
 }
 .search__control input:hover { border-color: var(--border-strong); }
 .search__control input::placeholder { color: var(--faint); }
+.search__control select { min-width: 0; max-width: 10rem; min-height: 2.75rem; padding: 0 0.5rem; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.inbox-badge { display: inline-block; padding: 0.1rem 0.4rem; color: var(--muted); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 0.25rem; font-size: 0.72rem; font-weight: 500; vertical-align: middle; }
+.inbox-availability { padding: 0.65rem 0.75rem; color: var(--text); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: var(--radius); }
 .search__button, .search__clear {
   min-height: 2.75rem;
   display: inline-flex;
