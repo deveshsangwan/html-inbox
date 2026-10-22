@@ -35,10 +35,11 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc-rs -p tsconfig.json --noEmit",
+    "build": "tsc-rs -p tsconfig.json",
     "bundle": "ncc build dist/index.js -o bundle",
     "test": "pnpm run build && pnpm run test:self",
     "test:self": "node ../../scripts/run-unit-tests.mjs",
-    "prepack": "tsc -p tsconfig.json && ncc build dist/index.js -o bundle"
+    "prepack": "tsc-rs -p tsconfig.json && ncc build dist/index.js -o bundle"
   }
 }
