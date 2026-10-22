@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { cp, lstat, mkdir, readFile, readdir, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, lstat, mkdir, readFile, readdir, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { test, type TestContext } from "node:test";
 import { promisify } from "node:util";
-import { createInbox, InboxInspectionError, setDefaultInbox } from "./inbox-catalog";
+import { LocalDocumentBackend } from "./backend";
+import { clearDefaultInbox, createInbox, InboxInspectionError, setDefaultInbox } from "./inbox-catalog";
 import { resolveInboxSelection } from "./inbox-selection";
 import { temporaryHome } from "./test-fixtures";
 
@@ -34,12 +35,9 @@ test("same-tier name and home selectors must agree; unknown names never create",
   assert.deepEqual(await resolveInboxSelection({ inbox: "first", home: first.home }, env), { ...first, source: "explicit" });
   assert.deepEqual(await resolveInboxSelection({}, { ...env, HTML_INBOX_NAME: "first", HTML_INBOX_HOME: first.home }), { ...first, source: "environment" });
 
-  for (const resolution of [
-    resolveInboxSelection({ inbox: "first", home: second.home }, env),
-    resolveInboxSelection({}, { ...env, HTML_INBOX_NAME: "first", HTML_INBOX_HOME: second.home }),
-  ]) {
-    await assert.rejects(resolution, (error: unknown) => error instanceof InboxInspectionError && error.state === "conflict");
-  }
+  const hasConflict = (error: unknown) => error instanceof InboxInspectionError && error.state === "conflict";
+  await assert.rejects(resolveInboxSelection({ inbox: "first", home: second.home }, env), hasConflict);
+  await assert.rejects(resolveInboxSelection({}, { ...env, HTML_INBOX_NAME: "first", HTML_INBOX_HOME: second.home }), hasConflict);
 
   const missing = path.join(root, "missing");
   await assert.rejects(resolveInboxSelection({ inbox: "unknown", home: missing }, env), /Unknown inbox/);
@@ -116,4 +114,109 @@ test("legacy fallback uses getInboxHome without making a catalog or library", as
   const unregistered = path.join(root, "unregistered");
   await mkdir(unregistered);
   assert.deepEqual(await resolveInboxSelection({}, { HTML_INBOX_CATALOG_HOME: catalogHome, HTML_INBOX_HOME: unregistered }), { home: unregistered, source: "environment" });
+});
+
+test("registered legacy fallback rejects replaced, missing, and copied identities and captures its name", async (t) => {
+  const root = await realpath(await temporaryHome(t));
+  const modulePath = path.join(__dirname, "inbox-selection.js");
+  const worker = `
+    require(process.argv[1]).resolveInboxSelection({}, {HTML_INBOX_CATALOG_HOME: process.argv[2]})
+      .then(value => process.stdout.write(JSON.stringify({value})))
+      .catch(error => {
+        if (typeof error.state !== "string") throw error;
+        process.stdout.write(JSON.stringify({state: error.state}));
+      });
+  `;
+
+  for (const state of ["replaced", "missing", "copied", "healthy"]) {
+    const userHome = path.join(root, state);
+    const catalogHome = path.join(userHome, "catalog");
+    const legacyHome = path.join(userHome, ".html-inbox");
+    const registeredHome = state === "copied" ? path.join(userHome, "original") : legacyHome;
+    const entry = await createInbox("legacy", registeredHome, catalogHome);
+
+    if (state === "replaced") {
+      await writeFile(path.join(legacyHome, "instance-id"), randomUUID());
+    }
+
+    if (state === "missing") {
+      await rename(legacyHome, path.join(userHome, "moved"));
+    }
+
+    if (state === "copied") {
+      await cp(registeredHome, legacyHome, { recursive: true });
+    }
+
+    const result = await promisify(execFile)(process.execPath, ["-e", worker, modulePath, catalogHome], {
+      env: { ...process.env, HOME: userHome, USERPROFILE: userHome },
+    });
+    const expected = state === "healthy" ? { value: { ...entry, source: "legacy" } }
+      : { state: state === "missing" ? "missing" : "conflict" };
+    assert.deepEqual(JSON.parse(result.stdout), expected, state);
+
+    if (state === "missing") {
+      await assert.rejects(lstat(legacyHome), { code: "ENOENT" });
+    }
+  }
+});
+
+test("invalid lower-priority default cannot interrupt explicit or environment selections", async (t) => {
+  const { catalogHome, first, second, env } = await selectionFixture(t);
+  const defaultPath = path.join(catalogHome, "default.json");
+  for (const contents of ["{", '{"schemaVersion":99}', "null"]) {
+    await writeFile(defaultPath, contents);
+    assert.deepEqual(await resolveInboxSelection({ inbox: "first" }, env), { ...first, source: "explicit" });
+    assert.deepEqual(await resolveInboxSelection({ home: first.home }, env), { ...first, source: "explicit" });
+    assert.deepEqual(await resolveInboxSelection({}, { ...env, HTML_INBOX_NAME: "second" }), { ...second, source: "environment" });
+    assert.deepEqual(await resolveInboxSelection({}, { ...env, HTML_INBOX_HOME: second.home }), { ...second, source: "environment" });
+    await assert.rejects(resolveInboxSelection({}, env));
+    assert.equal(await readFile(defaultPath, "utf8"), contents);
+  }
+});
+
+test("legacy home override is used only after explicit, environment, and configured default selections", async (t) => {
+  const { root, catalogHome, first, second, env } = await selectionFixture(t);
+  const legacy = await createInbox("service", path.join(root, "service-user", ".html-inbox"), catalogHome);
+  assert.deepEqual(await resolveInboxSelection({}, env, legacy.home), { ...legacy, source: "legacy" });
+  assert.deepEqual(await resolveInboxSelection({ inbox: "first" }, env, "relative-unused"), { ...first, source: "explicit" });
+  assert.deepEqual(await resolveInboxSelection({ home: first.home }, env, "relative-unused"), { ...first, source: "explicit" });
+  assert.deepEqual(await resolveInboxSelection({}, { ...env, HTML_INBOX_NAME: "second" }, "relative-unused"), { ...second, source: "environment" });
+  assert.deepEqual(await resolveInboxSelection({}, { ...env, HTML_INBOX_HOME: second.home }, "relative-unused"), { ...second, source: "environment" });
+
+  await setDefaultInbox("first", catalogHome);
+  assert.deepEqual(await resolveInboxSelection({}, env, "relative-unused"), { ...first, source: "default" });
+  await clearDefaultInbox(catalogHome);
+  await writeFile(path.join(legacy.home, "instance-id"), randomUUID());
+  await assert.rejects(resolveInboxSelection({}, env, legacy.home),
+    (error: unknown) => error instanceof InboxInspectionError && error.state === "conflict");
+});
+
+test("only an unregistered missing legacy home can be prepared by the selected backend", async (t) => {
+  const { root, catalogHome, env } = await selectionFixture(t);
+  const unregistered = path.join(root, "unregistered-legacy");
+  const selection = await resolveInboxSelection({}, env, unregistered);
+  assert.deepEqual(selection, { home: unregistered, source: "legacy" });
+  await assert.rejects(lstat(unregistered), { code: "ENOENT" });
+  assert.deepEqual(await new LocalDocumentBackend(selection.home).listDocuments(), []);
+  assert.equal((await lstat(path.join(unregistered, "documents"))).isDirectory(), true);
+
+  const registered = await createInbox("legacy", path.join(root, "registered-legacy"), catalogHome);
+  await rename(registered.home, path.join(root, "moved-legacy"));
+  await assert.rejects(resolveInboxSelection({}, env, registered.home),
+    (error: unknown) => error instanceof InboxInspectionError && error.state === "missing");
+  await assert.rejects(lstat(registered.home), { code: "ENOENT" });
+});
+
+test("registered home selectors reject changed parent aliases even with a different UUID", { skip: process.platform === "win32" }, async (t) => {
+  const { root, catalogHome, env } = await selectionFixture(t);
+  const parent = path.join(root, "registered-parent");
+  const entry = await createInbox("legacy", path.join(parent, ".html-inbox"), catalogHome);
+  const movedParent = path.join(root, "moved-parent");
+  await rename(parent, movedParent);
+  await symlink(movedParent, parent);
+  await writeFile(path.join(movedParent, ".html-inbox", "instance-id"), randomUUID());
+  const hasConflict = (error: unknown) => error instanceof InboxInspectionError && error.state === "conflict";
+
+  await assert.rejects(resolveInboxSelection({ home: entry.home }, env), hasConflict);
+  await assert.rejects(resolveInboxSelection({}, env, `${entry.home}${path.sep}`), hasConflict);
 });

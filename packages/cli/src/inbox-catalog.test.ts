@@ -204,6 +204,148 @@ test("stale registration lock and unpublished partial record do not block catalo
   assert.equal(await readFile(lockPath, "utf8"), lockContents);
 });
 
+test("catalog reads retry valid default replacement and unlink races before and after open", async (t) => {
+  const { root, catalogHome } = await catalogFixture(t);
+  const first = await createInbox("first", path.join(root, "first"), catalogHome);
+  const second = await createInbox("second", path.join(root, "second"), catalogHome);
+  const defaultPath = path.join(catalogHome, "default.json");
+  const replacementPath = path.join(catalogHome, "replacement");
+  const modulePath = path.join(__dirname, "inbox-catalog.js");
+  const worker = `
+    const fs = require("node:fs/promises");
+    const [modulePath, catalogHome, defaultPath, replacementPath, mode] = process.argv.slice(1);
+    const perform = fs.open;
+    let isArmed = true;
+    fs.open = async (...args) => {
+      if (args[0] !== defaultPath || !isArmed) return perform(...args);
+      isArmed = false;
+
+      if (mode === "after-open") {
+        const file = await perform(...args);
+        await fs.rename(replacementPath, defaultPath);
+        return file;
+      }
+
+      if (mode === "unlink") await fs.rm(defaultPath);
+      else await fs.rename(replacementPath, defaultPath);
+      return perform(...args);
+    };
+    require(modulePath).readInboxCatalog(catalogHome)
+      .then(value => process.stdout.write(JSON.stringify(value)))
+      .catch(error => { console.error(error); process.exitCode = 1; });
+  `;
+
+  for (const mode of ["replace", "unlink", "after-open"]) {
+    await setDefaultInbox("first", catalogHome);
+    await writeFile(replacementPath, '{"schemaVersion":1,"name":"second"}', { mode: 0o600 });
+    const result = await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, defaultPath, replacementPath, mode]);
+    const expected = { inboxes: [first, second], ...(mode === "unlink" ? {} : { defaultName: "second" }) };
+    assert.deepEqual(JSON.parse(result.stdout), expected, mode);
+  }
+});
+
+test("replacement retries retain strict schema, byte limits, and hardlink validation", async (t) => {
+  const { root, catalogHome } = await catalogFixture(t);
+  await createInbox("work", path.join(root, "work"), catalogHome);
+  const defaultPath = path.join(catalogHome, "default.json");
+  const replacementPath = path.join(catalogHome, "replacement");
+  const modulePath = path.join(__dirname, "inbox-catalog.js");
+  const worker = `
+    const fs = require("node:fs/promises");
+    const [modulePath, catalogHome, defaultPath, replacementPath] = process.argv.slice(1);
+    const perform = fs.open;
+    let isArmed = true;
+    fs.open = async (...args) => {
+      if (args[0] === defaultPath && isArmed) {
+        isArmed = false;
+        await fs.rename(replacementPath, defaultPath);
+      }
+      return perform(...args);
+    };
+    require(modulePath).readInboxCatalog(catalogHome)
+      .then(() => { throw new Error("Unsafe replacement was accepted"); })
+      .catch(error => process.stdout.write(error.message));
+  `;
+
+  for (const { contents, message } of [
+    { contents: '{"schemaVersion":99}', message: /default must use schema version 1/ },
+    { contents: " ".repeat(64 * 1024 + 1), message: /too large/ },
+  ]) {
+    await setDefaultInbox("work", catalogHome);
+    await writeFile(replacementPath, contents, { mode: 0o600 });
+    const result = await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, defaultPath, replacementPath]);
+    assert.match(result.stdout, message);
+    assert.equal(await readFile(defaultPath, "utf8"), contents);
+    await rm(defaultPath);
+  }
+
+  await setDefaultInbox("work", catalogHome);
+  const target = path.join(root, "outside");
+  await writeFile(target, '{"schemaVersion":1,"name":"work"}', { mode: 0o644 });
+  const originalMode = (await stat(target)).mode;
+  await link(target, replacementPath);
+  const result = await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, defaultPath, replacementPath]);
+  assert.match(result.stdout, /regular private file/);
+  assert.equal((await stat(target)).mode, originalMode);
+});
+
+test("catalog replacement retries stop after a bounded number of changing files", async (t) => {
+  const { root, catalogHome } = await catalogFixture(t);
+  await createInbox("work", path.join(root, "work"), catalogHome);
+  await setDefaultInbox("work", catalogHome);
+  const modulePath = path.join(__dirname, "inbox-catalog.js");
+  const defaultPath = path.join(catalogHome, "default.json");
+  const worker = `
+    const assert = require("node:assert/strict");
+    const fs = require("node:fs/promises");
+    const [modulePath, catalogHome, defaultPath] = process.argv.slice(1);
+    const perform = fs.open;
+    let attempts = 0;
+    fs.open = async (...args) => {
+      if (args[0] === defaultPath) {
+        attempts += 1;
+        assert(attempts <= 20, "Catalog retry loop did not stop");
+        const replacementPath = defaultPath + ".replacement";
+        await fs.writeFile(replacementPath, '{"schemaVersion":1,"name":"work"}', {mode: 0o600});
+        await fs.rename(replacementPath, defaultPath);
+      }
+      return perform(...args);
+    };
+    require(modulePath).readInboxCatalog(catalogHome)
+      .then(() => { throw new Error("Continuously changing record was accepted"); })
+      .catch(error => {
+        assert.match(error.message, /changed repeatedly during read/);
+        assert(attempts > 1 && attempts <= 20);
+        process.stdout.write("bounded retries verified");
+      });
+  `;
+
+  const result = await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, defaultPath], { timeout: 5000 });
+  assert.equal(result.stdout, "bounded retries verified");
+});
+
+test("100 alternating default updates preserve three concurrent bound and catalog readers", async (t) => {
+  const { root, catalogHome } = await catalogFixture(t);
+  const first = await createInbox("first", path.join(root, "first"), catalogHome);
+  await createInbox("second", path.join(root, "second"), catalogHome);
+  await setDefaultInbox("first", catalogHome);
+  const env = { HTML_INBOX_CATALOG_HOME: catalogHome };
+  const updateDefaults = async () => {
+    for (let index = 0; index < 100; index += 1) {
+      await setDefaultInbox(index % 2 === 0 ? "second" : "first", catalogHome);
+    }
+  };
+  const readSelections = async () => {
+    for (let index = 0; index < 100; index += 1) {
+      assert.deepEqual(await resolveInboxSelection({ inbox: "first" }, env), { ...first, source: "explicit" });
+      const catalog = await readInboxCatalog(catalogHome);
+      assert(catalog.defaultName === "first" || catalog.defaultName === "second");
+    }
+  };
+
+  await Promise.all([updateDefaults(), readSelections(), readSelections(), readSelections()]);
+});
+
 test("duplicate locations and copied UUIDs fail even under concurrent different names", async (t) => {
   const { root, catalogHome } = await catalogFixture(t);
   const home = await legacyLibrary(root, "shared-location");

@@ -37,7 +37,10 @@ export function assertInboxName(name: string): void {
   }
 }
 
-export async function readInboxCatalog(catalogHome = getInboxCatalogHome()): Promise<InboxCatalog> {
+export async function readInboxCatalog(
+  catalogHome = getInboxCatalogHome(),
+  options: { includeDefault?: boolean } = {},
+): Promise<InboxCatalog> {
   const root = checkedCatalogHome(catalogHome);
   if (!await hasCatalogDirectory(root)) {
     return { inboxes: [] };
@@ -55,7 +58,7 @@ export async function readInboxCatalog(catalogHome = getInboxCatalogHome()): Pro
     }
   }
 
-  const defaultName = await readDefaultInbox(root);
+  const defaultName = options.includeDefault === false ? undefined : await readDefaultInbox(root);
   return { inboxes, ...(defaultName ? { defaultName } : {}) };
 }
 
@@ -235,35 +238,54 @@ async function readDefaultInbox(root: string): Promise<string | undefined> {
 }
 
 async function readCatalogJson(filePath: string): Promise<{ value: unknown } | null> {
-  const checked = await lstat(filePath).catch((error: unknown) => {
-    if (hasErrorCode(error, "ENOENT")) {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const checked = await lstat(filePath).catch((error: unknown) => {
+      if (hasErrorCode(error, "ENOENT")) {
+        return null;
+      }
+
+      throw error;
+    });
+    if (!checked) {
       return null;
     }
 
-    throw error;
-  });
-  if (!checked) {
-    return null;
-  }
-
-  if (!checked.isFile() || checked.isSymbolicLink() || checked.nlink !== 1) {
-    throw new Error(`Catalog record must be a regular private file: ${filePath}`);
-  }
-
-  const file = await open(filePath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0));
-  try {
-    const info = await file.stat();
-    if (!info.isFile() || info.nlink !== 1 || info.dev !== checked.dev || info.ino !== checked.ino) {
-      throw new Error(`Catalog record changed during read: ${filePath}`);
+    if (!checked.isFile() || checked.isSymbolicLink() || checked.nlink !== 1) {
+      throw new Error(`Catalog record must be a regular private file: ${filePath}`);
     }
 
-    await file.chmod(PRIVATE_FILE_MODE);
-    const bytes = await readBoundedFile(file, 64 * 1024, `Catalog record is too large: ${filePath}`);
-    const value: unknown = JSON.parse(bytes.toString("utf8"));
-    return { value };
-  } finally {
-    await file.close();
+    const file = await open(filePath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0))
+      .catch((error: unknown) => {
+        if (hasErrorCode(error, "ENOENT")) {
+          return null;
+        }
+
+        throw error;
+      });
+    if (!file) {
+      continue;
+    }
+
+    try {
+      const info = await file.stat();
+      if (!info.isFile() || info.nlink > 1) {
+        throw new Error(`Catalog record must be a regular private file: ${filePath}`);
+      }
+
+      if (info.nlink === 0 || info.dev !== checked.dev || info.ino !== checked.ino) {
+        continue;
+      }
+
+      await file.chmod(PRIVATE_FILE_MODE);
+      const bytes = await readBoundedFile(file, 64 * 1024, `Catalog record is too large: ${filePath}`);
+      const value: unknown = JSON.parse(bytes.toString("utf8"));
+      return { value };
+    } finally {
+      await file.close();
+    }
   }
+
+  throw new Error(`Catalog record changed repeatedly during read; retry the command: ${filePath}`);
 }
 
 async function withCatalogRegistration<T>(catalogHome: string, register: (root: string) => Promise<T>): Promise<T> {

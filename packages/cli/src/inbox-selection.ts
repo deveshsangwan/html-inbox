@@ -18,14 +18,17 @@ export interface ResolvedInboxSelection {
 export async function resolveInboxSelection(
   selection: InboxSelection = {},
   env: NodeJS.ProcessEnv = process.env,
+  legacyHome?: string,
 ): Promise<ResolvedInboxSelection> {
   const catalogHome = getInboxCatalogHome(env);
-  const catalog = await readInboxCatalog(catalogHome);
-  if (selection.inbox !== undefined || selection.home !== undefined) {
+  const hasExplicitSelection = selection.inbox !== undefined || selection.home !== undefined;
+  const hasEnvironmentSelection = Boolean(env.HTML_INBOX_NAME || env.HTML_INBOX_HOME);
+  const catalog = await readInboxCatalog(catalogHome, { includeDefault: !hasExplicitSelection && !hasEnvironmentSelection });
+  if (hasExplicitSelection) {
     return resolveSelectors(selection, catalog.inboxes, "explicit");
   }
 
-  if (env.HTML_INBOX_NAME || env.HTML_INBOX_HOME) {
+  if (hasEnvironmentSelection) {
     // Relative HTML_INBOX_HOME keeps its legacy meaning, relative to this operation's cwd.
     const home = env.HTML_INBOX_HOME ? path.resolve(env.HTML_INBOX_HOME) : undefined;
     return resolveSelectors({ inbox: env.HTML_INBOX_NAME || undefined, home }, catalog.inboxes, "environment");
@@ -35,8 +38,7 @@ export async function resolveInboxSelection(
     return resolveSelectors({ inbox: catalog.defaultName }, catalog.inboxes, "default");
   }
 
-  const home = await canonicalizeInboxHome(getInboxHome(env), true);
-  return { home, source: "legacy" };
+  return resolveSelectors({ home: legacyHome ?? getInboxHome(env) }, catalog.inboxes, "legacy");
 }
 
 async function resolveSelectors(
@@ -62,7 +64,9 @@ async function resolveSelectors(
     throw new Error("Inbox selection requires a name or home");
   }
 
-  const entry = inboxes.find((candidate) => candidate.home === home);
+  const requestedHome = path.resolve(selection.home ?? home);
+  const entry = inboxes.find((candidate) => candidate.home === requestedHome)
+    ?? inboxes.find((candidate) => candidate.home === home);
   if (entry) {
     return { ...await inspectRegisteredInbox(entry), source };
   }
