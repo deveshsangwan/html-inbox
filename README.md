@@ -117,6 +117,8 @@ html-inbox viewer
 
 Use `html-inbox viewer --foreground` to keep it attached for debugging, containers, or a service manager. Failed background startup reports an error and keeps diagnostics under the protected inbox home.
 
+Detachment does not escape an agent's systemd scope or provide automatic restart. If that scope is stopped, its viewer stops too. Use the explicit [boot service](docs/self-hosting.md#start-at-boot) for links that must survive agent cleanup, logout, or reboot.
+
 Stop a viewer started by an older HTML Inbox release before upgrading. The private control protocol has changed; the new CLI refuses to signal a process whose older record it cannot verify.
 
 Manage the local library and viewer:

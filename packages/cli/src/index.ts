@@ -48,6 +48,7 @@ Commands:
   viewer [--foreground] [--loopback|--lan|--tailscale] [--host <ip>] [--port <port>]
       Start or reuse a background viewer after verifying readiness.
       --foreground stays attached. First startup is loopback-only.
+      Use viewer service install for supervision beyond the launching agent's lifetime.
       LAN trusts all reachable readers; Tailscale uses existing HTTPS Serve.
       Omitted networking options reuse the saved configuration.
 

@@ -83,6 +83,8 @@ html-inbox viewer stop
 
 Startup waits for verified readiness. Use `--foreground` for debugging, containers, or service managers. Publishing starts or reuses the same viewer and prints its document URL.
 
+Detachment does not escape an agent's systemd scope or provide automatic restart. Use an explicit [boot service](https://github.com/deveshsangwan/html-inbox/blob/main/docs/self-hosting.md#start-at-boot) for links that must survive agent cleanup, logout, or reboot. Graceful shutdown diagnostics include the timestamp, PID, and shutdown reason in `viewer.log`, foreground stderr, or the service journal.
+
 Stop an older viewer before upgrading. The new private control protocol refuses unverified older process records.
 
 Explicit self-hosting modes serve the complete live inbox for reading and searching:
