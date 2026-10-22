@@ -4,7 +4,7 @@ import path from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import { DeleteResult, DocumentMetadata } from "./documents";
-import { getInboxHome, getViewerPort, LocalDocumentBackend } from "./backend";
+import { getViewerPort, LocalDocumentBackend } from "./backend";
 import { loadPublishInput, PublishRequest } from "./publish-input";
 import { ensurePrivateDirectory } from "./private-storage";
 import { RemoteState, RemoteStatus, RemoteWorkflow } from "./remote-workflow";
@@ -17,11 +17,13 @@ import { parseViewerNetworkConfig } from "./viewer-network";
 import { getViewerServiceStatus, installViewerService, resolveViewerServiceHome, uninstallViewerService } from "./viewer-service";
 import { configureViewerServiceLogging } from "./viewer-service-log";
 import { readPreferences, setAppearancePreference } from "./preferences";
+import { resolveInboxSelection, type ResolvedInboxSelection } from "./inbox-selection";
+import { runInboxCommand, runHubCommand } from "./inbox-commands";
 
 export const USAGE = `Usage: html-inbox <command> [options]
 
 Commands:
-  publish <file.html> --title <title> --type <type>
+  publish <file.html> --title <title> --type <type> [--json]
       Store an HTML document and print its active viewer URL.
 
   list [--json]
@@ -61,11 +63,27 @@ Commands:
       Manage boot startup with systemd or a macOS LaunchDaemon.
       Install and uninstall require administrator privileges; the viewer runs as a normal user.
 
+  inbox create <name> --home <absolute-path> [--json]
+  inbox register <name> --home <absolute-path> [--json]
+  inbox list [--json]
+  inbox default <name> | inbox default --clear
+      Name independent libraries, inspect their local state, or choose a fallback.
+
+  hub init --config <absolute-path> --inbox <name> [--inbox <name> ...] [--name <title>]
+      Capture explicit reading membership in a new local config.
+  hub --config <absolute-path> [--port <port>] [--loopback|--lan] [--host <ip>]
+      Serve selected local libraries in the foreground. Default: loopback port 3218.
+      Every reachable reader can read all selected libraries. Ctrl-C stops the hub.
+
 Options:
+  --inbox <name>  Select a registered library for this operation.
+  --home <path>   Select an absolute library path for this operation.
   -h, --help       Show this help.
   -v, --version    Print the installed version.
 
 Environment:
+  HTML_INBOX_NAME                 Registered library name.
+  HTML_INBOX_CATALOG_HOME         Private catalog, default ~/.config/html-inbox.
   HTML_INBOX_HOME                 Library directory, default ~/.html-inbox.
   HTML_INBOX_PORT                 Port override, default 3217 on first startup.
   HTML_INBOX_TAILSCALE_COMMAND    Path to an existing Tailscale executable.`;
@@ -84,21 +102,38 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     return;
   }
 
+  if (parsed.command === "inbox create" || parsed.command === "inbox register" || parsed.command === "inbox list" || parsed.command === "inbox default") {
+    await runInboxCommand(parsed);
+    return;
+  }
+
+  if (parsed.command === "hub" || parsed.command === "hub init") {
+    await runHubCommand(parsed);
+    return;
+  }
+
+  const selection = await resolveInboxSelection(parsed);
+  const home = parsed.command === "viewer service" && selection.source === "legacy"
+    ? await resolveViewerServiceHome({ user: parsed.user })
+    : selection.home;
+  if (selection.name) {
+    console.error(`html-inbox: Inbox ${selection.name} (${home})`);
+  }
+
   if (command === "publish") {
-    const url = await publishCommand(parsed.options);
-    console.log(url);
+    const url = await publishCommand(parsed.options, selection);
+    console.log(parsed.json ? JSON.stringify({ url, inbox: selection.name ?? null, home }) : url);
     return;
   }
 
   if (command === "list") {
     const json = parsed.json;
-    const documents = await new LocalDocumentBackend(getInboxHome()).listDocuments();
+    const documents = await new LocalDocumentBackend(home).listDocuments();
     console.log(formatDocumentList(documents, json));
     return;
   }
 
   if (command === "preferences") {
-    const home = getInboxHome();
     const preferences = parsed.appearance === undefined
       ? await readPreferences(home)
       : await setAppearancePreference(home, parsed.appearance);
@@ -107,13 +142,12 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
   }
 
   if (command === "delete") {
-    await deleteCommand(parsed);
+    await deleteCommand(parsed, home);
     return;
   }
 
   if (command === "export") {
     const options = parsed.options;
-    const home = getInboxHome();
     await ensurePrivateDirectory(home);
     assertExportOutsideHome(options.outputDir, home);
     const result = await exportStaticSnapshot(
@@ -125,19 +159,19 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
   }
 
   if (command === "remote init" || command === "remote publish" || command === "remote status" || command === "remote reconcile" || command === "remote revoke") {
-    await remoteCommand(parsed);
+    await remoteCommand(parsed, home);
     return;
   }
 
   if (command === "viewer service") {
-    const home = await resolveViewerServiceHome({ home: process.env.HTML_INBOX_HOME, user: parsed.user });
+    const serviceHome = await resolveViewerServiceHome({ home, user: parsed.user });
     if (parsed.action === "status") {
-      console.log(JSON.stringify(await getViewerServiceStatus({ home }), null, 2));
+      console.log(JSON.stringify(await getViewerServiceStatus({ home: serviceHome }), null, 2));
       return;
     }
 
     if (parsed.action === "uninstall") {
-      console.log(JSON.stringify(await uninstallViewerService({ home }), null, 2));
+      console.log(JSON.stringify(await uninstallViewerService({ home: serviceHome }), null, 2));
       return;
     }
 
@@ -152,15 +186,14 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
   }
 
   if (command === "viewer") {
-    const home = getInboxHome();
     const environmentPort = process.env.HTML_INBOX_PORT ? getViewerPort() : undefined;
     if (parsed.action === "status") {
-      console.log(JSON.stringify(await getViewerStatus(home, environmentPort), null, 2));
+      console.log(JSON.stringify({ ...(await getViewerStatus(home, environmentPort)), ...(selection.name ? { inbox: selection.name } : {}) }, null, 2));
       return;
     }
 
     if (parsed.action === "stop") {
-      console.log(JSON.stringify(await stopViewer(home, environmentPort), null, 2));
+      console.log(JSON.stringify({ ...(await stopViewer(home, environmentPort)), ...(selection.name ? { inbox: selection.name } : {}) }, null, 2));
       return;
     }
 
@@ -177,12 +210,12 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
         ? JSON.parse(process.env.HTML_INBOX_VIEWER_CONFIG)
         : await resolveViewerConfiguration(home, input);
       const config = parseViewerNetworkConfig(workerConfig);
-      await startViewer(new LocalDocumentBackend(home), home, config);
+      await startViewer(new LocalDocumentBackend(home), home, config, selection.name ?? process.env.HTML_INBOX_VIEWER_NAME);
       console.error(`html-inbox viewer listening on ${(await getViewerStatus(home)).url}`);
       return;
     }
 
-    console.log((await ensureViewer(home, input)).url);
+    console.log((await ensureViewer(home, input, selection.name)).url);
     return;
   }
 
@@ -198,8 +231,12 @@ export function getCliVersion(): string {
   return packageJson.version;
 }
 
-export async function publishCommand(args: PublishRequest): Promise<string> {
-  const home = getInboxHome();
+export async function publishCommand(
+  args: PublishRequest,
+  selection?: ResolvedInboxSelection,
+): Promise<string> {
+  const destination = selection ?? await resolveInboxSelection();
+  const home = destination.home;
   const port = process.env.HTML_INBOX_PORT ? getViewerPort() : undefined;
   const backend = new LocalDocumentBackend(home);
   const { input, warnings } = await loadPublishInput(args);
@@ -208,7 +245,7 @@ export async function publishCommand(args: PublishRequest): Promise<string> {
     console.warn(`html-inbox: ${warning}`);
   }
 
-  const viewer = await ensureViewer(home, port);
+  const viewer = await ensureViewer(home, port, destination.name);
   const metadata = await backend.publish(input);
   return `${viewer.url}/documents/${metadata.id}`;
 }
@@ -310,8 +347,8 @@ export function formatRemoteStatus(status: RemoteStatus): string {
   return lines.join("\n");
 }
 
-async function deleteCommand({ id, force, json }: Extract<CliCommand, { command: "delete" }>): Promise<void> {
-  const backend = new LocalDocumentBackend(getInboxHome());
+async function deleteCommand({ id, force, json }: Extract<CliCommand, { command: "delete" }>, home: string): Promise<void> {
+  const backend = new LocalDocumentBackend(home);
   const metadata = await backend.getDocumentMetadata(id);
   if (!metadata) {
     throw new Error(`Document not found: ${id}`);
@@ -332,9 +369,8 @@ async function deleteCommand({ id, force, json }: Extract<CliCommand, { command:
   console.log(formatDeleteResult(result, json));
 }
 
-async function remoteCommand(parsed: Extract<CliCommand, { command: `remote ${string}` }>): Promise<void> {
+async function remoteCommand(parsed: Extract<CliCommand, { command: `remote ${string}` }>, home: string): Promise<void> {
   const action = parsed.command;
-  const home = getInboxHome();
   const workflow = new RemoteWorkflow(new LocalDocumentBackend(home), home);
 
   if (action === "remote init") {

@@ -8,6 +8,8 @@ HTML Inbox is local-first. Publishing, deletion, and process management stay in 
 
 The CLI is packaged as a self-contained `html-inbox` executable with no runtime package dependencies.
 
+You can intentionally name independent local libraries and read selected ones through an optional combined hub. See [named inboxes and local reading](docs/named-inboxes.md) for deterministic routing, source membership, and exposure rules.
+
 ## Set up your agent
 
 Start with the main skill if you want your agent to publish HTML and manage the viewer. The current skills CLI requires Node.js 22.20.0 or newer and npm for installation and updates:

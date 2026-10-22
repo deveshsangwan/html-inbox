@@ -1,6 +1,6 @@
 ---
 name: html-inbox
-description: Publish HTML artifacts to HTML Inbox. Use when the user wants to publish or open a document, set up document appearance, operate its background viewer, choose loopback, LAN, or Tailscale reader access, manage boot startup, or diagnose a rejected document.
+description: Publish HTML artifacts to HTML Inbox. Use for publishing or opening documents, named library selection, a local reading hub, document appearance, viewer operation, loopback/LAN/Tailscale access, boot startup, or rejected documents.
 ---
 
 # HTML Inbox
@@ -22,6 +22,16 @@ Then follow the installed `html-inbox-remote` skill, or read its [repository gui
 ## Resolve the CLI
 
 Before running commands, follow [CLI resolution](./references/cli-resolution.md). It selects a compatible installed CLI or the pinned npm fallback and defines the `inbox` command used below. Keep that selected prefix and inbox environment for the whole operation.
+
+## Resolve the destination
+
+Preserve an explicit user-selected library and its saved exposure. Check `inbox --help` before using named inbox or hub commands; older installed versions and the pinned 0.2.1 fallback lack them. Keep the selected executable for the operation. If named routing is required but unavailable, report that the selected CLI needs updating; do not silently create a different library.
+
+With named routing support, selection is explicit `--inbox NAME` / absolute `--home PATH`, then process `HTML_INBOX_NAME` / `HTML_INBOX_HOME`, then a configured default, then legacy `~/.html-inbox`. Same-tier name and home must agree. Resolve a named destination with `inbox viewer status --inbox NAME`, or inspect `inbox inbox list --json` when the intended name needs checking. An unknown name, missing root, or identity conflict is a terminal selection error. Keep the same selector on preferences, publish, list, export, and viewer commands. Command stdout remains the URL; named context is on stderr, or opt into `publish --json`.
+
+Create a library only for an intentional user-requested destination using `inbox inbox create NAME --home ABS`; register existing data in place with `inbox inbox register NAME --home ABS`. Ordinary artifact work reuses its resolved destination. Do not create a task-specific library or change a global default just because another agent is active. Different libraries need nonconflicting ports; preserve unrelated viewers and diagnose conflicts through private lifecycle status.
+
+When the user requests combined local reading, follow [named inboxes and hub operation](https://github.com/deveshsangwan/html-inbox/blob/main/docs/named-inboxes.md). `hub init` captures only explicitly approved library names in trusted local configuration. New libraries never auto-join. Every reader reaching a hub can read all mounts, including libraries with stopped or private standalone viewers. Choose exposure explicitly. A hub is a foreground reader; publication still targets one library. Same-machine, same-account sources only; hub commands do not configure Tailscale or boot services.
 
 ## Set up appearance
 

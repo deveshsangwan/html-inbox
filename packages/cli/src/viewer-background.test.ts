@@ -245,7 +245,7 @@ test("early child exit captures private diagnostics and timeout kills only the f
     assert(child && typeof child === "object" && "pid" in child && typeof child.pid === "number");
     const failedChildPid = child.pid;
     assert.throws(() => process.kill(failedChildPid, 0), /ESRCH/);
-    assert.deepEqual("args" in child ? child.args : null, ["viewer", "--foreground"]);
+    assert.deepEqual("args" in child ? child.args : null, ["viewer", "--foreground", "--home", home]);
     assert.equal((await getViewerStatus(home, port)).state, "stopped");
   } finally {
     if (originalEntry === undefined) {

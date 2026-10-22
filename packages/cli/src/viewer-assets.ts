@@ -171,7 +171,7 @@ a { color: inherit; }
 h1 { margin: 0; color: var(--text-strong); font-weight: 650; letter-spacing: -0.02em; }
 .library { width: min(100% - 2rem, 74rem); margin-inline: auto; padding-block: 0.25rem 2rem; }
 .library__bar { display: flex; align-items: center; gap: 0.75rem; min-height: 3rem; }
-.library__title { padding-left: 0.75rem; border-left: 1px solid var(--border); font-size: 0.875rem; }
+.library__title { min-width: 0; max-width: min(100%, 24rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 0.75rem; border-left: 1px solid var(--border); font-size: 0.875rem; }
 .document-count { margin: 0.75rem 0 0.5rem; color: var(--faint); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
 .search { min-width: 0; width: min(100%, 28rem); margin-left: auto; }
 .search__control { display: flex; align-items: center; gap: 0.4rem; }

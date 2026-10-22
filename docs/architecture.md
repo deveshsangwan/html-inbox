@@ -39,6 +39,8 @@ New records include a storage schema version. Legacy records without the field a
 
 ## Backend
 
+Named library selection and the optional local reading hub are described in [named inboxes](named-inboxes.md). A private per-user catalog binds intentional names to canonical homes and expected UUIDs. CLI operations resolve one destination before calling the existing store and lifecycle. Hub membership is separate trusted local configuration; it never controls publishing or auto-mounts catalog entries.
+
 The local document store exposes these operations:
 
 - `publish(input)`

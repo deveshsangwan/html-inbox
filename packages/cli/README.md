@@ -1,5 +1,7 @@
 # HTML Inbox
 
+Name independent local libraries with `inbox create` or `inbox register`, select one with `--inbox`, and optionally read an explicit set through `hub`. See [named inboxes and local reading](https://github.com/deveshsangwan/html-inbox/blob/main/docs/named-inboxes.md) for routing, membership, and exposure rules. Older CLI releases lack these commands; check `--help` before using them.
+
 HTML Inbox stores generated HTML reports in a local library, previews them through a sandboxed viewer, and can publish complete unlisted snapshots to a user-owned Cloudflare Pages project. The live viewer listens on loopback by default.
 
 The library defaults to `~/.html-inbox`; set `HTML_INBOX_HOME` to choose another location. On POSIX filesystems that enforce Unix permissions, the CLI creates and tightens managed directories to `0700` and files to `0600`. On Windows, privacy relies on existing and inherited filesystem ACLs. The CLI does not install or verify owner-only Windows ACLs. Use a protected local user directory and restrict access throughout its subtree, including remote-state files containing bearer capabilities. See the [Windows storage prerequisites](https://github.com/deveshsangwan/html-inbox/blob/main/docs/threat-model.md#windows-storage-prerequisites) before storing sensitive content. Exports and temporary credential logs need protected locations too.

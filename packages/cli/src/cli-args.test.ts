@@ -103,3 +103,42 @@ test("viewer startup and service installation accept explicit exposure and rejec
     assert.throws(() => parseCommand(args), Error, args.join(" "));
   }
 });
+
+test("all library operations carry explicit selection without changing command options", () => {
+  for (const args of [
+    ["publish", "report.html", "--title=Title", "--type=report"],
+    ["list", "--json"], ["preferences", "--appearance=dark"],
+    ["delete", "id", "--force"], ["export", "--out=output"],
+    ["viewer"], ["viewer", "status"], ["viewer", "stop"],
+    ["viewer", "service", "status"], ["remote", "status"],
+  ]) {
+    assert.deepEqual(parseCommand([...args, "--inbox=office"]), { ...parseCommand(args), inbox: "office" });
+    assert.deepEqual(parseCommand([...args, "--home", "/libraries/office"]), { ...parseCommand(args), home: "/libraries/office" });
+  }
+
+  assert.deepEqual(parseCommand(["publish", "--inbox=home", "--title=Title", "--type=report", "--", "--home"]), {
+    command: "publish", inbox: "home", options: { filePath: "--home", title: "Title", type: "report" },
+  });
+  assert.throws(() => parseCommand(["list", "--inbox=a", "--inbox=b"]), /only once/);
+  assert.throws(() => parseCommand(["list", "--home"]), /requires a value/);
+  assert.throws(() => parseCommand(["--version", "--inbox=a"]), /requires a library command/);
+});
+
+test("catalog and hub administration require intentional names, homes and membership", () => {
+  assert.deepEqual(parseCommand(["inbox", "create", "office", "--home=/libraries/office"]), {
+    command: "inbox create", name: "office", home: "/libraries/office", json: false,
+  });
+  assert.deepEqual(parseCommand(["inbox", "default", "--clear"]), { command: "inbox default", clear: true });
+  assert.deepEqual(parseCommand(["hub", "init", "--config=/hub.json", "--inbox=home", "--inbox=office"]), {
+    command: "hub init", config: "/hub.json", name: "Reading hub", inboxes: ["home", "office"],
+  });
+  assert.deepEqual(parseCommand(["hub", "--config=/hub.json"]), { command: "hub", config: "/hub.json", port: 3218, exposure: "loopback" });
+
+  for (const args of [
+    ["inbox", "create", "office"], ["inbox", "register", "--home=/a"],
+    ["inbox", "default", "office", "--clear"], ["hub", "init", "--config=/hub.json"],
+    ["hub", "--config=/hub.json", "--tailscale"], ["hub", "--config=/hub.json", "--loopback", "--lan"],
+  ]) {
+    assert.throws(() => parseCommand(args), Error, args.join(" "));
+  }
+});
