@@ -86,6 +86,41 @@ test("create accepts new or empty homes and refuses unrelated data or existing l
   await assert.rejects(createInbox("relative", "relative", catalogHome), /absolute/);
 });
 
+test("canonicalizing a home on an unavailable Windows drive stops at the missing root", async () => {
+  const modulePath = path.join(__dirname, "inbox-home.js");
+  const worker = `
+    const assert = require("node:assert/strict");
+    const fs = require("node:fs/promises");
+    const path = require("node:path");
+    const { canonicalizeInboxHome } = require(process.argv[1]);
+    for (const operation of ["isAbsolute", "resolve", "dirname", "basename", "join", "parse"]) {
+      path[operation] = path.win32[operation];
+    }
+
+    const calls = [];
+    for (const operation of ["lstat", "realpath"]) {
+      fs[operation] = async home => {
+        calls.push([operation, home]);
+        if (calls.length > 8) throw new Error("Repeated missing-root lookup");
+        throw Object.assign(new Error("Unavailable drive"), { code: "ENOENT", path: home });
+      };
+    }
+
+    const home = String.raw\`Z:\\library\`;
+    const root = path.parse(home).root;
+    canonicalizeInboxHome(home, true)
+      .then(() => { throw new Error("Unavailable drive was accepted"); })
+      .catch(error => {
+        assert.equal(error.code, "ENOENT");
+        assert.equal(error.path, root);
+        assert.deepEqual(calls, [["lstat", home], ["realpath", root], ["lstat", root]]);
+      })
+      .catch(error => { console.error(error); process.exitCode = 1; });
+  `;
+
+  await runNode(process.execPath, ["-e", worker, modulePath], { timeout: 5000 });
+});
+
 test("register rejects missing, unrelated, and unsupported homes without adopting them", async (t) => {
   const { root, catalogHome } = await catalogFixture(t);
   const missing = path.join(root, "missing");
@@ -216,13 +251,20 @@ test("catalog reads retry valid default replacement and unlink races before and 
     const [modulePath, catalogHome, defaultPath, replacementPath, mode] = process.argv.slice(1);
     const perform = fs.open;
     let isArmed = true;
+    let replacementBlocked = false;
     fs.open = async (...args) => {
       if (args[0] !== defaultPath || !isArmed) return perform(...args);
       isArmed = false;
 
       if (mode === "after-open") {
         const file = await perform(...args);
-        await fs.rename(replacementPath, defaultPath);
+        try {
+          await fs.rename(replacementPath, defaultPath);
+        } catch (error) {
+          // Windows can deny replacing an open file; its existing value remains readable.
+          if (process.platform !== "win32" || error.code !== "EPERM") throw error;
+          replacementBlocked = true;
+        }
         return file;
       }
 
@@ -231,7 +273,7 @@ test("catalog reads retry valid default replacement and unlink races before and 
       return perform(...args);
     };
     require(modulePath).readInboxCatalog(catalogHome)
-      .then(value => process.stdout.write(JSON.stringify(value)))
+      .then(catalog => process.stdout.write(JSON.stringify({ catalog, replacementBlocked })))
       .catch(error => { console.error(error); process.exitCode = 1; });
   `;
 
@@ -239,8 +281,15 @@ test("catalog reads retry valid default replacement and unlink races before and 
     await setDefaultInbox("first", catalogHome);
     await writeFile(replacementPath, '{"schemaVersion":1,"name":"second"}', { mode: 0o600 });
     const result = await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, defaultPath, replacementPath, mode]);
-    const expected = { inboxes: [first, second], ...(mode === "unlink" ? {} : { defaultName: "second" }) };
-    assert.deepEqual(JSON.parse(result.stdout), expected, mode);
+    const { catalog, replacementBlocked } = JSON.parse(result.stdout);
+    assert.equal(typeof replacementBlocked, "boolean");
+    if (replacementBlocked) {
+      assert.equal(process.platform, "win32");
+      assert.equal(mode, "after-open");
+    }
+
+    const expected = { inboxes: [first, second], ...(mode === "unlink" ? {} : { defaultName: replacementBlocked ? "first" : "second" }) };
+    assert.deepEqual(catalog, expected, mode);
   }
 });
 

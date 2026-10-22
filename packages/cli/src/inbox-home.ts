@@ -20,7 +20,7 @@ export async function canonicalizeInboxHome(home: string, allowMissing = false):
 
   const absoluteHome = path.resolve(home);
   const info = await lstat(absoluteHome).catch((error: unknown) => {
-    if (allowMissing && hasErrorCode(error, "ENOENT")) {
+    if (allowMissing && hasErrorCode(error, "ENOENT") && path.dirname(absoluteHome) !== absoluteHome) {
       return null;
     }
 
