@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { cp, mkdtemp, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
+import { cp, lstat, mkdtemp, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -11,6 +11,27 @@ import { stopViewer } from "./viewer-server";
 import { LocalDocumentBackend } from "./backend";
 
 const executeFile = promisify(execFile);
+
+test("catalog CLI clears and resets corrupt defaults without starting a listener", async (t) => {
+  const root = await temporaryHome(t);
+  const catalogHome = path.join(root, "catalog");
+  const env = { ...process.env, HTML_INBOX_CATALOG_HOME: catalogHome, HTML_INBOX_HOME: undefined, HTML_INBOX_NAME: undefined };
+  const run = (...args: string[]) => executeFile(process.execPath, [path.join(__dirname, "index.js"), ...args], { env });
+  await run("inbox", "create", "work", "--home", path.join(root, "work"));
+  const defaultPath = path.join(catalogHome, "default.json");
+
+  for (const contents of ["{", "null", '{"schemaVersion":99,"name":"work"}', " ".repeat(64 * 1024 + 1)]) {
+    await writeFile(defaultPath, contents, { mode: 0o600 });
+    await assert.rejects(run("list", "--json"));
+    await run("inbox", "default", "--clear");
+    await assert.rejects(lstat(defaultPath), { code: "ENOENT" });
+
+    await writeFile(defaultPath, contents, { mode: 0o600 });
+    await run("inbox", "default", "work");
+    assert.deepEqual(JSON.parse(await readFile(defaultPath, "utf8")), { schemaVersion: 1, name: "work" });
+    assert.deepEqual(JSON.parse((await run("list", "--json")).stdout), []);
+  }
+});
 
 test("named CLI destinations isolate data, startup identity, preferences, export and lifecycle", { timeout: 60_000 }, async (t) => {
   const root = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-named-cli-")));

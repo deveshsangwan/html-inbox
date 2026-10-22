@@ -1,5 +1,5 @@
 import { constants } from "node:fs";
-import { lstat, open, readdir, rm } from "node:fs/promises";
+import { lstat, open, readdir, rm, unlink } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -160,8 +160,21 @@ export async function setDefaultInbox(name: string, catalogHome = getInboxCatalo
   }
 
   await inspectRegisteredInbox(entry);
-  await readDefaultInbox(catalogHome);
-  await writeAtomicPrivateJson(path.join(checkedCatalogHome(catalogHome), "default.json"), { schemaVersion: 1, name });
+  const defaultPath = path.join(checkedCatalogHome(catalogHome), "default.json");
+  const existing = await lstat(defaultPath).catch((error: unknown) => {
+    if (hasErrorCode(error, "ENOENT")) {
+      return null;
+    }
+
+    throw error;
+  });
+
+  // The atomic writer hardens an existing file before replacement, so reject shared inodes first.
+  if (existing && (!existing.isFile() || existing.isSymbolicLink() || existing.nlink !== 1)) {
+    throw new Error(`Catalog record must be a regular private file: ${defaultPath}`);
+  }
+
+  await writeAtomicPrivateJson(defaultPath, { schemaVersion: 1, name });
 }
 
 export async function clearDefaultInbox(catalogHome = getInboxCatalogHome()): Promise<void> {
@@ -170,8 +183,13 @@ export async function clearDefaultInbox(catalogHome = getInboxCatalogHome()): Pr
     return;
   }
 
-  await readDefaultInbox(root);
-  await rm(path.join(root, "default.json"), { force: true });
+  try {
+    await unlink(path.join(root, "default.json"));
+  } catch (error) {
+    if (!hasErrorCode(error, "ENOENT")) {
+      throw error;
+    }
+  }
 }
 
 function checkedCatalogHome(home: string): string {

@@ -498,6 +498,130 @@ test("defaults validate named homes, persist independently, and clear without a 
   assert.deepEqual(await readInboxCatalog(catalogHome), { inboxes: [first, second] });
 });
 
+test("default mutations recover corrupt contents while ordinary reads remain strict", async (t) => {
+  for (const { label, contents, message } of [
+    { label: "invalid JSON", contents: "{", message: /JSON/ },
+    { label: "invalid schema", contents: "null", message: /default must use schema version 1/ },
+    { label: "unsupported schema", contents: '{"schemaVersion":99,"name":"work"}', message: /default must use schema version 1/ },
+    { label: "oversized record", contents: " ".repeat(64 * 1024 + 1), message: /too large/ },
+  ]) {
+    for (const operation of ["clear", "reset"]) {
+      await t.test(`${label}: ${operation}`, async (t) => {
+        const { root, catalogHome } = await catalogFixture(t);
+        const entry = await createInbox("work", path.join(root, "work"), catalogHome);
+        const defaultPath = path.join(catalogHome, "default.json");
+        await writeFile(defaultPath, contents, { mode: 0o600 });
+        await assert.rejects(readInboxCatalog(catalogHome), message);
+        await assert.rejects(resolveInboxSelection({}, { HTML_INBOX_CATALOG_HOME: catalogHome }), message);
+
+        if (operation === "clear") {
+          await clearDefaultInbox(catalogHome);
+          await assert.rejects(lstat(defaultPath), { code: "ENOENT" });
+          assert.deepEqual(await readInboxCatalog(catalogHome), { inboxes: [entry] });
+        } else {
+          await setDefaultInbox("work", catalogHome);
+          assert.deepEqual(await readInboxCatalog(catalogHome), { inboxes: [entry], defaultName: "work" });
+          assert.deepEqual(await resolveInboxSelection({}, { HTML_INBOX_CATALOG_HOME: catalogHome }), { ...entry, source: "default" });
+          assert.equal((await lstat(defaultPath)).nlink, 1);
+
+          if (process.platform !== "win32") {
+            assert.equal((await stat(defaultPath)).mode & 0o777, 0o600);
+          }
+        }
+      });
+    }
+  }
+});
+
+test("default recovery validates the destination before changing corrupt contents", async (t) => {
+  const { root, catalogHome } = await catalogFixture(t);
+  const entry = await createInbox("work", path.join(root, "work"), catalogHome);
+  const defaultPath = path.join(catalogHome, "default.json");
+  const contents = "{";
+  await writeFile(defaultPath, contents, { mode: 0o644 });
+  const originalMode = (await stat(defaultPath)).mode;
+
+  await assert.rejects(setDefaultInbox("unknown", catalogHome), /Unknown inbox/);
+  assert.equal(await readFile(defaultPath, "utf8"), contents);
+  assert.equal((await stat(defaultPath)).mode, originalMode);
+
+  const moved = path.join(root, "moved");
+  await rename(entry.home, moved);
+  await assert.rejects(setDefaultInbox("work", catalogHome), hasInspectionState("missing"));
+  await assert.rejects(lstat(entry.home), { code: "ENOENT" });
+  assert.equal(await readFile(defaultPath, "utf8"), contents);
+  assert.equal((await stat(defaultPath)).mode, originalMode);
+
+  await rename(moved, entry.home);
+  const replacementIdentity = randomUUID();
+  await writeFile(path.join(entry.home, "instance-id"), replacementIdentity);
+  await assert.rejects(setDefaultInbox("work", catalogHome), hasInspectionState("conflict"));
+  assert.equal(await readFile(path.join(entry.home, "instance-id"), "utf8"), replacementIdentity);
+  assert.equal(await readFile(defaultPath, "utf8"), contents);
+  assert.equal((await stat(defaultPath)).mode, originalMode);
+});
+
+for (const kind of ["hardlink", "symlink"]) {
+  test(`default reset refuses a ${kind} and clear unlinks it without changing its target`, async (t) => {
+    const { root, catalogHome } = await catalogFixture(t);
+    const entry = await createInbox("work", path.join(root, "work"), catalogHome);
+    const defaultPath = path.join(catalogHome, "default.json");
+    const target = path.join(root, "unrelated.json");
+    const contents = '{"schemaVersion":1,"name":"work"}';
+    await writeFile(target, contents, { mode: 0o644 });
+    const originalMode = (await stat(target)).mode;
+
+    if (kind === "hardlink") {
+      await link(target, defaultPath);
+    } else {
+      try {
+        await symlink(target, defaultPath);
+      } catch (error) {
+        if (process.platform === "win32" && error instanceof Error && "code" in error && (error.code === "EPERM" || error.code === "EACCES")) {
+          t.skip("Creating file symlinks requires Windows privileges");
+          return;
+        }
+
+        throw error;
+      }
+    }
+
+    const originalLink = await lstat(defaultPath);
+    await assert.rejects(setDefaultInbox("work", catalogHome), /regular private file/);
+    const preservedLink = await lstat(defaultPath);
+    assert.equal(preservedLink.isSymbolicLink(), originalLink.isSymbolicLink());
+    assert.equal(preservedLink.ino, originalLink.ino);
+    assert.equal(preservedLink.nlink, originalLink.nlink);
+    assert.equal(await readFile(target, "utf8"), contents);
+    assert.equal((await stat(target)).mode, originalMode);
+
+    await clearDefaultInbox(catalogHome);
+    await assert.rejects(lstat(defaultPath), { code: "ENOENT" });
+    assert.equal(await readFile(target, "utf8"), contents);
+    assert.equal((await stat(target)).mode, originalMode);
+    assert.equal((await stat(target)).nlink, 1);
+    assert.deepEqual(await readInboxCatalog(catalogHome), { inboxes: [entry] });
+  });
+}
+
+test("default mutations refuse directories without removing contents or changing modes", async (t) => {
+  const { root, catalogHome } = await catalogFixture(t);
+  await createInbox("work", path.join(root, "work"), catalogHome);
+  const defaultPath = path.join(catalogHome, "default.json");
+  await mkdir(defaultPath, { mode: 0o755 });
+  const childPath = path.join(defaultPath, "keep.txt");
+  await writeFile(childPath, "keep", { mode: 0o644 });
+  const originalDirectoryMode = (await stat(defaultPath)).mode;
+  const originalFileMode = (await stat(childPath)).mode;
+
+  await assert.rejects(setDefaultInbox("work", catalogHome), /regular private file/);
+  await assert.rejects(clearDefaultInbox(catalogHome));
+  assert.deepEqual(await readdir(defaultPath), ["keep.txt"]);
+  assert.equal(await readFile(childPath, "utf8"), "keep");
+  assert.equal((await stat(defaultPath)).mode, originalDirectoryMode);
+  assert.equal((await stat(childPath)).mode, originalFileMode);
+});
+
 test("malformed catalog boundaries and unsafe names fail instead of being adopted", async (t) => {
   const { root, catalogHome } = await catalogFixture(t);
   await mkdir(path.join(catalogHome, "inboxes"), { recursive: true });
