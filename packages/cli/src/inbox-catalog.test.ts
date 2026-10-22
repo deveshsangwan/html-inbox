@@ -7,6 +7,7 @@ import path from "node:path";
 import { test, type TestContext } from "node:test";
 import { promisify } from "node:util";
 import { clearDefaultInbox, createInbox, getInboxCatalogHome, InboxInspectionError, inspectRegisteredInbox, readInboxCatalog, readNamedInbox, registerInbox, setDefaultInbox } from "./inbox-catalog";
+import { resolveInboxSelection } from "./inbox-selection";
 import { temporaryHome } from "./test-fixtures";
 
 const runNode = promisify(execFile);
@@ -139,6 +140,68 @@ test("concurrent same-name claims choose one complete winner and preserve it", a
   const originalRecord = await readFile(recordPath, "utf8");
   await assert.rejects(registerInbox("shared", homes[0] ?? root, catalogHome), /already registered/);
   assert.equal(await readFile(recordPath, "utf8"), originalRecord);
+});
+
+test("interrupted catalog publication leaves complete records readable before and after commit", async (t) => {
+  const { root } = await catalogFixture(t);
+  const modulePath = path.join(__dirname, "inbox-catalog.js");
+  const worker = `
+    const fs = require("node:fs/promises");
+    const [modulePath, catalogHome, home, recordPath, stage] = process.argv.slice(1);
+    for (const operation of ["rename", "link"]) {
+      const perform = fs[operation];
+      fs[operation] = async (...args) => {
+        if (args[1] === recordPath && stage === "before") process.exit(86);
+        const result = await perform(...args);
+        if (args[1] === recordPath) process.exit(86);
+        return result;
+      };
+    }
+    require(modulePath).createInbox("work", home, catalogHome).catch(error => {
+      console.error(error);
+      process.exitCode = 1;
+    });
+  `;
+
+  for (const stage of ["before", "after"]) {
+    const catalogHome = path.join(root, `${stage}-catalog`);
+    const existing = await createInbox("existing", path.join(root, `${stage}-existing`), catalogHome);
+    const home = path.join(root, `${stage}-work`);
+    const recordPath = path.join(catalogHome, "inboxes", "work.json");
+    await assert.rejects(runNode(process.execPath, ["-e", worker, modulePath, catalogHome, home, recordPath, stage]),
+      (error: unknown) => error instanceof Error && "code" in error && error.code === 86);
+
+    assert.equal((await lstat(path.join(catalogHome, "registration.lock"))).isFile(), true);
+    const entry = { name: "work", home, instanceId: (await readFile(path.join(home, "instance-id"), "utf8")).trim() };
+    const expected = stage === "before" ? [existing] : [existing, entry];
+    assert.deepEqual(await readInboxCatalog(catalogHome), { inboxes: expected });
+    assert.deepEqual(await readNamedInbox("existing", catalogHome), existing);
+
+    if (stage === "after") {
+      assert.equal((await lstat(recordPath)).nlink, 1);
+      assert.deepEqual(await resolveInboxSelection({ inbox: "work" }, { HTML_INBOX_CATALOG_HOME: catalogHome }), { ...entry, source: "explicit" });
+    } else {
+      assert.equal(await readNamedInbox("work", catalogHome), null);
+    }
+
+    await rm(path.join(catalogHome, "registration.lock"));
+    assert.deepEqual(await readInboxCatalog(catalogHome), { inboxes: expected });
+  }
+});
+
+test("stale registration lock and unpublished partial record do not block catalog reads or selection", async (t) => {
+  const { root, catalogHome } = await catalogFixture(t);
+  const entry = await createInbox("work", path.join(root, "work"), catalogHome);
+  await setDefaultInbox("work", catalogHome);
+  const lockPath = path.join(catalogHome, "registration.lock");
+  const lockContents = "2147483647\n";
+  await writeFile(lockPath, lockContents, { mode: 0o600 });
+  await writeFile(path.join(catalogHome, "inboxes", `unfinished.json.tmp-${randomUUID()}`), "{", { mode: 0o600 });
+
+  assert.deepEqual(await readInboxCatalog(catalogHome), { inboxes: [entry], defaultName: "work" });
+  assert.deepEqual(await readNamedInbox("work", catalogHome), entry);
+  assert.deepEqual(await resolveInboxSelection({}, { HTML_INBOX_CATALOG_HOME: catalogHome }), { ...entry, source: "default" });
+  assert.equal(await readFile(lockPath, "utf8"), lockContents);
 });
 
 test("duplicate locations and copied UUIDs fail even under concurrent different names", async (t) => {

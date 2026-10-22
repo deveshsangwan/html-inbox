@@ -1,6 +1,5 @@
-import { randomUUID } from "node:crypto";
 import { constants } from "node:fs";
-import { link, lstat, open, readdir, rm } from "node:fs/promises";
+import { lstat, open, readdir, rm } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -116,7 +115,7 @@ export async function registerInbox(name: string, home: string, catalogHome = ge
     const entry = { name, home: inspected.home, instanceId };
     assertUniqueInbox(catalog.inboxes, entry);
     await inspectRegisteredInbox(entry);
-    await claimCatalogEntry(root, entry);
+    await publishCatalogEntry(root, entry);
 
     return entry;
   });
@@ -145,7 +144,7 @@ export async function createInbox(name: string, home: string, catalogHome = getI
     await ensurePrivateDirectory(path.join(canonicalHome, "documents"));
     const entry = { name, home: canonicalHome, instanceId: (await getInboxInstanceId(canonicalHome)).toLowerCase() };
     assertUniqueInbox(catalog.inboxes, entry);
-    await claimCatalogEntry(root, entry);
+    await publishCatalogEntry(root, entry);
 
     return entry;
   });
@@ -235,7 +234,7 @@ async function readDefaultInbox(root: string): Promise<string | undefined> {
   return value.name;
 }
 
-async function readCatalogJson(filePath: string, remainingAttempts = 5): Promise<{ value: unknown } | null> {
+async function readCatalogJson(filePath: string): Promise<{ value: unknown } | null> {
   const checked = await lstat(filePath).catch((error: unknown) => {
     if (hasErrorCode(error, "ENOENT")) {
       return null;
@@ -245,12 +244,6 @@ async function readCatalogJson(filePath: string, remainingAttempts = 5): Promise
   });
   if (!checked) {
     return null;
-  }
-
-  // Exclusive publication briefly links the complete temporary record to its final name.
-  if (checked.isFile() && checked.nlink > 1 && remainingAttempts > 0) {
-    await delay(5);
-    return readCatalogJson(filePath, remainingAttempts - 1);
   }
 
   if (!checked.isFile() || checked.isSymbolicLink() || checked.nlink !== 1) {
@@ -306,20 +299,8 @@ async function withCatalogRegistration<T>(catalogHome: string, register: (root: 
   }
 }
 
-async function claimCatalogEntry(root: string, entry: NamedInbox): Promise<void> {
+async function publishCatalogEntry(root: string, entry: NamedInbox): Promise<void> {
+  // The registration lock protects the absent name and location/identity checks until publication.
   const filePath = path.join(root, "inboxes", `${entry.name}.json`);
-  const temporaryPath = path.join(root, "inboxes", `.pending-${randomUUID()}`);
-  try {
-    const file = await open(temporaryPath, "wx", PRIVATE_FILE_MODE);
-    try {
-      await file.writeFile(`${JSON.stringify({ schemaVersion: 1, ...entry }, null, 2)}\n`);
-      await file.sync();
-    } finally {
-      await file.close();
-    }
-
-    await link(temporaryPath, filePath);
-  } finally {
-    await rm(temporaryPath, { force: true });
-  }
+  await writeAtomicPrivateJson(filePath, { schemaVersion: 1, ...entry });
 }
