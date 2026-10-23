@@ -1,15 +1,13 @@
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
-import { once } from "node:events";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import http from "node:http";
-import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { withViewerSystemdFixture } from "./viewer-systemd-fixtures.mjs";
 
 // This opt-in suite creates only temporary user units, never installed boot services.
 const run = promisify(execFile);
@@ -43,17 +41,7 @@ for (const supervised of [false, true]) {
   test(supervised ? "separately supervised viewer survives launching scope stop" : "native detached viewer records SIGTERM when its owning scope stops", {
     skip: process.platform !== "linux" ? "Requires Linux and an available user systemd manager" : false,
     timeout: 45_000,
-  }, async () => {
-    const home = await mkdtemp(path.join(tmpdir(), "html-inbox-scope-"));
-    const scope = `html-inbox-test-${randomUUID()}.scope`;
-    const service = `html-inbox-test-${randomUUID()}.service`;
-    const environment = { ...process.env };
-    for (const key of Object.keys(environment)) {
-      if (key.startsWith("HTML_INBOX_")) delete environment[key];
-    }
-
-    environment.HTML_INBOX_HOME = home;
-    environment.HTML_INBOX_PORT = String(await availablePort());
+  }, () => withViewerSystemdFixture(supervised, async ({ home, scope, service, environment, watchOwner }) => {
     const source = path.join(home, "synthetic.html");
     const readyPath = path.join(home, "ready.json");
     const ownerPath = path.join(home, "owner.mjs");
@@ -67,76 +55,55 @@ for (const supervised of [false, true]) {
       `--setenv=HTML_INBOX_HOME=${home}`, `--setenv=HTML_INBOX_PORT=${environment.HTML_INBOX_PORT}`,
       process.execPath, cli, "viewer", "--foreground", "--loopback",
     ];
-    let owner;
-    let ownerExit;
-
-    try {
-      await run("systemctl", ["--user", "show", "--property=Version", "--value"], commandOptions);
-      await writeFile(source, sourceBytes);
-      await writeFile(ownerPath, ownerSource);
-      await writeFile(configPath, JSON.stringify({ cli, source, ready: readyPath, ...(supervised ? { serviceArgs } : {}) }));
-      owner = spawn("systemd-run", [
-        "--user", "--quiet", "--scope", `--unit=${scope}`, "--property=RuntimeMaxSec=60",
-        process.execPath, ownerPath, configPath,
-      ], { env: environment, stdio: "ignore" });
-      ownerExit = once(owner, "exit");
-      // Observe spawn errors immediately, even while readiness is being polled.
-      void ownerExit.catch(() => {});
-      await waitUntil(async () => {
-        assert.equal(owner.exitCode, null, "Synthetic scope owner exited before readiness");
-        return readFile(readyPath, "utf8").then(() => true).catch((error) => {
-          if (error.code === "ENOENT") return false;
-          throw error;
-        });
+    await run("systemctl", ["--user", "show", "--property=Version", "--value"], commandOptions);
+    await writeFile(source, sourceBytes);
+    await writeFile(ownerPath, ownerSource);
+    await writeFile(configPath, JSON.stringify({ cli, source, ready: readyPath, ...(supervised ? { serviceArgs } : {}) }));
+    const owner = spawn("systemd-run", [
+      "--user", "--quiet", "--scope", `--unit=${scope}`, "--property=RuntimeMaxSec=60",
+      process.execPath, ownerPath, configPath,
+    ], { env: environment, stdio: "ignore" });
+    const ownerExit = watchOwner(owner);
+    await waitUntil(async () => {
+      assert.equal(owner.exitCode, null, "Synthetic scope owner exited before readiness");
+      return readFile(readyPath, "utf8").then(() => true).catch((error) => {
+        if (error.code === "ENOENT") return false;
+        throw error;
       });
+    });
 
-      const ready = JSON.parse(await readFile(readyPath, "utf8"));
-      const record = JSON.parse(await readFile(path.join(home, "viewer.json"), "utf8"));
-      const configuration = await readFile(path.join(home, "viewer-config.json"));
-      const cgroup = await readFile(`/proc/${record.pid}/cgroup`, "utf8");
-      assert(cgroup.includes(supervised ? service : scope), "Viewer must belong to the expected synthetic unit");
-      if (!supervised) {
-        const stat = await readFile(`/proc/${record.pid}/stat`, "utf8");
-        const session = Number(stat.slice(stat.lastIndexOf(")") + 2).split(" ")[3]);
-        assert.equal(session, record.pid, "Native detached viewer must be a new session leader");
-      }
-      assert.equal(await httpStatus(ready.url), 200);
-
-      await run("systemctl", ["--user", "stop", scope], commandOptions);
-      await ownerExit;
-      const status = JSON.parse((await run(process.execPath, [cli, "viewer", "status"], { ...commandOptions, env: environment })).stdout);
-      assert.equal(status.state, supervised ? "running" : "stopped");
-      assert.equal(await httpStatus(ready.url), supervised ? 200 : null);
-      if (supervised) {
-        assert.equal(status.pid, record.pid);
-        await run("systemctl", ["--user", "stop", service], commandOptions);
-      }
-
-      await assert.rejects(readFile(path.join(home, "viewer.json")), { code: "ENOENT" });
-      assert.deepEqual(await readFile(path.join(home, "viewer-config.json")), configuration);
-      const documentPath = new URL(ready.url).pathname.replace(/\/$/, "");
-      assert.equal(await readFile(path.join(home, documentPath, "index.html"), "utf8"), sourceBytes);
-      const log = await readFile(path.join(home, "viewer.log"), "utf8");
-      assert.match(log, new RegExp(`Viewer ${record.pid} shutting down \\(SIGTERM\\)`));
-      assert.match(log, new RegExp(`Viewer ${record.pid} stopped \\(SIGTERM\\)`));
-      assert(!log.includes(record.controlUrl));
-      assert(!log.includes("/control/"));
-    } finally {
-      // Names are generated here; never stop a calling agent's scope or a real viewer unit.
-      const cleanup = await Promise.allSettled([scope, ...(supervised ? [service] : [])].map(async (unit) => {
-        try {
-          await run("systemctl", ["--user", "stop", unit], commandOptions);
-        } catch (error) {
-          if (!/not loaded|not found|does not exist/i.test(error.stderr ?? "")) throw error;
-        }
-      }));
-      for (const result of cleanup) {
-        if (result.status === "rejected") throw result.reason;
-      }
-      if (ownerExit) await ownerExit;
-      await rm(home, { recursive: true, force: true });
+    const ready = JSON.parse(await readFile(readyPath, "utf8"));
+    const record = JSON.parse(await readFile(path.join(home, "viewer.json"), "utf8"));
+    const configuration = await readFile(path.join(home, "viewer-config.json"));
+    const cgroup = await readFile(`/proc/${record.pid}/cgroup`, "utf8");
+    assert(cgroup.includes(supervised ? service : scope), "Viewer must belong to the expected synthetic unit");
+    if (!supervised) {
+      const stat = await readFile(`/proc/${record.pid}/stat`, "utf8");
+      const session = Number(stat.slice(stat.lastIndexOf(")") + 2).split(" ")[3]);
+      assert.equal(session, record.pid, "Native detached viewer must be a new session leader");
     }
-  });
+    assert.equal(await httpStatus(ready.url), 200);
+
+    await run("systemctl", ["--user", "stop", scope], commandOptions);
+    await ownerExit;
+    const status = JSON.parse((await run(process.execPath, [cli, "viewer", "status"], { ...commandOptions, env: environment })).stdout);
+    assert.equal(status.state, supervised ? "running" : "stopped");
+    assert.equal(await httpStatus(ready.url), supervised ? 200 : null);
+    if (supervised) {
+      assert.equal(status.pid, record.pid);
+      await run("systemctl", ["--user", "stop", service], commandOptions);
+    }
+
+    await assert.rejects(readFile(path.join(home, "viewer.json")), { code: "ENOENT" });
+    assert.deepEqual(await readFile(path.join(home, "viewer-config.json")), configuration);
+    const documentPath = new URL(ready.url).pathname.replace(/\/$/, "");
+    assert.equal(await readFile(path.join(home, documentPath, "index.html"), "utf8"), sourceBytes);
+    const log = await readFile(path.join(home, "viewer.log"), "utf8");
+    assert.match(log, new RegExp(`Viewer ${record.pid} shutting down \\(SIGTERM\\)`));
+    assert.match(log, new RegExp(`Viewer ${record.pid} stopped \\(SIGTERM\\)`));
+    assert(!log.includes(record.controlUrl));
+    assert(!log.includes("/control/"));
+  }));
 }
 
 async function waitUntil(predicate) {
@@ -145,15 +112,6 @@ async function waitUntil(predicate) {
     assert(Date.now() < deadline, "Synthetic scope readiness timed out");
     await delay(50);
   }
-}
-
-async function availablePort() {
-  const server = http.createServer();
-  server.listen(0, "127.0.0.1");
-  await once(server, "listening");
-  const port = server.address().port;
-  await new Promise((resolve) => server.close(resolve));
-  return port;
 }
 
 function httpStatus(url) {

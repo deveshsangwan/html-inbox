@@ -8,7 +8,8 @@
   "scripts": {
     "typecheck": "pnpm --filter html-inbox typecheck",
     "build": "node -e \"require('node:fs').rmSync('packages/cli/dist', { recursive: true, force: true })\" && pnpm --filter html-inbox build",
-    "test": "pnpm build && node scripts/run-unit-tests.mjs && pnpm test:skills",
+    "test": "pnpm build && node scripts/run-unit-tests.mjs && pnpm test:harness && pnpm test:skills",
+    "test:harness": "node --test scripts/viewer-systemd-cleanup.test.mjs",
     "test:skills": "node --test scripts/skill-cli-resolution.test.mjs scripts/skill-cli-windows.test.mjs",
     "test:skills:package": "node scripts/skill-cli-package-smoke.mjs",
     "test:package": "node scripts/package-smoke.mjs",
