@@ -106,7 +106,7 @@ function renderLibrary(
                 <time class="document-date" datetime="${escapeHtml(document.metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(document.metadata.createdAt, options.timeZone))}</time>
                 <span class="doc__source" title="${escapeHtml(document.metadata.sourceFileName)}">${escapeHtml(document.metadata.sourceFileName)}</span>
                 <span class="document-type">${escapeHtml(document.metadata.type)}</span>
-                ${options.deletion ? renderDeleteAction(document.metadata, document.documentPath, document.inboxName ?? options.inboxName ?? "Inbox", "doc__delete") : ""}
+                ${options.deletion ? renderDocumentActions(document.metadata, document.documentPath, document.inboxName ?? options.inboxName ?? "Inbox") : ""}
               </li>`,
           )
           .join("")}</ol>`;
@@ -202,8 +202,17 @@ export function renderDocumentShell(
   );
 }
 
+function renderDocumentActions(metadata: DocumentMetadata, documentPath: string, inboxName: string): string {
+  return `<details class="viewer-menu doc__actions" data-viewer-menu>
+                  <summary class="toolbar-control" aria-label="${escapeHtml(`Options for ${metadata.title} in ${inboxName}`)}" title="Document options"><span aria-hidden="true">&#8942;</span></summary>
+                  <div class="viewer-menu__panel doc__actions-panel">
+                    ${renderDeleteAction(metadata, documentPath, inboxName, "doc__actions-delete")}
+                  </div>
+                </details>`;
+}
+
 function renderDeleteAction(metadata: DocumentMetadata, documentPath: string, inboxName: string, className: string): string {
-  return `<button class="toolbar-control delete-action ${className}" type="button" data-delete-document data-delete-url="${escapeHtml(`/api${documentPath}`)}" data-document-path="${escapeHtml(documentPath)}" data-document-title="${escapeHtml(metadata.title)}" data-document-file="${escapeHtml(metadata.sourceFileName)}" data-inbox-name="${escapeHtml(inboxName)}" aria-label="${escapeHtml(`Delete ${metadata.title}...`)}">Delete...</button>`;
+  return `<button class="toolbar-control delete-action ${className}" type="button" data-delete-document data-delete-url="${escapeHtml(`/api${documentPath}`)}" data-document-path="${escapeHtml(documentPath)}" data-document-title="${escapeHtml(metadata.title)}" data-document-file="${escapeHtml(metadata.sourceFileName)}" data-inbox-name="${escapeHtml(inboxName)}" aria-label="${escapeHtml(`Delete ${metadata.title}`)}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg><span>Delete</span></button>`;
 }
 
 function renderDeletionDialog(token: string, homePath: string): string {

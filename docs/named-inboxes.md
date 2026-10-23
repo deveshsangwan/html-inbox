@@ -2,7 +2,7 @@
 
 Home, Development, and Office can be independent libraries with separate documents, viewer ports, preferences, exports, and exposure settings. Naming a library records its existing location. It does not move or combine documents.
 
-This page describes unreleased named-inbox and hub work, including live single-document deletion and the revised terminal choice and output behavior. The published `html-inbox@0.2.1` package lacks these features. Check the actual executable's `--help` for the commands and flags you need, and the running viewer for **Delete...**; a source checkout can report the same version with different capabilities. Reading these docs or updating a skill does not install or deploy a CLI.
+This page describes unreleased named-inbox and hub work, including live single-document deletion and the revised terminal choice and output behavior. The published `html-inbox@0.2.1` package lacks these features. Check the actual executable's `--help` for the commands and flags you need, and the running viewer for **Delete**; a source checkout can report the same version with different capabilities. Reading these docs or updating a skill does not install or deploy a CLI.
 
 ## Name libraries deliberately
 
@@ -122,7 +122,7 @@ html-inbox hub --config /absolute/path/to/reading-hub.json --port 4322
 
 The hub serves one combined list and search over all selected inboxes, with inbox badges and a source filter. Document links contain the source name plus original document ID, so identical IDs in different libraries remain distinct. Content routes return the original bytes through the existing sandbox and CSP. Standalone viewer and export URLs retain their existing forms.
 
-Every reachable live hub reader can permanently delete individual documents from every mounted inbox. Choose **Delete...** on a list row or in document options. The modal shows the title, filename, and source inbox, explains permanent deletion, and defaults to Cancel. There is no Undo or bulk deletion. The original source file, existing exports, and remote snapshots remain unchanged. Static exported or hosted snapshots are read-only independent copies with no live viewer credentials.
+Every reachable live hub reader can permanently delete individual documents from every mounted inbox. Choose **Delete** in a list row's three-dot menu or in document options. The modal shows the title, filename, and source inbox, explains permanent deletion, and defaults to Cancel. There is no Undo or bulk deletion. The original source file, existing exports, and remote snapshots remain unchanged. Static exported or hosted snapshots are read-only independent copies with no live viewer credentials.
 
 Source viewers may be stopped. The hub reads existing files directly without creating directories, changing permission modes, writing preferences, or copying runtime records. Each source has an explicitly bound deletion writer for its captured canonical root, expected UUID, and filesystem identity, under the same OS account. It revalidates that binding before deleting, rather than resolving a mutable catalog name or accepting a target path from the browser. A missing or replaced source fails without creating a new library or targeting another source.
 

@@ -10,7 +10,7 @@ The CLI is packaged as a self-contained `html-inbox` executable with no runtime 
 
 The unreleased named-inbox work lets you name independent local libraries and read an explicit set through a local hub. See [named inboxes and local reading](docs/named-inboxes.md) for selection, source membership, and exposure rules. Check the executable's `--help` for each command and flag; the published pinned `html-inbox@0.2.1` fallback lacks these features, and a checkout's version number alone does not prove support.
 
-Live UI deletion is also unreleased. Check the running viewer for **Delete...** before relying on it. Updating a skill does not update the CLI or a running viewer.
+Live UI deletion is also unreleased. Check the running viewer for **Delete** before relying on it. Updating a skill does not update the CLI or a running viewer.
 
 With that support, library commands select explicit `--inbox` / `--home`, then process `HTML_INBOX_NAME` / `HTML_INBOX_HOME`, then a configured default. Without a binding or default, registered entries require a one-operation choice by exact name or `#N` row in a fully interactive terminal. Redirecting stdin, stdout, or stderr disables the picker. Pipelines, non-TTY callers, and `--json` fail with available names and selector guidance on stderr, leaving stdout empty. Even one entry requires a choice. With no registered entries, legacy `~/.html-inbox` first use remains. A choice never saves a current inbox or default.
 
@@ -138,7 +138,7 @@ html-inbox viewer stop
 
 Use `--json` with `list` or `delete` for automation. Non-interactive CLI deletion requires `--force`. The viewer also supports server-rendered search across title, type, and source file name.
 
-In a live viewer or combined hub, choose **Delete...** from a document's list row or document options. The confirmation shows the title, filename, and inbox, explains permanent deletion, and defaults to Cancel. Confirming removes that document from its original inbox. There is no Undo or bulk deletion. The original source file, existing exports, and remote snapshots remain unchanged. Static exported or hosted copies are read-only and contain no live viewer credentials.
+In a live viewer or combined hub, choose **Delete** from a document's three-dot menu in the list or its document options. The confirmation shows the title, filename, and inbox, explains permanent deletion, and defaults to Cancel. Confirming removes that document from its original inbox. There is no Undo or bulk deletion. The original source file, existing exports, and remote snapshots remain unchanged. Static exported or hosted copies are read-only and contain no live viewer credentials.
 
 ## Reading documents and appearance
 

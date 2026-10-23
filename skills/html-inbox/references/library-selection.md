@@ -6,7 +6,7 @@ Read this after resolving the `inbox` executable and before library commands. Ex
 
 Run `inbox --help` with the selected executable. Named inboxes, the local hub, the terminal picker, `inbox inbox list --running`, and explicit JSON flags for viewer status/stop and service commands are unreleased work. The published pinned `html-inbox@0.2.1` fallback lacks them. A checkout may report the same version while providing more commands, so neither `0.2.1` nor a successful version check proves their availability. Inspect the actual help for each command and flag the operation needs.
 
-Live UI deletion is also unreleased work. Check the running viewer for **Delete...** on a list row or in document options before describing that control as available. A skill update does not update the CLI or a running viewer. Preserve the resolved executable and destination when a feature is unavailable.
+Live UI deletion is also unreleased work. Check the running viewer for **Delete** in a list row's three-dot menu or in document options before describing that control as available. A skill update does not update the CLI or a running viewer. Preserve the resolved executable and destination when a feature is unavailable.
 
 - Use `--inbox`, `--home`, `HTML_INBOX_NAME`, and catalog/default commands only when named selection is supported. If a requested named destination is unavailable, report that capability gap and stop the dependent operation. Keep the intended destination intact.
 - Use `inbox inbox list --running --json` only when help advertises `--running` for catalog listing. Named commands alone do not establish this newer capability. If absent, report that native running-only discovery is unavailable.

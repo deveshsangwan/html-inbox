@@ -205,7 +205,7 @@ async function publishAppearanceDocument(backend) {
 }
 
 async function chooseAppearance(page, appearance) {
-  const menu = page.locator("details[data-viewer-menu]");
+  const menu = page.locator("details[data-viewer-menu]").filter({ has: page.locator("[data-theme-option]") });
 
   if (await menu.getAttribute("open") === null) {
     await menu.locator("summary").click();
@@ -263,6 +263,7 @@ test("generated static inbox searches title, type, and file without server queri
   assert.equal(requests.length, requestCount);
 
   await search.fill("operations.html");
+  await page.waitForURL(`${inboxUrl}?q=operations.html`);
   await page.reload();
   assert.equal(await search.inputValue(), "operations.html");
   assert.equal(await page.locator("[data-search-text]:visible").count(), 1);

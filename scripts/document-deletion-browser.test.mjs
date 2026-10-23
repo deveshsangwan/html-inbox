@@ -23,6 +23,11 @@ function rowFor(page, title) {
   return page.locator(".doc").filter({ has: page.getByRole("link", { name: title, exact: true }) });
 }
 
+async function openRowDeletion(row) {
+  await row.locator(".doc__actions > summary").click();
+  await row.locator("[data-delete-document]").click();
+}
+
 async function openReaderDeletion(page) {
   await page.getByLabel("Viewer options", { exact: true }).click();
   await page.locator(".viewer-menu__delete").click();
@@ -59,6 +64,55 @@ async function assertNoOverflow(page) {
 }
 
 for (const width of [390, 1280]) {
+  test(`document options support keyboard access and dismiss without navigation at ${width}px`, { timeout: 30_000 }, async (t) => {
+    const { page, inboxUrl } = await createBrowserFixture(t, "local", publishDocuments);
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto(inboxUrl);
+    const row = rowFor(page, fullTitle);
+    const menu = row.locator(".doc__actions");
+    const toggle = menu.locator("summary");
+    const action = menu.getByRole("button", { name: `Delete ${fullTitle}`, exact: true });
+    let mutations = 0;
+    page.on("request", (request) => {
+      if (request.method() === "DELETE") mutations += 1;
+    });
+
+    assert.equal(await toggle.getAttribute("aria-label"), `Options for ${fullTitle} in Inbox`);
+    await toggle.focus();
+    await page.keyboard.press("Enter");
+    await action.waitFor();
+    assert.equal(await action.textContent(), "Delete");
+    assert.equal(await action.locator('svg[aria-hidden="true"]').count(), 1);
+    const bounds = await action.boundingBox();
+    assert(bounds.height >= 44);
+    await assertNoOverflow(page);
+
+    await page.keyboard.press("Escape");
+    assert.equal(await menu.getAttribute("open"), null);
+    await assertFocused(toggle);
+    await page.keyboard.press("Space");
+    await action.waitFor();
+    await rowFor(page, "Keep this note").locator(".doc__actions > summary").click();
+    assert.equal(await menu.getAttribute("open"), null);
+    assert.equal(await page.locator(".doc__actions[open]").count(), 1);
+    await page.getByRole("searchbox", { name: "Search documents" }).click();
+    assert.equal(await page.locator(".doc__actions[open]").count(), 0);
+
+    await toggle.focus();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Tab");
+    await assertFocused(action);
+    await page.keyboard.press("Enter");
+    const dialog = page.getByRole("dialog", { name: "Delete document?" });
+    await dialog.waitFor();
+    assert.equal(await menu.getAttribute("open"), null);
+    await page.keyboard.press("Escape");
+    await dialog.waitFor({ state: "hidden" });
+    await assertFocused(toggle);
+    assert.equal(mutations, 0);
+    assert.equal(page.url(), inboxUrl);
+  });
+
   test(`live list deletion confirms the full document and preserves search at ${width}px`, { timeout: 30_000 }, async (t) => {
     const { page, inboxUrl, documents, home } = await createBrowserFixture(t, "local", publishDocuments);
     await page.setViewportSize({ width, height: 844 });
@@ -66,10 +120,12 @@ for (const width of [390, 1280]) {
     await page.goto(filteredUrl);
     const row = rowFor(page, fullTitle);
     const action = row.locator("[data-delete-document]");
-    const bounds = await action.boundingBox();
+    const toggle = row.locator(".doc__actions > summary");
+    const bounds = await toggle.boundingBox();
     assert(bounds.width >= 44 && bounds.height >= 44);
+    assert.equal(await action.isVisible(), false);
     await assertNoOverflow(page);
-    await action.click();
+    await openRowDeletion(row);
     const dialog = page.getByRole("dialog", { name: "Delete document?" });
     await dialog.waitFor();
     assert.equal(await dialog.locator("[data-delete-title]").textContent(), fullTitle);
@@ -79,11 +135,11 @@ for (const width of [390, 1280]) {
     await assertNoOverflow(page);
     await page.keyboard.press("Escape");
     await dialog.waitFor({ state: "hidden" });
-    await assertFocused(action);
+    await assertFocused(toggle);
     assert.equal(await row.count(), 1);
     assert.equal(page.url(), filteredUrl);
 
-    await action.click();
+    await openRowDeletion(row);
     const token = await dialog.getAttribute("data-delete-token");
     const requestPromise = page.waitForRequest((request) => request.method() === "DELETE");
     await confirmDeletion(page, filteredUrl);
@@ -104,7 +160,7 @@ for (const width of [390, 1280]) {
     await page.reload();
     assert.equal(await page.locator("[data-deletion-notice]").isVisible(), false);
     await page.goto(inboxUrl);
-    await rowFor(page, "Keep this note").locator("[data-delete-document]").click();
+    await openRowDeletion(rowFor(page, "Keep this note"));
     await confirmDeletion(page, inboxUrl);
     await page.getByRole("heading", { name: "No documents yet" }).waitFor();
   });
@@ -160,7 +216,7 @@ test("list removal waits for the response, blocks dismissal and submits only onc
     await route.continue();
   });
   t.after(() => release());
-  await row.locator("[data-delete-document]").click();
+  await openRowDeletion(row);
   await page.getByRole("button", { name: "Delete document", exact: true }).click();
   await started;
   const dialog = page.getByRole("dialog");
@@ -190,7 +246,7 @@ test("list deletion restores the next document and scroll position after reloadi
   await page.goto(inboxUrl);
   const row = page.locator(".doc").nth(15);
   const nextPath = await page.locator(".doc__title").nth(16).getAttribute("href");
-  await row.locator("[data-delete-document]").click();
+  await openRowDeletion(row);
   const initialScroll = await page.evaluate(() => scrollY);
   assert(initialScroll > 0);
   await confirmDeletion(page, inboxUrl);
@@ -313,10 +369,10 @@ test("hub deletion keeps colliding IDs in their own inbox and preserves list fil
   await page.goto(listUrl);
   const action = page.locator("[data-delete-document]");
   assert.equal(await action.getAttribute("data-delete-url"), "/api/sources/home/documents/same-id");
-  await action.click();
+  await openRowDeletion(page.locator(".doc"));
   assert.equal(await page.locator("[data-delete-inbox]").textContent(), "home");
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
-  await assertFocused(action);
+  await assertFocused(page.locator(".doc__actions > summary"));
   await page.getByRole("link", { name: /^home report/ }).click();
   await openReaderDeletion(page);
   await confirmDeletion(page, listUrl);
@@ -352,7 +408,7 @@ test("hub list deletion uses the source-qualified URL at desktop size", { timeou
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(origin);
   const home = page.locator(".doc").filter({ has: page.getByRole("link", { name: /^home report/ }) });
-  await home.locator("[data-delete-document]").click();
+  await openRowDeletion(home);
   const request = page.waitForRequest((request) => request.method() === "DELETE");
   await confirmDeletion(page, `${origin}/`);
   assert.equal(new URL((await request).url()).pathname, "/api/sources/home/documents/same-id");
@@ -365,7 +421,7 @@ test("static exports contain no deletion controls or credentials and remain immu
   const { page, inboxUrl, documents, home } = await createBrowserFixture(t, "static", publishDocuments);
   const response = await page.goto(inboxUrl);
   assert.equal(response.headers()["content-security-policy"].includes("connect-src 'self'"), false);
-  assert.equal(await page.locator("[data-delete-document], [data-delete-dialog], [data-delete-token]").count(), 0);
+  assert.equal(await page.locator(".doc__actions, [data-delete-document], [data-delete-dialog], [data-delete-token]").count(), 0);
   await new LocalDocumentBackend(home).deleteDocument(documents[0].id);
   await page.reload();
   await page.getByRole("link", { name: fullTitle, exact: true }).click();

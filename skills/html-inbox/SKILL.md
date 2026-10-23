@@ -87,7 +87,7 @@ The handoff is complete when the user has a clickable URL and any verification l
 
 For an authorized deletion, identify the intended inbox and document first. Use `inbox delete <document-id>` with that same selector; automated CLI deletion requires `--force`. JSON output does not imply consent.
 
-In a live viewer with UI deletion support, **Delete...** is available on list rows and in document options. The modal shows the title, filename, and inbox, explains permanent deletion, and defaults to Cancel. Confirm only the authorized document. Every reachable live reader has this authority on loopback, LAN, and Tailscale, without a startup grant or separate reader login. Hub filters do not limit it.
+In a live viewer with UI deletion support, **Delete** is available in each list row's three-dot menu and in document options. The modal shows the title, filename, and inbox, explains permanent deletion, and defaults to Cancel. Confirm only the authorized document. Every reachable live reader has this authority on loopback, LAN, and Tailscale, without a startup grant or separate reader login. Hub filters do not limit it.
 
 Deletion removes the stored copy from its original inbox. It preserves the original source file, existing exports, and remote snapshots. There is no Undo or bulk deletion. If purge fails after removal from the live list, report that cleanup failure and the document's absence accurately. A missing or replaced source is a failure; preserve it rather than recreating storage or choosing another inbox. Deletion is complete when the result confirms removal and any cleanup failure is reported. Static exported or hosted copies remain read-only and contain no live viewer credentials.
 

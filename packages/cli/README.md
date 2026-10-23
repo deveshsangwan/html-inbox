@@ -2,7 +2,7 @@
 
 The unreleased named-inbox work adds `inbox create`, `inbox register`, `--inbox` selection, and a local reading `hub` with explicit membership. See [named inboxes and local reading](https://github.com/deveshsangwan/html-inbox/blob/main/docs/named-inboxes.md) for selection, membership, and exposure rules. Check the actual executable's `--help` for each command and flag. The published pinned `html-inbox@0.2.1` fallback lacks these features; a checkout can report the same version with different capabilities. Updating a skill does not install or deploy them.
 
-Live UI deletion is also unreleased. Check the running viewer for **Delete...** before relying on it. Updating a skill does not update the CLI or a running viewer.
+Live UI deletion is also unreleased. Check the running viewer for **Delete** before relying on it. Updating a skill does not update the CLI or a running viewer.
 
 HTML Inbox stores generated HTML reports in a local library, previews them through a sandboxed viewer, and can publish complete unlisted snapshots to a user-owned Cloudflare Pages project. The live viewer listens on loopback by default.
 
@@ -102,7 +102,7 @@ html-inbox viewer --tailscale
 
 LAN mode trusts everyone who can reach the port, with no login or reader token. Tailscale mode uses an already installed and connected Tailscale client, HTTPS Serve, and your tailnet access policy. MagicDNS and HTTPS must be available. The backend stays on loopback. HTML Inbox refuses conflicting Serve/Funnel settings, preserves unrelated services, and removes only its verified owned route. Every reachable live reader can read and permanently delete individual documents, including on loopback. Deletion needs no startup grant or separate login. Publishing and viewer management remain local CLI operations.
 
-Choose **Delete...** from a live document's list row or document options. The confirmation shows its title, filename, and inbox, defaults to Cancel, and explains that deletion is permanent. A hub deletes from the document's original mounted inbox, bound to its captured canonical root, UUID, and filesystem identity under the same OS account. Filters do not limit deletion authority. There is no Undo or bulk deletion. The original source file, existing exports, and remote snapshots remain unchanged. Static exported and hosted copies are read-only and contain no live viewer credentials.
+Choose **Delete** from a live document's three-dot menu in the list or its document options. The confirmation shows its title, filename, and inbox, defaults to Cancel, and explains that deletion is permanent. A hub deletes from the document's original mounted inbox, bound to its captured canonical root, UUID, and filesystem identity under the same OS account. Filters do not limit deletion authority. There is no Undo or bulk deletion. The original source file, existing exports, and remote snapshots remain unchanged. Static exported and hosted copies are read-only and contain no live viewer credentials.
 
 `--loopback`, `--lan`, and `--tailscale` are mutually exclusive. Commands without explicit networking options reuse the saved configuration. Stop an exposed viewer, then start with `--loopback` to return to local access. `--port` overrides `HTML_INBOX_PORT`; `HTML_INBOX_HOME` selects the library. Use `HTML_INBOX_TAILSCALE_COMMAND` to select an existing Tailscale executable when needed.
 

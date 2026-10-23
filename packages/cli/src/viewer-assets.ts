@@ -241,7 +241,11 @@ h1 { margin: 0; color: var(--text-strong); font-weight: 650; letter-spacing: -0.
 }
 .doc__title::after { content: ""; position: absolute; inset: 0; }
 .doc--deletable { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(4rem, 7rem) auto auto; grid-template-areas: "title source type date action"; }
-.doc__delete { position: relative; z-index: 1; grid-area: action; }
+.doc__actions { z-index: 1; grid-area: action; }
+.doc__actions[open] { z-index: 5; }
+.doc__actions > summary { font-size: 1.5rem; }
+.doc__actions-panel { width: 10rem; padding: 0.25rem; }
+.doc__actions-delete { justify-content: flex-start; width: 100%; }
 .delete-action { color: var(--danger); }
 .delete-action:hover { color: var(--danger); background: var(--danger-soft); }
 .viewer-menu__delete { justify-content: flex-start; width: 100%; margin-top: 1rem; border-top: 1px solid var(--border); border-radius: 0; }

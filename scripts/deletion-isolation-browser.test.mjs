@@ -49,6 +49,6 @@ test("live deletion shells cannot be embedded by another page", { timeout: 30_00
 
   await f.page.goto(`http://127.0.0.1:${address.port}`);
   await refused;
-  assert.equal(await f.page.getByRole("button", { name: "Delete...", exact: true }).count(), 0);
+  assert.equal(await f.page.locator(".doc__actions, [data-delete-document]").count(), 0);
   assert(await new LocalDocumentBackend(f.home).getDocument(f.documents[0].id));
 });
