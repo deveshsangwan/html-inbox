@@ -38,6 +38,10 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
+      - name: Use a canonical macOS temporary directory
+        if: runner.os == 'macOS'
+        run: node -e "require('node:fs').appendFileSync(process.env.GITHUB_ENV, 'TMPDIR=' + require('node:fs').realpathSync(require('node:os').tmpdir()) + '\n')"
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
