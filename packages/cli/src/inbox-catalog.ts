@@ -5,7 +5,7 @@ import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { readBoundedFile } from "./bounded-file";
 import { canonicalizeInboxHome, InboxInspectionError, inspectInboxHome, readInboxIdentity } from "./inbox-home";
-import { ensurePrivateDirectory, hardenPrivateDirectory, PRIVATE_FILE_MODE, writeAtomicPrivateJson } from "./private-storage";
+import { ensurePrivateDirectory, hardenPrivateDirectory, ManagedStorageError, PRIVATE_FILE_MODE, writeAtomicPrivateJson } from "./private-storage";
 import { assertUuidV4, isRecord } from "./validation";
 import { getInboxInstanceId, hasErrorCode } from "./viewer-records";
 
@@ -39,37 +39,40 @@ export function assertInboxName(name: string): void {
 
 export async function readInboxCatalog(
   catalogHome = getInboxCatalogHome(),
-  options: { includeDefault?: boolean } = {},
+  options: { includeDefault?: boolean; readOnly?: boolean } = {},
 ): Promise<InboxCatalog> {
   const root = checkedCatalogHome(catalogHome);
-  if (!await hasCatalogDirectory(root)) {
+  if (!await hasCatalogDirectory(root, options.readOnly)) {
     return { inboxes: [] };
   }
 
   const entriesHome = path.join(root, "inboxes");
-  const names = await hasCatalogDirectory(entriesHome) ? await readdir(entriesHome) : [];
+  const names = await hasCatalogDirectory(entriesHome, options.readOnly) ? await readdir(entriesHome) : [];
   const inboxes: NamedInbox[] = [];
   for (const fileName of names.filter((name) => name.endsWith(".json")).sort()) {
     const name = fileName.slice(0, -5);
-    const entry = await readNamedInbox(name, root);
+    const entry = await readNamedInboxEntry(name, root, options.readOnly);
     if (entry) {
       assertUniqueInbox(inboxes, entry);
       inboxes.push(entry);
     }
   }
 
-  const defaultName = options.includeDefault === false ? undefined : await readDefaultInbox(root);
+  const defaultName = options.includeDefault === false ? undefined : await readDefaultInbox(root, options.readOnly);
   return { inboxes, ...(defaultName ? { defaultName } : {}) };
 }
 
 export async function readNamedInbox(name: string, catalogHome = getInboxCatalogHome()): Promise<NamedInbox | null> {
+  return readNamedInboxEntry(name, checkedCatalogHome(catalogHome));
+}
+
+async function readNamedInboxEntry(name: string, root: string, readOnly = false): Promise<NamedInbox | null> {
   assertInboxName(name);
-  const root = checkedCatalogHome(catalogHome);
-  if (!await hasCatalogDirectory(root) || !await hasCatalogDirectory(path.join(root, "inboxes"))) {
+  if (!await hasCatalogDirectory(root, readOnly) || !await hasCatalogDirectory(path.join(root, "inboxes"), readOnly)) {
     return null;
   }
 
-  const record = await readCatalogJson(path.join(root, "inboxes", `${name}.json`));
+  const record = await readCatalogJson(path.join(root, "inboxes", `${name}.json`), readOnly);
   if (record === null) {
     return null;
   }
@@ -227,9 +230,17 @@ function assertUniqueInbox(inboxes: NamedInbox[], entry: NamedInbox): void {
   }
 }
 
-async function hasCatalogDirectory(home: string): Promise<boolean> {
+async function hasCatalogDirectory(home: string, readOnly = false): Promise<boolean> {
   try {
-    await hardenPrivateDirectory(home);
+    if (readOnly) {
+      const info = await lstat(home);
+      if (!info.isDirectory() || info.isSymbolicLink()) {
+        throw new ManagedStorageError(`Managed directory is not a regular directory: ${home}`);
+      }
+    } else {
+      await hardenPrivateDirectory(home);
+    }
+
     return true;
   } catch (error) {
     if (hasErrorCode(error, "ENOENT")) {
@@ -240,8 +251,8 @@ async function hasCatalogDirectory(home: string): Promise<boolean> {
   }
 }
 
-async function readDefaultInbox(root: string): Promise<string | undefined> {
-  const record = await readCatalogJson(path.join(root, "default.json"));
+async function readDefaultInbox(root: string, readOnly = false): Promise<string | undefined> {
+  const record = await readCatalogJson(path.join(root, "default.json"), readOnly);
   if (record === null) {
     return undefined;
   }
@@ -255,7 +266,7 @@ async function readDefaultInbox(root: string): Promise<string | undefined> {
   return value.name;
 }
 
-async function readCatalogJson(filePath: string): Promise<{ value: unknown } | null> {
+async function readCatalogJson(filePath: string, readOnly = false): Promise<{ value: unknown } | null> {
   for (let attempt = 0; attempt < 10; attempt += 1) {
     const checked = await lstat(filePath).catch((error: unknown) => {
       if (hasErrorCode(error, "ENOENT")) {
@@ -294,7 +305,10 @@ async function readCatalogJson(filePath: string): Promise<{ value: unknown } | n
         continue;
       }
 
-      await file.chmod(PRIVATE_FILE_MODE);
+      if (!readOnly) {
+        await file.chmod(PRIVATE_FILE_MODE);
+      }
+
       const bytes = await readBoundedFile(file, 64 * 1024, `Catalog record is too large: ${filePath}`);
       const value: unknown = JSON.parse(bytes.toString("utf8"));
       return { value };

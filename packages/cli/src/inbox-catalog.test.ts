@@ -38,6 +38,28 @@ test("catalog location is independent of selected library and missing reads crea
   assert.deepEqual(await readdir(root), []);
 });
 
+test("read-only catalog inspection preserves file bytes, modes and directory inventory", async (t) => {
+  const { root, catalogHome } = await catalogFixture(t);
+  const entry = await createInbox("work", path.join(root, "work"), catalogHome);
+  await setDefaultInbox("work", catalogHome);
+  const paths = [catalogHome, path.join(catalogHome, "inboxes"), path.join(catalogHome, "inboxes", "work.json"), path.join(catalogHome, "default.json")];
+  if (process.platform !== "win32") {
+    for (const target of paths) {
+      await chmod(target, target.endsWith(".json") ? 0o640 : 0o750);
+    }
+  }
+  const snapshot = async () => Promise.all(paths.map(async (target) => {
+    const info = await lstat(target);
+    return { target, mode: info.mode, ctimeMs: info.ctimeMs, content: info.isDirectory() ? await readdir(target) : await readFile(target, "utf8") };
+  }));
+  const before = await snapshot();
+
+  assert.deepEqual(await readInboxCatalog(catalogHome, { readOnly: true }), { inboxes: [entry], defaultName: "work" });
+  assert.deepEqual(await snapshot(), before);
+  assert.deepEqual(await readInboxCatalog(path.join(root, "missing"), { readOnly: true }), { inboxes: [] });
+  await assert.rejects(lstat(path.join(root, "missing")), { code: "ENOENT" });
+});
+
 test("register adds identity to a legacy stopped library in place and persists a private catalog", async (t) => {
   const { root, catalogHome } = await catalogFixture(t);
   const home = await legacyLibrary(root, "existing");

@@ -21,7 +21,7 @@ Registration preserves existing records and creates an identity for an existing 
 
 Registration requires an existing valid identity or a regular `documents/` directory. It checks library markers without scanning every stored report. Concurrent registrations serialize their name, root, and UUID claims and publish complete per-name records exclusively. If an interrupted writer leaves `registration.lock`, later writes fail after a bounded wait with recovery instructions. Stop every registration writer before removing only that stale lock. Catalog reads remain available.
 
-`inbox list` shows a human-readable catalog with local locations and viewer state. `inbox list --json` preserves the machine-readable result fields. Stopped libraries stay registered. Missing, conflicting, and incompatible libraries remain visible.
+`inbox list` shows a human-readable table of names, viewer states, and running reader URLs. `inbox list --json` preserves the machine-readable result fields, including local locations. Stopped libraries stay registered. Missing, conflicting, and incompatible libraries remain visible.
 
 To list only registered libraries with verified running viewers:
 
@@ -85,7 +85,7 @@ Check help for each command and flag before using them with an older CLI. Legacy
 
 JSON mode also suppresses destructive confirmation prompts. It does not imply approval: deletion still requires `--force`, and remote revocation still requires `--yes`.
 
-Named receipts and picker text go to stderr, preserving URL-only stdout for plain `publish`, detached viewer startup, and hub startup. `publish --json` returns the existing receipt with `url`, `inbox`, and `home`. Viewer status includes the configured name, and newly started viewers show it in the heading. Share the exact verified reader URL, keeping catalog paths and private control details local.
+Named context and picker text go to stderr, preserving URL-only stdout for plain `publish`, detached viewer startup, and hub startup. `publish --json` returns the existing receipt with `url`, `inbox`, and `home`. Viewer status includes the configured name, and newly started viewers show it in the heading. Share the exact verified reader URL, keeping catalog paths and private control details local.
 
 An optional default affects unbound future operations:
 
