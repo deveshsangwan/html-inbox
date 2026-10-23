@@ -1,13 +1,13 @@
 import http, { IncomingMessage, ServerResponse } from "node:http";
 import { randomBytes } from "node:crypto";
-import { DocumentBackend, isSafeDocumentId } from "./documents";
+import { type DocumentSource, isSafeDocumentId } from "./documents";
 import {
   DOCUMENT_CSP,
   SHELL_CSP,
   VIEWER_SCRIPT,
   VIEWER_STYLES,
 } from "./viewer-assets";
-import { renderDocumentShell, renderIndex } from "./viewer-render";
+import { renderDocumentShell, renderIndex, renderHubIndex, type ViewerRenderOptions } from "./viewer-render";
 import { readPreferences, type Appearance } from "./preferences";
 import {
   getViewerUrls,
@@ -23,21 +23,88 @@ export interface ViewerControlHealth {
   pid: number;
 }
 
-export interface ViewerHttpServer {
+export interface ViewerReaderServer {
   server: http.Server;
-  controlServer: http.Server;
   config: ViewerNetworkConfig;
   urls: string[];
-  controlUrl: string;
   close(): Promise<void>;
 }
 
+export interface ViewerHttpServer extends ViewerReaderServer {
+  controlServer: http.Server;
+  controlUrl: string;
+}
+
+export interface ViewerSourceMount {
+  name: string;
+  source: DocumentSource;
+}
+
+type ReaderConfiguration = {
+  source: DocumentSource;
+  preferencesHome?: string;
+  renderOptions: ViewerRenderOptions;
+} | {
+  mounts: readonly ViewerSourceMount[];
+  renderOptions: ViewerRenderOptions;
+};
+
 export async function startViewerHttpServer(
-  backend: DocumentBackend,
+  source: DocumentSource,
   configuration: ViewerNetworkConfig,
   health: ViewerControlHealth,
   preferencesHome?: string,
+  renderOptions: ViewerRenderOptions = {},
 ): Promise<ViewerHttpServer> {
+  const startingReader = startReaderServer({ source, preferencesHome, renderOptions }, configuration);
+  const controlPath = `/control/${randomBytes(32).toString("base64url")}`;
+  let controlPort = 0;
+  const controlServer = http.createServer((request, response) => {
+    routeControlRequest(health, controlPort, controlPath, request, response);
+  });
+  let controlClosed: Promise<void> | undefined;
+  let controlClose: Promise<void> | undefined;
+  const closeControl = () => controlClose ??= closeServer(controlServer, controlClosed);
+  const reader = await startingReader.catch(async (error: unknown) => {
+    await closeControl();
+    throw error;
+  });
+
+  reader.server.once("close", () => {
+    void closeControl();
+  });
+
+  try {
+    await listen(controlServer, 0, "127.0.0.1");
+    controlClosed = new Promise((resolve) => controlServer.once("close", resolve));
+    controlPort = getServerPort(controlServer);
+  } catch (error) {
+    await Promise.all([reader.close(), closeControl()]);
+    throw error;
+  }
+
+  return {
+    ...reader,
+    controlServer,
+    controlUrl: `http://127.0.0.1:${controlPort}${controlPath}`,
+    async close() {
+      await Promise.all([reader.close(), closeControl()]);
+    },
+  };
+}
+
+export function startHubHttpServer(
+  mounts: readonly ViewerSourceMount[],
+  configuration: ViewerNetworkConfig,
+  renderOptions: ViewerRenderOptions = {},
+): Promise<ViewerReaderServer> {
+  return startReaderServer({ mounts, renderOptions }, configuration);
+}
+
+async function startReaderServer(
+  reader: ReaderConfiguration,
+  configuration: ViewerNetworkConfig,
+): Promise<ViewerReaderServer> {
   let config = resolveViewerNetworkConfig(configuration);
   let urls = getViewerUrls(config);
   const server = http.createServer((request, response) => {
@@ -54,7 +121,7 @@ export async function startViewerHttpServer(
       }
     }
 
-    void routeReaderRequest(backend, config, urls, request, response, preferencesHome).catch((error: unknown) => {
+    void routeReaderRequest(reader, config, urls, request, response).catch((error: unknown) => {
       console.error(error);
 
       if (response.headersSent) {
@@ -65,53 +132,27 @@ export async function startViewerHttpServer(
       sendText(response, 500, "Internal Server Error");
     });
   });
-  const controlPath = `/control/${randomBytes(32).toString("base64url")}`;
-  let controlPort = 0;
-  const controlServer = http.createServer((request, response) => {
-    routeControlRequest(health, controlPort, controlPath, request, response);
-  });
-  let readerClosed: Promise<void> | undefined;
-  let controlClosed: Promise<void> | undefined;
-  let controlClose: Promise<void> | undefined;
-  const closeControl = () => controlClose ??= closeServer(controlServer, controlClosed);
-
-  server.once("close", () => {
-    void closeControl();
-  });
+  let closed: Promise<void> | undefined;
 
   try {
     await listen(server, config.port, config.host);
-    readerClosed = new Promise((resolve) => server.once("close", resolve));
+    closed = new Promise((resolve) => server.once("close", resolve));
     config = { ...config, port: getServerPort(server) };
     urls = getViewerUrls(config);
-
-    await listen(controlServer, 0, "127.0.0.1");
-    controlClosed = new Promise((resolve) => controlServer.once("close", resolve));
-    controlPort = getServerPort(controlServer);
   } catch (error) {
-    await Promise.all([closeServer(server, readerClosed), closeControl()]);
+    await closeServer(server, closed);
     throw error;
   }
 
-  return {
-    server,
-    controlServer,
-    config,
-    urls,
-    controlUrl: `http://127.0.0.1:${controlPort}${controlPath}`,
-    async close() {
-      await Promise.all([closeServer(server, readerClosed), closeControl()]);
-    },
-  };
+  return { server, config, urls, close: () => closeServer(server, closed) };
 }
 
 async function routeReaderRequest(
-  backend: DocumentBackend,
+  reader: ReaderConfiguration,
   config: ViewerNetworkConfig,
   urls: readonly string[],
   request: IncomingMessage,
   response: ServerResponse,
-  preferencesHome?: string,
 ): Promise<void> {
   if (!hasSingleHost(request) || !isAllowedViewerHost(request.headers.host, config, urls)) {
     sendText(response, 421, "Misdirected Request");
@@ -143,39 +184,78 @@ async function routeReaderRequest(
   }
 
   if (url.pathname === "/") {
-    const documents = await backend.listDocuments();
     const query = (url.searchParams.get("q") ?? "").trim().slice(0, 200);
-    const preferences = await readViewerPreferences(preferencesHome);
-    sendHtml(response, renderIndex(documents, query, preferences), SHELL_CSP);
+    if ("mounts" in reader) {
+      const sources = await Promise.all(reader.mounts.map(async ({ name, source }) => {
+        try {
+          return { name, available: true, documents: await source.listDocuments() };
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          console.error(`html-inbox: Hub source ${name} unavailable: ${message}`);
+
+          return { name, available: false, documents: [] };
+        }
+      }));
+      sendHtml(response, renderHubIndex(sources, query, url.searchParams.get("inbox") ?? "", reader.renderOptions), SHELL_CSP);
+      return;
+    }
+
+    const preferences = await readViewerPreferences(reader.preferencesHome);
+    const renderOptions = { ...reader.renderOptions, ...preferences };
+    sendHtml(response, renderIndex(await reader.source.listDocuments(), query, renderOptions), SHELL_CSP);
     return;
   }
 
-  const documentMatch = /^\/documents\/([^/]+)(\/content)?$/.exec(url.pathname);
-  if (!documentMatch || !isSafeDocumentId(documentMatch[1])) {
+  const documentMatch = "mounts" in reader
+    ? /^\/sources\/([^/]+)\/documents\/([^/]+)(\/content)?$/.exec(url.pathname)
+    : /^\/documents\/([^/]+)(\/content)?$/.exec(url.pathname);
+  const sourceName = "mounts" in reader ? documentMatch?.[1] : undefined;
+  const id = "mounts" in reader ? documentMatch?.[2] : documentMatch?.[1];
+  const isContent = "mounts" in reader ? documentMatch?.[3] : documentMatch?.[2];
+  const source = "mounts" in reader ? reader.mounts.find((mount) => mount.name === sourceName)?.source : reader.source;
+  if (!id || !isSafeDocumentId(id) || !source) {
     sendText(response, 404, "Not Found");
     return;
   }
 
-  const id = documentMatch[1];
-  if (documentMatch[2]) {
-    const document = await backend.getDocument(id);
-    if (!document) {
+  try {
+    if (isContent) {
+      const document = await source.getDocument(id);
+      if (!document) {
+        sendText(response, 404, "Not Found");
+        return;
+      }
+
+      sendHtml(response, document.originalBytes, DOCUMENT_CSP);
+      return;
+    }
+
+    const metadata = await source.getDocumentMetadata(id);
+    if (!metadata) {
       sendText(response, 404, "Not Found");
       return;
     }
 
-    sendHtml(response, document.originalBytes, DOCUMENT_CSP);
-    return;
-  }
+    const preferences = "source" in reader ? await readViewerPreferences(reader.preferencesHome) : undefined;
+    sendHtml(response, renderDocumentShell(metadata, {
+      ...reader.renderOptions,
+      ...preferences,
+      ...(sourceName ? {
+        inboxName: sourceName,
+        homePath: `/?inbox=${encodeURIComponent(sourceName)}`,
+        documentBasePath: `/sources/${sourceName}`,
+      } : {}),
+    }), SHELL_CSP);
+  } catch (error) {
+    if (!("mounts" in reader)) {
+      throw error;
+    }
 
-  const metadata = await backend.getDocumentMetadata(id);
-  if (!metadata) {
-    sendText(response, 404, "Not Found");
-    return;
-  }
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`html-inbox: Hub source ${sourceName} unavailable: ${message}`);
 
-  const preferences = await readViewerPreferences(preferencesHome);
-  sendHtml(response, renderDocumentShell(metadata, preferences), SHELL_CSP);
+    sendText(response, 503, "Inbox unavailable. Results may be incomplete.");
+  }
 }
 
 async function readViewerPreferences(home?: string): Promise<{ appearance: Appearance } | undefined> {

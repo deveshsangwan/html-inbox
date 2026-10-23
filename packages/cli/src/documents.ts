@@ -37,6 +37,11 @@ export interface DocumentBackend {
   deleteDocument(id: string): Promise<DeleteResult | null>;
 }
 
+export type DocumentSource = Pick<
+  DocumentBackend,
+  "listDocuments" | "getDocumentMetadata" | "getDocument"
+>;
+
 export function parseDocumentMetadata(value: unknown): DocumentMetadata {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("metadata must be an object");

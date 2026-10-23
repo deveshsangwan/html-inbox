@@ -1,10 +1,11 @@
 import { DEFAULT_PORT } from "./backend";
 import net from "node:net";
+import { readInboxIdentity } from "./inbox-home";
 import { ManagedStorageError } from "./private-storage";
 import { assertUuidV4, isRecord } from "./validation";
 import { getViewerUrls, resolveViewerNetworkConfig, type ViewerExposure, type ViewerNetworkConfig, type ViewerNetworkOptions } from "./viewer-network";
 import { getTailscaleStatus } from "./viewer-tailscale";
-import { getInboxInstanceId, hasErrorCode, isValidPid, readSavedViewerConfiguration, readViewerRecord, type ViewerRecord } from "./viewer-records";
+import { getInboxInstanceId, hasErrorCode, isValidPid, readSavedViewerConfiguration, readViewerRecord, type ViewerRecord, type ViewerRecordReadOptions } from "./viewer-records";
 
 export const VIEWER_PROTOCOL_VERSION = 3;
 
@@ -21,8 +22,9 @@ export interface ViewerStatus {
 export async function resolveViewerConfiguration(
   home: string,
   input?: number | ViewerNetworkOptions,
+  options: ViewerRecordReadOptions = {},
 ): Promise<ViewerNetworkConfig> {
-  const saved = await readSavedViewerConfiguration(home);
+  const saved = await readSavedViewerConfiguration(home, options);
   if (input === undefined) {
     return saved?.config ?? resolveViewerNetworkConfig(DEFAULT_PORT);
   }
@@ -46,13 +48,17 @@ export async function resolveViewerConfiguration(
 export async function getViewerStatus(
   home: string,
   port?: number,
-  options: { refreshLanUrls?: boolean } = {},
+  options: { refreshLanUrls?: boolean; readOnly?: boolean; instanceId?: string } = {},
 ): Promise<ViewerStatus> {
-  const config = await resolveViewerConfiguration(home, port);
+  if (options.instanceId !== undefined) {
+    assertUuidV4(options.instanceId, "Expected inbox identity");
+  }
+
+  const config = await resolveViewerConfiguration(home, port, options);
   let record: ViewerRecord | null;
   let recordFailure: string | undefined;
   try {
-    record = await readViewerRecord(home);
+    record = await readViewerRecord(home, options);
   } catch (error) {
     if (error instanceof ManagedStorageError) {
       throw error;
@@ -73,14 +79,27 @@ export async function getViewerStatus(
     ? getViewerUrls(selectedConfig)
     : selected?.urls ?? getViewerUrls(metadataConfig);
   const base = { url: urls[0], urls, exposure: selectedConfig.exposure, port: selectedConfig.port };
+  const inspectedInstanceId = options.readOnly ? await readInboxIdentity(home) : undefined;
+  if (options.readOnly && !inspectedInstanceId) {
+    return { ...base, state: "conflict", reason: "Inbox identity is missing; viewer cannot be verified" };
+  }
+
+  if (options.readOnly && options.instanceId !== undefined && inspectedInstanceId !== options.instanceId.toLowerCase()) {
+    return { ...base, state: "conflict", reason: "Inbox identity changed since selection" };
+  }
+
   if (!selected) {
     return {
       ...base,
-      state: recordFailure?.startsWith("Older viewer process record:")
+      state: recordFailure && (options.readOnly || recordFailure.startsWith("Older viewer process record:"))
         ? "incompatible"
         : await isPortListening(selectedConfig) ? "conflict" : "stopped",
       ...(recordFailure ? { reason: recordFailure } : {}),
     };
+  }
+
+  if (options.readOnly && selected.protocolVersion !== VIEWER_PROTOCOL_VERSION) {
+    return { ...base, state: "incompatible", reason: "Viewer process record uses an incompatible protocol" };
   }
 
   const health = await getControlHealth(selected.controlUrl);
@@ -92,16 +111,22 @@ export async function getViewerStatus(
     return { ...base, state: health.state === "incompatible" ? "incompatible" : "conflict" };
   }
 
-  const instanceId = await getInboxInstanceId(home);
-  if (health.instanceId !== instanceId || selected.instanceId !== instanceId) {
+  const instanceId = options.readOnly ? inspectedInstanceId : await getInboxInstanceId(home);
+  // Registered identities use canonical UUID spelling while legacy lifecycle records may use uppercase.
+  const canonicalInstanceId = instanceId?.toLowerCase();
+  if (health.instanceId.toLowerCase() !== canonicalInstanceId || selected.instanceId.toLowerCase() !== canonicalInstanceId) {
     return { ...base, state: "conflict", reason: "Viewer belongs to a different HTML_INBOX_HOME" };
   }
 
   const hasMatchingProcess = health.processId === selected.processId && health.pid === selected.pid &&
     selected.protocolVersion === VIEWER_PROTOCOL_VERSION;
+  if (options.readOnly && !hasMatchingProcess) {
+    return { ...base, state: "conflict", reason: "Viewer process record is missing or stale" };
+  }
+
   if (selected.config.exposure === "tailscale") {
-    const mapping = await getTailscaleStatus(home, { executable: process.env.HTML_INBOX_TAILSCALE_COMMAND });
-    if (mapping.state !== "running" || mapping.instanceId !== instanceId || mapping.processId !== selected.processId ||
+    const mapping = await getTailscaleStatus(home, { executable: process.env.HTML_INBOX_TAILSCALE_COMMAND }, options);
+    if (mapping.state !== "running" || mapping.instanceId?.toLowerCase() !== canonicalInstanceId || mapping.processId !== selected.processId ||
         mapping.backendPort !== selected.config.port || mapping.url !== base.url) {
       return {
         ...base,

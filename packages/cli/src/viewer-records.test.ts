@@ -406,6 +406,63 @@ test("the missing-no-follow fallback rereads a replacement shutdown failure mark
   assert.equal(replacedAfterStat, true);
 });
 
+for (const filename of ["viewer-config.json", "viewer.json"]) {
+  for (const usesFallback of [false, true]) {
+    test(`read-only ${filename} retries preserve permissions with ${usesFallback ? "fallback" : "native"} no-follow reads`, {
+      skip: openRecordReplacementSkip,
+    }, async (t) => {
+      const home = await temporaryHome(t);
+      const recordPath = path.join(home, filename);
+      const record: ViewerRecord = {
+        pid: process.pid,
+        instanceId: randomUUID(),
+        processId: randomUUID(),
+        protocolVersion: VIEWER_PROTOCOL_VERSION,
+        config: { port: 3217, exposure: "loopback", host: "127.0.0.1" },
+        urls: ["http://127.0.0.1:3217"],
+        controlUrl: `http://127.0.0.1:3218/control/${"A".repeat(43)}`,
+        startedAt: new Date().toISOString(),
+      };
+      const isConfiguration = filename === "viewer-config.json";
+      const contents = JSON.stringify(isConfiguration ? configuration : record);
+      await fsPromises.writeFile(recordPath, contents, { mode: 0o640 });
+      const readers = usesFallback ? await fallbackRecordReaders() : {
+        readConfiguration: readSavedViewerConfiguration,
+        readRecord: readViewerRecord,
+      };
+      const read = isConfiguration ? readers.readConfiguration : readers.readRecord;
+      const getUid = process.getuid;
+      process.getuid = () => 1000;
+      t.after(() => { process.getuid = getUid; });
+      const originalOpen = fsPromises.open;
+      let replacedOpenedRecord = false;
+      t.mock.method(fsPromises, "open", async (
+        filePath: Parameters<typeof originalOpen>[0],
+        flags: Parameters<typeof originalOpen>[1],
+        mode?: Parameters<typeof originalOpen>[2],
+      ) => {
+        const file = await originalOpen(filePath, flags, mode);
+        if (filePath === recordPath && !replacedOpenedRecord) {
+          replacedOpenedRecord = true;
+          await fsPromises.rm(recordPath);
+          await fsPromises.writeFile(recordPath, contents, { mode: 0o640 });
+        }
+
+        return file;
+      });
+
+      assert.deepEqual(structuredClone(await read(home, { readOnly: true })), isConfiguration ? {
+        config: configuration.config,
+        urls: configuration.urls,
+        tailscaleExecutable: undefined,
+      } : record);
+      assert.equal(replacedOpenedRecord, true);
+      assert.equal((await fsPromises.lstat(recordPath)).mode & 0o777, 0o640);
+      assert.equal(await fsPromises.readFile(recordPath, "utf8"), contents);
+    });
+  }
+}
+
 async function fallbackRecordReaders() {
   const modulePath = path.join(__dirname, "viewer-records.js");
   const requireModule = createRequire(modulePath);
@@ -428,8 +485,8 @@ async function fallbackRecordReaders() {
   );
 
   return {
-    readConfiguration: async (home: string): Promise<unknown> =>
-      readConfiguration(home),
-    readRecord: async (home: string): Promise<unknown> => readRecord(home),
+    readConfiguration: async (home: string, options?: { readOnly?: boolean }): Promise<unknown> =>
+      readConfiguration(home, options),
+    readRecord: async (home: string, options?: { readOnly?: boolean }): Promise<unknown> => readRecord(home, options),
   };
 }

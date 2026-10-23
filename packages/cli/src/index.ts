@@ -2,9 +2,9 @@
 import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { createInterface } from "node:readline/promises";
-import { stdin, stdout } from "node:process";
+import { stdin, stdout, stderr } from "node:process";
 import { DeleteResult, DocumentMetadata } from "./documents";
-import { getInboxHome, getViewerPort, LocalDocumentBackend } from "./backend";
+import { getViewerPort, LocalDocumentBackend } from "./backend";
 import { loadPublishInput, PublishRequest } from "./publish-input";
 import { ensurePrivateDirectory } from "./private-storage";
 import { RemoteState, RemoteStatus, RemoteWorkflow } from "./remote-workflow";
@@ -17,11 +17,15 @@ import { parseViewerNetworkConfig } from "./viewer-network";
 import { getViewerServiceStatus, installViewerService, resolveViewerServiceHome, uninstallViewerService } from "./viewer-service";
 import { configureViewerServiceLogging } from "./viewer-service-log";
 import { readPreferences, setAppearancePreference } from "./preferences";
+import { resolveInboxSelection, type ResolvedInboxSelection } from "./inbox-selection";
+import { runInboxCommand, runHubCommand } from "./inbox-commands";
+import { formatDocumentTable, formatViewerServiceResult, formatViewerStatus, formatViewerStopResult } from "./cli-display";
+import { promptForInbox } from "./inbox-picker";
 
 export const USAGE = `Usage: html-inbox <command> [options]
 
 Commands:
-  publish <file.html> --title <title> --type <type>
+  publish <file.html> --title <title> --type <type> [--json]
       Store an HTML document and print its active viewer URL.
 
   list [--json]
@@ -51,24 +55,47 @@ Commands:
       LAN trusts all reachable readers; Tailscale uses existing HTTPS Serve.
       Omitted networking options reuse the saved configuration.
 
-  viewer status
-  viewer stop
+  viewer status [--json]
+  viewer stop [--json]
       Inspect or stop the verified viewer through its local control endpoint.
 
-  viewer service install [--user <normal-user>] [viewer networking options]
-  viewer service uninstall [--user <normal-user>]
-  viewer service status [--user <normal-user>]
+  viewer service install [--user <normal-user>] [viewer networking options] [--json]
+  viewer service uninstall [--user <normal-user>] [--json]
+  viewer service status [--user <normal-user>] [--json]
       Manage boot startup with systemd or a macOS LaunchDaemon.
       Install and uninstall require administrator privileges; the viewer runs as a normal user.
 
+  inbox create <name> --home <absolute-path> [--json]
+  inbox register <name> --home <absolute-path> [--json]
+  inbox list [--running] [--json]
+  inbox default <name> | inbox default --clear
+      Name independent libraries, inspect their local state, or choose a fallback.
+
+  hub init --config <absolute-path> --inbox <name> [--inbox <name> ...] [--name <title>]
+      Capture explicit reading membership in a new local config.
+  hub --config <absolute-path> [--port <port>] [--loopback|--lan] [--host <ip>]
+      Serve selected local libraries in the foreground. Default: loopback port 3218.
+      Every reachable reader can read all selected libraries. Ctrl-C stops the hub.
+
 Options:
+  --inbox <name>  Select a registered library for this operation.
+  --home <path>   Select an absolute library path for this operation.
+  --json         Machine-readable results where supported; never prompt.
   -h, --help       Show this help.
   -v, --version    Print the installed version.
 
 Environment:
+  HTML_INBOX_NAME                 Registered library name.
+  HTML_INBOX_CATALOG_HOME         Private catalog, default ~/.config/html-inbox.
   HTML_INBOX_HOME                 Library directory, default ~/.html-inbox.
   HTML_INBOX_PORT                 Port override, default 3217 on first startup.
-  HTML_INBOX_TAILSCALE_COMMAND    Path to an existing Tailscale executable.`;
+  HTML_INBOX_TAILSCALE_COMMAND    Path to an existing Tailscale executable.
+
+Selection:
+  Explicit selection, then environment, then configured default.
+  With named inboxes and no selection, interactive terminals offer a picker.
+  Scripts and JSON mode require --inbox, --home, an environment binding, or a default.
+  Without named inboxes, the legacy ~/.html-inbox home remains available.`;
 
 export async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
   const parsed = parseCommand(argv);
@@ -84,21 +111,45 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     return;
   }
 
+  if (parsed.command === "inbox create" || parsed.command === "inbox register" || parsed.command === "inbox list" || parsed.command === "inbox default") {
+    await runInboxCommand(parsed);
+    return;
+  }
+
+  if (parsed.command === "hub" || parsed.command === "hub init") {
+    await runHubCommand(parsed);
+    return;
+  }
+
+  const legacyHome = parsed.command === "viewer service"
+    ? await resolveViewerServiceHome({ user: parsed.user })
+    : undefined;
+  const json = ("json" in parsed && parsed.json === true) ||
+    ("options" in parsed && "json" in parsed.options && parsed.options.json === true);
+  const canChooseInbox = stdin.isTTY && stdout.isTTY && stderr.isTTY && !json;
+  const selection = await resolveInboxSelection(parsed, process.env, legacyHome, {
+    requireSelection: true,
+    ...(canChooseInbox ? { chooseInbox: promptForInbox } : {}),
+  });
+  const home = selection.home;
+  if (selection.name) {
+    console.error(`html-inbox: Inbox ${selection.name} (${home})`);
+  }
+
   if (command === "publish") {
-    const url = await publishCommand(parsed.options);
-    console.log(url);
+    const url = await publishCommand(parsed.options, selection);
+    console.log(parsed.json ? JSON.stringify({ url, inbox: selection.name ?? null, home }) : url);
     return;
   }
 
   if (command === "list") {
     const json = parsed.json;
-    const documents = await new LocalDocumentBackend(getInboxHome()).listDocuments();
+    const documents = await new LocalDocumentBackend(home).listDocuments();
     console.log(formatDocumentList(documents, json));
     return;
   }
 
   if (command === "preferences") {
-    const home = getInboxHome();
     const preferences = parsed.appearance === undefined
       ? await readPreferences(home)
       : await setAppearancePreference(home, parsed.appearance);
@@ -107,13 +158,12 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
   }
 
   if (command === "delete") {
-    await deleteCommand(parsed);
+    await deleteCommand(parsed, home);
     return;
   }
 
   if (command === "export") {
     const options = parsed.options;
-    const home = getInboxHome();
     await ensurePrivateDirectory(home);
     assertExportOutsideHome(options.outputDir, home);
     const result = await exportStaticSnapshot(
@@ -125,19 +175,20 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
   }
 
   if (command === "remote init" || command === "remote publish" || command === "remote status" || command === "remote reconcile" || command === "remote revoke") {
-    await remoteCommand(parsed);
+    await remoteCommand(parsed, home);
     return;
   }
 
   if (command === "viewer service") {
-    const home = await resolveViewerServiceHome({ home: process.env.HTML_INBOX_HOME, user: parsed.user });
     if (parsed.action === "status") {
-      console.log(JSON.stringify(await getViewerServiceStatus({ home }), null, 2));
+      const status = await getViewerServiceStatus({ home });
+      console.log(parsed.json ? JSON.stringify(status, null, 2) : formatViewerServiceResult("status", status, selection.name));
       return;
     }
 
     if (parsed.action === "uninstall") {
-      console.log(JSON.stringify(await uninstallViewerService({ home }), null, 2));
+      const status = await uninstallViewerService({ home });
+      console.log(parsed.json ? JSON.stringify(status, null, 2) : formatViewerServiceResult("uninstall", status, selection.name));
       return;
     }
 
@@ -147,20 +198,26 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
       exposure: parsed.exposure,
       host: parsed.host,
     });
-    console.log(JSON.stringify(await installViewerService({ home, ...config, user: parsed.user }), null, 2));
+    const status = await installViewerService({ home, ...config, user: parsed.user });
+    console.log(parsed.json ? JSON.stringify(status, null, 2) : formatViewerServiceResult("install", status, selection.name));
     return;
   }
 
   if (command === "viewer") {
-    const home = getInboxHome();
     const environmentPort = process.env.HTML_INBOX_PORT ? getViewerPort() : undefined;
     if (parsed.action === "status") {
-      console.log(JSON.stringify(await getViewerStatus(home, environmentPort), null, 2));
+      const status = await getViewerStatus(home, environmentPort);
+      console.log(parsed.json
+        ? JSON.stringify({ ...status, ...(selection.name ? { inbox: selection.name } : {}) }, null, 2)
+        : formatViewerStatus(status, selection.name));
       return;
     }
 
     if (parsed.action === "stop") {
-      console.log(JSON.stringify(await stopViewer(home, environmentPort), null, 2));
+      const status = await stopViewer(home, environmentPort);
+      console.log(parsed.json
+        ? JSON.stringify({ ...status, ...(selection.name ? { inbox: selection.name } : {}) }, null, 2)
+        : formatViewerStopResult(status, selection.name));
       return;
     }
 
@@ -177,12 +234,12 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
         ? JSON.parse(process.env.HTML_INBOX_VIEWER_CONFIG)
         : await resolveViewerConfiguration(home, input);
       const config = parseViewerNetworkConfig(workerConfig);
-      await startViewer(new LocalDocumentBackend(home), home, config);
+      await startViewer(new LocalDocumentBackend(home), home, config, selection.name ?? process.env.HTML_INBOX_VIEWER_NAME);
       console.error(`html-inbox viewer listening on ${(await getViewerStatus(home)).url}`);
       return;
     }
 
-    console.log((await ensureViewer(home, input)).url);
+    console.log((await ensureViewer(home, input, selection.name)).url);
     return;
   }
 
@@ -198,8 +255,12 @@ export function getCliVersion(): string {
   return packageJson.version;
 }
 
-export async function publishCommand(args: PublishRequest): Promise<string> {
-  const home = getInboxHome();
+export async function publishCommand(
+  args: PublishRequest,
+  selection?: ResolvedInboxSelection,
+): Promise<string> {
+  const destination = selection ?? await resolveInboxSelection();
+  const home = destination.home;
   const port = process.env.HTML_INBOX_PORT ? getViewerPort() : undefined;
   const backend = new LocalDocumentBackend(home);
   const { input, warnings } = await loadPublishInput(args);
@@ -208,7 +269,7 @@ export async function publishCommand(args: PublishRequest): Promise<string> {
     console.warn(`html-inbox: ${warning}`);
   }
 
-  const viewer = await ensureViewer(home, port);
+  const viewer = await ensureViewer(home, port, destination.name);
   const metadata = await backend.publish(input);
   return `${viewer.url}/documents/${metadata.id}`;
 }
@@ -217,14 +278,7 @@ export function formatDocumentList(documents: DocumentMetadata[], json: boolean)
   if (json) {
     return JSON.stringify(documents, null, 2);
   }
-  if (documents.length === 0) {
-    return "No documents.";
-  }
-  return documents
-    .map((document) =>
-      [document.id, document.type, document.createdAt, document.title].join("\t"),
-    )
-    .join("\n");
+  return formatDocumentTable(documents);
 }
 
 export function formatDeleteResult(result: DeleteResult, json: boolean): string {
@@ -270,7 +324,7 @@ function resolveExistingPath(value: string): string {
   const missing: string[] = [];
   for (;;) {
     try {
-      return path.join(realpathSync(current), ...missing.reverse());
+      return path.join(realpathSync.native(current), ...missing.reverse());
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
       const parent = path.dirname(current);
@@ -310,8 +364,12 @@ export function formatRemoteStatus(status: RemoteStatus): string {
   return lines.join("\n");
 }
 
-async function deleteCommand({ id, force, json }: Extract<CliCommand, { command: "delete" }>): Promise<void> {
-  const backend = new LocalDocumentBackend(getInboxHome());
+async function deleteCommand({ id, force, json }: Extract<CliCommand, { command: "delete" }>, home: string): Promise<void> {
+  if (json && !force) {
+    throw new Error("delete --json requires --force; JSON mode never prompts for confirmation");
+  }
+
+  const backend = new LocalDocumentBackend(home);
   const metadata = await backend.getDocumentMetadata(id);
   if (!metadata) {
     throw new Error(`Document not found: ${id}`);
@@ -332,9 +390,8 @@ async function deleteCommand({ id, force, json }: Extract<CliCommand, { command:
   console.log(formatDeleteResult(result, json));
 }
 
-async function remoteCommand(parsed: Extract<CliCommand, { command: `remote ${string}` }>): Promise<void> {
+async function remoteCommand(parsed: Extract<CliCommand, { command: `remote ${string}` }>, home: string): Promise<void> {
   const action = parsed.command;
-  const home = getInboxHome();
   const workflow = new RemoteWorkflow(new LocalDocumentBackend(home), home);
 
   if (action === "remote init") {
@@ -367,6 +424,10 @@ async function remoteCommand(parsed: Extract<CliCommand, { command: `remote ${st
 
   if (action === "remote revoke") {
     const { yes, json } = parsed;
+    if (json && !yes) {
+      throw new Error("remote revoke --json requires --yes; JSON mode never prompts for confirmation");
+    }
+
     if (!yes && !(await confirmAction(
       "Replace the current remote capability route? Older immutable deployment URLs may remain readable. [y/N] ",
       "remote revoke requires --yes when no interactive terminal is available",
@@ -388,11 +449,11 @@ async function remoteCommand(parsed: Extract<CliCommand, { command: `remote ${st
 }
 
 async function confirmAction(question: string, unavailableMessage: string): Promise<boolean> {
-  if (!stdin.isTTY || !stdout.isTTY) {
+  if (!stdin.isTTY || !stdout.isTTY || !stderr.isTTY) {
     throw new Error(unavailableMessage);
   }
 
-  const prompt = createInterface({ input: stdin, output: stdout });
+  const prompt = createInterface({ input: stdin, output: stderr });
   try {
     const answer = await prompt.question(question);
     return /^y(?:es)?$/i.test(answer.trim());

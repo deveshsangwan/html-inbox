@@ -54,6 +54,10 @@ Publishing, deletion, startup, and stop remain local CLI operations. The exposed
 
 ## Storage privacy
 
+Named inbox catalog entries are trusted local configuration, separate from reader output. Names bind a canonical root and expected durable UUID; process reuse and shutdown still require verified private lifecycle identity. The catalog never grants network reader access.
+
+The optional local hub grants every reachable reader access to every explicitly mounted library, including stopped or privately served sources. New catalog entries do not join a hub. Membership is loaded from explicit trusted local configuration. Mounted sources are read without creating missing paths or changing their filesystem permissions; UUID or location mismatches isolate that source and mark combined results incomplete. Public availability messages contain source names and generic state, not local roots, private control URLs, or diagnostics. Original bytes, sandbox isolation, CSP, method restrictions, and Host validation apply to hub routes too. The hub adds no remote administration, ingestion, or source lifecycle authority. See [hub operation](named-inboxes.md#read-selected-libraries-together).
+
 On POSIX, the CLI uses Node's filesystem `mode` options and `chmod` to set managed directories to `0700`, giving the owner read, write, and traversal access, and files to `0600`, giving the owner read and write access. Group and other permission bits are cleared. Existing managed paths are tightened when accessed. The CLI does not change ownership, encrypt files, or protect against processes running as the same user or privileged administrators. A filesystem that ignores Unix permission modes cannot provide this POSIX guarantee.
 
 On Windows, Node's `chmod` changes only the write permission and does not distinguish owner, group, and other users. Directory creation modes are unsupported. These calls do not install an owner-only Windows discretionary access control list, or DACL. See [Node's file modes](https://nodejs.org/api/fs.html#file-modes) and [directory creation options](https://nodejs.org/api/fs.html#fspromisesmkdirpath-options).

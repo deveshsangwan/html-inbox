@@ -172,10 +172,10 @@ try {
     true,
   );
 
-  const stopped = await runInstalledCli(["viewer", "stop"]);
+  const stopped = await runInstalledCli(["viewer", "stop", "--json"]);
   assert.equal(JSON.parse(stopped.stdout).state, "stopped");
   await viewer.close();
-  const viewerStatus = await runInstalledCli(["viewer", "status"]);
+  const viewerStatus = await runInstalledCli(["viewer", "status", "--json"]);
   assert.equal(JSON.parse(viewerStatus.stdout).state, "stopped");
 
   const backgroundStarts = await Promise.all([
@@ -187,30 +187,30 @@ try {
     assert.equal(started.stdout.trim(), viewer.origin);
   }
 
-  const backgroundStatus = JSON.parse((await runInstalledCli(["viewer", "status"])).stdout);
+  const backgroundStatus = JSON.parse((await runInstalledCli(["viewer", "status", "--json"])).stdout);
   assert.equal(backgroundStatus.state, "running");
   assert.equal(typeof backgroundStatus.pid, "number");
   assert.equal((await fetch(`${viewer.origin}/health`)).status, 200);
-  assert.equal(JSON.parse((await runInstalledCli(["viewer", "status"])).stdout).pid, backgroundStatus.pid);
-  assert.equal(JSON.parse((await runInstalledCli(["viewer", "stop"])).stdout).state, "stopped");
+  assert.equal(JSON.parse((await runInstalledCli(["viewer", "status", "--json"])).stdout).pid, backgroundStatus.pid);
+  assert.equal(JSON.parse((await runInstalledCli(["viewer", "stop", "--json"])).stdout).state, "stopped");
 
   const restartedPublish = await runInstalledCli(
     ["publish", sourcePath, "--title", "Published after stop", "--type", "report"],
   );
   assert.equal((await fetch(restartedPublish.stdout.trim())).status, 200);
-  assert.equal(JSON.parse((await runInstalledCli(["viewer", "stop"])).stdout).state, "stopped");
+  assert.equal(JSON.parse((await runInstalledCli(["viewer", "stop", "--json"])).stdout).state, "stopped");
 
   await runInstalledCli(["viewer", "--lan", "--host", "127.0.0.1", "--port", String(viewerPort)]);
-  assert.equal(JSON.parse((await runInstalledCli(["viewer", "status"])).stdout).exposure, "lan");
+  assert.equal(JSON.parse((await runInstalledCli(["viewer", "status", "--json"])).stdout).exposure, "lan");
   const lanPublish = await runInstalledCli(["publish", sourcePath, "--title", "LAN report", "--type", "report"]);
   assert.equal(new URL(lanPublish.stdout.trim()).origin, viewer.origin);
   assert.equal((await fetch(lanPublish.stdout.trim())).status, 200);
   assert.deepEqual(await (await fetch(`${viewer.origin}/health`)).json(), { ok: true });
-  assert.equal(JSON.parse((await runInstalledCli(["viewer", "stop"])).stdout).state, "stopped");
+  assert.equal(JSON.parse((await runInstalledCli(["viewer", "stop", "--json"])).stdout).state, "stopped");
 
   await runInstalledCli(["viewer", "--loopback"]);
-  assert.equal(JSON.parse((await runInstalledCli(["viewer", "status"])).stdout).exposure, "loopback");
-  await runInstalledCli(["viewer", "stop"]);
+  assert.equal(JSON.parse((await runInstalledCli(["viewer", "status", "--json"])).stdout).exposure, "loopback");
+  await runInstalledCli(["viewer", "stop", "--json"]);
 
   if (process.platform !== "win32") {
     const fixture = await createPackageTailscaleFixture(path.join(temporaryRoot, "recording-tailscale"));
@@ -221,12 +221,12 @@ try {
     });
     const tailnetOrigin = `https://${fixture.hostname}`;
     assert.equal((await runTailscaleCli(["viewer", "--tailscale"])).stdout.trim(), tailnetOrigin);
-    const tailscaleStatus = JSON.parse((await runTailscaleCli(["viewer", "status"])).stdout);
+    const tailscaleStatus = JSON.parse((await runTailscaleCli(["viewer", "status", "--json"])).stdout);
     assert.equal(tailscaleStatus.state, "running");
     assert.equal(tailscaleStatus.exposure, "tailscale");
     assert.equal("controlUrl" in tailscaleStatus, false);
     assert.equal((await runTailscaleCli(["viewer"])).stdout.trim(), tailnetOrigin);
-    assert.equal(JSON.parse((await runTailscaleCli(["viewer", "status"])).stdout).pid, tailscaleStatus.pid);
+    assert.equal(JSON.parse((await runTailscaleCli(["viewer", "status", "--json"])).stdout).pid, tailscaleStatus.pid);
 
     const tailnetPublish = await runTailscaleCli(["publish", sourcePath, "--title", "Tailnet report", "--type", "report"]);
     const tailnetDocument = new URL(tailnetPublish.stdout.trim());
@@ -236,7 +236,7 @@ try {
     assert.deepEqual(proxiedContent.body, originalHtml);
     assert.match(proxiedContent.headers["content-security-policy"], /sandbox allow-scripts/);
 
-    assert.equal(JSON.parse((await runTailscaleCli(["viewer", "stop"])).stdout).state, "stopped");
+    assert.equal(JSON.parse((await runTailscaleCli(["viewer", "stop", "--json"])).stdout).state, "stopped");
     assert.deepEqual(JSON.parse(await readFile(fixture.configPath, "utf8")), fixture.originalConfig);
     await assert.rejects(readFile(path.join(isolatedHome, "tailscale-serve.json")), { code: "ENOENT" });
     const commands = (await readFile(fixture.commandsPath, "utf8")).trim().split("\n").map((line) => JSON.parse(line));
@@ -256,7 +256,7 @@ try {
   try {
     await viewer?.close();
     const installedExecutable = path.join(temporaryRoot, "consumer", "node_modules", "html-inbox", "bundle", "index.js");
-    await run(process.execPath, [installedExecutable, "viewer", "stop"], temporaryRoot, {
+    await run(process.execPath, [installedExecutable, "viewer", "stop", "--json"], temporaryRoot, {
       HTML_INBOX_HOME: path.join(temporaryRoot, "home"),
       ...tailscaleEnvironment,
     }).catch(() => {});
