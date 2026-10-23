@@ -7,7 +7,7 @@ import { test, type TestContext } from "node:test";
 import { promisify } from "node:util";
 import { LocalDocumentBackend } from "./backend";
 import { clearDefaultInbox, createInbox, InboxInspectionError, setDefaultInbox } from "./inbox-catalog";
-import { resolveInboxSelection } from "./inbox-selection";
+import { InboxSelectionRequiredError, resolveInboxSelection } from "./inbox-selection";
 import { temporaryHome } from "./test-fixtures";
 
 async function selectionFixture(t: TestContext) {
@@ -219,4 +219,174 @@ test("registered home selectors reject changed parent aliases even with a differ
 
   await assert.rejects(resolveInboxSelection({ home: entry.home }, env), hasConflict);
   await assert.rejects(resolveInboxSelection({}, env, `${entry.home}${path.sep}`), hasConflict);
+});
+
+test("required selection lists all captured names without choosing or preparing a legacy home", async (t) => {
+  const { root, first, second, env } = await selectionFixture(t);
+  const legacyHome = path.join(root, "unused-legacy");
+  await rm(second.home, { recursive: true });
+
+  await assert.rejects(resolveInboxSelection({}, env, legacyHome, { requireSelection: true }), (error: unknown) => {
+    assert(error instanceof InboxSelectionRequiredError);
+    assert.deepEqual(error.availableNames, [first.name, second.name]);
+    assert.match(error.message, /Available inboxes: first, second/);
+    assert.match(error.message, /--inbox <name>/);
+    return true;
+  });
+  await assert.rejects(lstat(legacyHome), { code: "ENOENT" });
+});
+
+test("a single registered inbox still requires a deliberate selection", async (t) => {
+  const root = await realpath(await temporaryHome(t));
+  const catalogHome = path.join(root, "catalog");
+  await createInbox("only", path.join(root, "only"), catalogHome);
+
+  await assert.rejects(resolveInboxSelection({}, { HTML_INBOX_CATALOG_HOME: catalogHome }, undefined, { requireSelection: true }),
+    (error: unknown) => error instanceof InboxSelectionRequiredError && error.availableNames.join() === "only");
+});
+
+test("a non-interactive selection-required error leaves stdout empty", async (t) => {
+  const { catalogHome } = await selectionFixture(t);
+  const modulePath = path.join(__dirname, "inbox-selection.js");
+  const worker = `
+    require(process.argv[1]).resolveInboxSelection({}, {HTML_INBOX_CATALOG_HOME: process.argv[2]}, undefined, {requireSelection: true})
+      .catch(error => {
+        console.error(error.message);
+        process.exitCode = 1;
+      });
+  `;
+
+  await assert.rejects(promisify(execFile)(process.execPath, ["-e", worker, modulePath, catalogHome]), (error: unknown) => {
+    assert(error instanceof Error && "stdout" in error && "stderr" in error);
+    assert.equal(error.stdout, "");
+    assert.match(String(error.stderr), /Available inboxes: first, second/);
+    assert.match(String(error.stderr), /--inbox <name>/);
+    return true;
+  });
+});
+
+test("required selection preserves first-use behavior when the catalog is empty", async (t) => {
+  const root = await realpath(await temporaryHome(t));
+  const catalogHome = path.join(root, "catalog");
+  const legacyHome = path.join(root, "legacy");
+  const chooseInbox = async () => assert.fail("An empty catalog must not prompt");
+
+  assert.deepEqual(await resolveInboxSelection({}, { HTML_INBOX_CATALOG_HOME: catalogHome }, legacyHome, { requireSelection: true, chooseInbox }),
+    { home: legacyHome, source: "legacy" });
+  assert.deepEqual(await readdir(root), []);
+});
+
+test("explicit, environment, and strict default tiers never invoke the chooser", async (t) => {
+  const { catalogHome, first, second, env } = await selectionFixture(t);
+  const options = { requireSelection: true, chooseInbox: async () => assert.fail("A bound operation must not prompt") };
+
+  assert.deepEqual(await resolveInboxSelection({ inbox: "first" }, env, undefined, options), { ...first, source: "explicit" });
+  assert.deepEqual(await resolveInboxSelection({}, { ...env, HTML_INBOX_NAME: "second" }, undefined, options), { ...second, source: "environment" });
+  await setDefaultInbox("first", catalogHome);
+  assert.deepEqual(await resolveInboxSelection({}, env, undefined, options), { ...first, source: "default" });
+  await rm(first.home, { recursive: true });
+  await assert.rejects(resolveInboxSelection({}, env, undefined, options),
+    (error: unknown) => error instanceof InboxInspectionError && error.state === "missing");
+  await writeFile(path.join(catalogHome, "default.json"), "{");
+  await assert.rejects(resolveInboxSelection({}, env, undefined, options), /JSON/);
+});
+
+test("a chooser selects one captured binding without rereading catalog or changing defaults", async (t) => {
+  const { catalogHome, first, second, env } = await selectionFixture(t);
+  const entryPath = path.join(catalogHome, "inboxes", "first.json");
+  const chooseInbox = async (inboxes: readonly typeof first[]) => {
+    assert.deepEqual(inboxes, [first, second]);
+    await writeFile(entryPath, "{");
+    await writeFile(path.join(catalogHome, "default.json"), '{"schemaVersion":1,"name":"second"}');
+    return "first";
+  };
+
+  assert.deepEqual(await resolveInboxSelection({}, env, undefined, { requireSelection: true, chooseInbox }), { ...first, source: "explicit" });
+  assert.equal(await readFile(entryPath, "utf8"), "{");
+  assert.equal(await readFile(path.join(catalogHome, "default.json"), "utf8"), '{"schemaVersion":1,"name":"second"}');
+  assert.deepEqual(await readdir(catalogHome), ["default.json", "inboxes"]);
+});
+
+test("chooser argument mutation cannot retarget a captured binding", async (t) => {
+  const { first, second, env } = await selectionFixture(t);
+  const chooseInbox = async (inboxes: readonly typeof first[]) => {
+    const entry = inboxes.find((inbox) => inbox.name === "first");
+    assert(entry);
+    Object.assign(entry, { home: second.home, instanceId: second.instanceId });
+    return "first";
+  };
+
+  assert.deepEqual(await resolveInboxSelection({}, env, undefined, { chooseInbox }), { ...first, source: "explicit" });
+});
+
+test("rebinding the catalog name while choosing cannot move the captured selection", async (t) => {
+  const { catalogHome, first, second, env } = await selectionFixture(t);
+  const replacement = { ...second, name: "first" };
+  const chooseInbox = async () => {
+    await writeFile(path.join(catalogHome, "inboxes", "first.json"), JSON.stringify({ schemaVersion: 1, ...replacement }));
+    await rm(path.join(catalogHome, "inboxes", "second.json"));
+    return "first";
+  };
+
+  assert.deepEqual(await resolveInboxSelection({}, env, undefined, { chooseInbox }), { ...first, source: "explicit" });
+  assert.deepEqual(await resolveInboxSelection({ inbox: "first" }, env), { ...replacement, source: "explicit" });
+});
+
+test("a chooser cannot adopt a changed identity or a newly registered catalog binding", async (t) => {
+  const { catalogHome, first, env } = await selectionFixture(t);
+  const entryPath = path.join(catalogHome, "inboxes", "first.json");
+  const chooseInbox = async () => {
+    const replacementId = randomUUID();
+    await writeFile(path.join(first.home, "instance-id"), replacementId);
+    await writeFile(entryPath, JSON.stringify({ schemaVersion: 1, ...first, instanceId: replacementId }));
+    return "first";
+  };
+
+  await assert.rejects(resolveInboxSelection({}, env, undefined, { chooseInbox }),
+    (error: unknown) => error instanceof InboxInspectionError && error.state === "conflict");
+  const original = await resolveInboxSelection({ inbox: "first" }, env);
+  assert.notEqual(original.instanceId, first.instanceId);
+});
+
+test("a root removed while choosing fails instead of being recreated", async (t) => {
+  const { first, env } = await selectionFixture(t);
+  const chooseInbox = async () => {
+    await rm(first.home, { recursive: true });
+    return "first";
+  };
+
+  await assert.rejects(resolveInboxSelection({}, env, undefined, { chooseInbox }),
+    (error: unknown) => error instanceof InboxInspectionError && error.state === "missing");
+  await assert.rejects(lstat(first.home), { code: "ENOENT" });
+});
+
+test("a captured home cannot follow a changed parent alias while choosing", { skip: process.platform === "win32" }, async (t) => {
+  const { root, first, env } = await selectionFixture(t);
+  const movedRoot = `${root}-moved`;
+  t.after(() => rm(movedRoot, { recursive: true, force: true }));
+  const chooseInbox = async () => {
+    await rename(root, movedRoot);
+    await symlink(movedRoot, root);
+    return "first";
+  };
+
+  await assert.rejects(resolveInboxSelection({}, env, undefined, { chooseInbox }),
+    (error: unknown) => error instanceof InboxInspectionError && error.state === "conflict" && /canonical location/.test(error.message));
+  assert.equal((await lstat(first.home)).isDirectory(), true);
+});
+
+test("chooser errors and unknown choices abort without falling back or adopting catalog additions", async (t) => {
+  const { root, catalogHome, env } = await selectionFixture(t);
+  const legacyHome = path.join(root, "unused-legacy");
+  const cancellation = new Error("Cancelled by caller");
+  await assert.rejects(resolveInboxSelection({}, env, legacyHome, { chooseInbox: async () => { throw cancellation; } }),
+    (error: unknown) => error === cancellation);
+
+  await assert.rejects(resolveInboxSelection({}, env, legacyHome, {
+    chooseInbox: async () => {
+      await createInbox("new", path.join(root, "new"), catalogHome);
+      return "new";
+    },
+  }), /Unknown inbox: new/);
+  await assert.rejects(lstat(legacyHome), { code: "ENOENT" });
 });
