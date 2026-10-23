@@ -1,8 +1,9 @@
 import { DOCUMENT_SCRIPT_CSP_SOURCES } from "./html-validation";
 
 import { initializeViewer } from "./viewer-client";
+import { initializeDocumentDeletion } from "./viewer-deletion-client";
 
-export const VIEWER_SCRIPT = `(${initializeViewer.toString()})();`;
+export const VIEWER_SCRIPT = `(${initializeViewer.toString()})();\n(${initializeDocumentDeletion.toString()})();`;
 
 export const VIEWER_STYLES = `
 :root {

@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { spawn, spawnSync } from "node:child_process";
+import { createHash, randomUUID } from "node:crypto";
+import { once } from "node:events";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test, { type TestContext } from "node:test";
 import { LocalDocumentBackend } from "./backend";
-import { createDocumentDeleter, DocumentCleanupError, DocumentIdentityError } from "./document-deletion";
+import { DocumentCleanupError, DocumentIdentityError } from "./document-deletion";
+import { createInProcessDocumentDeleter as createDocumentDeleter } from "./document-deletion-worker";
 import { LocalDocumentSource } from "./local-document-source";
 import { temporaryHome } from "./test-fixtures";
 import { getInboxInstanceId } from "./viewer-records";
@@ -371,15 +373,226 @@ test("concurrent deletions across independently captured deleters commit exactly
   await assert.rejects(fs.lstat(fixture.documentDirectory), { code: "ENOENT" });
 });
 
+test("overlapping Windows rename handles cannot move one document through two quarantines", { timeout: 5000 }, async (t) => {
+  const fixture = await deletionFixture(t);
+  const firstDeleter = await createDocumentDeleter(fixture);
+  const secondDeleter = await createDocumentDeleter(fixture);
+  let reportFirstRename: (() => void) | undefined;
+  let releaseFirstRename: ((alreadyMoved: boolean) => void) | undefined;
+  const firstRenameEntered = new Promise<void>((resolve) => { reportFirstRename = resolve; });
+  const firstRenameReleased = new Promise<boolean>((resolve) => { releaseFirstRename = resolve; });
+  const originalRename = fs.rename;
+  const originalOpen = fs.open;
+  let firstDestination: string | undefined;
+  let renameCount = 0;
+  t.mock.method(fs, "rename", async (...args: Parameters<typeof originalRename>) => {
+    if (args[0] !== fixture.documentDirectory) {
+      return originalRename(...args);
+    }
+
+    renameCount += 1;
+    if (firstDestination === undefined) {
+      firstDestination = String(args[1]);
+      reportFirstRename?.();
+      const alreadyMoved = await firstRenameReleased;
+
+      if (!alreadyMoved) {
+        await originalRename(...args);
+      }
+
+      return;
+    }
+
+    // Windows can resolve both source handles before either rename completes.
+    await originalRename(args[0], firstDestination);
+    await originalRename(firstDestination, args[1]);
+    releaseFirstRename?.(true);
+  });
+  t.mock.method(fs, "open", async (...args: Parameters<typeof originalOpen>) => {
+    try {
+      return await originalOpen(...args);
+    } catch (error) {
+      if (error instanceof Error && "code" in error && error.code === "EEXIST" &&
+          path.dirname(String(args[0])) === fixture.trashDirectory) {
+        releaseFirstRename?.(false);
+      }
+
+      throw error;
+    }
+  });
+
+  const first = firstDeleter(fixture.metadata.id);
+  await firstRenameEntered;
+  const second = secondDeleter(fixture.metadata.id);
+  const results = await Promise.all([first, second]);
+
+  assert.equal(renameCount, 1);
+  assert.equal(results.filter((result) => result !== null).length, 1);
+  assert.equal(results.filter((result) => result === null).length, 1);
+  assert.deepEqual(await fs.readdir(fixture.trashDirectory), []);
+});
+
+for (const partialPayload of ["", "{"]) {
+  test(`a contender waits for an initial lock payload of length ${partialPayload.length}`, { timeout: 5000 }, async (t) => {
+    const fixture = await deletionFixture(t);
+    const firstDeleter = await createDocumentDeleter(fixture);
+    const secondDeleter = await createDocumentDeleter(fixture);
+    const lockPath = documentLockPath(fixture);
+    let reportInitialPayload: (() => void) | undefined;
+    let releaseWriter: (() => void) | undefined;
+    const initialPayloadWritten = new Promise<void>((resolve) => { reportInitialPayload = resolve; });
+    const writerReleased = new Promise<void>((resolve) => { releaseWriter = resolve; });
+    const originalOpen = fs.open;
+    let readInitialPayload = false;
+    t.mock.method(fs, "open", async (...args: Parameters<typeof originalOpen>) => {
+      const file = await originalOpen(...args);
+
+      if (args[0] === lockPath && args[1] === "wx") {
+        const originalWrite = file.writeFile.bind(file);
+        t.mock.method(file, "writeFile", async (...writeArgs: Parameters<typeof originalWrite>) => {
+          await file.write(Buffer.from(partialPayload), 0, partialPayload.length, 0);
+          reportInitialPayload?.();
+          await writerReleased;
+          await file.truncate(0);
+
+          return originalWrite(...writeArgs);
+        });
+      } else if (args[0] === lockPath) {
+        const originalClose = file.close.bind(file);
+        t.mock.method(file, "close", async () => {
+          await originalClose();
+          readInitialPayload = true;
+          releaseWriter?.();
+        });
+      }
+
+      return file;
+    });
+
+    const first = firstDeleter(fixture.metadata.id);
+    await initialPayloadWritten;
+    const second = secondDeleter(fixture.metadata.id);
+    const results = await Promise.all([first, second]);
+
+    assert.equal(readInitialPayload, true);
+    assert.equal(results.filter((result) => result !== null).length, 1);
+    assert.equal(results.filter((result) => result === null).length, 1);
+    assert.deepEqual(await fs.readdir(fixture.trashDirectory), []);
+  });
+}
+
+test("mutation locks coordinate deleters in separate processes", { timeout: 5000 }, async (t) => {
+  const fixture = await deletionFixture(t);
+  const deleter = await createDocumentDeleter(fixture);
+  const script = `
+    const fs = require("node:fs/promises");
+    const { createInProcessDocumentDeleter: createDocumentDeleter } = require(process.argv[1]);
+    const fixture = JSON.parse(process.argv[2]);
+    const originalRename = fs.rename;
+    fs.rename = async (...args) => {
+      if (args[0] === fixture.documentDirectory) {
+        process.send({ state: "renaming" });
+        await new Promise(resolve => process.once("message", resolve));
+      }
+      return originalRename(...args);
+    };
+    (async () => {
+      const remove = await createDocumentDeleter(fixture);
+      const result = await remove(fixture.id);
+      process.send({ state: "result", id: result?.metadata.id ?? null });
+      process.disconnect();
+    })().catch(error => {
+      process.send({ state: "error", message: error.message });
+      process.exitCode = 1;
+      process.disconnect();
+    });
+  `;
+  const child = spawn(process.execPath, ["-e", script, path.join(__dirname, "document-deletion-worker.js"), JSON.stringify({
+    home: fixture.home, instanceId: fixture.instanceId, id: fixture.metadata.id, documentDirectory: fixture.documentDirectory,
+  })], { stdio: ["ignore", "ignore", "inherit", "ipc"] });
+  t.after(() => {
+    if (child.exitCode === null) {
+      child.kill();
+    }
+  });
+  const exited = once(child, "exit");
+  const [ready] = await once(child, "message");
+  assert.deepEqual(ready, { state: "renaming" });
+  const completed = once(child, "message");
+  const originalOpen = fs.open;
+  let contended = false;
+  t.mock.method(fs, "open", async (...args: Parameters<typeof originalOpen>) => {
+    try {
+      return await originalOpen(...args);
+    } catch (error) {
+      if (args[0] === documentLockPath(fixture) && error instanceof Error && "code" in error && error.code === "EEXIST") {
+        if (!contended) {
+          contended = true;
+          child.send("release");
+        }
+      }
+
+      throw error;
+    }
+  });
+
+  assert.equal(await deleter(fixture.metadata.id), null);
+  assert.equal(contended, true);
+  assert.deepEqual((await completed)[0], { state: "result", id: fixture.metadata.id });
+  assert.equal((await exited)[0], 0);
+  assert.deepEqual(await fs.readdir(fixture.trashDirectory), []);
+});
+
+test("an abandoned lock is preserved for explicit offline recovery", async (t) => {
+  const fixture = await deletionFixture(t);
+  const deleter = await createDocumentDeleter(fixture);
+  const lockPath = documentLockPath(fixture);
+  await fs.writeFile(lockPath, JSON.stringify({ pid: 2_147_483_647, token: randomUUID() }));
+  await fs.utimes(lockPath, 1, 1);
+  const before = await treeSnapshot(fixture.home);
+  t.mock.method(process, "kill", () => { throw Object.assign(new Error("exited"), { code: "ESRCH" }); });
+
+  await assert.rejects(deleter(fixture.metadata.id), /Stop HTML Inbox viewers, hubs, and CLI deletion commands/);
+  assert.deepEqual(await treeSnapshot(fixture.home), before);
+});
+
+test("a live owner has a bounded wait without stale-lock reclamation", async (t) => {
+  const fixture = await deletionFixture(t);
+  const deleter = await createDocumentDeleter(fixture);
+  const lockPath = documentLockPath(fixture);
+  await fs.writeFile(lockPath, JSON.stringify({ pid: process.pid, token: randomUUID() }));
+  const before = await treeSnapshot(fixture.home);
+  let now = Date.now();
+  t.mock.method(Date, "now", () => { now += 5001; return now; });
+
+  await assert.rejects(deleter(fixture.metadata.id), /Document deletion is busy/);
+  assert.deepEqual(await treeSnapshot(fixture.home), before);
+});
+
+for (const contents of ["", "{", JSON.stringify({ pid: -1, token: "invalid" })]) {
+  test(`an old malformed lock of length ${contents.length} is preserved`, async (t) => {
+    const fixture = await deletionFixture(t);
+    const deleter = await createDocumentDeleter(fixture);
+    const lockPath = documentLockPath(fixture);
+    await fs.writeFile(lockPath, contents);
+    await fs.utimes(lockPath, 1, 1);
+    const before = await treeSnapshot(fixture.home);
+
+    await assert.rejects(deleter(fixture.metadata.id), /remove only this lock file and retry/);
+    assert.deepEqual(await treeSnapshot(fixture.home), before);
+  });
+}
+
 test("rename failure preserves the library and never reports a cleanup error", async (t) => {
   const fixture = await deletionFixture(t);
   const deleter = await createDocumentDeleter(fixture);
   const failure = new Error("rename denied");
-  const before = await treeSnapshot(fixture.home);
+  const before = await treeSnapshot(fixture.documentDirectory);
   t.mock.method(fs, "rename", async () => { throw failure; });
 
   await assert.rejects(deleter(fixture.metadata.id), (error: unknown) => error === failure);
-  assert.deepEqual(await treeSnapshot(fixture.home), before);
+  assert.deepEqual(await treeSnapshot(fixture.documentDirectory), before);
+  assert.deepEqual(await fs.readdir(fixture.trashDirectory), []);
 });
 
 test("partial purge failure reports committed metadata and cause without resurrecting the document", async (t) => {
@@ -434,6 +647,32 @@ test("root replacement after commit reports cleanup failure and preserves the re
   assert.deepEqual(await treeSnapshot(fixture.home), replacement);
 });
 
+test("root replacement inside the final purge is detected after the syscall", async (t) => {
+  const fixture = await deletionFixture(t);
+  const deleter = await createDocumentDeleter(fixture);
+  const originalRm = fs.rm;
+  let originalQuarantine: string | undefined;
+  t.mock.method(fs, "rm", async (...args: Parameters<typeof originalRm>) => {
+    const directory = String(args[0]);
+
+    if (path.dirname(directory) === fixture.trashDirectory) {
+      const originalHome = await moveHome(t, fixture.home);
+      originalQuarantine = path.join(originalHome, "documents", ".trash", path.basename(directory));
+      await fs.cp(originalHome, fixture.home, { recursive: true });
+    }
+
+    return originalRm(...args);
+  });
+
+  await assert.rejects(deleter(fixture.metadata.id), (error: unknown) => {
+    assert.ok(error instanceof DocumentCleanupError);
+    assert.ok(error.cause instanceof DocumentIdentityError);
+    return true;
+  });
+  assert.ok(originalQuarantine);
+  assert.deepEqual((await fs.readdir(originalQuarantine)).sort(), ["index.html", "metadata.json"]);
+});
+
 test("cleanup handles read-only document directories after committing the rename", posixOnly, async (t) => {
   const fixture = await deletionFixture(t);
   await fs.mkdir(path.join(fixture.documentDirectory, "nested"));
@@ -475,6 +714,11 @@ function managedPath(fixture: Awaited<ReturnType<typeof deletionFixture>>, name:
       : name === ".trash" ? fixture.trashDirectory
         : name === "instance-id" ? path.join(fixture.home, name)
           : name === "record" ? fixture.documentDirectory : path.join(fixture.documentDirectory, name);
+}
+
+function documentLockPath(fixture: Awaited<ReturnType<typeof deletionFixture>>) {
+  const digest = createHash("sha256").update(fixture.metadata.id).digest("hex");
+  return path.join(fixture.trashDirectory, `.delete-${digest}.lock`);
 }
 
 async function fileSnapshot(file: string) {

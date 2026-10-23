@@ -195,7 +195,7 @@ test("list deletion restores the next document and scroll position after reloadi
   assert(initialScroll > 0);
   await confirmDeletion(page, inboxUrl);
   await assertFocused(page.locator(`.doc__title[href="${nextPath}"]`));
-  assert.equal(await page.evaluate(() => scrollY), initialScroll);
+  await page.waitForFunction((expected) => scrollY === expected, initialScroll);
 });
 
 for (const outcome of ["absent", "cleanup", "expired", "changed", "unknown", "lost"]) {
@@ -250,6 +250,34 @@ for (const outcome of ["absent", "cleanup", "expired", "changed", "unknown", "lo
     assert.equal(await page.getByRole("link", { name: fullTitle, exact: true }).count(), outcome === "lost" ? 0 : 1);
   });
 }
+
+test("cleanup warnings stay visible when browser storage is blocked", { timeout: 30_000 }, async (t) => {
+  const { page, inboxUrl, documents, home } = await createBrowserFixture(t, "local", publishDocuments);
+  const backend = new LocalDocumentBackend(home);
+  await page.addInitScript(() => {
+    Storage.prototype.setItem = () => { throw new DOMException("Storage is blocked", "SecurityError"); };
+  });
+  const documentUrl = `${inboxUrl}documents/${documents[0].id}`;
+  await page.goto(documentUrl);
+  await page.route(`**/api/documents/${documents[0].id}`, async (route) => {
+    await backend.deleteDocument(documents[0].id);
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "removed", cleanup: "failed" }) });
+  });
+  await openReaderDeletion(page);
+  await page.getByRole("button", { name: "Delete document", exact: true }).click();
+  await page.getByRole("dialog", { name: "Document removed" }).waitFor();
+
+  assert.match(await page.locator("[data-delete-progress]").textContent(), /removed.*could not be cleaned up/);
+  assert.equal(page.url(), documentUrl);
+  assert.equal(await backend.getDocument(documents[0].id), null);
+  assert.equal(await page.getByRole("button", { name: "Delete document", exact: true }).isDisabled(), true);
+
+  await Promise.all([
+    page.waitForURL(inboxUrl),
+    page.getByRole("link", { name: "Check inbox", exact: true }).click(),
+  ]);
+  assert.equal(await page.getByRole("link", { name: fullTitle, exact: true }).count(), 0);
+});
 
 async function createHubFixture(t) {
   const root = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-delete-hub-")));

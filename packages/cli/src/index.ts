@@ -21,6 +21,7 @@ import { resolveInboxSelection, type ResolvedInboxSelection } from "./inbox-sele
 import { runInboxCommand, runHubCommand } from "./inbox-commands";
 import { formatDocumentTable, formatViewerServiceResult, formatViewerStatus, formatViewerStopResult } from "./cli-display";
 import { promptForInbox } from "./inbox-picker";
+import { runDocumentDeletionWorker } from "./document-deletion-worker";
 
 export const USAGE = `Usage: html-inbox <command> [options]
 
@@ -473,7 +474,11 @@ function formatBytes(value: number): string {
 }
 
 if (require.main === module) {
-  void main().catch((error) => {
+  const isDeletionWorker = process.argv.length === 3 && process.argv[2] === "__delete-document" &&
+    typeof process.send === "function" && process.connected;
+  const execution = isDeletionWorker ? runDocumentDeletionWorker() : main();
+
+  void execution.catch((error) => {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`html-inbox: ${message}`);
     process.exitCode = 1;

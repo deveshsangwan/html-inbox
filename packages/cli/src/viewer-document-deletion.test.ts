@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { readFile, rename, cp, lstat, rm } from "node:fs/promises";
+import { readFile, rename, cp, lstat, rm, realpath } from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
 import { test, type TestContext } from "node:test";
@@ -94,7 +94,7 @@ test("tokens cannot be reused between viewer processes", async (t) => {
 });
 
 test("hub deletion uses source-qualified identity and retains the other colliding record", async (t) => {
-  const root = await temporaryHome(t);
+  const root = await realpath(await temporaryHome(t));
   const sources = await Promise.all(["work", "personal"].map(async (name) => {
     const home = path.join(root, name);
     const backend = new LocalDocumentBackend(home, () => {}, () => "shared-id");
@@ -157,7 +157,7 @@ test("HTTP distinguishes cleanup failure after removal from an unconfirmed failu
 });
 
 async function deletionFixture(t: TestContext, exposure: ViewerExposure, customDelete?: DocumentDeleter) {
-  const home = await temporaryHome(t);
+  const home = await realpath(await temporaryHome(t));
   const backend = new LocalDocumentBackend(home);
   const bytes = Buffer.from("<!doctype html><html><body>Report</body></html>");
   const document = await backend.publish({ originalBytes: bytes, title: "Report", type: "report", sourceFileName: "report.html" });
