@@ -207,7 +207,7 @@ function renderCopyDialog(copyUrl: string): string {
           <h2 id="copy-title">Copy content</h2>
           <button type="button" data-copy-close autofocus>Close</button>
         </div>
-        <p class="copy-dialog__help" id="copy-saved-help">Text comes from the saved HTML. It may differ from the preview and excludes content added by scripts, edited form values, and visuals such as canvas charts.</p>
+        <p class="copy-dialog__help" id="copy-saved-help">Text comes from the saved HTML. It may differ from the preview and excludes content added by scripts, edited form values, and visuals such as canvas charts. CSS-hidden text may be included.</p>
         <p class="copy-dialog__help">For selections in the preview, use the browser's own Ctrl+C or Command+C, context menu, or touch Copy.</p>
         <p class="copy-dialog__status" role="status" aria-live="polite" aria-atomic="true" data-copy-status></p>
         <button type="button" data-copy-retry hidden>Retry</button>

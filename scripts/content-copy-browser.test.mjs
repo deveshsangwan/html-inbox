@@ -161,6 +161,7 @@ for (const mode of ["local", "static"]) {
     assert.equal(await page.locator("[data-copy-dialog]").getAttribute("data-copy-url"), new URL(copyUrl).pathname);
     await openCopy(page);
     assert.deepEqual(copyRequests, [copyUrl]);
+    assert.match(await page.locator("#copy-saved-help").innerText(), /CSS-hidden text may be included/);
     assert.deepEqual(await writes(page), []);
     assert.equal(await page.locator("[data-copy-preview]").inputValue(), documentText);
     assert.equal(await page.locator("[data-copy-preview]").getAttribute("wrap"), "soft");

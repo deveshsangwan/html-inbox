@@ -50,6 +50,31 @@ for (const { name, rows, text } of [
     rows: "<tr><td></td></tr><tr><td></td></tr>",
     text: "\n",
   },
+  {
+    name: "paragraph-wrapped cells",
+    rows: "<tr><td><p>A</p></td><td><p>B</p></td></tr>",
+    text: "A\tB",
+  },
+  {
+    name: "nested block wrappers and leading empty paragraphs",
+    rows: "<tr><td><div><p></p><p>A</p></div></td><td><div><p>B</p></div></td></tr>",
+    text: "A\tB",
+  },
+  {
+    name: "empty block-wrapped cells across rows",
+    rows: "<tr><td><p></p></td><td><div>B</div></td><td><p></p></td></tr><tr><td><p>C</p></td><td><div></div></td><td><p>D</p></td></tr>",
+    text: "\tB\t\nC\t\tD",
+  },
+  {
+    name: "multiple paragraphs within each cell",
+    rows: "<tr><td><p>A</p><p>B</p></td><td><div>C</div><div>D</div></td></tr>",
+    text: "A\nB\tC\nD",
+  },
+  {
+    name: "a paragraph after code ending in a literal tab",
+    rows: "<tr><td><code>code&#9;</code><p>after</p></td><td><div>next</div></td></tr>",
+    text: "code\t\nafter\tnext",
+  },
 ]) {
   test(`copy text preserves table delimiters for ${name}`, () => {
     assert.deepEqual(extractDocumentCopyContent(Buffer.from(`<table>${rows}</table>`)), {

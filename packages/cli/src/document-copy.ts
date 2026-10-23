@@ -30,6 +30,7 @@ interface TraversalFrame {
   preservesWhitespace: boolean;
   startsCodeBlock: boolean;
   cellCount: number;
+  cellTextStart?: number;
   table?: { rowCount: number };
   separator?: string;
 }
@@ -134,7 +135,7 @@ export function extractDocumentCopyContent(
         codeBlockParts = undefined;
       }
 
-      if (frame.separator) {
+      if (frame.separator && frame.cellTextStart !== textParts.length) {
         separateText(frame.separator);
       }
 
@@ -187,7 +188,7 @@ export function extractDocumentCopyContent(
       ? "\n"
       : undefined;
 
-    if (separator) {
+    if (separator && frame.cellTextStart !== textParts.length) {
       separateText(separator);
     }
 
@@ -204,6 +205,7 @@ export function extractDocumentCopyContent(
       preservesWhitespace: frame.preservesWhitespace || node.tagName === "pre" || node.tagName === "code",
       startsCodeBlock,
       cellCount: 0,
+      cellTextStart: node.tagName === "td" || node.tagName === "th" ? textParts.length : frame.cellTextStart,
       table: node.tagName === "table" ? { rowCount: 0 } : frame.table,
       separator,
     });
