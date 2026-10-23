@@ -151,9 +151,9 @@ test("document tables label title, type and complete copyable IDs", () => {
   ];
 
   assert.equal(formatDocumentTable(documents), [
-    "TITLE             TYPE    ID",
-    "Quarterly report  report  doc_1-abc",
-    "Note              note    7c8d868e-ddb4-48b2-b165-03262a0f9ee6",
+    "TITLE             TYPE    CREATED               ID",
+    "Quarterly report  report  2026-10-23T00:00:00Z  doc_1-abc",
+    "Note              note    2026-10-22T00:00:00Z  7c8d868e-ddb4-48b2-b165-03262a0f9ee6",
   ].join("\n"));
   assert.equal(formatDocumentTable([]), "No documents.");
 });
@@ -169,7 +169,7 @@ test("human rows and reasons keep metadata line breaks and control characters ou
 
   assert.equal(table.split("\n").length, 2);
   assert.match(table, /Quarterly report/);
-  assert.match(table, /monthly report  copyable-id/);
+  assert.match(table, /monthly report  2026-10-23T00:00:00Z  copyable-id/);
   assert.doesNotMatch(table, /[\r\t\u001b]/);
   assert.match(status, /Reason: Missing process identity$/);
   assert.doesNotMatch(status, /[\r\t\u0000]/);

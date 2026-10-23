@@ -19,6 +19,8 @@ import { configureViewerServiceLogging } from "./viewer-service-log";
 import { readPreferences, setAppearancePreference } from "./preferences";
 import { resolveInboxSelection, type ResolvedInboxSelection } from "./inbox-selection";
 import { runInboxCommand, runHubCommand } from "./inbox-commands";
+import { formatDocumentTable, formatViewerServiceResult, formatViewerStatus, formatViewerStopResult } from "./cli-display";
+import { promptForInbox } from "./inbox-picker";
 
 export const USAGE = `Usage: html-inbox <command> [options]
 
@@ -53,19 +55,19 @@ Commands:
       LAN trusts all reachable readers; Tailscale uses existing HTTPS Serve.
       Omitted networking options reuse the saved configuration.
 
-  viewer status
-  viewer stop
+  viewer status [--json]
+  viewer stop [--json]
       Inspect or stop the verified viewer through its local control endpoint.
 
-  viewer service install [--user <normal-user>] [viewer networking options]
-  viewer service uninstall [--user <normal-user>]
-  viewer service status [--user <normal-user>]
+  viewer service install [--user <normal-user>] [viewer networking options] [--json]
+  viewer service uninstall [--user <normal-user>] [--json]
+  viewer service status [--user <normal-user>] [--json]
       Manage boot startup with systemd or a macOS LaunchDaemon.
       Install and uninstall require administrator privileges; the viewer runs as a normal user.
 
   inbox create <name> --home <absolute-path> [--json]
   inbox register <name> --home <absolute-path> [--json]
-  inbox list [--json]
+  inbox list [--running] [--json]
   inbox default <name> | inbox default --clear
       Name independent libraries, inspect their local state, or choose a fallback.
 
@@ -78,6 +80,7 @@ Commands:
 Options:
   --inbox <name>  Select a registered library for this operation.
   --home <path>   Select an absolute library path for this operation.
+  --json         Machine-readable results where supported; never prompt.
   -h, --help       Show this help.
   -v, --version    Print the installed version.
 
@@ -86,7 +89,13 @@ Environment:
   HTML_INBOX_CATALOG_HOME         Private catalog, default ~/.config/html-inbox.
   HTML_INBOX_HOME                 Library directory, default ~/.html-inbox.
   HTML_INBOX_PORT                 Port override, default 3217 on first startup.
-  HTML_INBOX_TAILSCALE_COMMAND    Path to an existing Tailscale executable.`;
+  HTML_INBOX_TAILSCALE_COMMAND    Path to an existing Tailscale executable.
+
+Selection:
+  Explicit selection, then environment, then configured default.
+  With named inboxes and no selection, interactive terminals offer a picker.
+  Scripts and JSON mode require --inbox, --home, an environment binding, or a default.
+  Without named inboxes, the legacy ~/.html-inbox home remains available.`;
 
 export async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
   const parsed = parseCommand(argv);
@@ -115,7 +124,13 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
   const legacyHome = parsed.command === "viewer service"
     ? await resolveViewerServiceHome({ user: parsed.user })
     : undefined;
-  const selection = await resolveInboxSelection(parsed, process.env, legacyHome);
+  const json = ("json" in parsed && parsed.json === true) ||
+    ("options" in parsed && "json" in parsed.options && parsed.options.json === true);
+  const canChooseInbox = stdin.isTTY && stdout.isTTY && stderr.isTTY && !json;
+  const selection = await resolveInboxSelection(parsed, process.env, legacyHome, {
+    requireSelection: true,
+    ...(canChooseInbox ? { chooseInbox: promptForInbox } : {}),
+  });
   const home = selection.home;
   if (selection.name) {
     console.error(`html-inbox: Inbox ${selection.name} (${home})`);
@@ -166,12 +181,14 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
   if (command === "viewer service") {
     if (parsed.action === "status") {
-      console.log(JSON.stringify(await getViewerServiceStatus({ home }), null, 2));
+      const status = await getViewerServiceStatus({ home });
+      console.log(parsed.json ? JSON.stringify(status, null, 2) : formatViewerServiceResult("status", status, selection.name));
       return;
     }
 
     if (parsed.action === "uninstall") {
-      console.log(JSON.stringify(await uninstallViewerService({ home }), null, 2));
+      const status = await uninstallViewerService({ home });
+      console.log(parsed.json ? JSON.stringify(status, null, 2) : formatViewerServiceResult("uninstall", status, selection.name));
       return;
     }
 
@@ -181,19 +198,26 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
       exposure: parsed.exposure,
       host: parsed.host,
     });
-    console.log(JSON.stringify(await installViewerService({ home, ...config, user: parsed.user }), null, 2));
+    const status = await installViewerService({ home, ...config, user: parsed.user });
+    console.log(parsed.json ? JSON.stringify(status, null, 2) : formatViewerServiceResult("install", status, selection.name));
     return;
   }
 
   if (command === "viewer") {
     const environmentPort = process.env.HTML_INBOX_PORT ? getViewerPort() : undefined;
     if (parsed.action === "status") {
-      console.log(JSON.stringify({ ...(await getViewerStatus(home, environmentPort)), ...(selection.name ? { inbox: selection.name } : {}) }, null, 2));
+      const status = await getViewerStatus(home, environmentPort);
+      console.log(parsed.json
+        ? JSON.stringify({ ...status, ...(selection.name ? { inbox: selection.name } : {}) }, null, 2)
+        : formatViewerStatus(status, selection.name));
       return;
     }
 
     if (parsed.action === "stop") {
-      console.log(JSON.stringify({ ...(await stopViewer(home, environmentPort)), ...(selection.name ? { inbox: selection.name } : {}) }, null, 2));
+      const status = await stopViewer(home, environmentPort);
+      console.log(parsed.json
+        ? JSON.stringify({ ...status, ...(selection.name ? { inbox: selection.name } : {}) }, null, 2)
+        : formatViewerStopResult(status, selection.name));
       return;
     }
 
@@ -254,14 +278,7 @@ export function formatDocumentList(documents: DocumentMetadata[], json: boolean)
   if (json) {
     return JSON.stringify(documents, null, 2);
   }
-  if (documents.length === 0) {
-    return "No documents.";
-  }
-  return documents
-    .map((document) =>
-      [document.id, document.type, document.createdAt, document.title].join("\t"),
-    )
-    .join("\n");
+  return formatDocumentTable(documents);
 }
 
 export function formatDeleteResult(result: DeleteResult, json: boolean): string {

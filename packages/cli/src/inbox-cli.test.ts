@@ -64,6 +64,13 @@ test("named CLI destinations isolate data, startup identity, preferences, export
   const secondPort = String(await availablePort());
   viewers.push({ home: second, port: Number(secondPort) });
   await run(["viewer", "--inbox=second", "--port", secondPort]);
+  const active = JSON.parse((await run(["inbox", "list", "--running", "--json"])).stdout);
+  assert.deepEqual(active.map((entry: { name: string }) => entry.name), ["first", "second"]);
+  assert(active.every((entry: { state: string; pid?: number }) => entry.state === "running" && entry.pid !== undefined));
+  assert.match((await run(["inbox", "list", "--running"])).stdout, /NAME\s+STATE\s+READER/);
+  const humanStatus = (await run(["viewer", "status", "--inbox=first"])).stdout;
+  assert.match(humanStatus, /Inbox: first\nViewer: running\nReader: http:/);
+  assert.doesNotMatch(humanStatus, /controlUrl|instanceId|processId/);
 
   const source = path.join(root, "report.html");
   const bytes = Buffer.from("<!doctype html><html><body><h1>Selected library</h1></body></html>");
@@ -89,6 +96,8 @@ test("named CLI destinations isolate data, startup identity, preferences, export
   assert.equal(new URL(receipt.url).port, secondPort);
 
   await run(["viewer", "stop", "--inbox=first"]);
+  const remainingActive = JSON.parse((await run(["inbox", "list", "--running", "--json"])).stdout);
+  assert.deepEqual(remainingActive.map((entry: { name: string }) => entry.name), ["second"]);
   assert.equal(JSON.parse((await run(["viewer", "status", "--json", "--inbox=second"])).stdout).state, "running");
   await run(["delete", firstDocuments[0].id, "--inbox=first", "--force"]);
   assert.deepEqual(JSON.parse((await run(["list", "--inbox=first", "--json"])).stdout), []);

@@ -14,19 +14,20 @@ import {
 import { getViewerStatus } from "./viewer-server";
 import { readHubConfig, writeHubConfig } from "./hub-config";
 import { startHub } from "./hub";
+import { formatInboxCatalog, formatInboxReceipt } from "./cli-display";
 
 export async function runInboxCommand(parsed: Extract<CliCommand, { command: `inbox ${string}` }>): Promise<void> {
   if (parsed.command === "inbox create" || parsed.command === "inbox register") {
     const operation = parsed.command === "inbox create" ? createInbox : registerInbox;
     const inbox = await operation(parsed.name, parsed.home);
-    console.log(parsed.json ? JSON.stringify(inbox, null, 2) : `${inbox.name}\t${inbox.home}`);
+    console.log(parsed.json ? JSON.stringify(inbox, null, 2) : formatInboxReceipt(parsed.command === "inbox create" ? "create" : "register", inbox));
     return;
   }
 
   if (parsed.command === "inbox default") {
     if (parsed.clear) {
       await clearDefaultInbox();
-      console.log("Default cleared. Unbound operations use the legacy home.");
+      console.log("Default cleared. Choose an inbox for each operation or set an explicit binding.");
       return;
     }
 
@@ -39,21 +40,20 @@ export async function runInboxCommand(parsed: Extract<CliCommand, { command: `in
     return;
   }
 
-  const catalog = await readInboxCatalog();
+  const catalog = await readInboxCatalog(undefined, { readOnly: true });
   const inboxes = await Promise.all(catalog.inboxes.map(async (inbox) => ({
     ...inbox,
     isDefault: inbox.name === catalog.defaultName,
     ...(await inspectInboxStatus(inbox)),
   })));
-  console.log(parsed.json ? JSON.stringify(inboxes, null, 2) : inboxes.length === 0
-    ? "No named inboxes. Use inbox register or inbox create."
-    : inboxes.map((inbox) => `${inbox.name}${inbox.isDefault ? " (default)" : ""}\t${inbox.state}\t${inbox.home}${inbox.reason ? `\t${inbox.reason}` : ""}`).join("\n"));
+  const selected = parsed.running ? inboxes.filter((inbox) => inbox.state === "running" && "pid" in inbox && inbox.pid !== undefined) : inboxes;
+  console.log(parsed.json ? JSON.stringify(selected, null, 2) : formatInboxCatalog(selected, parsed.running));
 }
 
 async function inspectInboxStatus(inbox: NamedInbox) {
   try {
     await inspectRegisteredInbox(inbox);
-    return await getViewerStatus(inbox.home, undefined, { refreshLanUrls: false });
+    return await getViewerStatus(inbox.home, undefined, { refreshLanUrls: false, readOnly: true, instanceId: inbox.instanceId });
   } catch (error) {
     return {
       state: error instanceof InboxInspectionError ? error.state : "incompatible",

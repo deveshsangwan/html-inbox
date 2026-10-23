@@ -101,13 +101,15 @@ export function formatDocumentTable(documents: readonly DocumentMetadata[]): str
 
   const titles = documents.map((document) => formatDisplayText(document.title));
   const types = documents.map((document) => formatDisplayText(document.type));
+  const dates = documents.map((document) => formatDisplayText(document.createdAt));
   const titleWidth = Math.max("TITLE".length, ...titles.map((title) => title.length));
   const typeWidth = Math.max("TYPE".length, ...types.map((type) => type.length));
+  const dateWidth = Math.max("CREATED".length, ...dates.map((date) => date.length));
 
   return [
-    `${"TITLE".padEnd(titleWidth)}  ${"TYPE".padEnd(typeWidth)}  ID`,
+    `${"TITLE".padEnd(titleWidth)}  ${"TYPE".padEnd(typeWidth)}  ${"CREATED".padEnd(dateWidth)}  ID`,
     ...documents.map((document, index) =>
-      `${titles[index].padEnd(titleWidth)}  ${types[index].padEnd(typeWidth)}  ${document.id}`,
+      `${titles[index].padEnd(titleWidth)}  ${types[index].padEnd(typeWidth)}  ${dates[index].padEnd(dateWidth)}  ${document.id}`,
     ),
   ].join("\n");
 }
