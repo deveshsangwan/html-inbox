@@ -144,6 +144,8 @@ Choose **Viewer options → Copy content...** to copy saved **Document text** or
 
 Copy text comes from the saved HTML, so scripted changes, edited form values, and chart visuals may be missing; CSS-hidden text can remain. To copy a selection from the current preview, use the browser's keyboard, context menu, or touch Copy. When automatic copying is unavailable or denied, use **Select all** in the dialog and your device's Copy command. This fallback also supports ordinary HTTP LAN readers. Copying changes only the reader's clipboard, and works in named viewers, the read-only hub, and newly generated static snapshots.
 
+If text stays fully selected after **Select all**, close and reopen the dialog before selecting a smaller portion.
+
 Appearance defaults to **System**, with **Light** and **Dark** overrides in the reader. The selected appearance applies to the inbox, frame, and documents that support it. Browser choices persist on that origin and device; they do not write to the CLI's preferences or sync across devices. Selecting System follows the reader's OS.
 
 Set the initial appearance for readers without a browser override:
