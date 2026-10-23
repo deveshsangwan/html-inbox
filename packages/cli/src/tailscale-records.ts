@@ -7,6 +7,7 @@ import { readBoundedFile } from "./bounded-file";
 import {
   hardenPrivateDirectory,
   hardenPrivateFile,
+  ManagedStorageError,
   writeAtomicPrivateJson,
 } from "./private-storage";
 import { assertUuidV4, isRecord } from "./validation";
@@ -71,6 +72,7 @@ function ownershipPath(home: string) {
 
 export async function readTailscaleOwnership(
   home: string,
+  options: { readOnly?: boolean } = {},
 ): Promise<TailscaleOwnership | undefined> {
   if (!path.isAbsolute(home) || home.includes("\0")) {
     throw new Error("Tailscale viewer home must be an absolute path");
@@ -78,14 +80,36 @@ export async function readTailscaleOwnership(
 
   const filePath = ownershipPath(home);
   try {
-    await hardenPrivateDirectory(home);
-    await hardenPrivateFile(filePath);
+    if (options.readOnly) {
+      const directory = await lstat(home);
+      if (!directory.isDirectory() || directory.isSymbolicLink()) {
+        throw new ManagedStorageError(`Managed directory is not a regular directory: ${home}`);
+      }
+    } else {
+      await hardenPrivateDirectory(home);
+      await hardenPrivateFile(filePath);
+    }
   } catch (error) {
     if (isRecord(error) && error.code === "ENOENT") {
       return undefined;
     }
 
     throw error;
+  }
+
+  const checked = options.readOnly ? await lstat(filePath).catch((error: unknown) => {
+    if (isRecord(error) && error.code === "ENOENT") {
+      return null;
+    }
+
+    throw error;
+  }) : undefined;
+  if (checked === null) {
+    return undefined;
+  }
+
+  if (checked && (!checked.isFile() || checked.isSymbolicLink() || checked.nlink !== 1)) {
+    throw new ManagedStorageError(`Tailscale ownership record must be a regular private file: ${filePath}`);
   }
 
   const file = await open(
@@ -96,8 +120,18 @@ export async function readTailscaleOwnership(
   );
   let value: unknown;
   try {
-    if (!(await file.stat()).isFile()) {
+    const info = await file.stat();
+    if (!info.isFile()) {
       throw new Error("Tailscale ownership record is not a regular file");
+    }
+
+    if (checked) {
+      const current = await lstat(filePath);
+      if (info.nlink !== 1 || info.dev !== checked.dev || info.ino !== checked.ino ||
+          !current.isFile() || current.isSymbolicLink() || current.nlink !== 1 ||
+          current.dev !== info.dev || current.ino !== info.ino) {
+        throw new ManagedStorageError(`Tailscale ownership record changed during inspection: ${filePath}`);
+      }
     }
 
     const bytes = await readBoundedFile(

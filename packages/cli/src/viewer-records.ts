@@ -26,6 +26,10 @@ export interface SavedViewerConfiguration {
   tailscaleExecutable?: string;
 }
 
+export interface ViewerRecordReadOptions {
+  readOnly?: boolean;
+}
+
 export async function getInboxInstanceId(home: string): Promise<string> {
   await ensurePrivateDirectory(home);
   const identityPath = path.join(home, "instance-id");
@@ -45,8 +49,11 @@ export async function getInboxInstanceId(home: string): Promise<string> {
   return instanceId;
 }
 
-export async function readViewerRecord(home: string): Promise<ViewerRecord | null> {
-  const value = await readPrivateJson(path.join(home, "viewer.json"));
+export async function readViewerRecord(
+  home: string,
+  options: ViewerRecordReadOptions = {},
+): Promise<ViewerRecord | null> {
+  const value = await readPrivateJson(path.join(home, "viewer.json"), options);
   if (value === null) {
     return null;
   }
@@ -93,8 +100,11 @@ export async function readViewerRecord(home: string): Promise<ViewerRecord | nul
   };
 }
 
-export async function readSavedViewerConfiguration(home: string): Promise<SavedViewerConfiguration | null> {
-  const value = await readPrivateJson(path.join(home, "viewer-config.json"));
+export async function readSavedViewerConfiguration(
+  home: string,
+  options: ViewerRecordReadOptions = {},
+): Promise<SavedViewerConfiguration | null> {
+  const value = await readPrivateJson(path.join(home, "viewer-config.json"), options);
   if (value === null) {
     return null;
   }
@@ -140,7 +150,11 @@ export function isValidPid(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value > 0 && value <= 2_147_483_647;
 }
 
-async function readPrivateJson(filePath: string, remainingAttempts = 3): Promise<unknown> {
+async function readPrivateJson(
+  filePath: string,
+  options: ViewerRecordReadOptions,
+  remainingAttempts = 3,
+): Promise<unknown> {
   const checked = constants.O_NOFOLLOW ? undefined : await lstat(filePath).catch((error: unknown) => {
       if (hasErrorCode(error, "ENOENT")) {
         return null;
@@ -196,11 +210,11 @@ async function readPrivateJson(filePath: string, remainingAttempts = 3): Promise
         throw new ManagedStorageError(`Viewer record changed repeatedly during read; retry the command: ${filePath}`);
       }
 
-      return readPrivateJson(filePath, remainingAttempts - 1);
+      return readPrivateJson(filePath, options, remainingAttempts - 1);
     }
 
-    // Administrator service commands read selected-user records without changing them.
-    if (process.getuid?.() !== 0) {
+    // Catalog inspection and administrator service commands must preserve source permissions.
+    if (!options.readOnly && process.getuid?.() !== 0) {
       await file.chmod(0o600);
     }
 
