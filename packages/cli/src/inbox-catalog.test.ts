@@ -181,13 +181,14 @@ test("24 independent concurrent registrations retain every distinct per-name rec
   await assert.rejects(lstat(path.join(catalogHome, "registration.lock")), { code: "ENOENT" });
 });
 
-for (const { platform, code, isPersistent, canRegister } of [
-  { platform: "win32", code: "EPERM", isPersistent: false, canRegister: true },
-  { platform: "win32", code: "EPERM", isPersistent: true, canRegister: false },
-  { platform: "linux", code: "EPERM", isPersistent: false, canRegister: false },
-  { platform: "win32", code: "EACCES", isPersistent: false, canRegister: false },
+for (const { platform, code, failureMode, canRegister } of [
+  { platform: "win32", code: "EPERM", failureMode: "transient", canRegister: true },
+  { platform: "win32", code: "EPERM", failureMode: "persistent", canRegister: false },
+  { platform: "win32", code: "EPERM", failureMode: "deadline-boundary", canRegister: false },
+  { platform: "linux", code: "EPERM", failureMode: "transient", canRegister: false },
+  { platform: "win32", code: "EACCES", failureMode: "transient", canRegister: false },
 ]) {
-  test(`registration ${canRegister ? "retries" : "rejects"} ${platform} ${isPersistent ? "persistent" : "transient"} ${code} without bypassing the lock`, async (t) => {
+  test(`registration ${canRegister ? "retries" : "rejects"} ${platform} ${failureMode} ${code} without bypassing the lock`, async (t) => {
     const { root, catalogHome } = await catalogFixture(t);
     const home = await legacyLibrary(root, "work");
     const modulePath = path.join(__dirname, "inbox-catalog.js");
@@ -195,23 +196,28 @@ for (const { platform, code, isPersistent, canRegister } of [
       const assert = require("node:assert/strict");
       const fs = require("node:fs/promises");
       const path = require("node:path");
-      const [modulePath, catalogHome, home, platform, code, persistent, succeeds] = process.argv.slice(1);
+      const [modulePath, catalogHome, home, platform, code, failureMode, succeeds] = process.argv.slice(1);
       Object.defineProperty(process, "platform", { value: platform });
       const lockPath = path.join(catalogHome, "registration.lock");
       const perform = fs.open;
       const failure = Object.assign(new Error("Exclusive lock open denied"), { code, syscall: "open", path: lockPath });
-      const now = Date.now;
-      const start = now();
+      const start = Date.now();
       let attempts = 0;
 
-      if (persistent === "true") {
+      if (failureMode === "persistent") {
         Date.now = () => start + (attempts >= 3 ? 10_001 : 0);
+      } else if (failureMode === "deadline-boundary") {
+        let clockReads = 0;
+        Date.now = () => {
+          clockReads += 1;
+          return start + (clockReads === 1 ? 0 : clockReads === 2 ? 9_999 : 10_000);
+        };
       }
 
       fs.open = async (...args) => {
         if (args[0] === lockPath && args[1] === "wx") {
           attempts += 1;
-          if (attempts === 1 || persistent === "true") throw failure;
+          if (attempts === 1 || failureMode !== "transient") throw failure;
         }
         return perform(...args);
       };
@@ -224,7 +230,7 @@ for (const { platform, code, isPersistent, canRegister } of [
           assert.deepEqual(await readInboxCatalog(catalogHome), { inboxes: [entry] });
         } else {
           await assert.rejects(registerInbox("work", home, catalogHome), error => error === failure);
-          assert.equal(attempts, persistent === "true" ? 3 : 1);
+          assert.equal(attempts, failureMode === "persistent" ? 3 : failureMode === "deadline-boundary" ? 2 : 1);
           assert.deepEqual(await readInboxCatalog(catalogHome), { inboxes: [] });
           await assert.rejects(fs.lstat(path.join(home, "instance-id")), { code: "ENOENT" });
         }
@@ -232,7 +238,7 @@ for (const { platform, code, isPersistent, canRegister } of [
       })().catch(error => { console.error(error); process.exitCode = 1; });
     `;
 
-    await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, home, platform, code, String(isPersistent), String(canRegister)], { timeout: 5000 });
+    await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, home, platform, code, failureMode, String(canRegister)], { timeout: 5000 });
   });
 }
 
