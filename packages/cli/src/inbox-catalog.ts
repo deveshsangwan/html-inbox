@@ -333,6 +333,11 @@ async function withCatalogRegistration<T>(catalogHome: string, register: (root: 
         return null;
       }
 
+      // Windows can deny creation while the previous lock is pending deletion.
+      if (process.platform === "win32" && hasErrorCode(error, "EPERM") && Date.now() < deadline) {
+        return null;
+      }
+
       throw error;
     });
     if (lock) {
