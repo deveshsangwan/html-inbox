@@ -54,7 +54,7 @@ An explicit selection overrides the entire environment selection tier. A name an
 
 ### Choose once in a human terminal
 
-When the catalog has entries and no binding or default applies, a picker appears only when stdin, stdout, and stderr are all TTYs and `--json` is absent. Type an exact inbox name or `#N` for a displayed row, such as `#2`, to choose that inbox for this operation. Numeric names remain exact names, so `123` chooses an inbox named `123`; a row choice uses the `#` prefix. Even a single registered entry requires a choice. The pick never changes a default or saves a current inbox.
+When the catalog has entries and no binding or default applies, a picker appears only when stdin, stdout, and stderr are all TTYs and `--json` is absent. Type an exact inbox name or `#N` for a displayed row, such as `#2`, to choose that inbox for this operation. Numeric names remain exact names, so `123` chooses an inbox named `123`; a row choice uses the `#` prefix. Use `:q`, Ctrl-C, or EOF to cancel without running the operation. Even a single registered entry requires a choice. The pick never changes a default or saves a current inbox.
 
 Pipelines and redirecting any individual stream, including stdin, stdout, or stderr, disable the picker. Non-TTY callers and `--json` never prompt. An unbound operation fails with available names and explicit `--inbox` guidance on stderr, leaving stdout empty. Agents and scripts should use their intended explicit selector, process binding, or configured default. If the destination is unknown, ask the user which library to use before retrying. Do not select an arbitrary entry or create a new library for each task.
 

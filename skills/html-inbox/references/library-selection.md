@@ -37,7 +37,7 @@ To bind a shell to an existing named library, use `export HTML_INBOX_NAME=develo
 
 ## Handle an unbound operation
 
-When registered entries exist but no selector, environment binding, or default applies, a human gets a picker only if stdin, stdout, and stderr are all TTYs and `--json` is absent. Enter the exact inbox name or `#N` for a displayed row, such as `#2`. A numeric name such as `123` selects that exact name; use the `#` prefix for a row choice. The choice applies to that operation alone. It never updates a default, current inbox, or last-used inbox, even when only one library is registered.
+When registered entries exist but no selector, environment binding, or default applies, a human gets a picker only if stdin, stdout, and stderr are all TTYs and `--json` is absent. Enter the exact inbox name or `#N` for a displayed row, such as `#2`. A numeric name such as `123` selects that exact name; use the `#` prefix for a row choice. Use `:q`, Ctrl-C, or EOF to cancel without running the operation. The choice applies to that operation alone. It never updates a default, current inbox, or last-used inbox, even when only one library is registered.
 
 Pipelines and any redirected stream, whether stdin, stdout, or stderr, disable the picker. Non-TTY agents and `--json` mode never prompt. A choice-required failure lists available names and explicit `--inbox` guidance on stderr, exits unsuccessfully, and leaves stdout empty. Treat it as an unresolved destination. Use the task's established destination if known, otherwise ask which listed library the user intends. Retry with that explicit selector after the destination is known. Do not pick by catalog order, running state, or the fact that there is only one entry.
 

@@ -219,7 +219,12 @@ async function readPrivateJson(
     }
 
     const bytes = await readBoundedFile(file, 64 * 1024, `Viewer record is too large: ${filePath}`);
-    return JSON.parse(bytes.toString("utf8"));
+    const value: unknown = JSON.parse(bytes.toString("utf8"));
+    if (options.readOnly && value === null) {
+      throw new Error(`Invalid viewer record at ${filePath}`);
+    }
+
+    return value;
   } finally {
     await file.close();
   }

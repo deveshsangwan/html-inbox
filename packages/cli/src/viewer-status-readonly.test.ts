@@ -101,6 +101,21 @@ test("read-only status rejects stale process records while normal status retains
   }
 });
 
+test("read-only status reports malformed process records as incompatible", async (t) => {
+  const viewer = await viewerFixture(t);
+  for (const contents of ["{", "null", '{"pid":0}']) {
+    await writeFile(path.join(viewer.home, "viewer.json"), contents);
+    await assertUnchanged(viewer.home, async () => {
+      const status = await viewer.inspect();
+      assert.equal(status.state, "incompatible");
+      assert.equal(status.pid, undefined);
+      assert(status.reason);
+    });
+  }
+
+  assert.deepEqual(viewer.requests, []);
+});
+
 test("read-only status retains private control health, protocol and inbox validation", async (t) => {
   const viewer = await viewerFixture(t);
   for (const health of [
@@ -129,7 +144,7 @@ test("read-only status retains private control health, protocol and inbox valida
   const requestsBefore = [...viewer.requests];
   await assertUnchanged(viewer.home, async () => {
     const status = await viewer.inspect();
-    assert.equal(status.state, "conflict");
+    assert.equal(status.state, "incompatible");
     assert.match(status.reason ?? "", /private loopback URL/);
   });
 

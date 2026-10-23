@@ -91,7 +91,7 @@ export async function getViewerStatus(
   if (!selected) {
     return {
       ...base,
-      state: recordFailure?.startsWith("Older viewer process record:")
+      state: recordFailure && (options.readOnly || recordFailure.startsWith("Older viewer process record:"))
         ? "incompatible"
         : await isPortListening(selectedConfig) ? "conflict" : "stopped",
       ...(recordFailure ? { reason: recordFailure } : {}),
