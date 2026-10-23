@@ -2,7 +2,7 @@
 import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { createInterface } from "node:readline/promises";
-import { stdin, stdout } from "node:process";
+import { stdin, stdout, stderr } from "node:process";
 import { DeleteResult, DocumentMetadata } from "./documents";
 import { getViewerPort, LocalDocumentBackend } from "./backend";
 import { loadPublishInput, PublishRequest } from "./publish-input";
@@ -348,6 +348,10 @@ export function formatRemoteStatus(status: RemoteStatus): string {
 }
 
 async function deleteCommand({ id, force, json }: Extract<CliCommand, { command: "delete" }>, home: string): Promise<void> {
+  if (json && !force) {
+    throw new Error("delete --json requires --force; JSON mode never prompts for confirmation");
+  }
+
   const backend = new LocalDocumentBackend(home);
   const metadata = await backend.getDocumentMetadata(id);
   if (!metadata) {
@@ -403,6 +407,10 @@ async function remoteCommand(parsed: Extract<CliCommand, { command: `remote ${st
 
   if (action === "remote revoke") {
     const { yes, json } = parsed;
+    if (json && !yes) {
+      throw new Error("remote revoke --json requires --yes; JSON mode never prompts for confirmation");
+    }
+
     if (!yes && !(await confirmAction(
       "Replace the current remote capability route? Older immutable deployment URLs may remain readable. [y/N] ",
       "remote revoke requires --yes when no interactive terminal is available",
@@ -424,11 +432,11 @@ async function remoteCommand(parsed: Extract<CliCommand, { command: `remote ${st
 }
 
 async function confirmAction(question: string, unavailableMessage: string): Promise<boolean> {
-  if (!stdin.isTTY || !stdout.isTTY) {
+  if (!stdin.isTTY || !stdout.isTTY || !stderr.isTTY) {
     throw new Error(unavailableMessage);
   }
 
-  const prompt = createInterface({ input: stdin, output: stdout });
+  const prompt = createInterface({ input: stdin, output: stderr });
   try {
     const answer = await prompt.question(question);
     return /^y(?:es)?$/i.test(answer.trim());

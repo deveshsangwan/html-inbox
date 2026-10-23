@@ -41,7 +41,7 @@ test("service health commands drop to the selected account before loading user-c
     ) => {
       invocations += 1;
       assert.equal(command, definition.nodePath);
-      assert.deepEqual(args, [definition.cliPath, "viewer", "status"]);
+      assert.deepEqual(args, [definition.cliPath, "viewer", "status", "--json"]);
       assert.equal(options.uid, 500);
       assert.equal(options.gid, 500);
       assert.equal(options.cwd, definition.user.home);
@@ -88,6 +88,57 @@ test("service health commands drop to the selected account before loading user-c
     /malformed normal-user status/,
   );
   assert.equal(invocations, 3);
+});
+
+test("service status retries only legacy rejection of the JSON flag", async (t) => {
+  const originalGetUid = process.getuid;
+  process.getuid = () => 500;
+  t.after(() => {
+    process.getuid = originalGetUid;
+  });
+
+  const definition: ViewerServiceDefinition = {
+    platform: "linux",
+    home: "/selected/inbox",
+    port: 3217,
+    exposure: "loopback",
+    user: { name: "alice", uid: 500, gid: 500, home: "/selected/home" },
+    nodePath: "/selected/node",
+    cliPath: "/selected/html-inbox.js",
+    environment: {},
+  };
+  const invocations: string[][] = [];
+  let failure = "html-inbox: Unknown option '--json'.";
+  t.mock.method(childProcess, "execFile", (
+    command: string,
+    args: string[],
+    options: ExecFileOptions,
+    callback: (error: Error | null, stdout: string, stderr: string) => void,
+  ) => {
+    assert.equal(command, definition.nodePath);
+    assert.equal(options.uid, 500);
+    assert.equal(options.gid, 500);
+    invocations.push(args);
+
+    if (args.includes("--json")) {
+      callback(new Error("Status command failed"), "", failure);
+    } else {
+      callback(null, JSON.stringify({ state: "running", pid: 4242 }), "");
+    }
+
+    return new childProcess.ChildProcess();
+  });
+
+  assert.deepEqual(await queryViewerServiceProcess(definition), { state: "running", pid: 4242 });
+  assert.deepEqual(invocations, [
+    [definition.cliPath, "viewer", "status", "--json"],
+    [definition.cliPath, "viewer", "status"],
+  ]);
+
+  invocations.length = 0;
+  failure = "html-inbox: Viewer identity conflict";
+  await assert.rejects(queryViewerServiceProcess(definition), /Viewer identity conflict/);
+  assert.deepEqual(invocations, [[definition.cliPath, "viewer", "status", "--json"]]);
 });
 
 test("administrator status initializes account groups and drops privileges before executing selected code", async (t) => {
@@ -182,6 +233,7 @@ test("administrator status initializes account groups and drops privileges befor
                 definition.cliPath,
                 "viewer",
                 "status",
+                "--json",
               ]);
               assert.equal(selectedOptions.uid, undefined);
               assert.equal(selectedOptions.gid, undefined);

@@ -244,6 +244,19 @@ test("hub distinguishes unavailable results from an empty selected inbox and tar
   assert.equal(unavailable.includes("html-inbox publish"), false);
 });
 
+test("filtered hub empty-state publishing targets the selected source", async (t) => {
+  const home = await hubSource(t, "home", "Home report");
+  const officeHome = await realpath(await temporaryHome(t));
+  const officeId = await getInboxInstanceId(officeHome);
+  const hub = await startHub(hubConfig([home.config, { name: "office", home: officeHome, instanceId: officeId }]), 0);
+  t.after(() => hub.close());
+
+  const html = await (await fetch(`${hub.urls[0]}/?inbox=office`)).text();
+  assert.match(html, /No documents yet/);
+  assert.match(html, /publish \.\/document.html --inbox office/);
+  assert.doesNotMatch(html, /publish \.\/document.html --inbox home/);
+});
+
 test("standalone label is optional and preserves legacy URLs and static export rendering", async (t) => {
   const source = await hubSource(t, "selected", "Standalone document");
   const options = { inboxName: 'Work <reports> "desk"' };

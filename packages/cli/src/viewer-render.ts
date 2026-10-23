@@ -73,6 +73,7 @@ function renderLibrary(
       )
     : allDocuments;
   const hasUnavailableInboxes = hub?.sources.some((source) => !source.available) ?? false;
+  const publishInbox = hub?.sources.find((source) => source.name === hub.inbox) ?? hub?.sources[0];
   const documentContent =
     documents.length === 0
       ? `<section class="empty-state" aria-labelledby="empty-title">
@@ -89,7 +90,7 @@ function renderLibrary(
           ${
             query || hasUnavailableInboxes
               ? ""
-              : `<code>html-inbox publish ./document.html${hub?.sources[0] ? ` --inbox ${escapeHtml(hub.sources[0].name)}` : ""} --title "My document" --type report</code>`
+              : `<code>html-inbox publish ./document.html${publishInbox ? ` --inbox ${escapeHtml(publishInbox.name)}` : ""} --title "My document" --type report</code>`
           }
         </section>`
       : `<ol class="document-list" aria-label="Published documents">${documents

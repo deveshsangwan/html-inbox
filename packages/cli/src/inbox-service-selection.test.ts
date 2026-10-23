@@ -8,7 +8,7 @@ import { main } from "./index";
 import { temporaryHome } from "./test-fixtures";
 import * as viewerService from "./viewer-service";
 
-test("service selection validates the target user's registered legacy home before manager access", async (t) => {
+test("service selection validates the target user's explicitly selected registered home before manager access", async (t) => {
   const root = await realpath(await temporaryHome(t));
   const catalogHome = path.join(root, "catalog");
   const target = await createInbox("reader", path.join(root, "reader-inbox"), catalogHome);
@@ -43,11 +43,11 @@ test("service selection validates the target user's registered legacy home befor
   t.mock.method(console, "log", () => undefined);
   t.mock.method(console, "error", (message: string) => { diagnostics.push(message); });
 
-  await main(["viewer", "service", "status", "--user=reader"]);
+  await main(["viewer", "service", "status", "--user=reader", "--inbox=reader"]);
   assert.deepEqual(accessedHomes, [target.home]);
   assert(diagnostics.some((message) => message.includes("Inbox reader")));
 
   await writeFile(path.join(target.home, "instance-id"), randomUUID());
-  await assert.rejects(main(["viewer", "service", "status", "--user=reader"]), /missing or different identity/);
+  await assert.rejects(main(["viewer", "service", "status", "--user=reader", "--inbox=reader"]), /missing or different identity/);
   assert.deepEqual(accessedHomes, [target.home]);
 });

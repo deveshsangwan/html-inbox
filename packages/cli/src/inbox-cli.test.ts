@@ -56,7 +56,7 @@ test("named CLI destinations isolate data, startup identity, preferences, export
   const firstPort = String(await availablePort());
   viewers.push({ home: first, port: Number(firstPort) });
   await run(["viewer", "--inbox", "first", "--port", firstPort], { HTML_INBOX_NAME: "second" });
-  const status = JSON.parse((await run(["viewer", "status", "--inbox=first"])).stdout);
+  const status = JSON.parse((await run(["viewer", "status", "--json", "--inbox=first"])).stdout);
   assert.equal(status.state, "running");
   assert.equal(status.inbox, "first");
   assert.equal(status.port, Number(firstPort));
@@ -89,7 +89,7 @@ test("named CLI destinations isolate data, startup identity, preferences, export
   assert.equal(new URL(receipt.url).port, secondPort);
 
   await run(["viewer", "stop", "--inbox=first"]);
-  assert.equal(JSON.parse((await run(["viewer", "status", "--inbox=second"])).stdout).state, "running");
+  assert.equal(JSON.parse((await run(["viewer", "status", "--json", "--inbox=second"])).stdout).state, "running");
   await run(["delete", firstDocuments[0].id, "--inbox=first", "--force"]);
   assert.deepEqual(JSON.parse((await run(["list", "--inbox=first", "--json"])).stdout), []);
 });
@@ -110,7 +110,7 @@ test("catalog CLI retains missing and conflicting entries without recreating the
   await assert.rejects(readFile(path.join(home, "instance-id")), { code: "ENOENT" });
 });
 
-test("unbound legacy CLI operations validate a registered home before reading or deleting", async (t) => {
+test("legacy first use stays available and named CLI choices validate identity before reading or deleting", async (t) => {
   const root = await realpath(await temporaryHome(t));
   const home = path.join(root, ".html-inbox");
   const env = {
@@ -124,11 +124,12 @@ test("unbound legacy CLI operations validate a registered home before reading or
   const run = (...args: string[]) => executeFile(process.execPath, [path.join(__dirname, "index.js"), ...args], { env });
   assert.deepEqual(JSON.parse((await run("list", "--json")).stdout), []);
   await run("inbox", "register", "personal", "--home", home);
-  const registeredListing = await run("list", "--json");
+  await assert.rejects(run("list", "--json"), /--inbox/);
+  const registeredListing = await run("list", "--json", "--inbox=personal");
 
   const moved = path.join(root, "moved");
   await rename(home, moved);
-  await assert.rejects(run("list", "--json"), /Cannot inspect registered inbox personal/);
+  await assert.rejects(run("list", "--json", "--inbox=personal"), /Cannot inspect registered inbox personal/);
   await assert.rejects(readFile(path.join(home, "instance-id")), { code: "ENOENT" });
 
   await cp(moved, home, { recursive: true });
@@ -137,8 +138,8 @@ test("unbound legacy CLI operations validate a registered home before reading or
     originalBytes: Buffer.from("<!doctype html><html><body>Replacement library</body></html>"),
     title: "Replacement report", type: "report", sourceFileName: "replacement.html",
   });
-  await assert.rejects(run("list", "--json"), /missing or different identity/);
-  await assert.rejects(run("delete", metadata.id, "--force"), /missing or different identity/);
+  await assert.rejects(run("list", "--json", "--inbox=personal"), /missing or different identity/);
+  await assert.rejects(run("delete", metadata.id, "--force", "--inbox=personal"), /missing or different identity/);
   assert.match(await readFile(path.join(home, "documents", metadata.id, "index.html"), "utf8"), /Replacement library/);
   assert.match(registeredListing.stderr, /Inbox personal/);
 });
