@@ -70,7 +70,7 @@ export function initializeViewerCopy(maximumJsonBytes: number): void {
     };
 
     const hasSelection = () => format.value === "text" &&
-      selectionStart >= 0 && selectionEnd > selectionStart && selectionEnd <= preparedText().length;
+      selectionStart >= 0 && selectionEnd > selectionStart && selectionEnd <= preview.value.length;
 
     const updateButtons = () => {
       const hasText = Boolean(payload && preparedText().length);
@@ -322,11 +322,11 @@ export function initializeViewerCopy(maximumJsonBytes: number): void {
         rememberSelection();
       }
 
-      if (!hasSelection() || preview.value !== preparedText()) {
+      if (!hasSelection()) {
         return;
       }
 
-      copyText(preparedText().slice(selectionStart, selectionEnd));
+      copyText(preview.value.slice(selectionStart, selectionEnd));
     });
 
     selectAll.addEventListener("click", () => {

@@ -96,6 +96,36 @@ async function resolveFetch(page, index, text) {
 }
 
 for (const mode of ["local", "static"]) {
+  test(`${mode} copies displayed selection offsets while preserving CR and CRLF in whole text and code`, { timeout: 30_000 }, async (t) => {
+    const { page } = await createCopyFixture(t, mode, async (backend) => [
+      await publishBrowserDocument(backend, "CR selection", "cr-selection.html", "<!doctype html><html><body><p>Before</p><pre><code>a&#13;b&#13;&#10;c</code></pre><p>After</p></body></html>"),
+    ]);
+    await openCopy(page);
+    const preview = page.locator("[data-copy-preview]");
+    assert.equal(await preview.inputValue(), "Before\na\nb\nc\nAfter");
+    await page.getByRole("button", { name: "Copy all", exact: true }).click();
+    await assertStatus(page, "Copied.");
+    await page.getByLabel("Format", { exact: true }).selectOption("code");
+    assert.equal(await preview.inputValue(), "a\nb\nc");
+    await page.getByRole("button", { name: "Copy code block 1", exact: true }).click();
+    await assertStatus(page, "Copied.");
+    const expectedWrites = ["Before\na\rb\r\nc\nAfter", "a\rb\r\nc"];
+    assert.deepEqual(await writes(page), expectedWrites);
+    await page.getByLabel("Format", { exact: true }).selectOption("text");
+
+    for (const [start, end, text] of [[0, 6, "Before"], [7, 12, "a\nb\nc"], [13, 18, "After"]]) {
+      await preview.evaluate((element, { start, end }) => {
+        element.focus();
+        element.setSelectionRange(start, end);
+      }, { start, end });
+      await page.locator("[data-copy-selection]:not(:disabled)").waitFor();
+      await page.getByRole("button", { name: "Copy selection", exact: true }).click();
+      expectedWrites.push(text);
+      assert.deepEqual(await writes(page), expectedWrites);
+      await assertStatus(page, "Copied.");
+    }
+  });
+
   test(`${mode} uses the saved document URL after the preview navigates and across shell aliases`, { timeout: 30_000 }, async (t) => {
     const fixture = await createCopyFixture(t, mode, async (backend) => [
       ...await publishCopyDocument(backend),

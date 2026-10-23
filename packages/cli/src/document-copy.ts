@@ -29,6 +29,8 @@ interface TraversalFrame {
   childIndex: number;
   preservesWhitespace: boolean;
   startsCodeBlock: boolean;
+  cellCount: number;
+  table?: { rowCount: number };
   separator?: string;
 }
 
@@ -81,7 +83,8 @@ export function extractDocumentCopyContent(
   };
 
   const separateText = (separator: string) => {
-    if (!textParts.length || pendingSeparator === "\n" || (separator === " " && pendingSeparator)) {
+    if (!textParts.length || pendingSeparator === "\n" ||
+      (separator === " " && (pendingSeparator || /[\t\n]$/.test(textParts[textParts.length - 1])))) {
       return;
     }
 
@@ -117,7 +120,7 @@ export function extractDocumentCopyContent(
   const frames: TraversalFrame[] = [];
 
   if (body && "tagName" in body && root && "tagName" in root && !isOmittedElement(root) && !isOmittedElement(body)) {
-    frames.push({ element: body, childIndex: 0, preservesWhitespace: false, startsCodeBlock: false });
+    frames.push({ element: body, childIndex: 0, preservesWhitespace: false, startsCodeBlock: false, cellCount: 0 });
   }
 
   // Keep one frame per ancestor so wide and deeply nested documents do not use the call stack.
@@ -160,6 +163,26 @@ export function extractDocumentCopyContent(
       continue;
     }
 
+    if (!frame.preservesWhitespace && node.tagName === "tr" && frame.table) {
+      if (frame.table.rowCount > 0) {
+        pendingSeparator = "";
+        appendText("\n");
+      } else {
+        flushSeparator();
+      }
+
+      frame.table.rowCount += 1;
+    }
+
+    if (!frame.preservesWhitespace && frame.element.tagName === "tr" && (node.tagName === "td" || node.tagName === "th")) {
+      if (frame.cellCount > 0) {
+        pendingSeparator = "";
+        appendText("\t");
+      }
+
+      frame.cellCount += 1;
+    }
+
     const separator = !frame.preservesWhitespace && BLOCK_ELEMENTS.has(node.tagName)
       ? "\n"
       : undefined;
@@ -180,7 +203,9 @@ export function extractDocumentCopyContent(
       childIndex: 0,
       preservesWhitespace: frame.preservesWhitespace || node.tagName === "pre" || node.tagName === "code",
       startsCodeBlock,
-      separator: separator ?? (!frame.preservesWhitespace && (node.tagName === "td" || node.tagName === "th") ? "\t" : undefined),
+      cellCount: 0,
+      table: node.tagName === "table" ? { rowCount: 0 } : frame.table,
+      separator,
     });
     isTooLarge = encodedBytes > MAX_DOCUMENT_COPY_JSON_BYTES;
   }

@@ -19,6 +19,56 @@ test("copy text keeps body structure, Unicode, links, and once-decoded entities"
   });
 });
 
+for (const { name, rows, text } of [
+  {
+    name: "an empty numeric column under its header",
+    rows: "<tr><th>Name</th><th>Q1</th><th>Q2</th></tr><tr><td>Sales</td><td></td><td>100</td></tr>",
+    text: "Name\tQ1\tQ2\nSales\t\t100",
+  },
+  {
+    name: "leading, middle, and trailing empty cells",
+    rows: "<tr><td></td><td>B</td><td></td></tr><tr><td>A</td><td></td><td>C</td></tr><tr><td>A</td><td>B</td><td></td></tr>",
+    text: "\tB\t\nA\t\tC\nA\tB\t",
+  },
+  {
+    name: "consecutive empty cells and formatting whitespace",
+    rows: "<tr>\n  <td> </td>\n  <td></td><td></td><td> D </td>\n  <td></td><td> </td>\n</tr>",
+    text: "\t\t\tD\t\t",
+  },
+  {
+    name: "leading and middle empty single-column rows",
+    rows: "<tr><td></td></tr><tr><td>B</td></tr><tr><td></td></tr><tr><td>D</td></tr>",
+    text: "\nB\n\nD",
+  },
+  {
+    name: "consecutive trailing empty single-column rows",
+    rows: "<tr><td>A</td></tr><tr><td></td></tr><tr><td></td></tr>",
+    text: "A\n\n",
+  },
+  {
+    name: "all-empty single-column rows",
+    rows: "<tr><td></td></tr><tr><td></td></tr>",
+    text: "\n",
+  },
+]) {
+  test(`copy text preserves table delimiters for ${name}`, () => {
+    assert.deepEqual(extractDocumentCopyContent(Buffer.from(`<table>${rows}</table>`)), {
+      schemaVersion: 1, status: "ready", text, codeBlocks: [],
+    });
+  });
+}
+
+test("ordinary whitespace after explicit line breaks does not indent text", () => {
+  const html = "<body>A<br>\n  B<br><span> C</span><pre><code>  x\n  y  </code></pre></body>";
+
+  assert.deepEqual(extractDocumentCopyContent(Buffer.from(html)), {
+    schemaVersion: 1,
+    status: "ready",
+    text: "A\nB\nC\n  x\n  y  ",
+    codeBlocks: ["  x\n  y  "],
+  });
+});
+
 test("copy text omits non-content and explicitly hidden subtrees without executing markup", () => {
   const html = `<!doctype html><html><head><title>private title</title><style>private style</style></head><body>
     <script>throw new Error("must not execute")</script><style>private CSS</style>
@@ -135,6 +185,22 @@ test("copy JSON accepts exactly 10 MiB and returns unavailable above it without 
   }
 
   assert.deepEqual(extractDocumentCopyContent(Buffer.concat([bytes, Buffer.from("a")])), {
+    schemaVersion: 1, status: "unavailable", reason: "too-large",
+  });
+});
+
+test("copy JSON includes empty table cell and row delimiters in its encoded byte limit", () => {
+  const overhead = Buffer.byteLength(JSON.stringify({ schemaVersion: 1, status: "ready", text: "", codeBlocks: [] }));
+  const contentBytes = MAX_DOCUMENT_COPY_JSON_BYTES - overhead - 4;
+  const text = '"'.repeat(Math.floor(contentBytes / 2)) + "x".repeat(contentBytes % 2);
+  const html = `<table><tr><td>${text}</td><td></td></tr><tr><td></td></tr></table>`;
+  const payload = extractDocumentCopyContent(Buffer.from(html));
+
+  assert.deepEqual(payload, {
+    schemaVersion: 1, status: "ready", text: `${text}\t\n`, codeBlocks: [],
+  });
+  assert.equal(Buffer.byteLength(JSON.stringify(payload)), MAX_DOCUMENT_COPY_JSON_BYTES);
+  assert.deepEqual(extractDocumentCopyContent(Buffer.from(html.replace("</table>", "<tr><td></td></tr></table>"))), {
     schemaVersion: 1, status: "unavailable", reason: "too-large",
   });
 });
