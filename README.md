@@ -8,7 +8,11 @@ HTML Inbox is local-first. Publishing, deletion, and process management stay in 
 
 The CLI is packaged as a self-contained `html-inbox` executable with no runtime package dependencies.
 
-You can intentionally name independent local libraries and read selected ones through an optional combined hub. See [named inboxes and local reading](docs/named-inboxes.md) for deterministic routing, source membership, and exposure rules.
+The unreleased named-inbox work lets you name independent local libraries and read an explicit set through a local hub. See [named inboxes and local reading](docs/named-inboxes.md) for selection, source membership, and exposure rules. Check the executable's `--help` for each command and flag; the published pinned `html-inbox@0.2.1` fallback lacks these features, and a checkout's version number alone does not prove support.
+
+With that support, library commands select explicit `--inbox` / `--home`, then process `HTML_INBOX_NAME` / `HTML_INBOX_HOME`, then a configured default. Without a binding or default, registered entries require a one-operation choice by exact name or `#N` row in a fully interactive terminal. Redirecting stdin, stdout, or stderr disables the picker. Pipelines, non-TTY callers, and `--json` fail with available names and selector guidance on stderr, leaving stdout empty. Even one entry requires a choice. With no registered entries, legacy `~/.html-inbox` first use remains. A choice never saves a current inbox or default.
+
+Use `html-inbox inbox list --running [--json]` for registered, verified running viewers. Human status, catalog, and document lists use text or tables; use advertised `--json` flags for automation. Check running-only, viewer JSON, and service JSON support separately. Plain publish, detached viewer startup, and hub startup retain URL-only stdout. Legacy viewer status/stop and service commands already emit JSON without a flag; check help before adding revised flags. JSON never prompts; deletion still requires `--force` and remote revocation `--yes`.
 
 ## Set up your agent
 
@@ -20,7 +24,7 @@ npx skills add deveshsangwan/html-inbox --skill html-inbox -g
 
 The skill installs agent instructions. The npm package supplies the executable. The installers are independent: adding a skill does not install a global CLI, and installing the CLI does not add a skill.
 
-On first use, the skill reuses a working, stable `html-inbox` 0.2.x executable or selects the tested fallback `npx --yes html-inbox@0.2.1`. It keeps that command prefix for the operation and preserves your inbox home, port, saved viewer exposure, and Tailscale executable override. The HTML Inbox runtime requires Node.js 20 or newer. The fallback needs npm and registry access or a cached package.
+On first use, the skill reuses a working, stable `html-inbox` 0.2.x executable or selects the tested fallback `npx --yes html-inbox@0.2.1`. It keeps that command prefix for the operation and preserves your inbox selection, catalog, port, saved viewer exposure, and Tailscale executable override. It checks actual command support before using newer features and reports unavailable capabilities without changing your destination or upgrading the pin. The HTML Inbox runtime requires Node.js 20 or newer. The fallback needs npm and registry access or a cached package.
 
 `-g` installs the skill for your user across projects. Omit it to install in the current project. The installer lets you choose target agents; use `--agent codex` or `--agent claude-code` to choose explicitly:
 
@@ -105,7 +109,7 @@ html-inbox publish ./examples/report.html \
   --type report
 ```
 
-The command stores the original HTML under `~/.html-inbox`, starts or reuses the background viewer, and prints a usable document URL. Set `HTML_INBOX_HOME` to choose another library or `HTML_INBOX_PORT` to select a port. Publishing reuses an exposed viewer and its network URL.
+The command stores the original HTML in the selected library, starts or reuses the background viewer, and prints a usable document URL. With no registered libraries, binding, or default, first use stores documents under `~/.html-inbox`. Set `HTML_INBOX_HOME` to choose another library or `HTML_INBOX_PORT` to select a port. Publishing preserves saved exposure and reuses an exposed viewer's network URL.
 
 On POSIX filesystems that enforce Unix permissions, the CLI creates and tightens managed directories to `0700` and files to `0600`. On Windows, privacy depends on the filesystem's existing and inherited access control lists. The CLI does not install or verify owner-only Windows ACLs. Keep `HTML_INBOX_HOME` in a protected local user directory and restrict access to its files and subdirectories, including `remote` state containing bearer capabilities. Follow the [Windows storage prerequisites](docs/threat-model.md#windows-storage-prerequisites) before storing sensitive reports or configuring remote publishing.
 
