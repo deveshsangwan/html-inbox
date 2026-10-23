@@ -12,14 +12,14 @@ export type CliCommand = (
   | { command: "preferences"; appearance?: Appearance; json: boolean }
   | { command: "delete"; id: string; force: boolean; json: boolean }
   | { command: "export"; options: { outputDir: string; capability?: string; json: boolean } }
-  | { command: "viewer"; action?: "status" | "stop"; foreground?: boolean; port?: number; exposure?: ViewerExposure; host?: string }
-  | { command: "viewer service"; action: "install" | "uninstall" | "status"; user?: string; port?: number; exposure?: ViewerExposure; host?: string }
+  | { command: "viewer"; action?: "status" | "stop"; foreground?: boolean; port?: number; exposure?: ViewerExposure; host?: string; json?: boolean }
+  | { command: "viewer service"; action: "install" | "uninstall" | "status"; user?: string; port?: number; exposure?: ViewerExposure; host?: string; json: boolean }
   | { command: "remote init"; options: RemoteInitOptions & { json: boolean } }
   | { command: "remote publish" | "remote status"; json: boolean }
   | { command: "remote reconcile"; adopt: boolean; recoverLock: boolean; json: boolean }
   | { command: "remote revoke"; yes: boolean; json: boolean }
   | { command: "inbox create" | "inbox register"; name: string; home: string; json: boolean }
-  | { command: "inbox list"; json: boolean }
+  | { command: "inbox list"; running: boolean; json: boolean }
   | { command: "inbox default"; name?: string; clear: boolean }
   | { command: "hub init"; config: string; name: string; inboxes: string[] }
   | { command: "hub"; config: string; port: number; exposure: "loopback" | "lan"; host?: string }
@@ -134,19 +134,21 @@ function parseLibraryCommand(argv: string[]): CliCommand {
         }
 
         if (action !== "install") {
-          const { values } = parseArgs({ args: args.slice(2), options: { user: { type: "string" } } });
+          const { values } = parseArgs({ args: args.slice(2), options: { user: { type: "string" }, json: { type: "boolean" } } });
           const user = values.user === undefined ? undefined : requireValue(values.user, "viewer service --user requires a normal user name");
-          return { command: "viewer service", action, ...(user ? { user } : {}) };
+
+          return { command: "viewer service", action, ...(user ? { user } : {}), json: values.json ?? false };
         }
 
-        const { values } = parseArgs({ args: args.slice(2), options: { ...viewerNetworkFlags, user: { type: "string" } } });
+        const { values } = parseArgs({ args: args.slice(2), options: { ...viewerNetworkFlags, user: { type: "string" }, json: { type: "boolean" } } });
         const user = values.user === undefined ? undefined : requireValue(values.user, "viewer service --user requires a normal user name");
-        return { command: "viewer service", action, ...(user ? { user } : {}), ...parseViewerFlags(values) };
+
+        return { command: "viewer service", action, ...(user ? { user } : {}), ...parseViewerFlags(values), json: values.json ?? false };
       }
 
       const { values, positionals } = parseArgs({
         args,
-        options: { ...viewerNetworkFlags, foreground: { type: "boolean" } },
+        options: { ...viewerNetworkFlags, foreground: { type: "boolean" }, json: { type: "boolean" } },
         allowPositionals: true,
       });
       const action = positionals[0];
@@ -155,11 +157,15 @@ function parseLibraryCommand(argv: string[]): CliCommand {
       }
 
       if (action !== undefined) {
-        if (Object.keys(values).length > 0) {
+        if (Object.keys(values).some((option) => option !== "json")) {
           throw new Error(`viewer ${action} does not accept startup options`);
         }
 
-        return { command: name, action };
+        return { command: name, action, json: values.json ?? false };
+      }
+
+      if (values.json) {
+        throw new Error("viewer --json requires status or stop");
       }
 
       return { command: name, ...(values.foreground ? { foreground: true } : {}), ...parseViewerFlags(values) };
@@ -245,8 +251,8 @@ function parseManagementCommand(argv: string[]): CliCommand {
     const action = argv[1];
     const args = argv.slice(2);
     if (action === "list") {
-      const { values } = parseArgs({ args, options: { json: { type: "boolean" } } });
-      return { command: "inbox list", json: values.json ?? false };
+      const { values } = parseArgs({ args, options: { running: { type: "boolean" }, json: { type: "boolean" } } });
+      return { command: "inbox list", running: values.running ?? false, json: values.json ?? false };
     }
 
     if (action === "create" || action === "register") {
