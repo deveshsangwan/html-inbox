@@ -26,6 +26,16 @@ interface SerializedError {
   cause?: SerializedError;
 }
 
+export type DocumentDeletionResponse = {
+  protocolVersion: 1;
+  ok: true;
+  result: DeleteResult | null;
+} | {
+  protocolVersion: 1;
+  ok: false;
+  error: SerializedError;
+};
+
 export function parseDocumentDeletionRequest(value: unknown): DocumentDeletionRequest {
   assertBoundedMessage(value);
 

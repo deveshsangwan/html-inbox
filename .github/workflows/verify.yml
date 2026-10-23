@@ -22,7 +22,8 @@ jobs:
           - os: windows-latest
             node: 24
           - os: macos-latest
-            node: 24
+            # Node 24 bundles the macOS fetch crash described in nodejs/undici#5544.
+            node: 20
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
 

@@ -49,7 +49,6 @@ export function initializeViewer(): void {
   let mode = readMode();
   applyMode(mode);
 
-
   const initialize = () => {
     document
       .querySelectorAll<HTMLInputElement>("[data-theme-option]")
@@ -151,7 +150,6 @@ export function initializeViewer(): void {
         menu.querySelector("summary")?.focus();
       });
     });
-
 
     const dateFormatter = new Intl.DateTimeFormat(undefined, {
       dateStyle: "medium",

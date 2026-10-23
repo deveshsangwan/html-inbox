@@ -5,7 +5,7 @@ import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { readBoundedFile } from "./bounded-file";
 import { type DeleteResult, type DocumentMetadata, isSafeDocumentId, parseDocumentMetadata } from "./documents";
-import { DocumentCleanupError, DocumentIdentityError, parseDocumentDeletionRequest, serializeDeletionError } from "./document-deletion-protocol";
+import { DocumentCleanupError, DocumentIdentityError, parseDocumentDeletionRequest, serializeDeletionError, type DocumentDeletionResponse } from "./document-deletion-protocol";
 import { type LocalDocumentLocation, parseLocalDocumentLocation } from "./local-document-source";
 import { checkCanonicalDirectory as checkDirectory, checkRegularFile as checkFile, isOwnedDirectory, isOwnedRegularFile } from "./local-storage-checks";
 import { assertUuidV4, isRecord } from "./validation";
@@ -36,7 +36,7 @@ export async function runDocumentDeletionWorker(): Promise<void> {
     process.once("message", resolve);
     process.once("disconnect", () => resolve(undefined));
   });
-  let response: unknown;
+  let response: DocumentDeletionResponse;
 
   try {
     const request = parseDocumentDeletionRequest(value);
