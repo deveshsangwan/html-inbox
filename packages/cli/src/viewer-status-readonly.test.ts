@@ -25,6 +25,26 @@ test("read-only status verifies the private viewer without changing source paths
   assert.deepEqual(viewer.requests, [viewer.controlPath]);
 });
 
+for (const usesTailscale of [false, true]) {
+  test(`read-only ${usesTailscale ? "Tailscale" : "loopback"} status accepts uppercase legacy inbox UUIDs`, async (t) => {
+    const viewer = await viewerFixture(t, usesTailscale);
+    const instanceId = viewer.health.instanceId.toUpperCase();
+    const record = { ...viewer.record, instanceId };
+    await writeFile(path.join(viewer.home, "instance-id"), instanceId);
+    await writeJson(viewer.home, "viewer.json", record);
+    viewer.setHealth({ ...viewer.health, instanceId });
+    if (usesTailscale) {
+      await tailscaleFixture(t, viewer.home, record);
+    }
+
+    await assertUnchanged(viewer.home, async () => {
+      const status = await viewer.inspect();
+      assert.equal(status.state, "running");
+      assert.equal(status.pid, process.pid);
+    });
+  });
+}
+
 test("read-only status leaves a stopped library without configuration or process records unchanged", async (t) => {
   const home = await temporaryHome(t);
   const instanceId = randomUUID();

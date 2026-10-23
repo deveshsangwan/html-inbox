@@ -52,6 +52,8 @@ test("named CLI destinations isolate data, startup identity, preferences, export
   const run = (args: string[], overrides: NodeJS.ProcessEnv = {}) => executeFile(process.execPath, [path.join(__dirname, "index.js"), ...args], { env: { ...env, ...overrides } });
   await run(["inbox", "create", "first", "--home", first]);
   await run(["inbox", "create", "second", "--home", second]);
+  const firstIdentityPath = path.join(first, "instance-id");
+  await writeFile(firstIdentityPath, (await readFile(firstIdentityPath, "utf8")).toUpperCase());
   await run(["inbox", "default", "second"]);
   const firstPort = String(await availablePort());
   viewers.push({ home: first, port: Number(firstPort) });

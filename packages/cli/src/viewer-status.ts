@@ -112,7 +112,9 @@ export async function getViewerStatus(
   }
 
   const instanceId = options.readOnly ? inspectedInstanceId : await getInboxInstanceId(home);
-  if (health.instanceId !== instanceId || selected.instanceId !== instanceId) {
+  // Registered identities use canonical UUID spelling while legacy lifecycle records may use uppercase.
+  const canonicalInstanceId = instanceId?.toLowerCase();
+  if (health.instanceId.toLowerCase() !== canonicalInstanceId || selected.instanceId.toLowerCase() !== canonicalInstanceId) {
     return { ...base, state: "conflict", reason: "Viewer belongs to a different HTML_INBOX_HOME" };
   }
 
@@ -124,7 +126,7 @@ export async function getViewerStatus(
 
   if (selected.config.exposure === "tailscale") {
     const mapping = await getTailscaleStatus(home, { executable: process.env.HTML_INBOX_TAILSCALE_COMMAND }, options);
-    if (mapping.state !== "running" || mapping.instanceId !== instanceId || mapping.processId !== selected.processId ||
+    if (mapping.state !== "running" || mapping.instanceId?.toLowerCase() !== canonicalInstanceId || mapping.processId !== selected.processId ||
         mapping.backendPort !== selected.config.port || mapping.url !== base.url) {
       return {
         ...base,
