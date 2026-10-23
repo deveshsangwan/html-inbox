@@ -1,6 +1,7 @@
 import http, { IncomingMessage, ServerResponse } from "node:http";
 import { randomBytes } from "node:crypto";
 import { type DocumentSource, isSafeDocumentId } from "./documents";
+import { extractDocumentCopyContent } from "./document-copy";
 import {
   DOCUMENT_CSP,
   SHELL_CSP,
@@ -207,11 +208,11 @@ async function routeReaderRequest(
   }
 
   const documentMatch = "mounts" in reader
-    ? /^\/sources\/([^/]+)\/documents\/([^/]+)(\/content)?$/.exec(url.pathname)
-    : /^\/documents\/([^/]+)(\/content)?$/.exec(url.pathname);
+    ? /^\/sources\/([^/]+)\/documents\/([^/]+)(\/content|\/copy\.json)?$/.exec(url.pathname)
+    : /^\/documents\/([^/]+)(\/content|\/copy\.json)?$/.exec(url.pathname);
   const sourceName = "mounts" in reader ? documentMatch?.[1] : undefined;
   const id = "mounts" in reader ? documentMatch?.[2] : documentMatch?.[1];
-  const isContent = "mounts" in reader ? documentMatch?.[3] : documentMatch?.[2];
+  const resource = "mounts" in reader ? documentMatch?.[3] : documentMatch?.[2];
   const source = "mounts" in reader ? reader.mounts.find((mount) => mount.name === sourceName)?.source : reader.source;
   if (!id || !isSafeDocumentId(id) || !source) {
     sendText(response, 404, "Not Found");
@@ -219,14 +220,19 @@ async function routeReaderRequest(
   }
 
   try {
-    if (isContent) {
+    if (resource) {
       const document = await source.getDocument(id);
       if (!document) {
         sendText(response, 404, "Not Found");
         return;
       }
 
-      sendHtml(response, document.originalBytes, DOCUMENT_CSP);
+      if (resource === "/copy.json") {
+        sendJson(response, extractDocumentCopyContent(document.originalBytes));
+      } else {
+        sendHtml(response, document.originalBytes, DOCUMENT_CSP);
+      }
+
       return;
     }
 

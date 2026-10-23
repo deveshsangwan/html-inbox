@@ -1,8 +1,10 @@
 import { DOCUMENT_SCRIPT_CSP_SOURCES } from "./html-validation";
+import { MAX_DOCUMENT_COPY_JSON_BYTES } from "./document-copy";
 
 import { initializeViewer } from "./viewer-client";
+import { initializeViewerCopy } from "./viewer-copy-client";
 
-export const VIEWER_SCRIPT = `(${initializeViewer.toString()})();`;
+export const VIEWER_SCRIPT = `(${initializeViewer.toString()})();\n(${initializeViewerCopy.toString()})(${MAX_DOCUMENT_COPY_JSON_BYTES});`;
 
 export const VIEWER_STYLES = `
 :root {
@@ -294,6 +296,58 @@ h1 { margin: 0; color: var(--text-strong); font-weight: 650; letter-spacing: -0.
 .document-details dl { display: grid; gap: 0.25rem; margin: 0; font-size: 0.8125rem; }
 .document-details dt { margin-top: 0.4rem; color: var(--faint); font-size: 0.75rem; }
 .document-details dd { margin: 0; overflow-wrap: anywhere; }
+.copy-content { width: 100%; justify-content: flex-start; margin-bottom: 0.75rem; }
+.copy-dialog {
+  width: min(44rem, calc(100vw - 1rem));
+  max-width: calc(100vw - 1rem);
+  max-height: calc(100dvh - 1rem);
+  margin: auto;
+  padding: 1rem;
+  overflow: auto;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font: inherit;
+}
+.copy-dialog[open] { display: grid; gap: 0.75rem; }
+.copy-dialog::backdrop { background: rgb(0 0 0 / 0.5); }
+.copy-dialog .copy-dialog__header { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.copy-dialog h2 { min-width: 0; margin: 0; color: var(--text-strong); font-size: 1.1rem; overflow-wrap: anywhere; }
+.copy-dialog .copy-dialog__help { margin: 0; color: var(--muted); font-size: 0.8125rem; overflow-wrap: anywhere; }
+.copy-dialog .copy-dialog__status { min-height: 1.5em; margin: 0; overflow-wrap: anywhere; }
+.copy-dialog .copy-dialog__content { display: grid; min-width: 0; gap: 0.5rem; }
+.copy-dialog label { color: var(--text-strong); font-size: 0.8125rem; font-weight: 600; }
+.copy-dialog button, .copy-dialog select {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  max-width: 100%;
+  padding: 0.5rem 0.75rem;
+  color: var(--text);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font: inherit;
+}
+.copy-dialog button { cursor: pointer; }
+.copy-dialog button:hover { color: var(--text-strong); border-color: var(--accent); }
+.copy-dialog button:disabled, .copy-dialog button[aria-disabled="true"] { opacity: 0.6; cursor: default; }
+.copy-dialog select { width: 100%; }
+.copy-dialog textarea {
+  width: 100%;
+  min-width: 0;
+  height: clamp(6rem, 28dvh, 18rem);
+  max-height: 40dvh;
+  padding: 0.75rem;
+  overflow: auto;
+  resize: vertical;
+  color: var(--text-strong);
+  background: var(--canvas);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font: 0.8125rem/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.copy-dialog .copy-dialog__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .preview-frame {
   flex: 1;
   min-height: 0;
@@ -348,7 +402,7 @@ iframe { display: block; width: 100%; height: 100%; background: var(--iframe-can
 }
 `;
 
-export const SHELL_CSP = "default-src 'none'; script-src 'self'; style-src 'self'; frame-src 'self'; base-uri 'none'; form-action 'self'";
+export const SHELL_CSP = "default-src 'none'; script-src 'self'; style-src 'self'; frame-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'";
 
 // Direct content URLs also need an opaque origin. Keep this in the response
 // policy because CSP sandbox directives do not work in HTML meta elements.

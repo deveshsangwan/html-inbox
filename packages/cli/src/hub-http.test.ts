@@ -75,6 +75,30 @@ test("hub reads stopped viewers, namespaces colliding IDs, and preserves origina
   assert.match(empty, /No matching documents/);
 });
 
+test("hub copy resources keep colliding IDs scoped and leave source files and modes unchanged", async (t) => {
+  const work = await hubSource(t, "work", "Work text");
+  const personal = await hubSource(t, "personal", "Personal text");
+  const workBytes = Buffer.from("<body><p>Work text</p><pre>  work\t\n</pre></body>");
+  const personalBytes = Buffer.from("<body><p>Personal text</p><pre>\tpersonal  </pre></body>");
+  await writeFile(path.join(work.config.home, "documents", "shared-id", "index.html"), workBytes);
+  await writeFile(path.join(personal.config.home, "documents", "shared-id", "index.html"), personalBytes);
+  const before = await Promise.all([snapshotSourceFiles(work.config.home), snapshotSourceFiles(personal.config.home)]);
+  const hub = await startHub(hubConfig([work.config, personal.config]), 0);
+  t.after(() => hub.close());
+
+  for (const [source, text, code] of [[work, "Work text\n  work\t\n", "  work\t\n"], [personal, "Personal text\n\tpersonal  ", "\tpersonal  "]] as const) {
+    const url = `${hub.urls[0]}/sources/${source.config.name}/documents/shared-id/copy.json`;
+    const response = await fetch(url);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("content-type"), "application/json; charset=utf-8");
+    assert.deepEqual(await response.json(), { schemaVersion: 1, status: "ready", text, codeBlocks: [code] });
+    assert.equal((await fetch(`${hub.urls[0]}/?inbox=${source.config.name}&q=text`)).status, 200);
+    assert.deepEqual(await (await fetch(url)).json(), { schemaVersion: 1, status: "ready", text, codeBlocks: [code] });
+  }
+
+  assert.deepEqual(await Promise.all([snapshotSourceFiles(work.config.home), snapshotSourceFiles(personal.config.home)]), before);
+});
+
 test("hub isolates unavailable, corrupt, mismatched, and replaced roots without leaking diagnostics", async (t) => {
   const diagnostics: string[] = [];
   t.mock.method(console, "error", (message: unknown) => {
@@ -121,7 +145,7 @@ test("hub isolates unavailable, corrupt, mismatched, and replaced roots without 
   assert(diagnostics.some((message) => message.startsWith("html-inbox: Hub source corrupt unavailable: ")));
 
   for (const name of ["mismatched", "corrupt", "replaced", "missing"]) {
-    for (const suffix of ["", "/content"]) {
+    for (const suffix of ["", "/content", "/copy.json"]) {
       diagnostics.length = 0;
       const unavailable = await fetch(`${baseUrl}/sources/${name}/documents/shared-id${suffix}`);
       assert.equal(unavailable.status, 503);
@@ -148,7 +172,7 @@ test("hub reader shares Host, GET/HEAD, CSP, and sandbox policies and exposes on
   configuration.sources.push(unselected.config);
   const baseUrl = hub.urls[0];
   const documentPath = "/sources/selected/documents/shared-id";
-  const readablePaths = ["/", "/health", "/assets/viewer.css", "/assets/viewer.js", documentPath, `${documentPath}/content`];
+  const readablePaths = ["/", "/health", "/assets/viewer.css", "/assets/viewer.js", documentPath, `${documentPath}/content`, `${documentPath}/copy.json`];
 
   for (const route of readablePaths) {
     const get = await request(baseUrl, { path: route });
@@ -163,23 +187,29 @@ test("hub reader shares Host, GET/HEAD, CSP, and sandbox policies and exposes on
 
   assert.deepEqual(JSON.parse((await request(baseUrl, { path: "/health" })).body.toString()), { ok: true });
   for (const method of ["POST", "PUT", "DELETE", "OPTIONS"]) {
-    const denied = await request(baseUrl, { path: `${documentPath}/content`, method });
-    assert.equal(denied.status, 405);
-    assert.equal(denied.headers.allow, "GET, HEAD");
-    assertSecurityHeaders(denied.headers);
+    for (const suffix of ["/content", "/copy.json"]) {
+      const denied = await request(baseUrl, { path: `${documentPath}${suffix}`, method });
+      assert.equal(denied.status, 405);
+      assert.equal(denied.headers.allow, "GET, HEAD");
+      assertSecurityHeaders(denied.headers);
+    }
   }
 
   for (const headers of [
     { Host: "attacker.example", "X-Forwarded-Host": new URL(baseUrl).host },
     ["Host", new URL(baseUrl).host, "Host", "attacker.example"],
   ]) {
-    const denied = await request(baseUrl, { path: "/", headers });
-    assert.equal(denied.status, 421);
-    assertSecurityHeaders(denied.headers);
+    for (const route of ["/", `${documentPath}/copy.json`]) {
+      const denied = await request(baseUrl, { path: route, headers });
+      assert.equal(denied.status, 421);
+      assertSecurityHeaders(denied.headers);
+    }
   }
 
   const hiddenPaths = [
     "/documents/shared-id", "/sources/unselected/documents/shared-id/content",
+    "/documents/shared-id/copy.json", "/sources/unselected/documents/shared-id/copy.json",
+    "/sources/selected/documents/missing/copy.json", "/sources/selected/documents/bad%2Fid/copy.json",
     "/sources/selected/instance-id", "/sources/selected/viewer.json", "/sources/selected/remote/state.json",
     `${documentPath}/metadata.json`, "/sources/selected/documents/..%2Fshared-id/content",
     "/sources/selected/documents/%2e%2e/content", "/sources/selected/documents/.staging/content",
@@ -306,6 +336,7 @@ test("hub honors HTML_INBOX_MAX_BYTES while keeping document reads bounded", asy
   const bounded = await startHub(hubConfig([source.config]), 0);
   t.after(() => bounded.close());
   assert.equal((await fetch(`${bounded.urls[0]}/sources/large/documents/shared-id/content`)).status, 503);
+  assert.equal((await fetch(`${bounded.urls[0]}/sources/large/documents/shared-id/copy.json`)).status, 503);
   assert.match(await (await fetch(bounded.urls[0])).text(), /Results are incomplete/);
 
   process.env.HTML_INBOX_MAX_BYTES = String(originalBytes.byteLength);
@@ -314,7 +345,21 @@ test("hub honors HTML_INBOX_MAX_BYTES while keeping document reads bounded", asy
   const response = await fetch(`${expanded.urls[0]}/sources/large/documents/shared-id/content`);
   assert.equal(response.status, 200);
   assert.deepEqual(Buffer.from(await response.arrayBuffer()), originalBytes);
+  assert.deepEqual(await (await fetch(`${expanded.urls[0]}/sources/large/documents/shared-id/copy.json`)).json(), {
+    schemaVersion: 1, status: "unavailable", reason: "too-large",
+  });
 });
+
+async function snapshotSourceFiles(home: string) {
+  const entries = [".", ...(await readdir(home, { recursive: true })).sort()];
+
+  return Promise.all(entries.map(async (entry) => {
+    const filePath = path.join(home, entry);
+    const info = await lstat(filePath);
+
+    return { path: entry, mode: info.mode, bytes: info.isFile() ? await readFile(filePath) : null };
+  }));
+}
 
 async function hubSource(t: TestContext, name: string, title: string) {
   const home = await realpath(await temporaryHome(t));
