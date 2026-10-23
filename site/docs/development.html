@@ -278,11 +278,15 @@ corepack pnpm verify</code></pre>
           public boundaries.
         </p>
         <p>
-          Keep the viewer read-only, preserve metadata escaping and document
-          isolation, and exercise process identity before adding any process
-          action. Changes to external integration should use recording commands
-          and temporary paths in tests, with real host checks performed
-          deliberately.
+          Preserve metadata escaping, document sandbox and CSP, Host checks,
+          and the private process-control boundary. Live single-document
+          deletion requires the process-scoped CSRF token and matching Origin;
+          live shells use <code>frame-ancestors 'none'</code>. Every reachable
+          live reader can delete, regardless of network mode or hub filters.
+          Bind hub writers to each captured local source identity. Keep static
+          snapshots read-only and free of live viewer credentials. Changes
+          to external integration should use recording commands and temporary
+          paths in tests, with real host checks performed deliberately.
         </p>
         <p>
           Use

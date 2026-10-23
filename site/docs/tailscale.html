@@ -165,9 +165,20 @@
           setup or consent prompts.
         </p>
         <p>
-          Reader access follows your tailnet policy. HTML Inbox does not install
-          Tailscale, log in, change ACLs, grant operator permissions, enable
-          public Funnel, or reset Serve configuration.
+          Reader reachability follows your tailnet policy. Every reachable live
+          reader can read and permanently delete individual documents, just as
+          on loopback and LAN. Deletion needs no startup grant or separate
+          reader login. HTML Inbox does not install Tailscale, log in, change
+          ACLs, grant operator permissions, enable public Funnel, or reset
+          Serve configuration.
+        </p>
+        <p>
+          Use <strong>Delete</strong> in a list row's three-dot menu or in
+          document options;
+          <a href="viewer.html#delete">the confirmation</a> defaults to Cancel.
+          Publishing and process control remain local CLI operations. Existing
+          exported and hosted snapshots remain read-only independent copies,
+          without live viewer credentials.
         </p>
         <p>
           See Tailscale's

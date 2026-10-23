@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { lstat, readFile, readdir, rename, rm, stat } from "node:fs/promises";
+import { lstat, readFile, readdir, realpath, rename, rm } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 import { parseDocumentMetadata, DOCUMENT_SCHEMA_VERSION, DeleteResult, DocumentBackend, DocumentMetadata, isSafeDocumentId, PublishInput, StoredDocument } from "./documents";
+import { deleteStoredDocument } from "./document-deletion";
 import {
   ensurePrivateDirectory,
   ManagedStorageError,
@@ -117,24 +118,12 @@ export class LocalDocumentBackend implements DocumentBackend {
   }
 
   async deleteDocument(id: string): Promise<DeleteResult | null> {
-    const metadata = await this.getDocumentMetadata(id);
-    if (!metadata) {
+    if (!isSafeDocumentId(id)) {
       return null;
     }
 
-    const documentDir = this.documentDir(id);
-    const [htmlStat, metadataStat] = await Promise.all([
-      stat(path.join(documentDir, "index.html")),
-      stat(path.join(documentDir, "metadata.json")),
-    ]);
-    const trashDir = path.join(this.trashDir(), `${id}-${randomUUID()}`);
-    await rename(documentDir, trashDir);
-    await rm(trashDir, { recursive: true, force: true });
-
-    return {
-      metadata,
-      reclaimedBytes: htmlStat.size + metadataStat.size,
-    };
+    await this.prepareStorage();
+    return deleteStoredDocument(await realpath(this.home), id);
   }
 
   private async readMetadata(id: string): Promise<DocumentMetadata | null> {

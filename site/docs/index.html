@@ -263,8 +263,12 @@ html-inbox viewer status</code></pre>
         </div>
         <p>
           <code>viewer</code> prints the inbox URL. Search in the browser by
-          title, type, or original file name. Use a document ID from
-          <code>list</code> when you want to remove a document.
+          title, type, or original file name. In a live viewer or hub, choose
+          <strong>Delete</strong> in a list row's three-dot menu or in document
+          options to remove one document. The confirmation shows its title, filename, and
+          inbox and defaults to Cancel. Every reachable live reader can delete,
+          on loopback, LAN, and Tailscale. Hub filters do not restrict this
+          authority. For CLI deletion, use a document ID from <code>list</code>.
         </p>
         <div class="docs-code">
           <pre
@@ -275,9 +279,12 @@ html-inbox viewer status</code></pre>
 html-inbox viewer stop</code></pre>
         </div>
         <p>
-          Deletion asks for confirmation in an interactive terminal. Stopping
-          the viewer preserves your library. Start it again whenever you need
-          it.
+          CLI deletion asks for confirmation in an interactive terminal.
+          Deletion is permanent, with no Undo or bulk deletion. The original
+          source file, existing exports, and remote snapshots remain unchanged.
+          Static copies are read-only and contain no live viewer credentials.
+          Stopping the viewer preserves your library. Start it again whenever
+          you need it.
         </p>
         <h2 id="next-step">Choose where readers can open it</h2>
         <div class="docs-cards">

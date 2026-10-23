@@ -9,6 +9,7 @@ export interface ViewerRenderOptions {
   inboxName?: string;
   homePath?: string;
   documentBasePath?: string;
+  deletion?: { token: string };
 }
 
 export function renderIndex(
@@ -96,7 +97,7 @@ function renderLibrary(
       : `<ol class="document-list" aria-label="Published documents">${documents
           .map(
             (document) =>
-              `<li class="doc" data-search-text="${escapeHtml(
+              `<li class="doc${options.deletion ? " doc--deletable" : ""}" data-search-text="${escapeHtml(
                 [document.metadata.title, document.metadata.type, document.metadata.sourceFileName, ...(document.inboxName ? [document.inboxName] : [])]
                   .join(" ")
                   .toLowerCase(),
@@ -105,6 +106,7 @@ function renderLibrary(
                 <time class="document-date" datetime="${escapeHtml(document.metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(document.metadata.createdAt, options.timeZone))}</time>
                 <span class="doc__source" title="${escapeHtml(document.metadata.sourceFileName)}">${escapeHtml(document.metadata.sourceFileName)}</span>
                 <span class="document-type">${escapeHtml(document.metadata.type)}</span>
+                ${options.deletion ? renderDocumentActions(document.metadata, document.documentPath, document.inboxName ?? options.inboxName ?? "Inbox") : ""}
               </li>`,
           )
           .join("")}</ol>`;
@@ -137,14 +139,14 @@ function renderLibrary(
         </form>
         ${renderAppearanceMenu()}
       </header>
-      ${hub ? renderAvailability(hub.sources) : ""}<p class="document-count" aria-live="polite" data-document-count>${countLabel}</p>
+      ${hub ? renderAvailability(hub.sources) : ""}${options.deletion ? '<p class="deletion-notice" role="status" data-deletion-notice hidden></p>' : ""}<p class="document-count" aria-live="polite" data-document-count>${countLabel}</p>
       ${
         options.clientSearch && allDocuments.length > 0
           ? '<section class="empty-state" aria-labelledby="client-empty-title" data-client-empty hidden><h2 id="client-empty-title">No matching documents</h2><p>Try another title, type, or source file name.</p></section>'
           : ""
       }
       ${documentContent}
-    </main>`,
+    </main>${options.deletion ? renderDeletionDialog(options.deletion.token, homePath) : ""}`,
     "Your published HTML documents, collected in one library.",
     basePath,
     options.appearance ?? "system",
@@ -159,6 +161,7 @@ export function renderDocumentShell(
   const basePath = options.basePath ?? "";
   const homePath = options.homePath ?? (basePath ? `${basePath}/` : "/");
   const documentBasePath = options.documentBasePath ?? basePath;
+  const documentPath = `${documentBasePath}/documents/${metadata.id}`;
   const contentPath = documentBasePath
     ? `${documentBasePath}/documents/${escapeHtml(metadata.id)}/content${options.documentBasePath ? "" : "/"}`
     : `/documents/${escapeHtml(metadata.id)}/content`;
@@ -183,6 +186,7 @@ export function renderDocumentShell(
                 <dt>Published</dt><dd><time datetime="${escapeHtml(metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(metadata.createdAt, options.timeZone))}</time></dd>
               </dl>
             </section>
+            ${options.deletion ? renderDeleteAction(metadata, documentPath, options.inboxName ?? "Inbox", "viewer-menu__delete") : ""}
           </div>
         </details>
       </header>
@@ -190,12 +194,48 @@ export function renderDocumentShell(
         <iframe sandbox="allow-scripts" src="${contentPath}" title="${escapeHtml(metadata.title)}" data-document-frame></iframe>
       </div>
       <button class="toolbar-control show-frame" type="button" data-show-frame hidden>Show frame</button>
-    </main>`,
+    </main>${options.deletion ? renderDeletionDialog(options.deletion.token, homePath) : ""}`,
     `Preview of ${metadata.title}`,
     basePath,
     options.appearance ?? "system",
     "document-page",
   );
+}
+
+function renderDocumentActions(metadata: DocumentMetadata, documentPath: string, inboxName: string): string {
+  return `<details class="viewer-menu doc__actions" data-viewer-menu>
+                  <summary class="toolbar-control" aria-label="${escapeHtml(`Options for ${metadata.title} in ${inboxName}`)}" title="Document options"><span aria-hidden="true">&#8942;</span></summary>
+                  <div class="viewer-menu__panel doc__actions-panel">
+                    ${renderDeleteAction(metadata, documentPath, inboxName, "doc__actions-delete")}
+                  </div>
+                </details>`;
+}
+
+function renderDeleteAction(metadata: DocumentMetadata, documentPath: string, inboxName: string, className: string): string {
+  return `<button class="toolbar-control delete-action ${className}" type="button" data-delete-document data-delete-url="${escapeHtml(`/api${documentPath}`)}" data-document-path="${escapeHtml(documentPath)}" data-document-title="${escapeHtml(metadata.title)}" data-document-file="${escapeHtml(metadata.sourceFileName)}" data-inbox-name="${escapeHtml(inboxName)}" aria-label="${escapeHtml(`Delete ${metadata.title}`)}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg><span>Delete</span></button>`;
+}
+
+function renderDeletionDialog(token: string, homePath: string): string {
+  return `
+<dialog class="delete-dialog" aria-labelledby="delete-dialog-title" aria-describedby="delete-dialog-description delete-dialog-copies" data-delete-dialog data-delete-token="${escapeHtml(token)}" data-home-path="${escapeHtml(homePath)}">
+  <form data-delete-form>
+    <h2 id="delete-dialog-title">Delete document?</h2>
+    <p id="delete-dialog-description">This removes the document and its saved files from this inbox. This cannot be undone.</p>
+    <p id="delete-dialog-copies">Your original source file and copies you already exported or shared are kept.</p>
+    <dl class="delete-dialog__details">
+      <dt>Title</dt><dd data-delete-title></dd>
+      <dt>File</dt><dd data-delete-file></dd>
+      <dt>Inbox</dt><dd data-delete-inbox></dd>
+    </dl>
+    <p role="status" data-delete-progress hidden></p>
+    <p class="delete-dialog__error" role="alert" data-delete-error hidden></p>
+    <a class="delete-dialog__review" data-delete-review hidden>Check inbox</a>
+    <div class="delete-dialog__actions">
+      <button class="toolbar-control delete-dialog__cancel" type="button" data-delete-cancel autofocus>Cancel</button>
+      <button class="toolbar-control delete-dialog__confirm" type="submit" data-delete-confirm>Delete document</button>
+    </div>
+  </form>
+</dialog>`;
 }
 
 function renderInboxFilter(sources: HubInboxListing[], selected: string): string {

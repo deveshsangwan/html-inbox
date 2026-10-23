@@ -143,8 +143,9 @@
         <p class="docs-eyebrow">HTML Inbox documentation</p>
         <h1>Run the live viewer</h1>
         <p class="docs-lead">
-          The viewer reads the current local library. It runs in the background
-          by default, while publishing, deletion, and process control stay in
+          The viewer serves the current local library and runs in the background
+          by default. Every reachable live reader can read and permanently
+          delete individual documents. Publishing and process control stay in
           the CLI.
         </p>
 
@@ -156,6 +157,32 @@
           available browser area, then use the small <strong>Show frame</strong>
           button to restore the toolbar. The document stays loaded and preserves
           its scroll and interactive state. Browser controls remain visible.
+        </p>
+        <h2 id="delete">Delete one document</h2>
+        <p>
+          Choose <strong>Delete</strong> from a live inbox list row's three-dot
+          menu or the document options menu. The confirmation shows the title, filename,
+          and inbox, explains permanent deletion, and defaults to Cancel.
+          Confirming removes the stored document from its original inbox.
+          There is no Undo or bulk deletion. The original source file, existing
+          exports, and remote snapshots remain unchanged.
+        </p>
+        <p>
+          Deletion is enabled by default on loopback, LAN, and Tailscale, without
+          a startup grant or reader login. The network you choose determines
+          who can read and delete documents. Every reachable live hub reader
+          can delete from every mounted inbox; source filters do not restrict
+          that authority. A hub binds each source's deletion writer to its
+          captured canonical root, inbox UUID, and filesystem identity under
+          the same OS account.
+        </p>
+        <p>
+          If a source is unavailable or replaced, deletion fails without
+          recreating it or choosing another target. Deletion first moves the
+          record out of the live library, then purges its files. If purge fails,
+          the document is already absent and the cleanup failure is reported.
+          Static exported and hosted snapshots are read-only independent copies
+          with no live deletion controls or live viewer credentials.
         </p>
         <h2 id="appearance">Choose appearance</h2>
         <p>
@@ -304,8 +331,9 @@ html-inbox viewer --loopback</code></pre>
           <a href="lan.html">LAN access</a> exposes the entire live library over
           HTTP to every reachable reader.
           <a href="tailscale.html">Tailscale access</a> uses HTTPS Serve and
-          your existing tailnet policy. No mode adds browser administration or
-          mutation routes.
+          your existing tailnet policy. Every reachable live reader can delete
+          documents in either mode. Publishing, process control, and service
+          management have no reader HTTP endpoints.
         </p>
         <h2 id="diagnostics">Find startup diagnostics</h2>
         <p>

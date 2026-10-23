@@ -21,6 +21,9 @@ jobs:
             node: 24
           - os: windows-latest
             node: 24
+          - os: macos-latest
+            # Node 24 bundles the macOS fetch crash described in nodejs/undici#5544.
+            node: 20
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
 
@@ -35,6 +38,10 @@ jobs:
 
       - name: Enable Corepack
         run: corepack enable
+
+      - name: Use a canonical macOS temporary directory
+        if: runner.os == 'macOS'
+        run: node -e "require('node:fs').appendFileSync(process.env.GITHUB_ENV, 'TMPDIR=' + require('node:fs').realpathSync(require('node:os').tmpdir()) + '\n')"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

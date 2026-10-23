@@ -195,22 +195,24 @@
                 <td>Loopback</td>
                 <td>
                   First-start default on <code>127.0.0.1</code>. Processes and
-                  people able to reach your local account's viewer can read the
-                  library.
+                  people able to reach your local account's viewer can read and
+                  permanently delete documents in the library.
                 </td>
               </tr>
               <tr>
                 <td>LAN</td>
                 <td>
-                  Every device able to reach the selected HTTP port can read the
-                  full live library. No login, password, or token.
+                  Every device able to reach the selected HTTP port can read and
+                  permanently delete documents in the full live library. No
+                  login, password, or reader access token.
                 </td>
               </tr>
               <tr>
                 <td>Tailscale</td>
                 <td>
                   HTTPS through the existing client, with reader access governed
-                  by your tailnet policy. No public Funnel is enabled.
+                  by your tailnet policy. Every reachable live reader can read
+                  and permanently delete documents. No public Funnel is enabled.
                 </td>
               </tr>
             </tbody>
@@ -219,8 +221,31 @@
         <p>
           Host validation checks the configured addresses and explicit trusted
           tailnet hostname. It does not authenticate a reader. Forwarding or
-          Tailscale identity headers grant no access. All reader routes remain
-          read-only; administration stays in the local CLI.
+          Tailscale identity headers grant no access. Live deletion requires a
+          process-scoped CSRF token and matching Origin. Live shells use
+          <code>frame-ancestors 'none'</code>, while original document content
+          retains its sandbox and CSP. Deletion is enabled by default without a
+          startup grant or reader login. These checks protect requests from
+          other origins; every reachable live reader retains deletion authority.
+          Publishing and process control stay in the local CLI, with no reader
+          HTTP endpoints.
+        </p>
+        <p>
+          Every reachable live hub reader can read and delete documents in every
+          mounted inbox, regardless of source filters or standalone viewer
+          exposure. Each source's deletion writer is explicitly bound to its
+          captured canonical root, durable inbox UUID, and filesystem identity
+          under the same OS account. An unavailable or replaced source fails
+          without recreating storage or choosing another target.
+        </p>
+        <p>
+          The <a href="viewer.html#delete">deletion confirmation</a> shows the
+          title, filename, and inbox and defaults to Cancel. There is no Undo or
+          bulk deletion. The stored record leaves the live library before its
+          files are purged; if purge fails, the record is already absent and the
+          cleanup failure is reported. The original source file, existing
+          exports, and remote snapshots remain unchanged. Static exported and
+          hosted copies are read-only and contain no live viewer credentials.
         </p>
         <p>
           Public <code>/health</code> exposes only anonymous success. Process

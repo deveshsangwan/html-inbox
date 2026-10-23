@@ -1,6 +1,8 @@
 # Tailscale viewer integration
 
-HTML Inbox uses an existing installed, signed-in Tailscale CLI. It never installs a client, logs in, changes access policy, enables Funnel, or resets Serve configuration. Reader access follows the user's tailnet policy. Publishing, deletion and process control stay in the local CLI.
+HTML Inbox uses an existing installed, signed-in Tailscale CLI. It never installs a client, logs in, changes access policy, enables Funnel, or resets Serve configuration. Reader reachability follows the user's tailnet policy. Every reachable live reader can read and permanently delete individual documents, just as on loopback and LAN. Deletion needs no startup grant or separate reader login. Publishing and process control stay in the local CLI.
+
+Live deletion uses a process-scoped CSRF token and matching Origin, with Host validation and `frame-ancestors 'none'` on live shells. These checks do not add per-reader roles. Original content keeps its sandbox and document CSP. Existing static exports and hosted snapshots remain read-only independent copies without live viewer credentials.
 
 Before using explicit Tailscale exposure, the node must be running, online and unexpired. Its connected tailnet must have MagicDNS enabled and HTTPS certificates available for its exact device hostname. The normal user running HTML Inbox needs permission to manage Serve through the existing daemon. If permission is denied, ask the server administrator to grant that user operator access. HTML Inbox never runs sudo. See the official [Serve guide](https://tailscale.com/docs/features/tailscale-serve) and [HTTPS prerequisites](https://tailscale.com/docs/how-to/set-up-https-certificates).
 

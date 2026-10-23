@@ -169,8 +169,9 @@ html-inbox -v</code></pre>
         </div>
         <p>
           Help and version are top-level commands. Unknown commands and
-          unsupported flags return an error. The CLI has no browser
-          administration API.
+          unsupported flags return an error. Publishing and lifecycle control
+          have no reader HTTP endpoints. Live readers can permanently delete
+          individual documents.
         </p>
         <h2 id="documents">Documents</h2>
         <div class="docs-code">
@@ -195,6 +196,14 @@ html-inbox delete &lt;id&gt; [--force] [--json]</code></pre>
           ID, asks for confirmation unless <code>--force</code> is supplied, and
           reports metadata plus reclaimed bytes with <code>--json</code>.
           Non-interactive deletion needs <code>--force</code>.
+        </p>
+        <p>
+          In a live viewer or hub, choose <strong>Delete</strong> in a list
+          row's three-dot menu or in document options. The
+          <a href="viewer.html#delete">confirmation</a> defaults to Cancel and
+          identifies the title, filename, and inbox. Every reachable live reader
+          can delete, without a startup grant or reader login, on loopback, LAN,
+          and Tailscale. Static exported or hosted copies remain read-only.
         </p>
         <h2 id="viewer">Viewer</h2>
         <div class="docs-code">
