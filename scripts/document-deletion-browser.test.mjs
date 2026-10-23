@@ -243,7 +243,10 @@ for (const outcome of ["absent", "cleanup", "expired", "changed", "unknown", "lo
     assert.equal(new URL(page.url()).pathname, `/documents/${documents[0].id}`);
     assert.equal(await page.locator("[data-document-frame]").count(), 1);
     assert.equal(await page.getByRole("button", { name: "Delete document", exact: true }).isDisabled(), true);
-    await page.getByRole("link", { name: "Check inbox", exact: true }).click();
+    await Promise.all([
+      page.waitForURL(inboxUrl),
+      page.getByRole("link", { name: "Check inbox", exact: true }).click(),
+    ]);
     assert.equal(await page.getByRole("link", { name: fullTitle, exact: true }).count(), outcome === "lost" ? 0 : 1);
   });
 }
