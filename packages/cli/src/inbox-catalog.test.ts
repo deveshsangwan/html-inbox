@@ -181,6 +181,61 @@ test("24 independent concurrent registrations retain every distinct per-name rec
   await assert.rejects(lstat(path.join(catalogHome, "registration.lock")), { code: "ENOENT" });
 });
 
+for (const { platform, code, isPersistent, canRegister } of [
+  { platform: "win32", code: "EPERM", isPersistent: false, canRegister: true },
+  { platform: "win32", code: "EPERM", isPersistent: true, canRegister: false },
+  { platform: "linux", code: "EPERM", isPersistent: false, canRegister: false },
+  { platform: "win32", code: "EACCES", isPersistent: false, canRegister: false },
+]) {
+  test(`registration ${canRegister ? "retries" : "rejects"} ${platform} ${isPersistent ? "persistent" : "transient"} ${code} without bypassing the lock`, async (t) => {
+    const { root, catalogHome } = await catalogFixture(t);
+    const home = await legacyLibrary(root, "work");
+    const modulePath = path.join(__dirname, "inbox-catalog.js");
+    const worker = `
+      const assert = require("node:assert/strict");
+      const fs = require("node:fs/promises");
+      const path = require("node:path");
+      const [modulePath, catalogHome, home, platform, code, persistent, succeeds] = process.argv.slice(1);
+      Object.defineProperty(process, "platform", { value: platform });
+      const lockPath = path.join(catalogHome, "registration.lock");
+      const perform = fs.open;
+      const failure = Object.assign(new Error("Exclusive lock open denied"), { code, syscall: "open", path: lockPath });
+      const now = Date.now;
+      const start = now();
+      let attempts = 0;
+
+      if (persistent === "true") {
+        Date.now = () => start + (attempts >= 3 ? 10_001 : 0);
+      }
+
+      fs.open = async (...args) => {
+        if (args[0] === lockPath && args[1] === "wx") {
+          attempts += 1;
+          if (attempts === 1 || persistent === "true") throw failure;
+        }
+        return perform(...args);
+      };
+
+      (async () => {
+        const { registerInbox, readInboxCatalog } = require(modulePath);
+        if (succeeds === "true") {
+          const entry = await registerInbox("work", home, catalogHome);
+          assert.equal(attempts, 2);
+          assert.deepEqual(await readInboxCatalog(catalogHome), { inboxes: [entry] });
+        } else {
+          await assert.rejects(registerInbox("work", home, catalogHome), error => error === failure);
+          assert.equal(attempts, persistent === "true" ? 3 : 1);
+          assert.deepEqual(await readInboxCatalog(catalogHome), { inboxes: [] });
+          await assert.rejects(fs.lstat(path.join(home, "instance-id")), { code: "ENOENT" });
+        }
+        await assert.rejects(fs.lstat(lockPath), { code: "ENOENT" });
+      })().catch(error => { console.error(error); process.exitCode = 1; });
+    `;
+
+    await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, home, platform, code, String(isPersistent), String(canRegister)], { timeout: 5000 });
+  });
+}
+
 test("concurrent same-name claims choose one complete winner and preserve it", async (t) => {
   const { root, catalogHome } = await catalogFixture(t);
   const homes = await Promise.all(Array.from({ length: 24 }, (_, index) => legacyLibrary(root, `candidate-${index}`)));
