@@ -10,7 +10,7 @@ Publish a finished HTML artifact into the local private document library. `publi
 This skill owns publishing and live viewer operation. Cloudflare Pages hosts a separate static snapshot. When the user requests Cloudflare setup, snapshot publishing, recovery, or revocation, install the optional remote skill if it is absent:
 
 ```sh
-npx skills add deveshsangwan/html-inbox --skill html-inbox-remote
+npx skills@1.7.0 add deveshsangwan/html-inbox --skill html-inbox-remote
 ```
 
 The current `skills@1.7.0` installer requires Node.js 22.20.0 or newer for skill installation or updates. HTML Inbox itself, including the fallback used by an already-installed skill, requires Node.js 20 or newer.

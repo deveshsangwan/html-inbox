@@ -12,7 +12,7 @@ Live Tailscale access uses the local viewer through HTTPS Serve and follows tail
 Install the optional main skill only when the user chooses installation:
 
 ```sh
-npx skills add deveshsangwan/html-inbox --skill html-inbox
+npx skills@1.7.0 add deveshsangwan/html-inbox --skill html-inbox
 ```
 
 The current `skills@1.7.0` installer requires Node.js 22.20.0 or newer for skill installation or updates. HTML Inbox itself, including the fallback used by an already-installed skill, requires Node.js 20 or newer.
