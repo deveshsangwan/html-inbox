@@ -40,6 +40,10 @@ export async function runInboxCommand(parsed: Extract<CliCommand, { command: `in
     return;
   }
 
+  if (parsed.command !== "inbox list") {
+    throw new Error(`Unknown inbox command: ${parsed.command}`);
+  }
+
   const catalog = await readInboxCatalog(undefined, { readOnly: true });
   const inboxes = await Promise.all(catalog.inboxes.map(async (inbox) => ({
     ...inbox,
