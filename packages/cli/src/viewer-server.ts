@@ -1,9 +1,10 @@
 import { setTimeout as delay } from "node:timers/promises";
 import { randomUUID } from "node:crypto";
-import { rm } from "node:fs/promises";
+import { realpath, rm } from "node:fs/promises";
 import type http from "node:http";
 import path from "node:path";
 import type { DocumentBackend } from "./documents";
+import { createDocumentDeleter } from "./document-deletion";
 import { ManagedStorageError } from "./private-storage";
 import { startViewerHttpServer, type ViewerHttpServer } from "./viewer-http-server";
 import { resolveViewerNetworkConfig, type ViewerNetworkOptions } from "./viewer-network";
@@ -255,7 +256,8 @@ export async function startViewer(
       }
 
       const config = prepared ? { ...initialConfig, tailscaleHostname: prepared.hostname } : initialConfig;
-      reader = await startViewerHttpServer(backend, config, health, home, { inboxName });
+      const deleteDocument = await createDocumentDeleter({ home: await realpath(home), instanceId });
+      reader = await startViewerHttpServer(backend, config, health, home, { inboxName }, deleteDocument);
       reader.server.once("close", () => { void close().catch(reportShutdownFailure); });
       if (closing) {
         return;

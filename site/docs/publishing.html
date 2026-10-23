@@ -152,8 +152,9 @@
         <h1>Publish and manage documents</h1>
         <p class="docs-lead">
           HTML Inbox stores the original HTML and separate metadata. Publishing
-          and deletion are local CLI operations, including when readers use LAN
-          or Tailscale.
+          stays in the local CLI. Every reachable live viewer or hub reader can
+          permanently delete individual documents, including on LAN and
+          Tailscale.
         </p>
 
         <h2 id="publish">Publish a file</h2>
@@ -271,8 +272,9 @@ html-inbox list</code></pre>
         <p>
           Open the inbox URL from <code>viewer</code>. The live viewer searches
           document title, type, and source file name. It does not perform
-          full-text search of document HTML. The browser has no publish, delete,
-          or process-management controls.
+          full-text search of document HTML. Live list rows and document options
+          offer <strong>Delete...</strong>. Publishing and process control have
+          no reader HTTP endpoints.
         </p>
         <p>
           The plain-text list contains tab-separated ID, type, creation time,
@@ -287,8 +289,16 @@ html-inbox list</code></pre>
         </div>
         <h2 id="delete">Delete a document</h2>
         <p>
-          Copy its ID from <code>list</code>, then run the delete command.
-          Confirmation defaults to no.
+          In a live viewer or hub, choose <strong>Delete...</strong> on the
+          document's list row or in document options. The modal shows its title,
+          filename, and inbox, explains permanent deletion, and defaults to
+          Cancel. Every reachable live reader can delete, without a startup
+          grant or separate reader login. Hub filters do not restrict deletion
+          authority across mounted inboxes.
+        </p>
+        <p>
+          For CLI deletion, copy its ID from <code>list</code>, then run the
+          delete command. Confirmation defaults to no.
         </p>
         <div class="docs-code">
           <pre
@@ -310,8 +320,10 @@ html-inbox list</code></pre>
           ><code>html-inbox delete &lt;document-id&gt; --force --json</code></pre>
         </div>
         <p>
-          Deletion removes the local record from the live library. It does not
-          update an existing static export or Cloudflare deployment. Run
+          Deletion removes the stored record from its original live inbox.
+          There is no Undo or bulk deletion. The original source file, existing
+          static exports, and Cloudflare deployments remain unchanged. Static
+          copies are read-only and contain no live viewer credentials. Run
           <code>remote publish</code> to replace the remote snapshot with the
           current library, and consider
           <a href="remote.html#revoke">historical deployment limits</a> before

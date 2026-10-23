@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { type DocumentSource, isSafeDocumentId } from "./documents";
 import {
   DOCUMENT_CSP,
+  LIVE_SHELL_CSP,
   SHELL_CSP,
   VIEWER_SCRIPT,
   VIEWER_STYLES,
@@ -15,6 +16,8 @@ import {
   resolveViewerNetworkConfig,
   ViewerNetworkConfig,
 } from "./viewer-network";
+import type { DocumentDeleter } from "./document-deletion";
+import { createViewerDocumentDeletion, hasSingleHeader } from "./viewer-document-deletion";
 
 export interface ViewerControlHealth {
   instanceId: string;
@@ -38,10 +41,12 @@ export interface ViewerHttpServer extends ViewerReaderServer {
 export interface ViewerSourceMount {
   name: string;
   source: DocumentSource;
+  deleteDocument?: DocumentDeleter;
 }
 
 type ReaderConfiguration = {
   source: DocumentSource;
+  deleteDocument?: DocumentDeleter;
   preferencesHome?: string;
   renderOptions: ViewerRenderOptions;
 } | {
@@ -55,8 +60,9 @@ export async function startViewerHttpServer(
   health: ViewerControlHealth,
   preferencesHome?: string,
   renderOptions: ViewerRenderOptions = {},
+  deleteDocument?: DocumentDeleter,
 ): Promise<ViewerHttpServer> {
-  const startingReader = startReaderServer({ source, preferencesHome, renderOptions }, configuration);
+  const startingReader = startReaderServer({ source, preferencesHome, renderOptions, deleteDocument }, configuration);
   const controlPath = `/control/${randomBytes(32).toString("base64url")}`;
   let controlPort = 0;
   const controlServer = http.createServer((request, response) => {
@@ -107,9 +113,14 @@ async function startReaderServer(
 ): Promise<ViewerReaderServer> {
   let config = resolveViewerNetworkConfig(configuration);
   let urls = getViewerUrls(config);
+  const deletion = createViewerDocumentDeletion(reader);
+  reader = { ...reader, renderOptions: {
+    ...reader.renderOptions,
+    deletion: deletion ? { token: deletion.token } : undefined,
+  } };
   const server = http.createServer((request, response) => {
     if (
-      hasSingleHost(request) &&
+      hasSingleHeader(request, "host") &&
       (config.host === "0.0.0.0" || config.host === "::") &&
       !isAllowedViewerHost(request.headers.host, config, urls)
     ) {
@@ -121,7 +132,7 @@ async function startReaderServer(
       }
     }
 
-    void routeReaderRequest(reader, config, urls, request, response).catch((error: unknown) => {
+    void routeReaderRequest(reader, config, urls, request, response, deletion).catch((error: unknown) => {
       console.error(error);
 
       if (response.headersSent) {
@@ -153,9 +164,15 @@ async function routeReaderRequest(
   urls: readonly string[],
   request: IncomingMessage,
   response: ServerResponse,
+  deletion: ReturnType<typeof createViewerDocumentDeletion>,
 ): Promise<void> {
-  if (!hasSingleHost(request) || !isAllowedViewerHost(request.headers.host, config, urls)) {
+  if (!hasSingleHeader(request, "host") || !isAllowedViewerHost(request.headers.host, config, urls)) {
     sendText(response, 421, "Misdirected Request");
+    return;
+  }
+
+  if (deletion && request.url?.startsWith("/api/")) {
+    await deletion.handle(request, response, config);
     return;
   }
 
@@ -196,13 +213,13 @@ async function routeReaderRequest(
           return { name, available: false, documents: [] };
         }
       }));
-      sendHtml(response, renderHubIndex(sources, query, url.searchParams.get("inbox") ?? "", reader.renderOptions), SHELL_CSP);
+      sendHtml(response, renderHubIndex(sources, query, url.searchParams.get("inbox") ?? "", reader.renderOptions), deletion ? LIVE_SHELL_CSP : SHELL_CSP);
       return;
     }
 
     const preferences = await readViewerPreferences(reader.preferencesHome);
     const renderOptions = { ...reader.renderOptions, ...preferences };
-    sendHtml(response, renderIndex(await reader.source.listDocuments(), query, renderOptions), SHELL_CSP);
+    sendHtml(response, renderIndex(await reader.source.listDocuments(), query, renderOptions), deletion ? LIVE_SHELL_CSP : SHELL_CSP);
     return;
   }
 
@@ -245,7 +262,7 @@ async function routeReaderRequest(
         homePath: `/?inbox=${encodeURIComponent(sourceName)}`,
         documentBasePath: `/sources/${sourceName}`,
       } : {}),
-    }), SHELL_CSP);
+    }), deletion ? LIVE_SHELL_CSP : SHELL_CSP);
   } catch (error) {
     if (!("mounts" in reader)) {
       throw error;
@@ -281,7 +298,7 @@ function routeControlRequest(
   response: ServerResponse,
 ): void {
   const config = { port, host: "127.0.0.1", exposure: "loopback" } satisfies ViewerNetworkConfig;
-  if (!hasSingleHost(request) || !isAllowedViewerHost(request.headers.host, config, [])) {
+  if (!hasSingleHeader(request, "host") || !isAllowedViewerHost(request.headers.host, config, [])) {
     sendText(response, 421, "Misdirected Request");
     return;
   }
@@ -301,17 +318,6 @@ function routeControlRequest(
   }
 
   sendJson(response, { ok: true, ...health });
-}
-
-function hasSingleHost(request: IncomingMessage): boolean {
-  let count = 0;
-  for (let index = 0; index < request.rawHeaders.length; index += 2) {
-    if (request.rawHeaders[index].toLowerCase() === "host") {
-      count += 1;
-    }
-  }
-
-  return count === 1;
 }
 
 function isReadRequest(request: IncomingMessage, response: ServerResponse): boolean {

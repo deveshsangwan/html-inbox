@@ -172,6 +172,13 @@
           no inbox listing.
         </p>
         <p>
+          Exported and hosted snapshots are read-only independent copies. They
+          have no live deletion controls or live viewer credentials. Deleting
+          a document through the CLI, live viewer, or hub changes its source
+          inbox and leaves the original source file and existing snapshots
+          unchanged.
+        </p>
+        <p>
           The output must be outside <code>HTML_INBOX_HOME</code> and cannot
           contain it. A recognized prior export can be replaced through staging;
           an unrelated directory is refused. Protect the output and its parent,
@@ -265,7 +272,8 @@ html-inbox remote status</code></pre>
         <p>
           <code>remote publish</code> deploys every current local document as a
           complete new snapshot and prints the production capability URL. Local
-          publishing and deletion do not deploy automatically.
+          publishing and deletion through the CLI, live viewer, or hub do not
+          deploy automatically.
         </p>
         <div class="docs-code">
           <pre

@@ -49,13 +49,17 @@ The local document store exposes these operations:
 - `getDocument(id)` for original document bytes
 - `deleteDocument(id)`
 
-Deletion first renames a committed document into the private trash area so it disappears from the library atomically, then removes the trash record. Search is a server-rendered filter over title, type, and source file name. There is no update, sync, tags, auth, or database layer in the local product.
+Deletion first renames a committed document into the private trash area so it disappears from the library atomically, then removes the trash record. If removal fails after the rename, the document is already absent from the live library and the operation reports the cleanup failure. Trash is an internal cleanup location, with no Undo. Deletion preserves the original publish source file and existing exported or remote snapshots. Search is a server-rendered filter over title, type, and source file name. There is no update, sync, tags, auth, or database layer in the local product.
+
+The hub explicitly binds a deletion writer for each mounted source to its captured canonical root, durable inbox UUID, and filesystem identity. This binding supports existing local libraries accessible to the same OS account. It does not add mutation to arbitrary document sources. Each deletion revalidates that binding; an unavailable or replaced source fails without recreating directories or choosing another source. Catalog name changes and list filters cannot retarget it.
 
 ## Viewer
 
-The viewer binds `127.0.0.1:3217` by default. Explicit LAN exposure selects a listening IP and serves the complete live inbox to reachable readers. Tailscale exposure keeps the backend on loopback and uses HTTPS Serve within the user's existing tailnet. Neither mode adds HTTP mutation or administration routes.
+The viewer binds `127.0.0.1:3217` by default. Explicit LAN exposure selects a listening IP and serves the complete live inbox to reachable readers. Tailscale exposure keeps the backend on loopback and uses HTTPS Serve within the user's existing tailnet. Every reachable live viewer or hub reader can permanently delete individual documents. There is no startup grant, reader login, or network-mode restriction. The owner's selected network determines which readers are trusted with this authority. Publishing, process control, service management, and hub membership have no reader HTTP endpoints.
 
 The reader accepts only explicit `Host` values derived from its configuration and reported interface URLs. Tailscale's exact verified DNS name is trusted configuration. Forwarded-host and identity headers do not authorize requests. The reader's `/health` response is anonymous. A separate loopback control listener returns the opaque inbox identity, protocol version, PID, and process identity through a private endpoint recorded under the inbox home.
+
+Live deletion requests require a process-scoped CSRF token and a matching Origin. These checks protect requests from other origins; they do not distinguish owners from reachable readers. Live shell responses use `frame-ancestors 'none'`. Stored document content retains its original bytes, opaque-origin iframe sandbox, and document CSP. Static exported or hosted snapshots are independent read-only copies and contain no live deletion controls or live viewer credentials.
 
 Use `HTML_INBOX_PORT` when the port is taken:
 
@@ -73,9 +77,9 @@ Documents render through a viewer-owned path inside a sandboxed iframe. The app 
 
 ## Appearance and reading layout
 
-The inbox list uses a compact header and responsive document rows. A document shell uses one toolbar with navigation, title, appearance, frame visibility, and a details menu. Hide frame removes the toolbar and document border/margins, leaving a Show frame control. The same iframe stays mounted so toggling retains its scroll and JavaScript state. Browser chrome remains outside the viewer's control.
+The inbox list uses a compact header and responsive document rows. A document shell uses one toolbar with navigation, title, appearance, frame visibility, and a details menu. Live list rows and document options offer Delete... for one document. Its modal identifies the title, filename, and inbox, defaults to Cancel, and explains permanent deletion and the retained source file and snapshots. There is no bulk deletion. Hide frame removes the toolbar and document border/margins, leaving a Show frame control. The same iframe stays mounted so toggling retains its scroll and JavaScript state. Browser chrome remains outside the viewer's control.
 
-`preferences.json` under the selected inbox home stores the setup appearance, `system`, `light`, or `dark`. A missing file resolves to System. `preferences --json` reads without creating a file; an explicit `--appearance` writes the preference. Reader routes remain read-only. The shell embeds the saved default for readers without a browser override, and a static export captures it at export time. Browser-local appearance overrides take priority, with System resolving against that reader's OS. They never update the local preferences file.
+`preferences.json` under the selected inbox home stores the setup appearance, `system`, `light`, or `dark`. A missing file resolves to System. `preferences --json` reads without creating a file; an explicit `--appearance` writes the preference. The reader has no preference-writing endpoint. The shell embeds the saved default for readers without a browser override, and a static export captures it at export time. Browser-local appearance overrides take priority, with System resolving against that reader's OS. They never update the local preferences file.
 
 Live viewer shells log unreadable preference errors and fall back to System so appearance settings cannot prevent reading documents. The invalid file is preserved; CLI preference commands and export paths retain strict validation.
 
@@ -106,7 +110,7 @@ Mermaid's CSP source includes its `dist/` subtree because the entry module loads
 
 ## Remote publishing
 
-Remote publishing follows [ADR 0001](adr/0001-static-remote-inbox.md). The local library remains the only mutable source of truth. A provider-independent module generates a complete static snapshot under a 128-bit capability path, and a deployment workflow sends that immutable snapshot through a Cloudflare Pages adapter. Administration remains local and the root of the deployed site does not list inboxes.
+Remote publishing follows [ADR 0001](adr/0001-static-remote-inbox.md). The local library remains the only mutable source of truth. A provider-independent module generates a complete static snapshot under a 128-bit capability path, and a deployment workflow sends that immutable snapshot through a Cloudflare Pages adapter. Remote publishing administration remains local and the root of the deployed site does not list inboxes. Live deletion changes only the source library; existing exports and deployments retain their copied documents until explicitly replaced or removed.
 
 The provider-independent export layout is:
 

@@ -4,15 +4,17 @@
 
 HTML Inbox is a local library for generated HTML reports, notes, and dashboards. The CLI validates and stores each document, then opens it through a viewer with an isolated document frame and a restrictive Content Security Policy. The viewer listens on loopback by default, with explicit LAN and Tailscale reader modes for self-hosting.
 
-HTML Inbox is local-first. Publishing, deletion, and process management stay in the local CLI. Optional Cloudflare Pages publishing deploys complete static snapshots; LAN and Tailscale modes serve the live library. See [ADR 0001](docs/adr/0001-static-remote-inbox.md).
+HTML Inbox is local-first. Every reachable live viewer or hub reader can permanently delete individual documents. Publishing and process management stay in the local CLI. Optional Cloudflare Pages publishing deploys complete read-only static snapshots; LAN and Tailscale modes serve the live library. See [ADR 0001](docs/adr/0001-static-remote-inbox.md).
 
 The CLI is packaged as a self-contained `html-inbox` executable with no runtime package dependencies.
 
 The unreleased named-inbox work lets you name independent local libraries and read an explicit set through a local hub. See [named inboxes and local reading](docs/named-inboxes.md) for selection, source membership, and exposure rules. Check the executable's `--help` for each command and flag; the published pinned `html-inbox@0.2.1` fallback lacks these features, and a checkout's version number alone does not prove support.
 
+Live UI deletion is also unreleased. Check the running viewer for **Delete...** before relying on it. Updating a skill does not update the CLI or a running viewer.
+
 With that support, library commands select explicit `--inbox` / `--home`, then process `HTML_INBOX_NAME` / `HTML_INBOX_HOME`, then a configured default. Without a binding or default, registered entries require a one-operation choice by exact name or `#N` row in a fully interactive terminal. Redirecting stdin, stdout, or stderr disables the picker. Pipelines, non-TTY callers, and `--json` fail with available names and selector guidance on stderr, leaving stdout empty. Even one entry requires a choice. With no registered entries, legacy `~/.html-inbox` first use remains. A choice never saves a current inbox or default.
 
-Use `html-inbox inbox list --running [--json]` for registered, verified running viewers. Human status, catalog, and document lists use text or tables; use advertised `--json` flags for automation. Check running-only, viewer JSON, and service JSON support separately. Plain publish, detached viewer startup, and hub startup retain URL-only stdout. Legacy viewer status/stop and service commands already emit JSON without a flag; check help before adding revised flags. JSON never prompts; deletion still requires `--force` and remote revocation `--yes`.
+Use `html-inbox inbox list --running [--json]` for registered, verified running viewers. Human status, catalog, and document lists use text or tables; use advertised `--json` flags for automation. Check running-only, viewer JSON, and service JSON support separately. Plain publish, detached viewer startup, and hub startup retain URL-only stdout. Legacy viewer status/stop and service commands already emit JSON without a flag; check help before adding revised flags. JSON never prompts; automated CLI deletion still requires `--force` and remote revocation `--yes`.
 
 ## Set up your agent
 
@@ -134,7 +136,9 @@ html-inbox viewer status
 html-inbox viewer stop
 ```
 
-Use `--json` with `list` or `delete` for automation. Non-interactive deletion requires `--force`. The viewer also supports server-rendered search across title, type, and source file name.
+Use `--json` with `list` or `delete` for automation. Non-interactive CLI deletion requires `--force`. The viewer also supports server-rendered search across title, type, and source file name.
+
+In a live viewer or combined hub, choose **Delete...** from a document's list row or document options. The confirmation shows the title, filename, and inbox, explains permanent deletion, and defaults to Cancel. Confirming removes that document from its original inbox. There is no Undo or bulk deletion. The original source file, existing exports, and remote snapshots remain unchanged. Static exported or hosted copies are read-only and contain no live viewer credentials.
 
 ## Reading documents and appearance
 
@@ -173,7 +177,7 @@ html-inbox viewer --tailscale
 
 Tailscale must already be signed in, with MagicDNS and HTTPS available. Reader access follows your tailnet policy. HTML Inbox keeps its backend on loopback, checks existing Serve and Funnel configuration, and refuses a conflicting route. It reports the verified HTTPS tailnet URL. It never installs Tailscale, logs in, changes access rules, enables Funnel, or resets all Serve configuration. Cleanup removes only its verified owned route. See the [Tailscale integration notes](docs/tailscale.md).
 
-`--loopback`, `--lan`, and `--tailscale` are mutually exclusive. Status reports the active mode and URLs. Commands without explicit networking options reuse the saved configuration, including after `viewer stop`. To return an exposed viewer to loopback, run `viewer stop`, then `viewer --loopback`. Publishing through the local CLI updates the live inbox for its readers. All HTTP routes remain read-only, and reader health responses contain no inbox or process identity.
+`--loopback`, `--lan`, and `--tailscale` are mutually exclusive. Status reports the active mode and URLs. Commands without explicit networking options reuse the saved configuration, including after `viewer stop`. To return an exposed viewer to loopback, run `viewer stop`, then `viewer --loopback`. Publishing through the local CLI updates the live inbox for its readers. Every reachable reader can also delete documents, with no startup grant, login, or mode restriction. Reader health responses contain no inbox or process identity; publishing and lifecycle control have no reader HTTP endpoints.
 
 ## Start the viewer at boot
 
@@ -242,7 +246,7 @@ HTML Inbox accepts UTF-8 `.html` and `.htm` files. HTTPS links in `<a href>` are
 
 Document-relative assets also produce advisory warnings. See [HTML compatibility](docs/html-compatibility.md) for supported resources and ways to embed them.
 
-Documents render inside an iframe sandbox without `allow-same-origin`, popup, or top-navigation permission. Links and allowed scripts can navigate the current preview frame; `_blank` links remain blocked. Viewer responses default to `no-referrer`, but author markup or script can override that policy or place data directly in a destination URL. Do not open stored document files directly in a browser. Choose LAN or Tailscale exposure explicitly and share the viewer only with readers you trust to see the complete live library.
+Documents render inside an iframe sandbox without `allow-same-origin`, popup, or top-navigation permission. Links and allowed scripts can navigate the current preview frame; `_blank` links remain blocked. Viewer responses default to `no-referrer`, but author markup or script can override that policy or place data directly in a destination URL. Do not open stored document files directly in a browser. Choose LAN or Tailscale exposure explicitly. Everyone who can reach the live viewer can read and delete documents in the complete library; hub filters do not restrict that authority.
 
 See [the architecture](docs/architecture.md) and [threat model](docs/threat-model.md) before changing storage, validation, rendering, or hosting behavior.
 

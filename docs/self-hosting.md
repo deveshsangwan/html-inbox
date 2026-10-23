@@ -2,7 +2,9 @@
 
 `html-inbox viewer` starts or reuses a detached viewer and returns after verifying that it is ready. The viewer survives terminal closure. `html-inbox viewer --foreground` keeps the process attached for debugging or an external service manager.
 
-First startup listens on loopback. Choose `--lan` or `--tailscale` explicitly to share the viewer. LAN access trusts everyone who can reach the port. The browser can read documents; publishing and deletion remain CLI commands.
+First startup listens on loopback. Choose `--lan` or `--tailscale` explicitly to share the viewer. Every reachable reader can read and permanently delete individual documents in every mode. Deletion is enabled by default without a startup grant or reader login. The owner's selected network determines who receives that authority. Publishing and process control remain local CLI operations.
+
+Choose **Delete...** from a live list row or document options. The confirmation shows the title, filename, and inbox and defaults to Cancel. Deletion removes the stored document, retaining the original source file, existing exports, and remote snapshots. There is no Undo or bulk deletion. Static exported and hosted snapshots are read-only independent copies with no live viewer credentials. See [the live deletion boundary](threat-model.md#live-self-hosting).
 
 The last successful port and exposure are saved in the private inbox. Later starts and publishing reuse those settings unless you select a port or exposure explicitly. Stop the viewer before changing its exposure. `html-inbox viewer --loopback` resets saved exposure to loopback.
 

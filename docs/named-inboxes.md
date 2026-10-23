@@ -2,7 +2,7 @@
 
 Home, Development, and Office can be independent libraries with separate documents, viewer ports, preferences, exports, and exposure settings. Naming a library records its existing location. It does not move or combine documents.
 
-This page describes unreleased named-inbox and hub work, including the revised terminal choice and output behavior. The published `html-inbox@0.2.1` package lacks these features. Check the actual executable's `--help` for the commands and flags you need; a source checkout can report the same version with different capabilities. Reading these docs or updating a skill does not install or deploy a CLI.
+This page describes unreleased named-inbox and hub work, including live single-document deletion and the revised terminal choice and output behavior. The published `html-inbox@0.2.1` package lacks these features. Check the actual executable's `--help` for the commands and flags you need, and the running viewer for **Delete...**; a source checkout can report the same version with different capabilities. Reading these docs or updating a skill does not install or deploy a CLI.
 
 ## Name libraries deliberately
 
@@ -83,7 +83,7 @@ html-inbox viewer stop --inbox development --json
 
 Check help for each command and flag before using them with an older CLI. Legacy viewer status/stop and service commands already output JSON without `--json`; do not pass a new flag to them. Check service JSON flags independently of viewer JSON flags, and the running-only filter independently of named commands. The picker and revised flags require actual capability checks rather than a package-version assumption. If the required feature is absent, report its availability and preserve the intended destination. A missing capability does not authorize an upgrade or a publish into another home.
 
-JSON mode also suppresses destructive confirmation prompts. It does not imply approval: deletion still requires `--force`, and remote revocation still requires `--yes`.
+JSON mode also suppresses destructive confirmation prompts. It does not imply approval: automated CLI deletion still requires `--force`, and remote revocation still requires `--yes`.
 
 Named context and picker text go to stderr, preserving URL-only stdout for plain `publish`, detached viewer startup, and hub startup. `publish --json` returns the existing receipt with `url`, `inbox`, and `home`. Viewer status includes the configured name, and newly started viewers show it in the heading. Share the exact verified reader URL, keeping catalog paths and private control details local.
 
@@ -122,9 +122,13 @@ html-inbox hub --config /absolute/path/to/reading-hub.json --port 4322
 
 The hub serves one combined list and search over all selected inboxes, with inbox badges and a source filter. Document links contain the source name plus original document ID, so identical IDs in different libraries remain distinct. Content routes return the original bytes through the existing sandbox and CSP. Standalone viewer and export URLs retain their existing forms.
 
-Source viewers may be stopped. The hub reads existing files directly without creating directories, changing permission modes, writing preferences, or copying runtime records. A missing source never becomes a new empty library. Unavailable or mismatched sources produce an incomplete-results notice while healthy sources remain readable. Reader output contains selected source names and availability, without catalog paths, control endpoints, or detailed filesystem errors. The foreground hub writes source names and detailed failure causes to stderr for operator diagnosis.
+Every reachable live hub reader can permanently delete individual documents from every mounted inbox. Choose **Delete...** on a list row or in document options. The modal shows the title, filename, and source inbox, explains permanent deletion, and defaults to Cancel. There is no Undo or bulk deletion. The original source file, existing exports, and remote snapshots remain unchanged. Static exported or hosted snapshots are read-only independent copies with no live viewer credentials.
 
-A corrupt committed record makes its source unavailable rather than presenting a partial source as complete. Hub content reads use `HTML_INBOX_MAX_BYTES`, default 10 MiB per document. Set the same larger limit when reading libraries that were intentionally published with a larger limit. These source results are a reading view, not an authoritative inventory for deleting or replicating documents.
+Source viewers may be stopped. The hub reads existing files directly without creating directories, changing permission modes, writing preferences, or copying runtime records. Each source has an explicitly bound deletion writer for its captured canonical root, expected UUID, and filesystem identity, under the same OS account. It revalidates that binding before deleting, rather than resolving a mutable catalog name or accepting a target path from the browser. A missing or replaced source fails without creating a new library or targeting another source.
+
+Unavailable or mismatched sources produce an incomplete-results notice while healthy sources remain readable. Reader output contains selected source names and availability, without catalog paths, control endpoints, or detailed filesystem errors. The foreground hub writes source names and detailed failure causes to stderr for operator diagnosis. Deletion renames a record out of its source library before purging it. If purge fails, the record is already absent and the cleanup failure is reported.
+
+A corrupt committed record makes its source unavailable rather than presenting a partial source as complete. Hub content reads use `HTML_INBOX_MAX_BYTES`, default 10 MiB per document. Set the same larger limit when reading libraries that were intentionally published with a larger limit. An incomplete result is not a complete inventory for cleanup or replication; deletion of a specific document still validates its bound source and document identity.
 
 The hub runs in the foreground until Ctrl-C. Its default listener is loopback port 3218. Multiple hubs and standalone viewers can run on distinct listeners. A hub does not choose publication destinations or own the mounted libraries' lifecycle.
 
@@ -134,6 +138,8 @@ LAN exposure is a separate explicit choice:
 html-inbox hub --config /absolute/path/to/reading-hub.json --lan --host 192.168.1.20 --port 4322
 ```
 
-Everyone who reaches that hub can read every selected library, even if its standalone viewer is stopped or private. Filtering is reading convenience, not access control. This version does not configure Tailscale Serve or boot services for hubs. Existing Tailscale routes and source viewers' saved modes remain independent.
+Everyone who reaches that hub can read and delete documents in every selected library, even if its standalone viewer is stopped or private. Filtering is reading convenience, not access control. Deletion is enabled by default without a startup grant, login, or network-mode restriction. The owner's chosen network determines reader trust. Host validation, a process-scoped CSRF token and matching Origin, and live-shell `frame-ancestors 'none'` protect deletion requests without adding reader roles. Publishing, membership changes, process control, and service administration remain local operations.
+
+This version does not configure Tailscale Serve or boot services for hubs. Existing Tailscale routes and source viewers' saved modes remain independent. If a live hub is reachable through an owner-configured route, its readers have the same deletion authority as readers on loopback or LAN.
 
 Only libraries accessible to the same OS account on the same machine are supported. Network replication, other accounts, remote ingestion, and migration of historical fragments are outside this version.

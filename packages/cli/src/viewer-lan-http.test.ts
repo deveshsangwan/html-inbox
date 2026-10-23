@@ -154,7 +154,7 @@ test("explicit bindings retain their configured Host inventory after interface c
   }
 });
 
-test("LAN reads the live inbox without granting HTTP mutations and preserves document protections", async (t) => {
+test("a source-only LAN adapter rejects HTTP mutations and preserves document protections", async (t) => {
   const home = await temporaryHome(t);
   const backend = new LocalDocumentBackend(home);
   const originalBytes = Buffer.from("<!doctype html><html><body><h1>LAN report</h1></body></html>");
