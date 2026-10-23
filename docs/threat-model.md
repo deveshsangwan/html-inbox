@@ -52,6 +52,8 @@ Tailscale mode delegates encrypted transport and reader access to the existing s
 
 Publishing, deletion, startup, and stop remain local CLI operations. The exposed reader has no administration endpoints. Private process records and startup logs follow the same filesystem protections as documents. Boot services are installed explicitly with administrator privileges, run the viewer as a normal user, and refuse unrelated definitions. A privileged administrator or another process running as the same user remains trusted.
 
+Copy controls operate in the trusted reader shell. A read-only JSON resource derives plain text from saved HTML using parse5; it does not execute author code or insert author nodes into the shell. Clipboard writes require a shell user action and never follow document messages. Same-origin shell fetch permission does not relax the document's connection policy, opaque origin, or response sandbox. Copied strings remain document-authored data, and native Copy inside the preview can still be changed by the document's own copy handler. No HTML source or rich HTML clipboard format is provided. Clipboard access can fail under browser transport, activation, or permission rules, so the shell retains selectable text for manual copying.
+
 ## Storage privacy
 
 Named inbox catalog entries are trusted local configuration, separate from reader output. Names bind a canonical root and expected durable UUID; process reuse and shutdown still require verified private lifecycle identity. The catalog never grants network reader access.

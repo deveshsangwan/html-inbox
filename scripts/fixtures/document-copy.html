@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Saved copy fixture</title><style>body { min-height: 2200px; }</style></head>
+<body>
+<h1>Saved copy fixture</h1>
+<p>A &amp; B, emoji 🐈 and שלום.</p>
+<pre><code>  const value = "&lt;tag&gt;";
+	return value;&#32;&#32;
+
+</code></pre>
+<pre>graph TD
+  A --&gt; B
+</pre>
+<script>
+  const button = document.createElement("button");
+  button.textContent = "Increment runtime";
+  const counter = document.createElement("output");
+  counter.id = "counter";
+  counter.textContent = "0";
+  button.addEventListener("click", () => { counter.textContent = String(Number(counter.textContent) + 1); });
+  document.body.append(button, counter);
+  window.addEventListener("message", (event) => {
+    if (event.data?.type === "html-inbox:appearance") document.documentElement.dataset.bridgeTheme = event.data.theme;
+  });
+</script>
+</body>
+</html>

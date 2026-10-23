@@ -140,6 +140,10 @@ Use `--json` with `list` or `delete` for automation. Non-interactive deletion re
 
 The inbox has a compact searchable list. Documents open beneath a slim toolbar on mobile and desktop. **Hide frame** gives the document the available browser area; the small **Show frame** button restores the toolbar. The iframe remains mounted, preserving document state and scroll. Document metadata is available in the details menu.
 
+Choose **Viewer options → Copy content...** to copy saved **Document text** or individual **Code blocks** as plain text. Use **Copy all**, select a portion and choose **Copy selection**, or pick a numbered code block. Code indentation, tabs, and trailing whitespace are preserved after normal HTML parsing. The preview stays loaded while the dialog is open.
+
+Copy text comes from the saved HTML, so scripted changes, edited form values, and chart visuals may be missing; CSS-hidden text can remain. To copy a selection from the current preview, use the browser's keyboard, context menu, or touch Copy. When automatic copying is unavailable or denied, use **Select all** in the dialog and your device's Copy command. This fallback also supports ordinary HTTP LAN readers. Copying changes only the reader's clipboard, and works in named viewers, the read-only hub, and newly generated static snapshots.
+
 Appearance defaults to **System**, with **Light** and **Dark** overrides in the reader. The selected appearance applies to the inbox, frame, and documents that support it. Browser choices persist on that origin and device; they do not write to the CLI's preferences or sync across devices. Selecting System follows the reader's OS.
 
 Set the initial appearance for readers without a browser override:

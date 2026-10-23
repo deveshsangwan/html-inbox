@@ -71,6 +71,14 @@ Boot configuration is an explicit service operation. Linux systemd system units 
 
 Documents render through a viewer-owned path inside a sandboxed iframe. The app shell lists documents and opens one document at a time; raw files are never rendered directly into the shell DOM.
 
+## Copying saved content
+
+Viewer options opens a native copy dialog without replacing the preview frame. It prepares plain document text and ordered preformatted code blocks from the saved HTML through the shared parse5 extractor. Body structure and preformatted whitespace are retained; scripts, styles, metadata, templates, noscript, and explicit hidden subtrees are omitted. CSS visibility and live document state are not reconstructed. Copy selection uses the dialog textarea's offsets; selections inside the opaque preview use the browser's own Copy command.
+
+Preparation reads `/documents/<id>/copy.json`, or `/sources/<name>/documents/<id>/copy.json` for a hub mount, through the already-selected `DocumentSource`. Ordinary shells still read metadata only. The resource is GET/HEAD-only JSON with no-store and nosniff headers. The shell allows same-origin connections for preparation; document CSP and sandboxing remain unchanged. The client bounds streamed bytes, validates the versioned payload, rejects redirects, and ignores cancelled or stale work. It inserts only text values, then writes the clipboard on a fresh activation. Missing or rejected clipboard access leaves manual selection available.
+
+Extraction checks the configured input limit before parsing, but the existing standalone backend read remains unbounded before that check. Encoded copy JSON is limited to 10 MiB; excessive output or invalid UTF-8 produces an unavailable result without truncating content or disabling the preview. Parsing is synchronous. Static exports derive a sibling `copy.json` from the same buffer used for original content and include it in the hashed inventory under the capability path. This adds one file per document against provider upload limits; large libraries can therefore reach a provider's file ceiling sooner. Existing deployments change only when their owner regenerates and publishes a snapshot.
+
 ## Appearance and reading layout
 
 The inbox list uses a compact header and responsive document rows. A document shell uses one toolbar with navigation, title, appearance, frame visibility, and a details menu. Hide frame removes the toolbar and document border/margins, leaving a Show frame control. The same iframe stays mounted so toggling retains its scroll and JavaScript state. Browser chrome remains outside the viewer's control.
