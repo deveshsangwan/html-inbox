@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { cp, mkdir, mkdtemp, readFile, readdir, rm, utimes, writeFile } from "node:fs/promises";
+import fs, { cp, mkdir, mkdtemp, readFile, readdir, rm, utimes, writeFile } from "node:fs/promises";
 import http from "node:http";
 import https from "node:https";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import platformTest, { type TestContext } from "node:test";
+import platformTest, { mock, type TestContext } from "node:test";
 import { SyncClient } from "./sync-client";
 import { createSyncHttpsCredentials, type SyncHttpsCredentials } from "./sync-https-fixtures";
 import { outboxKey, parseLedger } from "./sync-ledger";
@@ -48,28 +48,55 @@ async function connect(source: Inbox, receiver: Inbox, sourceUrl: string, receiv
   return { outbound, inbound };
 }
 
-async function application(t: TestContext, fixture: Inbox, tls: SyncHttpsCredentials, token: string, requestMs = 3000) {
+type FixtureContext = Pick<TestContext, "after" | "diagnostic">;
+
+async function application(t: FixtureContext, fixture: Inbox, tls: SyncHttpsCredentials, token: string, requestMs = 3000) {
   return startSyncApplication(t, { home: fixture.home, peerId: fixture.peerId, token, ...tls.trusted, requestMs });
 }
 
 async function pair(t: TestContext, options: { proxy?: boolean; sourceListener?: boolean } = {}) {
   const root = await mkdtemp(path.join(tmpdir(), "html-inbox-protocol-faults-"));
-  t.after(() => rm(root, { recursive: true, force: true }));
-  const tls = await createSyncHttpsCredentials(t);
+  const cleanup: Array<() => Promise<void>> = [];
+  t.after(async () => {
+    const failures: unknown[] = [];
+    for (const close of cleanup.reverse()) {
+      try {
+        await close();
+      } catch (error) {
+        failures.push(error);
+      }
+    }
+
+    if (failures.length) {
+      throw new AggregateError(failures, "Protocol fixture cleanup failed; shared store retained");
+    }
+
+    // Node runs after hooks in registration order; shared stores must outlive every writer.
+    await rm(root, { recursive: true, force: true });
+  });
+  const context: FixtureContext = {
+    after(close) {
+      if (close) {
+        cleanup.push(async () => { await close(t, () => {}); });
+      }
+    },
+    diagnostic: (message) => t.diagnostic(message),
+  };
+  const tls = await createSyncHttpsCredentials(context);
   const token = opaqueToken();
   const ca = await readFile(tls.caPath);
   const source = await inbox(root, "source");
   const receiver = await inbox(root, "receiver");
-  const receiverServer = await application(t, receiver, tls, token);
-  const sourceServer = options.sourceListener ? await application(t, source, tls, token) : undefined;
-  const proxy = options.proxy ? await startProtocolFaultChild(t, { mode: "proxy", home: tls.directory, upstreamUrl: receiverServer.url,
+  const receiverServer = await application(context, receiver, tls, token);
+  const sourceServer = options.sourceListener ? await application(context, source, tls, token) : undefined;
+  const proxy = options.proxy ? await startProtocolFaultChild(context, { mode: "proxy", home: tls.directory, upstreamUrl: receiverServer.url,
     caPath: tls.caPath, ...tls.trusted }) : undefined;
   const routes = await connect(source, receiver, sourceServer?.url ?? "https://127.0.0.1:1", proxy?.url ?? receiverServer.url);
   const credentials = () => ({ token, ca });
   const run = (fixture = source, route = routes.outbound, settings: Partial<ReconcileOptions> = {}) =>
     reconcileSyncRoutes({ store: fixture.store, peerId: fixture.peerId, credentials, routeIds: [route.id], requestMs: 1500, deadlineMs: 8000, ...settings });
 
-  return { root, tls, token, ca, source, receiver, sourceServer, receiverServer, proxy, credentials, run, ...routes };
+  return { root, context, tls, token, ca, source, receiver, sourceServer, receiverServer, proxy, credentials, run, ...routes };
 }
 
 type Pair = Awaited<ReturnType<typeof pair>>;
@@ -200,7 +227,7 @@ test("ingestion has no process administration; actual reader and private control
   const identity = await f.receiver.store.snapshot();
   const viewer = await startViewerHttpServer(f.receiver.store, { port: 0, host: "127.0.0.1", exposure: "loopback" },
     { instanceId: identity.inboxId, processId: randomUUID(), protocolVersion: 1, pid: process.pid }, f.receiver.home);
-  t.after(async () => {
+  f.context.after(async () => {
     await viewer.close();
     await assertLoopbackClosed(viewer.urls[0]);
     await assertLoopbackClosed(viewer.controlUrl);
@@ -361,7 +388,7 @@ test("opaque manifest cursors reject cross-session and cross-route reuse and ret
 test("an older HTTPS server establishes durability before exposing another process's uncertain custody", { timeout: 20_000 }, async (t) => {
   const f = await pair(t);
   assert.equal((await f.run()).routes[0].status, "confirmed");
-  const oldReader = await application(t, f.receiver, f.tls, f.token);
+  const oldReader = await application(f.context, f.receiver, f.tls, f.token);
   const binding = await bindingFor(f.source, f.outbound);
   const identities = [{ originInboxId: f.outbound.sourceInboxId, originDocumentId: "uncertain-wire" }];
   const empty = await request(oldReader.url, f.ca, f.token, binding, "/sync/v1/holdings", Buffer.from(JSON.stringify({ identities })));
@@ -493,7 +520,7 @@ test("actual sender process killed after receipt persistence recovers retirement
   const f = await pair(t);
   await f.source.store.publish(input, "sender-crash");
   const original = await stateFor(f.source, "sender-crash");
-  const runner = await startProtocolFaultChild(t, { mode: "runner", home: f.source.home, peerId: f.source.peerId, token: f.token, caPath: f.tls.caPath });
+  const runner = await startProtocolFaultChild(f.context, { mode: "runner", home: f.source.home, peerId: f.source.peerId, token: f.token, caPath: f.tls.caPath });
   await runner.command({ type: "arm" });
   const sending = runner.command({ type: "run", routeIds: [f.outbound.id] });
   const observed = Promise.allSettled([sending]);
@@ -524,7 +551,7 @@ test("actual sender process killed after receipt persistence recovers retirement
 test("five unchanged wire passes open, hash and transfer zero managed HTML with positive calibration", { timeout: 20_000 }, async (t) => {
   const f = await pair(t);
   await f.source.store.publish(input, "no-op-wire");
-  const runner = await startProtocolFaultChild(t, { mode: "runner", home: f.source.home, peerId: f.source.peerId, token: f.token, caPath: f.tls.caPath });
+  const runner = await startProtocolFaultChild(f.context, { mode: "runner", home: f.source.home, peerId: f.source.peerId, token: f.token, caPath: f.tls.caPath });
   const first = await runner.command({ type: "run", routeIds: [f.outbound.id] });
   assert.equal(first.error, undefined);
   assert.ok(Number(first.htmlReadOpens) > 0, "filesystem read-open probe must observe the actual first transfer");
@@ -561,7 +588,7 @@ test("cross-process local revoke after remote commit fences all later starts and
   assert.ok(f.proxy);
   await f.source.store.publish(input, "revoke-after-commit");
   await f.proxy.command({ type: "arm", pathname: "/sync/v1/body", method: "PUT", kind: "pause" });
-  const runner = await startProtocolFaultChild(t, { mode: "runner", home: f.source.home, peerId: f.source.peerId, token: f.token, caPath: f.tls.caPath });
+  const runner = await startProtocolFaultChild(f.context, { mode: "runner", home: f.source.home, peerId: f.source.peerId, token: f.token, caPath: f.tls.caPath });
   const sending = runner.command({ type: "run", routeIds: [f.outbound.id] });
   const observed = Promise.allSettled([sending]);
   await f.proxy.waitFor("paused");
@@ -699,6 +726,57 @@ function partialBody(url: string, f: Pair, binding: RequestBinding, transferId: 
   return { pending, outcome };
 }
 
+test("protocol fixture teardown reaps every application before removing its shared store", { timeout: 15_000 }, async (t) => {
+  const applications: Awaited<ReturnType<typeof application>>[] = [];
+  const originalRemove = fs.rm;
+  let root: string | undefined;
+  let removalChecks = 0;
+  const writersAtRemoval: number[] = [];
+  const remove = mock.method(fs, "rm", async (...args: Parameters<typeof fs.rm>) => {
+    if (root !== undefined && args[0] === root) {
+      removalChecks += 1;
+      for (const app of applications) {
+        const pid = app.pid;
+        assert.ok(pid);
+
+        try {
+          process.kill(pid, 0);
+          writersAtRemoval.push(pid);
+        } catch (error) {
+          assert.ok(error instanceof Error && "code" in error && error.code === "ESRCH");
+        }
+      }
+
+      // Record unsafe ordering, then stop the real writers so a red assertion cannot leak children.
+      await Promise.all(applications.map((app) => app.stop()));
+    }
+
+    return originalRemove(...args);
+  });
+
+  try {
+    const f = await pair(t);
+    root = f.root;
+    applications.push(f.receiverServer);
+    applications.push(await application(f.context, f.receiver, f.tls, f.token));
+    applications.push(await application(f.context, f.receiver, f.tls, f.token));
+  } finally {
+    t.after(async () => {
+      try {
+        await Promise.all(applications.map((app) => app.stop()));
+        if (root !== undefined) {
+          await originalRemove(root, { recursive: true, force: true });
+        }
+      } finally {
+        remove.mock.restore();
+      }
+
+      assert.equal(removalChecks, 1);
+      assert.deepEqual(writersAtRemoval, [], "Every fixture writer must be reaped before shared store removal begins");
+    });
+  }
+});
+
 for (const quota of ["bytes", "files"]) {
   test(`real concurrent HTTPS streams share the staging ${quota} quota across application processes`, { timeout: 30_000 }, async (t) => {
     const f = await pair(t);
@@ -710,7 +788,7 @@ for (const quota of ["bytes", "files"]) {
     const count = quota === "bytes" ? 6 : 16;
     const servers: Awaited<ReturnType<typeof application>>[] = [];
     for (let index = 0; index < Math.ceil((count + 1) / 4); index += 1) {
-      servers.push(await application(t, f.receiver, f.tls, f.token, 15_000));
+      servers.push(await application(f.context, f.receiver, f.tls, f.token, 15_000));
     }
 
     const binding = await bindingFor(f.source, f.outbound);
@@ -817,7 +895,7 @@ test("partial HTTPS stage survives live recovery and is reclaimed only after its
     assert.equal(await stream.outcome, 0);
     await new ManagedSyncStore(f.receiver.home).recover();
     assert.equal((await readdir(staging)).length, 0);
-    const restarted = await application(t, f.receiver, f.tls, f.token);
+    const restarted = await application(f.context, f.receiver, f.tls, f.token);
     const response = await request(restarted.url, f.ca, f.token, binding, "/sync/v1/offer", Buffer.from(JSON.stringify({ descriptor: state })));
     const retry = parseOfferResponse(decodeJson(response.body));
     if (retry.status !== "needs-body") {

@@ -12,7 +12,9 @@ if (files.length === 0) {
   throw new Error("No compiled tests found. Run the build first.");
 }
 
-const child = spawn(process.execPath, ["--test", ...files], { stdio: "inherit" });
+// TAP emits each failure immediately, even when another test later holds the process open.
+const reporter = process.env.GITHUB_ACTIONS === "true" ? ["--test-reporter=tap"] : [];
+const child = spawn(process.execPath, ["--test", ...reporter, ...files], { stdio: "inherit" });
 child.once("error", (error) => {
   console.error(error);
   process.exitCode = 1;
