@@ -1,3 +1,4 @@
+import { parseViewerLocalOwner, type ViewerLocalOwner } from "./viewer-ownership";
 import { randomUUID } from "node:crypto";
 import { constants } from "node:fs";
 import { lstat, open, readFile, rm } from "node:fs/promises";
@@ -18,6 +19,7 @@ export interface ViewerRecord {
   controlUrl: string;
   startedAt: string;
   shutdownError?: string;
+  localOwner?: ViewerLocalOwner;
 }
 
 export interface SavedViewerConfiguration {
@@ -96,6 +98,7 @@ export async function readViewerRecord(
     urls: parseViewerUrls(value.urls, config),
     controlUrl: value.controlUrl,
     startedAt: value.startedAt,
+    ...(value.localOwner === undefined ? {} : { localOwner: parseViewerLocalOwner(value.localOwner) }),
     ...(value.shutdownError ? { shutdownError: value.shutdownError } : {}),
   };
 }

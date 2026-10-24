@@ -90,7 +90,15 @@ export async function inspectInboxHome(home: string): Promise<{ home: string; in
       throw error;
     });
     if (documents && (!documents.isDirectory() || documents.isSymbolicLink())) {
-      throw new InboxInspectionError("incompatible", `Inbox documents must be a regular directory: ${documentsPath}`);
+      const { ManagedSyncStore } = await import("./sync-store.js");
+      if (!documents.isFile() || documents.isSymbolicLink() || !await ManagedSyncStore.isEnrolled(canonicalHome)) {
+        throw new InboxInspectionError("incompatible", `Inbox documents must be a legacy directory or managed format barrier: ${documentsPath}`);
+      }
+
+      const ledger = await new ManagedSyncStore(canonicalHome).snapshot();
+      if (ledger.inboxId !== instanceId) {
+        throw new InboxInspectionError("conflict", "Managed inbox identity differs from its reader identity");
+      }
     }
 
     if (!instanceId && !documents) {
