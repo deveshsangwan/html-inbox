@@ -9,6 +9,7 @@ import { defaultRuntimeConfig } from "./sync-runtime-config";
 import { ManagedSyncStore } from "./sync-store";
 import { temporaryHome, availablePort } from "./test-fixtures";
 import { parseObject } from "./sync-model";
+import { routeAuthorization } from "./sync-reconciliation";
 
 const test = process.platform === "win32" ? platformTest.skip : platformTest;
 
@@ -21,13 +22,92 @@ async function publicationFixture(t: TestContext) {
   const peerId = randomUUID();
   await store.configureRuntime({ ...defaultRuntimeConfig(), intendedTarget: { peerId, destinationInboxId: peerId } });
   const ledger = await store.snapshot();
-  await store.configureRoute({ id: randomUUID(), revision: 1, direction: "outbound", peerId, peerUrl: `https://127.0.0.1:${await availablePort()}`,
+  const route = await store.configureRoute({ id: randomUUID(), revision: 1, direction: "outbound", peerId, peerUrl: `https://127.0.0.1:${await availablePort()}`,
     sourceInboxId: entry.instanceId, destinationInboxId: peerId, localInboxName: entry.name, readerAudience: "unknown", allowedOrigins: ledger.originKeys,
     credentialRef: "missing", tlsTrustRef: "missing", state: "reconnecting", lastError: null });
   const filePath = path.join(root, "report.html");
   await writeFile(filePath, "<!doctype html><html><body>durable synthetic report</body></html>");
   const env = { PATH: process.env.PATH, HOME: root, HTML_INBOX_CATALOG_HOME: catalogHome, HTML_INBOX_HOME: entry.home };
-  return { root, entry, store, filePath, env };
+  return { root, entry, store, route, filePath, env };
+}
+
+for (const failure of [
+  { code: "unauthorized", recorded: false },
+  { code: "tls-verification-failed", recorded: false },
+  { code: "peer-identity-conflict", recorded: false },
+  { code: "invalid-response-envelope", recorded: true },
+  { code: "incomplete-history", recorded: true },
+  { code: "verified-transport-failed", recorded: true },
+]) {
+  test(`a history-gated publication preserves a permanent route block: ${failure.code}`, async (t) => {
+    const value = await publicationFixture(t);
+    const auth = routeAuthorization(value.route);
+    await value.store.setWorkerEnabled(true);
+    await value.store.setRouteError(auth, failure.code);
+    if (failure.recorded) {
+      await value.store.recordRouteRun(auth, failure.code, true);
+    }
+
+    const before = await value.store.snapshot();
+    const result = await publishWithoutViewer(value);
+    assert.equal(result.code, 3, result.stderr);
+    const output = parseObject(JSON.parse(result.stdout), "publication");
+    assert.deepEqual(output.local, { durable: true, queued: true });
+    const delivery = parseObject(output.delivery, "delivery");
+    assert.equal(delivery.state, "blocked");
+    assert.equal(delivery.receipt, null);
+    assert.equal(delivery.retriesEnabled, true);
+    const after = await value.store.snapshot();
+    assert.deepEqual(after.routeRetries, before.routeRetries);
+    assert.equal(after.routes[value.route.id]?.state, "reconnecting");
+    assert.equal(after.routes[value.route.id]?.lastError, failure.code);
+    assert.equal(Object.values(after.outbox)[0]?.lastError, "Trusted terminal history is required");
+    assert.equal(Object.values(after.outbox)[0]?.disposition, "blocked");
+    assert.equal(Object.keys(after.receipts).length, 0);
+    assert.equal(Object.keys(after.historyCheckpoints).length, 0);
+    assert.equal(parseObject(output.worker, "worker").running, false);
+  });
+}
+
+for (const paused of [false, true]) {
+  test(`a recoverable history gate remains durable pending with ${paused ? "paused" : "disabled"} retries`, async (t) => {
+    const value = await publicationFixture(t);
+    const auth = routeAuthorization(value.route);
+    await value.store.setRouteError(auth, "verified-transport-failed");
+    await value.store.recordRouteRun(auth, "verified-transport-failed", false);
+    await value.store.setWorkerEnabled(paused);
+    await value.store.setRetryPaused(paused);
+
+    const before = await value.store.snapshot();
+    const result = await publishWithoutViewer(value);
+    assert.equal(result.code, 2, result.stderr);
+    const output = parseObject(JSON.parse(result.stdout), "publication");
+    assert.deepEqual(output.local, { durable: true, queued: true });
+    const delivery = parseObject(output.delivery, "delivery");
+    assert.equal(delivery.state, "pending");
+    assert.equal(delivery.reason, paused ? "retries-paused" : "worker-disabled");
+    assert.equal(delivery.receipt, null);
+    assert.equal(delivery.retriesEnabled, false);
+    const after = await value.store.snapshot();
+    assert.deepEqual(after.routeRetries, before.routeRetries);
+    assert.equal(after.routes[value.route.id]?.state, "reconnecting");
+    assert.equal(Object.values(after.outbox)[0]?.disposition, "blocked");
+    assert.equal(Object.values(after.outbox)[0]?.attempts, 0);
+    assert.equal(Object.keys(after.receipts).length, 0);
+    assert.equal(Object.keys(after.historyCheckpoints).length, 0);
+    assert.equal(parseObject(output.worker, "worker").running, false);
+  });
+}
+
+function publishWithoutViewer(value: Awaited<ReturnType<typeof publicationFixture>>) {
+  const script = `
+    const [directory, filePath] = process.argv.slice(1);
+    const path = require("node:path");
+    require(path.join(directory, "viewer-server.js")).ensureViewer = async () => { throw new Error("Synthetic viewer unavailable"); };
+    require(path.join(directory, "index.js")).main(["publish", filePath, "--title", "History gate", "--type", "report", "--inbox", "source", "--json"])
+      .catch(error => { console.error(error); process.exitCode = 1; });
+  `;
+  return runScript(script, [__dirname, value.filePath], value.env);
 }
 
 test("first post-commit receipt lookup deadline still prints saved/pending JSON and exits 2", async (t) => {

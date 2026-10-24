@@ -6,6 +6,7 @@ import type { ResolvedInboxSelection } from "./inbox-selection";
 import { assertManagedLifecycle } from "./sync-lifecycle";
 import { ManagedSyncStore } from "./sync-store";
 import type { DurableReceipt } from "./sync-ledger";
+import { isBlockedRouteFailure } from "./sync-failure";
 import { defaultRuntimeConfig, type SyncTarget } from "./sync-runtime-config";
 import { contactWorker, ensureOwnedSyncWorker, getOwnedWorkerStatus } from "./sync-worker-client";
 import { ensureViewer } from "./viewer-server";
@@ -39,7 +40,9 @@ export async function publishManagedDocument(request: PublishRequest, selection:
     const deadlineAt = publication.committedAt + (request.waitMs ?? timings.foregroundMs);
     const requestMs = request.requestTimeoutMs ?? timings.requestMs;
     const ticketId = randomUUID();
+    let ticketSubmissionAttempted = false;
     let ticketSubmitted = false;
+    let cancellationAttempted = false;
     let viewer: { url: string | null; state: "running" | "failed"; error: string | null } = { url: null, state: "failed", error: "viewer-not-ready-within-foreground-budget" };
     const viewerTimer = setTimeout(() => viewerController.abort(), Math.max(1, deadlineAt - Date.now() - 150));
     const viewerPromise = ensureViewer(selection.home, process.env.HTML_INBOX_PORT ? getViewerPort() : undefined, selection.name, { deadlineAt, signal: viewerController.signal })
@@ -63,6 +66,7 @@ export async function publishManagedDocument(request: PublishRequest, selection:
         await ensureOwnedSyncWorker(selection.home, { deadlineAt: finishAt, signal: viewerController.signal });
         const routes = await matchingRoutes();
         if (routes.length && Date.now() < finishAt) {
+          ticketSubmissionAttempted = true;
           await contactWorker(selection.home, "run", { ticketId, routeIds: routes.map((route) => route.id), deadlineAt: finishAt, requestMs }, finishAt, viewerController.signal);
           ticketSubmitted = true;
         }
@@ -91,11 +95,11 @@ export async function publishManagedDocument(request: PublishRequest, selection:
       }
     }
 
-    if (ticketSubmitted && (interrupted || delivery.state !== "confirmed")) {
-      await contactWorker(selection.home, "cancel", ticketId, Math.min(deadlineAt, Date.now() + 150)).catch(() => {});
+    if (interrupted && ticketSubmissionAttempted || ticketSubmitted && delivery.state !== "confirmed") {
+      await cancelForegroundTicket();
     }
 
-    if (!interrupted && Date.now() < deadlineAt) {
+    if (!interrupted && delivery.state !== "confirmed" && Date.now() < deadlineAt) {
       delivery = await inspectDelivery(deadlineAt).catch((error) => {
         if (!isForegroundDeadline(error)) {
           throw error;
@@ -105,20 +109,30 @@ export async function publishManagedDocument(request: PublishRequest, selection:
       });
     }
 
+    await viewerPromise;
+    const worker = await getOwnedWorkerStatus(selection.home, Math.min(deadlineAt, Date.now() + 100)).catch(() => ({ enabled: ledger.worker.enabled, running: null,
+      processState: "unknown", retryPaused: ledger.worker.retryPaused, ingestion: { state: "unknown", url: null }, bootSupervised: null, setupReasons: ["Worker status could not be verified within the foreground budget."] }));
+
+    if (interrupted && ticketSubmissionAttempted && !cancellationAttempted) {
+      await cancelForegroundTicket();
+    }
+
     if (interrupted) {
       delivery = { ...delivery, state: "pending", receipt: null, cancelled: true, reason: "foreground-cancelled-durable-retries-retained" };
     } else if (delivery.state === "pending" && !delivery.reason) {
       delivery.reason = "foreground-deadline";
     }
 
-    await viewerPromise;
-    const worker = await getOwnedWorkerStatus(selection.home, Math.min(deadlineAt, Date.now() + 100)).catch(() => ({ enabled: ledger.worker.enabled, running: null,
-      processState: "unknown", retryPaused: ledger.worker.retryPaused, ingestion: { state: "unknown", url: null }, bootSupervised: null, setupReasons: ["Worker status could not be verified within the foreground budget."] }));
     const result = { schemaVersion: 1, command: "publish", inbox: { id: publication.origin.originInboxId, name: selection.name ?? null, home: selection.home },
       document: { localId: publication.metadata.id, originInboxId: publication.origin.originInboxId, originDocumentId: publication.origin.originDocumentId,
         historyEpoch: publication.origin.historyEpoch, version: publication.origin.version, fingerprint: publication.fingerprint },
       local: { durable: true, queued: publication.queued }, viewer, delivery, worker, onward: { awaited: false } };
     return { result, exitCode: interrupted ? 130 : delivery.state === "confirmed" || delivery.state === "local-only" ? 0 : delivery.state === "blocked" ? 3 : 2 };
+
+    async function cancelForegroundTicket() {
+      cancellationAttempted = true;
+      await contactWorker(selection.home, "cancel", ticketId, Math.min(deadlineAt, Date.now() + 150)).catch(() => {});
+    }
 
     async function matchingRoutes() {
       const current = await store.snapshot();
@@ -157,7 +171,9 @@ export async function publishManagedDocument(request: PublishRequest, selection:
 
         if (status.status === "suppressed" || status.status === "deleted" || status.status === "superseded") {
           blockedReason = `intended-target-${status.status}`;
-        } else if (status.status === "blocked" && status.lastError === "Trusted terminal history is required" && !current.routeRetries[route.id]?.blocked && !route.lastError) {
+        } else if (status.status === "blocked" && status.lastError === "Trusted terminal history is required" &&
+            !current.routeRetries[route.id]?.blocked && !isBlockedRouteFailure(route.lastError)) {
+          // A prior transient route error must not end the foreground history wait.
           canRetry = true;
         } else if (status.status === "blocked" || current.routeRetries[route.id]?.blocked) {
           blockedReason = status.lastError ?? current.routeRetries[route.id]?.lastError ?? "delivery-blocked";

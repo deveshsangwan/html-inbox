@@ -133,86 +133,207 @@ test("actual CLI headless enrollment, worker lifecycle and durable local-only pu
   }
 });
 
-test("actual CLI mapping/configuration confirms intended-server custody through the secured application worker", async (t) => {
-  const a = await fixture(t, "source");
-  const b = await fixture(t, "destination");
-  const tls = await createSyncHttpsCredentials(t);
-  const aPort = await availablePort();
-  const bPort = await availablePort();
-  const viewerPort = await availablePort();
-  const routeId = randomUUID();
-  const tokenFile = path.join(a.root, "token");
-  await writeFile(tokenFile, randomBytes(48).toString("base64url"), { mode: 0o600 });
-  try {
-    const aStatus = await a.run(["sync", "enroll", "--inbox", a.name, "--yes"]);
-    const bStatus = await b.run(["sync", "enroll", "--inbox", b.name, "--yes"]);
-    const aId = parseString(aStatus.peerId);
-    const bId = parseString(bStatus.peerId);
-    const grant = parseOriginGrant(aStatus.origin);
-    for (const [value, port, target] of [[a, aPort, { peerId: bId, destinationInboxId: bId }], [b, bPort, null]] as const) {
-      const config = { ...defaultRuntimeConfig(), intendedTarget: target, listener: { host: "127.0.0.1", port, tlsRef: "server" },
-        credentials: { paired: tokenFile }, trust: { ca: tls.caPath }, tls: { server: { key: tls.trusted.keyPath, cert: tls.trusted.certPath } } };
-      const configPath = path.join(value.root, "runtime.json");
-      await writeFile(configPath, JSON.stringify(config), { mode: 0o600 });
-      await value.run(["sync", "configure", "--inbox", value.name, "--config", configPath]);
-      const mappingPath = path.join(value.root, "mapping.json");
-      const outbound = value === a;
-      await writeFile(mappingPath, JSON.stringify({ schemaVersion: 1, expectedRevision: 0, route: { id: routeId, direction: outbound ? "outbound" : "inbound",
-        peerId: outbound ? bId : aId, peerUrl: `https://127.0.0.1:${outbound ? bPort : aPort}`, sourceInboxId: aId, destinationInboxId: bId,
-        localInboxName: value.name, readerAudience: "unknown", allowedOrigins: [grant], credentialRef: "paired", tlsTrustRef: "ca" } }), { mode: 0o600 });
-      const mapping = await value.run(["sync", "mapping", "add", "--inbox", value.name, "--config", mappingPath]);
-      assert.equal(parseObject(mapping.route, "route").state, "reconnecting");
-      await value.run(["sync", "worker", "enable", "--inbox", value.name]);
-    }
-
-    const source = path.join(a.root, "report.html");
-    const bytes = "<!doctype html><html><body>actual secured worker payload</body></html>";
-    await writeFile(source, bytes);
-    const published = await a.run(["publish", source, "--title", "Confirmed", "--type", "report", "--inbox", a.name, "--wait-ms", "5000"], 0, { HTML_INBOX_PORT: String(viewerPort) });
-    const delivery = parseObject(published.delivery, "delivery");
-    assert.equal(delivery.state, "confirmed");
-    assert.equal(parseObject(delivery.receipt, "receipt").receiverInboxId, bId);
-    const documents = await new ManagedSyncStore(b.home).listDocuments();
-    assert.equal(documents.length, 1);
-    assert.equal((await new ManagedSyncStore(b.home).getDocument(documents[0]?.id ?? "missing"))?.originalBytes.toString(), bytes);
-    const doc = parseObject(published.document, "document");
-    assert.equal(doc.originInboxId, aId);
-    assert.equal(parseObject((await a.run(["sync", "status", "--inbox", a.name, "--document", parseString(doc.localId)])).document, "document").target && true, true);
-    const script = `
-      const [cliPath, ...argv] = process.argv.slice(1);
-      const path = require("node:path");
-      const Store = require(path.join(path.dirname(cliPath), "sync-store.js")).ManagedSyncStore;
-      const perform = Store.prototype.deliveryStatus;
-      let faults = 0;
-      let staleObservationHits = 0;
-      Store.prototype.deliveryStatus = function (...args) {
-        if (faults < 2) {
-          faults += 1;
-          return Promise.reject(new Error("Managed ownership deadline exceeded"));
+for (const startup of ["normal", "recoverable history gate", "recoverable history deadline"] as const) {
+  test(`actual CLI mapping/configuration confirms intended-server custody through the secured application worker: ${startup}`, async (t) => {
+    const a = await fixture(t, "source");
+    const b = await fixture(t, "destination");
+    const tls = await createSyncHttpsCredentials(t);
+    const aPort = await availablePort();
+    const bPort = await availablePort();
+    const viewerPort = await availablePort();
+    const routeId = randomUUID();
+    const tokenFile = path.join(a.root, "token");
+    await writeFile(tokenFile, randomBytes(48).toString("base64url"), { mode: 0o600 });
+    try {
+      const aStatus = await a.run(["sync", "enroll", "--inbox", a.name, "--yes"]);
+      const bStatus = await b.run(["sync", "enroll", "--inbox", b.name, "--yes"]);
+      const aId = parseString(aStatus.peerId);
+      const bId = parseString(bStatus.peerId);
+      const grant = parseOriginGrant(aStatus.origin);
+      for (const [value, port, target] of [[a, aPort, { peerId: bId, destinationInboxId: bId }], [b, bPort, null]] as const) {
+        const config = { ...defaultRuntimeConfig(), intendedTarget: target, listener: { host: "127.0.0.1", port, tlsRef: "server" },
+          credentials: { paired: tokenFile }, trust: { ca: tls.caPath }, tls: { server: { key: tls.trusted.keyPath, cert: tls.trusted.certPath } } };
+        const configPath = path.join(value.root, "runtime.json");
+        await writeFile(configPath, JSON.stringify(config), { mode: 0o600 });
+        await value.run(["sync", "configure", "--inbox", value.name, "--config", configPath]);
+        const mappingPath = path.join(value.root, "mapping.json");
+        const outbound = value === a;
+        await writeFile(mappingPath, JSON.stringify({ schemaVersion: 1, expectedRevision: 0, route: { id: routeId, direction: outbound ? "outbound" : "inbound",
+          peerId: outbound ? bId : aId, peerUrl: `https://127.0.0.1:${outbound ? bPort : aPort}`, sourceInboxId: aId, destinationInboxId: bId,
+          localInboxName: value.name, readerAudience: "unknown", allowedOrigins: [grant], credentialRef: "paired", tlsTrustRef: "ca" } }), { mode: 0o600 });
+        const mapping = await value.run(["sync", "mapping", "add", "--inbox", value.name, "--config", mappingPath]);
+        assert.equal(parseObject(mapping.route, "route").state, "reconnecting");
+        if (outbound || startup === "normal") {
+          await value.run(["sync", "worker", "enable", "--inbox", value.name]);
         }
-        return perform.apply(this, args).then(status => {
-          if (!staleObservationHits) {
-            staleObservationHits += 1;
-            return { ...status, status: "pending", isCommitted: false, receipt: null };
-          }
-          return status;
-        });
-      };
-      process.argv[1] = cliPath;
-      require(cliPath).main(argv).then(() => process.stderr.write(JSON.stringify({ lookupTimeoutFaultHits: faults, staleObservationHits })))
-        .catch(error => { console.error(error); process.exitCode = 1; });
-    `;
-    const recovered = await runNode(process.execPath, ["-e", script, cliPath, "publish", source, "--title", "Poll contention", "--type", "report", "--inbox", a.name, "--wait-ms", "5000", "--json"], {
-      env: { ...a.env, HTML_INBOX_PORT: String(viewerPort) }, timeout: 10_000,
-    });
-    assert.match(recovered.stderr, /"lookupTimeoutFaultHits":2,"staleObservationHits":1/);
-    assert.equal(parseObject(JSON.parse(recovered.stdout).delivery, "delivery").state, "confirmed");
-    assert.equal((await new ManagedSyncStore(b.home).listDocuments()).length, 2);
+      }
 
-    await a.run(["viewer", "stop", "--inbox", a.name]);
-    assert.equal(parseObject((await a.run(["sync", "status", "--inbox", a.name])).worker, "worker").running, true);
+      if (startup !== "normal") {
+        const deadlineAt = Date.now() + 5000;
+        while (true) {
+          const ledger = await new ManagedSyncStore(a.home).snapshot();
+          const retry = ledger.routeRetries[routeId];
+          if (retry?.lastError === "verified-transport-failed") {
+            assert.equal(retry.blocked, false);
+            assert.equal(ledger.routes[routeId]?.lastError, "verified-transport-failed");
+            break;
+          }
+
+          assert(Date.now() < deadlineAt, "Source worker did not record the unavailable receiver");
+          await delay(20);
+        }
+      }
+
+      const source = path.join(a.root, "report.html");
+      const bytes = "<!doctype html><html><body>actual secured worker payload</body></html>";
+      await writeFile(source, bytes);
+      const startedAt = Date.now();
+      const publishArgs = ["publish", source, "--title", "Confirmed", "--type", "report", "--inbox", a.name, "--wait-ms", startup === "recoverable history deadline" ? "1000" : "5000"];
+      const published = startup === "normal" ? await a.run(publishArgs, 0, { HTML_INBOX_PORT: String(viewerPort) }) :
+        await observeFirstDelivery(publishArgs, { ...a.env, HTML_INBOX_PORT: String(viewerPort) }, async (status) => {
+          assert.equal(status.status, "blocked");
+          assert.equal(status.lastError, "Trusted terminal history is required");
+          assert.equal(status.isCommitted, false);
+          assert.equal(parseObject((await a.run(["sync", "worker", "status", "--inbox", a.name])).worker, "worker").running, true);
+          assert.equal((await new ManagedSyncStore(b.home).listDocuments()).length, 0);
+          if (startup === "recoverable history gate") {
+            await b.run(["sync", "worker", "enable", "--inbox", b.name]);
+          }
+
+          t.diagnostic("Observed actual history-blocked item with a recoverable route error and running worker before receiver startup");
+        }, startup === "recoverable history deadline" ? 2 : 0);
+      const delivery = parseObject(published.delivery, "delivery");
+      if (startup === "recoverable history deadline") {
+        assert(Date.now() - startedAt < 3000, "History waiting extended the foreground deadline");
+        assert.deepEqual(published.local, { durable: true, queued: true });
+        assert.equal(delivery.state, "pending");
+        assert.equal(delivery.reason, "foreground-deadline");
+        assert.equal(delivery.receipt, null);
+        const ledger = await new ManagedSyncStore(a.home).snapshot();
+        assert.equal(ledger.routes[routeId]?.state, "reconnecting");
+        assert.equal(ledger.worker.enabled, true);
+        assert.equal(ledger.worker.retryPaused, false);
+        assert.equal(Object.values(ledger.outbox)[0]?.disposition, "blocked");
+        assert.equal(Object.values(ledger.outbox)[0]?.attempts, 0);
+        assert.equal((await new ManagedSyncStore(b.home).listDocuments()).length, 0);
+        assert.equal(Object.keys((await new ManagedSyncStore(b.home).snapshot()).historyCheckpoints).length, 0);
+        return;
+      }
+
+      assert.equal(delivery.state, "confirmed");
+      const receipt = parseObject(delivery.receipt, "receipt");
+      assert.equal(receipt.receiverInboxId, bId);
+      assert.equal(receipt.disposition, "committed");
+      assert.equal(receipt.storageIncarnation, (await new ManagedSyncStore(b.home).snapshot()).storageIncarnation);
+      const documents = await new ManagedSyncStore(b.home).listDocuments();
+      assert.equal(documents.length, 1);
+      assert.equal((await new ManagedSyncStore(b.home).getDocument(documents[0]?.id ?? "missing"))?.originalBytes.toString(), bytes);
+      const doc = parseObject(published.document, "document");
+      assert.equal(receipt.fingerprint, doc.fingerprint);
+      assert.equal(doc.originInboxId, aId);
+      assert.equal(parseObject((await a.run(["sync", "status", "--inbox", a.name, "--document", parseString(doc.localId)])).document, "document").target && true, true);
+      const script = `
+        const [cliPath, ...argv] = process.argv.slice(1);
+        const path = require("node:path");
+        const Store = require(path.join(path.dirname(cliPath), "sync-store.js")).ManagedSyncStore;
+        const perform = Store.prototype.deliveryStatus;
+        let faults = 0;
+        let staleObservationHits = 0;
+        let confirmationObservations = 0;
+        let redundantLookupAttempts = 0;
+        Store.prototype.deliveryStatus = function (...args) {
+          if (confirmationObservations) {
+            redundantLookupAttempts += 1;
+            return Promise.reject(new Error("Controlled post-confirmation lookup deadline exceeded"));
+          }
+          if (faults < 2) {
+            faults += 1;
+            return Promise.reject(new Error("Managed ownership deadline exceeded"));
+          }
+          return perform.apply(this, args).then(status => {
+            if (!staleObservationHits) {
+              staleObservationHits += 1;
+              return { ...status, status: "pending", isCommitted: false, receipt: null };
+            }
+            if (status.isCommitted) confirmationObservations += 1;
+            return status;
+          });
+        };
+        process.argv[1] = cliPath;
+        require(cliPath).main(argv).then(() => process.stderr.write(JSON.stringify({ lookupTimeoutFaultHits: faults, staleObservationHits, confirmationObservations, redundantLookupAttempts })))
+          .catch(error => { console.error(error); process.exitCode = 1; });
+      `;
+      const recovered = await runNode(process.execPath, ["-e", script, cliPath, "publish", source, "--title", "Poll contention", "--type", "report", "--inbox", a.name, "--wait-ms", "5000", "--json"], {
+        env: { ...a.env, HTML_INBOX_PORT: String(viewerPort) }, timeout: 10_000,
+      });
+      assert.match(recovered.stderr, /"lookupTimeoutFaultHits":2,"staleObservationHits":1,"confirmationObservations":1,"redundantLookupAttempts":0/);
+      assert.equal(parseObject(JSON.parse(recovered.stdout).delivery, "delivery").state, "confirmed");
+      assert.equal((await new ManagedSyncStore(b.home).listDocuments()).length, 2);
+
+      await a.run(["viewer", "stop", "--inbox", a.name]);
+      assert.equal(parseObject((await a.run(["sync", "status", "--inbox", a.name])).worker, "worker").running, true);
+    } finally {
+      await stopFixture(a);
+      await stopFixture(b);
+    }
+  });
+}
+
+async function observeFirstDelivery(args: string[], env: NodeJS.ProcessEnv, observe: (status: Record<string, unknown>) => Promise<void>, expected = 0) {
+  const script = `
+    const [cliPath, ...argv] = process.argv.slice(1);
+    const path = require("node:path");
+    const Store = require(path.join(path.dirname(cliPath), "sync-store.js")).ManagedSyncStore;
+    const deliveryStatus = Store.prototype.deliveryStatus;
+    let observed = false;
+    Store.prototype.deliveryStatus = async function (...args) {
+      const status = await deliveryStatus.apply(this, args);
+      if (!observed) {
+        observed = true;
+        await new Promise(resolve => {
+          process.once("message", resolve);
+          process.send({ type: "delivery-observed", status });
+        });
+      }
+      return status;
+    };
+    process.argv[1] = cliPath;
+    require(cliPath).main(argv).then(() => process.disconnect())
+      .catch(error => { console.error(error); process.exitCode = 1; process.disconnect(); });
+  `;
+  const child = spawn(process.execPath, ["-e", script, cliPath, ...args, "--json"], { env, stdio: ["ignore", "pipe", "pipe", "ipc"] });
+  let stdout = "";
+  let stderr = "";
+  let observation: Promise<void> | undefined;
+  let observationError: unknown;
+  let timedOut = false;
+  const timer = setTimeout(() => { timedOut = true; child.kill("SIGKILL"); }, 15_000);
+  assert(child.stdout && child.stderr);
+  child.stdout.on("data", (chunk) => { stdout += chunk; });
+  child.stderr.on("data", (chunk) => { stderr += chunk; });
+  child.on("message", (message: unknown) => {
+    observation = Promise.resolve().then(async () => {
+      const event = parseObject(message, "delivery event");
+      assert.equal(event.type, "delivery-observed");
+      await observe(parseObject(event.status, "delivery status"));
+    }).catch((error: unknown) => { observationError = error; }).finally(() => {
+      if (child.connected) child.send({ type: "continue" });
+    });
+  });
+
+  try {
+    const code = await new Promise<number | null>((resolve, reject) => {
+      child.once("error", reject);
+      child.once("close", resolve);
+    });
+    await observation;
+    if (observationError) throw observationError;
+
+    assert.equal(timedOut, false, `Observed publication exceeded its fixture bound: ${stderr}`);
+    assert(observation, "Publication never inspected actual delivery status");
+    assert.equal(code, expected, `${stderr}\n${stdout}`);
+    return parseObject(JSON.parse(stdout), "observed publication");
   } finally {
-    await stopFixture(a);
-    await stopFixture(b);
+    clearTimeout(timer);
   }
-});
+}
