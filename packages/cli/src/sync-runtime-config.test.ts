@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { writeFile, realpath } from "node:fs/promises";
 import path from "node:path";
+import { tmpdir } from "node:os";
 import { test } from "node:test";
 import { promisify } from "node:util";
 import { temporaryHome } from "./test-fixtures";
@@ -58,7 +59,12 @@ test("runtime configuration validates deadlines, references, unknown fields and 
 
   assert.throws(() => parseRuntimeConfig({ ...defaultRuntimeConfig(), token: "not allowed" }), /fields/);
   assert.throws(() => parseRuntimeConfig({ ...defaultRuntimeConfig(), credentials: { route: "relative" } }), /absolute/);
-  assert.throws(() => parseRuntimeConfig({ ...defaultRuntimeConfig(), listener: { host: "0.0.0.0", port: 4000, tlsRef: "server" }, tls: { server: { key: "/tmp/key", cert: "/tmp/cert" } } }), /unicast/);
+  const key = path.resolve(tmpdir(), "html-inbox-test-key");
+  const cert = path.resolve(tmpdir(), "html-inbox-test-cert");
+  const listener = { host: "127.0.0.1", port: 4000, tlsRef: "server" };
+  const config = { ...defaultRuntimeConfig(), listener, tls: { server: { key, cert } } };
+  assert.deepEqual(parseRuntimeConfig(config).listener, listener);
+  assert.throws(() => parseRuntimeConfig({ ...config, listener: { ...listener, host: "0.0.0.0" } }), /unicast/);
 });
 
 test("optional worker record removal between existence check and checked read is absent, while unsafe files remain errors", async (t) => {

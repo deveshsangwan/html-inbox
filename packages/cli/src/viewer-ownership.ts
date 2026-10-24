@@ -17,7 +17,12 @@ export function parseViewerLocalOwner(value: unknown): ViewerLocalOwner {
   return { home: parseString(owner.home), dev: parseInteger(owner.dev), ino: parseInteger(owner.ino), start: owner.start === null ? null : parseString(owner.start) };
 }
 
-export async function currentViewerLocalOwner(home: string): Promise<ViewerLocalOwner> {
+export async function currentViewerLocalOwner(home: string): Promise<ViewerLocalOwner | undefined> {
+  // Managed stores require POSIX ownership; Windows file IDs can exceed safe JSON integers.
+  if (process.platform === "win32") {
+    return undefined;
+  }
+
   const info = await stat(home);
   return { home: await realpath(home), dev: info.dev, ino: info.ino, start: await processStart(process.pid) };
 }
@@ -25,7 +30,8 @@ export async function currentViewerLocalOwner(home: string): Promise<ViewerLocal
 export async function verifyViewerLocalOwner(home: string, record: ViewerRecord): Promise<"live" | "dead"> {
   const owner = record.localOwner;
   const current = await currentViewerLocalOwner(home);
-  if (!owner || owner.home !== home || current.home !== home || owner.dev !== current.dev || owner.ino !== current.ino ||
+
+  if (!owner || !current || owner.home !== home || current.home !== home || owner.dev !== current.dev || owner.ino !== current.ino ||
       await readInboxIdentity(home) !== record.instanceId.toLowerCase()) {
     throw new Error("Viewer ownership is copied, old or locally ambiguous; no endpoint was contacted");
   }
