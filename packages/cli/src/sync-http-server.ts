@@ -60,12 +60,27 @@ export function createSyncIngestionServer(options: SyncServerOptions) {
   const sessions = new Map<string, Session>();
   const transfers = new Map<string, Transfer>();
   const sockets = new Set<Duplex>();
+  const handlers = new Set<Promise<void>>();
+  const handlerFailures: unknown[] = [];
   const counters = { requests: 0, rejected: 0, requestBytes: 0, responseBytes: 0, activeRequests: 0, activeTransfers: 0 };
   let closed = false;
+  let closing: Promise<void> | undefined;
+  let binding: Promise<void> | undefined;
   let origin: string | null = null;
   const server = https.createServer({ key: options.key, cert: options.cert, minVersion: "TLSv1.2", maxHeaderSize: WIRE_LIMITS.headers,
     handshakeTimeout: requestMs, requestTimeout: requestMs, headersTimeout: requestMs, keepAliveTimeout: 1 }, (request, response) => {
-    void handle(request, response);
+    if (closed) {
+      response.destroy();
+      return;
+    }
+
+    const handling = Promise.resolve().then(() => handle(request, response));
+    handlers.add(handling);
+    void handling.then(() => { handlers.delete(handling); }, (error: unknown) => {
+      handlers.delete(handling);
+      handlerFailures.push(error);
+      response.destroy();
+    });
   });
   server.maxHeadersCount = 32;
   server.maxConnections = WIRE_LIMITS.concurrent;
@@ -492,22 +507,69 @@ export function createSyncIngestionServer(options: SyncServerOptions) {
         response.destroy();
       }
     } finally {
-      attempt?.signal.removeEventListener("abort", abortResponse);
-      attempt?.close();
-      counters.activeRequests -= 1;
+      try {
+        attempt?.signal.removeEventListener("abort", abortResponse);
+        attempt?.close();
+      } finally {
+        counters.activeRequests -= 1;
+      }
     }
+  }
+
+  function close(): Promise<void> {
+    return closing ??= (async () => {
+      closed = true;
+      sessions.clear();
+      transfers.clear();
+      const listener = (async () => {
+        // Await native binding, rather than public start, which rejects when close wins.
+        // A failed bind stays the start caller's error and leaves no bound listener.
+        await binding?.catch(() => {});
+        for (const socket of sockets) {
+          socket.destroy();
+        }
+
+        if (server.listening) {
+          await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+        }
+      })();
+      const settled = Promise.allSettled([listener, ...handlers]).then((results) => {
+        const failures = [...handlerFailures];
+        for (const result of results) {
+          if (result.status === "rejected" && !failures.includes(result.reason)) failures.push(result.reason);
+        }
+
+        if (failures.length > 1) throw new AggregateError(failures, "Sync ingestion shutdown failed");
+        if (failures.length === 1) throw failures[0];
+      });
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      try {
+        // Sockets can close before admitted store mutations finish. The existing
+        // request bound limits shutdown without abandoning those handler promises.
+        await Promise.race([settled, new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error("Sync ingestion shutdown did not drain admitted handlers")), requestMs);
+        })]);
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
+    })();
   }
 
   return {
     async start(): Promise<{ url: string }> {
-      if (closed || origin) {
+      if (closed || binding || origin) {
         throw new Error("Sync ingestion server is already started or closed");
       }
 
-      await new Promise<void>((resolve, reject) => {
+      binding = new Promise<void>((resolve, reject) => {
         server.once("error", reject);
         server.listen(port, host, () => { server.removeListener("error", reject); resolve(); });
       });
+      await binding;
+      if (closed) {
+        throw new Error("Sync ingestion server is already started or closed");
+      }
+
       const address = server.address();
       if (!address || typeof address === "string") {
         throw new Error("Sync ingestion did not obtain a loopback port");
@@ -516,18 +578,7 @@ export function createSyncIngestionServer(options: SyncServerOptions) {
       origin = `https://${isIP(host) === 6 ? `[${host}]` : host}:${address.port}`;
       return { url: origin };
     },
-    async close(): Promise<void> {
-      closed = true;
-      sessions.clear();
-      transfers.clear();
-      for (const socket of sockets) {
-        socket.destroy();
-      }
-
-      if (server.listening) {
-        await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
-      }
-    },
+    close,
     invalidateRoute(routeId: string) {
       parseUuid(routeId);
       for (const [id, session] of sessions) {

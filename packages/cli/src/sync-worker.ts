@@ -44,7 +44,21 @@ export function parseWorkerRun(value: unknown): WorkerRunRequest {
 }
 
 /** The lifetime lock owns every locally initiated sync request, including explicit one-shot runs. */
-export async function startOwnedSyncWorker(home: string, options: { temporary?: boolean; testHooks?: WorkerTestHooks } = {}) {
+export async function startOwnedSyncWorker(home: string, options: { temporary?: boolean; testHooks?: WorkerTestHooks; onFatalStop?: () => void } = {}) {
+  let fatalStopped = false;
+  function notifyFatalStop() {
+    if (fatalStopped) {
+      return;
+    }
+
+    fatalStopped = true;
+    try {
+      void Promise.resolve(options.onFatalStop?.()).catch(() => {});
+    } catch {
+      // The observer cannot prevent startup cleanup or runtime shutdown.
+    }
+  }
+
   const initial = await assertManagedLifecycle(home);
   if (!initial || !options.temporary && !initial.worker.enabled) {
     throw new Error("Worker start requires an enrolled, explicitly enabled inbox");
@@ -75,7 +89,12 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
 
     ownership = await acquireSyncOwnership(paths.lifetime, Date.now() + 1000);
   } catch (error) {
-    await startupExclusion?.release();
+    try {
+      await releaseStartupExclusion();
+    } catch (cleanupError) {
+      throw new AggregateError([error, cleanupError], "Worker acquisition and startup cleanup failed");
+    }
+
     throw error;
   }
   const store = new ManagedSyncStore(home);
@@ -100,7 +119,7 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
   });
   control.maxConnections = 16;
   control.on("clientError", (_error, socket) => socket.destroy());
-  const onSignal = () => { void close().catch(() => { process.exitCode = 1; }); };
+  const onSignal = () => { requestClose(); };
 
   try {
     await store.recover();
@@ -136,17 +155,46 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
     await files.replaceLedger(paths.record, record);
     process.on("SIGTERM", onSignal);
     process.on("SIGINT", onSignal);
-    timer = setInterval(() => { void tick().catch(() => { void close(); }); }, 250);
+    timer = setInterval(() => { void tick().catch(fatalStop); }, 250);
     options.testHooks?.onEvent?.({ type: "ready", processId: record.processId });
     kick();
-    await startupExclusion?.release();
+    await releaseStartupExclusion();
     startupExclusion = undefined;
 
     return { record, requestRun, cancel, requestWake, quiesce, status, close, tick };
   } catch (error) {
-    await close();
-    await startupExclusion?.release();
+    const cleanup = await Promise.allSettled([close(), releaseStartupExclusion()]);
+    const failures = cleanup.flatMap((result) => result.status === "rejected" ? [result.reason] : []);
+    if (failures.length) {
+      throw new AggregateError([error, ...failures], "Worker startup and cleanup failed");
+    }
+
     throw error;
+  }
+
+  async function releaseStartupExclusion() {
+    const failures: unknown[] = [];
+    try { await startupExclusion?.release(); } catch (error) { failures.push(error); notifyFatalStop(); }
+    try { await startupExclusion?.closeHandles(); } catch (error) {
+      if (!failures.includes(error)) failures.push(error);
+      notifyFatalStop();
+    }
+
+    if (failures.length > 1) throw new AggregateError(failures, "Worker startup ownership cleanup failed");
+    if (failures.length === 1) throw failures[0];
+  }
+
+  function requestClose() {
+    void close().catch(fatalStop);
+  }
+
+  function fatalStop() {
+    if (fatalStopped) {
+      return;
+    }
+
+    requestClose();
+    notifyFatalStop();
   }
 
   function status() {
@@ -200,7 +248,12 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
           }
         }
 
-        await store.recordWorkerRun(lastPassAt, "worker-pass-failed").catch(() => {});
+        try {
+          await store.recordWorkerRun(lastPassAt, "worker-pass-failed");
+        } catch {
+          // Shutdown awaits this drain; initiating it here must not await it.
+          fatalStop();
+        }
       }).finally(() => {
         draining = undefined;
         if (!closing && ([...tickets.values()].some((entry) => entry.state === "queued") || backgroundRequested)) {
@@ -219,7 +272,7 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
 
       const ledger = await assertManagedLifecycle(home);
       if (!ledger || ledger.storageIncarnation !== record?.storageIncarnation || (ledger.runtime?.revision ?? 0) !== record?.configRevision) {
-        void close();
+        requestClose();
         return;
       }
 
@@ -243,7 +296,6 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
 
       const deadlineAt = Math.min(ticket?.deadlineAt ?? Date.now() + config.timings.passMs, Date.now() + config.timings.passMs);
       const routeIds = ticket?.routeIds ?? Object.values(ledger.routes).filter((route) => route.state === "active" || route.state === "reconnecting").map((route) => route.id);
-      const credentials = await resolveRuntimeCredentials(config, Object.values(ledger.routes));
       options.testHooks?.onEvent?.({ type: "pass", processId: ownership.owner.token });
       for (const routeId of routeIds) {
         if (closing || ticket?.controller.signal.aborted || Date.now() >= deadlineAt) {
@@ -260,6 +312,7 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
           continue;
         }
 
+        const credentials = await resolveRuntimeCredentials(latest.runtime?.config ?? defaultRuntimeConfig(), [route]);
         if (credentials.unavailableRouteIds.includes(routeId)) {
           await store.recordRouteRun(routeAuthorization(route), "runtime-credential-unavailable", true);
           if (ticket) {
@@ -378,21 +431,69 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
         cancel(ticket.ticketId);
       }
 
-      await ingestion?.close();
-      control.closeAllConnections();
-      if (control.listening) {
-        await new Promise<void>((resolve) => control.close(() => resolve()));
+      const failures: unknown[] = [];
+      const listeners = await Promise.allSettled([
+        (async () => { await ingestion?.close(); })().catch((error: unknown) => { fatalStop(); throw error; }),
+        (async () => { control.closeAllConnections(); })().catch((error: unknown) => { fatalStop(); throw error; }),
+        (async () => {
+          if (control.listening) {
+            await new Promise<void>((resolve, reject) => control.close((error) => error ? reject(error) : resolve()));
+          }
+        })().catch((error: unknown) => { fatalStop(); throw error; }),
+      ]);
+      for (const result of listeners) {
+        if (result.status === "rejected") failures.push(result.reason);
       }
 
-      await draining;
-      if (record && (await readWorkerRecordOffline(home))?.processId === record.processId) {
-        await rm(paths.record, { force: true });
+      try {
+        await draining;
+      } catch (error) {
+        failures.push(error);
+        fatalStop();
       }
 
-      await ownership.release();
+      // Failed listener/drain cleanup cannot prove that replication has stopped.
+      // Retain ownership evidence rather than allowing another worker to act.
+      let releaseAttempted = false;
+      if (!failures.length) {
+        try {
+          if (record && (await readWorkerRecordOffline(home))?.processId === record.processId) {
+            await rm(paths.record);
+          }
+
+          releaseAttempted = true;
+          await ownership.release();
+        } catch (error) {
+          failures.push(error);
+          fatalStop();
+        }
+      }
+
+      if (!releaseAttempted) {
+        try {
+          await ownership.closeHandles();
+        } catch (error) {
+          failures.push(error);
+          fatalStop();
+        }
+      }
+
       process.off("SIGTERM", onSignal);
       process.off("SIGINT", onSignal);
-      options.testHooks?.onEvent?.({ type: "closed", processId: ownership.owner.token });
+      try {
+        options.testHooks?.onEvent?.({ type: "closed", processId: ownership.owner.token });
+      } catch (error) {
+        failures.push(error);
+        fatalStop();
+      }
+
+      if (failures.length === 1) {
+        throw failures[0];
+      }
+
+      if (failures.length) {
+        throw new AggregateError(failures, "Worker cleanup failed");
+      }
     })();
   }
 
@@ -437,7 +538,7 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
       }
 
       if (command.operation === "stop") {
-        response.once("finish", () => { void close(); });
+        response.once("finish", requestClose);
       }
 
       response.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" }).end(JSON.stringify(result));

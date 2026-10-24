@@ -209,24 +209,47 @@ export async function runSyncCommand(command: SyncCommand, selection: ResolvedIn
       return { schemaVersion: 1, command: command.command, ...result };
     }
 
-    const runtime = await startOwnedSyncWorker(home, { temporary: true });
+    const fatal = createFatalStopHandler();
+    const failedRun = () => ({ schemaVersion: 1, command: command.command, ticketId: request.ticketId,
+      state: "cancelled", routes: [], error: "worker-pass-failed" });
+    const runtime = await startOwnedSyncWorker(home, { temporary: true, onFatalStop: fatal.onFatalStop }).catch((error: unknown) => {
+      if (!fatal.stopped) throw error;
+    });
+    if (!runtime) {
+      return failedRun();
+    }
+
+    let completed: ReturnType<typeof runtime.status>["tickets"][number] | undefined;
     try {
       runtime.requestRun(request);
-      while (Date.now() < request.deadlineAt) {
+      while (!fatal.stopped && Date.now() < request.deadlineAt) {
         const ticket = runtime.status().tickets.find((entry) => entry.ticketId === request.ticketId);
         if (ticket?.state === "complete" || ticket?.state === "cancelled") {
-          return { schemaVersion: 1, command: command.command, ...ticket };
+          completed = ticket;
+          break;
         }
 
         await delay(20);
       }
 
-      runtime.cancel(request.ticketId);
-      process.exitCode = 2;
-      return { schemaVersion: 1, command: command.command, state: "pending", reason: "pass-deadline" };
+      if (!completed) runtime.cancel(request.ticketId);
+    } catch (error) {
+      if (!fatal.stopped) throw error;
     } finally {
-      await runtime.close();
+      // The worker has already reported fatal cleanup without exposing its error.
+      await runtime.close().catch(fatal.onFatalStop);
     }
+
+    if (fatal.stopped) {
+      return failedRun();
+    }
+
+    if (completed) {
+      return { schemaVersion: 1, command: command.command, ...completed };
+    }
+
+    process.exitCode = 2;
+    return { schemaVersion: 1, command: command.command, state: "pending", reason: "pass-deadline" };
   }
 
   if (command.command === "sync worker supervisor render") {
@@ -262,11 +285,26 @@ export async function runSyncCommand(command: SyncCommand, selection: ResolvedIn
     }
 
     if (command.action === "start" && command.foreground) {
-      const runtime = await startOwnedSyncWorker(home);
+      const fatal = createFatalStopHandler();
+      const runtime = await startOwnedSyncWorker(home, { onFatalStop: fatal.onFatalStop }).catch((error: unknown) => {
+        if (!fatal.stopped) throw error;
+      });
+      if (!runtime) {
+        return { schemaVersion: 1, command: "sync worker start", ready: false };
+      }
+
       const record = runtime.record;
+      const worker = await getOwnedWorkerStatus(home).catch(async (error: unknown) => {
+        await runtime.close().catch(fatal.onFatalStop);
+        if (!fatal.stopped) throw error;
+      });
+      if (fatal.stopped) {
+        return { schemaVersion: 1, command: "sync worker start", ready: false };
+      }
+
       process.send?.({ type: "sync-worker-ready", pid: record.pid, processId: record.processId, inboxId: record.inboxId, storageIncarnation: record.storageIncarnation });
       return { schemaVersion: 1, command: "sync worker start", ready: true, peerId: record.inboxId,
-        worker: { ...await getOwnedWorkerStatus(home), pid: record.pid, processId: record.processId } };
+        worker: { ...worker, pid: record.pid, processId: record.processId } };
     }
 
     try {
@@ -285,6 +323,22 @@ export async function runSyncCommand(command: SyncCommand, selection: ResolvedIn
   }
 
   throw new Error("Offline commands require explicit offline selection");
+}
+
+function createFatalStopHandler() {
+  let stopped = false;
+  return {
+    get stopped() { return stopped; },
+    onFatalStop() {
+      if (stopped) {
+        return;
+      }
+
+      stopped = true;
+      process.exitCode = 1;
+      console.error("html-inbox: Sync worker stopped after an unrecoverable state or cleanup failure; inspect the inbox before restarting.");
+    },
+  };
 }
 
 export function parseMappingInput(value: unknown): SyncRoute {
