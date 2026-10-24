@@ -85,7 +85,7 @@ export async function exportStaticSnapshot(
     throw new Error("Static export generatedAt must be a valid date");
   }
 
-  const documents = (await source.listDocuments()).map(parseDocumentMetadata);
+  const documents = (await source.listDocuments()).map(parseDocumentMetadata).filter((metadata) => !metadata.origin);
   documents.sort(compareDocuments);
   const inboxPath = `/i/${capability}`;
   const manifest = await replaceOutputDirectory(outputDir, async (stagingDir) => {
@@ -156,7 +156,7 @@ async function addDocumentFiles(
     throw new Error(`Document changed while exporting: ${metadata.id}`);
   }
   const currentMetadata = parseDocumentMetadata(document.metadata);
-  if (!sameMetadata(currentMetadata, metadata) || !Buffer.isBuffer(document.originalBytes)) {
+  if (currentMetadata.origin || !sameMetadata(currentMetadata, metadata) || !Buffer.isBuffer(document.originalBytes)) {
     throw new Error(`Document changed while exporting: ${metadata.id}`);
   }
   const documentPath = `${inboxPath.slice(1)}/documents/${metadata.id}`;

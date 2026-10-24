@@ -7,6 +7,8 @@ import { createInbox } from "./inbox-catalog";
 import { main } from "./index";
 import { temporaryHome } from "./test-fixtures";
 import * as viewerService from "./viewer-service";
+import { inspectInboxHome } from "./inbox-home";
+import { assertManagedLifecycle } from "./sync-lifecycle";
 
 test("service selection validates the target user's explicitly selected registered home before manager access", async (t) => {
   const root = await realpath(await temporaryHome(t));
@@ -33,6 +35,12 @@ test("service selection validates the target user's explicitly selected register
   t.mock.method(viewerService, "resolveViewerServiceHome", async (options: { user?: string }) => {
     assert.equal(options.user, "reader");
     return target.home;
+  });
+  t.mock.method(viewerService, "inspectViewerServiceSelection", async (home: string, user: string | undefined) => {
+    assert.equal(user, "reader");
+    const inspected = await inspectInboxHome(home);
+    await assertManagedLifecycle(home);
+    return { home: inspected.home, instanceId: inspected.instanceId ?? null, managed: false, configuration: null, tailscaleExecutable: null };
   });
   const accessedHomes: string[] = [];
   t.mock.method(viewerService, "getViewerServiceStatus", async (options: { home: string }): Promise<viewerService.ViewerServiceStatus> => {

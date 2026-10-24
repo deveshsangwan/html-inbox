@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { acquireSyncOwnership, createStorageCounters, DurableFiles, openPrivateFile, readPrivateFile } from "./sync-files";
 import { constants } from "node:fs";
 import { lstat, open, readdir, rm, unlink } from "node:fs/promises";
 import { homedir } from "node:os";
@@ -85,7 +87,7 @@ async function readNamedInboxEntry(name: string, root: string, readOnly = false)
   return entry;
 }
 
-export async function inspectRegisteredInbox(entry: NamedInbox): Promise<NamedInbox> {
+export async function inspectRegisteredInbox(entry: NamedInbox, inspectHome = inspectInboxHome): Promise<NamedInbox> {
   const expected = parseNamedInbox({ schemaVersion: 1, ...entry });
   try {
     const home = await canonicalizeInboxHome(expected.home);
@@ -93,11 +95,11 @@ export async function inspectRegisteredInbox(entry: NamedInbox): Promise<NamedIn
       throw new InboxInspectionError("conflict", `Registered inbox ${expected.name} has a different canonical location`);
     }
 
-    if (await readInboxIdentity(home) !== expected.instanceId) {
+    const inspected = await inspectHome(home);
+    if (inspected.home !== home || inspected.instanceId !== expected.instanceId) {
       throw new InboxInspectionError("conflict", `Registered inbox ${expected.name} has a missing or different identity`);
     }
 
-    await inspectInboxHome(home);
     return expected;
   } catch (error) {
     if (error instanceof InboxInspectionError) {
@@ -279,8 +281,13 @@ async function readCatalogJson(filePath: string, readOnly = false): Promise<{ va
       return null;
     }
 
-    if (!checked.isFile() || checked.isSymbolicLink() || checked.nlink !== 1) {
+    if (!checked.isFile() || checked.isSymbolicLink() || checked.nlink > 1) {
       throw new Error(`Catalog record must be a regular private file: ${filePath}`);
+    }
+
+    // Atomic replacement can unlink the observed inode before lstat completes.
+    if (checked.nlink === 0) {
+      continue;
     }
 
     const file = await open(filePath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0))
@@ -324,33 +331,118 @@ async function withCatalogRegistration<T>(catalogHome: string, register: (root: 
   const root = checkedCatalogHome(catalogHome);
   await ensurePrivateDirectory(root);
   await ensurePrivateDirectory(path.join(root, "inboxes"));
-  const lockPath = path.join(root, "registration.lock");
-  const deadline = Date.now() + 10_000;
+  const ownership = await acquireSyncOwnership(path.join(root, "registration.lock"), Date.now() + 10_000);
+  try {
+    return await register(root);
+  } finally {
+    await ownership.release();
+  }
+}
 
-  while (true) {
-    const lock = await open(lockPath, "wx", PRIVATE_FILE_MODE).catch((error: unknown) => {
-      if (hasErrorCode(error, "EEXIST")) {
-        return null;
-      }
+export interface CatalogIdentityTransition {
+  schemaVersion: 1;
+  name: string | null;
+  home: string;
+  oldInboxId: string;
+  newInboxId: string;
+}
 
+export async function readCatalogIdentityTransition(home: string, oldInboxId: string, catalogHome = getInboxCatalogHome()): Promise<CatalogIdentityTransition | null> {
+  const file = path.join(checkedCatalogHome(catalogHome), "identity-transition.json");
+  const exists = await lstat(file).catch((error: unknown) => {
+    if (hasErrorCode(error, "ENOENT")) return null;
+    throw error;
+  });
+  if (!exists) return null;
+  const value: unknown = JSON.parse((await readPrivateFile(file, 8192)).toString("utf8"));
+  if (!isRecord(value) || value.schemaVersion !== 1 || (value.name !== null && typeof value.name !== "string") || typeof value.home !== "string" ||
+      typeof value.oldInboxId !== "string" || typeof value.newInboxId !== "string" || Object.keys(value).length !== 5) {
+    throw new Error("Catalog identity transition journal is invalid");
+  }
+
+  if (value.name !== null) assertInboxName(value.name);
+  assertUuidV4(value.oldInboxId, "Recorded old inbox identity");
+  assertUuidV4(value.newInboxId, "Recorded new inbox identity");
+  if (value.home !== home || value.oldInboxId !== oldInboxId) {
+    throw new Error("An unrelated catalog identity transition is pending");
+  }
+
+  return { schemaVersion: 1, name: value.name, home: value.home, oldInboxId: value.oldInboxId, newInboxId: value.newInboxId };
+}
+
+export async function withCatalogIdentityTransition<T>(
+  home: string,
+  oldInboxId: string,
+  operation: (transition: CatalogIdentityTransition, complete: () => Promise<void>) => Promise<T>,
+  catalogHome = getInboxCatalogHome(),
+): Promise<T> {
+  assertUuidV4(oldInboxId, "Expected old catalog identity");
+  return withCatalogRegistration(catalogHome, async (root) => {
+    const journalPath = path.join(root, "identity-transition.json");
+    const files = new DurableFiles(createStorageCounters(), {}, root);
+    const existing = await lstat(journalPath).catch((error: unknown) => {
+      if (hasErrorCode(error, "ENOENT")) return null;
       throw error;
     });
-    if (lock) {
+    let transition: CatalogIdentityTransition;
+    if (existing) {
+      const intent = await openPrivateFile(journalPath, 8192);
       try {
-        await lock.writeFile(`${process.pid}\n`);
-        return await register(root);
+        const value: unknown = JSON.parse((await readBoundedFile(intent, 8192, "Catalog identity transition is too large")).toString("utf8"));
+        if (!isRecord(value) || value.schemaVersion !== 1 || (value.name !== null && typeof value.name !== "string") || typeof value.home !== "string" ||
+            typeof value.oldInboxId !== "string" || typeof value.newInboxId !== "string" || Object.keys(value).length !== 5) {
+          throw new Error("Catalog identity transition journal is invalid; no replacement was attempted");
+        }
+
+        if (value.name !== null) assertInboxName(value.name);
+        assertUuidV4(value.oldInboxId, "Recorded old inbox identity");
+        assertUuidV4(value.newInboxId, "Recorded new inbox identity");
+        transition = { schemaVersion: 1, name: value.name, home: value.home, oldInboxId: value.oldInboxId, newInboxId: value.newInboxId };
+        if (transition.home !== home || transition.oldInboxId !== oldInboxId) {
+          throw new Error("An unrelated catalog identity transition is pending");
+        }
+
+        // A visible rename may have survived a failed directory flush. Baseline the
+        // same validated intent before another authority commits the new identity.
+        files.uncertain = true;
+        await intent.sync();
       } finally {
-        await lock.close();
-        await rm(lockPath);
+        await intent.close();
       }
+
+      await files.flushDirectory(root);
+      files.uncertain = false;
+    } else {
+      const catalog = await readInboxCatalog(root, { readOnly: true });
+      const entry = catalog.inboxes.find((candidate) => candidate.home === home && candidate.instanceId === oldInboxId);
+      if (catalog.inboxes.some((candidate) => candidate.home === home && candidate.instanceId !== oldInboxId)) {
+        throw new Error("Fork requires the exact registered name/home/expected old UUID binding");
+      }
+
+      transition = { schemaVersion: 1, name: entry?.name ?? null, home, oldInboxId, newInboxId: randomUUID() };
+      await files.replaceLedger(journalPath, transition);
     }
 
-    if (Date.now() >= deadline) {
-      throw new Error(`Catalog registration is busy or was interrupted; stop registration commands before removing ${lockPath}`);
-    }
+    const complete = async () => {
+      const catalog = await readInboxCatalog(root, { readOnly: true });
+      const current = catalog.inboxes.find((candidate) => candidate.name === transition.name);
+      if (transition.name !== null && (!current || current.home !== home || current.instanceId !== oldInboxId && current.instanceId !== transition.newInboxId) ||
+          catalog.inboxes.some((candidate) => candidate.name !== transition.name && (candidate.home === home || candidate.instanceId === transition.newInboxId))) {
+        throw new Error("Catalog compare-and-replace failed; recorded transition retained");
+      }
 
-    await delay(10);
-  }
+      if (await readInboxIdentity(home) !== transition.newInboxId) {
+        throw new Error("Fork reader identity does not match its recorded catalog transition");
+      }
+
+      if (transition.name !== null) {
+        await files.replaceLedger(path.join(root, "inboxes", `${transition.name}.json`), { schemaVersion: 1, name: transition.name, home, instanceId: transition.newInboxId });
+      }
+      await unlink(journalPath);
+      await files.flushDirectory(root);
+    };
+    return operation(transition, complete);
+  });
 }
 
 async function publishCatalogEntry(root: string, entry: NamedInbox): Promise<void> {

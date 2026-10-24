@@ -1,3 +1,4 @@
+import type { SyncTarget } from "./sync-runtime-config";
 import { readBoundedFile } from "./bounded-file";
 import { open } from "node:fs/promises";
 import path from "node:path";
@@ -8,6 +9,9 @@ import { validateHtml } from "./html-validation";
 export const DEFAULT_MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
 
 export interface PublishRequest {
+  waitMs?: number;
+  requestTimeoutMs?: number;
+  target?: SyncTarget;
   filePath: string;
   title: string;
   type: string;

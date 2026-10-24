@@ -762,6 +762,33 @@ test("recording command timeouts and output limits are bounded before ownership"
   assert.deepEqual(mutations(await f.commands()), []);
 });
 
+test("foreground viewer inspection respects its overall deadline and aborts only the recording command", recordingTestOptions, async (t) => {
+  const f = await fixture(t);
+  const prepared = await prepareTailscale(f.options, f.command);
+  await startTailscale(prepared, f.command);
+  await f.update({ delayOperation: "status", delayMs: 10_000 });
+  const started = Date.now();
+  const expired = await getTailscaleStatus(f.home, { ...f.command, deadlineAt: started + 200 });
+  assert.equal(expired.state, "unavailable");
+  assert(Date.now() - started < 1500, "Tailscale inspection extended the foreground deadline to its default command timeout");
+
+  const before = (await f.commands()).length;
+  const controller = new AbortController();
+  const pending = getTailscaleStatus(f.home, { ...f.command, deadlineAt: Date.now() + 10_000, signal: controller.signal });
+  const admissionDeadline = Date.now() + 2000;
+  while ((await f.commands()).length === before) {
+    assert(Date.now() < admissionDeadline, "Recording status command did not start");
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+
+  const cancelledAt = Date.now();
+  controller.abort();
+  assert.equal((await pending).state, "unavailable");
+  assert(Date.now() - cancelledAt < 1500, "Viewer cancellation waited on the external command timeout");
+  assert.equal((await f.journal()).phase, "active");
+  assert.equal(mutations(await f.commands()).length, 1);
+});
+
 test(
   "silent Serve failure uses its exit code and daemon advice without setup hints",
   recordingTestOptions,

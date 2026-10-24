@@ -1,3 +1,5 @@
+import { parseSyncCommand, parseCliNumber, type SyncCommand } from "./sync-cli-args";
+import { parseUuid } from "./sync-model";
 import { parseArgs } from "node:util";
 import type { PublishRequest } from "./publish-input";
 import type { RemoteInitOptions } from "./remote-workflow";
@@ -6,6 +8,7 @@ import { parseAppearance, type Appearance } from "./preferences";
 import type { InboxSelection } from "./inbox-selection";
 
 export type CliCommand = (
+  | SyncCommand
   | { command: "help" | "version" }
   | { command: "publish"; options: PublishRequest; json?: boolean }
   | { command: "list"; json: boolean }
@@ -40,6 +43,10 @@ export function parseCommand(argv: string[]): CliCommand {
 }
 
 function parseLibraryCommand(argv: string[]): CliCommand {
+  if (argv[0] === "sync") {
+    return parseSyncCommand(argv.slice(1));
+  }
+
   const name = argv[0] === "remote" ? `remote ${argv[1] ?? ""}` : argv[0];
   const args = argv.slice(argv[0] === "remote" ? 2 : 1);
 
@@ -59,13 +66,21 @@ function parseLibraryCommand(argv: string[]): CliCommand {
       const { values, positionals } = parseArgs({
         args,
         allowPositionals: true,
-        options: { title: { type: "string" }, type: { type: "string" }, json: { type: "boolean" } },
+        options: { title: { type: "string" }, type: { type: "string" }, json: { type: "boolean" }, "wait-ms": { type: "string" },
+          "request-timeout-ms": { type: "string" }, "target-inbox": { type: "string" }, "target-peer": { type: "string" } },
       });
+
+      if ((values["target-inbox"] === undefined) !== (values["target-peer"] === undefined)) {
+        throw new Error("Publish target requires both --target-inbox and --target-peer");
+      }
 
       return {
         command: name,
         ...(values.json ? { json: true } : {}),
         options: {
+          ...(values["wait-ms"] === undefined ? {} : { waitMs: parseCliNumber(values["wait-ms"], 100, 300_000) }),
+          ...(values["request-timeout-ms"] === undefined ? {} : { requestTimeoutMs: parseCliNumber(values["request-timeout-ms"], 100, 30_000) }),
+          ...(values["target-inbox"] === undefined ? {} : { target: { destinationInboxId: parseUuid(values["target-inbox"]), peerId: parseUuid(values["target-peer"]) } }),
           filePath: requirePositional(positionals, "publish requires one file path"),
           title: requireValue(values.title, "publish requires --title"),
           type: requireValue(values.type, "publish requires --type"),

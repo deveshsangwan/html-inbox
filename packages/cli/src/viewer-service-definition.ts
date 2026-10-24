@@ -167,7 +167,7 @@ function isPort(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 65535;
 }
 
-export async function readOwnedDefinition(definitionPath: string, home: string, platform: "linux" | "darwin") {
+export async function readOwnedDefinition(definitionPath: string, home: string | undefined, platform: "linux" | "darwin") {
   try {
     const file = await open(definitionPath, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
     let contents: string;
@@ -183,7 +183,7 @@ export async function readOwnedDefinition(definitionPath: string, home: string, 
     }
 
     const definition = parseViewerServiceDefinition(contents);
-    if (definition.home !== path.resolve(home) || definition.platform !== platform) {
+    if (home !== undefined && definition.home !== path.resolve(home) || definition.platform !== platform) {
       throw new Error("Refusing a viewer service configured for a different inbox or platform");
     }
 

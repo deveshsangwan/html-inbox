@@ -66,7 +66,7 @@ function renderLibrary(
   const normalizedQuery = query.toLowerCase();
   const documents = normalizedQuery
     ? allDocuments.filter((document) =>
-        [document.metadata.title, document.metadata.type, document.metadata.sourceFileName, ...(document.inboxName ? [document.inboxName] : [])]
+        documentSearchFields(document)
           .join(" ")
           .toLowerCase()
           .includes(normalizedQuery),
@@ -97,11 +97,11 @@ function renderLibrary(
           .map(
             (document) =>
               `<li class="doc" data-search-text="${escapeHtml(
-                [document.metadata.title, document.metadata.type, document.metadata.sourceFileName, ...(document.inboxName ? [document.inboxName] : [])]
+                documentSearchFields(document)
                   .join(" ")
                   .toLowerCase(),
               )}">
-                <a class="doc__title" href="${escapeHtml(document.documentPath)}">${escapeHtml(document.metadata.title)}${document.inboxName ? ` <span class="inbox-badge">${escapeHtml(document.inboxName)}</span>` : ""}</a>
+                <a class="doc__title" href="${escapeHtml(document.documentPath)}">${escapeHtml(document.metadata.title)}${document.inboxName ? ` <span class="inbox-badge">${escapeHtml(document.inboxName)}</span>` : ""}${renderOriginBadge(document.metadata)}</a>
                 <time class="document-date" datetime="${escapeHtml(document.metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(document.metadata.createdAt, options.timeZone))}</time>
                 <span class="doc__source" title="${escapeHtml(document.metadata.sourceFileName)}">${escapeHtml(document.metadata.sourceFileName)}</span>
                 <span class="document-type">${escapeHtml(document.metadata.type)}</span>
@@ -168,7 +168,7 @@ export function renderDocumentShell(
     `<main class="document-view" id="main-content">
       <header class="reader__bar">
         <a class="back-link toolbar-control" href="${homePath}" aria-label="Back to inbox" title="Back to inbox"><span aria-hidden="true">&#8592;</span><span class="back-link__text">Back to inbox</span></a>
-        <h1 class="document-title" title="${escapeHtml(metadata.title)}">${escapeHtml(metadata.title)}</h1>
+        <h1 class="document-title" title="${escapeHtml(metadata.title)}">${escapeHtml(metadata.title)}${renderOriginBadge(metadata)}</h1>
         <button class="toolbar-control hide-frame" type="button" data-hide-frame>Hide frame</button>
         <details class="viewer-menu" data-viewer-menu>
           <summary class="toolbar-control" aria-label="Viewer options" title="Viewer options"><span aria-hidden="true">&#8943;</span></summary>
@@ -178,6 +178,7 @@ export function renderDocumentShell(
               <h2 id="document-details-title">Document details</h2>
               <dl>
                 ${options.inboxName ? `<dt>Inbox</dt><dd>${escapeHtml(options.inboxName)}</dd>\n                ` : ""}<dt>Title</dt><dd>${escapeHtml(metadata.title)}</dd>
+                ${metadata.origin ? `<dt>Origin</dt><dd>${escapeHtml(metadata.origin.inboxId)} / ${escapeHtml(metadata.origin.documentId)}${metadata.origin.detached ? " (detached)" : ""}</dd>` : ""}
                 <dt>File</dt><dd>${escapeHtml(metadata.sourceFileName)}</dd>
                 <dt>Type</dt><dd>${escapeHtml(metadata.type)}</dd>
                 <dt>Published</dt><dd><time datetime="${escapeHtml(metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(metadata.createdAt, options.timeZone))}</time></dd>
@@ -284,4 +285,18 @@ function formatDate(value: string, timeZone?: string): string {
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
+}
+
+function documentSearchFields(document: LibraryDocument): string[] {
+  return [document.metadata.title, document.metadata.type, document.metadata.sourceFileName,
+    ...(document.inboxName ? [document.inboxName] : []),
+    ...(document.metadata.origin ? [document.metadata.origin.inboxId, document.metadata.origin.documentId, document.metadata.origin.detached ? "detached" : "imported"] : [])];
+}
+
+function renderOriginBadge(metadata: DocumentMetadata): string {
+  if (!metadata.origin) {
+    return "";
+  }
+
+  return ` <span class="inbox-badge" title="Origin ${escapeHtml(metadata.origin.inboxId)} / ${escapeHtml(metadata.origin.documentId)}">${escapeHtml(metadata.origin.inboxId)}${metadata.origin.detached ? " · detached" : " · imported"}</span>`;
 }

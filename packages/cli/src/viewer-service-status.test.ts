@@ -11,9 +11,12 @@ import { queryViewerServiceProcess } from "./viewer-service-status";
 
 test("service health commands drop to the selected account before loading user-controlled executable configuration", async (t) => {
   const originalGetUid = process.getuid;
+  const originalGetGid = process.getgid;
   process.getuid = () => 500;
+  process.getgid = () => 500;
   t.after(() => {
     process.getuid = originalGetUid;
+    process.getgid = originalGetGid;
   });
 
   const definition: ViewerServiceDefinition = {
@@ -79,12 +82,12 @@ test("service health commands drop to the selected account before loading user-c
 
   status = { state: ["running"], pid: 4242 };
   await assert.rejects(
-    queryViewerServiceProcess(definition),
+    queryViewerServiceProcess(definition, async () => definition.user),
     /malformed normal-user status/,
   );
   status = { state: "running", pid: 0 };
   await assert.rejects(
-    queryViewerServiceProcess(definition),
+    queryViewerServiceProcess(definition, async () => definition.user),
     /malformed normal-user status/,
   );
   assert.equal(invocations, 3);
@@ -92,9 +95,12 @@ test("service health commands drop to the selected account before loading user-c
 
 test("service status retries only legacy rejection of the JSON flag", async (t) => {
   const originalGetUid = process.getuid;
+  const originalGetGid = process.getgid;
   process.getuid = () => 500;
+  process.getgid = () => 500;
   t.after(() => {
     process.getuid = originalGetUid;
+    process.getgid = originalGetGid;
   });
 
   const definition: ViewerServiceDefinition = {
@@ -129,7 +135,7 @@ test("service status retries only legacy rejection of the JSON flag", async (t) 
     return new childProcess.ChildProcess();
   });
 
-  assert.deepEqual(await queryViewerServiceProcess(definition), { state: "running", pid: 4242 });
+  assert.deepEqual(await queryViewerServiceProcess(definition, async () => definition.user), { state: "running", pid: 4242 });
   assert.deepEqual(invocations, [
     [definition.cliPath, "viewer", "status", "--json"],
     [definition.cliPath, "viewer", "status"],
@@ -137,15 +143,17 @@ test("service status retries only legacy rejection of the JSON flag", async (t) 
 
   invocations.length = 0;
   failure = "html-inbox: Viewer identity conflict";
-  await assert.rejects(queryViewerServiceProcess(definition), /Viewer identity conflict/);
+  await assert.rejects(queryViewerServiceProcess(definition, async () => definition.user), /Viewer identity conflict/);
   assert.deepEqual(invocations, [[definition.cliPath, "viewer", "status", "--json"]]);
 });
 
 test("administrator status initializes account groups and drops privileges before executing selected code", async (t) => {
   const originalGetUid = process.getuid;
+  const originalGetGid = process.getgid;
   process.getuid = () => 0;
   t.after(() => {
     process.getuid = originalGetUid;
+    process.getgid = originalGetGid;
   });
   const definition: ViewerServiceDefinition = {
     platform: "linux",
@@ -172,6 +180,8 @@ test("administrator status initializes account groups and drops privileges befor
       callback: (error: Error | null, stdout: string, stderr: string) => void,
     ) => {
       invocations += 1;
+      const configuration = JSON.parse(args[3]);
+      const isPreflight = configuration.args[0] === "--internal-viewer-owner-preflight";
       assert.equal(command, process.execPath);
       assert.deepEqual(args.slice(0, 2), ["--input-type=commonjs", "-e"]);
       assert.deepEqual(options.env, { LANG: "C", LC_ALL: "C" });
@@ -228,23 +238,21 @@ test("administrator status initializes account groups and drops privileges befor
               selectedOptions: SpawnOptions,
             ) => {
               operations.push("spawn");
-              assert.equal(selectedCommand, definition.nodePath);
-              assert.deepEqual(Array.from(selectedArgs), [
-                definition.cliPath,
-                "viewer",
-                "status",
-                "--json",
-              ]);
+              assert.equal(selectedCommand, isPreflight ? process.execPath : definition.nodePath);
+              assert.deepEqual(Array.from(selectedArgs), [configuration.cliPath, ...configuration.args]);
+              if (isPreflight) {
+                assert.equal(configuration.cliPath, path.join(__dirname, "index.js"));
+                assert.equal(configuration.environment.NODE_OPTIONS, undefined);
+                assert.equal(configuration.environment.NODE_PATH, undefined);
+              } else {
+                assert.deepEqual(configuration.args, ["viewer", "status", "--json"]);
+              }
               assert.equal(selectedOptions.uid, undefined);
               assert.equal(selectedOptions.gid, undefined);
               assert.equal(selectedOptions.cwd, definition.user.home);
               assert.deepEqual(
                 { ...selectedOptions.env },
-                {
-                  ...definition.environment,
-                  HTML_INBOX_HOME: definition.home,
-                  HTML_INBOX_PORT: "3217",
-                },
+                configuration.environment,
               );
               assert(Array.isArray(selectedOptions.stdio));
               assert.deepEqual(Array.from(selectedOptions.stdio), [
@@ -274,12 +282,14 @@ test("administrator status initializes account groups and drops privileges befor
       assert.equal(childKillSignal, "SIGKILL");
       statusChild.emit("exit", 0, null);
       assert.equal(helperProcess.exitCode, 0);
-      callback(null, JSON.stringify({ state: "running", pid: 4242 }), "");
+      callback(null, JSON.stringify(isPreflight
+        ? { home: definition.home, instanceId: null, managed: false, configuration: null, tailscaleExecutable: null }
+        : { state: "running", pid: 4242 }), "");
       return new childProcess.ChildProcess();
     },
   );
 
-  assert.deepEqual(await queryViewerServiceProcess(definition), {
+  assert.deepEqual(await queryViewerServiceProcess(definition, async () => definition.user), {
     state: "running",
     pid: 4242,
   });
@@ -294,14 +304,16 @@ test("administrator status initializes account groups and drops privileges befor
       /selected non-root user/,
     );
   }
-  assert.equal(invocations, 1);
+  assert.equal(invocations, 2);
 });
 
 test("administrator status refuses to load selected code when any credential switch fails", async (t) => {
   const originalGetUid = process.getuid;
+  const originalGetGid = process.getgid;
   process.getuid = () => 0;
   t.after(() => {
     process.getuid = originalGetUid;
+    process.getgid = originalGetGid;
   });
   t.mock.method(
     childProcess,
@@ -379,7 +391,7 @@ test("administrator status refuses to load selected code when any credential swi
       nodePath: "/selected/node",
       cliPath: "/selected/cli.js",
       environment: {},
-    }),
+    }, async () => ({ name: "alice", uid: 500, gid: 500, home: "/selected/home" })),
     /Recorded account switch failure/,
   );
 });

@@ -4,6 +4,7 @@ export async function readBoundedFile(
   file: FileHandle,
   maximumBytes: number,
   limitMessage: string,
+  onBytesRead?: (bytesRead: number) => void,
 ): Promise<Buffer> {
   const chunks: Buffer[] = [];
   let byteLength = 0;
@@ -14,6 +15,8 @@ export async function readBoundedFile(
     if (bytesRead === 0) {
       return Buffer.concat(chunks, byteLength);
     }
+
+    onBytesRead?.(bytesRead);
 
     byteLength += bytesRead;
     if (byteLength > maximumBytes) {

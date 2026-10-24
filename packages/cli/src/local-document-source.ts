@@ -4,6 +4,7 @@ import path from "node:path";
 import { readBoundedFile } from "./bounded-file";
 import { type DocumentMetadata, type DocumentSource, type StoredDocument, isSafeDocumentId, parseDocumentMetadata } from "./documents";
 import { assertUuidV4 } from "./validation";
+import { ManagedSyncStore } from "./sync-store";
 
 export interface LocalDocumentLocation {
   home: string;
@@ -39,6 +40,12 @@ export class LocalDocumentSource implements DocumentSource {
 
   async listDocuments(): Promise<DocumentMetadata[]> {
     await this.checkIdentity();
+    if (await ManagedSyncStore.isEnrolled(this.location.home)) {
+      const documents = await new ManagedSyncStore(this.location.home).listDocuments(this.maximumDocumentBytes);
+      await this.checkIdentity();
+      return documents;
+    }
+
     const directory = path.join(this.location.home, "documents");
     if (!await this.hasDocumentDirectory()) {
       await this.checkIdentity();
@@ -67,6 +74,12 @@ export class LocalDocumentSource implements DocumentSource {
     }
 
     await this.checkIdentity();
+    if (await ManagedSyncStore.isEnrolled(this.location.home)) {
+      const metadata = await new ManagedSyncStore(this.location.home).getDocumentMetadata(id, this.maximumDocumentBytes);
+      await this.checkIdentity();
+      return metadata;
+    }
+
     const metadata = await this.readMetadata(id);
     await this.checkIdentity();
 
@@ -79,6 +92,12 @@ export class LocalDocumentSource implements DocumentSource {
     }
 
     await this.checkIdentity();
+    if (await ManagedSyncStore.isEnrolled(this.location.home)) {
+      const document = await new ManagedSyncStore(this.location.home).getDocument(id, this.maximumDocumentBytes);
+      await this.checkIdentity();
+      return document;
+    }
+
     const metadata = await this.readMetadata(id);
     if (!metadata) {
       await this.checkIdentity();
