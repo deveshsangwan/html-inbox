@@ -1,3 +1,4 @@
+import { assertManagedLifecycle } from "./sync-lifecycle";
 import path from "node:path";
 import { getInboxHome } from "./backend";
 import { canonicalizeInboxHome, readInboxIdentity } from "./inbox-home";
@@ -18,6 +19,7 @@ export interface ResolvedInboxSelection {
 export interface InboxSelectionOptions {
   requireSelection?: boolean;
   chooseInbox?: (inboxes: readonly NamedInbox[]) => Promise<string>;
+  inspectHome?: (home: string) => Promise<{ home: string; instanceId?: string }>;
 }
 
 export class InboxSelectionRequiredError extends Error {
@@ -42,24 +44,24 @@ export async function resolveInboxSelection(
   const catalogOptions = { includeDefault: !hasExplicitSelection && !hasEnvironmentSelection, readOnly: true };
   const catalog = await readInboxCatalog(catalogHome, catalogOptions);
   if (hasExplicitSelection) {
-    return resolveSelectors(selection, catalog.inboxes, "explicit");
+    return resolveSelectors(selection, catalog.inboxes, "explicit", options.inspectHome);
   }
 
   if (hasEnvironmentSelection) {
     // Relative HTML_INBOX_HOME keeps its legacy meaning, relative to this operation's cwd.
     const home = env.HTML_INBOX_HOME ? path.resolve(env.HTML_INBOX_HOME) : undefined;
-    return resolveSelectors({ inbox: env.HTML_INBOX_NAME || undefined, home }, catalog.inboxes, "environment");
+    return resolveSelectors({ inbox: env.HTML_INBOX_NAME || undefined, home }, catalog.inboxes, "environment", options.inspectHome);
   }
 
   if (catalog.defaultName) {
-    return resolveSelectors({ inbox: catalog.defaultName }, catalog.inboxes, "default");
+    return resolveSelectors({ inbox: catalog.defaultName }, catalog.inboxes, "default", options.inspectHome);
   }
 
   if (catalog.inboxes.length > 0) {
     if (options.chooseInbox) {
       // A chooser may wait while the catalog changes. Keep its entries separate from the captured bindings.
       const name = await options.chooseInbox(catalog.inboxes.map((entry) => ({ ...entry })));
-      return resolveSelectors({ inbox: name }, catalog.inboxes, "explicit");
+      return resolveSelectors({ inbox: name }, catalog.inboxes, "explicit", options.inspectHome);
     }
 
     if (options.requireSelection) {
@@ -67,13 +69,14 @@ export async function resolveInboxSelection(
     }
   }
 
-  return resolveSelectors({ home: legacyHome ?? getInboxHome(env) }, catalog.inboxes, "legacy");
+  return resolveSelectors({ home: legacyHome ?? getInboxHome(env) }, catalog.inboxes, "legacy", options.inspectHome);
 }
 
 async function resolveSelectors(
   selection: InboxSelection,
   inboxes: readonly NamedInbox[],
   source: ResolvedInboxSelection["source"],
+  inspectHome?: InboxSelectionOptions["inspectHome"],
 ): Promise<ResolvedInboxSelection> {
   const home = selection.home === undefined ? undefined : await canonicalizeInboxHome(selection.home, true);
   if (selection.inbox !== undefined) {
@@ -86,7 +89,7 @@ async function resolveSelectors(
       throw new InboxInspectionError("conflict", `Inbox name ${selection.inbox} and home select different libraries`);
     }
 
-    return { ...await inspectRegisteredInbox(entry), source };
+    return { ...await inspectRegisteredInbox(entry, inspectHome), source };
   }
 
   if (home === undefined) {
@@ -97,12 +100,21 @@ async function resolveSelectors(
   const entry = inboxes.find((candidate) => candidate.home === requestedHome)
     ?? inboxes.find((candidate) => candidate.home === home);
   if (entry) {
-    return { ...await inspectRegisteredInbox(entry), source };
+    return { ...await inspectRegisteredInbox(entry, inspectHome), source };
   }
 
-  const instanceId = await readInboxIdentity(home);
+  const inspected = inspectHome ? await inspectHome(home) : undefined;
+  if (inspected && inspected.home !== home) {
+    throw new InboxInspectionError("conflict", "Selected home has a different canonical location");
+  }
+
+  const instanceId = inspected ? inspected.instanceId : await readInboxIdentity(home);
   if (instanceId && inboxes.some((candidate) => candidate.instanceId === instanceId)) {
     throw new InboxInspectionError("conflict", `Inbox home contains an identity registered at another location: ${home}`);
+  }
+
+  if (!inspectHome) {
+    await assertManagedLifecycle(home);
   }
 
   return { home, ...(instanceId ? { instanceId } : {}), source };

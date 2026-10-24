@@ -1,3 +1,4 @@
+import { assertManagedLifecycle } from "./sync-lifecycle";
 import http from "node:http";
 import { isDeepStrictEqual } from "node:util";
 import { isRecord } from "./validation";
@@ -62,10 +63,11 @@ export async function prepareTailscale(
   options: TailscaleViewerOptions,
   command: TailscaleCommandOptions = {},
 ): Promise<PreparedTailscale> {
+  await assertManagedLifecycle(options.home);
   assertViewerOptions(options);
   const executable = await resolveTailscaleExecutable(command.executable);
-  const node = await readNode(executable, command.timeoutMs);
-  const config = await readConfig(executable, command.timeoutMs);
+  const node = await readNode(executable, commandTimeout(command), true, command.signal);
+  const config = await readConfig(executable, commandTimeout(command), command.signal);
   const ownership = await readTailscaleOwnership(options.home);
   assertAvailableRoute(config, node, options, ownership);
 
@@ -84,6 +86,7 @@ export async function startTailscale(
   prepared: PreparedTailscale,
   command: TailscaleCommandOptions = {},
 ): Promise<PreparedTailscale> {
+  await assertManagedLifecycle(prepared.home);
   assertPreparedTailscale(prepared);
   if (prepared.backendPort === 0) {
     throw new Error(
@@ -96,10 +99,10 @@ export async function startTailscale(
   );
   const actual = { ...prepared, executable };
   return withTailscaleServeLock(actual.nodeId, async () => {
-    const node = await readNode(executable, command.timeoutMs);
+    const node = await readNode(executable, commandTimeout(command), true, command.signal);
     assertSameNode(node, actual);
 
-    const before = await readConfig(executable, command.timeoutMs);
+    const before = await readConfig(executable, commandTimeout(command), command.signal);
     const previous = await readTailscaleOwnership(actual.home);
     assertAvailableRoute(before, node, actual, previous);
     await assertAnonymousReader(actual.backendPort, actual.hostname);
@@ -126,12 +129,13 @@ export async function startTailscale(
             "--set-path=/",
             ownership.proxy,
           ],
-          command.timeoutMs,
+          commandTimeout(command),
+          command.signal,
         );
       }
 
-      assertSameNode(await readNode(executable, command.timeoutMs), actual);
-      const after = await readConfig(executable, command.timeoutMs);
+      assertSameNode(await readNode(executable, commandTimeout(command), true, command.signal), actual);
+      const after = await readConfig(executable, commandTimeout(command), command.signal);
       assertOwnedRoute(after, ownership);
       assertReaderRoutesAvailable(after, actual.hostname);
       if (
@@ -170,6 +174,7 @@ export async function getTailscaleStatus(
   command: TailscaleCommandOptions = {},
   options: { readOnly?: boolean } = {},
 ): Promise<TailscaleStatus> {
+  await assertManagedLifecycle(home);
   let ownership: TailscaleOwnership | undefined;
   try {
     ownership = await readTailscaleOwnership(home, options);
@@ -185,7 +190,7 @@ export async function getTailscaleStatus(
     const executable = await resolveTailscaleExecutable(
       command.executable ?? ownership.executable,
     );
-    const node = await readNode(executable, command.timeoutMs);
+    const node = await readNode(executable, commandTimeout(command), true, command.signal);
     if (
       node.nodeId !== ownership.nodeId ||
       node.hostname !== ownership.hostname
@@ -197,7 +202,7 @@ export async function getTailscaleStatus(
       };
     }
 
-    const config = await readConfig(executable, command.timeoutMs);
+    const config = await readConfig(executable, commandTimeout(command), command.signal);
     try {
       assertOwnedRoute(config, ownership);
       assertReaderRoutesAvailable(config, ownership.hostname);
@@ -231,6 +236,7 @@ export async function cleanupTailscale(
   expectedOwner?: TailscaleOwner,
   command: TailscaleCommandOptions = {},
 ): Promise<TailscaleStatus> {
+  await assertManagedLifecycle(home);
   const ownership = await readTailscaleOwnership(home);
   if (!ownership) {
     return { state: "stopped" };
@@ -265,10 +271,10 @@ async function cleanupOwnedRoute(
     command.executable ?? ownership.executable,
   );
   assertSameNode(
-    await readNode(executable, command.timeoutMs, false),
+    await readNode(executable, commandTimeout(command), false, command.signal),
     ownership,
   );
-  const before = await readConfig(executable, command.timeoutMs);
+  const before = await readConfig(executable, commandTimeout(command), command.signal);
   if (getRoute(before, ownership.hostname) === undefined) {
     await removeTailscaleOwnership(home);
     return { state: "stopped" };
@@ -278,14 +284,15 @@ async function cleanupOwnedRoute(
   await runTailscale(
     executable,
     ["serve", "--bg", "--yes", "--https=443", "--set-path=/", "off"],
-    command.timeoutMs,
+    commandTimeout(command),
+    command.signal,
   );
 
   assertSameNode(
-    await readNode(executable, command.timeoutMs, false),
+    await readNode(executable, commandTimeout(command), false, command.signal),
     ownership,
   );
-  const after = await readConfig(executable, command.timeoutMs);
+  const after = await readConfig(executable, commandTimeout(command), command.signal);
   if (
     getRoute(after, ownership.hostname) !== undefined ||
     !isDeepStrictEqual(
@@ -362,16 +369,17 @@ async function readNode(
   executable: string,
   timeoutMs?: number,
   requireServe = true,
+  signal?: AbortSignal,
 ) {
   return parseTailscaleNode(
-    await runTailscale(executable, ["status", "--json"], timeoutMs),
+    await runTailscale(executable, ["status", "--json"], timeoutMs, signal),
     requireServe,
   );
 }
 
-async function readConfig(executable: string, timeoutMs?: number) {
+async function readConfig(executable: string, timeoutMs?: number, signal?: AbortSignal) {
   return parseServeConfig(
-    await runTailscale(executable, ["serve", "status", "--json"], timeoutMs),
+    await runTailscale(executable, ["serve", "status", "--json"], timeoutMs, signal),
   );
 }
 
@@ -434,4 +442,19 @@ async function assertAnonymousReader(
 
 function describeError(error: unknown) {
   return error instanceof Error ? error.message : String(error);
+}
+
+function commandTimeout(command: TailscaleCommandOptions): number {
+  command.signal?.throwIfAborted();
+  const timeoutMs = command.timeoutMs ?? 10_000;
+  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 60_000) {
+    throw new Error("Tailscale command timeout must be between 1 and 60000ms");
+  }
+
+  const remaining = command.deadlineAt === undefined ? 60_000 : command.deadlineAt - Date.now();
+  if (remaining <= 0) {
+    throw new Error("Viewer foreground deadline exceeded before Tailscale command");
+  }
+
+  return Math.min(timeoutMs, remaining);
 }

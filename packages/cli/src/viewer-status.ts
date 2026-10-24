@@ -1,3 +1,5 @@
+import { assertManagedLifecycle } from "./sync-lifecycle";
+import { verifyViewerLocalOwner } from "./viewer-ownership";
 import { DEFAULT_PORT } from "./backend";
 import net from "node:net";
 import { readInboxIdentity } from "./inbox-home";
@@ -24,6 +26,7 @@ export async function resolveViewerConfiguration(
   input?: number | ViewerNetworkOptions,
   options: ViewerRecordReadOptions = {},
 ): Promise<ViewerNetworkConfig> {
+  await assertManagedLifecycle(home);
   const saved = await readSavedViewerConfiguration(home, options);
   if (input === undefined) {
     return saved?.config ?? resolveViewerNetworkConfig(DEFAULT_PORT);
@@ -48,8 +51,9 @@ export async function resolveViewerConfiguration(
 export async function getViewerStatus(
   home: string,
   port?: number,
-  options: { refreshLanUrls?: boolean; readOnly?: boolean; instanceId?: string } = {},
+  options: { refreshLanUrls?: boolean; readOnly?: boolean; instanceId?: string; deadlineAt?: number; signal?: AbortSignal; probeMissingRecord?: boolean } = {},
 ): Promise<ViewerStatus> {
+  const managed = await assertManagedLifecycle(home);
   if (options.instanceId !== undefined) {
     assertUuidV4(options.instanceId, "Expected inbox identity");
   }
@@ -89,11 +93,15 @@ export async function getViewerStatus(
   }
 
   if (!selected) {
+    if (managed && recordFailure) {
+      return { ...base, state: "incompatible", reason: recordFailure };
+    }
+
     return {
       ...base,
       state: recordFailure && (options.readOnly || recordFailure.startsWith("Older viewer process record:"))
         ? "incompatible"
-        : await isPortListening(selectedConfig) ? "conflict" : "stopped",
+        : options.probeMissingRecord === false ? "stopped" : await isPortListening(selectedConfig, options.deadlineAt, options.signal) ? "conflict" : "stopped",
       ...(recordFailure ? { reason: recordFailure } : {}),
     };
   }
@@ -102,9 +110,13 @@ export async function getViewerStatus(
     return { ...base, state: "incompatible", reason: "Viewer process record uses an incompatible protocol" };
   }
 
-  const health = await getControlHealth(selected.controlUrl);
+  if (managed && await verifyViewerLocalOwner(home, selected) === "dead") {
+    return { ...base, state: "stopped", reason: "Recorded viewer owner is conclusively dead" };
+  }
+
+  const health = await getControlHealth(selected.controlUrl, options);
   if (health.state === "unavailable") {
-    return { ...base, state: await isPortListening(selectedConfig) ? "conflict" : "stopped" };
+    return { ...base, state: await isPortListening(selectedConfig, options.deadlineAt, options.signal) ? "conflict" : "stopped" };
   }
 
   if (health.state !== "ready") {
@@ -125,7 +137,7 @@ export async function getViewerStatus(
   }
 
   if (selected.config.exposure === "tailscale") {
-    const mapping = await getTailscaleStatus(home, { executable: process.env.HTML_INBOX_TAILSCALE_COMMAND }, options);
+    const mapping = await getTailscaleStatus(home, { executable: process.env.HTML_INBOX_TAILSCALE_COMMAND, deadlineAt: options.deadlineAt, signal: options.signal }, options);
     if (mapping.state !== "running" || mapping.instanceId?.toLowerCase() !== canonicalInstanceId || mapping.processId !== selected.processId ||
         mapping.backendPort !== selected.config.port || mapping.url !== base.url) {
       return {
@@ -146,11 +158,16 @@ export async function getViewerStatus(
 
 type ControlHealth =
   | { state: "unavailable" | "invalid" | "incompatible" }
-  | { state: "ready"; instanceId: string; processId: string; pid: number };
+  | { state: "ready"; instanceId: string; processId: string; pid: number; managedCompatible: boolean };
 
-export async function getControlHealth(controlUrl: string): Promise<ControlHealth> {
+export async function getControlHealth(controlUrl: string, options: { deadlineAt?: number; signal?: AbortSignal } = {}): Promise<ControlHealth> {
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  options.signal?.addEventListener("abort", abort, { once: true });
+  if (options.signal?.aborted) abort();
+  const timer = setTimeout(abort, Math.max(1, Math.min(400, (options.deadlineAt ?? Infinity) - Date.now())));
   try {
-    const response = await fetch(controlUrl, { signal: AbortSignal.timeout(400), redirect: "error" });
+    const response = await fetch(controlUrl, { signal: controller.signal, redirect: "error" });
     if (!response.ok) {
       return { state: "invalid" };
     }
@@ -171,23 +188,32 @@ export async function getControlHealth(controlUrl: string): Promise<ControlHealt
     }
 
     assertUuidV4(value.processId, "Viewer process identity");
-    return { state: "ready", instanceId: value.instanceId, processId: value.processId, pid: value.pid };
+    return { state: "ready", instanceId: value.instanceId, processId: value.processId, pid: value.pid,
+      managedCompatible: isRecord(value.capabilities) && Array.isArray(value.capabilities.managedLedgerSchemas) &&
+        value.capabilities.managedLedgerSchemas.includes(1) && value.capabilities.dynamicFormatSwitch === true };
   } catch (error) {
     return { state: error instanceof SyntaxError ? "invalid" : "unavailable" };
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener("abort", abort);
   }
 }
 
-export async function isPortListening(config: ViewerNetworkConfig): Promise<boolean> {
+export async function isPortListening(config: ViewerNetworkConfig, deadlineAt?: number, signal?: AbortSignal): Promise<boolean> {
   const host = config.host === "0.0.0.0" ? "127.0.0.1" : config.host === "::" ? "::1" : config.host;
   return new Promise((resolve) => {
     const socket = net.createConnection({ port: config.port, host });
     const finish = (isListening: boolean) => {
+      signal?.removeEventListener("abort", onAbort);
       socket.destroy();
       resolve(isListening);
     };
 
+    const onAbort = () => finish(true);
+    signal?.addEventListener("abort", onAbort, { once: true });
+    if (signal?.aborted) onAbort();
     socket.once("connect", () => finish(true));
     socket.once("error", (error: Error) => finish(!hasErrorCode(error, "ECONNREFUSED")));
-    socket.setTimeout(400, () => finish(true));
+    socket.setTimeout(Math.max(1, Math.min(400, (deadlineAt ?? Infinity) - Date.now())), () => finish(true));
   });
 }

@@ -13,8 +13,9 @@ import { ensureViewer, getViewerStatus, resolveViewerConfiguration, startViewer,
 import { parseCommand, type CliCommand } from "./cli-args";
 import { isRecord } from "./validation";
 import { containsPath } from "./path-containment";
-import { parseViewerNetworkConfig } from "./viewer-network";
-import { getViewerServiceStatus, installViewerService, resolveViewerServiceHome, uninstallViewerService } from "./viewer-service";
+import { parseViewerNetworkConfig, resolveViewerNetworkConfig } from "./viewer-network";
+import { getViewerServiceStatus, installViewerService, inspectViewerServiceSelection, resolveViewerServiceHome, uninstallViewerService } from "./viewer-service";
+import { runViewerOwnerPreflight, VIEWER_OWNER_PREFLIGHT } from "./viewer-service-owner";
 import { configureViewerServiceLogging } from "./viewer-service-log";
 import { readPreferences, setAppearancePreference } from "./preferences";
 import { resolveInboxSelection, type ResolvedInboxSelection } from "./inbox-selection";
@@ -98,6 +99,15 @@ Selection:
   Without named inboxes, the legacy ~/.html-inbox home remains available.`;
 
 export async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
+  if (argv[0] === VIEWER_OWNER_PREFLIGHT) {
+    if (argv.length !== 2) {
+      throw new Error("Viewer owner preflight requires one bounded input");
+    }
+
+    console.log(JSON.stringify(await runViewerOwnerPreflight(argv[1])));
+    return;
+  }
+
   const parsed = parseCommand(argv);
   const command = parsed.command;
 
@@ -129,6 +139,10 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
   const canChooseInbox = stdin.isTTY && stdout.isTTY && stderr.isTTY && !json;
   const selection = await resolveInboxSelection(parsed, process.env, legacyHome, {
     requireSelection: true,
+    ...(parsed.command === "viewer service" ? { inspectHome: async (selectedHome: string) => {
+      const inspected = await inspectViewerServiceSelection(selectedHome, parsed.user);
+      return { home: inspected.home, ...(inspected.instanceId ? { instanceId: inspected.instanceId } : {}) };
+    } } : {}),
     ...(canChooseInbox ? { chooseInbox: promptForInbox } : {}),
   });
   const home = selection.home;
@@ -181,22 +195,25 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
   if (command === "viewer service") {
     if (parsed.action === "status") {
-      const status = await getViewerServiceStatus({ home });
+      const status = await getViewerServiceStatus({ home, user: parsed.user });
       console.log(parsed.json ? JSON.stringify(status, null, 2) : formatViewerServiceResult("status", status, selection.name));
       return;
     }
 
     if (parsed.action === "uninstall") {
-      const status = await uninstallViewerService({ home });
+      const status = await uninstallViewerService({ home, user: parsed.user });
       console.log(parsed.json ? JSON.stringify(status, null, 2) : formatViewerServiceResult("uninstall", status, selection.name));
       return;
     }
 
-    const saved = await resolveViewerConfiguration(home);
-    const config = await resolveViewerConfiguration(home, {
+    const inspected = await inspectViewerServiceSelection(home, parsed.user, undefined, true);
+    const saved = inspected.configuration ?? resolveViewerNetworkConfig(getViewerPort());
+    const exposure = parsed.exposure ?? saved.exposure;
+    const config = resolveViewerNetworkConfig({
       port: parsed.port ?? (process.env.HTML_INBOX_PORT ? getViewerPort() : saved.port),
-      exposure: parsed.exposure,
-      host: parsed.host,
+      exposure,
+      host: parsed.host ?? (exposure === saved.exposure ? saved.host : undefined),
+      tailscaleHostname: exposure === "tailscale" ? saved.tailscaleHostname : undefined,
     });
     const status = await installViewerService({ home, ...config, user: parsed.user });
     console.log(parsed.json ? JSON.stringify(status, null, 2) : formatViewerServiceResult("install", status, selection.name));

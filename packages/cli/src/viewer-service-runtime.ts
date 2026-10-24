@@ -5,8 +5,8 @@ import path from "node:path";
 import { CommandRunner, NodeCommandRunner } from "./command-runner";
 import { ViewerServiceDefinition } from "./viewer-service-definition";
 import { resolveViewerNetworkConfig } from "./viewer-network";
-import { readSavedViewerConfiguration } from "./viewer-records";
 import { queryViewerServiceProcess } from "./viewer-service-status";
+import { preflightViewerServiceHome } from "./viewer-service-owner";
 
 export interface ViewerServiceOptions {
   home: string;
@@ -102,6 +102,7 @@ export async function prepareDefinition(options: ViewerServiceOptions, runtime: 
   const user = await selectUser(options.user, runtime);
   const home = path.resolve(options.home);
   assertSafeText(home, "Inbox home");
+  const inspection = await preflightViewerServiceHome({ home, user, readConfiguration: true });
   const nodePath = await resolveInstalledPath(runtime.nodePath, true);
   const cliPath = await resolveInstalledPath(runtime.cliPath, false);
   const environment: Record<string, string> = {
@@ -125,8 +126,7 @@ export async function prepareDefinition(options: ViewerServiceOptions, runtime: 
   }
 
   if (config.exposure === "tailscale") {
-    const saved = await readSavedViewerConfiguration(home);
-    const override = runtime.tailscalePath ?? runtime.environment.HTML_INBOX_TAILSCALE_COMMAND ?? saved?.tailscaleExecutable;
+    const override = runtime.tailscalePath ?? runtime.environment.HTML_INBOX_TAILSCALE_COMMAND ?? inspection.tailscaleExecutable;
     environment.HTML_INBOX_TAILSCALE_COMMAND = await resolveExecutable(override ?? "tailscale", runtime.environment.PATH);
   }
 
@@ -184,6 +184,12 @@ async function stablePath(executablePath: string | undefined, nodePath: string) 
 }
 
 export async function prepareViewerServiceInbox(definition: ViewerServiceDefinition, runtime: ViewerServiceRuntime) {
+  const user = await selectUser(definition.user.name, runtime);
+  if (user.uid !== definition.user.uid || user.gid !== definition.user.gid || user.home !== definition.user.home) {
+    throw new Error("Installed service account binding differs from the current normal account");
+  }
+
+  await preflightViewerServiceHome({ home: definition.home, user: definition.user });
   let createdHome = false;
   try {
     await mkdir(definition.home, { mode: 0o700 });

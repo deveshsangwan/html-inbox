@@ -1,3 +1,4 @@
+import { assertManagedLifecycle } from "./sync-lifecycle";
 import http, { IncomingMessage, ServerResponse } from "node:http";
 import { randomBytes } from "node:crypto";
 import { type DocumentSource, isSafeDocumentId } from "./documents";
@@ -17,6 +18,7 @@ import {
 } from "./viewer-network";
 
 export interface ViewerControlHealth {
+  capabilities?: { managedLedgerSchemas: number[]; dynamicFormatSwitch: boolean };
   instanceId: string;
   processId: string;
   protocolVersion: number;
@@ -56,6 +58,7 @@ export async function startViewerHttpServer(
   preferencesHome?: string,
   renderOptions: ViewerRenderOptions = {},
 ): Promise<ViewerHttpServer> {
+  if (preferencesHome) await assertManagedLifecycle(preferencesHome);
   const startingReader = startReaderServer({ source, preferencesHome, renderOptions }, configuration);
   const controlPath = `/control/${randomBytes(32).toString("base64url")}`;
   let controlPort = 0;

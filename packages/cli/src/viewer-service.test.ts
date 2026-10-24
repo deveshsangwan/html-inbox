@@ -1,5 +1,6 @@
 import { strict as assert } from "node:assert";
-import { access, chmod, lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import childProcess, { type ExecFileOptions } from "node:child_process";
+import { access, chmod, cp, lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test, TestContext } from "node:test";
@@ -9,6 +10,12 @@ import { LAUNCHD_VIEWER_LABEL, parseViewerServiceDefinition, renderViewerService
 import { saveViewerConfiguration } from "./viewer-records";
 import { defaultRuntime, prepareDefinition } from "./viewer-service-runtime";
 import { queryManager, runManager } from "./viewer-service-manager";
+import { ManagedSyncStore } from "./sync-store";
+import { runViewerOwnerPreflight } from "./viewer-service-owner";
+import { registerInbox, setDefaultInbox } from "./inbox-catalog";
+import { main } from "./index";
+import * as serviceRuntime from "./viewer-service-runtime";
+import { parseObject, parseString } from "./sync-model";
 
 const serviceRecordingSkip = process.platform === "win32"
   ? "Boot service ownership and recording executable checks require a POSIX platform."
@@ -145,6 +152,70 @@ class RecordingManager implements CommandRunner {
     return { code: 0, signal: null, stdout, stderr: "" };
   }
 }
+
+test("administrator managed service operations validate as the selected owner before recording manager effects", { skip: serviceRecordingSkip }, async (t) => {
+  const fixture = await serviceFixture(t);
+  await new ManagedSyncStore(fixture.home).enroll();
+  const ownerUid = process.getuid;
+  assert.ok(ownerUid);
+  const nativeUid = ownerUid();
+  let preflights = 0;
+  process.getuid = () => 0;
+  t.after(() => { process.getuid = ownerUid; });
+  t.mock.method(childProcess, "execFile", (_command: string, args: string[], options: ExecFileOptions,
+    callback: (error: Error | null, stdout: string, stderr: string) => void) => {
+    assert.deepEqual(options.env, { LANG: "C", LC_ALL: "C" });
+    preflights += 1;
+    void (async () => {
+      process.getuid = () => nativeUid;
+      try {
+        const configuration = parseObject(JSON.parse(args[3]), "owner helper");
+        assert.ok(Array.isArray(configuration.args));
+        const inspected = await runViewerOwnerPreflight(parseString(configuration.args[1]));
+        callback(null, JSON.stringify(inspected), "");
+      } catch (error) {
+        callback(error instanceof Error ? error : new Error("Owner inspection failed"), "", "");
+      } finally {
+        process.getuid = () => 0;
+      }
+    })();
+    return new childProcess.ChildProcess();
+  });
+
+  assert.equal((await installViewerService(fixture.options, fixture.runtime)).state, "running");
+  assert.equal((await installViewerService(fixture.options, fixture.runtime)).state, "running");
+  fixture.runtime.environment = {};
+  assert.equal((await getViewerServiceStatus({ home: fixture.home }, fixture.runtime)).state, "running");
+  const managerCalls = fixture.manager.invocations.length;
+  const copied = path.join(fixture.directory, "copied");
+  await cp(fixture.home, copied, { recursive: true });
+  await assert.rejects(installViewerService({ ...fixture.options, home: copied, user: "alice" }, fixture.runtime), /Copied or moved/);
+  await assert.rejects(getViewerServiceStatus({ home: fixture.home, user: "another" }, fixture.runtime), /Selected user/);
+  await assert.rejects(serviceRuntime.prepareViewerServiceInbox({ ...await prepareDefinition({ ...fixture.options, user: "alice" }, fixture.runtime, "linux"), home: copied }, fixture.runtime), /Copied or moved/);
+  assert.equal(fixture.manager.invocations.length, managerCalls);
+
+  process.getuid = ownerUid;
+  const catalog = path.join(fixture.directory, "catalog");
+  await registerInbox("managed", fixture.home, catalog);
+  await setDefaultInbox("managed", catalog);
+  process.getuid = () => 0;
+  t.mock.method(serviceRuntime, "defaultRuntime", () => fixture.runtime);
+  const catalogBefore = process.env.HTML_INBOX_CATALOG_HOME;
+  process.env.HTML_INBOX_CATALOG_HOME = catalog;
+  t.after(() => {
+    if (catalogBefore === undefined) delete process.env.HTML_INBOX_CATALOG_HOME;
+    else process.env.HTML_INBOX_CATALOG_HOME = catalogBefore;
+  });
+  const output: string[] = [];
+  t.mock.method(console, "log", (value: string) => { output.push(value); });
+  await main(["viewer", "service", "install", "--inbox", "managed", "--user", "alice", "--json"]);
+  await main(["viewer", "service", "status", "--home", fixture.home, "--json"]);
+  await main(["viewer", "service", "status", "--json"]);
+  assert.equal(output.length, 3);
+  assert.ok(output.every((value) => parseObject(JSON.parse(value), "service result").state === "running"));
+  assert.equal((await uninstallViewerService({ home: fixture.home }, fixture.runtime)).state, "not-installed");
+  assert.ok(preflights >= 4);
+});
 
 test("system boot service preserves the selected user and inbox while logging to the journal", { skip: serviceRecordingSkip }, async (t) => {
   const fixture = await serviceFixture(t);
@@ -459,6 +530,11 @@ test("a temporary recording executable receives system service status arguments"
 
 test("administrator-selected normal UID 500 accounts retain their real home and service identity", { skip: serviceRecordingSkip }, async (t) => {
   const fixture = await serviceFixture(t);
+  const getuid = process.getuid;
+  const getgid = process.getgid;
+  process.getuid = () => 500;
+  process.getgid = () => 500;
+  t.after(() => { process.getuid = getuid; process.getgid = getgid; });
   const runtime = { ...fixture.runtime, lookupUser: async (name: string) => ({ name, uid: 500, gid: 500, home: fixture.userHome }) };
   assert.equal(await resolveViewerServiceHome({ user: "alice" }, runtime), path.join(fixture.userHome, ".html-inbox"));
   const definition = await prepareDefinition({ ...fixture.options, user: "alice" }, runtime, "linux");

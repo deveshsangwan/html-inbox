@@ -6,6 +6,8 @@ import path from "node:path";
 export interface TailscaleCommandOptions {
   executable?: string;
   timeoutMs?: number;
+  deadlineAt?: number;
+  signal?: AbortSignal;
 }
 
 export async function resolveTailscaleExecutable(
@@ -47,11 +49,13 @@ export async function runTailscale(
   executable: string,
   args: string[],
   timeoutMs = 10_000,
+  signal?: AbortSignal,
 ): Promise<string> {
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 60_000) {
     throw new Error("Tailscale command timeout must be between 1 and 60000ms");
   }
 
+  signal?.throwIfAborted();
   return new Promise((resolve, reject) => {
     const child = execFile(
       executable,
@@ -62,6 +66,7 @@ export async function runTailscale(
         killSignal: "SIGKILL",
         maxBuffer: 1024 * 1024,
         windowsHide: true,
+        signal,
       },
       (error, stdout, stderr) => {
         if (!error) {

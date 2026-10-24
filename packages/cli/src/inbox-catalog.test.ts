@@ -315,6 +315,53 @@ test("catalog reads retry valid default replacement and unlink races before and 
   }
 });
 
+test("catalog retries native zero-link inode observations during atomic replacement", { skip: process.platform === "win32" }, async (t) => {
+  const { root, catalogHome } = await catalogFixture(t);
+  await createInbox("first", path.join(root, "first"), catalogHome);
+  await createInbox("second", path.join(root, "second"), catalogHome);
+  await setDefaultInbox("first", catalogHome);
+  const modulePath = path.join(__dirname, "inbox-catalog.js");
+  const worker = `
+    const assert = require("node:assert/strict");
+    const fs = require("node:fs/promises");
+    const path = require("node:path");
+    const [modulePath, catalogHome, mode] = process.argv.slice(1);
+    const target = path.join(catalogHome, "default.json");
+    const perform = fs.lstat;
+    let hits = 0;
+    fs.lstat = async (...args) => {
+      if (args[0] !== target || (mode === "once" && hits)) return perform(...args);
+      hits += 1;
+      const old = await fs.open(target, "r");
+      try {
+        await fs.writeFile(target + ".replacement", JSON.stringify({ schemaVersion: 1, name: "second" }), { mode: 0o600 });
+        await fs.rename(target + ".replacement", target);
+        const unlinked = await old.stat();
+        assert.equal(unlinked.nlink, 0);
+        return unlinked;
+      } finally {
+        await old.close();
+      }
+    };
+    (async () => {
+      if (mode === "once") {
+        const result = await require(modulePath).readInboxCatalog(catalogHome, { readOnly: true });
+        assert.equal(result.defaultName, "second");
+        assert.equal(hits, 1);
+      } else {
+        await assert.rejects(require(modulePath).readInboxCatalog(catalogHome, { readOnly: true }), /changed repeatedly during read/);
+        assert.equal(hits, 10);
+      }
+      process.stdout.write(JSON.stringify({ mode, hits }));
+    })().catch(error => { console.error(error); process.exitCode = 1; });
+  `;
+
+  for (const mode of ["once", "always"]) {
+    const result = await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, mode], { timeout: 5000 });
+    assert.deepEqual(JSON.parse(result.stdout), { mode, hits: mode === "once" ? 1 : 10 });
+  }
+});
+
 test("replacement retries retain strict schema, byte limits, and hardlink validation", async (t) => {
   const { root, catalogHome } = await catalogFixture(t);
   await createInbox("work", path.join(root, "work"), catalogHome);

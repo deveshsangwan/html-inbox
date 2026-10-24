@@ -282,7 +282,7 @@ test("viewer stop recovers a pending Tailscale journal before any viewer process
   await new Promise<void>((resolve) => fixture.reader.close(() => resolve()));
 
   assert.equal(await readViewerRecord(fixture.home), null);
-  assert.equal((await stopViewer(fixture.home)).state, "stopped");
+  assert.equal((await stopViewer(fixture.home, fixture.options.backendPort)).state, "stopped");
   assert.deepEqual(await fixture.liveConfig(), {});
   await assert.rejects(fixture.journal(), /ENOENT/);
 });
