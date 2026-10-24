@@ -21,6 +21,10 @@ import { readPreferences, setAppearancePreference } from "./preferences";
 import { resolveInboxSelection, type ResolvedInboxSelection } from "./inbox-selection";
 import { runInboxCommand, runHubCommand } from "./inbox-commands";
 import { formatDocumentTable, formatViewerServiceResult, formatViewerStatus, formatViewerStopResult } from "./cli-display";
+import { resolveEnrollmentSelection } from "./sync-enrollment";
+import { isSyncCommand, isOfflineSyncCommand, runOfflineSyncCommand, runSyncCommand } from "./sync-cli";
+import { assertManagedLifecycle } from "./sync-lifecycle";
+import { formatManagedPublication, publishManagedDocument } from "./sync-publication";
 import { promptForInbox } from "./inbox-picker";
 
 export const USAGE = `Usage: html-inbox <command> [options]
@@ -28,6 +32,23 @@ export const USAGE = `Usage: html-inbox <command> [options]
 Commands:
   publish <file.html> --title <title> --type <type> [--json]
       Store an HTML document and print its active viewer URL.
+
+  sync enroll --inbox <name> --yes [--json]
+  sync configure --inbox <name> --config <absolute-runtime-json> [--json]
+  sync status [--document <local-id>] [--json]
+  sync mapping add --config <absolute-mapping-json>
+  sync mapping remove <route-uuid> --revision <current>
+  sync mapping reconnect <route-uuid> --revision <current> --config <absolute-json>
+  sync target set <destination-uuid> --peer <peer-uuid> | sync target clear
+  sync run [--route <uuid>] | sync retry --route <uuid> | sync pause | sync resume
+  sync worker enable | start [--foreground] | startup | status | stop | disable | wake
+  sync worker supervisor render --platform <systemd|launchd> --user <normal-user>
+  sync worker supervisor status --definition <absolute-definition>
+  sync restore inspect --home <canonical-home>
+  sync restore quarantine --home <canonical-home> --expect-inbox <uuid> --yes
+  sync fork --home <canonical-home> --expect-inbox <uuid> --yes
+      Managed replication uses explicit matching peer grants and its own owned worker.
+      Publish accepts --wait-ms, --request-timeout-ms and paired --target-inbox/--target-peer.
 
   list [--json]
       List locally stored documents.
@@ -131,13 +152,19 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     return;
   }
 
+  if (isSyncCommand(parsed) && isOfflineSyncCommand(parsed)) {
+    const result = await runOfflineSyncCommand(parsed);
+    console.log(parsed.json ? JSON.stringify(result) : JSON.stringify(result, null, 2));
+    return;
+  }
+
   const legacyHome = parsed.command === "viewer service"
     ? await resolveViewerServiceHome({ user: parsed.user })
     : undefined;
   const json = ("json" in parsed && parsed.json === true) ||
     ("options" in parsed && "json" in parsed.options && parsed.options.json === true);
   const canChooseInbox = stdin.isTTY && stdout.isTTY && stderr.isTTY && !json;
-  const selection = await resolveInboxSelection(parsed, process.env, legacyHome, {
+  const selection = parsed.command === "sync enroll" ? await resolveEnrollmentSelection(parsed) : await resolveInboxSelection(parsed, process.env, legacyHome, {
     requireSelection: true,
     ...(parsed.command === "viewer service" ? { inspectHome: async (selectedHome: string) => {
       const inspected = await inspectViewerServiceSelection(selectedHome, parsed.user);
@@ -150,7 +177,24 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     console.error(`html-inbox: Inbox ${selection.name} (${home})`);
   }
 
+  if (isSyncCommand(parsed)) {
+    const result = await runSyncCommand(parsed, selection);
+    console.log(typeof result === "string" ? result : JSON.stringify(result, null, parsed.json ? undefined : 2));
+    return;
+  }
+
   if (command === "publish") {
+    if (await assertManagedLifecycle(home)) {
+      const publication = await publishManagedDocument(parsed.options, selection);
+      console.log(parsed.json ? JSON.stringify(publication.result) : formatManagedPublication(publication.result));
+      process.exitCode = publication.exitCode;
+      return;
+    }
+
+    if (parsed.options.target || parsed.options.waitMs !== undefined || parsed.options.requestTimeoutMs !== undefined) {
+      throw new Error("Sync publication options require an enrolled inbox");
+    }
+
     const url = await publishCommand(parsed.options, selection);
     console.log(parsed.json ? JSON.stringify({ url, inbox: selection.name ?? null, home }) : url);
     return;
