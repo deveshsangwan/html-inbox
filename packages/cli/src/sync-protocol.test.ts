@@ -9,8 +9,9 @@ import platformTest, { type TestContext } from "node:test";
 import { SyncClient } from "./sync-client";
 import { createSyncHttpsCredentials, startSyncHttpsProxy, type SyncHttpsCredentials } from "./sync-https-fixtures";
 import { createSyncIngestionServer } from "./sync-http-server";
-import { canonicalKey, parseObject, sha256, signOriginState, stateFingerprint, type SyncRoute, type OriginGrant, type OriginState } from "./sync-model";
+import { canonicalKey, parseArray, parseObject, sha256, signOriginState, stateFingerprint, type SyncRoute, type OriginGrant, type OriginState } from "./sync-model";
 import { startSyncApplication } from "./sync-protocol-fixture";
+import { startProtocolFaultChild } from "./sync-protocol-fault-child";
 import { reconcileSyncRoutes, routeAuthorization } from "./sync-reconciliation";
 import { ManagedSyncStore, toOriginState } from "./sync-store";
 import { defaultRuntimeConfig } from "./sync-runtime-config";
@@ -455,9 +456,23 @@ test("local revoke aborts registered requests and fences every subsequent reques
 for (const event of ["body-flushed", "committed-before-receipt"]) {
   test(`actual server crash at ${event} resolves by repeatable durable receiver receipt`, { timeout: 25_000 }, async (t) => {
     const f = await pair(t);
+    const senderContext: Pick<TestContext, "after" | "diagnostic"> = { after(close) {
+      if (close) f.a.stopApplications.push(async () => { await close(t, () => {}); });
+    }, diagnostic(message) { t.diagnostic(message); } };
+    const sender = await startProtocolFaultChild(senderContext, { mode: "runner", home: f.a.home, peerId: f.a.peerId, token: f.token, caPath: f.tls.caPath });
+    async function runSender(requestMs = 1000) {
+      // Keep the original pass deadline without adding the helper's shorter reply limit.
+      const reply = await sender.command({ type: "run", routeIds: [f.outbound.id], requestMs, deadlineMs: 30_000 }, 25_000);
+      assert.equal(reply.error, undefined);
+      const result = parseObject(reply.result, "crash sender reconciliation");
+      const routes = parseArray(result.routes, (value) => parseObject(value, "crash sender route"), 1);
+      assert.equal(routes.length, 1);
+      return { routes };
+    }
+
     await f.a.store.publish(input, "crash");
     await f.bs.command({ type: "arm", event });
-    const sending = f.run(f.a, f.outbound, { requestMs: 1000 });
+    const sending = runSender();
     const fault = await f.bs.waitFor("fault");
     assert.equal(fault.hits, 1);
     await f.bs.stop(true);
@@ -471,10 +486,15 @@ for (const event of ["body-flushed", "committed-before-receipt"]) {
     const restarted = await server(t, f.b, f.tls, f.token, { port: Number(new URL(f.bs.url).port) });
     assert.equal(restarted.url, f.bs.url);
     await f.a.store.retry(routeAuthorization(f.outbound));
-    assert.equal((await f.run(f.a, f.outbound)).routes[0].status, "confirmed");
+    assert.equal((await runSender(5000)).routes[0].status, "confirmed");
+    // Process exit settles sender watchers before source recovery or directory removal.
+    await sender.stop();
+    t.diagnostic(`source runner ${sender.pid}: reaped before source recovery`);
+    await f.a.store.recover();
     const after = await recovered.snapshot();
     assert.equal(Object.keys(after.records).length, 1);
     assert.equal(Object.keys(after.receipts).length, 1);
+    assert.deepEqual((await recovered.getDocument(Object.values(after.records)[0].localId))?.originalBytes, bytes);
     if (event === "committed-before-receipt") assert.deepEqual(after.receipts, before.receipts);
   });
 }

@@ -37,8 +37,8 @@ export async function startProtocolFaultChild(t: Pick<TestContext, "after" | "di
   child.stderr?.on("data", (chunk: Buffer) => { diagnostic += chunk.toString(); });
   child.on("message", (value: unknown) => { messages.push(parseObject(value, "fault child IPC")); });
 
-  async function waitFor(type: string, id?: number) {
-    const deadline = Date.now() + 8000;
+  async function waitFor(type: string, id?: number, waitMs = 8000) {
+    const deadline = Date.now() + waitMs;
     while (Date.now() < deadline) {
       const message = messages.find((message) => message.type === type && (id === undefined || message.id === id));
       if (message) {
@@ -56,14 +56,15 @@ export async function startProtocolFaultChild(t: Pick<TestContext, "after" | "di
     throw new Error(`Fault child timed out at ${type}: ${diagnostic}`);
   }
 
-  async function command(value: Record<string, unknown>) {
+  async function command(value: Record<string, unknown>, waitMs = 8000) {
+    const boundedWait = parseInteger(waitMs, 1, 300_000);
     const id = ++sequence;
     if (!child.connected) {
       throw new Error("Fault child IPC is closed");
     }
 
     await new Promise<void>((resolve, reject) => child.send({ ...value, id }, (error) => error ? reject(error) : resolve()));
-    return waitFor("reply", id);
+    return waitFor("reply", id, boundedWait);
   }
 
   function stop(kill = false) {
