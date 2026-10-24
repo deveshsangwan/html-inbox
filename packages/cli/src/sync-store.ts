@@ -10,6 +10,7 @@ import { validateHtml } from "./html-validation";
 import { readInboxIdentity } from "./inbox-home";
 import { DurableFiles, checkDirectory, createStorageCounters, hasCode, openPrivateFile, optionalStat, readPrivateFile, withStoreLock, type StorageTestHooks } from "./sync-files";
 import { type SyncLedger, type ManagedRecord, type DurableReceipt, type OwnerAnchor, parseLedger, parseReceipt, outboxKey, receiptKey } from "./sync-ledger";
+import { readManagedLedgerBytes } from "./sync-ledger-reader";
 import { type OriginState, type OriginGrant, type SyncRoute, type RouteAuthorization, type CompleteInventory, SYNC_LIMITS, SYNC_DEFAULTS, IncompleteSyncHistoryError, canonicalKey, metadataEncoding, metadataProjection,
   parseOriginState, parseOriginalMetadata, parseAuthorization, parseRoute, parseCompleteInventory, sha256, signOriginState, stateFingerprint, sameImmutableDescriptor, verifyOriginState,
   inventoryDigest, parseInteger, parseObject, parseSafeId, parseUuid } from "./sync-model";
@@ -1435,22 +1436,7 @@ export class ManagedSyncStore {
   }
 
   private async readLedger(): Promise<SyncLedger> {
-    let bytes: Buffer | undefined;
-    for (let attempt = 0; attempt < 4; attempt += 1) {
-      try {
-        bytes = await readPrivateFile(this.ledgerPath(), SYNC_LIMITS.ledgerBytes);
-        break;
-      } catch (error) {
-        if (!(error instanceof Error) || error.message !== "Managed file changed during open" || attempt === 3) {
-          throw error;
-        }
-      }
-    }
-
-    if (!bytes) {
-      throw new Error("Unable to obtain a coherent ledger snapshot");
-    }
-
+    const bytes = await readManagedLedgerBytes(this.ledgerPath());
     const ledger = parseLedger(JSON.parse(bytes.toString("utf8")));
     for (const record of Object.values(ledger.records)) {
       const grant = ledger.originKeys.find((grant) => grant.inboxId === record.originInboxId && grant.historyEpoch === record.historyEpoch);
