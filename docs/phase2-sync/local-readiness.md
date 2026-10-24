@@ -1,6 +1,8 @@
 # Phase 2 local readiness handoff
 
-This report records the original local readiness snapshot. The later user request authorizes logical commits and a single stacked PR; [commit-sequence.md](commit-sequence.md) records that sequence and the fresh broad verification. All production/test source remains identical.
+This report records the original local readiness snapshot. The later user request authorizes logical commits and a single stacked PR; [commit-sequence.md](commit-sequence.md) records that sequence and its fresh broad verification. The source-identical statement there applies to the original seven commits.
+
+The later [CI follow-up](ci-followup.md) corrects fixture teardown and Windows compatibility. Both focused reviewers accepted it; local verification passed738tests with733passes and five documented skips. Its current source checksum list is tested-source-ci.sha256; the original source list below records the historical pre-CI snapshot. Hosted results are tracked in the PR checks after the corrected push.
 
 Status: tested local readiness. No observed local implementation or review blocker remains. This handoff does not authorize or certify deployment.
 
