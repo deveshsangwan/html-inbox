@@ -11,7 +11,8 @@ import { SyncClient } from "./sync-client";
 import { withStoreLock } from "./sync-files";
 import { createSyncHttpsCredentials } from "./sync-https-fixtures";
 import { createSyncIngestionServer } from "./sync-http-server";
-import { type OriginGrant, type SyncRoute } from "./sync-model";
+import { parseObject, type OriginGrant, type SyncRoute } from "./sync-model";
+import { startProtocolFaultChild } from "./sync-protocol-fault-child";
 import { assertLoopbackClosed } from "./sync-protocol-fixture";
 import { reconcileSyncRoutes, routeAuthorization } from "./sync-reconciliation";
 import { defaultRuntimeConfig } from "./sync-runtime-config";
@@ -45,11 +46,12 @@ async function fixture(t: TestContext) {
       await close();
     }
   });
-  const certificates = await createSyncHttpsCredentials({ after: (close) => {
+  const context: Pick<TestContext, "after" | "diagnostic"> = { after(close) {
     if (close) {
       cleanup.push(async () => { await close(t, () => {}); });
     }
-  } });
+  }, diagnostic(message) { t.diagnostic(message); } };
+  const certificates = await createSyncHttpsCredentials(context);
   const ca = await readFile(certificates.caPath);
   const key = await readFile(certificates.trusted.keyPath);
   const cert = await readFile(certificates.trusted.certPath);
@@ -93,6 +95,19 @@ async function fixture(t: TestContext) {
     return reconcileSyncRoutes({ store, peerId: (await store.snapshot()).inboxId, credentials: () => ({ token, ca }), routeIds: [route.id], requestMs, deadlineMs: 4000 });
   }
 
+  async function runIsolated(store: ManagedSyncStore, route: SyncRoute, requestMs = 1000) {
+    const ledger = await store.snapshot();
+    const runner = await startProtocolFaultChild(context, { mode: "runner", home: ledger.ownerAnchor.home, peerId: ledger.inboxId, token, caPath: certificates.caPath });
+    const reply = await runner.command({ type: "run", routeIds: [route.id], requestMs, deadlineMs: 4000 });
+    await runner.stop();
+    await store.recover();
+
+    assert.equal(reply.error, undefined);
+    const result = parseObject(reply.result, "runner reconciliation");
+    assert.ok(Array.isArray(result.routes));
+    return { routes: result.routes.map((value) => parseObject(value, "runner route result")) };
+  }
+
   async function preparePull(receiver: ManagedSyncStore, route: SyncRoute) {
     const ledger = await receiver.snapshot();
     const client = new SyncClient(receiver, ledger.inboxId, () => ({ token, ca }));
@@ -108,7 +123,7 @@ async function fixture(t: TestContext) {
     return { client, auth, session, state: page.descriptors[0] };
   }
 
-  return { root, store, listen, connect, worker, run, preparePull, ca, key, cert, token };
+  return { root, store, listen, connect, worker, run, runIsolated, preparePull, ca, key, cert, token };
 }
 
 test("owned worker recovers from sixteen real pre-auth requests without explicit retry", { timeout: 15_000 }, async (t) => {
@@ -395,7 +410,7 @@ for (const termination of ["disconnect", "quiesce", "server-close"] as const) {
     assert.equal(closedPins, openedPins, "the bounded late pin closes its actual body handle");
     if (termination !== "server-close") {
       t.mock.restoreAll();
-      assert.equal((await f.run(receiver, routes.inbound)).routes[0].status, "confirmed", "fresh admission succeeds without restarting the server");
+      assert.equal((await f.runIsolated(receiver, routes.inbound)).routes[0].status, "confirmed", "fresh admission succeeds without restarting the server");
       assert.equal((await receiver.listDocuments()).length, 1);
     }
   });

@@ -661,7 +661,16 @@ test("abort while authenticated offer is pending prevents new starts while retai
 test("full copied store and explicit restore quarantine block before credentials or network", { timeout: 20_000 }, async (t) => {
   const f = await pair(t);
   await f.source.store.publish(input, "clone-body");
-  assert.equal((await f.run()).routes[0].status, "confirmed");
+  const runner = await startProtocolFaultChild(f.context, { mode: "runner", home: f.source.home, peerId: f.source.peerId, token: f.token, caPath: f.tls.caPath });
+  const reply = await runner.command({ type: "run", routeIds: [f.outbound.id] });
+  assert.equal(reply.error, undefined);
+  const result = parseObject(reply.result, "clone setup reconciliation");
+  assert.ok(Array.isArray(result.routes));
+  assert.equal(parseObject(result.routes[0], "clone setup route").status, "confirmed");
+
+  // A confirmed pass can still retire authorization checks. Copy an offline home.
+  await runner.stop();
+  await f.source.store.recover();
   const cloneHome = path.join(f.root, "full-clone");
   await cp(f.source.home, cloneHome, { recursive: true });
   const clone = new ManagedSyncStore(cloneHome);

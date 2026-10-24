@@ -186,7 +186,9 @@ async function runReconciler(config: Record<string, unknown>, home: string) {
           }
         }
 
-        result = await reconcileSyncRoutes({ store, peerId, routeIds, credentials: () => ({ token, ca }), requestMs: 2000, deadlineMs: 8000 });
+        const requestMs = message.requestMs === undefined ? 2000 : parseInteger(message.requestMs, 1, 60_000);
+        const deadlineMs = message.deadlineMs === undefined ? 8000 : parseInteger(message.deadlineMs, 1, 300_000);
+        result = await reconcileSyncRoutes({ store, peerId, routeIds, credentials: () => ({ token, ca }), requestMs, deadlineMs });
       } else if (message.type === "read") {
         const document = await store.getDocument(parseString(message.localId));
         result = document?.originalBytes.length ?? null;

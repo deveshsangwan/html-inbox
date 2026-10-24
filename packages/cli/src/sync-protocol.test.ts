@@ -23,15 +23,21 @@ const test = process.platform === "win32" ? platformTest.skip : platformTest;
 const bytes = Buffer.from("\ufeff<!doctype html>\r\n<html><body>synthetic π</body></html>\r\n");
 const input = { originalBytes: bytes, title: "Synthetic protocol", type: "report", sourceFileName: "synthetic.html" };
 
-interface Inbox { home: string; store: ManagedSyncStore; peerId: string }
+interface Inbox { home: string; store: ManagedSyncStore; peerId: string; stopApplications: (() => Promise<void>)[] }
 
 async function inbox(t: TestContext): Promise<Inbox> {
   const root = await mkdtemp(path.join(tmpdir(), "html-inbox-wire-"));
-  t.after(() => rm(root, { recursive: true, force: true }));
+  const stopApplications: (() => Promise<void>)[] = [];
+  t.after(async () => {
+    // Inbox cleanup is registered before the application's own after hook.
+    // Reap its writers before removing the storage they can still access.
+    for (const stop of stopApplications) await stop();
+    await rm(root, { recursive: true, force: true });
+  });
   const home = path.join(root, "inbox");
   const store = new ManagedSyncStore(home);
   await store.enroll();
-  return { home, store, peerId: randomUUID() };
+  return { home, store, peerId: randomUUID(), stopApplications };
 }
 
 
@@ -49,7 +55,9 @@ async function connect(a: Inbox, b: Inbox, aUrl: string, bUrl: string, grant?: O
 
 async function server(t: TestContext, fixture: Inbox, tls: SyncHttpsCredentials, token: string, options: { requestMs?: number; leaseMs?: number; cert?: "trusted" | "rogue" | "wrongHost" | "expired"; port?: number } = {}) {
   const credentials = tls[options.cert ?? "trusted"];
-  return startSyncApplication(t, { home: fixture.home, peerId: fixture.peerId, token, ...credentials, requestMs: options.requestMs, leaseMs: options.leaseMs, port: options.port });
+  const application = await startSyncApplication(t, { home: fixture.home, peerId: fixture.peerId, token, ...credentials, requestMs: options.requestMs, leaseMs: options.leaseMs, port: options.port });
+  fixture.stopApplications.push(() => application.stop());
+  return application;
 }
 
 async function pair(t: TestContext, options: { sourceListener?: boolean; leaseMs?: number } = {}) {
