@@ -179,7 +179,57 @@ async function createViewerPage(t, browser, origin, inboxPath) {
   });
 
   const page = await context.newPage();
-  await page.goto(`${origin}${inboxPath}/`);
+  const navigationStartedAt = performance.now();
+  const navigationEvents = [];
+  const pendingRequests = new Set();
+  const recordNavigation = (event, details = {}) => {
+    if (navigationEvents.length < 32) {
+      navigationEvents.push({ elapsedMs: performance.now() - navigationStartedAt, event, ...details });
+    }
+  };
+  const navigationListeners = [
+    ["request", (request) => {
+      pendingRequests.add(request);
+      recordNavigation("request", { url: request.url(), type: request.resourceType() });
+    }],
+    ["response", (response) => recordNavigation("response", { url: response.url(), status: response.status() })],
+    ["requestfinished", (request) => {
+      pendingRequests.delete(request);
+      recordNavigation("requestfinished", { url: request.url() });
+    }],
+    ["requestfailed", (request) => {
+      pendingRequests.delete(request);
+      recordNavigation("requestfailed", { url: request.url(), failure: request.failure() });
+    }],
+    ["domcontentloaded", () => recordNavigation("domcontentloaded")],
+    ["load", () => recordNavigation("load")],
+    ["pageerror", (error) => recordNavigation("pageerror", { message: error.message })],
+  ];
+
+  for (const [event, listener] of navigationListeners) {
+    page.on(event, listener);
+  }
+
+  try {
+    await page.goto(`${origin}${inboxPath}/`);
+  } catch (error) {
+    t.diagnostic(JSON.stringify({
+      initialViewerNavigation: {
+        runtime: process.version,
+        platform: process.platform,
+        elapsedMs: performance.now() - navigationStartedAt,
+        currentUrl: page.url(),
+        pendingRequests: [...pendingRequests].map((request) => request.url()),
+        events: navigationEvents,
+      },
+    }));
+
+    throw error;
+  } finally {
+    for (const [event, listener] of navigationListeners) {
+      page.off(event, listener);
+    }
+  }
   await page.evaluate(({ storageKey, viewerSecret }) => {
     localStorage.setItem(storageKey, viewerSecret);
     sessionStorage.setItem(storageKey, viewerSecret);
