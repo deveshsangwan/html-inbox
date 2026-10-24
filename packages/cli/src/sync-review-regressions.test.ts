@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import fs, { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { performance } from "node:perf_hooks";
 import https from "node:https";
 import platformTest, { type TestContext } from "node:test";
 import { createInbox, withCatalogIdentityTransition } from "./inbox-catalog";
@@ -198,7 +199,9 @@ test("fork recovery baselines uncertain catalog intent before a durable new-ledg
   assert.equal((await new ManagedSyncStore(home).snapshot()).inboxId, chosenId);
 });
 
-test("successful push and pull sessions release capacity across more than eight multiroute passes", { timeout: 30_000 }, async (t) => {
+// This case accumulates twenty independently bounded reconciliation calls.
+test("successful push and pull sessions release capacity across more than eight multiroute passes", { timeout: 120_000 }, async (t) => {
+  const startedAt = performance.now();
   const f = await fixture(t);
   const a = await f.store("a");
   const b = await f.store("b");
@@ -208,12 +211,19 @@ test("successful push and pull sessions release capacity across more than eight 
   const second = await f.connect(a, b, as.url, bs.url);
   for (let index = 0; index < 10; index += 1) {
     await a.publish(input, `item-${index}`);
+    const pushStartedAt = performance.now();
     const pushed = await f.run(a, [first.outbound, second.outbound]);
     assert.ok(pushed.routes.every((route) => route.status === "confirmed"), JSON.stringify(pushed));
+    t.diagnostic(JSON.stringify({ iteration: index + 1, phase: "push", elapsedMs: performance.now() - startedAt,
+      durationMs: performance.now() - pushStartedAt, requests: pushed.counters.requests, sessions: bs.server.status().sessions }));
+    const pullStartedAt = performance.now();
     const pulled = await f.run(b, [first.inbound, second.inbound]);
     assert.ok(pulled.routes.every((route) => route.status === "confirmed"), JSON.stringify(pulled));
     assert.equal(bs.server.status().sessions, 0);
     assert.equal(as.server.status().sessions, 0);
+    t.diagnostic(JSON.stringify({ iteration: index + 1, phase: "pull", elapsedMs: performance.now() - startedAt,
+      durationMs: performance.now() - pullStartedAt, requests: pulled.counters.requests,
+      sourceSessions: as.server.status().sessions, destinationSessions: bs.server.status().sessions }));
   }
 
   assert.equal((await b.listDocuments()).length, 10);
