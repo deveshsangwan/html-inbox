@@ -331,7 +331,7 @@ async function withCatalogRegistration<T>(catalogHome: string, register: (root: 
   const root = checkedCatalogHome(catalogHome);
   await ensurePrivateDirectory(root);
   await ensurePrivateDirectory(path.join(root, "inboxes"));
-  const ownership = await acquireSyncOwnership(path.join(root, "registration.lock"), Date.now() + 10_000);
+  const ownership = await acquireSyncOwnership(path.join(root, "registration.lock"), Date.now() + 10_000, undefined, { mode: "portable" });
   try {
     return await register(root);
   } finally {

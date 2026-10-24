@@ -171,7 +171,8 @@ test("fork recovery baselines uncertain catalog intent before a durable new-ledg
       }
 
       await sync();
-      if (phase === "retry" && file === path.join(home, "sync")) {
+      // Lock release also flushes this directory; the ledger crash cut is one-shot.
+      if (phase === "retry" && ledgerCuts === 0 && file === path.join(home, "sync")) {
         const ledger = JSON.parse(await readFile(path.join(home, "sync", "ledger.json"), "utf8"));
         if (ledger.inboxId === chosenId) {
           ledgerCuts += 1;
