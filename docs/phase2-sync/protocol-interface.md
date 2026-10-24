@@ -24,7 +24,11 @@ const result = await reconcileSyncRoutes({
 await server.close();
 ```
 
-Imports are `sync-http-server`, `sync-reconciliation`, and `sync-store` under `packages/cli/src`. The server returns `start()`, `close()` and synchronous `status()`. Starting twice or starting after close fails. Closing destroys owned sockets and clears sessions/transfers. Status contains listening state, URL, active session/transfer/socket counts, cached-cut bytes and request/body counters.
+Imports are `sync-http-server`, `sync-reconciliation`, and `sync-store` under `packages/cli/src`. The server returns `start()`, `close()` and synchronous `status()`. Starting twice or starting after close fails. Closing stops admission, destroys owned sockets, clears sessions/transfers and waits for admitted handler promises. Successful close means an admitted mutation cannot commit afterward. The existing `requestMs` bounds drainage; expiry rejects close, so the worker retains lifetime ownership evidence. Completed remote commits remain committed. Repeated calls share the same close outcome.
+
+An initiated native listener bind also belongs to shutdown. A second pending start rejects without another listen call. If close wins, start rejects as closed after binding settles, and successful close leaves no listener. A native bind error remains the start caller's original error. The same `requestMs` bounds pending binding and handler drainage; a timed-out close stays rejected even if its observed cleanup finishes later.
+
+The body GET handler still detaches an unfinished read-only pin when its response closes. That pin cleans its own handle without sending late bytes. Shutdown waits for the handler, rather than the detached pin. Unexpected handler cleanup rejection is observed and preserved as a shutdown failure. Status contains listening state, URL, active session/transfer/socket counts, cached-cut bytes and request/body counters.
 
 Server host configuration accepts an explicit literal unicast IPv4 or IPv6 address. Its default is `127.0.0.1`. It rejects unspecified/wildcard, multicast, limited-broadcast and hostname bindings. There is no interface discovery or fallback. LAN/Tailscale binding and TLS/credential provisioning must be deliberately configured by the later owner. Development fixtures bind only `127.0.0.1` or `::1`. Non-loopback configuration tests construct servers without calling `start()`.
 

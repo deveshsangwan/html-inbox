@@ -1,6 +1,28 @@
 # Worker and CLI public test interface
 
-This guide defines the runtime JSON and public fixture interfaces. Actual CLI, owned-worker lifetime, terminal relay and cancellation regressions run on Node 24.19.0 and Node 20.20.2. Exact receipts and current review status are in `verification.json`, `acceptance.md` and `review-triage.md`. The approved `worker-cli-contract.md` remains authoritative.
+This guide defines the runtime JSON and public fixture interfaces. Actual CLI, owned-worker lifetime, terminal relay and cancellation regressions run on Node 24.19.0 and Node 20.20.2. Earlier receipts are in `verification.json`, `acceptance.md` and `review-triage.md`; current QA corrections and their verification status are in `qa-followup.md`. The approved `worker-cli-contract.md` remains authoritative.
+
+## QA worker correction interface
+
+`startOwnedSyncWorker(home, { temporary?, testHooks?, onFatalStop? })` adds an optional no-argument `onFatalStop` notification. Its runtime return shape and `close(): Promise<void>` are unchanged. Fatal state-read, unrecoverable failure-bookkeeping and cleanup failures notify once. Observation cannot prevent shutdown; observer throws or rejected promises are handled. The reusable library does not change process exit status. Explicit close callers still receive cleanup rejection.
+
+Shutdown attempts independent listener cleanup, stops scheduling and settles outbound work and admitted inbound mutation handlers before releasing lifetime ownership. Ingestion drainage is bounded by its existing `requestMs`; failure retains uncertain authority names while disposing the retained ownership descriptors. An unsuccessful close cannot claim quiescence. Successful authenticated stop/disable, signals, validated configuration/incarnation replacement and temporary completion stay normal. Route blocks, backoff, pause, cancellation and removal retain their existing behavior.
+
+Fatal cleanup before readiness also notifies once and preserves both the original acquisition/preflight failure and the cleanup failure. Ordinary startup errors with successful cleanup remain ordinary errors. Observer failure cannot interrupt cleanup or change library process-exit state. The additive ownership result method `closeHandles()` closes descriptors without removing authority names; `release()` performs validated namespace release. Their coordinated outcomes prevent disposal followed by a false successful release. See [the shutdown/ownership contract](qa-shutdown-ownership-contract.md) for error and concurrency rules.
+
+The foreground CLI maps fatal notification to exit 1 and one fixed stderr line, also captured by existing detached/supervisor logging:
+
+```text
+html-inbox: Sync worker stopped after an unrecoverable state or cleanup failure; inspect the inbox before restarting.
+```
+
+No original exception, path, stack, credential reference or control record is appended. A fatal temporary `sync run` returns its existing cancelled/error ticket shape with `worker-pass-failed`, rather than success or ordinary deadline-pending. An unsafe ledger does not receive a new persisted failure schema.
+
+Publication finalization applies SIGINT precedence after its final viewer/status waits and any best-effort ticket cancellation, immediately before forming JSON and the exit code. Late cancellation therefore returns exit 130 with cancelled/pending/null returned receipt, while a real completed remote commit remains committed. It attempts cancellation at most once for the exact foreground ticket submitted by that publication, using the existing overall-deadline/150ms control bound. It does not cancel other tickets or background work, pause retries or erase saved data. A failed or expired cancellation remains best-effort. A validated, uninterrupted intended-server confirmation is preserved without a redundant receipt lookup.
+
+Outgoing credentials resolve from the latest validated configuration for each currently eligible route immediately before its reconciliation. Listener startup resolution is unchanged. A token-file replacement does not clear a permanent failure; explicit retry is still required. The correction prevents a pass-wide old token from consuming a later route's explicit retry. It does not claim to fence every request already active at retry.
+
+The separate [fatal](qa-fatal-worker-contract.md) and [credential](qa-route-credential-contract.md) gates define these corrections. [QA follow-up](qa-followup.md) records current test/review qualifications; combined verification and physical corrected-SHA acceptance are separate gates.
 
 ## Configuration
 
@@ -96,3 +118,5 @@ Verified terminal offers drain before complete-inventory creation through the sa
 Review corrections add sync-failure.ts and sync-ledger-policy.ts as shared deterministic dependencies, plus viewer-service-owner.ts for administrator orchestration. The owner preflight enters the CURRENT CLI bundle through a fixed internal read-only action after the existing clean-environment groups/GID/UID drop. It returns only home/UUID/managed/configuration observations, never ledger or control authority. Administrative service selection, saved configuration and independently callable service/status helpers validate as the verified selected normal account before manager/control contact; installed removal/status use the saved account only after fresh account-binding verification. Saved configuration reads are read-only. Ordinary owner-only lifecycle and private-file guards remain unchanged.
 
 Existing catalog fork intent is validated and flushed, then its containing catalog directory is flushed under registration exclusion, before an identity callback may commit. EIO/ENOSPC retains the selected transition and prevents that callback. Audit quarantine shares the same route revision fence as revoke/restore, clears dependent retries and invalidates attempts after durable commit. Public CLI result fields and exit codes are unchanged by these corrections.
+
+The publisher records an exact-ticket submission attempt before awaiting the control acknowledgement. On SIGINT, uncertain acknowledgement still permits the existing bounded, at-most-once cancellation for that ticket. This does not prove admission or custody. A publication that never dispatches a run requests no ticket cancellation. Successful acknowledgement remains separate for error classification.
