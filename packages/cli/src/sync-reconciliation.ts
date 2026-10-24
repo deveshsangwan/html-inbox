@@ -1,3 +1,4 @@
+import { performance } from "node:perf_hooks";
 import { type SyncCredentialResolver, SyncClient, type SyncRequestOptions } from "./sync-client";
 import { outboxKey, type DurableReceipt } from "./sync-ledger";
 import { canonicalKey, parseInteger, parseObject, assertExactKeys, parseChoice, parseUuid, stateFingerprint, sameImmutableDescriptor, verifyOriginState, SYNC_DEFAULTS, SYNC_LIMITS,
@@ -36,6 +37,10 @@ export interface RouteReconciliation {
   lastError: string | null;
 }
 
+interface ReconciliationSession extends IdentityResponse {
+  localLeaseDeadline: number;
+}
+
 /** One finite catch-up pass. Calling this does not enable, schedule or own a background worker. */
 export async function reconcileSyncRoutes(options: ReconcileOptions) {
   const peerId = parseUuid(options.peerId);
@@ -51,7 +56,7 @@ export async function reconcileSyncRoutes(options: ReconcileOptions) {
   const retryMaxMs = parseInteger(options.retryMaxMs ?? SYNC_DEFAULTS.retryMaxMs, retryMinMs, 300_000);
   const maxAttempts = parseInteger(options.maxAttempts ?? SYNC_DEFAULTS.maxAttempts, 1, 1000);
   const client = new SyncClient(options.store, peerId, options.credentials);
-  const sessions = new Map<string, IdentityResponse>();
+  const sessions = new Map<string, ReconciliationSession>();
   const results: RouteReconciliation[] = [];
   const controller = new AbortController();
   const abort = () => controller.abort(new Error("Reconciliation aborted"));
@@ -116,7 +121,7 @@ export async function reconcileSyncRoutes(options: ReconcileOptions) {
         }
       } finally {
         const session = sessions.get(route.id);
-        if (session && !attempt.signal.aborted && Date.now() < deadlineAt && session.expiresAt > Date.now()) {
+        if (session && !attempt.signal.aborted && Date.now() < deadlineAt && session.localLeaseDeadline > performance.now()) {
           // Completion releases cached inventory. A lost completion is still bounded
           // by its lease and must not erase an already persisted receipt.
           await client.json(auth, "manifest", { op: "complete", sessionId: session.sessionId }, parseComplete, WIRE_LIMITS.identity, requestOptions).catch(() => {});
@@ -147,15 +152,20 @@ export async function reconcileSyncRoutes(options: ReconcileOptions) {
 
   async function identity(route: SyncRoute, auth: RouteAuthorization, requestOptions: SyncRequestOptions) {
     const nonce = opaqueToken();
+
+    // Remote expiresAt belongs to the receiver's wall clock. Bound our use by
+    // elapsed local time from before the request; the receiver enforces its own expiry.
+    const localLeaseDeadline = performance.now() + SYNC_LIMITS.manifestLeaseMs;
     const response = await client.json(auth, "identity", { nonce }, parseIdentityResponse, WIRE_LIMITS.identity, requestOptions);
     const expectedInbox = route.direction === "outbound" ? route.destinationInboxId : route.sourceInboxId;
-    if (response.requestNonce !== nonce || response.peerId !== route.peerId || response.inboxId !== expectedInbox || response.scopeDigest !== scopeDigest(route) ||
-        response.expiresAt <= Date.now() || response.expiresAt > Date.now() + SYNC_LIMITS.manifestLeaseMs) {
+    if (response.requestNonce !== nonce || response.peerId !== route.peerId || response.inboxId !== expectedInbox || response.scopeDigest !== scopeDigest(route)) {
       throw new SyncProtocolError(409, "peer-identity-conflict");
     }
 
-    sessions.set(route.id, response);
-    return { response, nonce };
+    const session = { ...response, localLeaseDeadline };
+    checkSession(session);
+    sessions.set(route.id, session);
+    return { response: session, nonce };
   }
 
   async function push(route: SyncRoute, auth: RouteAuthorization, requestOptions: SyncRequestOptions, result: RouteReconciliation) {
@@ -405,8 +415,8 @@ function validateReceipt(route: SyncRoute, receipt: DurableReceipt, storageIncar
   }
 }
 
-function checkSession(session: IdentityResponse): void {
-  if (session.expiresAt <= Date.now()) {
+function checkSession(session: ReconciliationSession): void {
+  if (session.localLeaseDeadline <= performance.now()) {
     throw new SyncProtocolError(410, "session-expired");
   }
 }
