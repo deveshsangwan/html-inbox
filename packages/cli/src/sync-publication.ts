@@ -5,7 +5,8 @@ import { loadPublishInput } from "./publish-input";
 import type { ResolvedInboxSelection } from "./inbox-selection";
 import { assertManagedLifecycle } from "./sync-lifecycle";
 import { ManagedSyncStore } from "./sync-store";
-import type { DurableReceipt } from "./sync-ledger";
+import { outboxKey, type DurableReceipt, type SyncLedger } from "./sync-ledger";
+import { canonicalKey } from "./sync-model";
 import { isBlockedRouteFailure } from "./sync-failure";
 import { defaultRuntimeConfig, type SyncTarget } from "./sync-runtime-config";
 import { contactWorker, ensureOwnedSyncWorker, getOwnedWorkerStatus } from "./sync-worker-client";
@@ -57,7 +58,7 @@ export async function publishManagedDocument(request: PublishRequest, selection:
         throw error;
       }
 
-      delivery = { state: "pending", target: publication.target, reason: "foreground-deadline", receipt: null, cancelled: interrupted,
+      delivery = { state: "pending", target: publication.target, reason: Date.now() >= deadlineAt ? "foreground-deadline" : "delivery-inspection-unavailable", receipt: null, cancelled: interrupted,
         retriesEnabled: ledger.worker.enabled && !ledger.worker.retryPaused };
     }
     if (publication.target && delivery.state === "pending" && ledger.worker.enabled && !ledger.worker.retryPaused && !interrupted && Date.now() < finishAt) {
@@ -105,7 +106,7 @@ export async function publishManagedDocument(request: PublishRequest, selection:
           throw error;
         }
 
-        return { ...delivery, state: "pending", reason: "foreground-deadline" };
+        return { ...delivery, state: "pending", reason: Date.now() >= deadlineAt ? "foreground-deadline" : "delivery-inspection-unavailable" };
       });
     }
 
@@ -134,8 +135,8 @@ export async function publishManagedDocument(request: PublishRequest, selection:
       await contactWorker(selection.home, "cancel", ticketId, Math.min(deadlineAt, Date.now() + 150)).catch(() => {});
     }
 
-    async function matchingRoutes() {
-      const current = await store.snapshot();
+    async function matchingRoutes(snapshot?: SyncLedger) {
+      const current = snapshot ?? await store.snapshot();
       return Object.values(current.routes).filter((route) => route.direction === "outbound" && route.peerId === publication.target?.peerId &&
         route.destinationInboxId === publication.target.destinationInboxId && (route.state === "active" || route.state === "reconnecting") &&
         !!routeOriginGrant(route, publication.origin.originInboxId, publication.origin.historyEpoch));
@@ -150,7 +151,7 @@ export async function publishManagedDocument(request: PublishRequest, selection:
         return { ...base, state: "local-only", reason: null };
       }
 
-      const routes = await matchingRoutes();
+      const routes = await matchingRoutes(current);
 
       if (!routes.length) {
         return { ...base, state: "blocked", reason: "no-authorized-route-to-intended-target" };
@@ -158,32 +159,43 @@ export async function publishManagedDocument(request: PublishRequest, selection:
 
       let blockedReason: string | null = null;
       let canRetry = false;
+      let hasUnavailableInspection = false;
       for (const route of routes) {
-        if (Date.now() >= bound) {
-          break;
-        }
+        const status = Date.now() < bound ? await store.deliveryStatus(route.id, publication.origin.originInboxId, publication.origin.originDocumentId, Math.min(bound, Date.now() + 200))
+          .catch((error: unknown) => {
+            if (!isForegroundDeadline(error)) throw error;
 
-        const status = await store.deliveryStatus(route.id, publication.origin.originInboxId, publication.origin.originDocumentId, Math.min(bound, Date.now() + 200));
+            return null;
+          }) : null;
 
-        if (status.isCommitted && Date.now() <= bound) {
+        hasUnavailableInspection ||= status === null;
+
+        if (status?.isCommitted && Date.now() <= bound) {
           return { ...base, state: "confirmed", reason: null, receipt: status.receipt };
         }
 
-        if (status.status === "suppressed" || status.status === "deleted" || status.status === "superseded") {
-          blockedReason = `intended-target-${status.status}`;
-        } else if (status.status === "blocked" && status.lastError === "Trusted terminal history is required" &&
+        // Metadata can explain a block or pause when custody is unavailable, but cannot confirm delivery.
+        const entry = current.outbox[outboxKey(route.id, route.revision, canonicalKey(publication.origin.originInboxId, publication.origin.originDocumentId))];
+        const item = entry?.fingerprint === publication.fingerprint ? entry : undefined;
+        const disposition = status?.status ?? (item?.disposition === "confirmed" ? item.receiptDisposition ?? item.disposition : item?.disposition);
+        const lastError = status === null ? item?.lastError : status.lastError;
+
+        if (disposition === "suppressed" || disposition === "deleted" || disposition === "superseded") {
+          blockedReason = `intended-target-${disposition}`;
+        } else if (disposition === "blocked" && lastError === "Trusted terminal history is required" &&
             !current.routeRetries[route.id]?.blocked && !isBlockedRouteFailure(route.lastError)) {
           // A prior transient route error must not end the foreground history wait.
           canRetry = true;
-        } else if (status.status === "blocked" || current.routeRetries[route.id]?.blocked) {
-          blockedReason = status.lastError ?? current.routeRetries[route.id]?.lastError ?? "delivery-blocked";
+        } else if (disposition === "blocked" || current.routeRetries[route.id]?.blocked || status === null && isBlockedRouteFailure(route.lastError)) {
+          blockedReason = lastError ?? current.routeRetries[route.id]?.lastError ?? route.lastError ?? "delivery-blocked";
         } else {
           canRetry = true;
         }
       }
 
       return { ...base, state: !canRetry && blockedReason ? "blocked" : "pending", reason: !canRetry && blockedReason ? blockedReason :
-        current.worker.retryPaused ? "retries-paused" : !current.worker.enabled ? "worker-disabled" : null };
+        current.worker.retryPaused ? "retries-paused" : !current.worker.enabled ? "worker-disabled" : Date.now() >= deadlineAt ? "foreground-deadline" :
+        hasUnavailableInspection ? "delivery-inspection-unavailable" : null };
     }
   } finally {
     viewerController.abort();
