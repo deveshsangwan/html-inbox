@@ -65,6 +65,8 @@ HTML_INBOX_PORT=4321 html-inbox viewer
 
 `viewer` and `publish` share the same detached startup path. The child runs `viewer --foreground`, retains the selected inbox and exposure configuration, and writes diagnostics in protected local storage. Startup serialization prevents concurrent callers from creating duplicate viewers. Saved configuration survives `stop`; the active process record identifies only the current viewer. Status and stop use the recorded local control endpoint instead of a network reader URL.
 
+Native detachment creates a separate session on POSIX, but retains service-manager ownership such as a Linux systemd cgroup. Scope cleanup can terminate the detached viewer. Persistent availability requires an explicitly configured supervisor. Graceful shutdown logs its timestamp, PID, and first trigger before cleanup and completion after removing the matching process record. A signal reason identifies the received signal, not its sender.
+
 The control health check is the source of truth for readiness. A viewer can be reused only when its protocol and opaque home identity match. Shutdown also matches the saved PID and per-process identity against current control health before signaling. Tailscale readiness additionally requires verification of the live Serve route. A private ownership journal tracks the exact HTTPS route and backend; startup failures and shutdown remove only that verified route, preserving the journal when external changes make cleanup unsafe.
 
 Boot configuration is an explicit service operation. Linux systemd system units and macOS LaunchDaemons run the foreground viewer as a selected normal user before login. Definitions preserve the inbox, exposure, port, executable paths, and required environment. Installation and removal require administrator privileges, reject unrelated definitions, and preserve documents. See [service setup](self-hosting.md).
@@ -87,10 +89,10 @@ Document content remains original bytes. The iframe canvas follows the viewer's 
 
 HTML is untrusted by default. HTML policy validation uses an HTML5 parser before storage:
 
-- allow scripts, but only allow external script entry URLs for Tailwind's browser build and Mermaid v11
+- accept inline scripts and recognize canonical Tailwind browser and Mermaid v11 external script entry URLs
 - warn on inline event handlers such as `onclick`, which the document CSP blocks
 - allow HTTPS navigation in anchor `href` attributes, plus relative and fragment links
-- warn on other external asset URLs, which the document CSP blocks
+- warn on other external script and asset URLs; the document CSP separately determines which requests can run
 
 Validation is a gate, not a sanitizer. Accepted HTML is still rendered only in the sandboxed viewer path. The iframe enables scripts without `allow-same-origin`, popup, or top-navigation permission, so documents receive an opaque origin and cannot access the viewer DOM or same-origin storage. Links and allowed scripts can navigate the current preview frame, while `_blank` links remain blocked. Its CSP permits inline document configuration and the allowlisted CDN script paths, blocks inline script attributes, and continues to block connections, frames, forms, objects, and non-data image, media, and font loads.
 
@@ -102,7 +104,7 @@ Supported CDN entry URLs are deliberately limited to the canonical major-version
 - `https://cdn.tailwindcss.com` (including its official plugin query)
 - `https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs`
 
-Mermaid's CSP source includes its `dist/` subtree because the entry module loads diagram chunks from that directory. Opening a document that uses a CDN or navigating to an external page makes a remote request. Viewer responses default to `no-referrer`, but author markup or script can override that default or include data in the destination URL. Add another CDN or major version only by changing both validation and the document CSP and adding an accept/reject check.
+Mermaid's CSP source includes its `dist/` subtree because the entry module loads diagram chunks from that directory. The Tailwind CDN origin is also broader than its canonical supported entry URL. A noncanonical script URL inside those sources can produce a warning and still load; a warning does not prove runtime blocking. Opening a document that uses a CDN or navigating to an external page makes a remote request. Viewer responses default to `no-referrer`, but author markup or script can override that default or include data in the destination URL. Review validation and the document CSP together before supporting another CDN or major version, and add accept/reject coverage.
 
 ## Remote publishing
 

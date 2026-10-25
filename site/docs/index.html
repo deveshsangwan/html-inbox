@@ -175,7 +175,7 @@
           The skill and CLI installers are independent. Adding a skill does not
           install a global executable. On first use, the skill reuses a working,
           stable <code>html-inbox</code> 0.2.x CLI or selects
-          <code>npx --yes html-inbox@0.2.0</code> for the operation. The fallback
+          <code>npx --yes html-inbox@0.2.1</code> for the operation. The fallback
           needs registry access or a cached package and preserves your existing
           viewer settings.
         </p>
@@ -247,9 +247,12 @@ html-inbox --help</code></pre>
           listens on <code>127.0.0.1:3217</code>.
         </p>
         <p>
-          The viewer runs in the background and keeps running when the terminal
-          closes. Publish more files to add them to the same library. Every
-          publish creates a new document with its own ID.
+          The viewer runs in the background after the launching CLI exits.
+          Stopping an agent's systemd scope also stops its detached viewer; use
+          an explicit <a href="boot-services.html">boot service</a> for links
+          that must survive agent cleanup or reboot. Publish more files to add
+          them to the same library. Every publish creates a new document with
+          its own ID.
         </p>
         <h2 id="find-documents">Find and manage documents</h2>
         <div class="docs-code">

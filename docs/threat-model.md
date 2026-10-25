@@ -107,14 +107,17 @@ CSP do not close:
   and `sandbox="allow-scripts"` permits a frame to navigate itself. Rejecting
   the feature avoids duplicating the browser's permissive refresh parser.
 
-**Tier 2 — advisory lint (reported, never blocks).** Conditions the runtime
-already fails closed. They are surfaced because a silently blocked resource is a
-confusing broken document, not because they are attacks:
+**Tier 2 — advisory lint (reported, never blocks).** Compatibility checks for
+content that may not work as authored. Many warned features are blocked by the
+runtime, but validation's canonical script-entry list is narrower than the CSP
+script sources, so warnings do not establish that every request is blocked:
 
 - Inline event handlers, blocked by `script-src-attr 'none'`.
 - Non-allowlisted external assets, blocked by `default-src 'none'` and the
   `data:`-only media directives.
-- Non-allowlisted external script sources, blocked by `script-src`.
+- Noncanonical external script entries. `script-src` blocks URLs outside its
+  permitted sources, but the Mermaid `dist/` subtree and Tailwind CDN origin can
+  permit warned URLs within those sources.
 - Non-allowlisted external URLs in script bodies. Advisory only — string
   concatenation defeats the check. `connect-src 'none'` blocks direct fetches,
   but not navigation of the document frame.

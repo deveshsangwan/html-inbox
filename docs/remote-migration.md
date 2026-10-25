@@ -4,12 +4,13 @@ Remote publishing does not move or mutate the local library. `~/.html-inbox/docu
 
 ## Before publishing
 
-1. Upgrade the installed CLI with `npm install --global html-inbox@latest` and confirm it with `html-inbox --version`.
-2. Confirm the local library with `html-inbox list` and open the viewer.
-3. Inspect a provider-independent export with `html-inbox export --out ./html-inbox-export`.
-4. Treat every document in the local library as part of one shared remote capability. Delete anything that should not be in that snapshot.
+1. Stop any running viewer with the executable that started it before updating, so the next start loads the new code. A 0.1.0 viewer must be stopped with its original executable.
+2. Upgrade the installed CLI with `npm install --global html-inbox@latest` and confirm it with `html-inbox --version`.
+3. Confirm the local library with `html-inbox list` and open the viewer.
+4. Inspect a provider-independent export with `html-inbox export --out ./html-inbox-export`.
+5. Treat every document in the local library as part of one shared remote capability. Delete anything that should not be in that snapshot.
 
-The updated viewer uses protocol version 3 and a private loopback control endpoint to match shutdown requests to a specific process. Stop an older foreground viewer with Ctrl-C before upgrading, or use the previous CLI to stop its detached viewer. A new CLI refuses to reuse or signal an incompatible viewer. Documents remain in the existing inbox.
+Version 0.2.x uses protocol version 3 and a private loopback control endpoint to match shutdown requests to a specific process. A new CLI refuses to reuse or signal an incompatible viewer. Stop a foreground viewer with Ctrl-C before upgrading, or use its original CLI to stop a detached viewer. Documents remain in the existing inbox.
 
 ## Configure Cloudflare
 
