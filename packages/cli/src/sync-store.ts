@@ -547,7 +547,7 @@ export class ManagedSyncStore {
     }, remainingMs);
   }
 
-  async openRouteAttempt(authorization: unknown, parentSignal?: AbortSignal, deadlineAt?: number, locallyInitiated = false): Promise<{ signal: AbortSignal; close: () => void }> {
+  async openRouteAttempt(authorization: unknown, parentSignal?: AbortSignal, deadlineAt?: number, locallyInitiated = false): Promise<{ signal: AbortSignal; close: () => Promise<void> }> {
     const auth = parseAuthorization(authorization);
     const controller = new AbortController();
     const abort = () => controller.abort(new Error("Sync attempt aborted"));
@@ -570,28 +570,47 @@ export class ManagedSyncStore {
       throw error;
     }
 
-    let checking = false;
+    const watcher = new AbortController();
+    const watcherStopped = new Error("Route attempt watcher closed");
+    let checking: Promise<void> | undefined;
+    let closing: Promise<void> | undefined;
+    let closed = false;
     const timer = setInterval(() => {
-      if (checking || controller.signal.aborted) {
+      if (closed || checking || controller.signal.aborted) {
         return;
       }
 
-      checking = true;
-      this.mutate(async (ledger) => {
+      // Retain the whole check before its first store await, including lock
+      // acquisition and release, rather than only its authorization callback.
+      checking = Promise.resolve().then(() => this.mutate(async (ledger) => {
         this.authorizeRoute(ledger, auth);
         if (locallyInitiated && ledger.worker.retryPaused) {
           throw new Error("Locally initiated sync is paused");
         }
-      }).catch(abort).finally(() => { checking = false; });
+      }, this.lockDeadlineMs, watcher.signal)).catch((error: unknown) => {
+        if (error !== watcherStopped) abort();
+      }).finally(() => { checking = undefined; });
     }, 50);
     timer.unref();
     return { signal: controller.signal, close: () => {
-      clearInterval(timer);
-      parentSignal?.removeEventListener("abort", abort);
-      activeAttempts.get(this.home)?.delete(entry);
-      if (!activeAttempts.get(this.home)?.size) {
-        activeAttempts.delete(this.home);
+      if (closing) {
+        return closing;
       }
+
+      closed = true;
+      clearInterval(timer);
+      const admitted = checking;
+      closing = Promise.resolve(admitted).then(() => {
+        parentSignal?.removeEventListener("abort", abort);
+        const attempts = activeAttempts.get(this.home);
+        attempts?.delete(entry);
+        if (attempts?.size === 0 && activeAttempts.get(this.home) === attempts) {
+          activeAttempts.delete(this.home);
+        }
+      });
+      // Abort listeners may reenter close synchronously and must see its promise.
+      watcher.abort(watcherStopped);
+      return closing;
     } };
   }
 
@@ -1241,8 +1260,11 @@ export class ManagedSyncStore {
     return route;
   }
 
-  private async mutate<T>(operation: (ledger: SyncLedger) => Promise<T>, lockDeadlineMs = this.lockDeadlineMs): Promise<T> {
+  private async mutate<T>(operation: (ledger: SyncLedger) => Promise<T>, lockDeadlineMs = this.lockDeadlineMs, signal?: AbortSignal): Promise<T> {
+    signal?.throwIfAborted();
     await checkDirectory(this.directory);
+    signal?.throwIfAborted();
+
     return withStoreLock(this.directory, lockDeadlineMs, async () => {
       if (this.files.uncertain) {
         throw new Error("Storage outcome is uncertain; explicit recovery is required before further mutation");
@@ -1256,8 +1278,9 @@ export class ManagedSyncStore {
       await this.assertAnchor(ledger);
       await this.assertBarrier(ledger);
       await this.assertReaderIdentity(ledger);
+      signal?.throwIfAborted();
       return operation(ledger);
-    });
+    }, signal);
   }
 
   private async recoverLocked(): Promise<void> {

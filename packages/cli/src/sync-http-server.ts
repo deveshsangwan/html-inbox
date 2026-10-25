@@ -509,7 +509,7 @@ export function createSyncIngestionServer(options: SyncServerOptions) {
     } finally {
       try {
         attempt?.signal.removeEventListener("abort", abortResponse);
-        attempt?.close();
+        await attempt?.close();
       } finally {
         counters.activeRequests -= 1;
       }

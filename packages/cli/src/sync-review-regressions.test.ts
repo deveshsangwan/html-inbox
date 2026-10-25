@@ -414,19 +414,22 @@ test("audit after actual worker retry bookkeeping durably fences routes and inva
   const before = await until(() => a.snapshot(), (ledger) => !!ledger.routeRetries[routes.outbound.id], "actual worker bookkeeping");
   await worker.close();
   const attempt = await a.openRouteAttempt(routeAuthorization(routes.outbound));
-  t.after(() => attempt.close());
-  const record = before.records[canonicalKey(before.inboxId, "drift")];
-  assert.ok(record.bodyFile);
-  await writeFile(path.join(before.ownerAnchor.home, "sync", "bodies", record.bodyFile), input.originalBytes.toString().replace("review", "REVIEW"));
-  const result = await a.audit();
-  assert.deepEqual(result.conflicts, [canonicalKey(before.inboxId, "drift")]);
-  assert.equal(attempt.signal.aborted, true);
-  const reopened = await new ManagedSyncStore(before.ownerAnchor.home).snapshot();
-  assert.equal(reopened.worker.ownerQuarantined, true);
-  assert.equal(reopened.routes[routes.outbound.id].revision, routes.outbound.revision + 1);
-  assert.equal(reopened.routes[routes.outbound.id].state, "blocked");
-  assert.equal(reopened.routeRetries[routes.outbound.id], undefined);
-  assert.ok(Object.values(reopened.outbox).every((entry) => entry.disposition === "retired"));
-  assert.deepEqual(reopened.records[canonicalKey(before.inboxId, "terminal")], before.records[canonicalKey(before.inboxId, "terminal")]);
-  await assert.rejects(a.openRouteAttempt(routeAuthorization(routes.outbound)), /quarantine|Revoked/);
+  try {
+    const record = before.records[canonicalKey(before.inboxId, "drift")];
+    assert.ok(record.bodyFile);
+    await writeFile(path.join(before.ownerAnchor.home, "sync", "bodies", record.bodyFile), input.originalBytes.toString().replace("review", "REVIEW"));
+    const result = await a.audit();
+    assert.deepEqual(result.conflicts, [canonicalKey(before.inboxId, "drift")]);
+    assert.equal(attempt.signal.aborted, true);
+    const reopened = await new ManagedSyncStore(before.ownerAnchor.home).snapshot();
+    assert.equal(reopened.worker.ownerQuarantined, true);
+    assert.equal(reopened.routes[routes.outbound.id].revision, routes.outbound.revision + 1);
+    assert.equal(reopened.routes[routes.outbound.id].state, "blocked");
+    assert.equal(reopened.routeRetries[routes.outbound.id], undefined);
+    assert.ok(Object.values(reopened.outbox).every((entry) => entry.disposition === "retired"));
+    assert.deepEqual(reopened.records[canonicalKey(before.inboxId, "terminal")], before.records[canonicalKey(before.inboxId, "terminal")]);
+    await assert.rejects(a.openRouteAttempt(routeAuthorization(routes.outbound)), /quarantine|Revoked/);
+  } finally {
+    await attempt.close();
+  }
 });

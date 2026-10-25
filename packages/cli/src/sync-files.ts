@@ -199,7 +199,15 @@ export function hasCode(error: unknown, code: string): boolean {
 export interface LockOwner { token: string; pid: number; start: string | null }
 const localQueues = new Map<string, Promise<void>>();
 
-export async function withStoreLock<T>(directory: string, deadlineMs: number, operation: () => Promise<T>): Promise<T> {
+export class StoreLockQueueDeadlineError extends Error {
+  constructor() {
+    super("Managed store lock deadline exceeded");
+  }
+}
+
+export async function withStoreLock<T>(directory: string, deadlineMs: number, operation: () => Promise<T>, signal?: AbortSignal): Promise<T> {
+  signal?.throwIfAborted();
+
   const deadline = Date.now() + deadlineMs;
   const previous = localQueues.get(directory) ?? Promise.resolve();
   let release = () => {};
@@ -207,20 +215,31 @@ export async function withStoreLock<T>(directory: string, deadlineMs: number, op
   const queue = previous.then(() => current);
   localQueues.set(directory, queue);
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let abort: (() => void) | undefined;
 
   try {
     await Promise.race([previous, new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new Error("Managed store lock deadline exceeded")), Math.max(1, deadline - Date.now()));
+      timer = setTimeout(() => reject(new StoreLockQueueDeadlineError()), Math.max(1, deadline - Date.now()));
+      if (signal) {
+        abort = () => reject(signal.reason);
+        signal.addEventListener("abort", abort, { once: true });
+        if (signal.aborted) abort();
+      }
     })]);
     if (timer) {
       clearTimeout(timer);
     }
 
-    return await withProcessLock(directory, deadline, operation);
+    if (abort) signal?.removeEventListener("abort", abort);
+    signal?.throwIfAborted();
+
+    return await withProcessLock(directory, deadline, operation, signal);
   } finally {
     if (timer) {
       clearTimeout(timer);
     }
+
+    if (abort) signal?.removeEventListener("abort", abort);
 
     release();
     if (localQueues.get(directory) === queue) {
@@ -229,10 +248,10 @@ export async function withStoreLock<T>(directory: string, deadlineMs: number, op
   }
 }
 
-async function withProcessLock<T>(directory: string, deadline: number, operation: () => Promise<T>): Promise<T> {
-  const ownership = await acquireSyncOwnership(path.join(directory, "mutation.lock"), deadline);
+async function withProcessLock<T>(directory: string, deadline: number, operation: () => Promise<T>, signal?: AbortSignal): Promise<T> {
+  const ownership = await acquireSyncOwnership(path.join(directory, "mutation.lock"), deadline, signal);
   return finishLockOperation(async () => {
-    checkAcquisition(deadline);
+    checkAcquisition(deadline, signal);
     return await operation();
   }, () => ownership.release());
 }
@@ -290,7 +309,7 @@ export async function acquireSyncOwnership(lockPath: string, deadline: number, s
         // EEXIST never grants authority over a different public inode.
         linkInvoked = false;
         await reclaimDeadLock(lockPath, parent);
-        await delay(Math.min(20, Math.max(1, deadline - Date.now())), undefined, { signal });
+        await waitForOwnershipRetry(Math.min(20, Math.max(1, deadline - Date.now())), signal);
         continue;
       }
 
@@ -402,6 +421,21 @@ function checkAcquisition(deadline: number, signal?: AbortSignal) {
   signal?.throwIfAborted();
   if (Date.now() >= deadline) {
     throw new Error("Managed store lock deadline exceeded; unknown or live owners are never stolen");
+  }
+}
+
+async function waitForOwnershipRetry(milliseconds: number, signal?: AbortSignal): Promise<void> {
+  try {
+    await delay(milliseconds, undefined, { signal });
+  } catch (error) {
+    // Only this native timer's abort wrapper is normalized, before owned cleanup
+    // can combine its reason with a separate filesystem or disposal failure.
+    if (signal?.aborted && error instanceof Error && !(error instanceof AggregateError) &&
+        error.name === "AbortError" && "code" in error && error.code === "ABORT_ERR" && error.cause === signal.reason) {
+      throw signal.reason;
+    }
+
+    throw error;
   }
 }
 
@@ -726,7 +760,7 @@ async function acquirePortableOwnership(lockPath: string, owner: LockOwner, dead
     }
 
     await reclaimDeadLock(lockPath);
-    await delay(Math.min(20, Math.max(1, deadline - Date.now())), undefined, { signal });
+    await waitForOwnershipRetry(Math.min(20, Math.max(1, deadline - Date.now())), signal);
   }
 
   checkAcquisition(deadline, signal);

@@ -77,7 +77,7 @@ export async function reconcileSyncRoutes(options: ReconcileOptions) {
       const result: RouteReconciliation = { routeId, direction: route.direction, status: "pending", historyReady: false, fullyReconciled: false,
         transferred: 0, confirmed: 0, pending: 0, blocked: 0, lastError: null };
       results.push(result);
-      if (route.state === "detached" || route.state === "blocked" || isBlockedRouteFailure(route.lastError)) {
+      if (route.state === "detached" || route.state === "blocked") {
         result.status = route.state === "detached" ? "detached" : "blocked";
         result.lastError = route.lastError;
         continue;
@@ -85,6 +85,12 @@ export async function reconcileSyncRoutes(options: ReconcileOptions) {
 
       if (controller.signal.aborted || Date.now() >= deadlineAt) {
         result.status = "aborted";
+        continue;
+      }
+
+      if (isBlockedRouteFailure(route.lastError)) {
+        result.status = "blocked";
+        result.lastError = route.lastError;
         continue;
       }
 
@@ -127,18 +133,19 @@ export async function reconcileSyncRoutes(options: ReconcileOptions) {
           await client.json(auth, "manifest", { op: "complete", sessionId: session.sessionId }, parseComplete, WIRE_LIMITS.identity, requestOptions).catch(() => {});
         }
 
-        // Awaited bookkeeping or completion can be the first observer of cancellation.
-        if (attempt.signal.aborted) {
-          result.status = "aborted";
-        }
-
-        attempt.close();
+        await attempt.close();
       }
 
       const current = await options.store.snapshot();
       const entries = Object.values(current.outbox).filter((entry) => entry.routeId === route.id && entry.revision === route.revision);
       result.pending = entries.filter((entry) => entry.disposition === "pending").length;
       result.blocked = entries.filter((entry) => entry.disposition === "blocked").length;
+      // The final snapshot can observe cancellation after close detached its
+      // parent listener, so the enclosing pass controller remains authoritative.
+      if (attempt.signal.aborted || controller.signal.aborted) {
+        result.status = "aborted";
+      }
+
       if (route.direction === "outbound" && result.status !== "aborted" && !result.lastError) {
         result.status = result.blocked ? "blocked" : result.pending ? "pending" : "confirmed";
       }

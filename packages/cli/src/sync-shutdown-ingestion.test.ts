@@ -225,8 +225,8 @@ for (const fault of ["none", "read", "handler-cleanup"] as const) {
       t.mock.method(ManagedSyncStore.prototype, "openRouteAttempt", async function (this: ManagedSyncStore, ...args: Parameters<typeof attempt>) {
         const opened = await attempt.apply(this, args);
         const isLocal = parseAuthorization(args[0]).peerId === b.inboxId;
-        return { ...opened, close() {
-          opened.close();
+        return { ...opened, async close() {
+          await opened.close();
           if (isLocal && hits === 1 && cleanupFaults === 0) {
             cleanupFaults += 1;
             throw cleanupError;

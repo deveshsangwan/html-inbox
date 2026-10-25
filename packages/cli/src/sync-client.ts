@@ -5,6 +5,7 @@ import { parseInteger, parseUuid, stateFingerprint, SYNC_DEFAULTS, SYNC_LIMITS }
 import { ManagedSyncStore, type ApplyResult } from "./sync-store";
 import { BINDING_HEADER, decodeJson, parseToken, SyncProtocolError, WIRE_LIMITS, type RequestBinding } from "./sync-wire";
 import { parseRemoteFailure } from "./sync-failure";
+import { StoreLockQueueDeadlineError } from "./sync-files";
 
 export interface SyncCredentials {
   token: string;
@@ -97,7 +98,17 @@ export class SyncClient {
     contentType: string | undefined, consume: (response: IncomingMessage) => Promise<T>, options: SyncRequestOptions, expectedState?: OriginState): Promise<T> {
     const requestMs = parseInteger(options.requestMs ?? SYNC_DEFAULTS.attemptMs, 1, 60_000);
     const deadlineAt = Math.min(options.deadlineAt === undefined ? Date.now() + requestMs : parseInteger(options.deadlineAt, 1), Date.now() + requestMs);
-    const attempt = await this.store.openRouteAttempt(authorization, options.signal, deadlineAt, true);
+    const attempt = await this.store.openRouteAttempt(authorization, options.signal, deadlineAt, true).catch((error: unknown) => {
+      if (!(error instanceof StoreLockQueueDeadlineError)) {
+        throw error;
+      }
+
+      options.signal?.throwIfAborted();
+
+      const failure = new SyncProtocolError(503, "local-acquisition-deadline");
+      failure.cause = error;
+      throw failure;
+    });
     const controller = new AbortController();
     const abort = () => controller.abort(new SyncProtocolError(503, "request-aborted"));
     attempt.signal.addEventListener("abort", abort, { once: true });
@@ -151,7 +162,7 @@ export class SyncClient {
     } finally {
       clearTimeout(timer);
       attempt.signal.removeEventListener("abort", abort);
-      attempt.close();
+      await attempt.close();
     }
   }
 
