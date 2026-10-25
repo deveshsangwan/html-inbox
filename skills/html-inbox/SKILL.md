@@ -33,7 +33,7 @@ Keep the resolved selector on preferences, publish, list, delete, export, remote
 
 During an explicit HTML Inbox setup request, offer the optional appearance choice once: **System** by default, or **Light** or **Dark**. Skipping the question keeps System. Installation and ordinary publishing continue without this question.
 
-First check `inbox --help` for the `preferences` command. The pinned 0.2.1 fallback supports it, but an older installed 0.2.x executable may not. If absent, keep System and explain that saving a setup preference requires a CLI with `preferences` support; continue other authorized setup work. Keep the selected CLI and version pin unchanged.
+First check `inbox --help` for the `preferences` command. The pinned 0.2.2 fallback supports it, but an older installed 0.2.x executable may not. If absent, keep System and explain that saving a setup preference requires a CLI with `preferences` support; continue other authorized setup work. Keep the selected CLI and version pin unchanged.
 
 When supported, inspect `inbox preferences --json`. If the selected inbox home already contains `preferences.json`, preserve its preference and skip the setup question unless the user asks to change it. Otherwise, save the chosen value, or the default when skipped:
 
@@ -180,6 +180,6 @@ The service records absolute Node/CLI paths, inbox and network settings, and the
 
 ## Security boundary
 
-The viewer stores each document's original HTML unchanged. It renders that HTML on a dedicated path inside a sandboxed iframe with a Content Security Policy; it does not sanitize the stored file. Do not present an accepted document as safe to open outside the viewer. Reader HTTP routes stay read-only in every mode.
+The viewer stores each document's original HTML unchanged. It renders that HTML on a dedicated path inside a sandboxed iframe with a Content Security Policy; it does not sanitize the stored file. Do not present an accepted document as safe to open outside the viewer. Live source-viewer and hub HTTP readers accept only GET and HEAD in every mode. Document deletion and other mutations remain local CLI operations.
 
 When changing implementation or security policy rather than operating the CLI, first read the [architecture](https://github.com/deveshsangwan/html-inbox/blob/main/docs/architecture.md) and [threat model](https://github.com/deveshsangwan/html-inbox/blob/main/docs/threat-model.md).
