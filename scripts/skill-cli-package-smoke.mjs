@@ -26,7 +26,8 @@ try {
   const environment = await createConsumerEnvironment(temporaryRoot);
   assert.deepEqual(await readdir(consumerRoot), [], "Fallback must start outside an npm project");
   assert.deepEqual(await readdir(environment.npm_config_cache), [], "Fallback must start with a fresh npm cache");
-  assert.deepEqual(await readdir(environment.npm_config_prefix), [], "Fallback must not reuse a global installation");
+  assert.deepEqual(await readdir(environment.npm_config_prefix), ["lib"], "Fallback prefix must contain only npm's empty layout");
+  assert.deepEqual(await readdir(path.join(environment.npm_config_prefix, "lib")), [], "Fallback must not reuse a global installation");
 
   console.log("Checking documented resolver with npx --yes html-inbox@0.3.0 and an empty consumer/cache.");
   const version = await runCli(resolution, ["--version"], consumerRoot, environment);
@@ -136,6 +137,8 @@ async function createConsumerEnvironment(root) {
   await mkdir(home);
   await mkdir(cache);
   await mkdir(prefix);
+  // npm 10 inspects prefix/lib even when npm exec will install only in its cache.
+  await mkdir(path.join(prefix, "lib"));
   const environment = {
     HOME: home,
     USERPROFILE: home,

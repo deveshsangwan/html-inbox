@@ -439,14 +439,26 @@ test("catalog metadata retries unlinked regular snapshots without reading or rep
 
     fs.lstat = async (...args) => {
       const info = await inspect(...args);
-      if (args[0] !== defaultPath) return info;
+
+      if (args[0] !== defaultPath) {
+        return info;
+      }
+
       inspections += 1;
-      if (mode === "replace" && inspections === 1) await fs.rename(replacementPath, defaultPath);
-      if (mode !== "replace" || inspections === 1) Object.defineProperty(info, "nlink", { value: 0 });
+
+      if (mode === "replace" && inspections === 1) {
+        await fs.rename(replacementPath, defaultPath);
+      }
+
+      if (mode !== "replace" || inspections === 1) {
+        Object.defineProperty(info, "nlink", { value: 0 });
+      }
+
       return info;
     };
     fs.open = async (...args) => {
       if (args[0] === defaultPath) opens += 1;
+
       return open(...args);
     };
 
