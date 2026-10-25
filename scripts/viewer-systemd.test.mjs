@@ -26,7 +26,7 @@ const run = (command, args) => execFileSync(command, args, { timeout: 10_000, en
 if (config.serviceArgs) {
   run("systemd-run", config.serviceArgs);
   const deadline = Date.now() + 10_000;
-  while (JSON.parse(run(process.execPath, [config.cli, "viewer", "status"])).state !== "running") {
+  while (JSON.parse(run(process.execPath, [config.cli, "viewer", "status", "--json"])).state !== "running") {
     if (Date.now() > deadline) throw new Error("Synthetic service readiness timed out");
     await delay(50);
   }
@@ -86,7 +86,7 @@ for (const supervised of [false, true]) {
 
     await run("systemctl", ["--user", "stop", scope], commandOptions);
     await ownerExit;
-    const status = JSON.parse((await run(process.execPath, [cli, "viewer", "status"], { ...commandOptions, env: environment })).stdout);
+    const status = JSON.parse((await run(process.execPath, [cli, "viewer", "status", "--json"], { ...commandOptions, env: environment })).stdout);
     assert.equal(status.state, supervised ? "running" : "stopped");
     assert.equal(await httpStatus(ready.url), supervised ? 200 : null);
     if (supervised) {
