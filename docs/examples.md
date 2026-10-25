@@ -14,6 +14,8 @@ corepack pnpm html-inbox publish ./skills/html-inbox/assets/document-template.ht
   --title "Document appearance example" --type example
 ```
 
+With registered inboxes, use the intended `--inbox NAME`, absolute `--home`, process binding, or configured default for these commands. Unbound redirected or agent commands fail rather than picking a library. See [selection rules](named-inboxes.md#select-a-publishing-destination).
+
 If you use the installed CLI, replace `corepack pnpm html-inbox` with
 `html-inbox`. See the [source checkout instructions](../README.md#set-up-a-source-checkout-for-development)
 if you have not built the CLI yet.

@@ -279,6 +279,11 @@ async function readCatalogJson(filePath: string, readOnly = false): Promise<{ va
       return null;
     }
 
+    // Atomic replacement can unlink the looked-up inode while lstat is in flight.
+    if (checked.isFile() && !checked.isSymbolicLink() && checked.nlink === 0) {
+      continue;
+    }
+
     if (!checked.isFile() || checked.isSymbolicLink() || checked.nlink !== 1) {
       throw new Error(`Catalog record must be a regular private file: ${filePath}`);
     }
@@ -328,8 +333,15 @@ async function withCatalogRegistration<T>(catalogHome: string, register: (root: 
   const deadline = Date.now() + 10_000;
 
   while (true) {
+    let permissionError: unknown;
     const lock = await open(lockPath, "wx", PRIVATE_FILE_MODE).catch((error: unknown) => {
       if (hasErrorCode(error, "EEXIST")) {
+        return null;
+      }
+
+      // Windows can deny creation while the previous lock is pending deletion.
+      if (process.platform === "win32" && hasErrorCode(error, "EPERM")) {
+        permissionError = error;
         return null;
       }
 
@@ -346,6 +358,10 @@ async function withCatalogRegistration<T>(catalogHome: string, register: (root: 
     }
 
     if (Date.now() >= deadline) {
+      if (permissionError !== undefined) {
+        throw permissionError;
+      }
+
       throw new Error(`Catalog registration is busy or was interrupted; stop registration commands before removing ${lockPath}`);
     }
 

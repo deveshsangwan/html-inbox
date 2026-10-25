@@ -150,6 +150,28 @@ test("HTML requires a parsed document marker rather than matching text", () => {
   }
 });
 
+test("noncanonical CDN script warnings do not promise runtime blocking", () => {
+  for (const url of [
+    "https://cdn.jsdelivr.net/npm/mermaid@11/dist/chunks/diagram.mjs",
+    "https://cdn.tailwindcss.com/custom.js",
+  ]) {
+    for (const markup of [
+      `<script type="module" src="${url}"></script>`,
+      `<script type="module">import "${url}";</script>`,
+    ]) {
+      const result = validateHtml(`<html>${markup}</html>`);
+
+      assert.equal(result.ok, true);
+      assert.deepEqual(result.errors, []);
+      assert(result.warnings.length > 0);
+      for (const warning of result.warnings) {
+        assert.doesNotMatch(warning, /CSP (?:will block|blocks fetches)/);
+        assert.match(warning, /CSP sources|runtime policy/);
+      }
+    }
+  }
+});
+
 test("document-relative asset warnings explain the CSP and remediation without blocking publish", () => {
   for (const markup of [
     '<img src="chart.png">',

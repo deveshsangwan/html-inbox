@@ -77,6 +77,7 @@
             <ul>
               <li><a href="index.html">Getting started</a></li>
               <li><a href="agent-setup.html">Agent setup</a></li>
+              <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
               <li><a href="publishing.html">Publish documents</a></li>
               <li><a href="html-compatibility.html">HTML compatibility</a></li>
             </ul>
@@ -111,6 +112,7 @@
               <ul>
                 <li><a href="index.html">Getting started</a></li>
                 <li><a href="agent-setup.html">Agent setup</a></li>
+                <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
                 <li><a href="publishing.html">Publish documents</a></li>
                 <li>
                   <a href="html-compatibility.html">HTML compatibility</a>
@@ -147,6 +149,19 @@
           library. Every device that can reach the listening port can browse,
           search, open, and permanently delete any document.
         </p>
+        <p>
+          Live UI deletion requires a reader running 0.5.x. The skill fallback
+          stays pinned to published 0.4.0, with copy and named-inbox support but
+          no UI deletion. Before an authorized upgrade, review the
+          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
+          and saved exposure and hub mounts.
+        </p>
+        <p>
+          Keep the same <code>--inbox</code>, absolute <code>--home</code>, or
+          process binding throughout these commands. Registered entries without
+          a binding require a terminal choice or fail for automation. See
+          <a href="named-inboxes.html#selection">named selection</a>.
+        </p>
 
         <h2 id="start">Start LAN mode</h2>
         <p>Stop any existing viewer for this inbox, then start LAN mode.</p>
@@ -159,7 +174,10 @@
 html-inbox viewer --lan</code></pre>
         </div>
         <p>
-          The default LAN bind address is <code>0.0.0.0</code>. The CLI reports
+          First LAN startup or a switch from another mode binds
+          <code>0.0.0.0</code> unless <code>--host</code> is supplied. Existing
+          LAN configuration retains its saved host, including with explicit
+          <code>--lan</code>. The CLI reports
           concrete IPv4 interface URLs such as
           <code>http://192.168.1.20:3217</code>, not the wildcard address. Open
           a reported URL on another device connected to the same network.

@@ -2,10 +2,22 @@
 
 The source workspace uses Node.js 24, Corepack, and the pinned pnpm lockfile. The published `html-inbox` CLI supports Node.js 20 or newer and contains one self-contained ncc executable with no runtime package dependencies. Publish `packages/cli`, never the private workspace root.
 
+## Prepare 0.5.0
+
+Check that the intended version is unused before publication. Keep both independently installed skills pinned to the published, verified 0.4.0 fallback; it supports copy and named inboxes but has no UI deletion. Resolver acceptance of installed stable 0.5.x is separate from the fallback pin.
+
+The 0.5.0 upgrade changes live reader permissions for 0.2.x through 0.4.x installations. After an authorized upgrade and restart, every reachable loopback, LAN, Tailscale, and hub reader can permanently delete documents, including every mounted inbox regardless of source filters or standalone viewer exposure. Deletion is always available. Publishing, process control, and hub membership remain CLI operations. Original source files and existing static copies remain unchanged; static snapshots remain read-only. Keep private control protocol 3 compatibility with 0.2.x and later.
+
+Include the [upgrade consequences and verified shutdown procedure](named-inboxes.md#upgrade-to-050) in release notes. Audit the final candidate's root README, packed README, all current guides, site, CLI help, and both skills. Retain copy fallback, MIME, upload-file count, frozen membership, and source identity details and the previous shutdown, named-inbox/Windows-lock/JSON, and DOM-readiness corrections. Preserve historical investigations and previous changelog entries as evidence. Record exact files, hashes, commands, results, and remaining gaps. Package publication and upgrading running installations are separate operations; publication does not change installed CLIs, viewers, services, or saved configuration.
+
 ## Prepare a version
 
 1. Update `packages/cli/package.json` and `CHANGELOG.md` together. Never reuse a version that npm has accepted.
 2. Tell users about upgrade requirements. For 0.2.0, stop viewers started by 0.1.0 with the old CLI before upgrading. The private process-control protocol changed; stored documents remain intact.
+   Version 0.2.2 keeps the 0.2.x CLI and control protocol unchanged; restart an existing viewer after updating to load the new diagnostics.
+   For 0.3.0, migrate automation to explicit `--json` on viewer/service inspections and explicit library selection when named entries exist. Catalog, picker, and hub inspection do not repair source permissions or create missing roots. The private control protocol remains compatible with 0.2.x; restart existing viewers to load the new code. See the [0.3.0 upgrade notes](../CHANGELOG.md#upgrade-to-030) and [named inbox guide](named-inboxes.md).
+   Version 0.4.0 keeps the 0.3.x CLI and private protocol unchanged. Restart verified live viewers after an authorized update to load copy controls; existing static readers require owner-controlled regeneration and publication. New snapshots add one copy JSON file per document.
+   Audit the root and packed READMEs, changelog, relevant guides, website, CLI help, and skill instructions against the exact candidate. Correct stale live claims and record the audit and validation results. Preserve explicitly historical evidence and keep any preparation fallback pinned to a published package.
 3. From a clean checkout, run:
 
    ```sh
@@ -17,30 +29,33 @@ The source workspace uses Node.js 24, Corepack, and the pinned pnpm lockfile. Th
 4. Review the change, commit it, and record the exact release commit. Keep the website guides consistent with the released commands.
 5. Inspect the packed files. The package should contain `bundle/index.js`, `README.md`, `LICENSE`, and `package.json`, with no runtime dependencies, credentials, inbox documents, or source tests.
 
+On hosts where zsh startup adds Node to the resolver tests' restricted PATH, run verification with `ZDOTDIR` set to an empty temporary directory, then remove that directory. This isolates shell configuration without weakening the tests or changing the user's shell files.
+
 ## Publish locally
+
+The normal release path is the main-only [GitHub publishing workflow](#publish-with-github-actions). Local publication is an alternative for an authenticated package owner.
 
 Authenticate the package owner on the machine that will publish. Run `npm login --registry=https://registry.npmjs.org/` yourself, complete its browser sign-in, and check `npm whoami --registry=https://registry.npmjs.org/`. A 401 means the publishing session needs to be restored. Keep tokens, passwords, and recovery codes out of repository files and chat.
 
-Build and test the same archive you will publish. These commands are for version 0.2.1; replace that version for subsequent releases:
+Build and test the same archive you will publish. From the checkout root, read its version from the reviewed package metadata:
 
 ```sh
 mkdir -p artifacts
-cd packages/cli
-npm pack --pack-destination ../../artifacts
-cd ../..
-node scripts/package-smoke.mjs artifacts/html-inbox-0.2.1.tgz
-npm publish ./artifacts/html-inbox-0.2.1.tgz --dry-run --access public --registry=https://registry.npmjs.org/
+inbox_release_version=$(node -p "require('./packages/cli/package.json').version")
+npm pack ./packages/cli --pack-destination ./artifacts
+node scripts/package-smoke.mjs "artifacts/html-inbox-${inbox_release_version}.tgz"
+npm publish "./artifacts/html-inbox-${inbox_release_version}.tgz" --dry-run --access public --registry=https://registry.npmjs.org/
 ```
 
 After the file list and installed-package checks pass, publish that exact archive:
 
 ```sh
-npm publish ./artifacts/html-inbox-0.2.1.tgz --access public --registry=https://registry.npmjs.org/
+npm publish "./artifacts/html-inbox-${inbox_release_version}.tgz" --access public --registry=https://registry.npmjs.org/
 ```
 
 Complete any npm authentication or 2FA challenge. Local publication does not claim GitHub provenance. A dry run validates the archive; it does not prove that npm will authorize the real publish.
 
-## Set up future GitHub publishing
+## Publish with GitHub Actions
 
 The [Publish npm release workflow](../.github/workflows/publish.yml) verifies source and browser tests, builds a tarball, runs installed-package smoke against that exact tarball, uploads it as an artifact, and publishes it through npm's trusted-publishing identity. It runs on GitHub-hosted Linux with Node.js 24 and grants `id-token: write` only to its publishing job. It needs no npm token secret.
 
@@ -69,7 +84,7 @@ Complete the browser 2FA challenge. Inspect existing relationships first; preser
 
 Complete the first successful publish within two days of creating the connection. Otherwise npm marks it expired and disables editing; delete that expired connection, recreate it with the values above, and publish before the new deadline.
 
-For a future release, merge the reviewed version change into main. Open Actions, choose **Publish npm release**, select **Run workflow** on main, and enter the exact package version. The workflow refuses a mismatched or non-stable version. It has a manual trigger so merging code or pushing an artifact tag does not publish unexpectedly. Successful trusted publishing from this public repository produces npm provenance automatically.
+For each release, merge the reviewed version change into main and verify that merge commit's required checks. Open Actions, choose **Publish npm release**, select **Run workflow** on main, and enter the exact package version. The workflow refuses a mismatched or non-stable version. It has a manual trigger so merging code or pushing an artifact tag does not publish unexpectedly. Successful trusted publishing from this public repository produces npm provenance automatically.
 
 The existing [Package release artifact workflow](../.github/workflows/package.yml) still creates verified archives on `v<version>` tags or manual runs and never publishes to npm. Website deployment, package artifact generation, and npm publication are separate workflows.
 
@@ -78,9 +93,10 @@ The existing [Package release artifact workflow](../.github/workflows/package.ym
 After publishing, inspect npm's version, tag, and integrity and exercise the public package:
 
 ```sh
-npm view html-inbox@0.2.1 version dist.integrity --registry=https://registry.npmjs.org/
+inbox_release_version=$(node -p "require('./packages/cli/package.json').version")
+npm view "html-inbox@${inbox_release_version}" version dist.integrity --registry=https://registry.npmjs.org/
 npm view html-inbox dist-tags --json --registry=https://registry.npmjs.org/
-npm exec --yes --registry=https://registry.npmjs.org/ --package=html-inbox@0.2.1 -- html-inbox --version
+npm exec --yes --registry=https://registry.npmjs.org/ --package="html-inbox@${inbox_release_version}" -- html-inbox --version
 ```
 
 Compare `dist.integrity` with the tested archive's SHA-512 integrity. Confirm that `latest` points to the intended stable version. Record a matching `v<version>` Git tag at the reviewed release commit and attach the tested archive to release notes when creating a GitHub release.

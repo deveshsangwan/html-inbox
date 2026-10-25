@@ -77,6 +77,7 @@
             <ul>
               <li><a href="index.html">Getting started</a></li>
               <li><a href="agent-setup.html">Agent setup</a></li>
+              <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
               <li><a href="publishing.html">Publish documents</a></li>
               <li><a href="html-compatibility.html">HTML compatibility</a></li>
             </ul>
@@ -111,6 +112,7 @@
               <ul>
                 <li><a href="index.html">Getting started</a></li>
                 <li><a href="agent-setup.html">Agent setup</a></li>
+                <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
                 <li><a href="publishing.html">Publish documents</a></li>
                 <li>
                   <a href="html-compatibility.html">HTML compatibility</a>
@@ -148,6 +150,13 @@
           delete individual documents. Publishing and process control stay in
           the CLI.
         </p>
+        <p>
+          Live UI deletion requires a reader running 0.5.x. The skill fallback
+          stays pinned to published 0.4.0, with copy and named-inbox support but
+          no UI deletion. Before an authorized upgrade, review the
+          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
+          and saved exposure and hub mounts.
+        </p>
 
         <h2 id="reading">Read with more document space</h2>
         <p>
@@ -183,6 +192,48 @@
           the document is already absent and the cleanup failure is reported.
           Static exported and hosted snapshots are read-only independent copies
           with no live deletion controls or live viewer credentials.
+        </p>
+        <h2 id="copy">Copy text and code</h2>
+        <p>
+          In version 0.4.0 or newer, open <strong>Viewer options</strong>, then choose
+          <strong>Copy content...</strong>. Copy all saved document text,
+          select a portion and choose <strong>Copy selection</strong>, or
+          switch to <strong>Code blocks</strong> and pick a numbered block.
+          Copying uses plain text and preserves code spacing. The preview
+          stays loaded while the dialog is open.
+        </p>
+        <p>
+          Text comes from saved HTML. Scripted changes, edited form values,
+          and chart visuals may be missing; CSS-hidden text can remain. For a
+          selection in the current preview, use your browser's keyboard,
+          context menu, or touch Copy.
+        </p>
+        <p>
+          If automatic copying is unavailable or denied, choose
+          <strong>Select all</strong> and use your device's Copy command.
+          This also works with ordinary HTTP LAN readers. Copying changes
+          the reader's clipboard without changing an inbox. Named viewers,
+          the live hub, and new static snapshots share these controls.
+        </p>
+        <p>
+          If text stays fully selected after <strong>Select all</strong>,
+          close and reopen the dialog before selecting a smaller portion.
+        </p>
+        <p>
+          Copying uses saved HTML rather than the live rendered page. HTML source,
+          Markdown, and formatted HTML are not clipboard formats in this release.
+          Restart an existing verified viewer after an authorized CLI update to
+          load these controls. Static readers gain them only when their owner
+          regenerates and publishes a snapshot. Loopback HTTP and valid HTTPS can
+          offer automatic copying; ordinary LAN or tailnet HTTP may require
+          manual Copy. Browser policy can deny writes even over HTTPS.
+        </p>
+        <p>
+          Preparation refuses invalid UTF-8 or copy JSON exceeding 10 MiB without
+          truncating text or disabling the preview. This output limit is separate
+          from <code>HTML_INBOX_MAX_BYTES</code>. If preparation is unavailable,
+          use native Copy in the preview; manual dialog Copy needs successfully
+          prepared text.
         </p>
         <h2 id="appearance">Choose appearance</h2>
         <p>
@@ -227,6 +278,12 @@ html-inbox preferences --json</code></pre>
           URL for the active exposure.
         </p>
         <p>
+          Detachment does not escape an agent's systemd scope or provide
+          automatic restart. Stopping that scope also stops its viewer. Use an
+          explicit <a href="boot-services.html">boot service</a> for links that
+          must survive agent cleanup, logout, or reboot.
+        </p>
+        <p>
           First startup binds <code>127.0.0.1</code> on port <code>3217</code>.
           The last successful port, address, and exposure are saved in the
           selected inbox. Later starts and publishing reuse them, even after
@@ -234,8 +291,9 @@ html-inbox preferences --json</code></pre>
         </p>
         <h2 id="configuration">Select the inbox and port</h2>
         <p>
-          Set <code>HTML_INBOX_HOME</code> to use another library. Keep that
-          value consistent across publishing, status, stop, and service
+          Use <code>--inbox NAME</code>, absolute <code>--home</code>, or a
+          process binding such as <code>HTML_INBOX_NAME</code> /
+          <code>HTML_INBOX_HOME</code> to choose a library. Keep that selection consistent across publishing, status, stop, and service
           commands. A relative path resolves against the current directory, so
           an absolute path is clearer for automation.
         </p>
@@ -251,6 +309,12 @@ html-inbox preferences --json</code></pre>
           explicit environment port overrides the saved port. Valid CLI ports
           are integers from 1 through 65535. Without either override, the saved
           configuration applies, or port 3217 on first startup.
+        </p>
+        <p>
+          Registered entries without a binding or default require a one-operation
+          choice in a fully interactive terminal. Redirected streams, scripts,
+          and JSON mode fail with selector guidance. With no entries or binding,
+          legacy first use remains. See <a href="named-inboxes.html#selection">selection rules</a>.
         </p>
         <h2 id="foreground">Keep it attached</h2>
         <div class="docs-code">
@@ -282,7 +346,8 @@ html-inbox preferences --json</code></pre>
 html-inbox viewer stop</code></pre>
         </div>
         <p>
-          Both commands print JSON. Status reports state, exposure, port, URLs,
+          Both commands print readable text in 0.3.0. Add <code>--json</code> for
+          automation that previously parsed their default JSON. JSON status reports state, exposure, port, URLs,
           and a PID when verified. States include <code>running</code>,
           <code>stopped</code>, <code>conflict</code>, and
           <code>incompatible</code>. A reported URL is usable only when the
@@ -300,6 +365,17 @@ html-inbox viewer stop</code></pre>
           Omit <code>HTML_INBOX_PORT</code> to use the saved active port, or
           keep its explicit value consistent with the viewer you intend to
           manage.
+        </p>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="Named viewer inspection"><code>html-inbox viewer status --inbox development --json
+html-inbox viewer stop --inbox development --json
+html-inbox inbox list --running</code></pre>
+        </div>
+        <p>
+          Catalog inspection includes only registered sources and verifies running
+          viewers privately. It does not discover every listener. Use a
+          <a href="named-inboxes.html#hub">local hub</a> to read explicitly selected
+          libraries together without starting their standalone viewers.
         </p>
         <h2 id="exposure">Change reader exposure</h2>
         <p>
@@ -335,7 +411,7 @@ html-inbox viewer --loopback</code></pre>
           documents in either mode. Publishing, process control, and service
           management have no reader HTTP endpoints.
         </p>
-        <h2 id="diagnostics">Find startup diagnostics</h2>
+        <h2 id="diagnostics">Find lifecycle diagnostics</h2>
         <p>
           Detached startup writes diagnostics to <code>viewer.log</code> inside
           the private inbox. Failed startup reports that path. The default
@@ -343,6 +419,17 @@ html-inbox viewer --loopback</code></pre>
           it is not a process identity check. The separate secret loopback
           control URL belongs in protected local records and should not be
           shared.
+        </p>
+        <p>
+          Starting with 0.2.2, graceful shutdown records its timestamp, viewer
+          PID, and first reason:
+          <code>SIGTERM</code>, <code>SIGINT</code>, <code>reader-close</code>, or
+          <code>startup-failure</code>. A <code>stopped</code> record follows
+          successful cleanup. A signal record cannot identify who sent it;
+          correlate the PID and timestamp with the service manager's journal.
+          A forced kill or power loss may leave no shutdown record.
+          Restart an existing viewer after updating the CLI to load these
+          diagnostics; older compatible 0.2.x viewers may lack them.
         </p>
         <p>
           See
@@ -368,13 +455,14 @@ html-inbox viewer --loopback</code></pre>
           <p class="docs-toc-label">On this page</p>
           <ul>
             <li><a href="#reading">Read with more space</a></li>
+            <li><a href="#copy">Copy text and code</a></li>
             <li><a href="#appearance">Choose appearance</a></li>
             <li><a href="#background">Start in the background</a></li>
             <li><a href="#configuration">Select the inbox and port</a></li>
             <li><a href="#foreground">Keep it attached</a></li>
             <li><a href="#status-stop">Inspect and stop it</a></li>
             <li><a href="#exposure">Change reader exposure</a></li>
-            <li><a href="#diagnostics">Find startup diagnostics</a></li>
+            <li><a href="#diagnostics">Find lifecycle diagnostics</a></li>
           </ul>
         </nav>
       </aside>

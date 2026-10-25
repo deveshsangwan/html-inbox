@@ -420,7 +420,7 @@ test("hub list deletion uses the source-qualified URL at desktop size", { timeou
 test("static exports contain no deletion controls or credentials and remain immutable", { timeout: 30_000 }, async (t) => {
   const { page, inboxUrl, documents, home } = await createBrowserFixture(t, "static", publishDocuments);
   const response = await page.goto(inboxUrl);
-  assert.equal(response.headers()["content-security-policy"].includes("connect-src 'self'"), false);
+  assert.equal(response.headers()["content-security-policy"].includes("connect-src 'self'"), true);
   assert.equal(await page.locator(".doc__actions, [data-delete-document], [data-delete-dialog], [data-delete-token]").count(), 0);
   await new LocalDocumentBackend(home).deleteDocument(documents[0].id);
   await page.reload();

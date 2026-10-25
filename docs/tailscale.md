@@ -1,5 +1,7 @@
 # Tailscale viewer integration
 
+Live UI deletion requires a reader running 0.5.x. The skill fallback stays pinned to published 0.4.0, with copy and named-inbox support but no UI deletion. Before an authorized upgrade, review the [0.5.0 permission change](named-inboxes.md#upgrade-to-050) and saved exposure and hub mounts.
+
 HTML Inbox uses an existing installed, signed-in Tailscale CLI. It never installs a client, logs in, changes access policy, enables Funnel, or resets Serve configuration. Reader reachability follows the user's tailnet policy. Every reachable live reader can read and permanently delete individual documents, just as on loopback and LAN. Deletion needs no startup grant or separate reader login. Publishing and process control stay in the local CLI.
 
 Live deletion uses a process-scoped CSRF token and matching Origin, with Host validation and `frame-ancestors 'none'` on live shells. These checks do not add per-reader roles. Original content keeps its sandbox and document CSP. Existing static exports and hosted snapshots remain read-only independent copies without live viewer credentials.
@@ -12,9 +14,11 @@ The reader binds to `127.0.0.1`. Serve terminates tailnet HTTPS on the connected
 
 The HTTP foundation must allow the exact prepared hostname, ignore forwarded and Tailscale identity headers for authorization, and return only `{"ok":true}` from the reader's `/health`. Identity belongs to the separate private loopback control endpoint. The module checks reader health with both the tailnet Host and a loopback Host before configuring Serve. A reader exposing process or inbox identity fails this check.
 
+Keep the intended `--inbox`, absolute `--home`, or process binding across startup, status, and cleanup. With registered entries, unbound automation requires a selector or configured default. See [named selection and the 0.3 upgrade](named-inboxes.md#upgrade-from-02x).
+
 ## Worker contract
 
-`packages/cli/src/viewer-tailscale.ts` exports these public boundaries:
+`packages/cli/src/viewer-tailscale.ts` uses these boundaries:
 
 ```typescript
 interface TailscaleViewerOptions {

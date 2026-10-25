@@ -12,6 +12,105 @@ import {
 import { temporaryHome } from "./test-fixtures";
 import { DOCUMENT_CSP } from "./viewer-assets";
 import { readPreferences, setAppearancePreference } from "./preferences";
+import { startViewerHttpServer } from "./viewer-http-server";
+import { resolveViewerNetworkConfig } from "./viewer-network";
+
+test("viewer copy resource reads only the requested document and preserves reader policies", async (t) => {
+  const home = await temporaryHome(t);
+  const backend = new LocalDocumentBackend(home);
+  const originalBytes = Buffer.from("\ufeff<!doctype html>\r\n<body><h1>Copy report</h1><pre><code>\tconst x = &lt;tag&gt;;  \r\n</code></pre></body>\r\n");
+  const metadata = await backend.publish({ originalBytes, title: "Copy report", type: "report", sourceFileName: "copy.html" });
+  const getDocument = t.mock.method(backend, "getDocument");
+  const server = await startViewerHttpServer(backend, resolveViewerNetworkConfig(0), {
+    instanceId: "test-instance", processId: "test-process", protocolVersion: 1, pid: process.pid,
+  }, undefined, { inboxName: "reports" });
+  t.after(() => server.close());
+  const baseUrl = server.urls[0];
+  const documentUrl = `${baseUrl}/documents/${metadata.id}`;
+
+  assert.equal((await fetch(documentUrl)).status, 200);
+  assert.equal((await fetch(documentUrl, { method: "HEAD" })).status, 200);
+  assert.equal(getDocument.mock.callCount(), 0);
+
+  const response = await fetch(`${documentUrl}/copy.json`);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("content-type"), "application/json; charset=utf-8");
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(response.headers.get("referrer-policy"), "no-referrer");
+  assert.equal(response.headers.has("content-security-policy"), false);
+  assert.deepEqual(await response.json(), {
+    schemaVersion: 1, status: "ready", text: "Copy report\n\tconst x = <tag>;  \n", codeBlocks: ["\tconst x = <tag>;  \n"],
+  });
+  assert.equal(getDocument.mock.callCount(), 1);
+
+  const head = await fetch(`${documentUrl}/copy.json`, { method: "HEAD" });
+  assert.equal(head.status, 200);
+  assert.equal(head.headers.get("content-type"), response.headers.get("content-type"));
+  assert.equal(await head.text(), "");
+
+  const content = await fetch(`${documentUrl}/content`);
+  assert.equal(content.headers.get("content-security-policy"), DOCUMENT_CSP);
+  assert.deepEqual(Buffer.from(await content.arrayBuffer()), originalBytes);
+  assert.deepEqual(await readFile(path.join(home, "documents", metadata.id, "index.html")), originalBytes);
+
+  const readsBeforeDeniedRequests = getDocument.mock.callCount();
+
+  for (const method of ["POST", "PUT", "DELETE", "OPTIONS", "PATCH"]) {
+    const denied = await fetch(`${documentUrl}/copy.json`, { method });
+    assert.equal(denied.status, 405);
+    assert.equal(denied.headers.get("allow"), "GET, HEAD");
+  }
+
+  assert.equal((await requestWithHost(server.config.port, "attacker.example", `/documents/${metadata.id}/copy.json`)).statusCode, 421);
+  assert.equal(getDocument.mock.callCount(), readsBeforeDeniedRequests);
+
+  for (const route of ["/documents/missing/copy.json", "/documents/%2e%2e/copy.json", "/documents/bad%2Fid/copy.json", `/documents/${metadata.id}/copy.json/`, `/sources/reports/documents/${metadata.id}/copy.json`]) {
+    const missing = await fetch(`${baseUrl}${route}`);
+    assert.equal(missing.status, 404, route);
+    assert.equal(await missing.text(), "Not Found");
+  }
+
+  await backend.deleteDocument(metadata.id);
+  assert.equal((await fetch(`${documentUrl}/copy.json`)).status, 404);
+});
+
+test("viewer copy failures leave shells and original content readable", async (t) => {
+  const home = await temporaryHome(t);
+  const backend = new LocalDocumentBackend(home);
+  const metadata = await backend.publish({ originalBytes: Buffer.from("<body>Original</body>"), title: "Copy limits", type: "report", sourceFileName: "limits.html" });
+  const server = await startViewerHttpServer(backend, resolveViewerNetworkConfig(0), {
+    instanceId: "test-instance", processId: "test-process", protocolVersion: 1, pid: process.pid,
+  });
+  t.after(() => server.close());
+  const documentUrl = `${server.urls[0]}/documents/${metadata.id}`;
+  const documentPath = path.join(home, "documents", metadata.id, "index.html");
+  const previousLimit = process.env.HTML_INBOX_MAX_BYTES;
+  t.after(() => {
+    if (previousLimit === undefined) {
+      delete process.env.HTML_INBOX_MAX_BYTES;
+      return;
+    }
+
+    process.env.HTML_INBOX_MAX_BYTES = previousLimit;
+  });
+  process.env.HTML_INBOX_MAX_BYTES = "128";
+
+  for (const [bytes, reason] of [
+    [Buffer.from([0xff]), "invalid-encoding"],
+    [Buffer.alloc(129, "x"), "too-large"],
+  ] as const) {
+    await writeFile(documentPath, bytes);
+    const copy = await fetch(`${documentUrl}/copy.json`);
+    assert.equal(copy.status, 200);
+    assert.deepEqual(await copy.json(), { schemaVersion: 1, status: "unavailable", reason });
+    assert.equal((await fetch(documentUrl)).status, 200);
+
+    const content = await fetch(`${documentUrl}/content`);
+    assert.equal(content.headers.get("content-security-policy"), DOCUMENT_CSP);
+    assert.deepEqual(Buffer.from(await content.arrayBuffer()), bytes);
+  }
+});
 
 test("viewer falls back to system for unreadable preferences without repairing them", async (t) => {
   const home = await temporaryHome(t);
@@ -335,10 +434,11 @@ test("viewer serves isolated documents and searches metadata", async (t) => {
 async function requestWithHost(
   port: number,
   host: string,
+  requestPath = "/health",
 ): Promise<{ statusCode: number | undefined; body: string }> {
   return new Promise((resolve, reject) => {
     const request = http.request(
-      { host: "127.0.0.1", port, path: "/health", headers: { Host: host } },
+      { host: "127.0.0.1", port, path: requestPath, headers: { Host: host } },
       (response) => {
         let body = "";
         response.setEncoding("utf8");
