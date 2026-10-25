@@ -348,8 +348,10 @@ HTML_INBOX_HOME=/home/alice/inboxes/reports html-inbox viewer service status</co
         </div>
         <p>
           Uninstall stops and disables the owned service and removes its
-          definition. It preserves documents, private records, and logs. Include
-          the same <code>HTML_INBOX_HOME</code> for a custom library.
+          definition. It preserves documents, saved configuration, inbox
+          identity, and logs. Successful shutdown removes the matching active
+          process record and any verified owned-route journal. Include the same
+          <code>HTML_INBOX_HOME</code> for a custom library.
         </p>
         <p>
           <code>viewer stop</code> does not remove boot configuration. Use
@@ -360,8 +362,11 @@ HTML_INBOX_HOME=/home/alice/inboxes/reports html-inbox viewer service status</co
         <p>
           Uninstall the service with the old CLI before upgrading, then install
           the updated CLI and reinstall the service as the same normal account
-          with the intended inbox and exposure. This avoids incompatible old
-          process records and stale executable paths.
+          with the intended inbox and exposure. This loads the new code and
+          records stable executable paths. Version 0.2.x keeps protocol version
+          3; incompatible 0.1.0 viewers need their original executable for
+          shutdown. The new shutdown diagnostics require a viewer running
+          0.2.2 or newer.
         </p>
         <div class="docs-code">
           <pre

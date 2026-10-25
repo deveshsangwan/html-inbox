@@ -5,6 +5,7 @@ All notable changes to HTML Inbox will be documented here.
 ## 0.2.2 - 2026-10-25
 
 - Record timestamped shutdown requests and completion with the viewer PID and first trigger, preserving serialized startup and cleanup.
+- Clarify external script warnings so they do not promise blocking for noncanonical URLs inside permitted CSP sources. Validation rules and runtime security policy are unchanged.
 - Explain why detached viewers remain owned by a launching systemd scope and point persistent reader links to the existing explicit boot service workflow.
 - Preserve the original failure and attempt every cleanup stage in the synthetic scope test harness, including setup failures, with manager-free regression coverage in CI.
 

@@ -119,7 +119,7 @@ Use `html-inbox viewer --foreground` to keep it attached for debugging, containe
 
 Detachment does not escape an agent's systemd scope or provide automatic restart. If that scope is stopped, its viewer stops too. Use the explicit [boot service](docs/self-hosting.md#start-at-boot) for links that must survive agent cleanup, logout, or reboot.
 
-Stop a viewer started by an older HTML Inbox release before upgrading. The private control protocol has changed; the new CLI refuses to signal a process whose older record it cannot verify.
+Version 0.2.x keeps the same private control protocol. Stop a viewer started by 0.1.0 with its original executable before upgrading; newer CLIs refuse to signal incompatible or unverified process records. Restart an existing 0.2.x viewer after updating to load the new code.
 
 Manage the local library and viewer:
 
@@ -159,7 +159,7 @@ html-inbox viewer --lan
 html-inbox viewer --lan --host 192.168.1.20 --port 4321
 ```
 
-LAN mode trusts everyone who can reach that port. There is no password, login, or reader token. The default LAN address is `0.0.0.0`; the CLI reports concrete interface URLs instead of a wildcard browser URL. `--host` selects an IP address on a multi-interface server, and `--port` overrides `HTML_INBOX_PORT`. The operating system's firewall determines which devices can reach the listener.
+LAN mode trusts everyone who can reach that port. There is no password, login, or reader token. First LAN startup, or a switch from another mode, binds `0.0.0.0` unless `--host` is supplied. An existing LAN configuration retains its saved host, including with explicit `--lan`. The CLI reports concrete interface URLs instead of a wildcard browser URL. `--host` selects an IP address on a multi-interface server, and `--port` overrides `HTML_INBOX_PORT`. The operating system's firewall determines which devices can reach the listener.
 
 Use an existing installed, connected Tailscale client to serve HTTPS within your tailnet:
 
@@ -234,7 +234,7 @@ Revocation rotates to a new undisclosed empty capability and removes the previou
 
 ## Supported HTML
 
-HTML Inbox accepts UTF-8 `.html` and `.htm` files. HTTPS links in `<a href>` are allowed, along with relative and fragment links; other navigation is rejected. Non-allowlisted external resources produce warnings and are blocked by the viewer CSP, except for the supported Tailwind browser and Mermaid v11 script entry points. Accepted HTML is still untrusted: validation is a compatibility and policy gate, not sanitization.
+HTML Inbox accepts UTF-8 `.html` and `.htm` files. HTTPS links in `<a href>` are allowed, along with relative and fragment links; other navigation is rejected. Non-allowlisted external resources produce advisory warnings. The runtime CSP blocks many warned features, but its script permissions are broader than the canonical Tailwind browser and Mermaid v11 entry URLs recognized by validation; a warning does not prove blocking. Accepted HTML is still untrusted: validation is a compatibility and policy gate, not sanitization.
 
 Document-relative assets also produce advisory warnings. See [HTML compatibility](docs/html-compatibility.md) for supported resources and ways to embed them.
 

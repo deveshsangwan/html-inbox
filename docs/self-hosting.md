@@ -78,7 +78,7 @@ Linux installs `/etc/systemd/system/html-inbox-viewer.service`, sets `User=`, in
 
 Service readiness and status run the viewer status CLI as the selected user's UID and GID, including Tailscale checks. The administrator process invokes the system service manager, but does not execute the inbox's configured Tailscale command with administrator privileges.
 
-Uninstallation stops and disables the owned service, removes its definition, and preserves documents, private records, and logs. Ordinary `viewer stop` stops the process without removing boot configuration. Use service uninstall to prevent boot startup.
+Uninstallation stops and disables the owned service, removes its definition, and preserves documents, saved configuration, inbox identity, and logs. Successful shutdown removes the matching active process record and any verified owned-route journal. Ordinary `viewer stop` stops the process without removing boot configuration. Use service uninstall to prevent boot startup.
 
 An older viewer record blocks startup until you stop that viewer with its previous executable. If the older process already exited, its stop command may leave `viewer.json` behind. Verify that the recorded viewer process is gone and its listening port is unused, then remove only the stale `viewer.json` from the selected inbox and retry the current viewer. Keep the documents, saved configuration, and other private records.
 

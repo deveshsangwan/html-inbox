@@ -323,12 +323,15 @@ html-inbox viewer --loopback</code></pre>
           shared.
         </p>
         <p>
-          Graceful shutdown records its timestamp, viewer PID, and first reason:
+          Starting with 0.2.2, graceful shutdown records its timestamp, viewer
+          PID, and first reason:
           <code>SIGTERM</code>, <code>SIGINT</code>, <code>reader-close</code>, or
           <code>startup-failure</code>. A <code>stopped</code> record follows
           successful cleanup. A signal record cannot identify who sent it;
           correlate the PID and timestamp with the service manager's journal.
           A forced kill or power loss may leave no shutdown record.
+          Restart an existing viewer after updating the CLI to load these
+          diagnostics; older compatible 0.2.x viewers may lack them.
         </p>
         <p>
           See
