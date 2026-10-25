@@ -1,14 +1,15 @@
 # HTML Inbox Threat Model
 
-Phase 1 protects the local viewer and local machine from untrusted HTML reports.
+HTML Inbox protects the local viewer and local machine from untrusted HTML reports.
 
 ## Assumptions
 
 - The user running the CLI is trusted.
 - Published HTML is untrusted.
 - The inbox is local-only by default.
-- Explicit LAN exposure trusts all readers who can reach the port; explicit Tailscale exposure trusts readers allowed by the user's tailnet policy. Either exposes the complete live library.
-- Storage is on the user's filesystem under `~/.html-inbox` unless `HTML_INBOX_HOME` is set.
+- Every reachable live viewer or hub reader is trusted to read and delete documents. Unenrolled inboxes permanently remove saved files. This applies on loopback, LAN, and Tailscale, without a startup grant or reader login. The owner's selected network determines reachability.
+- Explicit Tailscale exposure follows the user's tailnet policy.
+- Library selection follows the [named-inbox rules](named-inboxes.md#select-a-publishing-destination). With no registered entries or binding, storage defaults to `~/.html-inbox`. Names do not confer reader access.
 - The filesystem enforces Unix permission modes on POSIX, or the user has restricted Windows ACLs throughout the storage subtree as described below.
 
 ## Main Risks
@@ -23,11 +24,12 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - A followed external link observes the visitor's IP address or attempts to navigate outside the document frame.
 - Document script consumes excessive CPU or memory inside its frame.
 - A browser reaches loopback data through an attacker-controlled Host header.
+- Another origin submits a deletion request or frames the live shell to trick a reader into confirming one.
 - Another local operating-system account reads or changes inbox files because filesystem permissions or Windows ACLs allow access.
 - An accidental or maliciously large document exhausts memory or disk during publish.
 - A crash leaves a partially written record that appears in the library.
 
-## Phase 1 Controls
+## Local controls
 
 - Store the original HTML unchanged at `documents/<id>/index.html`.
 - Store metadata separately at `documents/<id>/metadata.json`.
@@ -36,29 +38,37 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - Use strict CSP on viewer responses. Document responses allow inline scripts plus the narrow CDN script paths required by Tailwind and Mermaid, block inline script attributes, and keep `connect-src`, frames, forms, objects, and non-data images, media, and fonts blocked. Default navigations to `no-referrer`.
 - Bind the viewer to `127.0.0.1`, default port `3217`, unless LAN exposure is explicitly selected. Tailscale Serve uses a loopback backend.
 - Reject requests whose `Host` is outside the allowlist derived from the selected listening addresses and exact trusted tailnet hostname. Ignore forwarding and identity headers for authorization.
-- On POSIX filesystems that enforce Unix permissions, create managed directories with `0700` and files with `0600`, and tighten existing managed paths when they are accessed. On Windows, rely on the user-provided filesystem ACLs described below.
+- On POSIX filesystems that enforce Unix permissions, create managed directories with `0700` and files with `0600`, and tighten existing managed paths during ordinary library operations. Catalog inspection, picker reads, and hub source reads do not repair permissions. On Windows, rely on the user-provided filesystem ACLs described below.
 - Keep identity-bearing health on a separate loopback control endpoint recorded in protected local storage. Reader health returns only an anonymous success response. Control health never exposes the absolute inbox path.
 - Reject oversized input before reading it and bound all user-controlled metadata fields.
 - Stage and validate a complete record before making it visible with an atomic directory rename.
-- Keep deletion in the CLI, require confirmation by default, and atomically move a record out of the live library before removing its files.
+- Offer single-document deletion in live list rows and document options. Show the title, filename, and inbox in a permanent-deletion confirmation with Cancel selected by default. Keep CLI confirmation and automated `--force` behavior.
+- Require a process-scoped CSRF token and matching Origin for live deletion. Retain Host validation and set `frame-ancestors 'none'` on live shell responses. The token protects requests from other origins, not documents from reachable readers.
+- Atomically rename a deleted record out of the live library before purging its files. Report a purge failure after that rename accurately, since the record is already absent. There is no Undo or bulk deletion. Preserve the original publish source file and existing exports and remote snapshots.
 - Validate the configured listening IP and port at the boundary. Report usable addresses rather than wildcard browser URLs.
 - Treat verified local control health as the readiness signal, and verify the HTTPS Serve route before reporting Tailscale readiness.
 
 ## Live self-hosting
 
-LAN mode has no password or reader access token. Every device that can reach the listener can browse metadata, search, and open every stored document. HTTP transport on the LAN does not encrypt the traffic. The operator chooses the listening interface and firewall policy. Host validation limits accepted request authorities; it does not authenticate a reader or prevent an allowed reader from sharing content.
+LAN mode has no password or reader access token. Every device that can reach the listener can browse metadata, search, open, and permanently delete any stored document. HTTP transport on the LAN does not encrypt the traffic. The operator chooses the listening interface and firewall policy. Host validation limits accepted request authorities; it does not authenticate a reader or prevent an allowed reader from sharing content or deleting documents.
 
 Tailscale mode delegates encrypted transport and reader access to the existing signed-in Tailscale client, HTTPS Serve, and tailnet policy. HTML Inbox accepts only the exact trusted tailnet hostname and its configured loopback authorities. Client-supplied forwarding and Tailscale identity headers grant no access. It checks existing Serve/Funnel settings before changes, refuses conflicting routes, and never enables Funnel or changes tailnet access rules. Cleanup verifies the journaled node and exact owned route before scoped removal. Configuration drift or unavailable clients leave the journal for deliberate recovery rather than deleting unrelated services.
 
-Publishing, deletion, startup, and stop remain local CLI operations. The exposed reader has no administration endpoints. Private process records and startup logs follow the same filesystem protections as documents. Boot services are installed explicitly with administrator privileges, run the viewer as a normal user, and refuse unrelated definitions. A privileged administrator or another process running as the same user remains trusted.
+Deletion is available to every reachable live reader in every network mode. No mode adds a startup grant or owner-only browser role. Publishing, startup, stop, exposure changes, and service administration remain local CLI operations, with no reader HTTP endpoints. Private process records and startup logs follow the same filesystem protections as documents. Boot services are installed explicitly with administrator privileges, run the viewer as a normal user, and refuse unrelated definitions. A privileged administrator or another process running as the same user remains trusted.
+
+Copy controls operate in the trusted reader shell. A read-only JSON resource derives plain text from saved HTML using parse5; it does not execute author code or insert author nodes into the shell. Clipboard writes require a shell user action and never follow document messages. Same-origin shell fetch permission does not relax the document's connection policy, opaque origin, or response sandbox. Copied strings remain document-authored data, and native Copy inside the preview can still be changed by the document's own copy handler. No HTML source or rich HTML clipboard format is provided. Clipboard access can fail under browser transport, activation, or permission rules, so the shell retains selectable text for manual copying.
 
 ## Storage privacy
 
 Named inbox catalog entries are trusted local configuration, separate from reader output. Names bind a canonical root and expected durable UUID; process reuse and shutdown still require verified private lifecycle identity. The catalog never grants network reader access.
 
-The optional local hub grants every reachable reader access to every explicitly mounted library, including stopped or privately served sources. New catalog entries do not join a hub. Membership is loaded from explicit trusted local configuration. Mounted sources are read without creating missing paths or changing their filesystem permissions; UUID or location mismatches isolate that source and mark combined results incomplete. Public availability messages contain source names and generic state, not local roots, private control URLs, or diagnostics. Original bytes, sandbox isolation, CSP, method restrictions, and Host validation apply to hub routes too. The hub adds no remote administration, ingestion, or source lifecycle authority. See [hub operation](named-inboxes.md#read-selected-libraries-together).
+The optional local hub grants every reachable reader read and deletion authority over every explicitly mounted library, including stopped or privately served sources. Filters do not restrict this authority. New catalog entries do not join a hub. Membership is captured as explicit name/home/UUID bindings in trusted local configuration and remains fixed for the running hub. Sources must be on the same machine and accessible to the same OS account. Mounted sources are read without creating missing paths or changing their filesystem permissions.
 
-On POSIX, the CLI uses Node's filesystem `mode` options and `chmod` to set managed directories to `0700`, giving the owner read, write, and traversal access, and files to `0600`, giving the owner read and write access. Group and other permission bits are cleared. Existing managed paths are tightened when accessed. The CLI does not change ownership, encrypt files, or protect against processes running as the same user or privileged administrators. A filesystem that ignores Unix permission modes cannot provide this POSIX guarantee.
+For each source, the hub explicitly binds a deletion writer to its captured canonical root, durable inbox UUID, and filesystem identity, under the same OS account. It validates that binding before deletion, without accepting arbitrary source mutations or browser-provided filesystem targets. A missing, unavailable, or replaced source fails without recreating storage or choosing another source. UUID, filesystem identity, or location mismatches isolate that source and mark combined results incomplete. Public availability messages contain source names and generic state, not local roots, private control URLs, or diagnostics. Original bytes, sandbox isolation, document CSP, Host validation, and deletion request checks apply to hub routes too. The hub adds no publishing, ingestion, membership management, or source lifecycle endpoints. See [hub operation](named-inboxes.md#read-selected-libraries-together).
+
+Deletion uses the existing Node executable in a short-lived helper whose working directory is the captured inbox root. It validates that directory before mutation and uses relative paths, keeping root-bound mutations attached to that directory if its external pathname changes. Cooperating deletions share a per-document lock. Identity and snapshot checks detect changes around the operation; they do not provide atomic protection against arbitrary descendant substitutions by other trusted same-account processes. Do not replace document or internal storage directories during deletion. Detected drift after removal produces a cleanup warning instead of success.
+
+On POSIX, the CLI uses Node's filesystem `mode` options and `chmod` to set managed directories to `0700`, giving the owner read, write, and traversal access, and files to `0600`, giving the owner read and write access. Group and other permission bits are cleared. Ordinary library operations tighten existing managed paths when accessed. Catalog inspection, picker reads, and hub sources deliberately use read-only checks and never repair source permissions. The CLI does not change ownership, encrypt files, or protect against processes running as the same user or privileged administrators. A filesystem that ignores Unix permission modes cannot provide this POSIX guarantee.
 
 On Windows, Node's `chmod` changes only the write permission and does not distinguish owner, group, and other users. Directory creation modes are unsupported. These calls do not install an owner-only Windows discretionary access control list, or DACL. See [Node's file modes](https://nodejs.org/api/fs.html#file-modes) and [directory creation options](https://nodejs.org/api/fs.html#fspromisesmkdirpath-options).
 
@@ -69,7 +79,8 @@ Windows checks each file or directory's DACL for access. New files and directori
 1. Choose a [local NTFS directory](https://learn.microsoft.com/en-us/windows-server/storage/file-server/ntfs-overview) under your user profile, such as the default `%USERPROFILE%\.html-inbox` or `%LOCALAPPDATA%\html-inbox` for a custom `HTML_INBOX_HOME`. Check its permissions before use. A location under your profile is a starting point, not proof of restricted access. Avoid public, shared, network, or synced locations for sensitive content.
 2. Create the chosen directory before the first publish or `remote init`. In File Explorer, open its Properties, then Security, then Advanced. Keep access for your own account and trusted system or administrator accounts only. Remove grants to other users and broad groups such as Everyone, Users, or Authenticated Users. If those grants are inherited from a permissive parent, disable inheritance for this directory, convert inherited entries to explicit entries, and remove the unwanted grants. Give your account Full control with scope "This folder, subfolders and files" so new paths inherit the restrictions.
 3. Inspect existing files and subdirectories too. Remove permissive explicit grants and repair disabled inheritance so the restricted directory permissions apply throughout the subtree. Recheck after moving or restoring an inbox. Protect `remote\state.json`, `remote\operation.json`, and `remote\work` as carefully as documents. State and operation records contain bearer capabilities; snapshots can contain the complete report library. Cloudflare tokens are not stored in these records.
-4. Protect separate export locations and their parent directories, where sibling staging and backup directories are created. Remote publishing also uses the operating system's temporary directory for short-lived Wrangler credential logs. On Windows, that directory and its new children must have restricted ACLs too. Cleanup after a command does not protect a file while it exists.
+4. Protect the separate catalog, default `~/.config/html-inbox`, and trusted hub configuration and its parent directory. Catalog and hub source inspection do not audit or repair ACLs.
+5. Protect separate export locations and their parent directories, where sibling staging and backup directories are created. Remote publishing also uses the operating system's temporary directory for short-lived Wrangler credential logs. On Windows, that directory and its new children must have restricted ACLs too. Cleanup after a command does not protect a file while it exists.
 
 After selecting and protecting a custom home, set it for the PowerShell session and inspect its DACLs:
 
@@ -107,14 +118,17 @@ CSP do not close:
   and `sandbox="allow-scripts"` permits a frame to navigate itself. Rejecting
   the feature avoids duplicating the browser's permissive refresh parser.
 
-**Tier 2 — advisory lint (reported, never blocks).** Conditions the runtime
-already fails closed. They are surfaced because a silently blocked resource is a
-confusing broken document, not because they are attacks:
+**Tier 2 — advisory lint (reported, never blocks).** Compatibility checks for
+content that may not work as authored. Many warned features are blocked by the
+runtime, but validation's canonical script-entry list is narrower than the CSP
+script sources, so warnings do not establish that every request is blocked:
 
 - Inline event handlers, blocked by `script-src-attr 'none'`.
 - Non-allowlisted external assets, blocked by `default-src 'none'` and the
   `data:`-only media directives.
-- Non-allowlisted external script sources, blocked by `script-src`.
+- Noncanonical external script entries. `script-src` blocks URLs outside its
+  permitted sources, but the Mermaid `dist/` subtree and Tailwind CDN origin can
+  permit warned URLs within those sources.
 - Non-allowlisted external URLs in script bodies. Advisory only — string
   concatenation defeats the check. `connect-src 'none'` blocks direct fetches,
   but not navigation of the document frame.
@@ -140,7 +154,7 @@ live. Tier 2 is a statement about the served runtime only.
 ## Out Of Scope
 
 - Multi-user auth
-- Remotely exposed administration or dynamic document storage
+- HTTP publishing, remote editing, process control, and service administration
 - Sync
 - HTML rewriting or sanitization
 - Fine-grained permissions
@@ -168,6 +182,13 @@ Controls:
 - Treat the account ID and project name as explicit target identity. Require deliberate adoption of every existing remote project during setup; the export ownership marker is not remote authentication.
 - Journal intent before deployment, checkpoint receipts, and reconcile ambiguous operations against deployment history before retrying.
 - Keep remote state in local files protected by POSIX `0600` modes or the restricted Windows ACLs required above. Inherit credentials from Wrangler's own login store or the process environment; never pass tokens as command arguments or include them in state, snapshots, or error output.
+- Keep exported and hosted snapshots read-only, with no live deletion controls or live viewer credentials. They are independent copies, so live deletion leaves existing snapshots unchanged.
 - State clearly that an unlisted URL is not private and that historical deployments may need pruning after revoke.
 
 The first remote release does not claim recipient authentication, guaranteed erasure, secret-link confidentiality after sharing, containment of navigation by allowed document scripts, protection from malicious allowlisted CDN code, or isolation between multiple remote users.
+
+### Managed sync deletion authority
+
+In an enrolled inbox, a reachable reader deleting an original invokes the existing signed origin-tombstone operation. That deletion reaches authorized replicas, including onward copies, on permitted reconnection. Mapping removal still stops all traffic over that mapping and retains its copies until explicit reconnection. Deleting an imported copy suppresses it only locally and cannot sign an origin deletion. Managed bodies remain retained; this operation provides no secure erasure or disk-reclamation guarantee. Existing exported and hosted snapshots stay independent.
+
+Live viewer and hub deletion writers bind the selected canonical root, filesystem identity and inbox UUID. The managed mutation checks that binding before writable recovery and again after obtaining ownership. Legacy deletion keeps its captured-root worker and existing purge checks. Host, exact Origin, process CSRF tokens and live-shell CSP continue to govern the HTTP interface.

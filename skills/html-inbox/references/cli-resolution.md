@@ -4,9 +4,13 @@ Resolve once before the first command in an operation. A global CLI installation
 
 Check `node --version` first. Use Node.js 20 or newer. The fallback also needs npm and access to its configured registry, or a cached copy of the pinned package. If a prerequisite is missing, report it and stop before publishing. These runtime requirements apply to an already-installed skill. Installing or updating it with the current `npx skills` installer requires Node.js 22.20.0 or newer.
 
-Use an installed `html-inbox` only when `--version` succeeds and its trimmed output matches `^0\.2\.(0|[1-9][0-9]*)$`. This accepts stable 0.2.x releases. Missing executables, failed checks, malformed versions, older versions, prereleases, and other minor or major versions select `npx --yes html-inbox@0.2.1`. Check that fallback's `--version` succeeds and prints exactly `0.2.1` before using it. Keep the version pinned; `latest` and unversioned npx are not this fallback.
+Use an installed `html-inbox` only when `--version` succeeds and its trimmed output matches `^0\.(2|3|4|5)\.(0|[1-9][0-9]*)$`. This accepts stable 0.2.x, 0.3.x, 0.4.x, and 0.5.x releases. Missing executables, failed checks, malformed versions, older versions, prereleases, and other minor or major versions select `npx --yes html-inbox@0.4.0`. Check that fallback's `--version` succeeds and prints exactly `0.4.0` before using it. Keep the version pinned; `latest` and unversioned npx are not this fallback.
 
-Keep `HTML_INBOX_HOME`, `HTML_INBOX_PORT`, `HTML_INBOX_TAILSCALE_COMMAND`, and inherited authentication/environment settings unchanged for the check and every subsequent command. Preserve the selected library's `viewer-config.json`. Ordinary publish/start calls omit networking flags so the CLI retains saved exposure. A fallback does not authorize an exposure change.
+The fallback uses the published and independently verified 0.4.0 package. It supports named inboxes, the terminal picker, running-only catalog listing, local hubs, revised human/JSON output, and saved-text and code copying. Its live readers have no UI deletion. Live UI deletion requires a running 0.5.x reader and permits every reachable live reader to permanently delete individual documents. Accepting an installed stable 0.5.x CLI does not prove that an existing viewer has loaded that code. Keep the fallback at public 0.4.0 until a replacement is published and separately verified.
+
+Check actual help before dispatching a feature-dependent command. For reader features, inspect the running reader or generated snapshot. A CLI version check does not prove that an existing viewer or snapshot has the copy dialog.
+
+Keep `HTML_INBOX_HOME`, `HTML_INBOX_NAME`, `HTML_INBOX_CATALOG_HOME`, `HTML_INBOX_PORT`, `HTML_INBOX_TAILSCALE_COMMAND`, and inherited authentication/environment settings unchanged for the check and every subsequent command. Preserve the selected library's `viewer-config.json`. Ordinary publish/start calls omit networking flags so the CLI retains saved exposure. A fallback does not authorize a destination or exposure change.
 
 ## Bash or zsh
 
@@ -16,13 +20,13 @@ Run this in the shell that will execute the operation. `inbox` then invokes the 
 node -e 'if (Number(process.versions.node.split(".")[0]) < 20) { console.error("HTML Inbox requires Node.js 20 or newer"); process.exit(1); }' || exit 1
 
 inbox_cli=(html-inbox)
-if inbox_version=$(command html-inbox --version) && [[ $inbox_version =~ ^[[:space:]]*0[.]2[.](0|[1-9][0-9]*)[[:space:]]*$ ]]; then
+if inbox_version=$(command html-inbox --version) && [[ $inbox_version =~ ^[[:space:]]*0[.](2|3|4|5)[.](0|[1-9][0-9]*)[[:space:]]*$ ]]; then
   inbox_cli=(html-inbox)
 else
-  inbox_cli=(npx --yes html-inbox@0.2.1)
+  inbox_cli=(npx --yes html-inbox@0.4.0)
   inbox_version=$(command "${inbox_cli[@]}" --version) || exit 1
 
-  if [[ ! $inbox_version =~ ^[[:space:]]*0[.]2[.]1[[:space:]]*$ ]]; then
+  if [[ ! $inbox_version =~ ^[[:space:]]*0[.]4[.]0[[:space:]]*$ ]]; then
     printf 'Unexpected HTML Inbox fallback version: %s\n' "$inbox_version" >&2
     exit 1
   fi
@@ -67,7 +71,7 @@ if ($inboxInstalled) {
   try {
     $inboxVersion = ((inbox --version) -join "`n").Trim()
 
-    if ($LASTEXITCODE -ne 0 -or $inboxVersion -notmatch '^0\.2\.(0|[1-9][0-9]*)$') {
+    if ($LASTEXITCODE -ne 0 -or $inboxVersion -notmatch '^0\.(2|3|4|5)\.(0|[1-9][0-9]*)$') {
       $inboxExecutable = $null
     }
   } catch {
@@ -78,22 +82,26 @@ if ($inboxInstalled) {
 
 if (-not $inboxExecutable) {
   $inboxExecutable = (Get-Command npx.cmd -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
-  $inboxPrefix = @('--yes', 'html-inbox@0.2.1')
+  $inboxPrefix = @('--yes', 'html-inbox@0.4.0')
   $inboxVersion = ((inbox --version) -join "`n").Trim()
 
   if ($LASTEXITCODE -ne 0) { throw "HTML Inbox npm fallback failed; see the original npm error above" }
-  if ($inboxVersion -cne '0.2.1') { throw "Unexpected HTML Inbox fallback version: $inboxVersion" }
+  if ($inboxVersion -cne '0.4.0') { throw "Unexpected HTML Inbox fallback version: $inboxVersion" }
 }
 ```
 
-Use `inbox publish ...`, `inbox viewer`, `inbox viewer status`, `inbox viewer stop`, and `inbox remote ...` throughout the operation. The skill's command examples use this wrapper. In a new shell or later operation, resolve again with the same inbox environment. Inspect or stop a detached viewer through the selected CLI even when the earlier npx invocation has exited. Bash/zsh commands can also use the complete selected prefix directly, including `--yes html-inbox@0.2.1` for the fallback. In Windows PowerShell, retain the `inbox` dispatcher for every invocation so argument transport stays intact.
+Use `inbox publish ...`, `inbox viewer`, `inbox viewer status`, `inbox viewer stop`, and `inbox remote ...` throughout the operation. The skill's command examples use this wrapper. In a new shell or later operation, resolve again with the same inbox environment. Inspect or stop a detached viewer through the selected CLI even when the earlier npx invocation has exited. Bash/zsh commands can also use the complete selected prefix directly, including `--yes html-inbox@0.4.0` for the fallback. In Windows PowerShell, retain the `inbox` dispatcher for every invocation so argument transport stays intact.
 
 Service status can use the selected prefix. Boot service installation and removal are separate, explicitly requested administrator operations through stable absolute Node and CLI paths in the [self-hosting guide](https://github.com/deveshsangwan/html-inbox/blob/main/docs/self-hosting.md#start-at-boot). An npx cache path is not a durable service installation. A persistent CLI installation is needed only when the user chooses a boot service.
 
 ## Failures and older viewers
 
+An upgrade from 0.2.x, 0.3.x, or 0.4.x to 0.5.0 changes live reader permissions after restart. Explain that every reachable loopback, LAN, Tailscale, and hub reader can permanently delete documents, including every mounted hub inbox regardless of filters. Before an authorized upgrade, review saved exposure and frozen hub membership. Existing session authorization covers the upgrade when it includes that permission change; ask only if authorization is missing. Stop old viewers with their original CLI and the same inbox binding, and confirm `stopped` before switching versions. Use Ctrl-C for foreground viewers and hubs. Keep the old executable until shutdown is verified, then upgrade and restart the intended viewers and hubs. Deletion is always available in 0.5.x. Publishing and process control remain CLI operations; original source files and existing read-only static snapshots remain unchanged.
+
+Stable 0.2.x, 0.3.x, 0.4.x, and 0.5.x use the same private control protocol, version 3. Updating the CLI does not reload a running viewer. Restart a verified viewer after an authorized update to load new reader behavior or diagnostics. The older 0.1.x upgrade boundary remains: stop that viewer with its original executable before switching CLIs; stored documents remain intact.
+
 If npm, the registry, or the network fails, retain the original diagnostic and stop. Report the failed command and the missing prerequisite or npm failure. Retry only after that condition is resolved. A successful version check proves availability; publishing succeeds only when the publish command exits successfully and prints its document URL. Return no success URL after any failed command.
 
-CLI compatibility does not prove an existing viewer's process identity or protocol compatibility. Status and stop can exit successfully while returning an `incompatible` or `conflict` JSON state. Inspect the state and reason; a zero exit code alone does not prove shutdown. If status/start/publish reports an older viewer or an unverified process record, leave its record and process intact. Stop the older viewer through its original executable or original foreground terminal, then retry resolution and startup. The resolver never deletes `viewer.json`, changes its PID, signals a recorded PID, or bypasses the CLI's private-control checks. Preserve the old executable until its viewer is stopped when updating skills or the CLI.
+CLI compatibility does not prove an existing viewer's process identity or protocol compatibility. Status and stop can exit successfully while reporting an `incompatible` or `conflict` state. For machine output, check help before adding `--json` to 0.3.x, 0.4.x, or 0.5.x status/stop commands; legacy 0.2.x status/stop commands already emit JSON without that flag. Inspect the state and reason; a zero exit code alone does not prove shutdown. If status/start/publish reports an older viewer or an unverified process record, leave its record and process intact. Stop the older viewer through its original executable or original foreground terminal, then retry resolution and startup. The resolver never deletes `viewer.json`, changes its PID, signals a recorded PID, or bypasses the CLI's private-control checks. Preserve the old executable until its viewer is stopped when updating skills or the CLI.
 
 Separate manual recovery for an already-exited older viewer follows the [older-viewer instructions](https://github.com/deveshsangwan/html-inbox/blob/main/docs/self-hosting.md). Prove the recorded process is gone and its port is unused before removing only stale `viewer.json`. A fallback selection alone supplies neither proof.

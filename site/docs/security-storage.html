@@ -77,6 +77,7 @@
             <ul>
               <li><a href="index.html">Getting started</a></li>
               <li><a href="agent-setup.html">Agent setup</a></li>
+              <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
               <li><a href="publishing.html">Publish documents</a></li>
               <li><a href="html-compatibility.html">HTML compatibility</a></li>
             </ul>
@@ -115,6 +116,7 @@
               <ul>
                 <li><a href="index.html">Getting started</a></li>
                 <li><a href="agent-setup.html">Agent setup</a></li>
+                <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
                 <li><a href="publishing.html">Publish documents</a></li>
                 <li>
                   <a href="html-compatibility.html">HTML compatibility</a>
@@ -153,7 +155,24 @@
           deliberate, documents stay untrusted, and filesystem privacy is part
           of operating it safely.
         </p>
+        <p>
+          Live UI deletion requires a reader running 0.5.x. The skill fallback
+          stays pinned to published 0.4.0, with copy and named-inbox support but
+          no UI deletion. Before an authorized upgrade, review the
+          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
+          and saved exposure and hub mounts.
+        </p>
 
+        <p>
+          Copy controls introduced in 0.4.0 prepare saved text in the trusted
+          shell without executing document code or inserting author nodes.
+          Clipboard writes require a shell user action. Same-origin shell fetch
+          permission preserves the opaque document sandbox and document connection
+          restrictions. Copied strings remain document-authored data, and static
+          capabilities also expose the derived <code>copy.json</code> resources.
+          See <a href="viewer.html#copy">copying text and code</a> for fidelity
+          and clipboard limits.
+        </p>
         <h2 id="documents">Treat document HTML as untrusted</h2>
         <p>
           The CLI preserves original HTML rather than sanitizing or rewriting
@@ -195,22 +214,24 @@
                 <td>Loopback</td>
                 <td>
                   First-start default on <code>127.0.0.1</code>. Processes and
-                  people able to reach your local account's viewer can read the
-                  library.
+                  people able to reach your local account's viewer can read and
+                  permanently delete documents in the library.
                 </td>
               </tr>
               <tr>
                 <td>LAN</td>
                 <td>
-                  Every device able to reach the selected HTTP port can read the
-                  full live library. No login, password, or token.
+                  Every device able to reach the selected HTTP port can read and
+                  permanently delete documents in the full live library. No
+                  login, password, or reader access token.
                 </td>
               </tr>
               <tr>
                 <td>Tailscale</td>
                 <td>
                   HTTPS through the existing client, with reader access governed
-                  by your tailnet policy. No public Funnel is enabled.
+                  by your tailnet policy. Every reachable live reader can read
+                  and permanently delete documents. No public Funnel is enabled.
                 </td>
               </tr>
             </tbody>
@@ -219,8 +240,31 @@
         <p>
           Host validation checks the configured addresses and explicit trusted
           tailnet hostname. It does not authenticate a reader. Forwarding or
-          Tailscale identity headers grant no access. All reader routes remain
-          read-only; administration stays in the local CLI.
+          Tailscale identity headers grant no access. Live deletion requires a
+          process-scoped CSRF token and matching Origin. Live shells use
+          <code>frame-ancestors 'none'</code>, while original document content
+          retains its sandbox and CSP. Deletion is enabled by default without a
+          startup grant or reader login. These checks protect requests from
+          other origins; every reachable live reader retains deletion authority.
+          Publishing and process control stay in the local CLI, with no reader
+          HTTP endpoints.
+        </p>
+        <p>
+          Every reachable live hub reader can read and delete documents in every
+          mounted inbox, regardless of source filters or standalone viewer
+          exposure. Each source's deletion writer is explicitly bound to its
+          captured canonical root, durable inbox UUID, and filesystem identity
+          under the same OS account. An unavailable or replaced source fails
+          without recreating storage or choosing another target.
+        </p>
+        <p>
+          The <a href="viewer.html#delete">deletion confirmation</a> shows the
+          title, filename, and inbox and defaults to Cancel. There is no Undo or
+          bulk deletion. The stored record leaves the live library before its
+          files are purged; if purge fails, the record is already absent and the
+          cleanup failure is reported. The original source file, existing
+          exports, and remote snapshots remain unchanged. Static exported and
+          hosted copies are read-only and contain no live viewer credentials.
         </p>
         <p>
           Public <code>/health</code> exposes only anonymous success. Process
@@ -230,8 +274,10 @@
         </p>
         <h2 id="storage">Know where data lives</h2>
         <p>
-          The default inbox is <code>~/.html-inbox</code>.
-          <code>HTML_INBOX_HOME</code> selects another library. Original HTML is
+          The legacy inbox is <code>~/.html-inbox</code> when there are no
+          registered entries or bindings. Version 0.3.0 also supports explicit
+          <code>--inbox</code> / absolute <code>--home</code>, environment bindings,
+          and a configured default. See <a href="named-inboxes.html#selection">selection rules</a>. Original HTML is
           stored at <code>documents/&lt;id&gt;/index.html</code> and metadata at
           <code>documents/&lt;id&gt;/metadata.json</code>.
         </p>
@@ -244,8 +290,9 @@
         </p>
         <p>
           On POSIX filesystems that enforce permissions, managed directories use
-          <code>0700</code> and files use <code>0600</code>. Existing managed
-          paths are tightened when accessed. Symlink and regular-file checks
+          <code>0700</code> and files use <code>0600</code>. Ordinary library operations tighten existing managed paths when accessed.
+          Catalog inspection, picker reads, and hub source reads do not create
+          missing paths or tighten source permissions. They are not permission repair. Symlink and regular-file checks
           protect managed paths, and the process records have additional
           descriptor and link-count checks.
         </p>
@@ -254,6 +301,16 @@
           recursively, or protect against privileged administrators and
           processes running as the same account. A filesystem that ignores Unix
           mode bits cannot provide the POSIX privacy guarantee.
+        </p>
+        <p>
+          The per-user catalog is separate, default <code>~/.config/html-inbox</code>.
+          Entries bind canonical homes and durable UUIDs. A hub config captures
+          explicit mounts, fixed for that running hub. Only same-machine,
+          same-account sources are supported. Every reachable hub reader can read
+          every mount, even if a source viewer is stopped or private. Source filters
+          do not restrict access. Missing or mismatched sources mark results
+          incomplete while healthy sources remain readable. Protect catalog and
+          hub configuration as trusted local files. See <a href="named-inboxes.html#hub">hub boundaries</a>.
         </p>
         <h2 id="windows">Prepare Windows storage</h2>
         <p>
@@ -280,7 +337,9 @@
             child grants. Recheck after a restore or move.
           </li>
           <li>
-            Protect separate export paths and their parents. Remote operations
+            Protect the separate catalog, hub configuration and its parent,
+            and every source tree. Read-only inspection does not audit or repair
+            Windows ACLs. Protect separate export paths and their parents. Remote operations
             also need protected operating-system temporary storage for
             short-lived Wrangler logs.
           </li>
@@ -313,8 +372,11 @@ icacls &quot;$env:HTML_INBOX_HOME&quot; /T</code></pre>
         <p>
           Back up the complete selected inbox to preserve documents, metadata,
           configuration, and remote intent. Keep the backup as private as the
-          original. Stop the viewer and any remote command or automation first
-          so your copy is not racing file changes.
+          original. Stop its standalone viewer and every hub mounting the
+          inbox. Wait for pending writes to finish, and keep all other local
+          writers, including publishing, deletion, remote commands, and
+          automation, stopped until the copy finishes. A stopped standalone
+          viewer does not prevent deletion through a running hub.
         </p>
         <p>
           Do not run an old active process record or copy locks as evidence that

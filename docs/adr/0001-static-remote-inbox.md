@@ -1,12 +1,12 @@
 # ADR 0001: Publish remote inboxes as static snapshots
 
-Status: accepted. The original loopback-only deployment restriction is amended by the explicit live self-hosting modes described below; the static snapshot decision remains in force.
+Status: accepted. Explicit live self-hosting and permanent single-document deletion amend the original loopback-only, read-only viewer restriction. The static snapshot decision remains in force.
 
 ## Context
 
-HTML Inbox currently has one trusted local operator, untrusted stored HTML, a private filesystem library, and a loopback-only viewer. The remote goal is to make selected inbox snapshots reachable from another machine without turning the local viewer into an internet-facing administration server.
+At the time of the original decision, HTML Inbox had one trusted local operator, untrusted stored HTML, a private filesystem library, and a loopback-only viewer. The remote goal was to make selected inbox snapshots reachable from another machine without turning the local viewer into an internet-facing publishing or process-management server.
 
-A remotely reachable server would need authentication, authorization, tenant isolation, mutation auditing, CSRF protection, rate limiting, durable storage, and an operational security model. None of those capabilities are needed to publish static reports.
+A multi-user administration server would need authentication, authorization, tenant isolation, mutation auditing, CSRF protection, rate limiting, durable storage, and an operational security model. Static report hosting requires none of that server machinery. Live single-document deletion uses the narrower reachable-reader trust model recorded below.
 
 [Pagecast](https://github.com/Amal-David/pagecast) demonstrates the useful product split: administration and source files remain local, while complete static output is deployed to infrastructure owned by the user. HTML Inbox will adopt that split while keeping a smaller feature surface.
 
@@ -16,7 +16,13 @@ A remotely reachable server would need authentication, authorization, tenant iso
 
 The local library remains the only source of truth and the only mutable document store. The CLI is the only remote-publishing administrator.
 
-The viewer remains loopback-only by default. Explicit LAN mode exposes the read-only live library to everyone who can reach its port. Explicit Tailscale mode exposes the read-only live library through HTTPS Serve under the user's tailnet policy, with a loopback backend. Neither mode exposes publishing, deletion, or process management. Process health uses a separate local control endpoint. These modes are independent of capability-protected static snapshots; they do not change snapshot deployment or revocation semantics. See the [architecture](../architecture.md#viewer) and [threat model](../threat-model.md#live-self-hosting).
+The viewer remains loopback-only by default. Explicit LAN mode exposes the live library to everyone who can reach its port. Explicit Tailscale mode exposes it through HTTPS Serve under the user's tailnet policy, with a loopback backend. Every reachable live viewer or hub reader can read and permanently delete individual documents, without a startup grant, reader login, or network-mode restriction. The owner chooses the network and trusts its reachable readers with deletion. Hub source filters do not restrict authority. Publishing and process management remain local CLI operations; process health uses a separate private local control endpoint.
+
+Each live list row's three-dot menu and document options offer Delete with a confirmation that shows title, filename, and inbox, explains permanent deletion, and defaults to Cancel. There is no Undo or bulk deletion. The operation renames a record out of its source library before purging it, and reports cleanup failure if purge fails after the record disappears. It preserves the original source file and existing static copies.
+
+The hub explicitly binds each local source's deletion writer to its captured canonical root, durable inbox UUID, and filesystem identity under the same OS account. It revalidates that binding before deletion. Missing, unavailable, or replaced sources fail without recreation or an alternate target. This does not grant arbitrary source mutation. Live requests require the process-scoped CSRF token and matching Origin, retain Host checks, and use `frame-ancestors 'none'` on live shells. Original document sandbox and CSP remain intact.
+
+These live modes are independent of capability-protected static snapshots. Exported and hosted snapshots remain read-only independent copies, contain no live deletion controls or live viewer credentials, and retain their copied documents after live deletion. Snapshot deployment and revocation semantics are unchanged. See the [architecture](../architecture.md#viewer) and [threat model](../threat-model.md#live-self-hosting).
 
 ### Provider-independent snapshot
 
@@ -84,7 +90,7 @@ Revocation deploys a complete replacement snapshot without the previously shared
 
 Benefits:
 
-- No remotely exposed administration process
+- Static hosting requires no live publishing or process-management server
 - Hosting output can be tested without Cloudflare credentials
 - Other static providers can be added without changing snapshot behavior
 - A deploy is an atomic whole-site replacement from the recipient's perspective
@@ -103,7 +109,7 @@ Costs:
 - Expiry, vanity links, redirects, and multiple inbox capabilities
 - Analytics, reactions, Workers, KV, and D1
 - Markdown, directory publishing, build-command execution, and auto-sync
-- Browser mutation routes, remote editing, MCP, and extensions
+- Browser publishing, remote editing, MCP, and extensions
 - Multi-user or organization-hosted administration
 
 ## References

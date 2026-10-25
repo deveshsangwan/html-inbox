@@ -731,10 +731,22 @@ async function validatePortableLock(lockPath: string, file: FileHandle, bytes: B
 
 async function acquirePortableOwnership(lockPath: string, owner: LockOwner, deadline: number, signal?: AbortSignal) {
   const bytes = Buffer.from(JSON.stringify(owner));
+  let permissionError: unknown;
+
+  // The loop checks expiry so the last denied creation keeps its original error.
   while (Date.now() < deadline) {
-    checkAcquisition(deadline, signal);
+    signal?.throwIfAborted();
+    permissionError = undefined;
+
     const file = await open(lockPath, "wx", 0o600).catch((error: unknown) => {
       if (hasCode(error, "EEXIST")) return null;
+
+      // Windows can deny creation while the previous lock is pending deletion.
+      if (process.platform === "win32" && hasCode(error, "EPERM")) {
+        permissionError = error;
+        return null;
+      }
+
       throw error;
     });
     if (file) {
@@ -759,8 +771,16 @@ async function acquirePortableOwnership(lockPath: string, owner: LockOwner, dead
       }, () => closeLockHandle(file));
     }
 
-    await reclaimDeadLock(lockPath);
+    if (permissionError === undefined) {
+      await reclaimDeadLock(lockPath);
+    }
+
     await waitForOwnershipRetry(Math.min(20, Math.max(1, deadline - Date.now())), signal);
+  }
+
+  signal?.throwIfAborted();
+  if (permissionError !== undefined) {
+    throw permissionError;
   }
 
   checkAcquisition(deadline, signal);

@@ -2,6 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { lstat, mkdir, readFile, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import { parseDocumentMetadata, DocumentBackend, DocumentMetadata } from "./documents";
+import { extractDocumentCopyContent } from "./document-copy";
 import {
   ensurePrivateDirectory,
   hardenPrivateDirectory,
@@ -165,6 +166,7 @@ async function addDocumentFiles(
     renderDocumentShell(metadata, { basePath: inboxPath, timeZone: "UTC", appearance }),
   );
   await writeFile(`${documentPath}/content/index.html`, document.originalBytes);
+  await writeFile(`${documentPath}/copy.json`, JSON.stringify(extractDocumentCopyContent(document.originalBytes)));
 }
 
 function describeFile(filePath: string, contents: Buffer): SnapshotFile {

@@ -172,6 +172,11 @@ try {
     true,
   );
 
+  await deleteThroughViewer(viewer.origin, documentUrl);
+  assert.deepEqual(JSON.parse((await runInstalledCli(["list", "--json"])).stdout), []);
+  assert.deepEqual(await readFile(sourcePath), originalHtml);
+  assert.deepEqual(await readFile(path.join(snapshotInbox, "documents", documentId, "content", "index.html")), originalHtml);
+
   const stopped = await runInstalledCli(["viewer", "stop", "--json"]);
   assert.equal(JSON.parse(stopped.stdout).state, "stopped");
   await viewer.close();
@@ -198,6 +203,10 @@ try {
     ["publish", sourcePath, "--title", "Published after stop", "--type", "report"],
   );
   assert.equal((await fetch(restartedPublish.stdout.trim())).status, 200);
+  const restartedId = new URL(restartedPublish.stdout.trim()).pathname.split("/").at(-1);
+  const deleted = JSON.parse((await runInstalledCli(["delete", restartedId, "--force", "--json"])).stdout);
+  assert.equal(deleted.metadata.id, restartedId);
+  assert(deleted.reclaimedBytes > 0);
   assert.equal(JSON.parse((await runInstalledCli(["viewer", "stop", "--json"])).stdout).state, "stopped");
 
   await runInstalledCli(["viewer", "--lan", "--host", "127.0.0.1", "--port", String(viewerPort)]);
@@ -206,6 +215,7 @@ try {
   assert.equal(new URL(lanPublish.stdout.trim()).origin, viewer.origin);
   assert.equal((await fetch(lanPublish.stdout.trim())).status, 200);
   assert.deepEqual(await (await fetch(`${viewer.origin}/health`)).json(), { ok: true });
+  await deleteThroughViewer(viewer.origin, new URL(lanPublish.stdout.trim()));
   assert.equal(JSON.parse((await runInstalledCli(["viewer", "stop", "--json"])).stdout).state, "stopped");
 
   await runInstalledCli(["viewer", "--loopback"]);
@@ -251,7 +261,7 @@ try {
     await assert.rejects(runInstalledCli(["viewer", "service", "install", "--user", userInfo().username]), /administrator privileges/);
   }
 
-  console.log("Installed package foreground, detached concurrency, LAN, exposure reset, publish restart, content, export, and shutdown passed.");
+  console.log("Installed package foreground, detached concurrency, LAN, exposure reset, publish restart, content, export, CLI/UI deletion, and shutdown passed.");
 } finally {
   try {
     await viewer?.close();
@@ -265,6 +275,19 @@ try {
       await rm(temporaryRoot, { recursive: true, force: true });
     }
   }
+}
+
+async function deleteThroughViewer(origin, documentUrl) {
+  const html = await (await fetch(origin, { signal: AbortSignal.timeout(3000) })).text();
+  const token = /data-delete-token="([a-zA-Z0-9_-]{43})"/.exec(html)?.[1];
+  assert(token, "Installed live viewer must render its deletion token");
+  const result = await fetch(`${origin}/api${documentUrl.pathname}`, {
+    method: "DELETE",
+    headers: { Origin: origin, "X-HTML-Inbox-CSRF": token },
+    signal: AbortSignal.timeout(10_000),
+  });
+  assert.equal(result.status, 204, await result.text());
+  assert.equal((await fetch(documentUrl, { signal: AbortSignal.timeout(3000) })).status, 404);
 }
 
 async function run(command, args, cwd, env = {}) {

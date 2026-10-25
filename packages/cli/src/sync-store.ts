@@ -8,12 +8,13 @@ import { readBoundedFile } from "./bounded-file";
 import { parseDocumentMetadata, type DocumentMetadata, type PublishInput, type StoredDocument, type DeleteResult } from "./documents";
 import { validateHtml } from "./html-validation";
 import { readInboxIdentity } from "./inbox-home";
+import { isOwnedDirectory } from "./local-storage-checks";
 import { DurableFiles, checkDirectory, createStorageCounters, hasCode, openPrivateFile, optionalStat, readPrivateFile, withStoreLock, type StorageTestHooks } from "./sync-files";
 import { type SyncLedger, type ManagedRecord, type DurableReceipt, type OwnerAnchor, parseLedger, parseReceipt, outboxKey, receiptKey } from "./sync-ledger";
 import { readManagedLedgerBytes } from "./sync-ledger-reader";
 import { type OriginState, type OriginGrant, type SyncRoute, type RouteAuthorization, type CompleteInventory, SYNC_LIMITS, SYNC_DEFAULTS, IncompleteSyncHistoryError, canonicalKey, metadataEncoding, metadataProjection,
   parseOriginState, parseOriginalMetadata, parseAuthorization, parseRoute, parseCompleteInventory, sha256, signOriginState, stateFingerprint, sameImmutableDescriptor, verifyOriginState,
-  inventoryDigest, parseInteger, parseObject, parseSafeId, parseUuid } from "./sync-model";
+  assertExactKeys, inventoryDigest, parseInteger, parseObject, parseSafeId, parseUuid } from "./sync-model";
 
 import { SyncStaging } from "./sync-staging";
 import { canForwardRecord, currentCustodyReceipt, detachLedgerRoute, fenceLedgerRoute, hasTrustedOriginHistory, nextRouteRetry, pinnedOriginGrant, pinnedStateGrant, queueLedgerState } from "./sync-ledger-policy";
@@ -23,6 +24,23 @@ export const MANAGED_FORMAT_BARRIER = "HTML Inbox managed store v2\nUse an upgra
 export interface ManagedStoreOptions {
   lockDeadlineMs?: number;
   testHooks?: StorageTestHooks;
+}
+
+export interface ManagedDeletionIdentity extends OwnerAnchor {
+  inboxId: string;
+}
+
+export class ManagedDeletionIdentityError extends Error {}
+
+function parseDeletionIdentity(value: ManagedDeletionIdentity): ManagedDeletionIdentity {
+  const identity = parseObject(value, "Captured deletion identity");
+  assertExactKeys(identity, ["home", "dev", "ino", "inboxId"]);
+  if (typeof identity.home !== "string" || identity.home.includes("\0") || identity.home.length > 4096 ||
+      !path.isAbsolute(identity.home) || path.resolve(identity.home) !== identity.home) {
+    throw new Error("Captured deletion home must be an absolute canonical path");
+  }
+
+  return { home: identity.home, dev: parseInteger(identity.dev), ino: parseInteger(identity.ino), inboxId: parseUuid(identity.inboxId) };
 }
 
 export type ApplyResult = { status: "needs-body" } | { status: "committed" | "deleted" | "suppressed" | "superseded"; receipt: DurableReceipt };
@@ -176,8 +194,10 @@ export class ManagedSyncStore {
     });
   }
 
-  async deleteDocument(localId: string): Promise<DeleteResult | null> {
+  async deleteDocument(localId: string, capturedIdentity?: ManagedDeletionIdentity): Promise<DeleteResult | null> {
     parseSafeId(localId);
+    const identity = capturedIdentity === undefined ? undefined : parseDeletionIdentity(capturedIdentity);
+
     return this.mutate(async (ledger) => {
       const record = Object.values(ledger.records).find((record) => record.localId === localId);
       if (!record || record.state === "deleted" || record.suppressed) {
@@ -196,7 +216,7 @@ export class ManagedSyncStore {
       await this.commit(ledger);
       // Bodies remain pinned. General reclamation is deliberately deferred.
       return { metadata, reclaimedBytes: 0 };
-    });
+    }, this.lockDeadlineMs, undefined, identity);
   }
 
   async setSuppressed(localId: string, suppressed: boolean): Promise<void> {
@@ -1260,12 +1280,20 @@ export class ManagedSyncStore {
     return route;
   }
 
-  private async mutate<T>(operation: (ledger: SyncLedger) => Promise<T>, lockDeadlineMs = this.lockDeadlineMs, signal?: AbortSignal): Promise<T> {
+  private async mutate<T>(operation: (ledger: SyncLedger) => Promise<T>, lockDeadlineMs = this.lockDeadlineMs, signal?: AbortSignal, deletionIdentity?: ManagedDeletionIdentity): Promise<T> {
     signal?.throwIfAborted();
+    if (deletionIdentity) {
+      await this.assertDeletionIdentity(deletionIdentity);
+    }
+
     await checkDirectory(this.directory);
     signal?.throwIfAborted();
 
     return withStoreLock(this.directory, lockDeadlineMs, async () => {
+      if (deletionIdentity) {
+        await this.assertDeletionIdentity(deletionIdentity);
+      }
+
       if (this.files.uncertain) {
         throw new Error("Storage outcome is uncertain; explicit recovery is required before further mutation");
       }
@@ -1281,6 +1309,25 @@ export class ManagedSyncStore {
       signal?.throwIfAborted();
       return operation(ledger);
     }, signal);
+  }
+
+  private async assertDeletionIdentity(identity: ManagedDeletionIdentity) {
+    const root = await optionalStat(this.home);
+    if (this.home !== identity.home || !root || !isOwnedDirectory(root) || root.dev !== identity.dev || root.ino !== identity.ino || await realpath(this.home) !== identity.home) {
+      throw new ManagedDeletionIdentityError("Managed root does not match the captured deletion identity");
+    }
+
+    if (await readInboxIdentity(this.home) !== identity.inboxId) {
+      throw new ManagedDeletionIdentityError("Reader UUID does not match the captured deletion identity");
+    }
+
+    await readPrivateFile(path.join(this.home, "instance-id"), 128);
+    const ledger = await this.readLedger();
+    if (ledger.inboxId !== identity.inboxId || ledger.ownerAnchor.home !== identity.home || ledger.ownerAnchor.dev !== identity.dev || ledger.ownerAnchor.ino !== identity.ino) {
+      throw new ManagedDeletionIdentityError("Managed ledger does not match the captured deletion identity");
+    }
+
+    await this.assertBarrier(ledger);
   }
 
   private async recoverLocked(): Promise<void> {

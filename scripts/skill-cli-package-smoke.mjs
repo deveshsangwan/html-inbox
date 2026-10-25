@@ -13,7 +13,7 @@ import { readResolution, runResolvedCli } from "./skill-cli-fixtures.mjs";
 assert(Number(process.versions.node.split(".")[0]) >= 20, "Registry smoke check requires Node.js 20 or newer");
 assert.equal(process.argv.length, 2, "Registry smoke check takes no arguments");
 
-const temporaryRoot = await mkdtemp(path.join(tmpdir(), "html-inbox-skill-registry-"));
+const temporaryRoot = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-skill-registry-")));
 let resolution;
 let consumerRoot;
 let cleanupEnvironment;
@@ -26,15 +26,25 @@ try {
   const environment = await createConsumerEnvironment(temporaryRoot);
   assert.deepEqual(await readdir(consumerRoot), [], "Fallback must start outside an npm project");
   assert.deepEqual(await readdir(environment.npm_config_cache), [], "Fallback must start with a fresh npm cache");
+  assert.deepEqual(await readdir(environment.npm_config_prefix), ["lib"], "Fallback prefix must contain only npm's empty layout");
+  assert.deepEqual(await readdir(path.join(environment.npm_config_prefix, "lib")), [], "Fallback must not reuse a global installation");
 
-  console.log("Checking documented resolver with npx --yes html-inbox@0.2.1 and an empty consumer/cache.");
+  console.log("Checking documented resolver with npx --yes html-inbox@0.4.0 and an empty consumer/cache.");
   const version = await runCli(resolution, ["--version"], consumerRoot, environment);
-  assert.equal(version.stdout.trim(), "0.2.1", "Fallback version gate must select the pinned release");
+  assert.equal(version.stdout.trim(), "0.4.0", "Fallback version gate must select the pinned release");
   await verifyCachedPackage(environment.npm_config_cache);
   const help = await runCli(resolution, ["--help"], consumerRoot, environment);
   assert.match(help.stdout, /viewer service install \[--user <normal-user>\] \[viewer networking options\]/);
   assert.match(help.stdout, /viewer service uninstall \[--user <normal-user>\]/);
   assert.match(help.stdout, /preferences \[--appearance <system\|light\|dark>\] \[--json\]/);
+  assert.match(help.stdout, /inbox create <name> --home <absolute-path> \[--json\]/);
+  assert.match(help.stdout, /inbox list \[--running\] \[--json\]/);
+  assert.match(help.stdout, /hub init --config <absolute-path> --inbox <name>/);
+  assert.match(help.stdout, /HTML_INBOX_NAME/);
+  assert.match(help.stdout, /HTML_INBOX_CATALOG_HOME/);
+  assert.match(help.stdout, /viewer status \[--json\]/);
+  assert.match(help.stdout, /viewer stop \[--json\]/);
+  assert.match(help.stdout, /viewer service status \[--user <normal-user>\] \[--json\]/);
   const preferences = await runCli(resolution, ["preferences", "--json"], consumerRoot, environment);
   assert.deepEqual(JSON.parse(preferences.stdout), { appearance: "system" });
 
@@ -58,6 +68,7 @@ try {
   }
 
   await verifyRejectedRecords(resolution, consumerRoot, environment, sourcePath);
+  await verifyNamedSelection(resolution, consumerRoot, environment);
   await verifyRegistryFailure(resolution, consumerRoot, environment, sourcePath);
   assert.deepEqual(await readdir(consumerRoot), [], "npx must leave the consumer directory empty");
 } catch (error) {
@@ -122,16 +133,23 @@ async function createConsumerEnvironment(root) {
 
   const home = path.join(root, "user home");
   const cache = path.join(root, "npm cache");
+  const prefix = path.join(root, "npm prefix");
   await mkdir(home);
   await mkdir(cache);
+  await mkdir(prefix);
+  // npm 10 inspects prefix/lib even when npm exec will install only in its cache.
+  await mkdir(path.join(prefix, "lib"));
   const environment = {
     HOME: home,
     USERPROFILE: home,
     PATH: searchDirectories.join(path.delimiter),
     npm_config_cache: cache,
+    npm_config_prefix: prefix,
     npm_config_registry: process.env.npm_config_registry ?? "https://registry.npmjs.org",
     npm_config_update_notifier: "false",
     HTML_INBOX_HOME: path.join(root, "inbox home"),
+    HTML_INBOX_NAME: undefined,
+    HTML_INBOX_CATALOG_HOME: path.join(root, "private catalog"),
     HTML_INBOX_PORT: String(await findAvailablePort()),
     HTML_INBOX_TAILSCALE_COMMAND: undefined,
     HTML_INBOX_VIEWER_CONFIG: undefined,
@@ -195,7 +213,7 @@ async function verifyCachedPackage(cache) {
 
   assert.equal(packages.length, 1, "Fresh npx cache must contain one real registry installation");
   assert.equal(packages[0].name, "html-inbox");
-  assert.equal(packages[0].version, "0.2.1");
+  assert.equal(packages[0].version, "0.4.0");
   assert.deepEqual(packages[0].bin, { "html-inbox": "bundle/index.js" });
 }
 
@@ -210,6 +228,7 @@ async function verifyDetachedLifecycle(resolution, cwd, env, sourcePath, origina
   assert.equal(typeof status.pid, "number", "Later npx invocation must verify the detached viewer PID");
 
   const record = JSON.parse(await readFile(path.join(env.HTML_INBOX_HOME, "viewer.json"), "utf8"));
+  assert.equal(record.protocolVersion, 3, "Published fallback must retain private control protocol 3");
   const health = await fetch(record.controlUrl, { signal: AbortSignal.timeout(3000) });
   assert.equal(health.status, 200);
   assert.equal((await health.json()).pid, status.pid);
@@ -320,7 +339,7 @@ async function verifyRejectedRecords(resolution, cwd, env, sourcePath) {
       const bytes = `${JSON.stringify(record.value)}\n`;
       await writeFile(recordPath, bytes, { mode: 0o600 });
       assert.equal((await readStatus(resolution, cwd, rejectedEnvironment)).state, record.state);
-      const stopped = await runCli(resolution, ["viewer", "stop"], cwd, rejectedEnvironment);
+      const stopped = await runCli(resolution, ["viewer", "stop", "--json"], cwd, rejectedEnvironment);
       assert.equal(JSON.parse(stopped.stdout).state, record.state, "Stop must refuse the unverified process, even when exit code is zero");
       assertNoSuccessUrl(stopped);
 
@@ -341,6 +360,40 @@ async function verifyRejectedRecords(resolution, cwd, env, sourcePath) {
   }
 
   console.log("Old and unverified records refused stop/start/publish; records and the unrelated HTTP process stayed intact.");
+}
+
+async function verifyNamedSelection(resolution, cwd, env) {
+  const home = path.join(temporaryRoot, "named inbox");
+  const created = JSON.parse((await runCli(resolution, ["inbox", "create", "registry", "--home", home, "--json"], cwd, env)).stdout);
+  assert.equal(created.name, "registry");
+  assert.equal(created.home, await realpath(home));
+
+  // Catalog inspection uses the saved port rather than the process override.
+  const port = await findAvailablePort();
+  await writeFile(path.join(home, "viewer-config.json"), JSON.stringify({
+    version: 1,
+    config: { port, exposure: "loopback", host: "127.0.0.1" },
+    urls: [`http://127.0.0.1:${port}`],
+  }), { mode: 0o600 });
+
+  const entries = JSON.parse((await runCli(resolution, ["inbox", "list", "--json"], cwd, env)).stdout);
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].instanceId, created.instanceId);
+  assert.equal(entries[0].state, "stopped");
+  assert.deepEqual(JSON.parse((await runCli(resolution, ["inbox", "list", "--running", "--json"], cwd, env)).stdout), []);
+
+  const selected = JSON.parse((await runCli(resolution, ["viewer", "status", "--inbox", "registry", "--json"], cwd, env)).stdout);
+  assert.equal(selected.state, "stopped");
+  const namedEnvironment = { ...env, HTML_INBOX_HOME: undefined, HTML_INBOX_NAME: "registry" };
+  assert.equal((await readStatus(resolution, cwd, namedEnvironment)).state, "stopped");
+
+  const configPath = path.join(temporaryRoot, "reading hub.json");
+  await runCli(resolution, ["hub", "init", "--config", configPath, "--inbox", "registry"], cwd, env);
+  const config = JSON.parse(await readFile(configPath, "utf8"));
+  assert.equal(config.sources.length, 1);
+  assert.deepEqual(config.sources[0], created);
+  await assertMissing(path.join(home, "viewer.json"));
+  console.log("Published fallback named selection, running-only catalog JSON, and stopped-source hub membership passed.");
 }
 
 async function verifyRegistryFailure(resolution, cwd, env, sourcePath) {
@@ -377,14 +430,14 @@ async function runCli(resolution, args, cwd, env) {
 }
 
 async function readStatus(resolution, cwd, env) {
-  return JSON.parse((await runCli(resolution, ["viewer", "status"], cwd, env)).stdout);
+  return JSON.parse((await runCli(resolution, ["viewer", "status", "--json"], cwd, env)).stdout);
 }
 
 async function stopVerifiedViewer(resolution, cwd, env) {
   const status = await readStatus(resolution, cwd, env);
   assert.equal(status.state, "running");
   assert.equal(typeof status.pid, "number", "Only a CLI-verified viewer may be stopped");
-  const stopped = JSON.parse((await runCli(resolution, ["viewer", "stop"], cwd, env)).stdout);
+  const stopped = JSON.parse((await runCli(resolution, ["viewer", "stop", "--json"], cwd, env)).stdout);
   assert.equal(stopped.state, "stopped");
   assert.equal((await readStatus(resolution, cwd, env)).state, "stopped");
   await assertMissing(path.join(env.HTML_INBOX_HOME, "viewer.json"));
@@ -420,7 +473,22 @@ function assertNoSuccessUrl(result) {
 async function verifyDocument(url, originalHtml) {
   const shell = await fetch(url, { signal: AbortSignal.timeout(3000) });
   assert.equal(shell.status, 200);
-  assert.match(await shell.text(), /<iframe sandbox="allow-scripts"/);
+  const shellHtml = await shell.text();
+  assert.match(shellHtml, /<iframe sandbox="allow-scripts"/);
+  assert.match(shellHtml, /data-copy-open/, "Published 0.4.0 fallback must include reader copy controls");
+  assert.match(shellHtml, /data-copy-dialog/);
+  assert.doesNotMatch(shellHtml, /data-delete-document|data-delete-dialog|data-delete-form/, "Published 0.4.0 fallback must not claim the 0.5 deletion controls");
+
+  const copy = await fetch(`${url.href}/copy.json`, { signal: AbortSignal.timeout(3000) });
+  assert.equal(copy.status, 200);
+  assert.match(copy.headers.get("content-type"), /^application\/json/);
+  assert.deepEqual(await copy.json(), {
+    schemaVersion: 1,
+    status: "ready",
+    text: "Pinned registry content\nDetached viewer test.",
+    codeBlocks: [],
+  });
+
   const content = await fetch(`${url.href}/content`, { signal: AbortSignal.timeout(3000) });
   assert.equal(content.status, 200);
   assert.match(content.headers.get("content-security-policy"), /connect-src 'none'/);

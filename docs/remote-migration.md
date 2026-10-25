@@ -1,15 +1,20 @@
 # Moving a local inbox to Cloudflare Pages
 
-Remote publishing does not move or mutate the local library. `~/.html-inbox/documents` remains the only document source of truth; each remote update is a complete generated snapshot.
+Live UI deletion requires a reader running 0.5.x. The skill fallback stays pinned to published 0.4.0, with copy and named-inbox support but no UI deletion. Before an authorized upgrade, review the [0.5.0 permission change](named-inboxes.md#upgrade-to-050) and saved exposure and hub mounts.
+
+Remote publishing does not move or mutate the local library. The selected library's `documents/` remains the only document source of truth; each remote update is a complete generated snapshot.
+
+Use the same intended selection for every command, including status and recovery. For the 0.3 upgrade, see [named-inbox migration](named-inboxes.md#upgrade-from-02x). Registered entries require an explicit selector, process binding, or configured default in automation.
 
 ## Before publishing
 
-1. Upgrade the installed CLI with `npm install --global html-inbox@latest` and confirm it with `html-inbox --version`.
-2. Confirm the local library with `html-inbox list` and open the viewer.
-3. Inspect a provider-independent export with `html-inbox export --out ./html-inbox-export`.
-4. Treat every document in the local library as part of one shared remote capability. Delete anything that should not be in that snapshot.
+1. Stop any running viewer with the executable that started it before updating, so the next start loads the new code. A 0.1.0 viewer must be stopped with its original executable.
+2. Upgrade the installed CLI with `npm install --global html-inbox@latest` and confirm it with `html-inbox --version`.
+3. Confirm the local library with `html-inbox list` and open the viewer.
+4. Inspect a provider-independent export with `html-inbox export --out ./html-inbox-export`.
+5. Treat every document in the local library as part of one shared remote capability. Delete anything that should not be in that snapshot.
 
-The updated viewer uses protocol version 3 and a private loopback control endpoint to match shutdown requests to a specific process. Stop an older foreground viewer with Ctrl-C before upgrading, or use the previous CLI to stop its detached viewer. A new CLI refuses to reuse or signal an incompatible viewer. Documents remain in the existing inbox.
+Versions 0.2.x, 0.3.x, 0.4.x, and 0.5.x share protocol version 3 and a private loopback control endpoint to match shutdown requests to a specific process. A new CLI refuses to reuse or signal an incompatible viewer. Stop a foreground viewer with Ctrl-C before upgrading, or use its original CLI to stop a detached viewer. Documents remain in the existing inbox.
 
 ## Configure Cloudflare
 
@@ -79,12 +84,13 @@ For these cases, or a shared home whose owner ran on another machine:
 After completing step 1, this Unix shell example performs steps 2 through 4:
 
 ```sh
-inbox_recovery_home="${HTML_INBOX_HOME:-$HOME/.html-inbox}"
+# Set this to the absolute home of the selected library.
+inbox_recovery_home="/absolute/path/to/selected-inbox"
 inbox_recovery_backup="$(mktemp -d)"
 cp -R "$inbox_recovery_home/remote" "$inbox_recovery_backup/remote" && \
   rm -f -- "$inbox_recovery_home/remote/mutation.lock" "$inbox_recovery_home/remote/mutation.lock.recovery" && \
-  html-inbox remote reconcile && \
-  html-inbox remote status
+  html-inbox remote reconcile --home "$inbox_recovery_home" && \
+  html-inbox remote status --home "$inbox_recovery_home"
 ```
 
 Keep the backup until reconciliation succeeds. If you cannot establish that every command using this home has stopped, leave both lock paths in place.
@@ -97,4 +103,8 @@ html-inbox remote revoke
 
 Revoke replaces the production site and rotates away from the shared capability. It does not delete older immutable deployment URLs. Remove sensitive historical deployments from the Cloudflare dashboard before treating the old content as inaccessible.
 
-The local viewer remains available throughout this process. Removing remote state or a Pages deployment is not a substitute for deleting local documents deliberately with `html-inbox delete`.
+The local viewer remains available throughout this process. Removing remote state or a Pages deployment is not a substitute for deleting local documents deliberately through the live viewer's **Delete** action or `html-inbox delete`. Live deletion leaves the original source file and existing exports and remote snapshots unchanged. Static copies remain read-only and contain no live viewer credentials. Replacing a local export requires an explicit export operation; updating or revoking a hosted snapshot requires an explicit remote operation.
+
+## Copy controls in 0.4.0 snapshots
+
+Updating the local CLI does not change a deployed snapshot. An owner-controlled export or remote publish with 0.4.0 generates the new copy dialog and a sibling `copy.json` per document. The JSON is included in snapshot digests and provider file-count validation. Preserve it with the rest of the snapshot and install the generated security policy rules. Serve `copy.json` as `application/json; charset=utf-8` with the common no-store/nosniff headers. The MIME rule is separate from provider-neutral `security-headers.json`; the Cloudflare adapter supplies it, while a generic host must configure it itself. Existing capabilities and original content bytes keep their meaning; copying grants no remote mutation authority. See [copying saved content](architecture.md#copying-saved-content) for fidelity and size limits.

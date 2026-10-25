@@ -181,6 +181,124 @@ test("24 independent concurrent registrations retain every distinct per-name rec
   await assert.rejects(lstat(path.join(catalogHome, "registration.lock")), { code: "ENOENT" });
 });
 
+for (const { platform, code, failureMode, canRegister } of [
+  { platform: "win32", code: "EPERM", failureMode: "transient", canRegister: true },
+  { platform: "win32", code: "EPERM", failureMode: "persistent", canRegister: false },
+  { platform: "win32", code: "EPERM", failureMode: "deadline-boundary", canRegister: false },
+  { platform: "linux", code: "EPERM", failureMode: "transient", canRegister: false },
+  { platform: "win32", code: "EACCES", failureMode: "transient", canRegister: false },
+]) {
+  test(`registration ${canRegister ? "retries" : "rejects"} ${platform} ${failureMode} ${code} without bypassing the lock`, async (t) => {
+    const { root, catalogHome } = await catalogFixture(t);
+    const home = await legacyLibrary(root, "work");
+    const modulePath = path.join(__dirname, "inbox-catalog.js");
+    const worker = `
+      const assert = require("node:assert/strict");
+      const fs = require("node:fs/promises");
+      const path = require("node:path");
+      const [modulePath, catalogHome, home, platform, code, failureMode, succeeds] = process.argv.slice(1);
+      Object.defineProperty(process, "platform", { value: platform });
+      const lockPath = path.join(catalogHome, "registration.lock");
+      const perform = fs.open;
+      const failure = Object.assign(new Error("Exclusive lock open denied"), { code, syscall: "open", path: lockPath });
+      const start = Date.now();
+      let attempts = 0;
+
+      if (failureMode === "persistent") {
+        Date.now = () => start + (attempts >= 3 ? 10_001 : 0);
+      } else if (failureMode === "deadline-boundary") {
+        Date.now = () => start + (attempts >= 2 ? 10_000 : attempts === 1 ? 9_999 : 0);
+      }
+
+      fs.open = async (...args) => {
+        if (args[0] === lockPath && args[1] === "wx") {
+          attempts += 1;
+          if (attempts === 1 || failureMode !== "transient") throw failure;
+        }
+        return perform(...args);
+      };
+
+      (async () => {
+        const { registerInbox, readInboxCatalog } = require(modulePath);
+        if (succeeds === "true") {
+          const entry = await registerInbox("work", home, catalogHome);
+          assert.equal(attempts, 2);
+          assert.deepEqual(await readInboxCatalog(catalogHome), { inboxes: [entry] });
+        } else {
+          await assert.rejects(registerInbox("work", home, catalogHome), error => error === failure);
+          assert.equal(attempts, failureMode === "persistent" ? 3 : failureMode === "deadline-boundary" ? 2 : 1);
+          assert.deepEqual(await readInboxCatalog(catalogHome), { inboxes: [] });
+          await assert.rejects(fs.lstat(path.join(home, "instance-id")), { code: "ENOENT" });
+        }
+        await assert.rejects(fs.lstat(lockPath), { code: "ENOENT" });
+      })().catch(error => { console.error(error); process.exitCode = 1; });
+    `;
+
+    await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, home, platform, code, failureMode, String(canRegister)], { timeout: 5000 });
+  });
+}
+
+for (const outcome of ["existing", "storage", "cancelled"]) {
+  test(`portable ownership preserves ${outcome} after an earlier Windows permission denial`, async (t) => {
+    const { catalogHome } = await catalogFixture(t);
+    await mkdir(catalogHome);
+    const modulePath = path.join(__dirname, "sync-files.js");
+    const worker = `
+      const assert = require("node:assert/strict");
+      const fs = require("node:fs/promises");
+      const path = require("node:path");
+      const [modulePath, catalogHome, outcome] = process.argv.slice(1);
+      Object.defineProperty(process, "platform", { value: "win32" });
+      const lockPath = path.join(catalogHome, "registration.lock");
+      const permissionError = Object.assign(new Error("Exclusive lock open denied"), { code: "EPERM" });
+      const storageError = Object.assign(new Error("Storage failed"), { code: "EIO" });
+      const cancellation = new Error("Acquisition cancelled");
+      const controller = new AbortController();
+      const perform = fs.open;
+      const start = Date.now();
+      let attempts = 0;
+      Date.now = () => start + (attempts >= 2 ? 10_000 : 0);
+
+      fs.open = async (...args) => {
+        if (args[0] === lockPath && args[1] === "wx") {
+          attempts += 1;
+          if (attempts === 1) throw permissionError;
+          if (outcome === "storage") throw storageError;
+          if (outcome === "cancelled") {
+            controller.abort(cancellation);
+            throw permissionError;
+          }
+        }
+        return perform(...args);
+      };
+
+      (async () => {
+        if (outcome === "existing") await fs.writeFile(lockPath, "unknown owner", { mode: 0o600 });
+        const before = outcome === "existing" ? await fs.lstat(lockPath) : undefined;
+        const { acquireSyncOwnership } = require(modulePath);
+        await assert.rejects(acquireSyncOwnership(lockPath, start + 10_000, controller.signal, { mode: "portable" }), error => {
+          if (outcome === "storage") return error === storageError;
+          if (outcome === "cancelled") return error === cancellation;
+          return error !== permissionError && error instanceof Error &&
+            error.message === "Managed store lock deadline exceeded; unknown or live owners are never stolen";
+        });
+        assert.equal(attempts, 2);
+        if (outcome === "existing") {
+          const after = await fs.lstat(lockPath);
+          assert.equal(after.dev, before.dev);
+          assert.equal(after.ino, before.ino);
+          assert.equal(await fs.readFile(lockPath, "utf8"), "unknown owner");
+        } else {
+          await assert.rejects(fs.lstat(lockPath), { code: "ENOENT" });
+        }
+        await assert.rejects(fs.lstat(lockPath + ".reap"), { code: "ENOENT" });
+      })().catch(error => { console.error(error); process.exitCode = 1; });
+    `;
+
+    await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, outcome], { timeout: 5000 });
+  });
+}
+
 test("concurrent same-name claims choose one complete winner and preserve it", async (t) => {
   const { root, catalogHome } = await catalogFixture(t);
   const homes = await Promise.all(Array.from({ length: 24 }, (_, index) => legacyLibrary(root, `candidate-${index}`)));
@@ -405,6 +523,89 @@ test("replacement retries retain strict schema, byte limits, and hardlink valida
   const result = await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, defaultPath, replacementPath]);
   assert.match(result.stdout, /regular private file/);
   assert.equal((await stat(target)).mode, originalMode);
+});
+
+test("catalog metadata retries unlinked regular snapshots without reading or repairing them", async (t) => {
+  const { root, catalogHome } = await catalogFixture(t);
+  const first = await createInbox("first", path.join(root, "first"), catalogHome);
+  const second = await createInbox("second", path.join(root, "second"), catalogHome);
+  const defaultPath = path.join(catalogHome, "default.json");
+  const replacementPath = path.join(catalogHome, "replacement");
+  const modulePath = path.join(__dirname, "inbox-catalog.js");
+  const worker = `
+    const assert = require("node:assert/strict");
+    const fs = require("node:fs/promises");
+    const [modulePath, catalogHome, defaultPath, replacementPath, mode] = process.argv.slice(1);
+    const inspect = fs.lstat;
+    const open = fs.open;
+    let inspections = 0;
+    let opens = 0;
+
+    fs.lstat = async (...args) => {
+      const info = await inspect(...args);
+
+      if (args[0] !== defaultPath) {
+        return info;
+      }
+
+      inspections += 1;
+
+      if (mode === "replace" && inspections === 1) {
+        await fs.rename(replacementPath, defaultPath);
+      }
+
+      if (mode !== "replace" || inspections === 1) {
+        Object.defineProperty(info, "nlink", { value: 0 });
+      }
+
+      return info;
+    };
+    fs.open = async (...args) => {
+      if (args[0] === defaultPath) opens += 1;
+
+      return open(...args);
+    };
+
+    (async () => {
+      const { readInboxCatalog } = require(modulePath);
+      if (mode === "replace") {
+        const catalog = await readInboxCatalog(catalogHome, { readOnly: true });
+        assert.equal(inspections, 2);
+        assert.equal(opens, 1);
+        process.stdout.write(JSON.stringify(catalog));
+      } else {
+        await assert.rejects(readInboxCatalog(catalogHome, { readOnly: true }),
+          mode === "unlinked" ? /changed repeatedly during read/ : /regular private file/);
+        assert.equal(inspections, mode === "unlinked" ? 10 : 1);
+        assert.equal(opens, 0);
+      }
+    })().catch(error => { console.error(error); process.exitCode = 1; });
+  `;
+
+  for (const mode of ["replace", "unlinked", "directory"]) {
+    await setDefaultInbox("first", catalogHome);
+    await writeFile(replacementPath, '{"schemaVersion":1,"name":"second"}', { mode: 0o640 });
+    const replacementMode = (await stat(replacementPath)).mode;
+
+    if (mode === "directory") {
+      await rm(defaultPath);
+      await mkdir(defaultPath);
+    }
+
+    const before = await lstat(defaultPath);
+    const result = await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, defaultPath, replacementPath, mode], { timeout: 5000 });
+
+    if (mode === "replace") {
+      assert.deepEqual(JSON.parse(result.stdout), { inboxes: [first, second], defaultName: "second" });
+      assert.equal((await stat(defaultPath)).mode, replacementMode);
+      assert.equal(await readFile(defaultPath, "utf8"), '{"schemaVersion":1,"name":"second"}');
+    } else {
+      const after = await lstat(defaultPath);
+      assert.equal(after.ino, before.ino);
+      assert.equal(after.mode, before.mode);
+      assert.equal(after.ctimeMs, before.ctimeMs);
+    }
+  }
 });
 
 test("catalog replacement retries stop after a bounded number of changing files", async (t) => {

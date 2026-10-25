@@ -281,13 +281,13 @@ async function readCatalogJson(filePath: string, readOnly = false): Promise<{ va
       return null;
     }
 
-    if (!checked.isFile() || checked.isSymbolicLink() || checked.nlink > 1) {
-      throw new Error(`Catalog record must be a regular private file: ${filePath}`);
+    // Atomic replacement can unlink the looked-up inode while lstat is in flight.
+    if (checked.isFile() && !checked.isSymbolicLink() && checked.nlink === 0) {
+      continue;
     }
 
-    // Atomic replacement can unlink the observed inode before lstat completes.
-    if (checked.nlink === 0) {
-      continue;
+    if (!checked.isFile() || checked.isSymbolicLink() || checked.nlink !== 1) {
+      throw new Error(`Catalog record must be a regular private file: ${filePath}`);
     }
 
     const file = await open(filePath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0))

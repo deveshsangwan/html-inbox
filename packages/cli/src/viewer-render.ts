@@ -9,6 +9,7 @@ export interface ViewerRenderOptions {
   inboxName?: string;
   homePath?: string;
   documentBasePath?: string;
+  deletion?: { token: string };
 }
 
 export function renderIndex(
@@ -96,7 +97,7 @@ function renderLibrary(
       : `<ol class="document-list" aria-label="Published documents">${documents
           .map(
             (document) =>
-              `<li class="doc" data-search-text="${escapeHtml(
+              `<li class="doc${options.deletion ? " doc--deletable" : ""}" data-search-text="${escapeHtml(
                 documentSearchFields(document)
                   .join(" ")
                   .toLowerCase(),
@@ -105,6 +106,7 @@ function renderLibrary(
                 <time class="document-date" datetime="${escapeHtml(document.metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(document.metadata.createdAt, options.timeZone))}</time>
                 <span class="doc__source" title="${escapeHtml(document.metadata.sourceFileName)}">${escapeHtml(document.metadata.sourceFileName)}</span>
                 <span class="document-type">${escapeHtml(document.metadata.type)}</span>
+                ${options.deletion ? renderDocumentActions(document.metadata, document.documentPath, document.inboxName ?? options.inboxName ?? "Inbox") : ""}
               </li>`,
           )
           .join("")}</ol>`;
@@ -137,14 +139,14 @@ function renderLibrary(
         </form>
         ${renderAppearanceMenu()}
       </header>
-      ${hub ? renderAvailability(hub.sources) : ""}<p class="document-count" aria-live="polite" data-document-count>${countLabel}</p>
+      ${hub ? renderAvailability(hub.sources) : ""}${options.deletion ? '<p class="deletion-notice" role="status" data-deletion-notice hidden></p>' : ""}<p class="document-count" aria-live="polite" data-document-count>${countLabel}</p>
       ${
         options.clientSearch && allDocuments.length > 0
           ? '<section class="empty-state" aria-labelledby="client-empty-title" data-client-empty hidden><h2 id="client-empty-title">No matching documents</h2><p>Try another title, type, or source file name.</p></section>'
           : ""
       }
       ${documentContent}
-    </main>`,
+    </main>${options.deletion ? renderDeletionDialog(options.deletion.token, homePath) : ""}`,
     "Your published HTML documents, collected in one library.",
     basePath,
     options.appearance ?? "system",
@@ -159,9 +161,11 @@ export function renderDocumentShell(
   const basePath = options.basePath ?? "";
   const homePath = options.homePath ?? (basePath ? `${basePath}/` : "/");
   const documentBasePath = options.documentBasePath ?? basePath;
+  const documentPath = `${documentBasePath}/documents/${metadata.id}`;
   const contentPath = documentBasePath
     ? `${documentBasePath}/documents/${escapeHtml(metadata.id)}/content${options.documentBasePath ? "" : "/"}`
     : `/documents/${escapeHtml(metadata.id)}/content`;
+  const copyUrl = `${documentBasePath}/documents/${metadata.id}/copy.json`;
 
   return page(
     metadata.title,
@@ -173,6 +177,7 @@ export function renderDocumentShell(
         <details class="viewer-menu" data-viewer-menu>
           <summary class="toolbar-control" aria-label="Viewer options" title="Viewer options"><span aria-hidden="true">&#8943;</span></summary>
           <div class="viewer-menu__panel">
+            <button class="toolbar-control copy-content" type="button" data-copy-open>Copy content...</button>
             ${renderAppearanceOptions()}
             <section class="document-details" aria-labelledby="document-details-title">
               <h2 id="document-details-title">Document details</h2>
@@ -184,6 +189,7 @@ export function renderDocumentShell(
                 <dt>Published</dt><dd><time datetime="${escapeHtml(metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(metadata.createdAt, options.timeZone))}</time></dd>
               </dl>
             </section>
+            ${options.deletion ? renderDeleteAction(metadata, documentPath, options.inboxName ?? "Inbox", "viewer-menu__delete") : ""}
           </div>
         </details>
       </header>
@@ -191,12 +197,84 @@ export function renderDocumentShell(
         <iframe sandbox="allow-scripts" src="${contentPath}" title="${escapeHtml(metadata.title)}" data-document-frame></iframe>
       </div>
       <button class="toolbar-control show-frame" type="button" data-show-frame hidden>Show frame</button>
-    </main>`,
+      ${renderCopyDialog(copyUrl)}
+    </main>${options.deletion ? renderDeletionDialog(options.deletion.token, homePath) : ""}`,
     `Preview of ${metadata.title}`,
     basePath,
     options.appearance ?? "system",
     "document-page",
   );
+}
+
+function renderDocumentActions(metadata: DocumentMetadata, documentPath: string, inboxName: string): string {
+  return `<details class="viewer-menu doc__actions" data-viewer-menu>
+                  <summary class="toolbar-control" aria-label="${escapeHtml(`Options for ${metadata.title} in ${inboxName}`)}" title="Document options"><span aria-hidden="true">&#8942;</span></summary>
+                  <div class="viewer-menu__panel doc__actions-panel">
+                    ${renderDeleteAction(metadata, documentPath, inboxName, "doc__actions-delete")}
+                  </div>
+                </details>`;
+}
+
+function renderDeleteAction(metadata: DocumentMetadata, documentPath: string, inboxName: string, className: string): string {
+  return `<button class="toolbar-control delete-action ${className}" type="button" data-delete-document data-delete-url="${escapeHtml(`/api${documentPath}`)}" data-document-path="${escapeHtml(documentPath)}" data-document-title="${escapeHtml(metadata.title)}" data-document-file="${escapeHtml(metadata.sourceFileName)}" data-inbox-name="${escapeHtml(inboxName)}" aria-label="${escapeHtml(`Delete ${metadata.title}`)}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg><span>Delete</span></button>`;
+}
+
+function renderDeletionDialog(token: string, homePath: string): string {
+  return `
+<dialog class="delete-dialog" aria-labelledby="delete-dialog-title" aria-describedby="delete-dialog-description delete-dialog-copies" data-delete-dialog data-delete-token="${escapeHtml(token)}" data-home-path="${escapeHtml(homePath)}">
+  <form data-delete-form>
+    <h2 id="delete-dialog-title">Delete document?</h2>
+    <p id="delete-dialog-description">This removes the document from this inbox. This action cannot be undone here. Deleting a synced original also deletes its authorized copies when they reconnect; deleting a received copy hides it only in this inbox.</p>
+    <p id="delete-dialog-copies">Your original input file and separately exported or shared copies are kept. Managed storage may retain saved bytes.</p>
+    <dl class="delete-dialog__details">
+      <dt>Title</dt><dd data-delete-title></dd>
+      <dt>File</dt><dd data-delete-file></dd>
+      <dt>Inbox</dt><dd data-delete-inbox></dd>
+    </dl>
+    <p role="status" data-delete-progress hidden></p>
+    <p class="delete-dialog__error" role="alert" data-delete-error hidden></p>
+    <a class="delete-dialog__review" data-delete-review hidden>Check inbox</a>
+    <div class="delete-dialog__actions">
+      <button class="toolbar-control delete-dialog__cancel" type="button" data-delete-cancel autofocus>Cancel</button>
+      <button class="toolbar-control delete-dialog__confirm" type="submit" data-delete-confirm>Delete document</button>
+    </div>
+  </form>
+</dialog>`;
+}
+
+function renderCopyDialog(copyUrl: string): string {
+  return `<dialog class="copy-dialog" data-copy-dialog data-copy-url="${escapeHtml(copyUrl)}" aria-labelledby="copy-title" aria-describedby="copy-saved-help">
+        <div class="copy-dialog__header">
+          <h2 id="copy-title">Copy content</h2>
+          <button type="button" data-copy-close autofocus>Close</button>
+        </div>
+        <p class="copy-dialog__help" id="copy-saved-help">Text comes from the saved HTML. It may differ from the preview and excludes content added by scripts, edited form values, and visuals such as canvas charts. CSS-hidden text may be included.</p>
+        <p class="copy-dialog__help">For selections in the preview, use the browser's own Ctrl+C or Command+C, context menu, or touch Copy.</p>
+        <p class="copy-dialog__status" role="status" aria-live="polite" aria-atomic="true" data-copy-status></p>
+        <button type="button" data-copy-retry hidden>Retry</button>
+        <div class="copy-dialog__content" data-copy-content hidden>
+          <label for="copy-format">Format</label>
+          <select id="copy-format" data-copy-format>
+            <option value="text">Document text</option>
+            <option value="code">Code blocks</option>
+          </select>
+          <div class="copy-dialog__content" data-copy-code-controls hidden>
+            <p class="copy-dialog__help">Code blocks include saved preformatted text, such as diagram source. Spacing is preserved.</p>
+            <label for="copy-code-block">Code block</label>
+            <select id="copy-code-block" data-copy-code-block></select>
+          </div>
+          <p class="copy-dialog__help" data-copy-empty hidden></p>
+          <label for="copy-preview" data-copy-preview-label>Document text</label>
+          <textarea id="copy-preview" data-copy-preview readonly wrap="soft" spellcheck="false" aria-describedby="copy-manual-help"></textarea>
+          <div class="copy-dialog__actions">
+            <button type="button" data-copy-all disabled>Copy all</button>
+            <button type="button" data-copy-selection disabled>Copy selection</button>
+            <button type="button" data-copy-code hidden disabled>Copy code block 1</button>
+            <button type="button" data-copy-select-all disabled>Select all</button>
+          </div>
+          <p class="copy-dialog__help" id="copy-manual-help">To copy manually, select text here, then use Ctrl+C or Command+C, the context menu, or touch Copy.</p>
+        </div>
+      </dialog>`;
 }
 
 function renderInboxFilter(sources: HubInboxListing[], selected: string): string {

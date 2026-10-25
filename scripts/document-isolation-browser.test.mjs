@@ -85,6 +85,11 @@ test("response sandbox isolates direct documents and reader frames", { timeout: 
 
       await assertIsolation(page.frameLocator("iframe"));
       assert.deepEqual([...cdnRequests].sort(), [...cdnScripts.keys()].sort());
+      await page.getByLabel("Viewer options", { exact: true }).click();
+      await page.getByRole("button", { name: "Copy content...", exact: true }).click();
+      await page.locator("[data-copy-content]:visible").waitFor();
+      assert.match(await page.getByLabel("Document text", { exact: true }).inputValue(), /pending/);
+      await page.getByRole("button", { name: "Close", exact: true }).click();
       await assertViewerUnchanged(page);
     });
   }
@@ -290,6 +295,7 @@ async function serveSnapshot(snapshot, documentId) {
     [`${documentPath}/`, `${documentPath}/index.html`, security.shell, "text/html"],
     [`${documentPath}/content/`, `${documentPath}/content/index.html`, security.document, "text/html"],
     [`${documentPath}/content/index.html`, `${documentPath}/content/index.html`, security.document, "text/html"],
+    [`${documentPath}/copy.json`, `${documentPath}/copy.json`, {}, "application/json"],
     [`${snapshot.inboxPath}/assets/viewer.js`, `${snapshot.inboxPath}/assets/viewer.js`, {}, "text/javascript"],
     [`${snapshot.inboxPath}/assets/viewer.css`, `${snapshot.inboxPath}/assets/viewer.css`, {}, "text/css"],
     [`${snapshot.inboxPath}/snapshot-manifest.json`, `${snapshot.inboxPath}/snapshot-manifest.json`, {}, "application/json"],
@@ -310,7 +316,7 @@ async function serveSnapshot(snapshot, documentId) {
     }
 
     const route = routes.get(request.url);
-    if (!route) {
+    if (!route || !["GET", "HEAD"].includes(request.method)) {
       response.writeHead(404);
       response.end();
 
@@ -318,7 +324,7 @@ async function serveSnapshot(snapshot, documentId) {
     }
 
     response.writeHead(200, route.headers);
-    response.end(route.body);
+    response.end(request.method === "HEAD" ? undefined : route.body);
   });
 
   await new Promise((resolve, reject) => {

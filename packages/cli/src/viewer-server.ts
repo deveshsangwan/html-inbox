@@ -2,10 +2,11 @@ import { assertManagedLifecycle } from "./sync-lifecycle";
 import { currentViewerLocalOwner, verifyViewerLocalOwner } from "./viewer-ownership";
 import { setTimeout as delay } from "node:timers/promises";
 import { randomUUID } from "node:crypto";
-import { rm } from "node:fs/promises";
+import { realpath, rm } from "node:fs/promises";
 import type http from "node:http";
 import path from "node:path";
 import type { DocumentBackend } from "./documents";
+import { createDocumentDeleter } from "./document-deletion";
 import { ManagedStorageError } from "./private-storage";
 import { startViewerHttpServer, type ViewerHttpServer } from "./viewer-http-server";
 import { resolveViewerNetworkConfig, type ViewerNetworkOptions } from "./viewer-network";
@@ -219,7 +220,9 @@ export async function startViewer(
     let startup: Promise<void> | undefined;
     let closing: Promise<void> | undefined;
     let hasReportedShutdownFailure = false;
-    const close = () => closing ??= (async () => {
+    const close = (reason: "SIGTERM" | "SIGINT" | "reader-close" | "startup-failure") => closing ??= (async () => {
+      console.error(`${new Date().toISOString()} html-inbox: Viewer ${process.pid} shutting down (${reason})`);
+
       try {
         // Startup owns route mutation and readiness writes until its promise settles.
         await startup?.catch(() => undefined);
@@ -235,9 +238,10 @@ export async function startViewer(
         }
 
         await removeViewerRecord(home, processId);
+        console.error(`${new Date().toISOString()} html-inbox: Viewer ${process.pid} stopped (${reason})`);
       } finally {
-        process.off("SIGTERM", onSignal);
-        process.off("SIGINT", onSignal);
+        process.off("SIGTERM", onSigterm);
+        process.off("SIGINT", onSigint);
       }
     })();
     const reportShutdownFailure = (error: unknown) => {
@@ -247,7 +251,7 @@ export async function startViewer(
 
       hasReportedShutdownFailure = true;
       const message = error instanceof Error ? error.message : String(error);
-      console.error(`html-inbox: Viewer shutdown failed: ${message}`);
+      console.error(`${new Date().toISOString()} html-inbox: Viewer ${process.pid} shutdown failed: ${message}`);
       process.exitCode = 1;
       void readViewerRecord(home).then((record) => {
         if (record?.processId === processId) {
@@ -257,10 +261,11 @@ export async function startViewer(
         console.error(`html-inbox: Could not record shutdown failure: ${String(recordError)}`);
       });
     };
-    const onSignal = () => { void close().catch(reportShutdownFailure); };
+    const onSigterm = () => { void close("SIGTERM").catch(reportShutdownFailure); };
+    const onSigint = () => { void close("SIGINT").catch(reportShutdownFailure); };
 
-    process.on("SIGTERM", onSignal);
-    process.on("SIGINT", onSignal);
+    process.on("SIGTERM", onSigterm);
+    process.on("SIGINT", onSigint);
     startup = (async () => {
       await clearPreviousTailscaleRoute(home);
       if (closing) {
@@ -280,8 +285,9 @@ export async function startViewer(
       }
 
       const config = prepared ? { ...initialConfig, tailscaleHostname: prepared.hostname } : initialConfig;
-      reader = await startViewerHttpServer(backend, config, health, home, { inboxName });
-      reader.server.once("close", () => { void close().catch(reportShutdownFailure); });
+      const deleteDocument = await createDocumentDeleter({ home: await realpath(home), instanceId });
+      reader = await startViewerHttpServer(backend, config, health, home, { inboxName }, deleteDocument);
+      reader.server.once("close", () => { void close("reader-close").catch(reportShutdownFailure); });
       if (closing) {
         return;
       }
@@ -327,7 +333,7 @@ export async function startViewer(
       return reader.server;
     } catch (error) {
       try {
-        await close();
+        await close("startup-failure");
       } catch (cleanupError) {
         throw new AggregateError([error, cleanupError], "Viewer startup failed and Tailscale cleanup failed; private ownership journal retained");
       }

@@ -1,6 +1,6 @@
 ---
 name: html-inbox
-description: Publish HTML artifacts to HTML Inbox. Use for publishing or opening documents, named library selection, a local reading hub, document appearance, viewer operation, loopback/LAN/Tailscale access, boot startup, or rejected documents.
+description: Publish HTML artifacts to HTML Inbox. Use for publishing, opening or deleting documents, named library selection, a local reading hub, document appearance, viewer operation, loopback/LAN/Tailscale access, boot startup, or rejected documents.
 ---
 
 # HTML Inbox
@@ -13,7 +13,7 @@ This skill owns publishing and live viewer operation. Cloudflare Pages hosts a s
 npx skills@1.7.0 add deveshsangwan/html-inbox --skill html-inbox-remote
 ```
 
-The current `skills@1.7.0` installer requires Node.js 22.20.0 or newer for skill installation or updates. HTML Inbox itself, including the fallback used by an already-installed skill, requires Node.js 20 or newer.
+The skills installer requires Node.js 22.20.0 or newer for skill installation or updates. HTML Inbox itself, including the fallback used by an already-installed skill, requires Node.js 20 or newer.
 
 Choose a supported agent explicitly when needed, for example by appending `--agent codex -y`. Verify that agent's installed directory contains `SKILL.md`, `references/cli-resolution.md`, `references/library-selection.md`, `references/document-appearance.md`, `assets/document-template.html`, and the bundled `scripts/windows-cli.cjs` before using it. Installer exit code zero alone does not prove every selected agent target succeeded.
 
@@ -33,7 +33,7 @@ Keep the resolved selector on preferences, publish, list, delete, export, remote
 
 During an explicit HTML Inbox setup request, offer the optional appearance choice once: **System** by default, or **Light** or **Dark**. Skipping the question keeps System. Installation and ordinary publishing continue without this question.
 
-First check `inbox --help` for the `preferences` command. The pinned 0.2.1 fallback supports it, but an older installed 0.2.x executable may not. If absent, keep System and explain that saving a setup preference requires a CLI with `preferences` support; continue other authorized setup work. Keep the selected CLI and version pin unchanged.
+First check `inbox --help` for the `preferences` command. The pinned 0.4.0 fallback supports it, but an older installed 0.2.x executable may not. If absent, keep System and explain that saving a setup preference requires a CLI with `preferences` support; continue other authorized setup work. Keep the selected CLI and version pin unchanged.
 
 When supported, inspect `inbox preferences --json`. If the selected inbox home already contains `preferences.json`, preserve its preference and skip the setup question unless the user asks to change it. Otherwise, save the chosen value, or the default when skipped:
 
@@ -79,9 +79,17 @@ Verification is complete when the expected content is visible without relevant c
 
 ### 4. Hand off
 
-Give the user the printed document URL and identify the published title and type. Explain who can reach it for the selected mode. Mention a custom home or port only when it helps the user operate their inbox. Share only reader URLs; keep private control URLs, tokens, process records, and diagnostics out of reader handoffs.
+Give the user the printed document URL and identify the published title and type. Explain who can reach it for the selected mode. When the running viewer supports UI deletion, explain that every reachable live reader can read and permanently delete documents. Mention a custom home or port only when it helps the user operate their inbox. Share only reader URLs; keep private control URLs, tokens, process records, and diagnostics out of reader handoffs.
 
 The handoff is complete when the user has a clickable URL and any verification limitation is explicit.
+
+## Delete one document
+
+For an authorized deletion, identify the intended inbox and document first. Use `inbox delete <document-id>` with that same selector; automated CLI deletion requires `--force`. JSON output does not imply consent.
+
+In a live viewer with UI deletion support, **Delete** is available in each list row's three-dot menu and in document options. The modal shows the title, filename, and inbox, explains permanent deletion, and defaults to Cancel. Confirm only the authorized document. Every reachable live reader has this authority on loopback, LAN, and Tailscale, without a startup grant or separate reader login. Hub filters do not limit it.
+
+Deletion removes the stored copy from its original inbox. It preserves the original source file, existing exports, and remote snapshots. There is no Undo or bulk deletion. If purge fails after removal from the live list, report that cleanup failure and the document's absence accurately. A missing or replaced source is a failure; preserve it rather than recreating storage or choosing another inbox. Deletion is complete when the result confirms removal and any cleanup failure is reported. Static exported or hosted copies remain read-only and contain no live viewer credentials.
 
 ## Validation gate
 
@@ -89,7 +97,7 @@ The source must be a regular `.html` or `.htm` file containing valid UTF-8 and a
 
 Blocking HTML policy errors reject publishing. These include `javascript:` or `vbscript:` URL attributes, navigation to `data:` URLs, `<meta http-equiv="refresh">`, and `<a>` or `<area>` links with non-HTTPS schemes or protocol-relative URLs. HTTPS, relative, and fragment links are allowed.
 
-Inline scripts and the supported Tailwind browser and Mermaid v11 script entry points are allowed. Inline event handlers, `<base>`, and non-allowlisted external scripts or asset URLs produce advisory warnings. Publishing continues, and the viewer CSP blocks the warned features.
+Inline scripts and the supported Tailwind browser and Mermaid v11 script entry points are allowed. Inline event handlers, `<base>`, and non-allowlisted external scripts or asset URLs produce advisory warnings. Publishing continues. The viewer CSP blocks many warned features, but its script sources are broader than the canonical entry URLs; verify the affected behavior instead of treating a warning as proof of blocking.
 
 When publishing fails, preserve the exact error, fix the named condition in the source, and retry the same publish contract. Do not bypass validation, weaken viewer security, or claim that a CDN works without rendering it in the viewer.
 
@@ -104,6 +112,10 @@ inbox viewer
 inbox viewer status
 inbox viewer stop
 ```
+
+Detachment keeps the launching process's service-manager ownership. On Linux, stopping an agent's systemd scope also stops its detached viewer. For links that must survive agent cleanup, logout, or reboot, follow the explicitly authorized [boot service workflow](#manage-boot-startup). Ordinary startup and publishing never install that service.
+
+Starting with 0.2.2, graceful shutdown records its timestamp, viewer PID, first trigger, and cleanup completion in the existing diagnostic stream. A signal reason does not identify its sender, and a forced kill can prevent a shutdown record. Older compatible 0.2.x executables may lack these records.
 
 Use `inbox viewer --foreground` when the user wants an attached process for debugging, containers, or an external service manager. It keeps the terminal occupied and prints its listening address to stderr. Startup failures report an error and retain private diagnostics under the selected inbox home.
 
@@ -130,7 +142,7 @@ inbox viewer --loopback
 
 ### LAN
 
-LAN mode trusts every reader who can reach the listener. There is no reader login, password, or token. All reachable readers can read the complete library; the operating system's firewall determines reachability. Publishing, deletion, process control, and service administration remain local CLI operations.
+LAN mode trusts every reader who can reach the listener to read and permanently delete documents in the complete library. There is no reader login, password, or access token. The operating system's firewall determines reachability. Publishing, process control, and service administration remain local CLI operations.
 
 After the user chooses LAN access, use a host IP that belongs to this machine:
 
@@ -150,7 +162,7 @@ After the user chooses live tailnet reader access:
 inbox viewer --tailscale
 ```
 
-The reader backend binds `127.0.0.1`. The CLI prepares and explicitly trusts the exact device hostname in its reader Host allowlist, verifies the node identity and root HTTPS proxy on port 443, then returns its reader URL. Do not invent a hostname, widen the Host allowlist, or use forwarded/Tailscale identity headers as application authorization. Reachability follows the user's tailnet policy; readers can read the complete live library.
+The reader backend binds `127.0.0.1`. The CLI prepares and explicitly trusts the exact device hostname in its reader Host allowlist, verifies the node identity and root HTTPS proxy on port 443, then returns its reader URL. Do not invent a hostname, widen the Host allowlist, or use forwarded/Tailscale identity headers as application authorization. Reachability follows the user's tailnet policy; every reachable reader can read and permanently delete documents in the complete live library.
 
 An unrelated existing HTTPS root remains unchanged and causes a conflict. Preserve it, report the conflicting hostname/route, and have the user choose loopback/LAN, a different node, or explicitly arrange that route's relocation before retrying. Reserved reader routes, an incompatible listener, or unsafe Serve/Funnel configuration can also block startup. Preserve unrelated mounts, ports, named Services, and foreground configurations.
 
@@ -172,10 +184,10 @@ sudo /absolute/path/to/node /absolute/path/to/html-inbox viewer service uninstal
 
 Run ordinary status as the selected normal user and select that user's inbox. For a custom library, preserve the same absolute `HTML_INBOX_HOME` during installation, status, and removal as shown in the full guide. The explicit `--loopback` example chooses loopback; choose LAN or Tailscale options only when the user requests that exposure. Omitting networking options preserves saved settings.
 
-The service records absolute Node/CLI paths, inbox and network settings, and the Tailscale executable when needed. Reinstall after moving or replacing those installation paths. CLI and skill updates are separate operations. Service status checks both the manager and private viewer readiness. Uninstall stops and disables only the owned boot service and preserves documents and private state. `viewer stop` does not remove boot configuration; use service uninstall to prevent future boot startup.
+The service records absolute Node/CLI paths, inbox and network settings, and the Tailscale executable when needed. Reinstall after moving or replacing those installation paths. CLI and skill updates are separate operations. Service status checks both the manager and private viewer readiness. Uninstall stops and disables only the owned boot service and preserves documents, saved configuration, inbox identity, and logs. Successful shutdown removes the matching active process record and any verified owned-route journal. `viewer stop` does not remove boot configuration; use service uninstall to prevent future boot startup.
 
 ## Security boundary
 
-The viewer stores each document's original HTML unchanged. It renders that HTML on a dedicated path inside a sandboxed iframe with a Content Security Policy; it does not sanitize the stored file. Do not present an accepted document as safe to open outside the viewer. Reader HTTP routes stay read-only in every mode.
+The viewer stores each document's original HTML unchanged. It renders that HTML on a dedicated path inside a sandboxed iframe with a Content Security Policy; it does not sanitize the stored file. Do not present an accepted document as safe to open outside the viewer. Live deletion requires a process-scoped CSRF token and matching Origin, retains Host validation, and uses `frame-ancestors 'none'` on live shells. These checks protect requests from other origins while every reachable reader retains deletion authority. Publishing and lifecycle control have no reader HTTP endpoints.
 
 When changing implementation or security policy rather than operating the CLI, first read the [architecture](https://github.com/deveshsangwan/html-inbox/blob/main/docs/architecture.md) and [threat model](https://github.com/deveshsangwan/html-inbox/blob/main/docs/threat-model.md).

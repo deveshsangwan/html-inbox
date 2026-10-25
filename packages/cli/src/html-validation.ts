@@ -7,9 +7,9 @@ import parseSrcset from "@fisker/parse-srcset";
  * `errors` block literal markup that the sandboxed frame and document CSP do
  * not contain. Allowed scripts can still recreate equivalent behavior.
  *
- * `warnings` are advisory lint: conditions the runtime already fails closed.
- * They are reported so the author can fix a document that will silently not
- * work, but they never block publishing. See docs/threat-model.md.
+ * `warnings` are advisory compatibility checks and never block publishing.
+ * Many warned features are blocked by the runtime, but script URLs inside
+ * permitted CSP sources can still load. See docs/threat-model.md.
  */
 export interface ValidationResult {
   ok: boolean;
@@ -78,7 +78,7 @@ export function validateHtml(html: string): ValidationResult {
     if (tag.name === "script" && element.childNodes.some((node) =>
       "value" in node && containsDisallowedExternalUrl(node.value),
     )) {
-      warnings.add("HTML scripts reference non-allowlisted external URLs; the document CSP blocks fetches to them");
+      warnings.add("HTML scripts reference non-allowlisted external URLs; direct connections are blocked, while script loading and navigation follow runtime policy");
     }
     for (const attribute of tag.attributes) {
       if (attribute.name.startsWith("on")) {
@@ -204,9 +204,8 @@ function checkUrlValue(
   }
 
   if (tag.name === "script" && attribute.name === "src") {
-    // A non-allowlisted script source is refused by `script-src`, but a blocked
-    // script is a broken document rather than a compromised one.
-    warnings.add("HTML references a non-allowlisted external script URL; the document CSP will block it",
+    // Canonical supported entry URLs are narrower than runtime CSP sources.
+    warnings.add("HTML references a non-allowlisted external script URL; runtime loading depends on the document CSP sources",
     );
     return;
   }

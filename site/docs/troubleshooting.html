@@ -77,6 +77,7 @@
             <ul>
               <li><a href="index.html">Getting started</a></li>
               <li><a href="agent-setup.html">Agent setup</a></li>
+              <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
               <li><a href="publishing.html">Publish documents</a></li>
               <li><a href="html-compatibility.html">HTML compatibility</a></li>
             </ul>
@@ -115,6 +116,7 @@
               <ul>
                 <li><a href="index.html">Getting started</a></li>
                 <li><a href="agent-setup.html">Agent setup</a></li>
+                <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
                 <li><a href="publishing.html">Publish documents</a></li>
                 <li>
                   <a href="html-compatibility.html">HTML compatibility</a>
@@ -155,7 +157,32 @@
           preserve records and owned routes when the CLI cannot establish that a
           process or external configuration belongs to it.
         </p>
+        <p>
+          Live UI deletion requires a reader running 0.5.x. The skill fallback
+          stays pinned to published 0.4.0, with copy and named-inbox support but
+          no UI deletion. Before an authorized upgrade, review the
+          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
+          and saved exposure and hub mounts.
+        </p>
 
+        <h2 id="selection">An inbox choice is required</h2>
+        <p>
+          In 0.3.0, even one registered entry requires an intended destination.
+          Pass <code>--inbox NAME</code>, absolute <code>--home</code>, a process
+          binding, or a configured default. Redirecting any stream or using JSON
+          disables the picker. A fully interactive terminal accepts an exact name
+          or <code>#N</code> row for one operation. Missing homes or changed UUIDs
+          fail rather than creating a replacement library. See
+          <a href="named-inboxes.html#selection">selection and default repair</a>.
+        </p>
+        <p>
+          Scripts parsing old default JSON must add <code>--json</code> to viewer
+          status/stop and service commands after upgrading. Published 0.2.x
+          commands lack those new flags. Check actual help and preserve the
+          destination if an older executable lacks a requested capability.
+          The published 0.4.0 fallback supports named inboxes, hubs, and the
+          reader copy dialog, but has no UI deletion. See <a href="named-inboxes.html#upgrade">migration steps</a>.
+        </p>
         <h2 id="viewer">Viewer does not start</h2>
         <p>
           Check the installed version, configuration, and private status first.
@@ -188,7 +215,7 @@ html-inbox viewer --foreground</code></pre>
           ><code>html-inbox viewer --port 4321</code></pre>
         </div>
         <p>
-          Use the same <code>HTML_INBOX_HOME</code> across commands. An explicit
+          Keep the same explicit selector or process binding across commands. An explicit
           <code>HTML_INBOX_PORT</code> must match the intended active port for
           status and stop; unset it when you want the saved configuration.
           Repeated starts reuse a healthy matching viewer, while explicit
@@ -196,10 +223,20 @@ html-inbox viewer --foreground</code></pre>
         </p>
         <h2 id="upgrade">Older viewer record blocks an upgrade</h2>
         <p>
+          An upgrade to 0.5.0 gives every reachable live reader permanent
+          deletion authority on all exposures and hub mounts after restart.
+          Before an authorized upgrade, review saved exposure and frozen hub
+          membership and follow the <a href="named-inboxes.html#upgrade-050">verified
+          shutdown and upgrade steps</a>. Publishing and process control stay
+          in the CLI; original source files and existing static snapshots remain unchanged.
+        </p>
+        <p>
           Stop the old process with its previous executable before installing a
           newer release. For an old foreground process, use Ctrl-C. The new CLI
-          refuses an older private control protocol rather than signaling an
-          unverified PID.
+          refuses an incompatible private control protocol rather than
+          signaling an unverified PID. This applies to 0.1.0 viewers; 0.2.x,
+          0.3.x, 0.4.x, and 0.5.x share protocol version 3. Restart an existing viewer after updating
+          to load new code, including the 0.2.2 shutdown diagnostics and 0.4.0 copy controls.
         </p>
         <p>
           If the older viewer already exited but left <code>viewer.json</code>,
@@ -349,6 +386,7 @@ html-inbox remote reconcile</code></pre>
         <nav aria-label="On this page">
           <p class="docs-toc-label">On this page</p>
           <ul>
+            <li><a href="#selection">Inbox choice and JSON migration</a></li>
             <li><a href="#viewer">Viewer does not start</a></li>
             <li>
               <a href="#upgrade">Older viewer record blocks an upgrade</a>

@@ -2,6 +2,10 @@
 
 Managed sync is an explicit per-inbox format upgrade. Make a backup and stop or upgrade undiscoverable older readers and writers before enrollment. Windows enrollment is unsupported and rejects before managed mutation. Ordinary unenrolled libraries remain available.
 
+For a consistent backup, stop the inbox's sync worker as well as its viewer and every hub that mounts it, and verify those owned processes have settled before copying. A stopped reader does not stop the independent sync worker.
+
+Live viewer and hub Delete actions use the existing managed mutation authority after verifying the captured root and inbox UUID. Deleting an original queues signed deletion for authorized copies on reconnection; deleting an imported copy hides it only locally. Bodies remain retained and no disk reclamation is reported. Unenrolled inboxes keep the legacy physical-deletion worker.
+
 Create or register an existing named library, then enroll it:
 
 ```sh

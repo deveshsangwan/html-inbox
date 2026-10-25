@@ -5,9 +5,9 @@ description: Deploy HTML Inbox snapshots to Cloudflare Pages. Use when the user 
 
 # Remote HTML Inbox
 
-Operate a Cloudflare Pages static snapshot of the local HTML Inbox. The local library remains the document source of truth; this skill never edits stored documents. Local publishing or deletion changes the live library, while Cloudflare changes only after a successful remote snapshot operation.
+Operate a Cloudflare Pages static snapshot of the local HTML Inbox. The local library remains the document source of truth; this skill never edits stored documents. Local publishing or deletion through the CLI, live viewer, or hub changes the live library, while Cloudflare changes only after a successful remote snapshot operation. Exported and hosted snapshots are read-only independent copies with no live deletion controls or live viewer credentials. Live deletion preserves the original source file and existing snapshots.
 
-Live Tailscale access uses the local viewer through HTTPS Serve and follows tailnet policy. It does not upload a Cloudflare snapshot or use a Cloudflare capability link. Choose the requested sharing model before acting. This remote skill works independently for Cloudflare operations. For local publishing, background viewer operation, LAN, or live Tailscale access, follow the installed main skill or read its [repository guidance](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/SKILL.md). Linked references require neither a checkout nor an installed sibling.
+Live Tailscale access uses the local viewer through HTTPS Serve and follows tailnet policy. Every reachable live viewer or hub reader can read and permanently delete individual documents, without a startup grant or separate reader login; hub filters do not restrict this authority. This applies on loopback, LAN, and Tailscale. Live access does not upload a Cloudflare snapshot or use a Cloudflare capability link. Choose the requested sharing model before acting. This remote skill works independently for Cloudflare operations. For local publishing, deletion, background viewer operation, LAN, or live Tailscale access, follow the installed main skill or read its [repository guidance](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/SKILL.md). Linked references require neither a checkout nor an installed sibling.
 
 Install the optional main skill only when the user chooses installation:
 
@@ -15,7 +15,7 @@ Install the optional main skill only when the user chooses installation:
 npx skills@1.7.0 add deveshsangwan/html-inbox --skill html-inbox
 ```
 
-The current `skills@1.7.0` installer requires Node.js 22.20.0 or newer for skill installation or updates. HTML Inbox itself, including the fallback used by an already-installed skill, requires Node.js 20 or newer.
+The skills installer requires Node.js 22.20.0 or newer for skill installation or updates. HTML Inbox itself, including the fallback used by an already-installed skill, requires Node.js 20 or newer.
 
 Choose a supported agent explicitly when needed, for example by appending `--agent codex -y`. Verify that agent's installed directory contains `SKILL.md`, `references/cli-resolution.md`, and the bundled `scripts/windows-cli.cjs` before using it. Installer exit code zero alone does not prove every selected agent target succeeded.
 
@@ -27,7 +27,7 @@ Before running commands, follow [CLI resolution](./references/cli-resolution.md)
 
 Before any remote command, read the main skill's [library selection and hub operation](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/library-selection.md). It defines selection precedence, root/UUID validation, human exact-name or `#N` choices, non-interactive choice-required handling, default recovery, and output compatibility. Its local hub rules apply only when the user requests combined reading; a hub never selects or combines remote publication sources.
 
-Check the selected executable's `inbox --help` for every required command and flag. Named routing and the revised picker/output features are unreleased; the published pinned `html-inbox@0.2.1` fallback lacks them. A checkout can report the same version with different capabilities. Named commands do not establish `--running` support or viewer/service JSON support; follow the linked reference's separate gates before using them.
+Check the selected executable's `inbox --help` for every required command and flag. Named routing, the local hub, and revised picker/output features are available starting in 0.3.0, including the published `html-inbox@0.4.0` fallback. That fallback includes reader copying but has no live UI deletion. Live UI deletion requires a running 0.5.x reader; static snapshots remain read-only. Check the generated snapshot for reader features. A checkout can report the same version with different capabilities. Named commands do not establish `--running` support or viewer/service JSON support; follow the linked reference's separate gates before using them.
 
 With named routing support, use the intended explicit selector, process binding, or configured default on every remote command. Apply the linked reference's precedence and same-tier name/home agreement. A missing, conflicting, or invalid destination/default fails without fallback. Treat a choice-required error as an unresolved destination and ask which listed library the user intends; even one registered entry needs a choice. Only an empty catalog retains unbound legacy-home first use. The linked reference defines every redirected-stream and JSON case; resolve the intended destination before retrying.
 
@@ -37,7 +37,7 @@ Examples below use the preserved process binding or default. When using explicit
 inbox remote status --inbox development --json
 ```
 
-With the legacy fallback, use its existing commands and the already intended `HTML_INBOX_HOME`; do not pass unsupported `--inbox` / `--home` flags. If the intended destination depends on named routing, including inherited `HTML_INBOX_NAME` or a named default, report the missing capability and stop that dependent operation. Preserve the selected executable and fallback pin. Ordinary remote work creates no task-specific library, changes no current/default inbox, and installs or upgrades nothing automatically. Default clear/reset is a separate deliberate repair, as described in the linked reference.
+With an installed legacy 0.2.x CLI, use its existing commands and the already intended `HTML_INBOX_HOME`; do not pass unsupported `--inbox` / `--home` flags. If the intended destination depends on named routing, including inherited `HTML_INBOX_NAME` or a named default, report the missing capability and stop that dependent operation. Preserve the selected executable and fallback pin. Ordinary remote work creates no task-specific library, changes no current/default inbox, and installs or upgrades nothing automatically. Default clear/reset is a separate deliberate repair, as described in the linked reference.
 
 ## Choose output for automation
 
@@ -45,7 +45,7 @@ Remote commands use human-readable state by default. Use `--json` only when help
 
 On a successful publish, the human output's `Inbox:` line reports the production capability URL. The JSON state reports it at `lastDeployment.receipt.projectInboxUrl`. For status output, that state is nested under `state`. Share that URL only for a published, non-revoked state. Preserve the immutable deployment receipt for recovery and keep these remote result schemas when parsing. Plain local publish, detached viewer startup, and hub startup keep URL-only stdout as defined in the linked reference. Named context, picker text, and diagnostics go to stderr.
 
-With revised output support, JSON mode never prompts, including destructive confirmation. It does not imply consent. Revocation still requires `--yes`, and local document deletion still requires `--force`; use either only for the authorized operation. The published fallback may still prompt if consent flags are omitted in a TTY, so always supply `--yes` for authorized automated revocation, with or without JSON. If a required capability is absent, report availability rather than changing the destination, executable, or output assumptions.
+With revised output support, JSON mode never prompts, including destructive confirmation. It does not imply consent. Revocation still requires `--yes`, and automated CLI document deletion still requires `--force`; use either only for the authorized operation. An older installed CLI may still prompt if consent flags are omitted in a TTY, so always supply `--yes` for authorized automated revocation, with or without JSON. If a required capability is absent, report availability rather than changing the destination, executable, or output assumptions.
 
 ## Choose the operation
 
@@ -71,7 +71,7 @@ Setup is complete when `remote init` succeeds and `inbox remote status` reports 
 
 ## Snapshot appearance
 
-Snapshots use the same compact document toolbar and Hide frame / Show frame controls as the live viewer. Their setup default comes from the local inbox at export time; each reader can select System, Light, or Dark in their own browser. Browser changes do not sync back to the CLI or other devices. A new export is needed to change the snapshot's saved default.
+With CLI 0.2.1 or newer, snapshots use the same compact document toolbar and Hide frame / Show frame controls as the live viewer. Their setup default comes from the local inbox at export time; each reader can select System, Light, or Dark in their own browser. Browser changes do not sync back to the CLI or other devices. A new export is needed to change the snapshot's saved default. A compatible 0.2.0 executable supports ordinary remote operations but lacks these appearance controls.
 
 Remote publishing preserves original document bytes. When asked to author or adapt documents, use the main skill's [document appearance reference](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/document-appearance.md). Older documents with hardcoded colors need individual adaptation; the remote operation does not convert them.
 

@@ -77,6 +77,7 @@
             <ul>
               <li><a href="index.html">Getting started</a></li>
               <li><a href="agent-setup.html">Agent setup</a></li>
+              <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
               <li><a href="publishing.html">Publish documents</a></li>
               <li><a href="html-compatibility.html">HTML compatibility</a></li>
             </ul>
@@ -115,6 +116,7 @@
               <ul>
                 <li><a href="index.html">Getting started</a></li>
                 <li><a href="agent-setup.html">Agent setup</a></li>
+                <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
                 <li><a href="publishing.html">Publish documents</a></li>
                 <li>
                   <a href="html-compatibility.html">HTML compatibility</a>
@@ -155,7 +157,22 @@
           separate from the live loopback, LAN, or Tailscale viewer and does not
           move your local documents.
         </p>
+        <p>
+          Live UI deletion requires a reader running 0.5.x. The skill fallback
+          stays pinned to published 0.4.0, with copy and named-inbox support but
+          no UI deletion. Before an authorized upgrade, review the
+          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
+          and saved exposure and hub mounts.
+        </p>
 
+        <p>
+          Remote commands operate on one selected library, not a hub's combined
+          view. Keep the same explicit selector or process binding across setup,
+          publish, status, and recovery. With registered entries, unbound
+          automation fails instead of choosing a library. See
+          <a href="named-inboxes.html#selection">selection rules</a> and
+          <a href="named-inboxes.html#upgrade">0.3 upgrade guidance</a>.
+        </p>
         <h2 id="static-export">Export without a provider</h2>
         <div class="docs-code">
           <pre
@@ -170,6 +187,13 @@
           the document count, snapshot hash, and inbox path
           <code>/i/&lt;capability&gt;/</code>. The site's root deliberately has
           no inbox listing.
+        </p>
+        <p>
+          Exported and hosted snapshots are read-only independent copies. They
+          have no live deletion controls or live viewer credentials. Deleting
+          a document through the CLI, live viewer, or hub changes its source
+          inbox and leaves the original source file and existing snapshots
+          unchanged.
         </p>
         <p>
           The output must be outside <code>HTML_INBOX_HOME</code> and cannot
@@ -196,7 +220,11 @@
           alias. Copying HTML alone does not install those response headers.
           Opening files through <code>file://</code> does not provide the served
           CSP. The built-in Cloudflare adapter applies the required hosting
-          policies.
+          policies. Also serve each document's <code>copy.json</code> as
+          <code>application/json; charset=utf-8</code> with the common no-store
+          and nosniff headers. This MIME rule is separate from
+          <code>security-headers.json</code>; the Cloudflare adapter supplies it,
+          while a generic host must configure it itself.
         </p>
         <aside class="docs-note">
           <p>
@@ -265,7 +293,8 @@ html-inbox remote status</code></pre>
         <p>
           <code>remote publish</code> deploys every current local document as a
           complete new snapshot and prints the production capability URL. Local
-          publishing and deletion do not deploy automatically.
+          publishing and deletion through the CLI, live viewer, or hub do not
+          deploy automatically.
         </p>
         <div class="docs-code">
           <pre
@@ -281,11 +310,19 @@ html-inbox remote status --json</code></pre>
           URL, test search and a document, and share that path rather than the
           site's root.
         </p>
+        <p>
+          Existing deployments do not change when the local CLI is updated.
+          Copy controls and their JSON resources appear after the owner generates
+          and publishes a new snapshot. Original document bytes and response
+          isolation policies remain intact.
+        </p>
         <h2 id="hosting-limits">Keep the snapshot within hosting limits</h2>
         <p>
           The current Cloudflare adapter checks a maximum of 20,000 upload files
           and 25 MiB per file before deployment. Generated viewer, document,
-          manifest, and policy files all contribute to the upload, so file count
+          manifest, and policy files all contribute to the upload. Version 0.4.0
+          adds a <code>copy.json</code> per document for saved text and code
+          copying, so file count
           is not the same as document count. Increasing
           <code>HTML_INBOX_MAX_BYTES</code> can let a local document exceed the
           remote file limit.

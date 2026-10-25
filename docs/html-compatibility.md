@@ -2,7 +2,7 @@
 
 HTML Inbox stores the original HTML file. Files beside it, such as `chart.png`,
 `styles.css`, and `app.js`, are not copied into the inbox. The document Content
-Security Policy blocks those resources in both the local viewer and served
+Security Policy blocks those resources in source viewers, local hubs, and served
 static snapshots.
 
 Publishing continues when validation reports a compatibility warning. A warning
@@ -34,8 +34,11 @@ are also blocked; attach handlers from an inline script instead.
 - `https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs`
 
 Use the Mermaid entry URL in a module script or an inline module import. Other
-remote script entry URLs produce warnings and are blocked. External images and
-stylesheets are blocked even when their host serves a supported script.
+remote script entry URLs produce advisory warnings. URLs outside the document
+CSP's script sources are blocked, but those sources include the Mermaid `dist/`
+subtree for module chunks and the Tailwind CDN origin. A noncanonical script URL
+inside those sources can warn and still load. External images and stylesheets
+remain blocked even when their host serves a supported script.
 
 ## Navigation and local references
 
@@ -51,3 +54,7 @@ Validation checks URL attributes in parsed markup. It does not inspect CSS
 `url()` or `@import`, or reliably detect resource URLs assembled by JavaScript.
 Those requests remain subject to the document CSP. Validation is a compatibility
 check, not a sanitizer; see the [threat model](threat-model.md).
+
+## Saved text and code copying
+
+The 0.4.0 reader extracts saved body text and numbered `<pre>` blocks without executing author code. Inline `<code>` alone is not a numbered block. Saved Mermaid `<pre>` content can be copied as diagram source; interactive changes, CSS visibility, and rendered visuals are not reconstructed. Native selection in the preview uses the browser's Copy command. See [copying saved content](architecture.md#copying-saved-content).

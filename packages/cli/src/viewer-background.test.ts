@@ -80,6 +80,10 @@ test("saved LAN configuration survives stop and --loopback resets it explicitly"
 test("malformed process records and abandoned startup locks recover without trusting a PID", async (t) => {
   const home = await temporaryHome(t);
   const port = await availablePort();
+  await saveViewerConfiguration(home, {
+    config: { port, exposure: "loopback", host: "127.0.0.1" },
+    urls: [`http://127.0.0.1:${port}`],
+  });
   await writeFile(path.join(home, "viewer.json"), "{broken");
   await writeFile(path.join(home, "viewer-start.lock"), JSON.stringify({ pid: 2_147_483_647, token: randomUUID() }));
 
