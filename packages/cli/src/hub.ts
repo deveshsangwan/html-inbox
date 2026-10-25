@@ -1,5 +1,6 @@
 import { parseHubConfig, type HubConfiguration } from "./hub-config";
 import { LocalDocumentSource } from "./local-document-source";
+import { createDocumentDeleter } from "./document-deletion";
 import { getMaxDocumentBytes } from "./publish-input";
 import { startHubHttpServer, type ViewerReaderServer } from "./viewer-http-server";
 import { resolveViewerNetworkConfig, type ViewerNetworkOptions } from "./viewer-network";
@@ -17,10 +18,14 @@ export function startHub(
   }
 
   const maximumDocumentBytes = getMaxDocumentBytes();
-  const mounts = config.sources.map(({ name, home, instanceId }) => ({
-    name,
-    source: new LocalDocumentSource({ home, instanceId }, maximumDocumentBytes),
+  const mounts = Promise.all(config.sources.map(async ({ name, home, instanceId }) => {
+    const deletion = await createDocumentDeleter({ home, instanceId }).then(
+      (deleteDocument) => ({ deleteDocument }),
+      (error: unknown) => ({ deleteDocument: async () => { throw error; } }),
+    );
+
+    return { name, source: new LocalDocumentSource({ home, instanceId }, maximumDocumentBytes), ...deletion };
   }));
 
-  return startHubHttpServer(mounts, network, { inboxName: config.name });
+  return mounts.then((sources) => startHubHttpServer(sources, network, { inboxName: config.name }));
 }

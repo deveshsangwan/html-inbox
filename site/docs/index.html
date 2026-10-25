@@ -155,6 +155,13 @@
           22.20.0 or newer; the HTML Inbox CLI needs Node.js 20 or newer. Both
           use npm. You do not need a source checkout.
         </p>
+        <p>
+          Live UI deletion requires a reader running 0.5.x. The skill fallback
+          stays pinned to published 0.4.0, with copy and named-inbox support but
+          no UI deletion. Before an authorized upgrade, review the
+          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
+          and saved exposure and hub mounts.
+        </p>
 
         <h2 id="agent-setup">Set up your agent</h2>
         <p>
@@ -176,8 +183,8 @@
         <p>
           The skill and CLI installers are independent. Adding a skill does not
           install a global executable. On first use, the skill reuses a working,
-          stable <code>html-inbox</code> 0.2.x, 0.3.x, or 0.4.x CLI or selects
-          <code>npx --yes html-inbox@0.3.0</code> for the operation. The fallback
+          stable <code>html-inbox</code> 0.2.x, 0.3.x, 0.4.x, or 0.5.x CLI or selects
+          <code>npx --yes html-inbox@0.4.0</code> for the operation. The fallback
           needs registry access or a cached package and preserves your existing
           viewer settings.
         </p>
@@ -190,12 +197,12 @@
 
         <h2 id="install">Install the CLI for terminal use</h2>
         <p>
-          Install the latest published package from npm. These docs describe the
-          0.4.0 release, including saved-text and code copying, named libraries,
-          the terminal picker, readable CLI output, and local reading hubs. Check actual
-          <code>--help</code> if a command is unavailable. The published 0.3.0
-          skill fallback supports named libraries and hubs but lacks the
-          <a href="viewer.html#copy">0.4.0 reader copy dialog</a>.
+          Install the latest published package from npm, then check its version.
+          Named libraries, the terminal picker, readable CLI output, and local
+          hubs require 0.3.0 or newer. Reader copying requires 0.4.0 or newer;
+          live UI deletion requires a running 0.5.x reader. The skill fallback
+          stays pinned to verified 0.4.0 and has no UI deletion. Check actual
+          <code>--help</code> and the running reader before relying on a feature.
         </p>
         <div class="docs-code">
           <pre
@@ -283,8 +290,12 @@ html-inbox viewer status</code></pre>
         </div>
         <p>
           <code>viewer</code> prints the inbox URL. Search in the browser by
-          title, type, or original file name. Use a document ID from
-          <code>list</code> when you want to remove a document.
+          title, type, or original file name. In a live viewer or hub, choose
+          <strong>Delete</strong> in a list row's three-dot menu or in document
+          options to remove one document. The confirmation shows its title, filename, and
+          inbox and defaults to Cancel. Every reachable live reader can delete,
+          on loopback, LAN, and Tailscale. Hub filters do not restrict this
+          authority. For CLI deletion, use a document ID from <code>list</code>.
         </p>
         <div class="docs-code">
           <pre
@@ -295,9 +306,12 @@ html-inbox viewer status</code></pre>
 html-inbox viewer stop</code></pre>
         </div>
         <p>
-          Deletion asks for confirmation in an interactive terminal. Stopping
-          the viewer preserves your library. Start it again whenever you need
-          it.
+          CLI deletion asks for confirmation in an interactive terminal.
+          Deletion is permanent, with no Undo or bulk deletion. The original
+          source file, existing exports, and remote snapshots remain unchanged.
+          Static copies are read-only and contain no live viewer credentials.
+          Stopping the viewer preserves your library. Start it again whenever
+          you need it.
         </p>
         <h2 id="next-step">Choose where readers can open it</h2>
         <div class="docs-cards">
@@ -349,10 +363,18 @@ html-inbox viewer stop</code></pre>
         </p>
         <h2 id="update">Update an installation</h2>
         <p>
+          An upgrade to 0.5.0 gives every reachable live reader permanent
+          deletion authority on all exposures and hub mounts after restart.
+          Before an authorized upgrade, review saved exposure and frozen hub
+          membership and follow the <a href="named-inboxes.html#upgrade-050">verified
+          shutdown and upgrade steps</a>. Publishing and process control stay
+          in the CLI; original source files and existing static snapshots remain unchanged.
+        </p>
+        <p>
           Update agent instructions separately using the
           <a href="agent-setup.html#update">skill update instructions</a>.
           Before changing CLI versions, stop an old viewer using the executable
-          that started it. Versions 0.2.x, 0.3.x, and 0.4.x share private control protocol 3;
+          that started it. Versions 0.2.x, 0.3.x, 0.4.x, and 0.5.x share private control protocol 3;
           incompatible 0.1.0 viewers need their original executable for shutdown.
           The CLI refuses to signal a process it cannot verify. Confirm the old viewer has stopped
           before installing the new version.

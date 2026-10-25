@@ -153,10 +153,17 @@
         <p class="docs-eyebrow">HTML Inbox documentation</p>
         <h1>CLI reference</h1>
         <p class="docs-lead">
-          This reference describes 0.4.0. Library commands resolve one destination
+          This reference describes 0.5.0. Library commands resolve one destination
           from explicit flags, environment, or the configured default. Run
           <code>html-inbox --help</code> for the actual installed command set
           and <code>html-inbox --version</code> to identify the release.
+        </p>
+        <p>
+          Live UI deletion requires a reader running 0.5.x. The skill fallback
+          stays pinned to published 0.4.0, with copy and named-inbox support but
+          no UI deletion. Before an authorized upgrade, review the
+          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
+          and saved exposure and hub mounts.
         </p>
 
         <h2 id="global">Help and version</h2>
@@ -172,8 +179,9 @@ html-inbox -v</code></pre>
         </div>
         <p>
           Help and version are top-level commands. Unknown commands and
-          unsupported flags return an error. The CLI has no browser
-          administration API.
+          unsupported flags return an error. Publishing and lifecycle control
+          have no reader HTTP endpoints. Live readers can permanently delete
+          individual documents.
         </p>
         <h2 id="selection">Library selection</h2>
         <p>
@@ -250,7 +258,7 @@ html-inbox delete &lt;id&gt; [--force] [--json]</code></pre>
           a readable table or JSON. <code>delete</code> requires the document
           ID, asks for confirmation unless <code>--force</code> is supplied, and
           reports metadata plus reclaimed bytes with <code>--json</code>.
-          Non-interactive or JSON deletion needs <code>--force</code>.
+          Non-interactive or JSON CLI deletion needs <code>--force</code>.
         </p>
         <h2 id="preferences">Appearance preferences</h2>
         <div class="docs-code">
@@ -267,6 +275,14 @@ html-inbox delete &lt;id&gt; [--force] [--json]</code></pre>
           resolved preference. Reading without <code>--appearance</code> does
           not create a preference file. Static exports capture the saved
           default when created.
+        </p>
+        <p>
+          In a live viewer or hub, choose <strong>Delete</strong> in a list
+          row's three-dot menu or in document options. The
+          <a href="viewer.html#delete">confirmation</a> defaults to Cancel and
+          identifies the title, filename, and inbox. Every reachable live reader
+          can delete, without a startup grant or reader login, on loopback, LAN,
+          and Tailscale. Static exported or hosted copies remain read-only.
         </p>
         <h2 id="viewer">Viewer</h2>
         <div class="docs-code">
@@ -489,13 +505,13 @@ html-inbox remote revoke [--yes] [--json]</code></pre>
           and catalog lists are readable tables. Plain publish, detached viewer
           startup, and hub startup retain URL-only stdout. Named context, picker
           text, and warnings go to stderr. JSON never prompts or grants approval;
-          deletion requires <code>--force</code> and revoke requires <code>--yes</code>.
+          CLI deletion requires <code>--force</code> and revoke requires <code>--yes</code>.
         </p>
         <p>
           Published 0.2.x viewer and service commands output JSON without that
           flag. Check actual help before using new flags with an older CLI. The
-          published 0.3.0 skill fallback supports named selection and hubs, but
-          its reader lacks the <a href="viewer.html#copy">0.4.0 copy controls</a>.
+          published 0.4.0 skill fallback supports named selection, hubs, and
+          <a href="viewer.html#copy">reader copy controls</a>, but has no UI deletion.
           See <a href="named-inboxes.html#upgrade">upgrade steps</a> and the
           <a href="https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/cli-resolution.md">canonical CLI resolver rules</a>.
         </p>

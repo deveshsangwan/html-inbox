@@ -51,13 +51,19 @@ The local document store exposes these operations:
 - `getDocument(id)` for original document bytes
 - `deleteDocument(id)`
 
-Deletion first renames a committed document into the private trash area so it disappears from the library atomically, then removes the trash record. Search is a server-rendered filter over title, type, and source file name. There is no update, sync, tags, auth, or database layer in the local product.
+Deletion first renames a committed document into the private trash area so it disappears from the library atomically, then removes the trash record. If removal fails after the rename, the document is already absent from the live library and the operation reports the cleanup failure. Trash is an internal cleanup location, with no Undo. Deletion preserves the original publish source file and existing exported or remote snapshots. Search is a server-rendered filter over title, type, and source file name. There is no update, sync, tags, auth, or database layer in the local product.
+
+The hub explicitly binds a deletion writer for each mounted source to its captured canonical root, durable inbox UUID, and filesystem identity. This binding supports existing local libraries accessible to the same OS account. It does not add mutation to arbitrary document sources. Each deletion revalidates that binding; an unavailable or replaced source fails without recreating directories or choosing another source. Catalog name changes and list filters cannot retarget it.
+
+Deletion runs in a short-lived helper using the existing Node executable. The helper checks its working directory against the captured inbox identity and performs mutations through relative paths. This keeps those operations attached to the selected root when its external pathname changes, without changing the viewer's working directory. A per-document lock serializes cooperating CLI, viewer, and hub deletions through quarantine and purge. A detected root change after removal reports a cleanup failure. Other same-account processes remain trusted; arbitrary concurrent changes to descendants are outside this guarantee.
 
 ## Viewer
 
-The viewer binds `127.0.0.1:3217` by default. Explicit LAN exposure selects a listening IP and serves the complete live inbox to reachable readers. Tailscale exposure keeps the backend on loopback and uses HTTPS Serve within the user's existing tailnet. Both viewers and hubs accept only HTTP GET and HEAD. Neither adds HTTP mutation or administration routes. Hubs run in the foreground on loopback port 3218 by default, support explicit LAN binding, and do not manage Tailscale Serve, boot services, or source lifecycles.
+The viewer binds `127.0.0.1:3217` by default. Explicit LAN exposure selects a listening IP and serves the complete live inbox to reachable readers. Tailscale exposure keeps the backend on loopback and uses HTTPS Serve within the user's existing tailnet. Every reachable live viewer or hub reader can permanently delete individual documents. There is no startup grant, reader login, or network-mode restriction. The owner's selected network determines which readers are trusted with this authority. Publishing, process control, service management, and hub membership have no reader HTTP endpoints. Hubs run in the foreground on loopback port 3218 by default, support explicit LAN binding, and do not manage Tailscale Serve, boot services, or source lifecycles.
 
 The reader accepts only explicit `Host` values derived from its configuration and reported interface URLs. Tailscale's exact verified DNS name is trusted configuration. Forwarded-host and identity headers do not authorize requests. The reader's `/health` response is anonymous. A separate loopback control listener returns the opaque inbox identity, protocol version, PID, and process identity through a private endpoint recorded under the inbox home.
+
+Live deletion requests require a process-scoped CSRF token and a matching Origin. These checks protect requests from other origins; they do not distinguish owners from reachable readers. Live shell responses use `frame-ancestors 'none'`. Stored document content retains its original bytes, opaque-origin iframe sandbox, and document CSP. Static exported or hosted snapshots are independent read-only copies and contain no live deletion controls or live viewer credentials.
 
 Use `HTML_INBOX_PORT` when the port is taken:
 
@@ -69,7 +75,7 @@ HTML_INBOX_PORT=4321 html-inbox viewer
 
 Native detachment creates a separate session on POSIX, but retains service-manager ownership such as a Linux systemd cgroup. Scope cleanup can terminate the detached viewer. Persistent availability requires an explicitly configured supervisor. Graceful shutdown logs its timestamp, PID, and first trigger before cleanup and completion after removing the matching process record. A signal reason identifies the received signal, not its sender.
 
-Versions 0.2.x, 0.3.x, and 0.4.x share private control protocol 3. Compatible running viewers retain their loaded code until restarted. The control health check is the source of truth for readiness. A viewer can be reused only when its protocol and opaque home identity match. Shutdown also matches the saved PID and per-process identity against current control health before signaling. Tailscale readiness additionally requires verification of the live Serve route. A private ownership journal tracks the exact HTTPS route and backend; startup failures and shutdown remove only that verified route, preserving the journal when external changes make cleanup unsafe.
+Versions 0.2.x, 0.3.x, 0.4.x, and 0.5.x share private control protocol 3. Compatible running viewers retain their loaded code until restarted. The control health check is the source of truth for readiness. A viewer can be reused only when its protocol and opaque home identity match. Shutdown also matches the saved PID and per-process identity against current control health before signaling. Tailscale readiness additionally requires verification of the live Serve route. A private ownership journal tracks the exact HTTPS route and backend; startup failures and shutdown remove only that verified route, preserving the journal when external changes make cleanup unsafe.
 
 Boot configuration is an explicit service operation. Linux systemd system units and macOS LaunchDaemons run the foreground viewer as a selected normal user before login. Definitions preserve the inbox, exposure, port, executable paths, and required environment. Installation and removal require administrator privileges, reject unrelated definitions, and preserve documents. See [service setup](self-hosting.md).
 
@@ -85,9 +91,9 @@ Extraction checks the configured input limit before parsing, but the existing st
 
 ## Appearance and reading layout
 
-The inbox list uses a compact header and responsive document rows. A document shell uses one toolbar with navigation, title, appearance, frame visibility, and a details menu. Hide frame removes the toolbar and document border/margins, leaving a Show frame control. The same iframe stays mounted so toggling retains its scroll and JavaScript state. Browser chrome remains outside the viewer's control.
+The inbox list uses a compact header and responsive document rows. A document shell uses one toolbar with navigation, title, appearance, frame visibility, and a details menu. Each live list row's three-dot menu and document options offer Delete for one document. Its modal identifies the title, filename, and inbox, defaults to Cancel, and explains permanent deletion and the retained source file and snapshots. There is no bulk deletion. Hide frame removes the toolbar and document border/margins, leaving a Show frame control. The same iframe stays mounted so toggling retains its scroll and JavaScript state. Browser chrome remains outside the viewer's control.
 
-`preferences.json` under the selected inbox home stores the setup appearance, `system`, `light`, or `dark`. A missing file resolves to System. `preferences --json` reads without creating a file; an explicit `--appearance` writes the preference. Reader routes remain read-only. The shell embeds the saved default for readers without a browser override, and a static export captures it at export time. Browser-local appearance overrides take priority, with System resolving against that reader's OS. They never update the local preferences file.
+`preferences.json` under the selected inbox home stores the setup appearance, `system`, `light`, or `dark`. A missing file resolves to System. `preferences --json` reads without creating a file; an explicit `--appearance` writes the preference. The reader has no preference-writing endpoint. The shell embeds the saved default for readers without a browser override, and a static export captures it at export time. Browser-local appearance overrides take priority, with System resolving against that reader's OS. They never update the local preferences file.
 
 Live viewer shells log unreadable preference errors and fall back to System so appearance settings cannot prevent reading documents. The invalid file is preserved; CLI preference commands and export paths retain strict validation.
 
@@ -118,7 +124,7 @@ Mermaid's CSP source includes its `dist/` subtree because the entry module loads
 
 ## Remote publishing
 
-Remote publishing follows [ADR 0001](adr/0001-static-remote-inbox.md). The local library remains the only mutable source of truth. A provider-independent module generates a complete static snapshot under a 128-bit capability path, and a deployment workflow sends that immutable snapshot through a Cloudflare Pages adapter. Administration remains local and the root of the deployed site does not list inboxes.
+Remote publishing follows [ADR 0001](adr/0001-static-remote-inbox.md). The local library remains the only mutable source of truth. A provider-independent module generates a complete static snapshot under a 128-bit capability path, and a deployment workflow sends that immutable snapshot through a Cloudflare Pages adapter. Remote publishing administration remains local and the root of the deployed site does not list inboxes. Live deletion changes only the source library; existing exports and deployments retain their copied documents until explicitly replaced or removed.
 
 The provider-independent export layout is:
 

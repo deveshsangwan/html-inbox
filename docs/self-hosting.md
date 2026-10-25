@@ -1,12 +1,16 @@
 # Run HTML Inbox on a home server
 
+Live UI deletion requires a reader running 0.5.x. The skill fallback stays pinned to published 0.4.0, with copy and named-inbox support but no UI deletion. Before an authorized upgrade, review the [0.5.0 permission change](named-inboxes.md#upgrade-to-050) and saved exposure and hub mounts.
+
 `html-inbox viewer` starts or reuses a detached viewer and returns after verifying that it is ready. The viewer survives terminal closure. `html-inbox viewer --foreground` keeps the process attached for debugging or an external service manager.
 
 Detachment does not provide supervision or escape the launching process's service-manager ownership. On Linux, a viewer launched inside an agent's transient systemd scope remains in that scope even though it has a separate session and process group. Stopping a scope with `KillMode=control-group` also stops its detached viewer. `nohup`, `disown`, or another session do not move a process to a different cgroup. Use the explicit [boot service](#start-at-boot) below when shared links must survive agent cleanup, logout, or reboot. Ordinary startup never installs that service or changes the manager's cleanup policy.
 
 Keep the same explicit `--inbox`, absolute `--home`, or process binding throughout viewer commands. When catalog entries exist, unbound scripts require a selector or configured default; only a fully interactive terminal offers a picker. See [named selection and upgrades](named-inboxes.md#upgrade-from-02x). In 0.3.0, add `--json` to viewer status/stop and service commands for machine-readable output.
 
-First startup listens on loopback. Choose `--lan` or `--tailscale` explicitly to share the viewer. LAN access trusts everyone who can reach the port. The browser can read documents; publishing and deletion remain CLI commands.
+First startup listens on loopback. Choose `--lan` or `--tailscale` explicitly to share the viewer. Every reachable reader can read and permanently delete individual documents in every mode. Deletion is enabled by default without a startup grant or reader login. The owner's selected network determines who receives that authority. Publishing and process control remain local CLI operations.
+
+Choose **Delete** from a live list row's three-dot menu or document options. The confirmation shows the title, filename, and inbox and defaults to Cancel. Deletion removes the stored document, retaining the original source file, existing exports, and remote snapshots. There is no Undo or bulk deletion. Static exported and hosted snapshots are read-only independent copies with no live viewer credentials. See [the live deletion boundary](threat-model.md#live-self-hosting).
 
 The last successful port and exposure are saved in the private inbox. Later starts and publishing reuse those settings unless you select a port or exposure explicitly. Stop the viewer before changing its exposure. `html-inbox viewer --loopback` resets saved exposure to loopback.
 

@@ -1,5 +1,7 @@
 # Moving a local inbox to Cloudflare Pages
 
+Live UI deletion requires a reader running 0.5.x. The skill fallback stays pinned to published 0.4.0, with copy and named-inbox support but no UI deletion. Before an authorized upgrade, review the [0.5.0 permission change](named-inboxes.md#upgrade-to-050) and saved exposure and hub mounts.
+
 Remote publishing does not move or mutate the local library. The selected library's `documents/` remains the only document source of truth; each remote update is a complete generated snapshot.
 
 Use the same intended selection for every command, including status and recovery. For the 0.3 upgrade, see [named-inbox migration](named-inboxes.md#upgrade-from-02x). Registered entries require an explicit selector, process binding, or configured default in automation.
@@ -12,7 +14,7 @@ Use the same intended selection for every command, including status and recovery
 4. Inspect a provider-independent export with `html-inbox export --out ./html-inbox-export`.
 5. Treat every document in the local library as part of one shared remote capability. Delete anything that should not be in that snapshot.
 
-Versions 0.2.x, 0.3.x, and 0.4.x share protocol version 3 and a private loopback control endpoint to match shutdown requests to a specific process. A new CLI refuses to reuse or signal an incompatible viewer. Stop a foreground viewer with Ctrl-C before upgrading, or use its original CLI to stop a detached viewer. Documents remain in the existing inbox.
+Versions 0.2.x, 0.3.x, 0.4.x, and 0.5.x share protocol version 3 and a private loopback control endpoint to match shutdown requests to a specific process. A new CLI refuses to reuse or signal an incompatible viewer. Stop a foreground viewer with Ctrl-C before upgrading, or use its original CLI to stop a detached viewer. Documents remain in the existing inbox.
 
 ## Configure Cloudflare
 
@@ -101,7 +103,7 @@ html-inbox remote revoke
 
 Revoke replaces the production site and rotates away from the shared capability. It does not delete older immutable deployment URLs. Remove sensitive historical deployments from the Cloudflare dashboard before treating the old content as inaccessible.
 
-The local viewer remains available throughout this process. Removing remote state or a Pages deployment is not a substitute for deleting local documents deliberately with `html-inbox delete`.
+The local viewer remains available throughout this process. Removing remote state or a Pages deployment is not a substitute for deleting local documents deliberately through the live viewer's **Delete** action or `html-inbox delete`. Live deletion leaves the original source file and existing exports and remote snapshots unchanged. Static copies remain read-only and contain no live viewer credentials. Replacing a local export requires an explicit export operation; updating or revoking a hosted snapshot requires an explicit remote operation.
 
 ## Copy controls in 0.4.0 snapshots
 

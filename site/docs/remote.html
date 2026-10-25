@@ -157,6 +157,13 @@
           separate from the live loopback, LAN, or Tailscale viewer and does not
           move your local documents.
         </p>
+        <p>
+          Live UI deletion requires a reader running 0.5.x. The skill fallback
+          stays pinned to published 0.4.0, with copy and named-inbox support but
+          no UI deletion. Before an authorized upgrade, review the
+          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
+          and saved exposure and hub mounts.
+        </p>
 
         <p>
           Remote commands operate on one selected library, not a hub's combined
@@ -180,6 +187,13 @@
           the document count, snapshot hash, and inbox path
           <code>/i/&lt;capability&gt;/</code>. The site's root deliberately has
           no inbox listing.
+        </p>
+        <p>
+          Exported and hosted snapshots are read-only independent copies. They
+          have no live deletion controls or live viewer credentials. Deleting
+          a document through the CLI, live viewer, or hub changes its source
+          inbox and leaves the original source file and existing snapshots
+          unchanged.
         </p>
         <p>
           The output must be outside <code>HTML_INBOX_HOME</code> and cannot
@@ -279,7 +293,8 @@ html-inbox remote status</code></pre>
         <p>
           <code>remote publish</code> deploys every current local document as a
           complete new snapshot and prints the production capability URL. Local
-          publishing and deletion do not deploy automatically.
+          publishing and deletion through the CLI, live viewer, or hub do not
+          deploy automatically.
         </p>
         <div class="docs-code">
           <pre

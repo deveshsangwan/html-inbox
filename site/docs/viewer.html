@@ -145,9 +145,17 @@
         <p class="docs-eyebrow">HTML Inbox documentation</p>
         <h1>Run the live viewer</h1>
         <p class="docs-lead">
-          The viewer reads the current local library. It runs in the background
-          by default, while publishing, deletion, and process control stay in
+          The viewer serves the current local library and runs in the background
+          by default. Every reachable live reader can read and permanently
+          delete individual documents. Publishing and process control stay in
           the CLI.
+        </p>
+        <p>
+          Live UI deletion requires a reader running 0.5.x. The skill fallback
+          stays pinned to published 0.4.0, with copy and named-inbox support but
+          no UI deletion. Before an authorized upgrade, review the
+          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
+          and saved exposure and hub mounts.
         </p>
 
         <h2 id="reading">Read with more document space</h2>
@@ -158,6 +166,32 @@
           available browser area, then use the small <strong>Show frame</strong>
           button to restore the toolbar. The document stays loaded and preserves
           its scroll and interactive state. Browser controls remain visible.
+        </p>
+        <h2 id="delete">Delete one document</h2>
+        <p>
+          Choose <strong>Delete</strong> from a live inbox list row's three-dot
+          menu or the document options menu. The confirmation shows the title, filename,
+          and inbox, explains permanent deletion, and defaults to Cancel.
+          Confirming removes the stored document from its original inbox.
+          There is no Undo or bulk deletion. The original source file, existing
+          exports, and remote snapshots remain unchanged.
+        </p>
+        <p>
+          Deletion is enabled by default on loopback, LAN, and Tailscale, without
+          a startup grant or reader login. The network you choose determines
+          who can read and delete documents. Every reachable live hub reader
+          can delete from every mounted inbox; source filters do not restrict
+          that authority. A hub binds each source's deletion writer to its
+          captured canonical root, inbox UUID, and filesystem identity under
+          the same OS account.
+        </p>
+        <p>
+          If a source is unavailable or replaced, deletion fails without
+          recreating it or choosing another target. Deletion first moves the
+          record out of the live library, then purges its files. If purge fails,
+          the document is already absent and the cleanup failure is reported.
+          Static exported and hosted snapshots are read-only independent copies
+          with no live deletion controls or live viewer credentials.
         </p>
         <h2 id="copy">Copy text and code</h2>
         <p>
@@ -179,7 +213,7 @@
           <strong>Select all</strong> and use your device's Copy command.
           This also works with ordinary HTTP LAN readers. Copying changes
           the reader's clipboard without changing an inbox. Named viewers,
-          the read-only hub, and new static snapshots share these controls.
+          the live hub, and new static snapshots share these controls.
         </p>
         <p>
           If text stays fully selected after <strong>Select all</strong>,
@@ -373,8 +407,9 @@ html-inbox viewer --loopback</code></pre>
           <a href="lan.html">LAN access</a> exposes the entire live library over
           HTTP to every reachable reader.
           <a href="tailscale.html">Tailscale access</a> uses HTTPS Serve and
-          your existing tailnet policy. No mode adds browser administration or
-          mutation routes.
+          your existing tailnet policy. Every reachable live reader can delete
+          documents in either mode. Publishing, process control, and service
+          management have no reader HTTP endpoints.
         </p>
         <h2 id="diagnostics">Find lifecycle diagnostics</h2>
         <p>

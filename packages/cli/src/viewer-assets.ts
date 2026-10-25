@@ -2,9 +2,10 @@ import { DOCUMENT_SCRIPT_CSP_SOURCES } from "./html-validation";
 import { MAX_DOCUMENT_COPY_JSON_BYTES } from "./document-copy";
 
 import { initializeViewer } from "./viewer-client";
+import { initializeDocumentDeletion } from "./viewer-deletion-client";
 import { initializeViewerCopy } from "./viewer-copy-client";
 
-export const VIEWER_SCRIPT = `(${initializeViewer.toString()})();\n(${initializeViewerCopy.toString()})(${MAX_DOCUMENT_COPY_JSON_BYTES});`;
+export const VIEWER_SCRIPT = `(${initializeViewer.toString()})();\n(${initializeViewerCopy.toString()})(${MAX_DOCUMENT_COPY_JSON_BYTES});\n(${initializeDocumentDeletion.toString()})();`;
 
 export const VIEWER_STYLES = `
 :root {
@@ -21,6 +22,10 @@ export const VIEWER_STYLES = `
   --accent-soft: #dce4ff;
   --accent-contrast: #f7f8ff;
   --focus: #3858c7;
+  --danger: #b42332;
+  --danger-soft: #fcebed;
+  --danger-fill: #a82030;
+  --danger-contrast: #ffffff;
   --iframe-canvas: #ffffff;
   --radius: 0.5rem;
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -40,6 +45,10 @@ export const VIEWER_STYLES = `
   --accent-soft: #202b50;
   --accent-contrast: #0e1222;
   --focus: #91a5ff;
+  --danger: #ffa0aa;
+  --danger-soft: #382029;
+  --danger-fill: #f3a1aa;
+  --danger-contrast: #310e13;
   --iframe-canvas: #101217;
   color-scheme: dark;
 }
@@ -233,6 +242,15 @@ h1 { margin: 0; color: var(--text-strong); font-weight: 650; letter-spacing: -0.
   text-decoration: none;
 }
 .doc__title::after { content: ""; position: absolute; inset: 0; }
+.doc--deletable { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(4rem, 7rem) auto auto; grid-template-areas: "title source type date action"; }
+.doc__actions { z-index: 1; grid-area: action; }
+.doc__actions[open] { z-index: 5; }
+.doc__actions > summary { font-size: 1.5rem; }
+.doc__actions-panel { width: 10rem; padding: 0.25rem; }
+.doc__actions-delete { justify-content: flex-start; width: 100%; }
+.delete-action { color: var(--danger); }
+.delete-action:hover { color: var(--danger); background: var(--danger-soft); }
+.viewer-menu__delete { justify-content: flex-start; width: 100%; margin-top: 1rem; border-top: 1px solid var(--border); border-radius: 0; }
 .doc__source { grid-area: source; min-width: 0; overflow: hidden; color: var(--faint); font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
 .document-date { grid-area: date; color: var(--muted); font-size: 0.75rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .document-type {
@@ -375,8 +393,37 @@ iframe { display: block; width: 100%; height: 100%; background: var(--iframe-can
 [data-frame-hidden] .preview-frame { margin: 0; border: 0; border-radius: 0; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .doc__title:focus-visible { outline-offset: 0.25rem; }
+.deletion-notice { margin: 0.75rem 0; padding: 0.75rem; color: var(--text-strong); background: var(--accent-soft); border: 1px solid var(--border); border-radius: var(--radius); overflow-wrap: anywhere; }
+.delete-dialog {
+  width: min(30rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 1.25rem;
+  overflow: auto;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.24);
+  font: inherit;
+}
+.delete-dialog::backdrop { background: rgb(0 0 0 / 0.5); }
+.delete-dialog h2 { margin: 0; color: var(--text-strong); font-size: 1.125rem; line-height: 1.4; }
+.delete-dialog p { margin: 0.75rem 0; }
+.delete-dialog__details { display: grid; gap: 0.25rem; margin: 1rem 0; overflow-wrap: anywhere; }
+.delete-dialog__details dt { color: var(--faint); font-size: 0.75rem; }
+.delete-dialog__details dd { margin: 0 0 0.5rem; color: var(--text-strong); }
+.delete-dialog__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; margin-top: 1.25rem; }
+.delete-dialog__cancel { background: var(--surface); border-color: var(--border-strong); }
+.delete-dialog__confirm { color: var(--danger-contrast); background: var(--danger-fill); border-color: var(--danger-fill); }
+.delete-dialog__confirm:hover { color: var(--danger-contrast); background: var(--danger-fill); filter: brightness(0.92); }
+.delete-dialog__error { color: var(--danger); }
+.delete-dialog__review { display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--accent); }
+.delete-dialog button:disabled { opacity: 0.65; cursor: default; }
+.delete-dialog[aria-busy="true"] button:disabled { cursor: wait; }
 @media (max-width: 52rem) {
   .doc { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "title date" "source type"; }
+  .doc--deletable { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "title date action" "source type action"; }
   .document-type { justify-self: end; }
 }
 @media (max-width: 42rem) {
@@ -395,6 +442,7 @@ iframe { display: block; width: 100%; height: 100%; background: var(--iframe-can
 @media (max-width: 30rem) {
   .document-type { max-width: 5.5rem; }
   .doc { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "title type" "source source" "date date"; gap: 0.25rem 0.5rem; }
+  .doc--deletable { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "title title action" "source type action" "date date action"; }
   .document-date { white-space: normal; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -403,6 +451,8 @@ iframe { display: block; width: 100%; height: 100%; background: var(--iframe-can
 `;
 
 export const SHELL_CSP = "default-src 'none'; script-src 'self'; style-src 'self'; frame-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'";
+
+export const LIVE_SHELL_CSP = `${SHELL_CSP}; frame-ancestors 'none'`;
 
 // Direct content URLs also need an opaque origin. Keep this in the response
 // policy because CSP sandbox directives do not work in HTML meta elements.

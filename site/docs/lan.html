@@ -147,7 +147,14 @@
         <p class="docs-lead">
           Choose LAN exposure explicitly when other devices should read the live
           library. Every device that can reach the listening port can browse,
-          search, and open every document.
+          search, open, and permanently delete any document.
+        </p>
+        <p>
+          Live UI deletion requires a reader running 0.5.x. The skill fallback
+          stays pinned to published 0.4.0, with copy and named-inbox support but
+          no UI deletion. Before an authorized upgrade, review the
+          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
+          and saved exposure and hub mounts.
         </p>
         <p>
           Keep the same <code>--inbox</code>, absolute <code>--home</code>, or
@@ -180,7 +187,7 @@ html-inbox viewer --lan</code></pre>
             LAN mode has no password, login, or shared reader token. Traffic
             uses HTTP. Choose this mode only when you trust everyone who can
             reach the port to read the complete library, including document
-            metadata.
+            metadata, and permanently delete documents.
           </p>
         </aside>
         <h2 id="selected-address">Choose an address and port</h2>
@@ -231,10 +238,21 @@ html-inbox viewer --lan</code></pre>
         </p>
         <h2 id="reader-boundary">Keep management local</h2>
         <p>
-          LAN readers can browse and search the inbox and open documents. They
-          cannot publish, delete, start, stop, or configure a service through
-          the browser. Run those commands locally under the account that owns
-          the inbox.
+          LAN readers can browse and search the inbox, open documents, and
+          permanently delete individual documents. Choose
+          <strong>Delete</strong> in a list row's three-dot menu or in document
+          options. The confirmation identifies the title, filename, and inbox and defaults
+          to Cancel. Deletion needs no startup grant or separate reader login.
+          Publishing, process control, and service configuration remain local
+          CLI operations.
+        </p>
+        <p>
+          The original source file, existing exports, and remote snapshots
+          remain unchanged. There is no Undo or bulk deletion. In a live hub,
+          every reachable reader can delete from every mounted inbox, even when
+          its standalone viewer is stopped or private. Filters do not restrict
+          that authority. Static exported and hosted copies are read-only and
+          contain no live viewer credentials.
         </p>
         <div class="docs-code">
           <pre
@@ -255,6 +273,13 @@ html-inbox viewer status</code></pre>
           readers. Client-supplied forwarding or Tailscale identity headers
           grant no access. Public reader health is anonymous, and process
           identity remains on a separate protected local control path.
+        </p>
+        <p>
+          Live deletion also requires the process-scoped CSRF token and a
+          matching Origin. Live shells use
+          <code>frame-ancestors 'none'</code>. These checks protect requests from
+          other origins while every reachable reader retains deletion
+          authority. The document sandbox and content CSP remain intact.
         </p>
         <h2 id="stop">Stop sharing</h2>
         <div class="docs-code">

@@ -4,15 +4,15 @@
 
 HTML Inbox is a local library for generated HTML reports, notes, and dashboards. The CLI validates and stores each document, then opens it through a viewer with an isolated document frame and a restrictive Content Security Policy. The viewer listens on loopback by default, with explicit LAN and Tailscale reader modes for self-hosting.
 
-HTML Inbox is local-first. Publishing, deletion, and process management stay in the local CLI. Optional Cloudflare Pages publishing deploys complete static snapshots; LAN and Tailscale modes serve the live library. See [ADR 0001](docs/adr/0001-static-remote-inbox.md).
+HTML Inbox is local-first. Every reachable live viewer or hub reader can permanently delete individual documents. Publishing and process management stay in the local CLI. Optional Cloudflare Pages publishing deploys complete read-only static snapshots; LAN and Tailscale modes serve the live library. See [ADR 0001](docs/adr/0001-static-remote-inbox.md).
 
 The CLI is packaged as a self-contained `html-inbox` executable with no runtime package dependencies.
 
-Version 0.4.0 adds copying saved document text, selected passages, and code blocks from the reader. Named independent libraries and the read-only local hub introduced in 0.3.0 remain available. See [named inboxes and local reading](docs/named-inboxes.md) for selection, source membership, and exposure rules. Check the executable's `--help` for each command and flag; a checkout's version number alone does not prove support.
+Version 0.5.0 adds permanent single-document deletion for every reachable live viewer and hub reader. UI deletion requires a running 0.5.x reader. Version 0.4.0 includes reader copying, and 0.3.0 introduced named independent libraries and local hubs. See [named inboxes and local reading](docs/named-inboxes.md) for selection, source membership, and exposure rules. Check the executable's `--help` and the running reader for actual capabilities. Updating a skill does not update the CLI or a running viewer.
 
 Library commands select explicit `--inbox` / `--home`, then process `HTML_INBOX_NAME` / `HTML_INBOX_HOME`, then a configured default. Without a binding or default, registered entries require a one-operation choice by exact name or `#N` row in a fully interactive terminal. Redirecting stdin, stdout, or stderr disables the picker. Pipelines, non-TTY callers, and `--json` fail with available names and selector guidance on stderr, leaving stdout empty. Even one entry requires a choice. With no registered entries, legacy `~/.html-inbox` first use remains. A choice never saves a current inbox or default.
 
-Use `html-inbox inbox list --running [--json]` for registered, verified running viewers. Human status, catalog, and document lists use text or tables; use advertised `--json` flags for automation. Check running-only, viewer JSON, and service JSON support separately. Plain publish, detached viewer startup, and hub startup retain URL-only stdout. In 0.3.0, viewer status/stop and service commands print readable text by default; add `--json` in scripts that previously parsed their default JSON. Published 0.2.x commands emit JSON without that flag; check help before adding it to an older executable. JSON never prompts; deletion still requires `--force` and remote revocation `--yes`.
+Use `html-inbox inbox list --running [--json]` for registered, verified running viewers. Human status, catalog, and document lists use text or tables; use advertised `--json` flags for automation. Check running-only, viewer JSON, and service JSON support separately. Plain publish, detached viewer startup, and hub startup retain URL-only stdout. In 0.3.0, viewer status/stop and service commands print readable text by default; add `--json` in scripts that previously parsed their default JSON. Published 0.2.x commands emit JSON without that flag; check help before adding it to an older executable. JSON never prompts; CLI deletion still requires `--force` and remote revocation `--yes`.
 
 ## Set up your agent
 
@@ -24,7 +24,7 @@ npx skills add deveshsangwan/html-inbox --skill html-inbox -g
 
 The skill installs agent instructions. The npm package supplies the executable. The installers are independent: adding a skill does not install a global CLI, and installing the CLI does not add a skill.
 
-On first use, the skill reuses a working, stable `html-inbox` 0.2.x, 0.3.x, or 0.4.x executable or selects the tested fallback `npx --yes html-inbox@0.3.0`. That fallback supports named libraries and hubs but lacks the 0.4.0 reader copy dialog. The [CLI resolution reference](skills/html-inbox/references/cli-resolution.md) defines the exact acceptance rules and fallback pin. It keeps that command prefix for the operation and preserves your inbox selection, catalog, port, saved viewer exposure, and Tailscale executable override. It checks actual command support before using newer features and reports unavailable capabilities without changing your destination or upgrading the pin. The HTML Inbox runtime requires Node.js 20 or newer. The fallback needs npm and registry access or a cached package.
+On first use, the skill reuses a working, stable `html-inbox` 0.2.x, 0.3.x, 0.4.x, or 0.5.x executable or selects the tested fallback `npx --yes html-inbox@0.4.0`. That published fallback supports named libraries, hubs, and reader copying, but has no UI deletion. The [CLI resolution reference](skills/html-inbox/references/cli-resolution.md) defines the exact acceptance rules and fallback pin. It keeps that command prefix for the operation and preserves your inbox selection, catalog, port, saved viewer exposure, and Tailscale executable override. It checks actual command support before using newer features and reports unavailable capabilities without changing your destination or upgrading the pin. The HTML Inbox runtime requires Node.js 20 or newer. The fallback needs npm and registry access or a cached package.
 
 `-g` installs the skill for your user across projects. Omit it to install in the current project. The installer lets you choose target agents; use `--agent codex` or `--agent claude-code` to choose explicitly:
 
@@ -75,7 +75,11 @@ For a project installation, run `npx skills update html-inbox -p` from that proj
 
 You can also rerun the original individual `skills add` command with the same scope and agent selection. Refresh the complete skill directory, including bundled references and scripts. The skill's npm fallback stays pinned to its tested version until updated skill instructions change it.
 
-For 0.4.0, restart a verified viewer after updating to load the copy controls. Existing static readers gain them only through owner-controlled snapshot regeneration and publishing. There is no new CLI or permission migration from 0.3.x.
+Upgrading from 0.2.x, 0.3.x, or 0.4.x to 0.5.0 changes live reader permissions. After an authorized update and restart, every reachable loopback, LAN, and Tailscale reader can permanently delete individual documents. Every live hub reader can delete from all mounted inboxes, including stopped or privately served sources; filters do not limit authority. Deletion is always available in 0.5.x. Publishing, process control, and hub membership stay in the local CLI. Original source files and existing static copies remain unchanged, and static snapshots remain read-only.
+
+Before an authorized upgrade, review saved exposure and frozen hub membership because these determine who gains deletion authority. Stop each old viewer with the executable that started it and the same inbox binding, then confirm shutdown through status. Use Ctrl-C for foreground viewers and hubs. Keep the old executable until shutdown is verified, then upgrade and restart the intended viewers and hubs. Existing session authorization covers these steps when it includes the permission change.
+
+Versions 0.2.x through 0.5.x share private control protocol 3. Compatible running viewers keep their loaded code until restarted. The 0.5.0 update preserves stored documents and saved exposure. Existing static readers gain 0.4.0 copy controls only through owner-controlled snapshot regeneration and publishing.
 
 For the 0.3 upgrade, add `--json` to viewer status/stop and service commands used by automation. Once catalog entries exist, bind unbound jobs with `--inbox`, absolute `--home`, `HTML_INBOX_NAME` / `HTML_INBOX_HOME`, or a deliberate default. With no entries, legacy home selection remains. The [named-inbox migration guide](docs/named-inboxes.md#upgrade-from-02x) covers the change.
 
@@ -129,7 +133,7 @@ Use `html-inbox viewer --foreground` to keep it attached for debugging, containe
 
 Detachment does not escape an agent's systemd scope or provide automatic restart. If that scope is stopped, its viewer stops too. Use the explicit [boot service](docs/self-hosting.md#start-at-boot) for links that must survive agent cleanup, logout, or reboot.
 
-Versions 0.2.x, 0.3.x, and 0.4.x share private control protocol 3. Stop a viewer started by 0.1.0 with its original executable before upgrading; newer CLIs refuse to signal incompatible or unverified process records. Restart an existing compatible viewer after updating to load the new code and reader controls.
+Versions 0.2.x, 0.3.x, 0.4.x, and 0.5.x share private control protocol 3. Stop a viewer started by 0.1.0 with its original executable before upgrading; newer CLIs refuse to signal incompatible or unverified process records. Restart an existing compatible viewer after updating to load the new code and reader controls.
 
 Manage the local library and viewer:
 
@@ -140,7 +144,9 @@ html-inbox viewer status
 html-inbox viewer stop
 ```
 
-Use `--json` with `publish`, `list`, `preferences`, `delete`, viewer status/stop, or service commands for automation. Non-interactive deletion requires `--force`. The viewer also supports server-rendered search across title, type, and source file name.
+Use `--json` with `publish`, `list`, `preferences`, `delete`, viewer status/stop, or service commands for automation. Non-interactive CLI deletion requires `--force`. The viewer also supports server-rendered search across title, type, and source file name.
+
+In a live viewer or combined hub, choose **Delete** from a document's three-dot menu in the list or its document options. The confirmation shows the title, filename, and inbox, explains permanent deletion, and defaults to Cancel. Confirming removes that document from its original inbox. There is no Undo or bulk deletion. The original source file, existing exports, and remote snapshots remain unchanged. Static exported or hosted copies are read-only and contain no live viewer credentials.
 
 ## Reading documents and appearance
 
@@ -148,7 +154,7 @@ The inbox has a compact searchable list. Documents open beneath a slim toolbar o
 
 Choose **Viewer options → Copy content...** to copy saved **Document text** or individual **Code blocks** as plain text. Use **Copy all**, select a portion and choose **Copy selection**, or pick a numbered code block. Code indentation, tabs, and trailing whitespace are preserved after normal HTML parsing. The preview stays loaded while the dialog is open.
 
-Copy text comes from the saved HTML, so scripted changes, edited form values, and chart visuals may be missing; CSS-hidden text can remain. To copy a selection from the current preview, use the browser's keyboard, context menu, or touch Copy. When automatic copying is unavailable or denied, use **Select all** in the dialog and your device's Copy command. This fallback also supports ordinary HTTP LAN readers. Copying changes only the reader's clipboard, and works in named viewers, the read-only hub, and newly generated static snapshots.
+Copy text comes from the saved HTML, so scripted changes, edited form values, and chart visuals may be missing; CSS-hidden text can remain. To copy a selection from the current preview, use the browser's keyboard, context menu, or touch Copy. When automatic copying is unavailable or denied, use **Select all** in the dialog and your device's Copy command. This fallback also supports ordinary HTTP LAN readers. Copying changes only the reader's clipboard, and works in named viewers, the live hub, and newly generated static snapshots.
 
 If text stays fully selected after **Select all**, close and reopen the dialog before selecting a smaller portion.
 
@@ -185,7 +191,7 @@ html-inbox viewer --tailscale
 
 Tailscale must already be signed in, with MagicDNS and HTTPS available. Reader access follows your tailnet policy. HTML Inbox keeps its backend on loopback, checks existing Serve and Funnel configuration, and refuses a conflicting route. It reports the verified HTTPS tailnet URL. It never installs Tailscale, logs in, changes access rules, enables Funnel, or resets all Serve configuration. Cleanup removes only its verified owned route. See the [Tailscale integration notes](docs/tailscale.md).
 
-`--loopback`, `--lan`, and `--tailscale` are mutually exclusive. Status reports the active mode and URLs. Commands without explicit networking options reuse the saved configuration, including after `viewer stop`. To return an exposed viewer to loopback, run `viewer stop`, then `viewer --loopback`. Publishing through the local CLI updates the live inbox for its readers. All HTTP routes remain read-only, and reader health responses contain no inbox or process identity.
+`--loopback`, `--lan`, and `--tailscale` are mutually exclusive. Status reports the active mode and URLs. Commands without explicit networking options reuse the saved configuration, including after `viewer stop`. To return an exposed viewer to loopback, run `viewer stop`, then `viewer --loopback`. Publishing through the local CLI updates the live inbox for its readers. Every reachable reader can also delete documents, with no startup grant, login, or mode restriction. Reader health responses contain no inbox or process identity; publishing and lifecycle control have no reader HTTP endpoints.
 
 ## Start the viewer at boot
 
@@ -254,7 +260,7 @@ HTML Inbox accepts UTF-8 `.html` and `.htm` files. HTTPS links in `<a href>` are
 
 Document-relative assets also produce advisory warnings. See [HTML compatibility](docs/html-compatibility.md) for supported resources and ways to embed them.
 
-Documents render inside an iframe sandbox without `allow-same-origin`, popup, or top-navigation permission. Links and allowed scripts can navigate the current preview frame; `_blank` links remain blocked. Viewer responses default to `no-referrer`, but author markup or script can override that policy or place data directly in a destination URL. Do not open stored document files directly in a browser. Choose LAN or Tailscale exposure explicitly and share the viewer only with readers you trust to see the complete live library.
+Documents render inside an iframe sandbox without `allow-same-origin`, popup, or top-navigation permission. Links and allowed scripts can navigate the current preview frame; `_blank` links remain blocked. Viewer responses default to `no-referrer`, but author markup or script can override that policy or place data directly in a destination URL. Do not open stored document files directly in a browser. Choose LAN or Tailscale exposure explicitly. Everyone who can reach the live viewer can read and delete documents in the complete library; hub filters do not restrict that authority.
 
 See [the architecture](docs/architecture.md) and [threat model](docs/threat-model.md) before changing storage, validation, rendering, or hosting behavior.
 

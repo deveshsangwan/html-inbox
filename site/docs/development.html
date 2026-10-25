@@ -152,6 +152,13 @@
           Use Node.js 24 for the source workspace and its release tooling. The
           published CLI continues to support Node.js 20 or newer.
         </p>
+        <p>
+          Live UI deletion requires a reader running 0.5.x. The skill fallback
+          stays pinned to published 0.4.0, with copy and named-inbox support but
+          no UI deletion. Before an authorized upgrade, review the
+          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
+          and saved exposure and hub mounts.
+        </p>
 
         <h2 id="source-checkout">Set up a source checkout</h2>
         <div class="docs-code">
@@ -294,11 +301,15 @@ corepack pnpm verify</code></pre>
           public boundaries.
         </p>
         <p>
-          Keep viewer and hub HTTP routes read-only with GET/HEAD only. Preserve
-          metadata escaping and document isolation, and exercise process identity before adding any process
-          action. Changes to external integration should use recording commands
-          and temporary paths in tests, with real host checks performed
-          deliberately.
+          Preserve metadata escaping, document sandbox and CSP, Host checks,
+          and the private process-control boundary. Live single-document
+          deletion requires the process-scoped CSRF token and matching Origin;
+          live shells use <code>frame-ancestors 'none'</code>. Every reachable
+          live reader can delete, regardless of network mode or hub filters.
+          Bind hub writers to each captured local source identity. Keep static
+          snapshots read-only and free of live viewer credentials. Changes
+          to external integration should use recording commands and temporary
+          paths in tests, with real host checks performed deliberately.
         </p>
         <p>
           Use

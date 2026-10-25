@@ -155,6 +155,13 @@
           or newer and npm. The HTML Inbox CLI itself supports Node.js 20 or
           newer. A source checkout and a global CLI installation are optional.
         </p>
+        <p>
+          Live UI deletion requires a reader running 0.5.x. The skill fallback
+          stays pinned to published 0.4.0, with copy and named-inbox support but
+          no UI deletion. Before an authorized upgrade, review the
+          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
+          and saved exposure and hub mounts.
+        </p>
 
         <h2 id="install">Install the main skill</h2>
         <div class="command">
@@ -218,15 +225,15 @@
         </p>
         <p>
           A successful <code>html-inbox --version</code> returning a single
-          stable 0.2.x, 0.3.x, or 0.4.x version selects the installed executable. A missing,
+          stable 0.2.x, 0.3.x, 0.4.x, or 0.5.x version selects the installed executable. A missing,
           failed, malformed, older, prerelease, or newer minor or major version
           selects the tested npm fallback. The skill checks that the fallback
-          reports exactly 0.3.0 before continuing. The
+          reports exactly 0.4.0 before continuing. The
           <a href="https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/cli-resolution.md">CLI resolution reference</a>
           defines the exact accepted version forms and pin.
         </p>
         <div class="docs-code">
-          <pre role="region" tabindex="0" aria-label="Pinned fallback verification command"><code>npx --yes html-inbox@0.3.0 --version</code></pre>
+          <pre role="region" tabindex="0" aria-label="Pinned fallback verification command"><code>npx --yes html-inbox@0.4.0 --version</code></pre>
         </div>
         <p>
           The fallback runs the package through npm without installing a global
@@ -267,9 +274,9 @@ html-inbox list --json
 html-inbox viewer status --json</code></pre>
         </div>
         <p>
-          The published 0.3.0 fallback supports named selection, hubs, the picker,
-          publish JSON, and viewer/service JSON flags. Its reader lacks the
-          <a href="viewer.html#copy">0.4.0 copy controls</a>. Check actual help
+          The published 0.4.0 fallback supports named selection, hubs, the picker,
+          publish JSON, viewer/service JSON flags, and
+          <a href="viewer.html#copy">reader copy controls</a>. It has no UI deletion. Check actual help
           before using each capability, including <code>inbox list --running</code>.
           Published 0.2.x viewer status/stop and service commands return JSON
           without a flag. A missing feature does not authorize changing the
@@ -285,7 +292,7 @@ html-inbox viewer status --json</code></pre>
         </p>
         <p>
           The agent checks whether the selected CLI supports
-          <code>preferences</code> before saving the choice. The pinned 0.3.0
+          <code>preferences</code> before saving the choice. The pinned 0.4.0
           fallback supports this command; an older installed CLI such as 0.2.0
           may not. A CLI with preference support can save a different default:
         </p>
@@ -321,6 +328,14 @@ html-inbox viewer status --json</code></pre>
         </p>
 
         <h2 id="update">Update skills separately from the CLI</h2>
+        <p>
+          An upgrade to 0.5.0 gives every reachable live reader permanent
+          deletion authority on all exposures and hub mounts after restart.
+          Before an authorized upgrade, review saved exposure and frozen hub
+          membership and follow the <a href="named-inboxes.html#upgrade-050">verified
+          shutdown and upgrade steps</a>. Publishing and process control stay
+          in the CLI; original source files and existing static snapshots remain unchanged.
+        </p>
         <p>Update the global main skill by name:</p>
         <div class="docs-code">
           <pre role="region" tabindex="0" aria-label="Global main skill update command"><code>npx skills update html-inbox -g</code></pre>
@@ -356,7 +371,7 @@ html-inbox viewer status --json</code></pre>
           exposure settings.
         </p>
         <p>
-          Versions 0.2.x, 0.3.x, and 0.4.x share protocol version 3. A 0.1.0 viewer needs its
+          Versions 0.2.x, 0.3.x, 0.4.x, and 0.5.x share protocol version 3. A 0.1.0 viewer needs its
           original executable for shutdown before upgrading. Restart an
           existing viewer after a CLI update to load the new code, including
           the shutdown diagnostics introduced in 0.2.2.

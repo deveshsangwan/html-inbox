@@ -29,9 +29,9 @@ try {
   assert.deepEqual(await readdir(environment.npm_config_prefix), ["lib"], "Fallback prefix must contain only npm's empty layout");
   assert.deepEqual(await readdir(path.join(environment.npm_config_prefix, "lib")), [], "Fallback must not reuse a global installation");
 
-  console.log("Checking documented resolver with npx --yes html-inbox@0.3.0 and an empty consumer/cache.");
+  console.log("Checking documented resolver with npx --yes html-inbox@0.4.0 and an empty consumer/cache.");
   const version = await runCli(resolution, ["--version"], consumerRoot, environment);
-  assert.equal(version.stdout.trim(), "0.3.0", "Fallback version gate must select the pinned release");
+  assert.equal(version.stdout.trim(), "0.4.0", "Fallback version gate must select the pinned release");
   await verifyCachedPackage(environment.npm_config_cache);
   const help = await runCli(resolution, ["--help"], consumerRoot, environment);
   assert.match(help.stdout, /viewer service install \[--user <normal-user>\] \[viewer networking options\]/);
@@ -213,7 +213,7 @@ async function verifyCachedPackage(cache) {
 
   assert.equal(packages.length, 1, "Fresh npx cache must contain one real registry installation");
   assert.equal(packages[0].name, "html-inbox");
-  assert.equal(packages[0].version, "0.3.0");
+  assert.equal(packages[0].version, "0.4.0");
   assert.deepEqual(packages[0].bin, { "html-inbox": "bundle/index.js" });
 }
 
@@ -475,8 +475,20 @@ async function verifyDocument(url, originalHtml) {
   assert.equal(shell.status, 200);
   const shellHtml = await shell.text();
   assert.match(shellHtml, /<iframe sandbox="allow-scripts"/);
-  assert.doesNotMatch(shellHtml, /data-copy-open|data-copy-dialog/, "Published 0.3.0 fallback must not claim the 0.4 copy reader");
-  assert.equal((await fetch(`${url.href}/copy.json`, { signal: AbortSignal.timeout(3000) })).status, 404);
+  assert.match(shellHtml, /data-copy-open/, "Published 0.4.0 fallback must include reader copy controls");
+  assert.match(shellHtml, /data-copy-dialog/);
+  assert.doesNotMatch(shellHtml, /data-delete-document|data-delete-dialog|data-delete-form/, "Published 0.4.0 fallback must not claim the 0.5 deletion controls");
+
+  const copy = await fetch(`${url.href}/copy.json`, { signal: AbortSignal.timeout(3000) });
+  assert.equal(copy.status, 200);
+  assert.match(copy.headers.get("content-type"), /^application\/json/);
+  assert.deepEqual(await copy.json(), {
+    schemaVersion: 1,
+    status: "ready",
+    text: "Pinned registry content\nDetached viewer test.",
+    codeBlocks: [],
+  });
+
   const content = await fetch(`${url.href}/content`, { signal: AbortSignal.timeout(3000) });
   assert.equal(content.status, 200);
   assert.match(content.headers.get("content-security-policy"), /connect-src 'none'/);

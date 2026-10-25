@@ -2,6 +2,23 @@
 
 All notable changes to HTML Inbox will be documented here.
 
+## 0.5.0 - 2026-10-25
+
+- Add permanent single-document deletion to live list-row menus and document options, with a confirmation naming the title, filename, and inbox and defaulting to Cancel. There is no Undo or bulk deletion.
+- Give every reachable live loopback, LAN, Tailscale, and hub reader deletion authority. Hub readers can delete from every mounted inbox, regardless of filters or standalone viewer exposure. Publishing, process control, and hub membership remain local CLI operations.
+- Protect live requests with process-scoped CSRF tokens, matching Origin, Host validation, and `frame-ancestors 'none'`. Preserve the original document sandbox, CSP, and bytes.
+- Bind hub deletion to each captured canonical root, inbox UUID, and filesystem identity. Revalidate the source and use a root-bound helper and per-document lock; fail on unavailable or replaced sources without creating storage or choosing another target.
+- Remove the record from the live library before purging its files, and report a cleanup failure accurately when the record is already absent. Preserve original source files and existing exports and remote snapshots. Static copies remain read-only and contain no live deletion controls or viewer credentials.
+- Retain 0.4.0 copy controls and their selectable-text fallback, named inbox and JSON behavior, Windows catalog locks, and shutdown diagnostics. Accept stable installed 0.5.x CLIs in both skills, alongside 0.2.x through 0.4.x, with the published and verified 0.4.0 fallback.
+
+### Upgrade to 0.5.0
+
+This is a permission change for live readers upgrading from 0.2.x, 0.3.x, or 0.4.x. After restart on 0.5.0, every reachable reader can permanently delete documents on every live exposure and every hub mount. Deletion is always available, and filters do not limit its authority. Before an authorized upgrade, review saved exposure and frozen hub membership to understand who gains deletion authority. See the [upgrade instructions](docs/named-inboxes.md#upgrade-to-050).
+
+Stop old viewers with their original verified CLI and the same library binding, and confirm shutdown before installing the update. Use Ctrl-C for foreground viewers and hubs. Retain the old executable until shutdown is verified; follow the existing service update workflow for boot installations. Versions 0.2.x through 0.5.x share private control protocol 3, but installing an executable does not reload a running viewer. Stored documents, preferences, and saved exposure persist. Publishing and process control stay in the CLI. Original source files and existing static copies remain unchanged, and static snapshots stay read-only.
+
+Package publication and upgrading a running installation are separate operations. The skills keep their fallback pinned to published 0.4.0, which includes reader copying and named inboxes but has no UI deletion.
+
 ## 0.4.0 - 2026-10-25
 
 - Add Viewer options → Copy content for saved document text, selected passages in the dialog, and individual preformatted code blocks as plain text.

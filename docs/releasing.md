@@ -2,6 +2,14 @@
 
 The source workspace uses Node.js 24, Corepack, and the pinned pnpm lockfile. The published `html-inbox` CLI supports Node.js 20 or newer and contains one self-contained ncc executable with no runtime package dependencies. Publish `packages/cli`, never the private workspace root.
 
+## Prepare 0.5.0
+
+Check that the intended version is unused before publication. Keep both independently installed skills pinned to the published, verified 0.4.0 fallback; it supports copy and named inboxes but has no UI deletion. Resolver acceptance of installed stable 0.5.x is separate from the fallback pin.
+
+The 0.5.0 upgrade changes live reader permissions for 0.2.x through 0.4.x installations. After an authorized upgrade and restart, every reachable loopback, LAN, Tailscale, and hub reader can permanently delete documents, including every mounted inbox regardless of source filters or standalone viewer exposure. Deletion is always available. Publishing, process control, and hub membership remain CLI operations. Original source files and existing static copies remain unchanged; static snapshots remain read-only. Keep private control protocol 3 compatibility with 0.2.x and later.
+
+Include the [upgrade consequences and verified shutdown procedure](named-inboxes.md#upgrade-to-050) in release notes. Audit the final candidate's root README, packed README, all current guides, site, CLI help, and both skills. Retain copy fallback, MIME, upload-file count, frozen membership, and source identity details and the previous shutdown, named-inbox/Windows-lock/JSON, and DOM-readiness corrections. Preserve historical investigations and previous changelog entries as evidence. Record exact files, hashes, commands, results, and remaining gaps. Package publication and upgrading running installations are separate operations; publication does not change installed CLIs, viewers, services, or saved configuration.
+
 ## Prepare a version
 
 1. Update `packages/cli/package.json` and `CHANGELOG.md` together. Never reuse a version that npm has accepted.

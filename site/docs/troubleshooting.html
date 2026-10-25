@@ -157,6 +157,13 @@
           preserve records and owned routes when the CLI cannot establish that a
           process or external configuration belongs to it.
         </p>
+        <p>
+          Live UI deletion requires a reader running 0.5.x. The skill fallback
+          stays pinned to published 0.4.0, with copy and named-inbox support but
+          no UI deletion. Before an authorized upgrade, review the
+          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
+          and saved exposure and hub mounts.
+        </p>
 
         <h2 id="selection">An inbox choice is required</h2>
         <p>
@@ -173,8 +180,8 @@
           status/stop and service commands after upgrading. Published 0.2.x
           commands lack those new flags. Check actual help and preserve the
           destination if an older executable lacks a requested capability.
-          The published 0.3.0 fallback supports named inboxes and hubs, but
-          the reader copy dialog requires 0.4.0. See <a href="named-inboxes.html#upgrade">migration steps</a>.
+          The published 0.4.0 fallback supports named inboxes, hubs, and the
+          reader copy dialog, but has no UI deletion. See <a href="named-inboxes.html#upgrade">migration steps</a>.
         </p>
         <h2 id="viewer">Viewer does not start</h2>
         <p>
@@ -216,11 +223,19 @@ html-inbox viewer --foreground</code></pre>
         </p>
         <h2 id="upgrade">Older viewer record blocks an upgrade</h2>
         <p>
+          An upgrade to 0.5.0 gives every reachable live reader permanent
+          deletion authority on all exposures and hub mounts after restart.
+          Before an authorized upgrade, review saved exposure and frozen hub
+          membership and follow the <a href="named-inboxes.html#upgrade-050">verified
+          shutdown and upgrade steps</a>. Publishing and process control stay
+          in the CLI; original source files and existing static snapshots remain unchanged.
+        </p>
+        <p>
           Stop the old process with its previous executable before installing a
           newer release. For an old foreground process, use Ctrl-C. The new CLI
           refuses an incompatible private control protocol rather than
           signaling an unverified PID. This applies to 0.1.0 viewers; 0.2.x,
-          0.3.x, and 0.4.x share protocol version 3. Restart an existing viewer after updating
+          0.3.x, 0.4.x, and 0.5.x share protocol version 3. Restart an existing viewer after updating
           to load new code, including the 0.2.2 shutdown diagnostics and 0.4.0 copy controls.
         </p>
         <p>

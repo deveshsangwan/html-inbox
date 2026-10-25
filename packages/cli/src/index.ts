@@ -21,6 +21,7 @@ import { resolveInboxSelection, type ResolvedInboxSelection } from "./inbox-sele
 import { runInboxCommand, runHubCommand } from "./inbox-commands";
 import { formatDocumentTable, formatViewerServiceResult, formatViewerStatus, formatViewerStopResult } from "./cli-display";
 import { promptForInbox } from "./inbox-picker";
+import { runDocumentDeletionWorker } from "./document-deletion-worker";
 
 export const USAGE = `Usage: html-inbox <command> [options]
 
@@ -54,6 +55,7 @@ Commands:
       --foreground stays attached. First startup is loopback-only.
       Use viewer service install for supervision beyond the launching agent's lifetime.
       LAN trusts all reachable readers; Tailscale uses existing HTTPS Serve.
+      Every reachable live reader can read and permanently delete stored documents.
       Omitted networking options reuse the saved configuration.
 
   viewer status [--json]
@@ -73,10 +75,10 @@ Commands:
       Name independent libraries, inspect their local state, or choose a fallback.
 
   hub init --config <absolute-path> --inbox <name> [--inbox <name> ...] [--name <title>]
-      Capture explicit reading membership in a new local config.
+      Capture explicit library membership in a new local config.
   hub --config <absolute-path> [--port <port>] [--loopback|--lan] [--host <ip>]
       Serve selected local libraries in the foreground. Default: loopback port 3218.
-      Every reachable reader can read all selected libraries. Ctrl-C stops the hub.
+      Every reachable reader can read and delete from all selected libraries. Ctrl-C stops the hub.
 
 Options:
   --inbox <name>  Select a registered library for this operation.
@@ -474,7 +476,11 @@ function formatBytes(value: number): string {
 }
 
 if (require.main === module) {
-  void main().catch((error) => {
+  const isDeletionWorker = process.argv.length === 3 && process.argv[2] === "__delete-document" &&
+    typeof process.send === "function" && process.connected;
+  const execution = isDeletionWorker ? runDocumentDeletionWorker() : main();
+
+  void execution.catch((error) => {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`html-inbox: ${message}`);
     process.exitCode = 1;

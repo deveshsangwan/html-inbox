@@ -8,7 +8,7 @@ import { LocalDocumentBackend } from "./backend";
 import { startHub, DEFAULT_HUB_PORT } from "./hub";
 import { type HubConfiguration } from "./hub-config";
 import { temporaryHome } from "./test-fixtures";
-import { DOCUMENT_CSP, SHELL_CSP } from "./viewer-assets";
+import { DOCUMENT_CSP, LIVE_SHELL_CSP } from "./viewer-assets";
 import { startViewerHttpServer } from "./viewer-http-server";
 import { resolveViewerNetworkConfig } from "./viewer-network";
 import { getInboxInstanceId } from "./viewer-records";
@@ -34,7 +34,7 @@ test("hub reads stopped viewers, namespaces colliding IDs, and preserves origina
 
   const baseUrl = hub.urls[0];
   const index = await fetch(baseUrl);
-  assert.equal(index.headers.get("content-security-policy"), SHELL_CSP);
+  assert.equal(index.headers.get("content-security-policy"), LIVE_SHELL_CSP);
   const indexHtml = await index.text();
   assert.match(indexHtml, /<h1 class="library__title">My reports &#60;local&#62;<\/h1>/);
   assert.match(indexHtml, /2 documents/);
@@ -45,7 +45,7 @@ test("hub reads stopped viewers, namespaces colliding IDs, and preserves origina
     assert(indexHtml.includes(`href="${documentPath}"`));
     assert(indexHtml.includes(`<span class="inbox-badge">${source.config.name}</span>`));
     const shell = await fetch(`${baseUrl}${documentPath}`);
-    assert.equal(shell.headers.get("content-security-policy"), SHELL_CSP);
+    assert.equal(shell.headers.get("content-security-policy"), LIVE_SHELL_CSP);
     const shellHtml = await shell.text();
     assert(shellHtml.includes(`<iframe sandbox="allow-scripts" src="${documentPath}/content"`));
     assert(shellHtml.includes(`href="/?inbox=${source.config.name}"`));

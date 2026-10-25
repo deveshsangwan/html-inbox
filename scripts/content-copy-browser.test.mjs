@@ -504,7 +504,7 @@ for (const mode of ["local", "static"]) {
       document.body.focus();
     });
     await documentFrame.focus();
-    await page.keyboard.press("Control+c");
+    await page.keyboard.press("ControlOrMeta+c");
     assert.equal(await frame.locator("body").evaluate(() => window.nativeCopyEvents), 1);
     assert.deepEqual(await writes(page), []);
   });
@@ -624,7 +624,7 @@ for (const mode of ["local", "static"]) {
     await openCopy(page);
     assert.equal(await page.locator("[data-copy-preview]").inputValue(), adversarialText);
     assert.equal(await page.locator("body").getAttribute("data-compromised"), null);
-    assert.equal(await page.locator("dialog script, dialog img, dialog svg, dialog iframe, dialog form, dialog style").count(), 0);
+    assert.equal(await page.locator("[data-copy-dialog]").locator("script, img, svg, iframe, form, style").count(), 0);
     assert.equal(await page.locator("iframe").count(), 1);
     assert.deepEqual(await writes(page), []);
     assert.deepEqual(requests, [fixture.copyUrl]);

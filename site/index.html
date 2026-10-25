@@ -354,8 +354,8 @@
             <h2 id="hosting-title">Read locally. Or on your home server.</h2>
             <p>
               Choose who can reach the live inbox. Network readers can browse,
-              search and open documents. Publishing and deletion stay in your
-              local CLI.
+              search, open, and permanently delete documents. Publishing and
+              process management stay in your local CLI.
             </p>
           </div>
           <div
@@ -415,10 +415,17 @@
           </p>
 
           <p class="landing-access-note">
+            Live UI deletion requires a reader running 0.5.x. The skill fallback
+            stays pinned to published 0.4.0, with copy and named inboxes but no UI
+            deletion. Before an authorized upgrade, review the
+            <a href="docs/named-inboxes.html#upgrade-050">deletion permission
+            change</a> for all exposures and hub mounts.
+          </p>
+          <p class="landing-access-note">
             In 0.3.0, name independent libraries and choose each destination
             explicitly. A local hub reads selected libraries together on this
             machine without starting their viewers. Every reachable hub reader
-            can read every selected library.
+            can read and permanently delete from every selected library in 0.5.0.
             <a href="docs/named-inboxes.html">Set up named inboxes and a reading hub</a>.
             Version 0.4.0 also lets readers
             <a href="docs/viewer.html#copy">copy saved text, selected passages, and code</a>
