@@ -372,8 +372,11 @@ icacls &quot;$env:HTML_INBOX_HOME&quot; /T</code></pre>
         <p>
           Back up the complete selected inbox to preserve documents, metadata,
           configuration, and remote intent. Keep the backup as private as the
-          original. Stop the viewer and any remote command or automation first
-          so your copy is not racing file changes.
+          original. Stop its standalone viewer and every hub mounting the
+          inbox. Wait for pending writes to finish, and keep all other local
+          writers, including publishing, deletion, remote commands, and
+          automation, stopped until the copy finishes. A stopped standalone
+          viewer does not prevent deletion through a running hub.
         </p>
         <p>
           Do not run an old active process record or copy locks as evidence that
