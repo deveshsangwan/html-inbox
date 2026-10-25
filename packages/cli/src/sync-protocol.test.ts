@@ -253,10 +253,26 @@ test("authorization rejects wrong credential, peer, target, revision, direction 
   assert.equal((await f.b.store.listDocuments()).length, 0);
 });
 
-test("129 descriptors paginate one immutable cut; missing pages, changed scope, nonce replay and expiry fail", { timeout: 30_000 }, async (t) => {
+// The aggregate budget covers 129 sequential durable seed publications; protocol requests keep their own bounds.
+test("129 descriptors paginate one immutable cut; missing pages, changed scope, nonce replay and expiry fail", { timeout: 120_000 }, async (t) => {
+  const startedAt = performance.now();
+  let stage = "setup";
+  let returnedSeeds = 0;
+
+  function reportProgress(nextStage: string, event = "entered") {
+    stage = nextStage;
+    t.diagnostic(`pagination ${JSON.stringify({ elapsedMs: Number((performance.now() - startedAt).toFixed(3)), stage, returnedSeeds, event })}`);
+  }
+
+  t.after(() => reportProgress(stage, "teardown entered"));
+  reportProgress("setup");
   const f = await pair(t, { sourceListener: true });
+  reportProgress("setup", "completed");
+  reportProgress("seed publications");
   for (let index = 0; index < 129; index += 1) {
     await f.a.store.publish(input, `page-${String(index).padStart(3, "0")}`);
+    returnedSeeds += 1;
+    if (returnedSeeds % 32 === 0 || returnedSeeds === 129) reportProgress("seed publications", "returned");
   }
 
   const sourceClient = new SyncClient(f.a.store, f.a.peerId, f.credentials);
@@ -264,31 +280,66 @@ test("129 descriptors paginate one immutable cut; missing pages, changed scope, 
   const auth = routeAuthorization(f.outbound);
   const receiveAuth = routeAuthorization(f.inbound);
   const nonce = opaqueToken();
+  reportProgress("receiver identity");
   const receiveSession = await sourceClient.json(auth, "identity", { nonce }, parseIdentityResponse, WIRE_LIMITS.identity);
+  reportProgress("receiver identity", "completed");
+  reportProgress("inventory cut");
   const cut = await f.a.store.inventory(auth);
+  reportProgress("inventory cut", "completed");
   const evidence = createEvidence(f.outbound, f.a.peerId, receiveSession.challengeNonce, cut);
   const finalPage = { evidence, pageNumber: 1, descriptors: cut.states.slice(128), nextCursor: null };
+  reportProgress("missing page rejection");
   await assert.rejects(sourceClient.json(auth, "manifest", { op: "push", sessionId: receiveSession.sessionId, page: finalPage }, parseReadiness, WIRE_LIMITS.readiness), (error: unknown) => error instanceof SyncProtocolError && error.status === 409);
+  reportProgress("missing page rejection", "checked");
   const firstPage = { evidence, pageNumber: 0, descriptors: cut.states.slice(0, 128), nextCursor: opaqueToken() };
+  reportProgress("first push page");
   await sourceClient.json(auth, "manifest", { op: "push", sessionId: receiveSession.sessionId, page: firstPage }, (value) => value, WIRE_LIMITS.readiness);
+  reportProgress("first push page", "completed");
+  reportProgress("changed nonce rejection");
   await assert.rejects(sourceClient.json(auth, "manifest", { op: "push", sessionId: receiveSession.sessionId, page: { ...finalPage, evidence: { ...evidence, nonce: opaqueToken() } } }, parseReadiness, WIRE_LIMITS.readiness));
+  reportProgress("changed nonce rejection", "checked");
+  reportProgress("changed scope rejection");
   await assert.rejects(sourceClient.json(auth, "manifest", { op: "push", sessionId: receiveSession.sessionId, page: { ...finalPage, evidence: { ...evidence, scope: [] } } }, parseReadiness, WIRE_LIMITS.readiness));
+  reportProgress("changed scope rejection", "checked");
+  reportProgress("incomplete history checkpoint check");
   assert.equal(Object.keys((await f.b.store.snapshot()).historyCheckpoints).length, 0);
+  reportProgress("incomplete history checkpoint check", "checked");
+  reportProgress("final push page and readiness");
   const ready = await sourceClient.json(auth, "manifest", { op: "push", sessionId: receiveSession.sessionId, page: finalPage }, parseReadiness, WIRE_LIMITS.readiness);
+  reportProgress("final push page and readiness", "completed");
+  reportProgress("activation nonce rejection");
   await assert.rejects(f.a.store.activateOutbound(auth, ready, evidence, opaqueToken(), f.b.peerId), /locally issued/);
+  reportProgress("activation nonce rejection", "checked");
+  reportProgress("activation");
   await f.a.store.activateOutbound(auth, ready, evidence, nonce, f.b.peerId);
+  reportProgress("activation", "completed");
+  reportProgress("completed push replay rejection");
   await assert.rejects(sourceClient.json(auth, "manifest", { op: "push", sessionId: receiveSession.sessionId, page: finalPage }, parseReadiness, WIRE_LIMITS.readiness));
+  reportProgress("completed push replay rejection", "checked");
   const pullNonce = opaqueToken();
+  reportProgress("source identity");
   const sourceSession = await receiverClient.json(receiveAuth, "identity", { nonce: pullNonce }, parseIdentityResponse, WIRE_LIMITS.identity);
+  reportProgress("source identity", "completed");
+  reportProgress("first pull page");
   const page1 = await receiverClient.json(receiveAuth, "manifest", { op: "pull", sessionId: sourceSession.sessionId, cursor: null }, parseManifestPage, WIRE_LIMITS.page);
   assert.equal(page1.descriptors.length, 128);
   assert.ok(page1.nextCursor);
+  reportProgress("first pull page", "checked");
+  reportProgress("after-cut publication");
   await f.a.store.publish(input, "after-cut");
+  reportProgress("after-cut publication", "completed");
+  reportProgress("second pull page");
   const page2 = await receiverClient.json(receiveAuth, "manifest", { op: "pull", sessionId: sourceSession.sessionId, cursor: page1.nextCursor }, parseManifestPage, WIRE_LIMITS.page);
+  reportProgress("second pull page", "completed");
+  reportProgress("immutable page checks");
   assert.equal(page2.descriptors.length, 1);
   assert.equal(page2.evidence.count, 129);
   assert.deepEqual(page1.evidence, page2.evidence);
+  reportProgress("immutable page checks", "checked");
+  reportProgress("cursor replay rejection");
   await assert.rejects(receiverClient.json(receiveAuth, "manifest", { op: "pull", sessionId: sourceSession.sessionId, cursor: page1.nextCursor }, parseManifestPage, WIRE_LIMITS.page));
+  reportProgress("cursor replay rejection", "checked");
+  reportProgress("assertions done", "completed");
 });
 
 test("expired and exhausted sessions are bounded without activation", { timeout: 20_000 }, async (t) => {

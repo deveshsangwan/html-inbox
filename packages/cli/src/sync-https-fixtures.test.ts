@@ -252,7 +252,9 @@ test("real subprocess HTTPS fixtures validate trust, faults and cleanup", { time
   await upstream.stop();
   for (const child of children) {
     assert.equal(child.isRunning, false);
-    assert.throws(() => process.kill(child.pid, 0), /ESRCH/);
+    const stopped = await child.stop();
+    assert(stopped.code !== null || stopped.signal !== null);
+    await assert.rejects(child.stats(), /HTTPS fixture child closed/);
     await assertListenerReleased(child.url);
   }
 

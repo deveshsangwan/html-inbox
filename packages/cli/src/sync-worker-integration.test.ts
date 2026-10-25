@@ -187,6 +187,13 @@ for (const startup of ["normal", "recoverable history gate", "recoverable histor
       const source = path.join(a.root, "report.html");
       const bytes = "<!doctype html><html><body>actual secured worker payload</body></html>";
       await writeFile(source, bytes);
+
+      if (startup !== "normal") {
+        // Keep fixture CLI startup outside the publication's real foreground deadline.
+        assert.equal(parseObject((await a.run(["sync", "worker", "status", "--inbox", a.name])).worker, "worker").running, true);
+        assert.equal((await new ManagedSyncStore(b.home).listDocuments()).length, 0);
+      }
+
       const startedAt = Date.now();
       const publishArgs = ["publish", source, "--title", "Confirmed", "--type", "report", "--inbox", a.name, "--wait-ms", startup === "recoverable history deadline" ? "1000" : "5000"];
       const published = startup === "normal" ? await a.run(publishArgs, 0, { HTML_INBOX_PORT: String(viewerPort) }) :
@@ -194,13 +201,13 @@ for (const startup of ["normal", "recoverable history gate", "recoverable histor
           assert.equal(status.status, "blocked");
           assert.equal(status.lastError, "Trusted terminal history is required");
           assert.equal(status.isCommitted, false);
-          assert.equal(parseObject((await a.run(["sync", "worker", "status", "--inbox", a.name])).worker, "worker").running, true);
           assert.equal((await new ManagedSyncStore(b.home).listDocuments()).length, 0);
+
           if (startup === "recoverable history gate") {
             await b.run(["sync", "worker", "enable", "--inbox", b.name]);
           }
 
-          t.diagnostic("Observed actual history-blocked item with a recoverable route error and running worker before receiver startup");
+          t.diagnostic("Observed actual history-blocked item and empty destination before receiver startup; source worker verified before publication");
         }, startup === "recoverable history deadline" ? 2 : 0);
       const delivery = parseObject(published.delivery, "delivery");
       if (startup === "recoverable history deadline") {

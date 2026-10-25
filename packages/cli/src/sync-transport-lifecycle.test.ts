@@ -370,17 +370,24 @@ for (const termination of ["disconnect", "quiesce", "server-close"] as const) {
       entered();
       return pending;
     });
-    t.after(async () => {
+    t.after(() => {
       release();
-      await heldLock;
       // Original red cleanup settles only the retained fixture response; it is never a production fix.
       if (endpoint.server.status().counters.activeRequests) {
         bodyResponse?.emit("close");
       }
     });
-    const pulling = assert.rejects(client.pullBody(auth, session.sessionId, state, { requestMs: termination === "disconnect" ? 250 : 3000 }));
-    await reachedPin;
+    const request = client.pullBody(auth, session.sessionId, state, { requestMs: termination === "disconnect" ? 250 : 3000 });
+    const pulling = assert.rejects(request);
+    void pulling.catch(() => {});
+    const failures: unknown[] = [];
     try {
+      if (termination === "disconnect") {
+        await Promise.race([reachedPin, pulling.then(() => { throw new Error("Body request settled before pin admission"); })]);
+      } else {
+        await reachedPin;
+      }
+
       if (termination === "quiesce") {
         await source.quiesceRoute(routes.outbound.id, Date.now() + 600);
       }
@@ -394,11 +401,20 @@ for (const termination of ["disconnect", "quiesce", "server-close"] as const) {
       await until(() => bodyResponse?.destroyed, (destroyed) => destroyed === true, "owned response closed");
       await until(() => endpoint.server.status().counters.activeRequests, (count) => count === 0, "closed response releases attempt before pin lock", 600);
       await source.quiesceRoute(routes.outbound.id, Date.now() + 600);
+    } catch (error) {
+      failures.push(error);
     } finally {
       release();
-      await heldLock;
-      await pinned;
+      const lockAndRequest = await Promise.allSettled([heldLock, pulling]);
+      // Releasing the lock can admit the late pin before its promise is assigned.
+      const results = [...lockAndRequest, ...await Promise.allSettled([pinned])];
+      for (const result of results) {
+        if (result.status === "rejected" && !failures.includes(result.reason)) failures.push(result.reason);
+      }
     }
+
+    if (failures.length === 1) throw failures[0];
+    if (failures.length > 1) throw new AggregateError(failures, "Body response test and cleanup failed");
 
     await until(() => endpoint.server.status(), (status) => status.sessions === 0 && status.sockets === 0 && status.counters.activeRequests === 0, "expired/released interrupted session");
     assert.equal((await receiver.listDocuments()).length, 0);

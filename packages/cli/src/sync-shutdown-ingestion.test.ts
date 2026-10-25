@@ -2,18 +2,20 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import fs, { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import platformTest from "node:test";
+import { performance } from "node:perf_hooks";
+import platformTest, { type TestContext } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import { ManagedSyncStore } from "./sync-store";
 import { createSyncHttpsCredentials } from "./sync-https-fixtures";
 import { defaultRuntimeConfig } from "./sync-runtime-config";
 import { reconcileSyncRoutes } from "./sync-reconciliation";
 import { acquireSyncOwnership, readSyncOwnership } from "./sync-files";
-import { canonicalKey, parseAuthorization } from "./sync-model";
+import { canonicalKey, parseAuthorization, parseObject } from "./sync-model";
 import { workerPaths, readWorkerRecordOffline } from "./sync-worker-records";
 import { availablePort } from "./test-fixtures";
 import { errorCauses, shutdownFixture } from "./sync-shutdown-fixtures";
 import { waitUntil } from "./sync-worker-fault-fixtures";
+import { startProtocolFaultChild } from "./sync-protocol-fault-child";
 
 const test = process.platform === "win32" ? platformTest.skip : platformTest;
 const originalBytes = Buffer.from("\ufeff<!doctype html>\r\n<html><body>admitted mutation π</body></html>\r\n");
@@ -60,8 +62,33 @@ for (const operation of ["terminal", "body", "history", "activation"] as const) 
         return file.fd !== -1 && name !== undefined && (name === paths.directory || path.dirname(name) === paths.directory);
       });
       assert.equal(ownershipHandles.length, 2, "capture the actual retained lifetime file and directory handles");
-      const run = () => reconcileSyncRoutes({ store: isPull ? receiver : source, peerId: isPull ? receiverId : sourceId,
-        credentials: () => ({ token, ca }), routeIds: [route.id], requestMs: 3000, deadlineMs: 5000 });
+      let sourceRunner: Awaited<ReturnType<typeof startProtocolFaultChild>> | undefined;
+      if (operation === "body" && !timeout) {
+        const context: Pick<TestContext, "after" | "diagnostic"> = { after(close) {
+          if (close) {
+            f.cleanup.push(async () => {
+              await close(t, () => {});
+              await remote.recover();
+            });
+          }
+        }, diagnostic(message) { t.diagnostic(message); } };
+        sourceRunner = await startProtocolFaultChild(context, { mode: "runner", home: remoteLedger.ownerAnchor.home,
+          peerId: sourceId, token, caPath: tls.caPath });
+      }
+
+      async function run() {
+        if (!sourceRunner) {
+          return reconcileSyncRoutes({ store: isPull ? receiver : source, peerId: isPull ? receiverId : sourceId,
+            credentials: () => ({ token, ca }), routeIds: [route.id], requestMs: 3000, deadlineMs: 5000 });
+        }
+
+        const reply = await sourceRunner.command({ type: "run", routeIds: [route.id], requestMs: 3000, deadlineMs: 5000 });
+        assert.equal(reply.error, undefined);
+        const result = parseObject(reply.result, "source reconciliation");
+        assert.ok(Array.isArray(result.routes));
+        return { ...result, routes: result.routes.map((value) => parseObject(value, "source route result")) };
+      }
+
       const id = "admitted-mutation";
       await source.publish(input, id);
       if (operation === "terminal") {
@@ -109,8 +136,63 @@ for (const operation of ["terminal", "body", "history", "activation"] as const) 
 
       const running = run();
       void running.catch(() => {});
-      f.cleanup.push(async () => { release(); await running.catch(() => {}); });
-      await waitUntil("real admitted mutation seam", async () => hits, (value) => value === 1, 4000);
+      let passObservation: { state: "pending" | "fulfilled" | "rejected";
+        routes?: { status: string | null; lastError: string | null; historyReady: boolean | null }[];
+        counters?: Record<string, number>; errorName?: string | null; errorCode?: string | null } = { state: "pending" };
+      const boundedCode = (value: unknown) => typeof value === "string" && /^[A-Za-z][A-Za-z0-9_-]{0,95}$/.test(value) ? value : null;
+      void running.then((result) => {
+        passObservation = { state: "fulfilled" };
+        try {
+          passObservation.routes = result.routes.slice(0, 1).map((value) => ({ status: boundedCode(value.status),
+            lastError: boundedCode(value.lastError), historyReady: typeof value.historyReady === "boolean" ? value.historyReady : null }));
+          const counters = "counters" in result ? result.counters : undefined;
+          if (counters && typeof counters === "object") {
+            passObservation.counters = {};
+            for (const name of ["requests", "requestBytes", "responseBytes"]) {
+              const value: unknown = Reflect.get(counters, name);
+              if (typeof value === "number" && Number.isSafeInteger(value) && value >= 0) passObservation.counters[name] = value;
+            }
+          }
+        } catch {
+          // Observing a result must not reject or alter the original pass.
+        }
+      }, (error: unknown) => {
+        passObservation = { state: "rejected" };
+        try {
+          if (error instanceof Error) passObservation.errorName = boundedCode(error.name);
+          if (error && typeof error === "object" && "code" in error) passObservation.errorCode = boundedCode(error.code);
+        } catch {
+          // Error metadata is optional; the original rejection remains intact.
+        }
+      });
+      f.cleanup.push(async () => {
+        release();
+        if (!sourceRunner) {
+          await running.catch(() => {});
+          return;
+        }
+
+        const results = await Promise.allSettled([running, worker.close()]);
+        const failures = results.flatMap((result) => result.status === "rejected" ? [result.reason] : []);
+        if (failures.length) throw new AggregateError(failures, "Source command or admitted receiver cleanup failed");
+      });
+      const observationStarted = performance.now();
+      let reads = 0;
+      let lastValue: number | null = null;
+      let lastReadElapsedMs = 0;
+      const observeAdmission = () => t.diagnostic(`admission observation ${JSON.stringify({ operation, timeout, reads, lastValue,
+        lastReadElapsedMs, elapsedMs: performance.now() - observationStarted, pass: passObservation })}`);
+      try {
+        await waitUntil("real admitted mutation seam", async () => {
+          const value = hits;
+          reads += 1;
+          lastValue = value;
+          lastReadElapsedMs = performance.now() - observationStarted;
+          return value;
+        }, (value) => value === 1, 4000);
+      } catch (error) {
+        try { observeAdmission(); } finally { throw error; }
+      }
       assert.equal(hits, 1);
       const ownerBytes = await readFile(paths.lifetime);
       const before = await f.store.snapshot();
@@ -169,6 +251,7 @@ for (const operation of ["terminal", "body", "history", "activation"] as const) 
       assert.equal((await f.store.snapshot()).generation, after.generation, "successful quiescence permits no later admitted store mutation");
       await waitUntil("completed route inspections dispose their handles", async () => f.handles.filter((file) => file.fd !== -1).length, (count) => count === 0, 1000);
       await f.assertHandlesClosed();
+      observeAdmission();
       t.diagnostic(`one real ${operation} hold; ${timeout ? "failed close retained authority" : "successful close waited for settlement"}; exact listeners rebound during teardown`);
     });
   }

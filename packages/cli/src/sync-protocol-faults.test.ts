@@ -804,9 +804,17 @@ for (const quota of ["bytes", "files"]) {
     const staging = path.join(f.receiver.home, "sync", "staging");
     const streams: ReturnType<typeof partialBody>[] = [];
     try {
+      const preparedOffers: Awaited<ReturnType<typeof request>>[] = [];
+      if (quota === "files") {
+        for (let index = 0; index < count; index += 1) {
+          const server = servers[Math.floor(index / 4)];
+          preparedOffers.push(await request(server.url, f.ca, f.token, binding, "/sync/v1/offer", Buffer.from(JSON.stringify({ descriptor: state }))));
+        }
+      }
+
       for (let index = 0; index < count; index += 1) {
         const server = servers[Math.floor(index / 4)];
-        const offered = await request(server.url, f.ca, f.token, binding, "/sync/v1/offer", Buffer.from(JSON.stringify({ descriptor: state })));
+        const offered = preparedOffers[index] ?? await request(server.url, f.ca, f.token, binding, "/sync/v1/offer", Buffer.from(JSON.stringify({ descriptor: state })));
         assert.equal(offered.status, 200);
         const offer = parseOfferResponse(decodeJson(offered.body));
         assert.equal(offer.status, "needs-body");

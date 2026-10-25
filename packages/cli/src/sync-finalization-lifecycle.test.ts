@@ -12,12 +12,14 @@ import { acquireSyncOwnership, readSyncOwnership } from "./sync-files";
 import { assertLoopbackClosed } from "./sync-protocol-fixture";
 import { canonicalKey, parseArray, parseInteger, parseObject, parseString, type RouteAuthorization } from "./sync-model";
 import { errorCauses, shutdownFixture } from "./sync-shutdown-fixtures";
-import { createWorkerFixture, createOwnedPullPair, parsePublication, assertReceiverCommitted, waitUntil, syntheticBytes } from "./sync-worker-fault-fixtures";
+import { createWorkerFixture, createOwnedPullPair, parsePublication, assertReceiverCommitted, waitUntil, syntheticBytes, type WorkerFixture, type FixtureInbox } from "./sync-worker-fault-fixtures";
 import { defaultRuntimeConfig } from "./sync-runtime-config";
 import { startOwnedSyncWorker } from "./sync-worker";
 import { contactWorker, parseWorkerControlStatus } from "./sync-worker-client";
+import { isRouteDue } from "./sync-ledger-policy";
 import { SyncClient, type SyncRequestOptions } from "./sync-client";
 import { availablePort } from "./test-fixtures";
+import { readViewerRecord } from "./viewer-records";
 
 const test = process.platform === "win32" ? platformTest.skip : platformTest;
 
@@ -152,6 +154,65 @@ async function waitForFinalizationHold(root: string) {
   }, (value) => value !== null, 5000);
 }
 
+async function prepareCompletionPublication(f: WorkerFixture, source: FixtureInbox, receiver: FixtureInbox,
+  sourceWorker: Awaited<ReturnType<typeof startOwnedSyncWorker>>, destinationWorker: Awaited<ReturnType<typeof startOwnedSyncWorker>>,
+  route: { id: string; revision: number }, receiverUrl: string) {
+  await f.run(["viewer", "--inbox", source.name], 0);
+  const viewer = await f.rememberViewer(source);
+  assert.equal(viewer.state, "running");
+  assert.equal(viewer.exposure, "loopback");
+
+  const viewerRecord = await readViewerRecord(source.home, { readOnly: true });
+  assert.ok(viewerRecord);
+  assert.equal(viewer.pid, viewerRecord.pid);
+  assert.equal(viewer.port, viewerRecord.config.port);
+  assert.equal(viewerRecord.instanceId, sourceWorker.record.inboxId);
+
+  const sourceStatus = parseWorkerControlStatus(await contactWorker(source.home, "status"));
+  const destinationStatus = parseWorkerControlStatus(await contactWorker(receiver.home, "status"));
+  for (const { status, record } of [
+    { status: sourceStatus, record: sourceWorker.record },
+    { status: destinationStatus, record: destinationWorker.record },
+  ]) {
+    assert.equal(status.processId, record.processId);
+    assert.equal(status.inboxId, record.inboxId);
+    assert.equal(status.storageIncarnation, record.storageIncarnation);
+    assert.equal(status.pid, record.pid);
+    assert.equal(status.configRevision, record.configRevision);
+    assert.deepEqual(status.tickets, []);
+  }
+
+  assert.equal(sourceStatus.processState, "idle");
+  assert.equal(destinationStatus.ingestion.state, "listening");
+  assert.equal(destinationStatus.ingestion.url, receiverUrl);
+
+  for (const inbox of [source, receiver]) {
+    const ledger = await inbox.store.snapshot();
+    assert.equal(ledger.worker.enabled, true);
+    assert.equal(ledger.worker.retryPaused, false);
+
+    const currentRoute = ledger.routes[route.id];
+    assert.ok(currentRoute);
+    assert.equal(currentRoute.id, route.id);
+    assert.equal(currentRoute.revision, route.revision);
+    assert.equal(currentRoute.direction, inbox === source ? "outbound" : "inbound");
+    assert.equal(currentRoute.state, "reconnecting");
+
+    assert.deepEqual(ledger.records, {});
+    assert.deepEqual(ledger.receipts, {});
+    assert.deepEqual(ledger.publicationIntents, {});
+    assert.deepEqual(ledger.outbox, {});
+    assert.deepEqual(ledger.historyCheckpoints, {});
+    assert.deepEqual(ledger.checkpoints, {});
+
+    if (inbox === source) {
+      assert.equal(isRouteDue(ledger, currentRoute, Date.now()), true);
+    }
+  }
+
+  return { pid: viewerRecord.pid, processId: viewerRecord.processId };
+}
+
 for (const mode of ["calibration", "viewer", "status"] as const) {
   test(`real post-custody HTTPS completion ${mode === "calibration" ? "can be aborted by exact-ticket API control" : `is aborted by late ${mode} CLI cancellation`}`, { timeout: 20_000 }, async (t) => {
     const f = await createWorkerFixture(t);
@@ -222,6 +283,10 @@ for (const mode of ["calibration", "viewer", "status"] as const) {
     ports.push(sourceWorker.record.controlOrigin);
     f.resources.push(async () => { releaseResponse(); await sourceWorker.close(); });
 
+    const preparedViewer = await prepareCompletionPublication(f, source, receiver, sourceWorker, destinationWorker, route, receiverUrl);
+    assert.equal(starts, 0);
+    assert.equal(holds, 0);
+
     const args = await f.publicationArgs(source, ["--wait-ms", "5000", "--json"]);
     const boundary = mode === "viewer" ? "viewer" : "status";
     const cli = f.launch([boundary, mode === "calibration" ? "continue" : "signal", ...args], { entry: path.join(__dirname, "sync-finalization-child.js"), timeoutMs: 8000 });
@@ -247,7 +312,9 @@ for (const mode of ["calibration", "viewer", "status"] as const) {
     }
     await writeFile(path.join(f.root, "finalization-release"), "continue", { mode: 0o600 });
     const completed = await cli.completion;
-    await f.rememberViewer(source);
+    const viewer = await f.rememberViewer(source);
+    assert.equal(viewer.state, "running");
+    assert.equal(viewer.pid, preparedViewer.pid);
     t.diagnostic(JSON.stringify({ mode, responseClosedAfterCli: responseClosed, signalAbortedAfterCli: completion.signal.aborted, remainingAfterCli: completion.deadlineAt - Date.now() }));
     await waitUntil("held response closes from cancellation", async () => responseClosed, Boolean, 500);
     assert.equal(completion.signal.aborted, true);
@@ -270,6 +337,11 @@ for (const mode of ["calibration", "viewer", "status"] as const) {
     assert.equal(counters.signals, mode === "calibration" ? 0 : 1);
     assert.equal(counters.confirmations, 1);
     assert.equal(counters.holds, 1);
+
+    const viewerRecord = await readViewerRecord(source.home, { readOnly: true });
+    assert.ok(viewerRecord);
+    assert.equal(viewerRecord.pid, preparedViewer.pid);
+    assert.equal(viewerRecord.processId, preparedViewer.processId);
     t.diagnostic(`one genuine custody/HTTPS completion hold; ${mode}; aborted before expiry; exact ports ${ports.join(", ")}`);
   });
 }
@@ -369,6 +441,10 @@ for (const mode of ["signal", "calibration", "continue"] as const) {
     ports.push(sourceWorker.record.controlOrigin);
     f.resources.push(async () => { releaseAcknowledgement(); releaseResponse(); await sourceWorker.close(); });
 
+    const preparedViewer = await prepareCompletionPublication(f, source, receiver, sourceWorker, destinationWorker, route, receiverUrl);
+    assert.equal(starts, 0);
+    assert.equal(holds, 0);
+    assert.equal(acknowledgementHolds, 0);
 
     const args = await f.publicationArgs(source, ["--wait-ms", "5000", "--json"]);
     const cli = f.launch(["ack", mode === "signal" ? "signal" : "continue", ...args], { entry: path.join(__dirname, "sync-finalization-child.js"), timeoutMs: 8000 });
@@ -404,7 +480,9 @@ for (const mode of ["signal", "calibration", "continue"] as const) {
     }
 
     const completed = await cli.completion;
-    await f.rememberViewer(source);
+    const viewer = await f.rememberViewer(source);
+    assert.equal(viewer.state, "running");
+    assert.equal(viewer.pid, preparedViewer.pid);
     assert.equal(completed.code, mode === "signal" ? 130 : 0, completed.stderr);
     assert.equal(completed.signal, null);
     const publication = parsePublication(JSON.parse(completed.stdout));
@@ -434,6 +512,11 @@ for (const mode of ["signal", "calibration", "continue"] as const) {
     assert.equal(ledger.worker.enabled, true);
     assert.equal(ledger.worker.retryPaused, false);
     assert.ok(Object.values(ledger.outbox).every((entry) => entry.disposition !== "retired" && entry.disposition !== "blocked"));
+
+    const viewerRecord = await readViewerRecord(source.home, { readOnly: true });
+    assert.ok(viewerRecord);
+    assert.equal(viewerRecord.pid, preparedViewer.pid);
+    assert.equal(viewerRecord.processId, preparedViewer.processId);
     t.diagnostic(JSON.stringify({ mode, acknowledgementHolds, holds, cancellations, responseClosed, signalAborted: completion.signal.aborted, remainingAfterCli: completion.deadlineAt - Date.now() }));
   });
 }

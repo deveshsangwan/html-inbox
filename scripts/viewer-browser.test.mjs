@@ -61,6 +61,7 @@ for (const mode of ["local", "static"]) {
 
     await page.getByRole("link", { name: "Back to inbox" }).click();
     assert.equal(page.url(), inboxUrl);
+    await page.waitForLoadState("domcontentloaded");
     assert.equal(await page.locator("[data-search-text]").count(), 2);
     await assertTheme(page, "light");
     await page.getByRole("link", { name: "Deployment notes", exact: true }).click();

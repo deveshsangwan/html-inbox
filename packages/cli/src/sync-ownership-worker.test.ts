@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { lstat } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { lstat, readFile } from "node:fs/promises";
 import path from "node:path";
 import platformTest, { type TestContext } from "node:test";
-import { acquireSyncOwnership, createStorageCounters, DurableFiles, readSyncOwnership } from "./sync-files";
-import { canonicalKey, parseObject, parseString, stateFingerprint } from "./sync-model";
+import { acquireSyncOwnership, createStorageCounters, DurableFiles, processStart, readSyncOwnership } from "./sync-files";
+import { assertExactKeys, canonicalKey, parseObject, parseString, parseUuid, stateFingerprint } from "./sync-model";
 import { assertLoopbackClosed } from "./sync-protocol-fixture";
 import { routeAuthorization } from "./sync-reconciliation";
 import { contactWorker, parseWorkerControlStatus } from "./sync-worker-client";
@@ -39,6 +40,8 @@ async function foreground(t: TestContext, f: WorkerFixture, selected: { home: st
 
   async function waitFor(type: string) {
     return waitUntil(`foreground ${type}: ${stderr}`, async () => {
+      const failure = messages.find((message) => message.type === "mutation-cut-failed");
+      if (failure) throw new Error(`Foreground cut failed: ${JSON.stringify(failure)}`);
       if (exited) throw new Error(`Foreground exited before ${type}: ${stderr} ${stdout}`);
       return messages.find((message) => message.type === type);
     }, (message) => Boolean(message), 10_000).then((message) => { assert.ok(message); return message; });
@@ -70,14 +73,35 @@ async function foreground(t: TestContext, f: WorkerFixture, selected: { home: st
     return { child, record, cleanup, waitFor, diagnostics: () => ({ stderr, stdout, exited, exitCode: child.exitCode, signalCode: child.signalCode }), async arm() {
       child.send({ type: "arm" });
       await waitFor("armed");
+    }, async cutPausedMutation(operationId: string) {
+      child.send({ type: "cut-paused-mutation", operationId });
+      const cut = await waitFor("mutation-cut");
+      const producers = messages.filter((message) => message.type === "mutation-producer");
+      assert.equal(producers.length, 1);
+      const producer = producers[0];
+      assert.equal(producer.operationId, operationId);
+      assert.equal(producer.operationCount, 1);
+      assert.equal(producer.method, "setRetryPaused");
+      assert.equal(producer.paused, true);
+      assert.equal(producer.alreadyPaused, true);
+      assert.equal(producer.pid, child.pid);
+      assert.equal(messages.filter((message) => message.type === "mutation-cut").length, 1);
+      assert.equal(cut.operationId, operationId);
+      assert.equal(cut.scopeId, operationId);
+      assert.equal(cut.operationCount, 1);
+      assert.equal(cut.pid, child.pid);
+      assert.equal(cut.stage, stage);
+      t.diagnostic(JSON.stringify(producer));
+      return cut;
     }, async kill() {
+      assert.equal(messages.some((message) => message.type === "mutation-cut-failed"), false);
       child.kill("SIGKILL");
       assert.deepEqual(await closed, { code: null, signal: "SIGKILL" });
       clearTimeout(lifetime);
       assert.equal(isPidGone(record.pid), true);
       await assertLoopbackClosed(record.controlOrigin);
       if (status.ingestion.url) await assertLoopbackClosed(status.ingestion.url);
-      t.diagnostic(`SIGKILL child ${record.pid} reaped; exact control and ingestion ports rebound`);
+      t.diagnostic(`SIGKILL child ${record.pid} reaped; exact control ${record.controlOrigin} and ingestion ${status.ingestion.url} ports rebound`);
     } };
   } finally { await exclusion?.release(); }
 }
@@ -136,15 +160,27 @@ for (const stage of ["created", "linked"]) {
     assert.equal(blockedBefore.disposition, "blocked");
     assert.equal(Object.values(seeded.outbox).find((entry) => entry.canonicalKey === key)?.disposition, "pending");
     assert.equal((await f.destination.store.listDocuments()).length, 0);
-    await source.arm();
-    await f.source.store.setRetryPaused(false);
-    await contactWorker(f.source.home, "wake");
-    const cut = await source.waitFor("mutation-cut");
+    // Hold an idempotent test-only pause mutation in the actual worker process.
+    // The parent must reap that owner before unpause can acquire its linked lock.
+    const cut = await source.cutPausedMutation(randomUUID());
     assert.equal(cut.hits, 1);
     assert.equal(cut.candidateOpens, 1);
+    const candidatePath = parseString(cut.candidate);
+    const lockPath = path.join(f.source.home, "sync", "mutation.lock");
+    const candidate = await lstat(candidatePath);
+    assert.equal(candidate.ino, cut.ino);
+    assert.equal(candidate.dev, cut.dev);
+    assert.equal(candidate.size, cut.bytes);
+    assert.equal(candidate.nlink, cut.nlink);
+    assert.equal(source.child.exitCode, null);
+    assert.equal(source.child.signalCode, null);
+    assert.equal(isPidGone(source.record.pid), false);
+    await assert.rejects(lstat(`${lockPath}.reap`), { code: "ENOENT" });
     if (stage === "created") {
       assert.equal(cut.canonical, null);
       assert.equal(cut.bytes, 0);
+      assert.equal(cut.nlink, 1);
+      await assert.rejects(lstat(lockPath), { code: "ENOENT" });
     } else {
       const canonical = parseObject(cut.canonical, "linked canonical");
       assert.equal(canonical.ino, cut.ino);
@@ -152,9 +188,49 @@ for (const stage of ["created", "linked"]) {
       assert.equal(canonical.nlink, 2);
       assert.equal(cut.nlink, 2);
       assert.ok(parseString(canonical.content).includes('"schemaVersion":2'));
+      const current = await lstat(lockPath);
+      assert.equal(current.dev, candidate.dev);
+      assert.equal(current.ino, candidate.ino);
+      assert.equal(current.nlink, 2);
+      for (const info of [candidate, current]) {
+        assert.equal(info.isFile(), true);
+        assert.equal(info.mode & 0o777, 0o600);
+        assert.equal(info.uid, process.getuid?.());
+      }
+      const bytes = await readFile(lockPath, "utf8");
+      assert.equal(bytes, canonical.content);
+      assert.equal(await readFile(candidatePath, "utf8"), bytes);
+      const owner = parseObject(JSON.parse(bytes), "linked owner");
+      assertExactKeys(owner, ["schemaVersion", "token", "pid", "start"]);
+      assert.equal(owner.schemaVersion, 2);
+      parseUuid(owner.token);
+      assert.equal(owner.pid, source.record.pid);
+      const start = await processStart(source.record.pid);
+      if (process.platform === "linux") assert.ok(start);
+      assert.equal(owner.start, start);
+      assert.deepEqual(await readSyncOwnership(lockPath), { token: owner.token, pid: owner.pid, start: owner.start });
     }
+
+    const sourceAtCut = await f.source.store.snapshot();
+    const receiverAtCut = await f.destination.store.snapshot();
+    assert.equal(sourceAtCut.worker.retryPaused, true);
+    assert.deepEqual(sourceAtCut.records[key], seeded.records[key]);
+    assert.deepEqual(Object.values(sourceAtCut.outbox).find((entry) => entry.canonicalKey === key),
+      Object.values(seeded.outbox).find((entry) => entry.canonicalKey === key));
+    assert.deepEqual(Object.values(sourceAtCut.outbox).find((entry) => entry.canonicalKey === blockedKey), blockedBefore);
+    assert.equal(receiverAtCut.worker.retryPaused, true);
+    assert.equal(receiverAtCut.records[key], undefined);
+    assert.equal((await f.destination.store.listDocuments()).length, 0);
+    assert.equal(await f.destination.store.getDocument(metadata.id), null);
+    const fingerprint = stateFingerprint(seeded.records[key]);
+    assert.equal(Object.values(sourceAtCut.receipts).some((entry) => entry.fingerprint === fingerprint), false);
+    assert.equal(Object.values(receiverAtCut.receipts).some((entry) => entry.fingerprint === fingerprint), false);
+    t.diagnostic(JSON.stringify({ cut, pendingAtCut: true, blockedUnchanged: true, sourcePaused: true, receiverPaused: true,
+      receiverRecordAbsent: true, receiverBodyAbsent: true, senderReceiptAbsent: true, receiverReceiptAbsent: true }));
+
     await source.kill();
     t.diagnostic(JSON.stringify(cut));
+    await f.source.store.setRetryPaused(false);
     const restarted = await foreground(t, f, f.source);
     assert.notEqual(restarted.record.processId, source.record.processId);
     if (stage === "linked") await assert.rejects(lstat(parseString(cut.candidate)), { code: "ENOENT" });
