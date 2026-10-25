@@ -2,18 +2,18 @@
 
 Home, Development, and Office can be independent libraries with separate documents, viewer ports, preferences, exports, and exposure settings. Naming a library records its existing location. It does not move or combine documents.
 
-Named inboxes, the terminal picker, readable command output, and local hubs are available in 0.3.0. The published `html-inbox@0.2.2` skill fallback lacks these features. Check the actual executable's `--help` for the commands and flags you need; help is authoritative for a source checkout or older executable. Reading these docs or updating a skill does not install or deploy a CLI.
+Named inboxes, the terminal picker, readable command output, and local hubs are available in 0.3.0. The published `html-inbox@0.3.0` skill fallback supports these features but lacks the 0.4.0 reader copy dialog. Check the actual executable's `--help` for the commands and flags you need; help is authoritative for a source checkout or older executable. Reading these docs or updating a skill does not install or deploy a CLI.
 
 ## Upgrade from 0.2.x
 
-Before upgrading, stop the old viewer with the executable that started it and confirm shutdown. Stop a foreground viewer with Ctrl-C. For a boot service, uninstall with the old stable installation, update, and reinstall with the same intended home and exposure. See [service updates](../site/docs/boot-services.html#updating). Versions 0.2.x and 0.3.x share private control protocol 3. Restart compatible viewers to load the new code and named headings; 0.1.0 viewers still need their original executable for shutdown. Documents, preferences, and saved exposure remain in place.
+Before upgrading, stop the old viewer with the executable that started it and confirm shutdown. Stop a foreground viewer with Ctrl-C. For a boot service, uninstall with the old stable installation, update, and reinstall with the same intended home and exposure. See [service updates](../site/docs/boot-services.html#updating). Versions 0.2.x, 0.3.x, and 0.4.x share private control protocol 3. Restart compatible viewers to load the new code and named headings; 0.1.0 viewers still need their original executable for shutdown. Documents, preferences, and saved exposure remain in place.
 
 Update human and agent automation deliberately:
 
 - Add `--json` to viewer status/stop and service commands when parsing output. Plain status, catalog, and document lists are readable text or tables in 0.3.0. Plain publish and detached viewer startup retain URL-only stdout; `publish --json` adds a structured receipt.
 - Keep an explicit `--inbox`, absolute `--home`, process environment binding, or configured default across every command in a job. Registering even one library makes unbound automation fail instead of silently using the legacy home. Redirected streams and JSON mode never open the picker.
 - With no registered entries and no binding or default, legacy `~/.html-inbox` behavior remains. To name that existing library, register its absolute path in place, then update jobs to select it. Registration does not move documents or change saved network exposure.
-- Skill updates and CLI updates remain independent. The skill accepts stable installed 0.2.x and 0.3.x executables, with exact rules in the [CLI resolution reference](../skills/html-inbox/references/cli-resolution.md). Its fallback stays on published `html-inbox@0.2.2` until deliberately changed. Check actual help before using named selection, running-only filtering, publish JSON, viewer JSON, or service JSON. Missing capabilities never authorize publishing into another home or silently upgrading the pin.
+- Skill updates and CLI updates remain independent. The skill accepts stable installed 0.2.x, 0.3.x, and 0.4.x executables, with exact rules in the [CLI resolution reference](../skills/html-inbox/references/cli-resolution.md). Its fallback stays on published `html-inbox@0.3.0` until deliberately changed. Check actual help before using named selection, running-only filtering, publish JSON, viewer JSON, or service JSON. Missing capabilities never authorize publishing into another home or silently upgrading the pin.
 
 ## Name libraries deliberately
 

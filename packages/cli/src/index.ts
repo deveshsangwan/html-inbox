@@ -47,7 +47,7 @@ Commands:
   remote reconcile [--adopt] [--recover-lock] [--json]
       Recover preserved intent; --recover-lock verifies and replaces an abandoned lock.
   remote revoke [--yes] [--json]
-      Configure and manage a private capability inbox on Cloudflare Pages.
+      Configure and manage an unlisted bearer-capability inbox on Cloudflare Pages.
 
   viewer [--foreground] [--loopback|--lan|--tailscale] [--host <ip>] [--port <port>]
       Start or reuse a background viewer after verifying readiness.

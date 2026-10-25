@@ -206,7 +206,11 @@
           alias. Copying HTML alone does not install those response headers.
           Opening files through <code>file://</code> does not provide the served
           CSP. The built-in Cloudflare adapter applies the required hosting
-          policies.
+          policies. Also serve each document's <code>copy.json</code> as
+          <code>application/json; charset=utf-8</code> with the common no-store
+          and nosniff headers. This MIME rule is separate from
+          <code>security-headers.json</code>; the Cloudflare adapter supplies it,
+          while a generic host must configure it itself.
         </p>
         <aside class="docs-note">
           <p>

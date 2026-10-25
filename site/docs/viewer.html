@@ -194,6 +194,13 @@
           offer automatic copying; ordinary LAN or tailnet HTTP may require
           manual Copy. Browser policy can deny writes even over HTTPS.
         </p>
+        <p>
+          Preparation refuses invalid UTF-8 or copy JSON exceeding 10 MiB without
+          truncating text or disabling the preview. This output limit is separate
+          from <code>HTML_INBOX_MAX_BYTES</code>. If preparation is unavailable,
+          use native Copy in the preview; manual dialog Copy needs successfully
+          prepared text.
+        </p>
         <h2 id="appearance">Choose appearance</h2>
         <p>
           <strong>System</strong> is the default. Choose <strong>Light</strong>
@@ -413,6 +420,7 @@ html-inbox viewer --loopback</code></pre>
           <p class="docs-toc-label">On this page</p>
           <ul>
             <li><a href="#reading">Read with more space</a></li>
+            <li><a href="#copy">Copy text and code</a></li>
             <li><a href="#appearance">Choose appearance</a></li>
             <li><a href="#background">Start in the background</a></li>
             <li><a href="#configuration">Select the inbox and port</a></li>
