@@ -421,6 +421,77 @@ test("replacement retries retain strict schema, byte limits, and hardlink valida
   assert.equal((await stat(target)).mode, originalMode);
 });
 
+test("catalog metadata retries unlinked regular snapshots without reading or repairing them", async (t) => {
+  const { root, catalogHome } = await catalogFixture(t);
+  const first = await createInbox("first", path.join(root, "first"), catalogHome);
+  const second = await createInbox("second", path.join(root, "second"), catalogHome);
+  const defaultPath = path.join(catalogHome, "default.json");
+  const replacementPath = path.join(catalogHome, "replacement");
+  const modulePath = path.join(__dirname, "inbox-catalog.js");
+  const worker = `
+    const assert = require("node:assert/strict");
+    const fs = require("node:fs/promises");
+    const [modulePath, catalogHome, defaultPath, replacementPath, mode] = process.argv.slice(1);
+    const inspect = fs.lstat;
+    const open = fs.open;
+    let inspections = 0;
+    let opens = 0;
+
+    fs.lstat = async (...args) => {
+      const info = await inspect(...args);
+      if (args[0] !== defaultPath) return info;
+      inspections += 1;
+      if (mode === "replace" && inspections === 1) await fs.rename(replacementPath, defaultPath);
+      if (mode !== "replace" || inspections === 1) Object.defineProperty(info, "nlink", { value: 0 });
+      return info;
+    };
+    fs.open = async (...args) => {
+      if (args[0] === defaultPath) opens += 1;
+      return open(...args);
+    };
+
+    (async () => {
+      const { readInboxCatalog } = require(modulePath);
+      if (mode === "replace") {
+        const catalog = await readInboxCatalog(catalogHome, { readOnly: true });
+        assert.equal(inspections, 2);
+        assert.equal(opens, 1);
+        process.stdout.write(JSON.stringify(catalog));
+      } else {
+        await assert.rejects(readInboxCatalog(catalogHome, { readOnly: true }),
+          mode === "unlinked" ? /changed repeatedly during read/ : /regular private file/);
+        assert.equal(inspections, mode === "unlinked" ? 10 : 1);
+        assert.equal(opens, 0);
+      }
+    })().catch(error => { console.error(error); process.exitCode = 1; });
+  `;
+
+  for (const mode of ["replace", "unlinked", "directory"]) {
+    await setDefaultInbox("first", catalogHome);
+    await writeFile(replacementPath, '{"schemaVersion":1,"name":"second"}', { mode: 0o640 });
+    const replacementMode = (await stat(replacementPath)).mode;
+
+    if (mode === "directory") {
+      await rm(defaultPath);
+      await mkdir(defaultPath);
+    }
+
+    const before = await lstat(defaultPath);
+    const result = await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, defaultPath, replacementPath, mode], { timeout: 5000 });
+
+    if (mode === "replace") {
+      assert.deepEqual(JSON.parse(result.stdout), { inboxes: [first, second], defaultName: "second" });
+      assert.equal((await stat(defaultPath)).mode, replacementMode);
+      assert.equal(await readFile(defaultPath, "utf8"), '{"schemaVersion":1,"name":"second"}');
+    } else {
+      const after = await lstat(defaultPath);
+      assert.equal(after.ino, before.ino);
+      assert.equal(after.mode, before.mode);
+      assert.equal(after.ctimeMs, before.ctimeMs);
+    }
+  }
+});
+
 test("catalog replacement retries stop after a bounded number of changing files", async (t) => {
   const { root, catalogHome } = await catalogFixture(t);
   await createInbox("work", path.join(root, "work"), catalogHome);

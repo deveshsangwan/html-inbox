@@ -13,7 +13,7 @@ import { readResolution, runResolvedCli } from "./skill-cli-fixtures.mjs";
 assert(Number(process.versions.node.split(".")[0]) >= 20, "Registry smoke check requires Node.js 20 or newer");
 assert.equal(process.argv.length, 2, "Registry smoke check takes no arguments");
 
-const temporaryRoot = await mkdtemp(path.join(tmpdir(), "html-inbox-skill-registry-"));
+const temporaryRoot = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-skill-registry-")));
 let resolution;
 let consumerRoot;
 let cleanupEnvironment;

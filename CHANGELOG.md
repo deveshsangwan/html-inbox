@@ -10,6 +10,7 @@ All notable changes to HTML Inbox will be documented here.
 - Share bounded parse5 extraction across read-only local and source-qualified hub resources and new static snapshots. Preserve original HTML bytes, document sandbox/CSP, source isolation, and preview state.
 - Include each static document's copy JSON in the hashed inventory and apply its JSON response type. Each document adds one upload file against provider limits.
 - Accept stable installed 0.4.x CLIs in both skills, retaining earlier supported lines and the already-published 0.3.0 npm fallback.
+- Retry unlinked catalog metadata observed during atomic default replacement while preserving regular-file, hardlink, and read-only safety checks.
 
 ### Upgrade to 0.4.0
 

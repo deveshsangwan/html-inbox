@@ -279,6 +279,11 @@ async function readCatalogJson(filePath: string, readOnly = false): Promise<{ va
       return null;
     }
 
+    // Atomic replacement can unlink the looked-up inode while lstat is in flight.
+    if (checked.isFile() && !checked.isSymbolicLink() && checked.nlink === 0) {
+      continue;
+    }
+
     if (!checked.isFile() || checked.isSymbolicLink() || checked.nlink !== 1) {
       throw new Error(`Catalog record must be a regular private file: ${filePath}`);
     }
