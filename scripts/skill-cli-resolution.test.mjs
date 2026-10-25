@@ -19,7 +19,7 @@ const shells = process.platform === "win32"
 
 for (const shell of shells) {
   test(`${path.basename(shell)} selects once and reuses its prefix throughout an operation`, async (t) => {
-    for (const version of ["0.2.0", "0.2.2", "0.3.0", null]) {
+    for (const version of ["0.2.0", "0.2.2", "0.3.0", "0.4.0", null]) {
       const fixture = await createExecutables(t, { version });
       const isPowerShell = /(?:pwsh|powershell)(?:\.exe)?$/.test(shell);
       const commands = "\ninbox publish report.html\ninbox viewer status\ninbox viewer stop\ninbox remote status\ninbox viewer service status\n";
@@ -37,7 +37,7 @@ for (const shell of shells) {
     }
   });
 
-  for (const version of ["0.2.0", "0.2.2", "0.3.0", "0.3.12", " 0.2.12\r\n", " 0.3.12\r\n"]) {
+  for (const version of ["0.2.0", "0.2.2", "0.3.0", "0.3.12", "0.4.0", "0.4.12", " 0.2.12\r\n", " 0.3.12\r\n", " 0.4.12\r\n"]) {
     test(`${path.basename(shell)} accepts installed ${JSON.stringify(version)} and preserves arguments/environment`, async (t) => {
       const fixture = await createExecutables(t, { version });
       const args = ["publish", "report&notes with spaces.html", "--title", 'R&D "results" %PATH% | $growth Résumé δ', "--type", "report", ""];
@@ -53,42 +53,44 @@ for (const shell of shells) {
     });
   }
 
-  test(`${path.basename(shell)} retains installed 0.3.0 for named and JSON operations`, async (t) => {
-    const fixture = await createExecutables(t, { version: "0.3.0" });
-    const operations = [
-      ["inbox", "list", "--running", "--json"],
-      ["viewer", "status", "--inbox", "development", "--json"],
-      ["remote", "status", "--home", fixture.env.HTML_INBOX_HOME, "--json"],
-    ];
+  for (const version of ["0.3.0", "0.4.0"]) {
+    test(`${path.basename(shell)} retains installed ${version} for named and JSON operations`, async (t) => {
+      const fixture = await createExecutables(t, { version });
+      const operations = [
+        ["inbox", "list", "--running", "--json"],
+        ["viewer", "status", "--inbox", "development", "--json"],
+        ["remote", "status", "--home", fixture.env.HTML_INBOX_HOME, "--json"],
+      ];
 
-    for (const args of operations) {
-      const result = await runResolvedCli(resolution, args, { ...fixture, shell });
-      assert.equal(result.code, 0, result.stderr);
-    }
+      for (const args of operations) {
+        const result = await runResolvedCli(resolution, args, { ...fixture, shell });
+        assert.equal(result.code, 0, result.stderr);
+      }
 
-    const commands = await fixture.commands();
-    assert(commands.every(({ executable }) => executable === "html-inbox"));
-    assert.deepEqual(commands.filter(({ args }) => args[0] !== "--version").map(({ args }) => args), operations);
-    assertPreservedEnvironment(commands, fixture.env);
-  });
+      const commands = await fixture.commands();
+      assert(commands.every(({ executable }) => executable === "html-inbox"));
+      assert.deepEqual(commands.filter(({ args }) => args[0] !== "--version").map(({ args }) => args), operations);
+      assertPreservedEnvironment(commands, fixture.env);
+    });
+  }
 
   test(`${path.basename(shell)} preserves a single operation argument`, async (t) => {
-    for (const version of ["0.2.0", "0.3.0", null]) {
+    for (const version of ["0.2.0", "0.3.0", "0.4.0", null]) {
       const fixture = await createExecutables(t, { version });
       const result = await runResolvedCli(resolution, ["--version"], { ...fixture, shell });
       assert.equal(result.code, 0, result.stderr);
-      assert.equal(result.stdout.trim(), version ?? "0.2.2");
+      assert.equal(result.stdout.trim(), version ?? "0.3.0");
 
       const commands = await fixture.commands();
       assert.equal(commands.length, 2);
-      const prefix = version ? [] : ["--yes", "html-inbox@0.2.2"];
+      const prefix = version ? [] : ["--yes", "html-inbox@0.3.0"];
       assert.deepEqual(commands.at(-1).args, [...prefix, "--version"]);
     }
   });
 
   if (/(?:pwsh|powershell)(?:\.exe)?$/.test(shell)) {
     test(`${path.basename(shell)} converts literal and variable numeric arguments to native strings`, async (t) => {
-      for (const version of ["0.2.0", "0.3.0", null]) {
+      for (const version of ["0.2.0", "0.3.0", "0.4.0", null]) {
         const fixture = await createExecutables(t, { version });
         const result = await runCommand(shell, [
           "-NoLogo", "-NoProfile", "-NonInteractive", "-Command",
@@ -97,7 +99,7 @@ for (const shell of shells) {
         assert.equal(result.code, 0, result.stderr);
 
         const operations = (await fixture.commands()).slice(-2).map(({ args }) => args);
-        const prefix = version ? [] : ["--yes", "html-inbox@0.2.2"];
+        const prefix = version ? [] : ["--yes", "html-inbox@0.3.0"];
         assert.deepEqual(operations, [
           [...prefix, "viewer", "--port", "4321"],
           [...prefix, "viewer", "--port", "4322"],
@@ -107,9 +109,9 @@ for (const shell of shells) {
   }
 
   for (const version of [
-    null, "0.1.9", "0.4.0", "1.0.0", "0.2.0-beta.1", "0.3.0-beta.1",
-    "0.2.0+build", "0.3.0+build", "0.2.01", "0.3.01", "0.03.0", "0.3",
-    "v0.2.0", "v0.3.0", "0.2.0\nunexpected", "0.3.0\nunexpected", "garbage",
+    null, "0.1.9", "0.5.0", "0.5.12", "1.0.0", "0.2.0-beta.1", "0.3.0-beta.1", "0.4.0-beta.1",
+    "0.2.0+build", "0.3.0+build", "0.4.0+build", "0.2.01", "0.3.01", "0.4.01", "0.03.0", "0.04.0", "0.3", "0.4",
+    "v0.2.0", "v0.3.0", "v0.4.0", "0.2.0\nunexpected", "0.3.0\nunexpected", "0.4.0\nunexpected", "garbage",
   ]) {
     test(`${path.basename(shell)} falls back for ${version === null ? "an absent executable" : version}`, async (t) => {
       const fixture = await createExecutables(t, { version });
@@ -122,7 +124,7 @@ for (const shell of shells) {
       const npmCommands = commands.filter(({ executable }) => executable === "npx");
       assert.equal(npmCommands.length, 10);
       for (const command of npmCommands) {
-        assert.deepEqual(command.args.slice(0, 2), ["--yes", "html-inbox@0.2.2"]);
+        assert.deepEqual(command.args.slice(0, 2), ["--yes", "html-inbox@0.3.0"]);
       }
       assert.equal(commands.filter(({ executable, args }) => executable === "html-inbox" && args[0] !== "--version").length, 0);
       assertPreservedEnvironment(commands, fixture.env);
@@ -134,7 +136,7 @@ for (const shell of shells) {
     const result = await runResolvedCli(resolution, ["publish", "report.html"], { ...fixture, shell });
     assert.equal(result.code, 0, result.stderr);
     assert.match(result.stderr, /installed executable failed/);
-    assert.deepEqual((await fixture.commands()).at(-1).args, ["--yes", "html-inbox@0.2.2", "publish", "report.html"]);
+    assert.deepEqual((await fixture.commands()).at(-1).args, ["--yes", "html-inbox@0.3.0", "publish", "report.html"]);
   });
 
   test(`${path.basename(shell)} preserves npm failure and never attempts publishing`, async (t) => {
@@ -143,11 +145,11 @@ for (const shell of shells) {
     assert.notEqual(result.code, 0);
     assert.match(result.stderr, /npm error ECONNREFUSED original-registry-failure/);
     assert.equal(result.stdout, "");
-    assert.deepEqual((await fixture.commands()).map(({ args }) => args), [["--yes", "html-inbox@0.2.2", "--version"]]);
+    assert.deepEqual((await fixture.commands()).map(({ args }) => args), [["--yes", "html-inbox@0.3.0", "--version"]]);
   });
 
   test(`${path.basename(shell)} rejects an unexpected fallback version before publishing`, async (t) => {
-    for (const fallbackVersion of ["0.2.1", "0.2.3", "0.3.0", "0.2.02", "0.2.2-beta.1"]) {
+    for (const fallbackVersion of ["0.2.2", "0.3.1", "0.4.0", "0.5.0", "0.3.00", "0.3.0-beta.1", "0.3.0+build", "v0.3.0", "0.3.0\nunexpected"]) {
       const fixture = await createExecutables(t, { version: null, fallbackVersion });
       const result = await runResolvedCli(resolution, ["publish", "report.html"], { ...fixture, shell });
       assert.notEqual(result.code, 0);
@@ -178,8 +180,8 @@ for (const shell of shells) {
       const result = await runResolvedCli(shadowed, args, { ...fixture, shell });
       assert.equal(result.code, 0, result.stderr);
       assert.deepEqual((await fixture.commands()).map(({ args }) => args), [
-        ["--yes", "html-inbox@0.2.2", "--version"],
-        ["--yes", "html-inbox@0.2.2", ...args],
+        ["--yes", "html-inbox@0.3.0", "--version"],
+        ["--yes", "html-inbox@0.3.0", ...args],
       ]);
     });
   }
@@ -239,7 +241,7 @@ test("Windows PowerShell falls back for an unsupported installed shim without ru
   await assert.rejects(readFile(marker), { code: "ENOENT" });
 });
 
-async function createExecutables(t, { version, installedFailure = false, npmFailure = false, fallbackVersion = "0.2.2" }) {
+async function createExecutables(t, { version, installedFailure = false, npmFailure = false, fallbackVersion = "0.3.0" }) {
   const cwd = await mkdtemp(path.join(tmpdir(), "html-inbox skill resolution "));
   // Windows can briefly retain an executable lock after its child process closes.
   t.after(() => rm(cwd, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
