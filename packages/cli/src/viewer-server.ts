@@ -18,6 +18,7 @@ export { getViewerStatus, resolveViewerConfiguration, VIEWER_PROTOCOL_VERSION, t
 export async function ensureViewer(
   home: string,
   input?: number | ViewerNetworkOptions,
+  inboxName?: string,
 ): Promise<ViewerStatus> {
   const lock = await acquireViewerStartLock(home);
   try {
@@ -44,7 +45,7 @@ export async function ensureViewer(
     await rm(path.join(home, "viewer.json"), { force: true });
 
     const saved = await readSavedViewerConfiguration(home);
-    const detached = await spawnDetachedViewer(home, config, lock.token, saved?.tailscaleExecutable);
+    const detached = await spawnDetachedViewer(home, config, lock.token, saved?.tailscaleExecutable, inboxName);
     try {
       const startupTimeout = config.exposure === "tailscale" ? 45_000 : 10_000;
       const deadline = Date.now() + startupTimeout;
@@ -174,6 +175,7 @@ export async function startViewer(
   backend: DocumentBackend,
   home: string,
   input: number | ViewerNetworkOptions,
+  inboxName?: string,
 ): Promise<http.Server> {
   const inherited = await hasInheritedViewerStartLock(home);
   const lock = inherited ? null : await acquireViewerStartLock(home);
@@ -257,7 +259,7 @@ export async function startViewer(
       }
 
       const config = prepared ? { ...initialConfig, tailscaleHostname: prepared.hostname } : initialConfig;
-      reader = await startViewerHttpServer(backend, config, health, home);
+      reader = await startViewerHttpServer(backend, config, health, home, { inboxName });
       reader.server.once("close", () => { void close("reader-close").catch(reportShutdownFailure); });
       if (closing) {
         return;

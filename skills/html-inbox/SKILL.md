@@ -1,6 +1,6 @@
 ---
 name: html-inbox
-description: Publish HTML artifacts to HTML Inbox. Use when the user wants to publish or open a document, set up document appearance, operate its background viewer, choose loopback, LAN, or Tailscale reader access, manage boot startup, or diagnose a rejected document.
+description: Publish HTML artifacts to HTML Inbox. Use for publishing or opening documents, named library selection, a local reading hub, document appearance, viewer operation, loopback/LAN/Tailscale access, boot startup, or rejected documents.
 ---
 
 # HTML Inbox
@@ -10,24 +10,30 @@ Publish a finished HTML artifact into the local private document library. `publi
 This skill owns publishing and live viewer operation. Cloudflare Pages hosts a separate static snapshot. When the user requests Cloudflare setup, snapshot publishing, recovery, or revocation, install the optional remote skill if it is absent:
 
 ```sh
-npx skills add deveshsangwan/html-inbox --skill html-inbox-remote
+npx skills@1.7.0 add deveshsangwan/html-inbox --skill html-inbox-remote
 ```
 
 The skills installer requires Node.js 22.20.0 or newer for skill installation or updates. HTML Inbox itself, including the fallback used by an already-installed skill, requires Node.js 20 or newer.
 
-Choose a supported agent explicitly when needed, for example by appending `--agent codex -y`. Verify that agent's installed directory contains `SKILL.md`, `references/cli-resolution.md`, `references/document-appearance.md`, `assets/document-template.html`, and the bundled `scripts/windows-cli.cjs` before using it. Installer exit code zero alone does not prove every selected agent target succeeded.
+Choose a supported agent explicitly when needed, for example by appending `--agent codex -y`. Verify that agent's installed directory contains `SKILL.md`, `references/cli-resolution.md`, `references/library-selection.md`, `references/document-appearance.md`, `assets/document-template.html`, and the bundled `scripts/windows-cli.cjs` before using it. Installer exit code zero alone does not prove every selected agent target succeeded.
 
 Then follow the installed `html-inbox-remote` skill, or read its [repository guidance](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox-remote/SKILL.md). This skill requires neither a repository checkout nor that optional skill for live viewer operations.
 
 ## Resolve the CLI
 
-Before running commands, follow [CLI resolution](./references/cli-resolution.md). It selects a compatible installed CLI or the pinned npm fallback and defines the `inbox` command used below. Keep that selected prefix and inbox environment for the whole operation.
+Before running commands, follow [CLI resolution](./references/cli-resolution.md). It selects a compatible installed CLI or the pinned npm fallback and defines the `inbox` command used below. Keep that selected prefix and inbox environment for the whole operation. Version compatibility alone does not establish feature support.
+
+## Resolve the destination
+
+Before any library command, read [library selection and hub operation](./references/library-selection.md). Apply its capability checks, selection precedence, human terminal picker, non-interactive choice-required recovery, and output rules. It also covers `inbox inbox list --running`, default clear/reset, and explicit local hub membership with incomplete results.
+
+Keep the resolved selector on preferences, publish, list, delete, export, remote, and viewer commands. Preserve `HTML_INBOX_NAME`, `HTML_INBOX_HOME`, `HTML_INBOX_CATALOG_HOME`, the port and Tailscale overrides, and the selected library's saved exposure. Ordinary artifact work reuses the intended library. Create or register a library, or change a default, only for that deliberate user request. Do not create a library per task or select the first or only catalog entry on the user's behalf.
 
 ## Set up appearance
 
 During an explicit HTML Inbox setup request, offer the optional appearance choice once: **System** by default, or **Light** or **Dark**. Skipping the question keeps System. Installation and ordinary publishing continue without this question.
 
-First check `inbox --help` for the `preferences` command. The pinned 0.2.1 fallback supports it, but an older installed 0.2.x executable may not. If absent, keep System and explain that saving a setup preference requires a CLI with `preferences` support; continue other authorized setup work. Keep the selected CLI and version pin unchanged.
+First check `inbox --help` for the `preferences` command. The pinned 0.2.2 fallback supports it, but an older installed 0.2.x executable may not. If absent, keep System and explain that saving a setup preference requires a CLI with `preferences` support; continue other authorized setup work. Keep the selected CLI and version pin unchanged.
 
 When supported, inspect `inbox preferences --json`. If the selected inbox home already contains `preferences.json`, preserve its preference and skip the setup question unless the user asks to change it. Otherwise, save the chosen value, or the default when skipped:
 
@@ -105,11 +111,11 @@ Starting with 0.2.2, graceful shutdown records its timestamp, viewer PID, first 
 
 Use `inbox viewer --foreground` when the user wants an attached process for debugging, containers, or an external service manager. It keeps the terminal occupied and prints its listening address to stderr. Startup failures report an error and retain private diagnostics under the selected inbox home.
 
-First startup uses `~/.html-inbox`, loopback `127.0.0.1`, and port `3217`. `HTML_INBOX_HOME` selects the library for every command. The last successful port, bind address, and exposure are saved inside that inbox and survive `viewer stop`. A later `viewer` or `publish` without explicit network options reuses them. `HTML_INBOX_PORT` overrides the saved port; `viewer --port` overrides that environment value. Status and stop use the same inbox and environment, without startup flags.
+First startup of a new selected library uses loopback `127.0.0.1` and port `3217`. Destination selection follows the library reference above. The last successful port, bind address, and exposure are saved inside that inbox and survive `viewer stop`. A later `viewer` or `publish` without explicit network options reuses them. `HTML_INBOX_PORT` overrides the saved port; `viewer --port` overrides that environment value. Status and stop use the same inbox and environment, without startup flags.
 
 Before a user-requested port change, stop the verified existing viewer with `HTML_INBOX_PORT` matching its current port, or with that override unset. Confirm `stopped` before selecting the new port. Then set the override to the requested port or leave it unset so later commands use the saved port, and resolve the CLI for this new operation. Preserve that selected environment for startup, publishing, status, and stop. Otherwise a startup with `--port 4321` can succeed while status still inspects an inherited port `3217` and stop refuses the mismatch.
 
-Use `viewer status` to inspect the verified process, mode, and reader URLs. Inspect the JSON `state` and any `reason` from status and stop, since even a conflict or incompatibility can exit with code zero. Complete a stop only after its result and a follow-up status confirm `stopped`. A stopped or conflicting status can contain candidate URLs; share a usable URL only after successful startup or a verified running status. The CLI checks its separate private loopback control endpoint and inbox/process identity before reusing or stopping a viewer. Reader `/health` returns only anonymous `{"ok":true}`. It proves reader availability, never inbox or process ownership.
+Use `viewer status` to inspect the verified process, mode, and reader URLs. For automation, use the capability-gated JSON commands in the library reference and inspect `state` and any `reason` from status and stop. Even a conflict or incompatibility can exit with code zero. Complete a stop only after its result and a follow-up status confirm `stopped`. A stopped or conflicting status can contain candidate URLs; share a usable URL only after successful startup or a verified running status. The CLI checks its separate private loopback control endpoint and inbox/process identity before reusing or stopping a viewer. Reader `/health` returns only anonymous `{"ok":true}`. It proves reader availability, never inbox or process ownership.
 
 If the CLI reports another inbox on the requested port, choose another port and preserve that process. For an incompatible older viewer, stop it using its original executable before retrying the selected CLI. If it has already exited, the [older-viewer recovery guide](https://github.com/deveshsangwan/html-inbox/blob/main/docs/self-hosting.md#diagnostics-and-removal) permits removal of only stale `viewer.json` after proving that the recorded process is gone and its port unused. Keep documents, saved configuration, and other private records. Never signal an unverified PID or delete records to bypass ownership checks.
 
@@ -174,6 +180,6 @@ The service records absolute Node/CLI paths, inbox and network settings, and the
 
 ## Security boundary
 
-The viewer stores each document's original HTML unchanged. It renders that HTML on a dedicated path inside a sandboxed iframe with a Content Security Policy; it does not sanitize the stored file. Do not present an accepted document as safe to open outside the viewer. Reader HTTP routes stay read-only in every mode.
+The viewer stores each document's original HTML unchanged. It renders that HTML on a dedicated path inside a sandboxed iframe with a Content Security Policy; it does not sanitize the stored file. Do not present an accepted document as safe to open outside the viewer. Live source-viewer and hub HTTP readers accept only GET and HEAD in every mode. Document deletion and other mutations remain local CLI operations.
 
 When changing implementation or security policy rather than operating the CLI, first read the [architecture](https://github.com/deveshsangwan/html-inbox/blob/main/docs/architecture.md) and [threat model](https://github.com/deveshsangwan/html-inbox/blob/main/docs/threat-model.md).

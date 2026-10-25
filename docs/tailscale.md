@@ -10,9 +10,11 @@ The reader binds to `127.0.0.1`. Serve terminates tailnet HTTPS on the connected
 
 The HTTP foundation must allow the exact prepared hostname, ignore forwarded and Tailscale identity headers for authorization, and return only `{"ok":true}` from the reader's `/health`. Identity belongs to the separate private loopback control endpoint. The module checks reader health with both the tailnet Host and a loopback Host before configuring Serve. A reader exposing process or inbox identity fails this check.
 
+Keep the intended `--inbox`, absolute `--home`, or process binding across startup, status, and cleanup. With registered entries, unbound automation requires a selector or configured default. See [named selection and the 0.3 upgrade](named-inboxes.md#upgrade-from-02x).
+
 ## Worker contract
 
-`packages/cli/src/viewer-tailscale.ts` exports these public boundaries:
+`packages/cli/src/viewer-tailscale.ts` uses these boundaries:
 
 ```typescript
 interface TailscaleViewerOptions {

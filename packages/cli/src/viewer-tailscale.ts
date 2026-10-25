@@ -168,10 +168,11 @@ export async function startTailscale(
 export async function getTailscaleStatus(
   home: string,
   command: TailscaleCommandOptions = {},
+  options: { readOnly?: boolean } = {},
 ): Promise<TailscaleStatus> {
   let ownership: TailscaleOwnership | undefined;
   try {
-    ownership = await readTailscaleOwnership(home);
+    ownership = await readTailscaleOwnership(home, options);
   } catch (error) {
     return { state: "drift", reason: describeError(error) };
   }

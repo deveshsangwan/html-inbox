@@ -2,6 +2,26 @@
 
 All notable changes to HTML Inbox will be documented here.
 
+## 0.3.0 - 2026-10-25
+
+- Add intentionally named independent inboxes with a private per-user catalog, in-place registration, explicit creation, and durable location/identity validation.
+- Resolve a library once per operation using explicit selectors, process-bound environment, then an optional configured default. There is no shared current or last-used inbox.
+- Offer a one-operation terminal picker when named inboxes exist without a binding or default. Scripts and JSON mode fail with selector guidance instead of prompting; an empty catalog retains legacy first-use behavior.
+- Use readable viewer, service, catalog, and document-list output by default, preserve machine-readable schemas with `--json`, and add `inbox list --running` for privately verified registered viewers.
+- Add an optional local read-only hub with explicit source membership, combined list/search, inbox filters and source-qualified document links. Stopped libraries remain readable; unavailable sources produce incomplete results without changing source paths, permissions, identities, or original bytes.
+- Retry Windows catalog-lock creation while a prior lock is pending deletion, bounded by the existing acquisition deadline; retain permanent permission errors.
+- Update documentation and both skills for the human and agent workflows. Skill resolvers accept stable installed 0.2.x and 0.3.x executables and retain a published 0.2.2 fallback with feature-specific capability checks.
+
+### Upgrade to 0.3.0
+
+Automation parsing `viewer status`, `viewer stop`, or `viewer service` output must add `--json` after upgrading. JSON mode never confirms a destructive operation: deletion still requires `--force`, and remote revocation requires `--yes`. Plain publishing and viewer/hub startup retain URL-only stdout.
+
+Once named inboxes are registered, unbound automation needs `--inbox NAME`, an absolute `--home PATH`, a consistent `HTML_INBOX_NAME` / `HTML_INBOX_HOME` binding, or an intentionally configured default. Without any named entries, the legacy `~/.html-inbox` behavior remains. Terminal picks affect only that operation and do not save a default. Existing homes can be registered in place; no document move, merge, or automatic import occurs.
+
+Catalog, picker, and hub inspection validate existing roots and identities without repairing permissions or creating missing paths. Make selected sources readable to the same OS account and retain protected local storage; Windows privacy still depends on owner-restricted ACLs. Ordinary owned-library writes retain their managed-directory/file permission behavior. Every reachable hub reader can read every explicitly mounted source; filters do not restrict access. Reading membership never changes publishing destinations or auto-adds new libraries.
+
+The private control protocol remains compatible with 0.2.x. Restart an existing viewer through the normal verified lifecycle after updating to load the new interface and code; stored documents and saved exposure remain intact. Stop a 0.1.0 viewer with its original executable before upgrading. Update CLI and skills separately. This release covers one machine and OS account; it adds no reader mutations, library copying, or network replication.
+
 ## 0.2.2 - 2026-10-25
 
 - Record timestamped shutdown requests and completion with the viewer PID and first trigger, preserving serialized startup and cleanup.

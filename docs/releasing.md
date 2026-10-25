@@ -7,6 +7,7 @@ The source workspace uses Node.js 24, Corepack, and the pinned pnpm lockfile. Th
 1. Update `packages/cli/package.json` and `CHANGELOG.md` together. Never reuse a version that npm has accepted.
 2. Tell users about upgrade requirements. For 0.2.0, stop viewers started by 0.1.0 with the old CLI before upgrading. The private process-control protocol changed; stored documents remain intact.
    Version 0.2.2 keeps the 0.2.x CLI and control protocol unchanged; restart an existing viewer after updating to load the new diagnostics.
+   For 0.3.0, migrate automation to explicit `--json` on viewer/service inspections and explicit library selection when named entries exist. Catalog, picker, and hub inspection do not repair source permissions or create missing roots. The private control protocol remains compatible with 0.2.x; restart existing viewers to load the new code. See the [0.3.0 upgrade notes](../CHANGELOG.md#upgrade-to-030) and [named inbox guide](named-inboxes.md).
    Audit the root and packed READMEs, changelog, relevant guides, website, CLI help, and skill instructions against the exact candidate. Correct stale live claims and record the audit and validation results. Preserve explicitly historical evidence and keep any preparation fallback pinned to a published package.
 3. From a clean checkout, run:
 

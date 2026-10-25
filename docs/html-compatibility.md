@@ -2,7 +2,7 @@
 
 HTML Inbox stores the original HTML file. Files beside it, such as `chart.png`,
 `styles.css`, and `app.js`, are not copied into the inbox. The document Content
-Security Policy blocks those resources in both the local viewer and served
+Security Policy blocks those resources in source viewers, local hubs, and served
 static snapshots.
 
 Publishing continues when validation reports a compatibility warning. A warning

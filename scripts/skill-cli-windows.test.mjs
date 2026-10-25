@@ -73,7 +73,7 @@ console.log(${JSON.stringify(prefix)});
         await writeFile(path.join(globalBin, "npx-cli.js"), 'console.log(JSON.stringify({ entry: "global", args: process.argv.slice(2) }));\n');
       }
 
-      const args = ["--yes", "html-inbox@0.2.1", "publish", "R&D.html", "--title", '"Results" %PATH%'];
+      const args = ["--yes", "html-inbox@0.2.2", "publish", "R&D.html", "--title", '"Results" %PATH%'];
       const result = await runCommand(process.execPath, [dispatcher], {
         env: { HTML_INBOX_SKILL_INVOCATION: JSON.stringify({ command: fixture.shim, args }) },
       });

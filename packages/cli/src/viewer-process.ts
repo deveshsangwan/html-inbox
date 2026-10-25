@@ -19,6 +19,7 @@ export async function spawnDetachedViewer(
   config: ViewerNetworkConfig,
   lockToken: string,
   tailscaleExecutable?: string,
+  inboxName?: string,
 ): Promise<DetachedViewer> {
   const entry = process.argv[1];
   if (!entry) {
@@ -39,11 +40,13 @@ export async function spawnDetachedViewer(
 
     await log.chmod(0o600);
     await log.write(`\n${new Date().toISOString()} Starting ${config.exposure} viewer on port ${config.port}\n`);
-    child = spawn(process.execPath, [path.resolve(entry), "viewer", "--foreground"], {
+    child = spawn(process.execPath, [path.resolve(entry), "viewer", "--foreground", "--home", home], {
       detached: true,
       env: {
         ...process.env,
         HTML_INBOX_HOME: home,
+        HTML_INBOX_NAME: undefined,
+        HTML_INBOX_VIEWER_NAME: inboxName,
         HTML_INBOX_PORT: String(config.port),
         HTML_INBOX_VIEWER_CONFIG: JSON.stringify(config),
         HTML_INBOX_START_LOCK: lockToken,

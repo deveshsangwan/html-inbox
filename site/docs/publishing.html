@@ -77,6 +77,7 @@
             <ul>
               <li><a href="index.html">Getting started</a></li>
               <li><a href="agent-setup.html">Agent setup</a></li>
+              <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
               <li>
                 <a href="publishing.html" aria-current="page"
                   >Publish documents</a
@@ -115,6 +116,7 @@
               <ul>
                 <li><a href="index.html">Getting started</a></li>
                 <li><a href="agent-setup.html">Agent setup</a></li>
+                <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
                 <li>
                   <a href="publishing.html" aria-current="page"
                     >Publish documents</a
@@ -156,6 +158,14 @@
           or Tailscale.
         </p>
 
+        <p>
+          In 0.3.0, library commands accept <code>--inbox NAME</code> or absolute
+          <code>--home</code>. Keep the same destination across publish, list,
+          preferences, and deletion. With registered entries, redirected jobs
+          require a selector, process binding, or configured default. With no
+          entries or bindings, legacy first use remains. See
+          <a href="named-inboxes.html#selection">named selection</a> before scripting.
+        </p>
         <h2 id="publish">Publish a file</h2>
         <div class="docs-code">
           <pre
@@ -275,8 +285,8 @@ html-inbox list</code></pre>
           or process-management controls.
         </p>
         <p>
-          The plain-text list contains tab-separated ID, type, creation time,
-          and title. JSON includes the complete stored metadata.
+          The plain-text list is a readable table of title, type, creation time,
+          and ID. JSON includes the complete stored metadata.
         </p>
         <div class="docs-code">
           <pre
@@ -300,7 +310,7 @@ html-inbox list</code></pre>
         <p>
           For automation, use <code>--force</code>. <code>--json</code> changes
           successful output to JSON with the metadata and reclaimed byte count;
-          it does not remove the confirmation requirement.
+          JSON mode never prompts and requires <code>--force</code>.
         </p>
         <div class="docs-code">
           <pre
@@ -320,28 +330,32 @@ html-inbox list</code></pre>
         <h2 id="automation">Use output in scripts</h2>
         <p>
           Capture the publish URL from stdout. Keep warnings visible on stderr
-          so you can spot blocked resources.
+          so you can inspect compatibility problems. A warning alone does not
+          prove that the browser blocks the feature.
         </p>
         <div class="docs-code">
           <pre
             role="region"
             tabindex="0"
             aria-label="Terminal command"
-          ><code>html-inbox publish ./report.html --title &quot;Daily report&quot; --type report &gt; report-url.txt
-html-inbox list --json &gt; documents.json</code></pre>
+          ><code>html-inbox publish ./report.html --title &quot;Daily report&quot; --type report --inbox development &gt; report-url.txt
+html-inbox list --inbox development --json &gt; documents.json
+html-inbox viewer status --inbox development --json</code></pre>
         </div>
         <p>
-          <code>publish</code> has no <code>--json</code> option.
-          <code>list</code>, <code>delete</code>, <code>export</code>, and
-          remote commands support <code>--json</code>. Viewer and service status
-          commands already print JSON without a flag. CLI errors return a
+          <code>publish --json</code> returns a receipt with <code>url</code>,
+          <code>inbox</code>, and <code>home</code>. <code>list</code>,
+          <code>preferences</code>, <code>delete</code>, <code>export</code>, remote
+          commands, viewer status/stop, and service commands support <code>--json</code>.
+          Viewer and service commands print readable text by default in 0.3.0;
+          add the flag when migrating scripts that parsed their 0.2.x default JSON. CLI errors return a
           nonzero exit status. A status command can succeed while reporting a
           stopped, conflicting, incompatible, or failed state; inspect its JSON
           state before treating the viewer as ready.
         </p>
 
         <nav class="docs-page-links" aria-label="Adjacent documentation pages">
-          <a href="index.html">Previous: Getting started</a
+          <a href="named-inboxes.html">Previous: Named inboxes and hubs</a
           ><a href="html-compatibility.html">Next: HTML compatibility</a>
         </nav>
         <p class="docs-source">

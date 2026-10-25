@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta
+      name="description"
+      content="Name independent local libraries, choose CLI destinations, read explicit sources through a local hub, and migrate automation to 0.3.0."
+    />
+    <title>Named inboxes and hubs | HTML Inbox docs</title>
+    <link
+      rel="canonical"
+      href="https://deveshsangwan.github.io/html-inbox/docs/named-inboxes.html"
+    />
+    <script src="../assets/theme.js"></script>
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/docs.css" />
+  </head>
+  <body class="docs-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav">
+        <a class="brand" href="../index.html" aria-label="HTML Inbox home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M3.5 4h13v12h-13zM3.5 11h3.25l1.5 2h3.5l1.5-2h3.25"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span>HTML Inbox</span>
+        </a>
+        <nav class="nav-links" aria-label="Main navigation">
+          <a href="index.html" aria-current="true">Docs</a>
+          <a href="https://github.com/deveshsangwan/html-inbox">GitHub</a>
+          <a class="nav-cta" href="https://www.npmjs.com/package/html-inbox"
+            >npm package</a
+          >
+          <button
+            class="theme-toggle"
+            type="button"
+            data-theme-toggle
+            aria-label="Switch to dark mode"
+            hidden
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle
+                cx="10"
+                cy="10"
+                r="7"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path d="M10 3a7 7 0 0 1 0 14V3Z" fill="currentColor" />
+            </svg>
+            <span data-theme-label>Dark mode</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+    <div class="shell docs-layout">
+      <aside class="docs-sidebar">
+        <nav class="docs-nav" aria-label="Documentation">
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Use HTML Inbox</p>
+            <ul>
+              <li><a href="index.html">Getting started</a></li>
+              <li><a href="agent-setup.html">Agent setup</a></li>
+              <li><a href="named-inboxes.html" aria-current="page">Named inboxes and hubs</a></li>
+              <li>
+                <a href="publishing.html"
+                  >Publish documents</a
+                >
+              </li>
+              <li><a href="html-compatibility.html">HTML compatibility</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Run and share</p>
+            <ul>
+              <li><a href="viewer.html">Viewer</a></li>
+              <li><a href="lan.html">LAN access</a></li>
+              <li><a href="tailscale.html">Tailscale access</a></li>
+              <li><a href="boot-services.html">Boot services</a></li>
+              <li><a href="remote.html">Static and remote publishing</a></li>
+            </ul>
+          </div>
+          <div class="docs-nav-group">
+            <p class="docs-nav-label">Reference</p>
+            <ul>
+              <li><a href="security-storage.html">Security and storage</a></li>
+              <li><a href="cli-reference.html">CLI reference</a></li>
+              <li><a href="troubleshooting.html">Troubleshooting</a></li>
+              <li><a href="development.html">Development</a></li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+      <main class="docs-article" id="main">
+        <details class="docs-mobile-nav">
+          <summary>Documentation navigation</summary>
+          <nav class="docs-nav" aria-label="Mobile documentation">
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Use HTML Inbox</p>
+              <ul>
+                <li><a href="index.html">Getting started</a></li>
+                <li><a href="agent-setup.html">Agent setup</a></li>
+                <li><a href="named-inboxes.html" aria-current="page">Named inboxes and hubs</a></li>
+                <li>
+                  <a href="publishing.html"
+                    >Publish documents</a
+                  >
+                </li>
+                <li>
+                  <a href="html-compatibility.html">HTML compatibility</a>
+                </li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Run and share</p>
+              <ul>
+                <li><a href="viewer.html">Viewer</a></li>
+                <li><a href="lan.html">LAN access</a></li>
+                <li><a href="tailscale.html">Tailscale access</a></li>
+                <li><a href="boot-services.html">Boot services</a></li>
+                <li><a href="remote.html">Static and remote publishing</a></li>
+              </ul>
+            </div>
+            <div class="docs-nav-group">
+              <p class="docs-nav-label">Reference</p>
+              <ul>
+                <li>
+                  <a href="security-storage.html">Security and storage</a>
+                </li>
+                <li><a href="cli-reference.html">CLI reference</a></li>
+                <li><a href="troubleshooting.html">Troubleshooting</a></li>
+                <li><a href="development.html">Development</a></li>
+              </ul>
+            </div>
+          </nav>
+        </details>
+        <p class="docs-eyebrow">HTML Inbox documentation</p>
+        <h1>Name libraries and read them together</h1>
+        <p class="docs-lead">
+          Version 0.3.0 adds independent named libraries, a terminal picker, and
+          a local reading hub. Naming a library records its location without
+          moving or combining documents. Hubs support the same machine and OS account.
+        </p>
+        <h2 id="catalog">Name an existing or new library</h2>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="Name libraries"><code>html-inbox inbox register home --home /absolute/path/to/existing-inbox
+html-inbox inbox create development --home /absolute/path/to/development-inbox
+html-inbox inbox list
+html-inbox inbox list --running --json</code></pre>
+        </div>
+        <p>
+          Register preserves an existing library; create initializes a new root.
+          Unknown names during ordinary commands never create libraries. Names
+          use 1-63 lowercase letters, digits, underscores, or hyphens, start with
+          a letter or digit, and exclude reserved filenames. Each binding captures
+          a canonical absolute home and durable UUID. Missing or replaced homes
+          fail instead of being adopted. The catalog defaults to
+          <code>~/.config/html-inbox</code>, independent of the selected library.
+        </p>
+        <p>
+          List shows registered names, viewer states, and running reader URLs.
+          <code>--running</code> filters to privately verified running viewers;
+          anonymous reader health is not verification. Stopped libraries stay
+          registered. Unregistered libraries are not discovered. Catalog and
+          picker inspection do not create source paths or repair permissions.
+        </p>
+        <h2 id="selection">Select one destination per operation</h2>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="Select a library"><code>html-inbox publish ./report.html --title "Build report" --type report --inbox development
+html-inbox list --inbox development --json
+html-inbox viewer status --inbox development --json
+html-inbox viewer --inbox development --port 4321</code></pre>
+        </div>
+        <p>
+          Library commands choose explicit <code>--inbox</code> / absolute
+          <code>--home</code>, then process-bound <code>HTML_INBOX_NAME</code> /
+          <code>HTML_INBOX_HOME</code>, then the configured default. An explicit
+          selector overrides the entire environment tier. A name and home in one
+          tier must match. Invalid names, stale defaults, and changed identities
+          fail without falling back. Relative <code>HTML_INBOX_HOME</code> keeps
+          its legacy meaning relative to the current working directory.
+        </p>
+        <p>
+          With entries and no binding or default, the picker requires stdin,
+          stdout, and stderr all attached to TTYs and no <code>--json</code>.
+          Enter an exact name or <code>#N</code> row, such as <code>#2</code>.
+          Numeric names remain exact names. Use <code>:q</code>, Ctrl-C, or EOF
+          to cancel. Even one entry requires a choice, which applies to this
+          operation only and never saves a current inbox or changes the default.
+        </p>
+        <p>
+          Redirecting any stream disables the picker. Scripts, agents, pipelines,
+          and JSON mode fail with available names and selector guidance on stderr,
+          leaving stdout empty. Keep an intended selector or binding across every
+          command. Ask which library to use if it is unknown. With no entries or
+          bindings, legacy first use at <code>~/.html-inbox</code> remains.
+        </p>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="Bind operations or set a default"><code>export HTML_INBOX_NAME=development
+html-inbox list --json
+html-inbox inbox default home
+html-inbox inbox default --clear</code></pre>
+        </div>
+        <p>
+          In PowerShell, use <code>$env:HTML_INBOX_NAME = 'development'</code>.
+          A default affects future unbound operations; an environment binding
+          still takes priority. Clear or set a healthy default deliberately to
+          repair an unavailable one. Use explicit selection to reach a healthy
+          library during recovery. Library ports must differ. Naming preserves
+          preferences and saved exposure; stop a verified viewer before changing
+          its active port, host, or exposure. Restart to load a new named heading.
+        </p>
+        <h2 id="hub">Read explicit libraries through a hub</h2>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="Create and start a reading hub"><code>html-inbox hub init --config /absolute/path/to/reading-hub.json \
+  --name "My reports" --inbox home --inbox development
+html-inbox hub --config /absolute/path/to/reading-hub.json --port 4322</code></pre>
+        </div>
+        <p>
+          Init requires an existing canonical parent directory and refuses an
+          existing config. It captures 1-128 explicit name/home/UUID mounts.
+          New catalog entries and default changes never add sources. Membership
+          stays fixed for the running hub; review a new config deliberately when
+          it should change. Protect the config and parent because it contains local paths.
+        </p>
+        <p>
+          The hub runs in the foreground until Ctrl-C. Its default listener is
+          loopback port 3218. It combines list and search with inbox badges and
+          a source filter. Source names keep identical document IDs distinct.
+          Missing, mismatched, or corrupt sources mark results incomplete while
+          healthy sources remain readable. Public notices omit local paths and
+          control details; operator diagnostics go to stderr.
+        </p>
+        <p>
+          Source viewers may be stopped. Hub reads check existing source files
+          without creating paths, tightening permissions, writing preferences,
+          or copying runtime state. POSIX sources must belong to the current
+          account. Windows ACL privacy remains a prerequisite for every source,
+          the catalog, and config. Read-only inspection does not repair ACLs.
+          See <a href="security-storage.html#windows">Windows storage prerequisites</a>.
+          Hub document reads use <code>HTML_INBOX_MAX_BYTES</code>, default 10 MiB.
+        </p>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="Expose a hub deliberately"><code>html-inbox hub --config /absolute/path/to/reading-hub.json \
+  --lan --host 192.168.1.20 --port 4322</code></pre>
+        </div>
+        <p>
+          Every reachable hub reader can read every selected library, even if its
+          standalone viewer is stopped or private. Filters are reading aids,
+          not access control. Source viewers and hubs accept HTTP GET and HEAD
+          only, with the existing sandbox, CSP, and Host checks. Publishing and
+          deletion remain local CLI operations. Hubs do not manage source
+          lifecycles, Tailscale Serve, or boot services. Cross-account reading,
+          network replication, remote ingestion, and historical-fragment migration
+          are outside this release.
+        </p>
+        <h2 id="services">Select a library for a boot service</h2>
+        <p>
+          Service commands use the invoking account's catalog. Resolve the
+          normal user's intended absolute home before sudo, then use
+          <code>--home</code> or <code>HTML_INBOX_HOME</code> consistently for
+          install, status, and uninstall. Named libraries retain the single fixed
+          boot-service definition per machine. Use deliberately installed stable
+          Node and CLI paths. See <a href="boot-services.html">boot setup and ownership</a>.
+        </p>
+        <h2 id="upgrade">Upgrade humans and agents from 0.2.x</h2>
+        <p>
+          Stop an old viewer with the executable that started it, or Ctrl-C for
+          foreground mode, and confirm shutdown before updating. For boot startup,
+          uninstall with the old installation, update, then reinstall with the
+          intended home and exposure. Versions 0.2.x and 0.3.x share protocol 3;
+          restart compatible viewers to load the new code. Incompatible 0.1.0
+          viewers still require their original executable for shutdown. Documents,
+          preferences, and saved exposure persist. Follow the
+          <a href="index.html#update">CLI update</a> and
+          <a href="boot-services.html#updating">service update</a> instructions.
+        </p>
+        <ul>
+          <li>Add <code>--json</code> to viewer status/stop and service commands
+            when parsing output. They print readable text by default in 0.3.0.
+            Document and catalog lists are readable tables. Plain publish,
+            detached viewer startup, and hub startup keep URL-only stdout.
+            <code>publish --json</code> returns <code>url</code>, <code>inbox</code>,
+            and <code>home</code>.</li>
+          <li>Bind automation before registering a library. Even one entry makes
+            unbound redirected jobs fail rather than choose the legacy home.
+            Use <code>--inbox</code>, absolute <code>--home</code>, an environment
+            binding, or a deliberate default. No entries preserves legacy behavior.</li>
+          <li>Update skills separately. The skill accepts stable installed 0.2.x
+            and 0.3.x CLIs and keeps its fallback on published
+            <code>npx --yes html-inbox@0.2.2</code>. That fallback lacks named
+            selection, hubs, the picker, publish JSON, and new viewer/service
+            JSON flags. Check actual help for each capability, including
+            <code>inbox list --running</code>. Older viewer and service commands
+            already output JSON without the new flag. Preserve the intended
+            destination when a feature is unavailable.</li>
+          <li>JSON never prompts or grants destructive approval. Deletion still
+            requires <code>--force</code>; remote revoke requires <code>--yes</code>.</li>
+        </ul>
+        <p>
+          The <a href="https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/cli-resolution.md">CLI resolution reference</a>
+          defines exact resolver acceptance and the published fallback pin. The
+          <a href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/named-inboxes.md">source guide</a>
+          covers identity validation, interrupted registration, and service
+          compatibility. See the <a href="cli-reference.html">CLI reference</a>
+          for complete syntax.
+        </p>
+        <nav class="docs-page-links" aria-label="Adjacent documentation pages">
+          <a href="agent-setup.html">Previous: Agent setup</a>
+          <a href="publishing.html">Next: Publish documents</a>
+        </nav>
+        <p class="docs-source">
+          See a mistake?
+          <a href="https://github.com/deveshsangwan/html-inbox/issues"
+            >Report a documentation issue</a
+          >.
+        </p>
+      </main>
+      <aside class="docs-toc">
+        <nav aria-label="On this page">
+          <p class="docs-toc-label">On this page</p>
+          <ul>
+            <li><a href="#catalog">Name libraries</a></li>
+            <li><a href="#selection">Select a destination</a></li>
+            <li><a href="#hub">Read through a hub</a></li>
+            <li><a href="#services">Boot-service selection</a></li>
+            <li><a href="#upgrade">Upgrade from 0.2.x</a></li>
+          </ul>
+        </nav>
+      </aside>
+    </div>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span
+          >HTML Inbox ·
+          <a
+            href="https://github.com/deveshsangwan/html-inbox/blob/main/LICENSE"
+            >MIT license</a
+          ></span
+        ><a href="https://github.com/deveshsangwan/html-inbox"
+          >Source on GitHub</a
+        >
+      </div>
+    </footer>
+  </body>
+</html>

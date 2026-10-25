@@ -77,6 +77,7 @@
             <ul>
               <li><a href="index.html">Getting started</a></li>
               <li><a href="agent-setup.html">Agent setup</a></li>
+              <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
               <li><a href="publishing.html">Publish documents</a></li>
               <li><a href="html-compatibility.html">HTML compatibility</a></li>
             </ul>
@@ -115,6 +116,7 @@
               <ul>
                 <li><a href="index.html">Getting started</a></li>
                 <li><a href="agent-setup.html">Agent setup</a></li>
+                <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
                 <li><a href="publishing.html">Publish documents</a></li>
                 <li>
                   <a href="html-compatibility.html">HTML compatibility</a>
@@ -154,6 +156,12 @@
           HTML Inbox integrates with an existing signed-in Tailscale client.
           Tailscale Serve terminates HTTPS and proxies the live viewer on
           loopback.
+        </p>
+        <p>
+          Keep the same <code>--inbox</code>, absolute <code>--home</code>, or
+          process binding throughout these commands. Registered entries without
+          a binding require a terminal choice or fail for automation. See
+          <a href="named-inboxes.html#selection">named selection</a>.
         </p>
 
         <h2 id="prerequisites">Prepare the existing client</h2>

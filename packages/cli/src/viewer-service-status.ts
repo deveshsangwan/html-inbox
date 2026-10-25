@@ -15,7 +15,7 @@ if (process.getuid() !== configuration.user.uid || process.getgid() !== configur
 
 const child = require("node:child_process").spawn(
   configuration.nodePath,
-  [configuration.cliPath, "viewer", "status"],
+  [configuration.cliPath, "viewer", "status", ...(configuration.json ? ["--json"] : [])],
   { cwd: configuration.user.home, env: configuration.environment, stdio: ["ignore", "inherit", "inherit"] },
 );
 process.once("SIGTERM", () => child.kill("SIGKILL"));
@@ -51,7 +51,7 @@ export async function queryViewerServiceProcess(
     HTML_INBOX_PORT: String(definition.port),
   };
   const command = isAdministrator ? process.execPath : definition.nodePath;
-  const args = isAdministrator
+  const statusArgs = (json: boolean) => isAdministrator
     ? [
         "--input-type=commonjs",
         "-e",
@@ -61,14 +61,15 @@ export async function queryViewerServiceProcess(
           nodePath: definition.nodePath,
           cliPath: definition.cliPath,
           environment,
+          json,
         }),
       ]
-    : [definition.cliPath, "viewer", "status"];
+    : [definition.cliPath, "viewer", "status", ...(json ? ["--json"] : [])];
 
-  const output = await new Promise<string>((resolve, reject) => {
+  const query = (json: boolean) => new Promise<{ error: Error | null; stdout: string; stderr: string }>((resolve) => {
     const child = execFile(
       command,
-      args,
+      statusArgs(json),
       {
         ...(isAdministrator
           ? {}
@@ -81,23 +82,26 @@ export async function queryViewerServiceProcess(
         killSignal: isAdministrator ? "SIGTERM" : "SIGKILL",
       },
       (error, stdout, stderr) => {
-        if (error) {
-          reject(
-            new Error(
-              `Viewer service status failed as ${definition.user.name}: ${(stderr.trim() || error.message).slice(0, 2000)}`,
-              { cause: error },
-            ),
-          );
-          return;
-        }
-
-        resolve(stdout);
+        resolve({ error, stdout, stderr });
       },
     );
     child.stdin?.end();
   });
 
-  const status: unknown = JSON.parse(output);
+  let result = await query(true);
+  // Older installed service CLIs already emit JSON and reject the new format flag.
+  if (result.error && /^html-inbox: Unknown option ['"]--json['"]/m.test(result.stderr)) {
+    result = await query(false);
+  }
+
+  if (result.error) {
+    throw new Error(
+      `Viewer service status failed as ${definition.user.name}: ${(result.stderr.trim() || result.error.message).slice(0, 2000)}`,
+      { cause: result.error },
+    );
+  }
+
+  const status: unknown = JSON.parse(result.stdout);
   if (
     !isRecord(status) ||
     typeof status.state !== "string" ||

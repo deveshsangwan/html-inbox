@@ -77,6 +77,7 @@
             <ul>
               <li><a href="index.html">Getting started</a></li>
               <li><a href="agent-setup.html">Agent setup</a></li>
+              <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
               <li><a href="publishing.html">Publish documents</a></li>
               <li><a href="html-compatibility.html">HTML compatibility</a></li>
             </ul>
@@ -115,6 +116,7 @@
               <ul>
                 <li><a href="index.html">Getting started</a></li>
                 <li><a href="agent-setup.html">Agent setup</a></li>
+                <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
                 <li><a href="publishing.html">Publish documents</a></li>
                 <li>
                   <a href="html-compatibility.html">HTML compatibility</a>
@@ -156,6 +158,23 @@
           process or external configuration belongs to it.
         </p>
 
+        <h2 id="selection">An inbox choice is required</h2>
+        <p>
+          In 0.3.0, even one registered entry requires an intended destination.
+          Pass <code>--inbox NAME</code>, absolute <code>--home</code>, a process
+          binding, or a configured default. Redirecting any stream or using JSON
+          disables the picker. A fully interactive terminal accepts an exact name
+          or <code>#N</code> row for one operation. Missing homes or changed UUIDs
+          fail rather than creating a replacement library. See
+          <a href="named-inboxes.html#selection">selection and default repair</a>.
+        </p>
+        <p>
+          Scripts parsing old default JSON must add <code>--json</code> to viewer
+          status/stop and service commands after upgrading. Published 0.2.x
+          commands lack those new flags. Check actual help and preserve the
+          destination if a skill's published 0.2.2 fallback lacks a requested
+          named or hub capability. See <a href="named-inboxes.html#upgrade">migration steps</a>.
+        </p>
         <h2 id="viewer">Viewer does not start</h2>
         <p>
           Check the installed version, configuration, and private status first.
@@ -188,7 +207,7 @@ html-inbox viewer --foreground</code></pre>
           ><code>html-inbox viewer --port 4321</code></pre>
         </div>
         <p>
-          Use the same <code>HTML_INBOX_HOME</code> across commands. An explicit
+          Keep the same explicit selector or process binding across commands. An explicit
           <code>HTML_INBOX_PORT</code> must match the intended active port for
           status and stop; unset it when you want the saved configuration.
           Repeated starts reuse a healthy matching viewer, while explicit
@@ -200,7 +219,7 @@ html-inbox viewer --foreground</code></pre>
           newer release. For an old foreground process, use Ctrl-C. The new CLI
           refuses an incompatible private control protocol rather than
           signaling an unverified PID. This applies to 0.1.0 viewers; 0.2.x
-          keeps protocol version 3. Restart an existing viewer after updating
+          and 0.3.x share protocol version 3. Restart an existing viewer after updating
           to load new code, including the 0.2.2 shutdown diagnostics.
         </p>
         <p>
@@ -351,6 +370,7 @@ html-inbox remote reconcile</code></pre>
         <nav aria-label="On this page">
           <p class="docs-toc-label">On this page</p>
           <ul>
+            <li><a href="#selection">Inbox choice and JSON migration</a></li>
             <li><a href="#viewer">Viewer does not start</a></li>
             <li>
               <a href="#upgrade">Older viewer record blocks an upgrade</a>
