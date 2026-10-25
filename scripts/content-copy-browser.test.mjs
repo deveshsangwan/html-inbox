@@ -504,7 +504,7 @@ for (const mode of ["local", "static"]) {
       document.body.focus();
     });
     await documentFrame.focus();
-    await page.keyboard.press("Control+c");
+    await page.keyboard.press("ControlOrMeta+c");
     assert.equal(await frame.locator("body").evaluate(() => window.nativeCopyEvents), 1);
     assert.deepEqual(await writes(page), []);
   });
