@@ -137,7 +137,7 @@ export function initializeViewer(): void {
     });
 
     document.addEventListener("keydown", (event) => {
-      if (event.key !== "Escape") {
+      if (event.key !== "Escape" || document.querySelector("[data-copy-dialog][open]")) {
         return;
       }
 

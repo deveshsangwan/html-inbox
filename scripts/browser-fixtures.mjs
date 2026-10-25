@@ -101,7 +101,7 @@ export async function createBrowserFixture(t, mode, publishDocuments, options = 
   const address = server.address();
   assert(address && typeof address !== "string");
   const origin = `http://127.0.0.1:${address.port}`;
-  browser = await chromium.launch(
+  browser = await (options.browserType ?? chromium).launch(
     process.env.HTML_INBOX_BROWSER_EXECUTABLE
       ? { executablePath: process.env.HTML_INBOX_BROWSER_EXECUTABLE }
       : {},
@@ -149,7 +149,7 @@ async function startStaticServer(snapshot, requests) {
       requests.push(pathname);
       const filePath = files.get(pathname);
 
-      if (!filePath || request.method !== "GET") {
+      if (!filePath || !["GET", "HEAD"].includes(request.method)) {
         response.writeHead(404);
         response.end("Not Found");
         return;
@@ -157,15 +157,16 @@ async function startStaticServer(snapshot, requests) {
 
       const bytes = await readFile(path.join(snapshot.outputDir, filePath));
       // A static host must install the generated policy on shells and original content.
-      const policy = filePath === "index.html"
+      const policy = filePath.endsWith(".json") ? {} : filePath === "index.html"
         ? headers.root
-        : filePath.includes("/content/") ? headers.document : headers.shell;
+        : filePath.includes("/content/") ? headers.document : filePath.endsWith(".html") ? headers.shell : {};
       response.writeHead(200, {
         ...headers.common,
         ...policy,
         "Content-Type": contentTypes.get(path.extname(filePath)) ?? "application/octet-stream",
+        "Content-Length": String(bytes.byteLength),
       });
-      response.end(bytes);
+      response.end(request.method === "HEAD" ? undefined : bytes);
     })().catch((error) => {
       response.writeHead(500);
       response.end(String(error));

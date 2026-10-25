@@ -153,7 +153,7 @@
         <p class="docs-eyebrow">HTML Inbox documentation</p>
         <h1>CLI reference</h1>
         <p class="docs-lead">
-          This reference describes 0.3.0. Library commands resolve one destination
+          This reference describes 0.4.0. Library commands resolve one destination
           from explicit flags, environment, or the configured default. Run
           <code>html-inbox --help</code> for the actual installed command set
           and <code>html-inbox --version</code> to identify the release.
@@ -484,7 +484,7 @@ html-inbox remote revoke [--yes] [--json]</code></pre>
         </p>
         <h2 id="output">Output and automation migration</h2>
         <p>
-          In 0.3.0, viewer status/stop and service commands require
+          Since 0.3.0, viewer status/stop and service commands require
           <code>--json</code> to retain machine-readable output. Plain document
           and catalog lists are readable tables. Plain publish, detached viewer
           startup, and hub startup retain URL-only stdout. Named context, picker
@@ -494,7 +494,8 @@ html-inbox remote revoke [--yes] [--json]</code></pre>
         <p>
           Published 0.2.x viewer and service commands output JSON without that
           flag. Check actual help before using new flags with an older CLI. The
-          published 0.2.2 skill fallback has no named selection or hub support.
+          published 0.3.0 skill fallback supports named selection and hubs, but
+          its reader lacks the <a href="viewer.html#copy">0.4.0 copy controls</a>.
           See <a href="named-inboxes.html#upgrade">upgrade steps</a> and the
           <a href="https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/cli-resolution.md">canonical CLI resolver rules</a>.
         </p>

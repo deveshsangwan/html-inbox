@@ -32,6 +32,10 @@ export function renderCloudflareHeaders(
       path: `${inboxPath}/documents/:id/content/*`,
       headers: security.document,
     },
+    {
+      path: `${inboxPath}/documents/:id/copy.json`,
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+    },
   ];
 
   if (rules.length > CLOUDFLARE_HEADER_RULE_LIMIT) {

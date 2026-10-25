@@ -1,12 +1,77 @@
 import { test } from "node:test";
 import { strict as assert } from "node:assert";
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { LocalDocumentBackend } from "./backend";
 import { formatStaticExportResult } from "./index";
-import { exportStaticSnapshot } from "./static-export";
+import { exportStaticSnapshot, hashManifestFiles } from "./static-export";
 import { DOCUMENT_CSP } from "./viewer-assets";
 import { temporaryHome } from "./test-fixtures";
+
+test("static copy JSON uses the same document read as content and joins the hashed inventory", async (t) => {
+  const home = await temporaryHome(t);
+  const backend = new LocalDocumentBackend(home);
+  const originalBytes = Buffer.from("\ufeff<!doctype html>\r\n<body><h1>Snapshot</h1><pre><code>  saved\t \r\n</code></pre></body>\r\n");
+  const metadata = await backend.publish({ originalBytes, title: "Snapshot", type: "report", sourceFileName: "snapshot.html" });
+  let documentReads = 0;
+  const snapshot = await exportStaticSnapshot({
+    listDocuments: () => backend.listDocuments(),
+    async getDocument(id) {
+      documentReads += 1;
+      assert.equal(documentReads, 1);
+
+      return backend.getDocument(id);
+    },
+  }, { outputDir: path.join(home, "snapshot") });
+  const documentPath = `${snapshot.inboxPath.slice(1)}/documents/${metadata.id}`;
+  const copyPath = `${documentPath}/copy.json`;
+  const copyBytes = await readFile(path.join(snapshot.outputDir, copyPath));
+
+  assert.equal(documentReads, 1);
+  assert.deepEqual(JSON.parse(copyBytes.toString("utf8")), {
+    schemaVersion: 1, status: "ready", text: "Snapshot\n  saved\t \n", codeBlocks: ["  saved\t \n"],
+  });
+  assert.deepEqual(await readFile(path.join(snapshot.outputDir, documentPath, "content", "index.html")), originalBytes);
+  assert.deepEqual(snapshot.manifest.files.find((file) => file.path === copyPath), {
+    path: copyPath, size: copyBytes.byteLength, sha256: createHash("sha256").update(copyBytes).digest("hex"),
+  });
+  assert.equal(snapshot.manifest.files.length, 9);
+  assert.equal((await readdir(snapshot.outputDir, { recursive: true, withFileTypes: true })).filter((entry) => entry.isFile()).length, 10);
+  assert.equal(snapshot.manifest.snapshotHash, hashManifestFiles(snapshot.manifest.files));
+  assert.notEqual(snapshot.manifest.snapshotHash, hashManifestFiles(snapshot.manifest.files.filter((file) => file.path !== copyPath)));
+});
+
+test("static export keeps unavailable copy payloads beside unchanged original bytes", async (t) => {
+  const home = await temporaryHome(t);
+  const backend = new LocalDocumentBackend(home);
+  const previousLimit = process.env.HTML_INBOX_MAX_BYTES;
+  t.after(() => {
+    if (previousLimit === undefined) {
+      delete process.env.HTML_INBOX_MAX_BYTES;
+      return;
+    }
+
+    process.env.HTML_INBOX_MAX_BYTES = previousLimit;
+  });
+  process.env.HTML_INBOX_MAX_BYTES = "128";
+  const fixtures = [
+    { bytes: Buffer.from([0xff]), reason: "invalid-encoding" },
+    { bytes: Buffer.alloc(129, "x"), reason: "too-large" },
+  ];
+
+  for (const fixture of fixtures) {
+    const metadata = await backend.publish({ originalBytes: fixture.bytes, title: fixture.reason, type: "report", sourceFileName: "unavailable.html" });
+    const snapshot = await exportStaticSnapshot(backend, { outputDir: path.join(home, `snapshot-${fixture.reason}`) });
+    const documentPath = path.join(snapshot.outputDir, snapshot.inboxPath, "documents", metadata.id);
+
+    assert.deepEqual(JSON.parse(await readFile(path.join(documentPath, "copy.json"), "utf8")), {
+      schemaVersion: 1, status: "unavailable", reason: fixture.reason,
+    });
+    assert.deepEqual(await readFile(path.join(documentPath, "content", "index.html")), fixture.bytes);
+    assert.equal(snapshot.manifest.files.some((file) => file.path.endsWith(`/documents/${metadata.id}/copy.json`)), true);
+  }
+});
 
 test("static snapshots carry an appearance default in shells and preserve document bytes", async (t) => {
   const home = await temporaryHome(t);
@@ -110,6 +175,7 @@ test("static export preserves bytes, metadata and atomic replacement", async (t)
   });
   assert.equal(firstSnapshot.inboxPath, `/i/${capability}`);
   assert.equal(firstSnapshot.manifest.documentCount, 2);
+  assert.equal(firstSnapshot.manifest.files.length, 12);
   assert.match(
     formatStaticExportResult(firstSnapshot, false),
     /Exported 2 documents/,

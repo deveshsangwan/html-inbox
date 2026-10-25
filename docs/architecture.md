@@ -69,11 +69,19 @@ HTML_INBOX_PORT=4321 html-inbox viewer
 
 Native detachment creates a separate session on POSIX, but retains service-manager ownership such as a Linux systemd cgroup. Scope cleanup can terminate the detached viewer. Persistent availability requires an explicitly configured supervisor. Graceful shutdown logs its timestamp, PID, and first trigger before cleanup and completion after removing the matching process record. A signal reason identifies the received signal, not its sender.
 
-Versions 0.2.x and 0.3.x share private control protocol 3. Compatible running viewers retain their loaded code until restarted. The control health check is the source of truth for readiness. A viewer can be reused only when its protocol and opaque home identity match. Shutdown also matches the saved PID and per-process identity against current control health before signaling. Tailscale readiness additionally requires verification of the live Serve route. A private ownership journal tracks the exact HTTPS route and backend; startup failures and shutdown remove only that verified route, preserving the journal when external changes make cleanup unsafe.
+Versions 0.2.x, 0.3.x, and 0.4.x share private control protocol 3. Compatible running viewers retain their loaded code until restarted. The control health check is the source of truth for readiness. A viewer can be reused only when its protocol and opaque home identity match. Shutdown also matches the saved PID and per-process identity against current control health before signaling. Tailscale readiness additionally requires verification of the live Serve route. A private ownership journal tracks the exact HTTPS route and backend; startup failures and shutdown remove only that verified route, preserving the journal when external changes make cleanup unsafe.
 
 Boot configuration is an explicit service operation. Linux systemd system units and macOS LaunchDaemons run the foreground viewer as a selected normal user before login. Definitions preserve the inbox, exposure, port, executable paths, and required environment. Installation and removal require administrator privileges, reject unrelated definitions, and preserve documents. See [service setup](self-hosting.md).
 
 Documents render through a viewer-owned path inside a sandboxed iframe. The app shell lists documents and opens one document at a time; raw files are never rendered directly into the shell DOM.
+
+## Copying saved content
+
+Viewer options opens a native copy dialog without replacing the preview frame. It prepares plain document text and ordered preformatted code blocks from the saved HTML through the shared parse5 extractor. Body structure and preformatted whitespace are retained; scripts, styles, metadata, templates, noscript, and explicit hidden subtrees are omitted. CSS visibility and live document state are not reconstructed. Copy selection uses the dialog textarea's offsets; selections inside the opaque preview use the browser's own Copy command.
+
+Preparation reads `/documents/<id>/copy.json`, or `/sources/<name>/documents/<id>/copy.json` for a hub mount, through the already-selected `DocumentSource`. Ordinary shells still read metadata only. The resource is GET/HEAD-only JSON with no-store and nosniff headers. The shell allows same-origin connections for preparation; document CSP and sandboxing remain unchanged. The client bounds streamed bytes, validates the versioned payload, rejects redirects, and ignores cancelled or stale work. It inserts only text values, then writes the clipboard on a fresh activation. Missing or rejected clipboard access leaves manual selection available.
+
+Extraction checks the configured input limit before parsing, but the existing standalone backend read remains unbounded before that check. Encoded copy JSON is limited to 10 MiB; excessive output or invalid UTF-8 produces an unavailable result without truncating content or disabling the preview. Parsing is synchronous. Static exports derive a sibling `copy.json` from the same buffer used for original content and include it in the hashed inventory under the capability path. This adds one file per document against provider upload limits; large libraries can therefore reach a provider's file ceiling sooner. Existing deployments change only when their owner regenerates and publishes a snapshot.
 
 ## Appearance and reading layout
 
@@ -126,13 +134,14 @@ i/<capability>/
   documents/<id>/
     index.html
     content/index.html
+    copy.json
 ```
 
 The root page contains no capability path. The owner marker contains only a schema version and opaque owner UUID. The manifest records sorted file digests and an aggregate snapshot hash without local paths. Original document bytes are copied to `content/index.html`; generated shell pages continue to embed them in sandboxed iframes.
 
 `security-headers.json` lives behind the capability path so the generic static output has no predictable file that discloses the bearer link. It is an adapter input rather than a file browsers consume. It describes common, root, shell, and document policies without provider routing syntax. A provider adapter must apply them to every corresponding route alias and must fail rather than publish without equivalent headers.
 
-The Cloudflare Pages adapter translates those policies into a compact `_headers` file in a disposable copy of the snapshot. The copy is deployed from its own root with Wrangler Direct Upload, then removed whether deployment succeeds or fails. The provider-neutral snapshot is never modified. Deployment preparation verifies every listed file digest, rejects extra and missing files, and checks the journaled snapshot hash before invoking Wrangler. A global common rule combines with separate root, inbox-shell, document-shell, and document-content rules so the content CSP never merges with the stricter shell CSP.
+The Cloudflare Pages adapter translates those policies into a compact `_headers` file in a disposable copy of the snapshot. The copy is deployed from its own root with Wrangler Direct Upload, then removed whether deployment succeeds or fails. The provider-neutral snapshot is never modified. Deployment preparation verifies every listed file digest, rejects extra and missing files, and checks the journaled snapshot hash before invoking Wrangler. A global common rule combines with separate root, inbox-shell, document-shell, and document-content rules so the content CSP never merges with the stricter shell CSP. A precise document copy-resource rule supplies JSON MIME without applying HTML sandbox policy to the payload.
 
 Wrangler is invoked as an argument array through an exact version pin. The Cloudflare account is selected with `CLOUDFLARE_ACCOUNT_ID`; API tokens remain inherited process credentials and are never command arguments, persisted state, or error output. The adapter validates the current Direct Upload limits (20,000 files and 25 MiB per file) and `_headers` limits (100 rules and 2,000 characters per line) before invoking Wrangler.
 

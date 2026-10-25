@@ -156,6 +156,16 @@
           of operating it safely.
         </p>
 
+        <p>
+          Copy controls introduced in 0.4.0 prepare saved text in the trusted
+          shell without executing document code or inserting author nodes.
+          Clipboard writes require a shell user action. Same-origin shell fetch
+          permission preserves the opaque document sandbox and document connection
+          restrictions. Copied strings remain document-authored data, and static
+          capabilities also expose the derived <code>copy.json</code> resources.
+          See <a href="viewer.html#copy">copying text and code</a> for fidelity
+          and clipboard limits.
+        </p>
         <h2 id="documents">Treat document HTML as untrusted</h2>
         <p>
           The CLI preserves original HTML rather than sanitizing or rewriting

@@ -159,6 +159,48 @@
           button to restore the toolbar. The document stays loaded and preserves
           its scroll and interactive state. Browser controls remain visible.
         </p>
+        <h2 id="copy">Copy text and code</h2>
+        <p>
+          In version 0.4.0 or newer, open <strong>Viewer options</strong>, then choose
+          <strong>Copy content...</strong>. Copy all saved document text,
+          select a portion and choose <strong>Copy selection</strong>, or
+          switch to <strong>Code blocks</strong> and pick a numbered block.
+          Copying uses plain text and preserves code spacing. The preview
+          stays loaded while the dialog is open.
+        </p>
+        <p>
+          Text comes from saved HTML. Scripted changes, edited form values,
+          and chart visuals may be missing; CSS-hidden text can remain. For a
+          selection in the current preview, use your browser's keyboard,
+          context menu, or touch Copy.
+        </p>
+        <p>
+          If automatic copying is unavailable or denied, choose
+          <strong>Select all</strong> and use your device's Copy command.
+          This also works with ordinary HTTP LAN readers. Copying changes
+          the reader's clipboard without changing an inbox. Named viewers,
+          the read-only hub, and new static snapshots share these controls.
+        </p>
+        <p>
+          If text stays fully selected after <strong>Select all</strong>,
+          close and reopen the dialog before selecting a smaller portion.
+        </p>
+        <p>
+          Copying uses saved HTML rather than the live rendered page. HTML source,
+          Markdown, and formatted HTML are not clipboard formats in this release.
+          Restart an existing verified viewer after an authorized CLI update to
+          load these controls. Static readers gain them only when their owner
+          regenerates and publishes a snapshot. Loopback HTTP and valid HTTPS can
+          offer automatic copying; ordinary LAN or tailnet HTTP may require
+          manual Copy. Browser policy can deny writes even over HTTPS.
+        </p>
+        <p>
+          Preparation refuses invalid UTF-8 or copy JSON exceeding 10 MiB without
+          truncating text or disabling the preview. This output limit is separate
+          from <code>HTML_INBOX_MAX_BYTES</code>. If preparation is unavailable,
+          use native Copy in the preview; manual dialog Copy needs successfully
+          prepared text.
+        </p>
         <h2 id="appearance">Choose appearance</h2>
         <p>
           <strong>System</strong> is the default. Choose <strong>Light</strong>
@@ -378,6 +420,7 @@ html-inbox viewer --loopback</code></pre>
           <p class="docs-toc-label">On this page</p>
           <ul>
             <li><a href="#reading">Read with more space</a></li>
+            <li><a href="#copy">Copy text and code</a></li>
             <li><a href="#appearance">Choose appearance</a></li>
             <li><a href="#background">Start in the background</a></li>
             <li><a href="#configuration">Select the inbox and port</a></li>

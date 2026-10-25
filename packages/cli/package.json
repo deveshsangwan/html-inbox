@@ -1,6 +1,6 @@
 {
   "name": "html-inbox",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A local-first CLI that stores, previews, and publishes generated HTML documents.",
   "license": "MIT",
   "repository": {

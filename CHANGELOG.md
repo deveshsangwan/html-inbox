@@ -2,6 +2,22 @@
 
 All notable changes to HTML Inbox will be documented here.
 
+## 0.4.0 - 2026-10-25
+
+- Add Viewer options → Copy content for saved document text, selected passages in the dialog, and individual preformatted code blocks as plain text.
+- Preserve parsed code whitespace and useful paragraph, list, table-cell/row, and line-break boundaries. Explain that saved extraction can differ from live or CSS-hidden content.
+- Keep native preview Copy available and provide selectable text when automatic clipboard access is unavailable or denied, including ordinary HTTP LAN readers.
+- Share bounded parse5 extraction across read-only local and source-qualified hub resources and new static snapshots. Preserve original HTML bytes, document sandbox/CSP, source isolation, and preview state.
+- Include each static document's copy JSON in the hashed inventory and apply its JSON response type. Each document adds one upload file against provider limits.
+- Accept stable installed 0.4.x CLIs in both skills, retaining earlier supported lines and the already-published 0.3.0 npm fallback.
+- Retry unlinked catalog metadata observed during atomic default replacement while preserving regular-file, hardlink, and read-only safety checks.
+
+### Upgrade to 0.4.0
+
+No additional CLI, permission, or control-protocol migration is required from 0.3.x. The 0.3.0 explicit JSON and library-selection requirements remain in effect. Versions 0.2.x, 0.3.x, and 0.4.x share private control protocol 3. Restart an existing viewer through its verified lifecycle after an authorized CLI update to load the copy interface; installing a new executable does not reload a running viewer. Stored documents and saved exposure remain unchanged. Stop a 0.1.x viewer with its original executable before upgrading.
+
+Existing static deployments retain their previous interface until their owner regenerates and publishes a snapshot. New snapshots contain a sibling `copy.json` per document, so libraries reach provider file limits sooner. Copying changes the reader's clipboard, not an inbox. The hub and exposed browser readers remain read-only. HTML source, Markdown, rich HTML, live rendered extraction, browser deletion, and inbox replication are not added by this release.
+
 ## 0.3.0 - 2026-10-25
 
 - Add intentionally named independent inboxes with a private per-user catalog, in-place registration, explicit creation, and durable location/identity validation.

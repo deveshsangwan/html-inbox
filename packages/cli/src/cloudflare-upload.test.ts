@@ -106,6 +106,15 @@ test("Cloudflare upload builds private headers, normalizes arguments and returns
     headerRules.filter((rule) => rule.includes("sandbox allow-scripts")).length,
     1,
   );
+  const copyRule = headerRules.find((rule) =>
+    rule.startsWith(`/i/${snapshot.capability}/documents/:id/copy.json\n`),
+  );
+  assert.equal(copyRule, `/i/${snapshot.capability}/documents/:id/copy.json\n  Content-Type: application/json; charset=utf-8`);
+  assert.equal(headerRules[0].startsWith("/*\n"), true);
+  assert.match(headerRules[0], /Cache-Control: private, no-store/);
+  assert.match(headerRules[0], /X-Content-Type-Options: nosniff/);
+  assert.deepEqual(recordingRunner.copyPayloads, [{ schemaVersion: 1, status: "ready", text: "Report", codeBlocks: [] }]);
+  assert.equal(recordingRunner.fileCount, 11);
 
   assert.equal(
     recordingRunner.headers
@@ -117,7 +126,7 @@ test("Cloudflare upload builds private headers, normalizes arguments and returns
     recordingRunner.headers
       .split("\n")
       .filter((line) => line && !line.startsWith(" ")).length,
-    8,
+    9,
   );
   await assert.rejects(
     readFile(path.join(snapshot.outputDir, "_headers")),
@@ -276,6 +285,28 @@ test("Cloudflare upload rejects files above its size limit before invoking Wrang
   assert.equal(runner.invocations.length, 0);
 });
 
+test("Cloudflare upload rejects missing and tampered copy resources from the inventory", async (t) => {
+  for (const tamper of [false, true]) {
+    const { home, snapshot } = await createSnapshot(t);
+    const runner = new RecordingCommandRunner({ code: 0, signal: null, stderr: "", stdout: "unused" });
+    const copyFile = snapshot.manifest.files.find((file) => file.path.endsWith("/copy.json"));
+    assert(copyFile);
+    const copyPath = path.join(snapshot.outputDir, copyFile.path);
+
+    if (tamper) {
+      await writeFile(copyPath, '{"schemaVersion":1,"status":"ready","text":"tampered","codeBlocks":[]}');
+    } else {
+      await rm(copyPath);
+    }
+
+    await assert.rejects(new CloudflarePagesAdapter(runner).deploySnapshot(snapshot, {
+      accountId: "a".repeat(32), projectName: "html-inbox",
+    }), tamper ? /file does not match manifest/ : /missing manifest files/);
+    assert.equal(runner.invocations.length, 0);
+    assert.equal((await readdir(home)).some((entry) => entry.startsWith("snapshot.cloudflare-")), false);
+  }
+});
+
 async function createSnapshot(t: TestContext) {
   const home = await temporaryHome(t);
   const backend = new LocalDocumentBackend(home);
@@ -296,11 +327,19 @@ async function createSnapshot(t: TestContext) {
 class RecordingCommandRunner implements CommandRunner {
   readonly invocations: CommandInvocation[] = [];
   headers = "";
+  copyPayloads: unknown[] = [];
+  fileCount = 0;
 
   constructor(private readonly result: CommandResult) {}
 
   async run(invocation: CommandInvocation): Promise<CommandResult> {
     this.invocations.push(structuredClone(invocation));
+    const entries = await readdir(invocation.cwd, { recursive: true, withFileTypes: true });
+    this.fileCount = entries.filter((entry) => entry.isFile()).length;
+    this.copyPayloads = await Promise.all(entries.filter((entry) => entry.isFile() && entry.name === "copy.json").map(async (entry) =>
+      JSON.parse(await readFile(path.join(entry.parentPath, entry.name), "utf8")),
+    ));
+
     try {
       this.headers = await readFile(
         path.join(invocation.cwd, "_headers"),

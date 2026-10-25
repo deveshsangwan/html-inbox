@@ -4,7 +4,7 @@ Please report suspected vulnerabilities privately through [GitHub Security Advis
 
 The supported security boundary is documented in [docs/threat-model.md](docs/threat-model.md). In particular:
 
-- the local viewer must remain loopback-only;
+- the live viewer listens on loopback by default; explicit LAN access trusts every reachable reader, and Tailscale HTTPS Serve follows tailnet policy while keeping its backend on loopback; both expose read-only access to the complete selected library;
 - stored and remotely published HTML is untrusted;
 - remote capability URLs are unlisted bearer links, not authentication;
 - revoke does not erase older immutable Cloudflare deployment URLs.

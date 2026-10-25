@@ -54,3 +54,7 @@ Validation checks URL attributes in parsed markup. It does not inspect CSS
 `url()` or `@import`, or reliably detect resource URLs assembled by JavaScript.
 Those requests remain subject to the document CSP. Validation is a compatibility
 check, not a sanitizer; see the [threat model](threat-model.md).
+
+## Saved text and code copying
+
+The 0.4.0 reader extracts saved body text and numbered `<pre>` blocks without executing author code. Inline `<code>` alone is not a numbered block. Saved Mermaid `<pre>` content can be copied as diagram source; interactive changes, CSS visibility, and rendered visuals are not reconstructed. Native selection in the preview uses the browser's Copy command. See [copying saved content](architecture.md#copying-saved-content).

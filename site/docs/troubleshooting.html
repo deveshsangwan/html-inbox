@@ -172,8 +172,9 @@
           Scripts parsing old default JSON must add <code>--json</code> to viewer
           status/stop and service commands after upgrading. Published 0.2.x
           commands lack those new flags. Check actual help and preserve the
-          destination if a skill's published 0.2.2 fallback lacks a requested
-          named or hub capability. See <a href="named-inboxes.html#upgrade">migration steps</a>.
+          destination if an older executable lacks a requested capability.
+          The published 0.3.0 fallback supports named inboxes and hubs, but
+          the reader copy dialog requires 0.4.0. See <a href="named-inboxes.html#upgrade">migration steps</a>.
         </p>
         <h2 id="viewer">Viewer does not start</h2>
         <p>
@@ -218,9 +219,9 @@ html-inbox viewer --foreground</code></pre>
           Stop the old process with its previous executable before installing a
           newer release. For an old foreground process, use Ctrl-C. The new CLI
           refuses an incompatible private control protocol rather than
-          signaling an unverified PID. This applies to 0.1.0 viewers; 0.2.x
-          and 0.3.x share protocol version 3. Restart an existing viewer after updating
-          to load new code, including the 0.2.2 shutdown diagnostics.
+          signaling an unverified PID. This applies to 0.1.0 viewers; 0.2.x,
+          0.3.x, and 0.4.x share protocol version 3. Restart an existing viewer after updating
+          to load new code, including the 0.2.2 shutdown diagnostics and 0.4.0 copy controls.
         </p>
         <p>
           If the older viewer already exited but left <code>viewer.json</code>,

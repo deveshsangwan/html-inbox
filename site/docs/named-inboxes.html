@@ -284,7 +284,7 @@ html-inbox hub --config /absolute/path/to/reading-hub.json --port 4322</code></p
           Stop an old viewer with the executable that started it, or Ctrl-C for
           foreground mode, and confirm shutdown before updating. For boot startup,
           uninstall with the old installation, update, then reinstall with the
-          intended home and exposure. Versions 0.2.x and 0.3.x share protocol 3;
+          intended home and exposure. Versions 0.2.x, 0.3.x, and 0.4.x share protocol 3;
           restart compatible viewers to load the new code. Incompatible 0.1.0
           viewers still require their original executable for shutdown. Documents,
           preferences, and saved exposure persist. Follow the
@@ -302,11 +302,11 @@ html-inbox hub --config /absolute/path/to/reading-hub.json --port 4322</code></p
             unbound redirected jobs fail rather than choose the legacy home.
             Use <code>--inbox</code>, absolute <code>--home</code>, an environment
             binding, or a deliberate default. No entries preserves legacy behavior.</li>
-          <li>Update skills separately. The skill accepts stable installed 0.2.x
-            and 0.3.x CLIs and keeps its fallback on published
-            <code>npx --yes html-inbox@0.2.2</code>. That fallback lacks named
-            selection, hubs, the picker, publish JSON, and new viewer/service
-            JSON flags. Check actual help for each capability, including
+          <li>Update skills separately. The skill accepts stable installed 0.2.x,
+            0.3.x, and 0.4.x CLIs and keeps its fallback on published
+            <code>npx --yes html-inbox@0.3.0</code>. That fallback supports named
+            selection, hubs, the picker, publish JSON, and viewer/service JSON
+            flags, but its reader lacks the 0.4.0 copy dialog. Check actual help for each capability, including
             <code>inbox list --running</code>. Older viewer and service commands
             already output JSON without the new flag. Preserve the intended
             destination when a feature is unavailable.</li>
