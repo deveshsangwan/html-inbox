@@ -1,0 +1,90 @@
+TERMINAL BLOCKED. runtimeReleased=true. UTC2026-10-25T07:38:35.628980+00:00
+Command1 native exit1; coordinator elapsed250.376813412s. DispatchUTC2026-10-25T07:32:02.202608+00:00; returnUTC2026-10-25T07:36:12.614468+00:00.
+["python3", "/tmp/html-inbox-phase2-checks-1mpkndv5/check-coordinator.py", "qa-ci-cea-integrated-verify2421-attempt3", "bash", "/tmp/html-inbox-qa-history-amcemjlx/verify-hosted-node2421.sh"]
+["/usr/bin/flock", "-w", "45", "-E", "75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "python3", "/tmp/html-inbox-phase2-checks-1mpkndv5/check-coordinator.py", "qa-ci-cea-integrated-verify2421-attempt3", "bash", "/tmp/html-inbox-qa-history-amcemjlx/verify-hosted-node2421.sh"]
+LogSHA256 744b4d66928cbe7cda37837a6aa82a9290640bbfef7c77fb8ab2e0ecd622f107
+Original receipt /tmp/html-inbox-phase2-checks-1mpkndv5/receipts/qa-ci-cea-integrated-verify2421-attempt3.json
+Units: [{"tests": 1051, "suites": 0, "pass": 1049, "fail": 1, "cancelled": 0, "skipped": 1, "todo": 0, "duration_ms": 246095.790863}]. Skips: [{"line": 6324, "text": "ok 838 - Windows rollback stops a real temporary descendant before its delayed file write # SKIP The real taskkill process-tree check requires Windows."}]
+Typecheck/build passed. Skills/browser/site integrity/site theme/package smoke NOT REACHED. Command2 NOT STARTED; its label/log/JSON are absent. No current-source Node20 test result. No retry, diagnosis or fix.
+
+Original failure YAML and stack, including actual child counters:
+command1.log:1214
+not ok 193 - owned worker persists queue backoff through restart, blocks at its limit, and retries into real idempotent custody
+  ---
+  duration_ms: 2701.884988
+  type: 'test'
+  location: '/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-acquisition-deadline.test.js:266:5'
+  failureType: 'testCodeFailure'
+  error: |-
+    {"laterCommunicationQueueHits":1,"requests":0,"classification":"blocked"}
+    {"wholePassQueueHits":1,"result":{"routes":[{"routeId":"59d387ce-bd20-4a58-be0c-4c02dbec8490","direction":"outbound","status":"aborted","historyReady":false,"fullyReconciled":false,"transferred":0,"confirmed":0,"pending":0,"blocked":1,"lastError":"local-validation-or-storage-failed"}],"counters":{"requests":0,"requestBytes":0,"responseBytes":0}}}
+    {"realWakeAndRestartSuppressed":true,"queueHits":1,"firstRetry":{"revision":1,"attempts":1,"nextAttemptAt":1792913534901,"lastError":"local-acquisition-deadline","blocked":false},"remainingBackoffMs":666}
+    {"queueHits":2,"virtualIdleOffsetMs":666,"retry":{"revision":1,"attempts":2,"nextAttemptAt":1792913536384,"lastError":"local-acquisition-deadline","blocked":false}}
+    {"queueHits":3,"virtualIdleOffsetMs":1914,"retry":{"revision":1,"attempts":3,"nextAttemptAt":1792913539911,"lastError":"local-acquisition-deadline","blocked":false}}
+    {"queueHits":4,"virtualIdleOffsetMs":5163,"retry":{"revision":1,"attempts":4,"nextAttemptAt":1792913544591,"lastError":"local-acquisition-deadline","blocked":false}}
+    {"queueHits":5,"virtualIdleOffsetMs":9616,"retry":{"revision":1,"attempts":5,"nextAttemptAt":1792913558586,"lastError":"local-acquisition-deadline","blocked":false}}
+    ✖ queue worker child (2578.170402ms)
+    ℹ tests 1
+    ℹ suites 0
+    ℹ pass 0
+    ℹ fail 1
+    ℹ cancelled 0
+    ℹ skipped 0
+    ℹ todo 0
+    ℹ duration_ms 2583.619042
+    
+    ✖ failing tests:
+    
+    test at ../../../../home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-acquisition-deadline.test.js:63:29
+    ✖ queue worker child (2578.170402ms)
+      AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+      + actual - expected
+      
+      + 'aborted'
+      - 'pending'
+      
+          at runWorkerScenario (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-acquisition-deadline.test.js:451:30)
+          at async Test.run (node:internal/test_runner/test:1409:7)
+          at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+        generatedMessage: true,
+        code: 'ERR_ASSERTION',
+        actual: 'aborted',
+        expected: 'pending',
+        operator: 'strictEqual',
+        diff: 'simple'
+      }
+    
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-acquisition-deadline.test.js:285:26)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+
+
+All169 source hashes and membership unchanged: fb9b5da57f33450997881995d71941e266fed2c3bbe344708835cbd37ee914f5.
+All336 compiled files exactly match final author: 9d2815862665039fab5cad1615aaa3975325ed884c2c3966c75bcc98ff25c58f. Four added,11changed,0removed, exactly input allowed footprint. Full before/after manifests and individual hashes retained.
+All406 nonignored files unchanged: 339tracked/67untracked. Complete file hashes/modes/sizes inspected individually. HEADcea30b48cbef814511e2eedfc83d1793bc011354, branchfeat/phase2-sync, status and empty cached diff unchanged; rawindexe3dd34cce6446819560c71040ab9ba111d2c07087bc8b41e74f2922b3dcd1562.
+Ignored membership unchanged: ['node_modules/', 'packages/cli/bundle/', 'packages/cli/dist/']. Historical tested-source-qa manifest unchanged and intentionally not current169pin.
+Historical preservation groups {'historicalReceiptAndLogFiles': 513, 'firstRoundLogManifest': 636, 'referencedHistoricalLogs': 487, 'previousEvidenceFiles': 1724, 'protectedHistoricalInputs': 27}; all bytehashes and prior bundle memberships held. Original global audit byteprefix210958, SHA25624112418b084d82cffcb1e46bf2874361fab03e7aa8e07da83b758b11e8d26d3 held. Unique old receipts remain intact; generic/network/inner/exit aliases copied before and after. Terminal Node20 generic copies are HISTORICAL, not a new result.
+Original outer audit reapedAdopted126; remaining[]. Audited adopted PIDs present[]; explicit per-case child PIDs present[]; owned compiled processes[]. Sets overlap, no total/global absence claim. No saved/foreign PID signals.
+NEW RESIDUE REMAINS: {'html-inbox-queue-worker-nRRbiq': 23}, total23path entries including root/nested files/directories. Exact UID/dev/inode/type/size metadata retained. Left untouched, no credential/store contents inspected. Cleanup is incomplete; no actor attribution.
+Raw scratch removals{"/tmp/html-inbox-phase2-checks-1mpkndv5/tmp": [], "/tmp/html-inbox-phase2-checks-1mpkndv5/home": [], "/tmp/html-inbox-phase2-checks-1mpkndv5/config": [], "/tmp/html-inbox-phase2-checks-1mpkndv5/data": [], "/tmp/html-inbox-phase2-checks-1mpkndv5/state": [], "/tmp/html-inbox-phase2-checks-1mpkndv5/runtime": []}. Raw cache additions0 /removals0 /bytechanges0; exact paths/hashes retained. Inherited scratch/cache unchanged.
+Author cleanup nativeExit1 remains serialization failure after asserted operations/removals; parent read-only postflight did not retry application/rebind/cleanup. Lost endpoint timestamps and12uncapturedclosecallbacks are not reconstructed.
+Previous old167 Node24 green and Node20 attempt2 red203+453 remain historical. Original actors/producers and controlled mechanism qualifications remain unchanged.
+UTC dispatch/return directly surround blocking flock and coordinator; admission and wrapper overhead included. Original coordinator elapsed and native exit are separately retained.
+Established direct Popen/waitpid subreaper original audit retained; adopted PID/status entries and remaining[] are original. Numeric PIDs from explicit per-case child lines were checked absent. These observed sets overlap and are not summed. No invented start ticks/close callbacks or host-global absence claim.
+Citations preserve actual per-case assertions and exact endpoint strings only where logged. No global rebind count, new socket bind or numeric endpoint discovery was performed.
+New residue received only path/lstat metadata inspection; no credential/store contents were read or copied. No arbitrary PID signals, inherited scratch deletion, unknown authority removal or cleanup retry.
+Local Linux isolated synthetic namespace only; no hosted/native Windows/Mac/Fleet/physical acceptance, source/docs edit, install, commit, push, PR action, review or QA SHA release.
+
+Artifacts: terminal-receipt.json; all-406-file-inspection.json; source-before/after-command1.sha256; compiled-before/after-command1.sha256; expected-author-compiled336.sha256; command1.log + original receipt; original failure JSON/text; exact-per-case-process-port-resource-evidence.txt; capacity-progress-evidence.txt; new-residue-path-metadata.json; original/terminal audit snapshots; preflight/current generic snapshots; runtime proof; artifact-inventory.json + artifact-inventory.sha256.
+Parent owns further integration/evidence disposition and TWO NEW independent full-rubric reviews. Exclusive root ignored build/runtime ownership released.

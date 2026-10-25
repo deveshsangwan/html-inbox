@@ -1,0 +1,897 @@
+READ-ONLY ACTIVATION DIAGNOSIS TERMINAL. runtimeReleased=true. Original historical cause UNKNOWN. No source fix, integration, review, acceptance or QA release.
+
+Bundle: /tmp/qa-activation-research-odawvhft
+Report UTC: 2026-10-25T06:43:01.274370+00:00
+
+The one natural exact authored-source Node20 selected case passed. The unchanged test body then produced the exact original hits===1 timeout under one preregistered controlled identity-result/network hold, and the matching live-socket control passed all original assertions. This proves a possible pre-activation transport mechanism. It does not identify the cause of the original failed affected20 run or establish an effect of the new awaitable-close source change.
+
+Original immutable failure: affected18 files, 463 cases, 461 pass, 1 fail, 1 baseline-artifact skip; TAP344 real HTTPS activation times out with retained authority; duration4353.083521ms; compiled sync-shutdown-ingestion.test.js:61:9, waitUntil at compiled203. Original hits values and request/pass state were not retained. The later mutation/close/drain/authority assertions were not reached. Zero, multiple and missed observation remain unseparated for THAT run. Existing clock25 and linked-cut passes inside that failed invocation do not make it broadly green. Affected24 was not run. Prior parent failures and the original case203 actor remain unassigned.
+
+Frozen source: all169 files individually verified for bytes AND modes before copying and before every runtime command; no stale committed worktree or parent dist executed. Source aggregate3530f9442605fd0f38b64147477e4a6c84b63fab2ce3a10bf1d44b3e76bf41db. Fresh exact Node24.21 build produced all336 files byte-identical to the author compiled pin, aggregatecd70359446495ce52f6740e7ab7da88d18201a345a2647513b63873fd4844a90. Both remain intact after the three selected arms. The first12075 source bytes containing the whole original activation loop equal the parent bytes; prefixSHA2568dc04ed01e7a14011e77d7495fcb91bd391fc29817bbc4a2f01a771adbb73340. The author change in this file is below, in handler-cleanup only.
+
+Parent legacy167 was individually reverified against faff70c2f39c339078353a594300b98d2462dc04b50cbca49d00338afa2646c6. The optional legacy arm was not run: the natural new-source observation supplied no failed phase requiring that comparison. No legacy compiled332 or parent stale dist was borrowed. A source-change causal comparison remains unperformed, not implicitly green.
+
+Runtime isolation: private copied binaries, dependency tree with all symlinks resolving inside the private root, HOME/USERPROFILE/XDG/TMP/PATH/cache/project. No package install, network download or root wrapper. Every syntax check/build/target/cleanup probe used the shared flock -w45 -E75 and a byte-identical owned copy of the established subreaper. Every outer logger used direct Popen and os.waitpid. No admission75, retry, fragile descendant sampler, foreign signal or surviving adopted child. Dependency copying, hashing and reports were administrative filesystem operations, not runtime validation.
+
+Exact engine originals and verified private copies:
+node20: /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node
+SHA256 6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd
+node24: /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node
+SHA256 7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c
+
+Pre-registered hypotheses, ranked before observation: (1) an actual pre-activation request/route error prevents admission, predicting actual zero reads plus the failing request reason; (2) watcher join/queue/acquisition holds progress, predicting a retained producer across the missed bound; (3) multiple activation entries bypass equality, predicting >1 entries and actual non-one readings. The original failure still lacks the discriminator. The controlled pair demonstrates only hypothesis1 under the explicitly introduced ordering.
+
+Observer boundary and overhead: exported waitUntil delegates each original reader once and returns its exact resolved value through one additional .then. No extra counter poll or filesystem read. Events accumulate in memory and flush once per process exit. Existing methods/callbacks, 50ms intervals, timeout callbacks, real HTTPS calls, genuine stores and locks are delegated. AsyncLocalStorage, Date/performance/stack capture, event listeners and promise observers have overhead; no zero-overhead equivalence or original timing attribution is claimed. The waiter wrapper can change async-stack formatting. No source/compiled-body transform, response substitute, fake stats/custody/receipt, production hook/export or fault environment. No token, header, key, raw body or credential content was logged.
+
+Unchanged bounds and scope: real waiter4000ms and hits===1 predicate; worker listener requestMs400; client request3000; pass5000; case10000; Node default concurrency. Three selected executions only: one natural169, one controlled red169, one matched control169. No natural repeat, Node24 target, full affected rerun, CI stress/load calibration, backoff reset, cap, timeout increase, production/fixture patch or source integration.
+
+Controlled hypothesis and actual event: after the genuine identity handler inventory finishes, an external wrapper retains that exact real value at the caller-return boundary. Red releases it once the SAME native request socket closes. The unchanged server connection timer created at compiled sync-http-server.js:49:23 fired; the external1000ms cleanup guard did not fire. Control uses the same one-shot value boundary but releases while its socket is live. No lock or unrelated producer is held by this wrapper. Both holds release before the waiter bound. This deliberately changes response timing and proves sufficiency, not historical occurrence.
+
+NATURAL20
+Native exit0; counts {"tests": 11, "suites": 0, "pass": 1, "fail": 0, "cancelled": 0, "skipped": 10, "todo": 0}. The10 skips are name-filter exclusions, not execution credit.
+Waiter actual readings11, value histogram{"0": 10, "1": 1}. First 2026-10-25T06:33:32.490Z value0 at +0.125803ms. Last 2026-10-25T06:33:32.696Z value1 at +205.928072ms. Actual activation-hold entries1.
+Waiter outcome [{"type": "waiter-fulfilled", "sequence": 267, "pid": 384280, "utc": "2026-10-25T06:33:32.696Z", "monotonicMs": 645.60278, "value": 1, "readings": 11, "relativeToWaiterMs": 206.07579000000004}]
+Activation actual home /tmp/qa-activation-research-odawvhft/tmp/html-inbox-shutdown-u4py3I/inbox; entry+186.908919ms; stack
+Error
+    at ManagedSyncStore.implementation (/tmp/qa-activation-research-odawvhft/observe.cjs:312:92)
+    at Object.apply (node:internal/test_runner/mock/mock:586:20)
+    at handle (/tmp/qa-activation-research-odawvhft/project/packages/cli/dist/sync-http-server.js:281:45)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Actual route/pass outcome [{"type": "pass-fulfilled", "sequence": 337, "pid": 384280, "utc": "2026-10-25T06:33:32.781Z", "monotonicMs": 729.932515, "context": {"passId": 1, "home": "/tmp/qa-activation-research-odawvhft/tmp/html-inbox-shutdown-u4py3I/remote"}, "routes": [{"routeId": "575c180e-f249-49d1-8313-9961b4bbb524", "direction": "inbound", "status": "pending", "historyReady": true, "fullyReconciled": false, "transferred": 0, "confirmed": 0, "pending": 0, "blocked": 0, "lastError": "verified-transport-failed"}], "counters": {"requests": 4, "requestBytes": 1035, "responseBytes": 1595}, "relativeToWaiterMs": 290.40552499999995}]
+Observed attempt closes8; longest join12.637045ms; all settled. Observed exported lock operations45; watcher-origin lock operations18; all settled. Lock entry, protected callback and release-settlement times are individually retained in observed-phase-summary.json and original event streams. This is full exported-operation settlement, not an invented per-inode native release receipt.
+Controlled events []
+
+CONTROLLED-RED20
+Native exit1; counts {"tests": 11, "suites": 0, "pass": 0, "fail": 1, "cancelled": 0, "skipped": 10, "todo": 0}. The10 skips are name-filter exclusions, not execution credit.
+Waiter actual readings196, value histogram{"0": 196}. First 2026-10-25T06:35:34.708Z value0 at +0.121642ms. Last 2026-10-25T06:35:38.691Z value0 at +3983.688385ms. Actual activation-hold entries0.
+Waiter outcome [{"type": "waiter-rejected", "sequence": 458, "pid": 384675, "utc": "2026-10-25T06:35:38.712Z", "monotonicMs": 4445.104424, "error": {"name": "Error", "message": "Timed out waiting for real admitted mutation seam"}, "relativeToWaiterMs": 4004.16888}]
+Actual route/pass outcome [{"type": "pass-fulfilled", "sequence": 284, "pid": 384675, "utc": "2026-10-25T06:35:35.163Z", "monotonicMs": 896.122844, "context": {"passId": 1, "home": "/tmp/qa-activation-research-odawvhft/tmp/html-inbox-shutdown-4Pmafq/remote"}, "routes": [{"routeId": "8fee2c7f-d7cc-4828-86d0-cb3623c74253", "direction": "inbound", "status": "pending", "historyReady": false, "fullyReconciled": false, "transferred": 0, "confirmed": 0, "pending": 0, "blocked": 0, "lastError": "verified-transport-failed"}], "counters": {"requests": 1, "requestBytes": 55, "responseBytes": 0}, "relativeToWaiterMs": 455.1873}]
+Observed attempt closes3; longest join0.228192ms; all settled. Observed exported lock operations37; watcher-origin lock operations22; all settled. Lock entry, protected callback and release-settlement times are individually retained in observed-phase-summary.json and original event streams. This is full exported-operation settlement, not an invented per-inode native release receipt.
+Controlled events [{"type": "selected-inventory-enter", "pid": 384675, "utc": "2026-10-25T06:35:34.816Z", "monotonicMs": 549.086482, "holds": 1, "home": "/tmp/qa-activation-research-odawvhft/tmp/html-inbox-shutdown-4Pmafq/inbox", "socketDestroyed": false, "relativeToWaiterMs": 108.15093800000005}, {"type": "genuine-inventory-result-held", "pid": 384675, "utc": "2026-10-25T06:35:34.831Z", "monotonicMs": 564.701568, "home": "/tmp/qa-activation-research-odawvhft/tmp/html-inbox-shutdown-4Pmafq/inbox", "socketDestroyed": false, "relativeToWaiterMs": 123.76602399999996}, {"type": "selected-native-socket-close", "pid": 384675, "utc": "2026-10-25T06:35:35.149Z", "monotonicMs": 882.215909, "hadError": false, "relativeToWaiterMs": 441.280365}, {"type": "genuine-inventory-result-released", "pid": 384675, "utc": "2026-10-25T06:35:35.149Z", "monotonicMs": 882.315698, "reason": "native-socket-close", "releases": 1, "socketDestroyed": true, "relativeToWaiterMs": 441.380154}, {"type": "controlled-process-exit", "pid": 384675, "utc": "2026-10-25T06:35:38.766Z", "monotonicMs": 4498.971222, "code": 1, "isRed": true, "holds": 1, "releases": 1, "guardFired": false, "relativeToWaiterMs": 4058.035678}]
+
+CONTROLLED-CONTROL20
+Native exit0; counts {"tests": 11, "suites": 0, "pass": 1, "fail": 0, "cancelled": 0, "skipped": 10, "todo": 0}. The10 skips are name-filter exclusions, not execution credit.
+Waiter actual readings12, value histogram{"0": 11, "1": 1}. First 2026-10-25T06:35:57.178Z value0 at +0.130885ms. Last 2026-10-25T06:35:57.401Z value1 at +223.686617ms. Actual activation-hold entries1.
+Waiter outcome [{"type": "waiter-fulfilled", "sequence": 271, "pid": 384851, "utc": "2026-10-25T06:35:57.401Z", "monotonicMs": 667.368641, "value": 1, "readings": 12, "relativeToWaiterMs": 223.74701100000004}]
+Activation actual home /tmp/qa-activation-research-odawvhft/tmp/html-inbox-shutdown-GivjCv/inbox; entry+208.544978ms; stack
+Error
+    at ManagedSyncStore.implementation (/tmp/qa-activation-research-odawvhft/observe.cjs:312:92)
+    at Object.apply (node:internal/test_runner/mock/mock:586:20)
+    at handle (/tmp/qa-activation-research-odawvhft/project/packages/cli/dist/sync-http-server.js:281:45)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Actual route/pass outcome [{"type": "pass-fulfilled", "sequence": 327, "pid": 384851, "utc": "2026-10-25T06:35:57.442Z", "monotonicMs": 708.178911, "context": {"passId": 1, "home": "/tmp/qa-activation-research-odawvhft/tmp/html-inbox-shutdown-GivjCv/remote"}, "routes": [{"routeId": "98d84c65-5cda-44d6-a1df-6eb41fb2838d", "direction": "inbound", "status": "pending", "historyReady": true, "fullyReconciled": false, "transferred": 0, "confirmed": 0, "pending": 0, "blocked": 0, "lastError": "verified-transport-failed"}], "counters": {"requests": 4, "requestBytes": 1035, "responseBytes": 1595}, "relativeToWaiterMs": 264.557281}]
+Observed attempt closes8; longest join2.135479ms; all settled. Observed exported lock operations44; watcher-origin lock operations17; all settled. Lock entry, protected callback and release-settlement times are individually retained in observed-phase-summary.json and original event streams. This is full exported-operation settlement, not an invented per-inode native release receipt.
+Controlled events [{"type": "selected-inventory-enter", "pid": 384851, "utc": "2026-10-25T06:35:57.260Z", "monotonicMs": 525.578511, "holds": 1, "home": "/tmp/qa-activation-research-odawvhft/tmp/html-inbox-shutdown-GivjCv/inbox", "socketDestroyed": false, "relativeToWaiterMs": 81.95688100000007}, {"type": "genuine-inventory-result-held", "pid": 384851, "utc": "2026-10-25T06:35:57.273Z", "monotonicMs": 539.382455, "home": "/tmp/qa-activation-research-odawvhft/tmp/html-inbox-shutdown-GivjCv/inbox", "socketDestroyed": false, "relativeToWaiterMs": 95.76082500000007}, {"type": "genuine-inventory-result-released", "pid": 384851, "utc": "2026-10-25T06:35:57.273Z", "monotonicMs": 539.498445, "reason": "live-socket-control", "releases": 1, "socketDestroyed": false, "relativeToWaiterMs": 95.87681499999997}, {"type": "controlled-process-exit", "pid": 384851, "utc": "2026-10-25T06:35:58.072Z", "monotonicMs": 1338.440919, "code": 0, "isRed": false, "holds": 1, "releases": 1, "guardFired": false, "relativeToWaiterMs": 894.8192889999999}]
+
+Precise red phase, relative to its unchanged waiter start: real inventory invoked+108.151ms, real result held+123.766ms, native400ms connection timer fired+438.075ms, identity request rejected verified-transport-failed+439.864ms, native socket close+441.280ms, same real inventory value released+441.380ms, actual pass pending/historyReady=false/lastError=verified-transport-failed+455.187ms, waiter rejected+4004.169ms. Only one actual network request, identity; no manifest/body request or activation entry. All22 watcher-origin lock operations settled by+436.891ms, all3 attempt closes by+453.158ms. This red is an early completed failed pass followed by the original counter-only wait. It is not evidence of a four-second stuck close.
+
+Natural and matched-control evidence: natural wait values0x10 then1; actual activation+186.909ms and successful observation+205.928ms. Control releases genuine identity result on live socket+95.877ms; values0x11 then1; actual activation+208.545ms and successful observation+223.687ms. Both entered the genuine held activation and completed every original retained-authority, bounded failed-close, real post-release mutation, stable-generation, handle-disposal and fixture teardown assertion. Their subsequent verified-transport-failed route result follows the test intentionally closing the listener while activation is held; it is not a pre-seam failure. The natural/control requested mutation assertions were reached; the controlled-red later assertions were not.
+
+UNAPPLIED interface conclusion: no production-interface correction is proven or proposed. The existing attempt close/private watcher-stop versus compound-error classification and compatibility contract remains byte-identical. Existing watcher storage errors still become the generic public abort rather than newly escaping close; detached pins retain their independent lifetime. This diagnosis does not revalidate every policy branch. The narrow demonstrated diagnostic need is to retain the original waiter readings alongside the actual pass/request result. Any future fixture diagnostic must keep hits===1 and all existing bounds/assertions; a settled pending pass is failure evidence, never successful admission. Parent must separately authorize any implementation.
+
+Missing historical discriminator: the original affected20 waiter values and actual request/pass timeline. This workstream cannot tell whether that run lost identity/manifest transport, had a different route error, admitted multiple activations, or experienced another observation schedule. No generic load/fixture/production/root-cause assignment, no inferred regression due to await, and no timeout or source-fix speculation. Only the single controlled ordering has a demonstrated cause.
+
+CLEANUP AND NONOWNED STATE
+42 previously recorded known PIDs absent at the locked audit. 33 actual ChildProcess creations,33 native exit events,33 separate close callbacks,0 child error events. All6 observed exact loopback host/port pairs rebound/listened/closed. Six generated fixture/TLS roots absent; all recorded FileHandle fd values were -1 at actual process exit. Natural/control retain their original fixture EBADF assertions. No unseen-process, whole-host, per-fd native-close-callback or physical-device claim. The cleanup wrapper itself then exited0 with actual waitpid; all7 outer command PIDs separately absent after return. Each established subreaper reports remaining[] and adopted0.
+
+Private HOME/XDG/TMP/bin/dependency/cache trees were removed only after all runtime commands returned. Source169, compiled336, manifests, helper files, raw events/TAP, preregistrations and receipts remain. No inherited scratch/old bundle/root protected reader was deleted. No foreign PID was signalled. No real inbox/service, credential, network, VPN or settings action. No commit, PR action/comment, merge, deploy, native/Fleet/Mac/physical test, new thread, sourceauthor or review performed.
+
+Final static comparison initially stopped because parent docs/phase2-sync/ledger.md and docs/phase2-sync/verification-qa.json changed after the preparation snapshot. Raw failure and before/current hashes are retained in administrative-integrity-discrepancy.json. No runtime/application retry followed. This workstream wrote only its private root; the writer of those changes was not directly observed. Both nonowned docs remain as found. All167 parent sources retain the exact faff pin. The bound diagnosis checkout has0 changes among339 tracked files; both raw indexes equal their recorded preparation snapshots. Initial index snapshots were taken after the first read-only git status, so no pre-snapshot raw-byte claim. Nothing was overlaid or needed restoration.
+
+Parent owns actual source-fix gate, remaining affected24/20 decisions, combined checks, TWO NEW independent reviews and one committed hosted green SHA to QA. These selected diagnostic passes and controlled failure do not replace those gates. runtimeReleased=true.
+
+EXACT COMMAND RECEIPTS, UTC, NATIVE EXITS, COUNTS, EXCLUSIONS, LOG/HELPER HASHES
+
+observer-syntax20
+UTC 2026-10-25T06:33:15.056811+00:00 -> 2026-10-25T06:33:15.123077+00:00; elapsed0.06675427127629519s; nativeExit0; waitpid PID383405 status0; admissionOnlyFalse
+cwd /tmp/qa-activation-research-odawvhft/project
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-activation-research-odawvhft/run-subreaper.py", "/tmp/qa-activation-research-odawvhft/bin/node20", "--check", "/tmp/qa-activation-research-odawvhft/observe.cjs"]
+counts {}
+exclusions []
+logSHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+helperSHA256 {"observe.cjs": "b3ee036975bd73410061342d57e139237d307d05dfcaa607aba95b3d135a10e4", "run.py": "d51c319825a66296479f935829e0acea3e03a3a53a269f758886293e00ee7506", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72"}
+
+build24
+UTC 2026-10-25T06:33:20.623987+00:00 -> 2026-10-25T06:33:21.303727+00:00; elapsed0.6802236065268517s; nativeExit0; waitpid PID383580 status0; admissionOnlyFalse
+cwd /tmp/qa-activation-research-odawvhft/project
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-activation-research-odawvhft/run-subreaper.py", "/tmp/qa-activation-research-odawvhft/bin/node24", "node_modules/tsc-rs/bin/tsc-rs", "-p", "packages/cli/tsconfig.json"]
+counts {}
+exclusions []
+logSHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+helperSHA256 {"observe.cjs": "b3ee036975bd73410061342d57e139237d307d05dfcaa607aba95b3d135a10e4", "run.py": "d51c319825a66296479f935829e0acea3e03a3a53a269f758886293e00ee7506", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72"}
+
+natural20
+UTC 2026-10-25T06:33:31.965286+00:00 -> 2026-10-25T06:33:33.404261+00:00; elapsed1.439444176852703s; nativeExit0; waitpid PID384272 status0; admissionOnlyFalse
+cwd /tmp/qa-activation-research-odawvhft/project
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-activation-research-odawvhft/run-subreaper.py", "/tmp/qa-activation-research-odawvhft/bin/node20", "--require", "/tmp/qa-activation-research-odawvhft/observe.cjs", "--test", "--test-reporter=tap", "--test-name-pattern=^real HTTPS activation times out with retained authority$", "packages/cli/dist/sync-shutdown-ingestion.test.js"]
+counts {"tests": 11, "suites": 0, "pass": 1, "fail": 0, "cancelled": 0, "skipped": 10, "todo": 0}
+exclusions ["ok 1 - real HTTPS terminal settles before successful worker close # SKIP test name does not match pattern", "ok 2 - real HTTPS terminal times out with retained authority # SKIP test name does not match pattern", "ok 3 - real HTTPS body settles before successful worker close # SKIP test name does not match pattern", "ok 4 - real HTTPS body times out with retained authority # SKIP test name does not match pattern", "ok 5 - real HTTPS history settles before successful worker close # SKIP test name does not match pattern", "ok 6 - real HTTPS history times out with retained authority # SKIP test name does not match pattern", "ok 7 - real HTTPS activation settles before successful worker close # SKIP test name does not match pattern", "ok 9 - closed body response detaches its real late pin with none # SKIP test name does not match pattern", "ok 10 - closed body response detaches its real late pin with read # SKIP test name does not match pattern", "ok 11 - closed body response detaches its real late pin with handler-cleanup # SKIP test name does not match pattern"]
+logSHA256 b9426885cebd87c1e2a9962f85f155049c1f33bff5b08b94c51aebe65d96d95e
+helperSHA256 {"observe.cjs": "b3ee036975bd73410061342d57e139237d307d05dfcaa607aba95b3d135a10e4", "run.py": "d51c319825a66296479f935829e0acea3e03a3a53a269f758886293e00ee7506", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72"}
+
+control-syntax20
+UTC 2026-10-25T06:35:22.245903+00:00 -> 2026-10-25T06:35:22.322414+00:00; elapsed0.07708025351166725s; nativeExit0; waitpid PID384587 status0; admissionOnlyFalse
+cwd /tmp/qa-activation-research-odawvhft/project
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-activation-research-odawvhft/run-subreaper.py", "/tmp/qa-activation-research-odawvhft/bin/node20", "--check", "/tmp/qa-activation-research-odawvhft/control.cjs"]
+counts {}
+exclusions []
+logSHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+helperSHA256 {"control.cjs": "24ce4cbf0d518a283f336e26dea72571a69855a8cd514e4b01fe11f494d30c53", "observe.cjs": "b3ee036975bd73410061342d57e139237d307d05dfcaa607aba95b3d135a10e4", "run.py": "d51c319825a66296479f935829e0acea3e03a3a53a269f758886293e00ee7506", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72"}
+
+controlled-red20
+UTC 2026-10-25T06:35:34.180937+00:00 -> 2026-10-25T06:35:38.816807+00:00; elapsed4.636869475245476s; nativeExit1; waitpid PID384667 status256; admissionOnlyFalse
+cwd /tmp/qa-activation-research-odawvhft/project
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-activation-research-odawvhft/run-subreaper.py", "/tmp/qa-activation-research-odawvhft/bin/node20", "--require", "/tmp/qa-activation-research-odawvhft/observe.cjs", "--require", "/tmp/qa-activation-research-odawvhft/control.cjs", "--test", "--test-reporter=tap", "--test-name-pattern=^real HTTPS activation times out with retained authority$", "packages/cli/dist/sync-shutdown-ingestion.test.js"]
+counts {"tests": 11, "suites": 0, "pass": 0, "fail": 1, "cancelled": 0, "skipped": 10, "todo": 0}
+exclusions ["ok 1 - real HTTPS terminal settles before successful worker close # SKIP test name does not match pattern", "ok 2 - real HTTPS terminal times out with retained authority # SKIP test name does not match pattern", "ok 3 - real HTTPS body settles before successful worker close # SKIP test name does not match pattern", "ok 4 - real HTTPS body times out with retained authority # SKIP test name does not match pattern", "ok 5 - real HTTPS history settles before successful worker close # SKIP test name does not match pattern", "ok 6 - real HTTPS history times out with retained authority # SKIP test name does not match pattern", "ok 7 - real HTTPS activation settles before successful worker close # SKIP test name does not match pattern", "ok 9 - closed body response detaches its real late pin with none # SKIP test name does not match pattern", "ok 10 - closed body response detaches its real late pin with read # SKIP test name does not match pattern", "ok 11 - closed body response detaches its real late pin with handler-cleanup # SKIP test name does not match pattern"]
+logSHA256 4697c5988f8f9d1baef464bed2c2784534353b56d64186484c4f18af35f666e7
+helperSHA256 {"control.cjs": "24ce4cbf0d518a283f336e26dea72571a69855a8cd514e4b01fe11f494d30c53", "observe.cjs": "b3ee036975bd73410061342d57e139237d307d05dfcaa607aba95b3d135a10e4", "run.py": "d51c319825a66296479f935829e0acea3e03a3a53a269f758886293e00ee7506", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72"}
+
+controlled-control20
+UTC 2026-10-25T06:35:56.639203+00:00 -> 2026-10-25T06:35:58.105605+00:00; elapsed1.466946480795741s; nativeExit0; waitpid PID384843 status0; admissionOnlyFalse
+cwd /tmp/qa-activation-research-odawvhft/project
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-activation-research-odawvhft/run-subreaper.py", "/tmp/qa-activation-research-odawvhft/bin/node20", "--require", "/tmp/qa-activation-research-odawvhft/observe.cjs", "--require", "/tmp/qa-activation-research-odawvhft/control.cjs", "--test", "--test-reporter=tap", "--test-name-pattern=^real HTTPS activation times out with retained authority$", "packages/cli/dist/sync-shutdown-ingestion.test.js"]
+counts {"tests": 11, "suites": 0, "pass": 1, "fail": 0, "cancelled": 0, "skipped": 10, "todo": 0}
+exclusions ["ok 1 - real HTTPS terminal settles before successful worker close # SKIP test name does not match pattern", "ok 2 - real HTTPS terminal times out with retained authority # SKIP test name does not match pattern", "ok 3 - real HTTPS body settles before successful worker close # SKIP test name does not match pattern", "ok 4 - real HTTPS body times out with retained authority # SKIP test name does not match pattern", "ok 5 - real HTTPS history settles before successful worker close # SKIP test name does not match pattern", "ok 6 - real HTTPS history times out with retained authority # SKIP test name does not match pattern", "ok 7 - real HTTPS activation settles before successful worker close # SKIP test name does not match pattern", "ok 9 - closed body response detaches its real late pin with none # SKIP test name does not match pattern", "ok 10 - closed body response detaches its real late pin with read # SKIP test name does not match pattern", "ok 11 - closed body response detaches its real late pin with handler-cleanup # SKIP test name does not match pattern"]
+logSHA256 25fe24773b5aa18681743982d78185395fb90725a37b55ac3055d3a7a4bd818c
+helperSHA256 {"control.cjs": "24ce4cbf0d518a283f336e26dea72571a69855a8cd514e4b01fe11f494d30c53", "observe.cjs": "b3ee036975bd73410061342d57e139237d307d05dfcaa607aba95b3d135a10e4", "run.py": "d51c319825a66296479f935829e0acea3e03a3a53a269f758886293e00ee7506", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72"}
+
+cleanup-audit
+UTC 2026-10-25T06:38:07.125705+00:00 -> 2026-10-25T06:38:07.253253+00:00; elapsed0.12810300383716822s; nativeExit0; waitpid PID385409 status0; admissionOnlyFalse
+cwd /tmp/qa-activation-research-odawvhft/project
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-activation-research-odawvhft/run-subreaper.py", "/usr/bin/python3", "/tmp/qa-activation-research-odawvhft/cleanup-audit.py"]
+counts {}
+exclusions []
+logSHA256 f8eef9ee77a12f1d22546fa6a34c309c0bcbe0d9d1c3cae2651f7e50952b9310
+helperSHA256 {"cleanup-audit.py": "dfb95434c6c68eb199ab1887446ee65465ee6e416e59696e9ceb7282188b4af3", "control.cjs": "24ce4cbf0d518a283f336e26dea72571a69855a8cd514e4b01fe11f494d30c53", "observe.cjs": "b3ee036975bd73410061342d57e139237d307d05dfcaa607aba95b3d135a10e4", "run.py": "d51c319825a66296479f935829e0acea3e03a3a53a269f758886293e00ee7506", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72"}
+
+EXACT EXECUTED RED-CAPABLE COMMAND
+/usr/bin/python3 /tmp/qa-activation-research-odawvhft/run.py controlled-red20 /tmp/qa-activation-research-odawvhft/bin/node20 --require /tmp/qa-activation-research-odawvhft/observe.cjs --require /tmp/qa-activation-research-odawvhft/control.cjs --test --test-reporter=tap '--test-name-pattern=^real HTTPS activation times out with retained authority$' packages/cli/dist/sync-shutdown-ingestion.test.js
+This command was executed exactly once and reached the original symptom. Its private binaries/dependencies were removed after receipts and cleanup; recreating the private environment requires the retained source/dependency/engine pins. Do not rerun under this consumed gate.
+
+ORIGINAL HISTORICAL FAILURE BLOCK
+# Subtest: real HTTPS activation times out with retained authority
+not ok 344 - real HTTPS activation times out with retained authority
+  ---
+  duration_ms: 4353.083521
+  location: '/tmp/qa-case203-source-preparation-9zaoemx8/runtime/project/packages/cli/dist/sync-shutdown-ingestion.test.js:61:9'
+  failureType: 'testCodeFailure'
+  error: 'Timed out waiting for real admitted mutation seam'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    waitUntil (/tmp/qa-case203-source-preparation-9zaoemx8/runtime/project/packages/cli/dist/sync-worker-fault-fixtures.js:47:11)
+    async TestContext.<anonymous> (/tmp/qa-case203-source-preparation-9zaoemx8/runtime/project/packages/cli/dist/sync-shutdown-ingestion.test.js:203:13)
+    async Test.run (node:internal/test_runner/test:797:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# 2 exact ports rebound; intercepted handles disposed; synthetic root removed
+
+OBSERVED TARGET TAP LOGS
+
+natural20
+TAP version 13
+# Subtest: real HTTPS terminal settles before successful worker close
+ok 1 - real HTTPS terminal settles before successful worker close # SKIP test name does not match pattern
+  ---
+  duration_ms: 1.804952
+  ...
+# Subtest: real HTTPS terminal times out with retained authority
+ok 2 - real HTTPS terminal times out with retained authority # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.12571
+  ...
+# Subtest: real HTTPS body settles before successful worker close
+ok 3 - real HTTPS body settles before successful worker close # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.112506
+  ...
+# Subtest: real HTTPS body times out with retained authority
+ok 4 - real HTTPS body times out with retained authority # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.128299
+  ...
+# Subtest: real HTTPS history settles before successful worker close
+ok 5 - real HTTPS history settles before successful worker close # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.189173
+  ...
+# Subtest: real HTTPS history times out with retained authority
+ok 6 - real HTTPS history times out with retained authority # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.11147
+  ...
+# Subtest: real HTTPS activation settles before successful worker close
+ok 7 - real HTTPS activation settles before successful worker close # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.10776
+  ...
+# Subtest: real HTTPS activation times out with retained authority
+ok 8 - real HTTPS activation times out with retained authority
+  ---
+  duration_ms: 1223.171148
+  ...
+# one real activation hold; failed close retained authority; exact listeners rebound during teardown
+# 2 exact ports rebound; intercepted handles disposed; synthetic root removed
+# Subtest: closed body response detaches its real late pin with none
+ok 9 - closed body response detaches its real late pin with none # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.218107
+  ...
+# Subtest: closed body response detaches its real late pin with read
+ok 10 - closed body response detaches its real late pin with read # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.134496
+  ...
+# Subtest: closed body response detaches its real late pin with handler-cleanup
+ok 11 - closed body response detaches its real late pin with handler-cleanup # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.106754
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 10
+# todo 0
+# duration_ms 1342.44071
+owned-wrapper-audit={"reapedAdopted": 0, "remaining": []}
+
+
+controlled-red20
+TAP version 13
+# Subtest: real HTTPS terminal settles before successful worker close
+ok 1 - real HTTPS terminal settles before successful worker close # SKIP test name does not match pattern
+  ---
+  duration_ms: 1.837531
+  ...
+# Subtest: real HTTPS terminal times out with retained authority
+ok 2 - real HTTPS terminal times out with retained authority # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.123435
+  ...
+# Subtest: real HTTPS body settles before successful worker close
+ok 3 - real HTTPS body settles before successful worker close # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.11168
+  ...
+# Subtest: real HTTPS body times out with retained authority
+ok 4 - real HTTPS body times out with retained authority # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.151947
+  ...
+# Subtest: real HTTPS history settles before successful worker close
+ok 5 - real HTTPS history settles before successful worker close # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.230638
+  ...
+# Subtest: real HTTPS history times out with retained authority
+ok 6 - real HTTPS history times out with retained authority # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.123676
+  ...
+# Subtest: real HTTPS activation settles before successful worker close
+ok 7 - real HTTPS activation settles before successful worker close # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.121163
+  ...
+# Subtest: real HTTPS activation times out with retained authority
+not ok 8 - real HTTPS activation times out with retained authority
+  ---
+  duration_ms: 4386.918336
+  location: '/tmp/qa-activation-research-odawvhft/project/packages/cli/dist/sync-shutdown-ingestion.test.js:61:9'
+  failureType: 'testCodeFailure'
+  error: 'Timed out waiting for real admitted mutation seam'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    waitUntil (/tmp/qa-activation-research-odawvhft/project/packages/cli/dist/sync-worker-fault-fixtures.js:47:11)
+  ...
+# 2 exact ports rebound; intercepted handles disposed; synthetic root removed
+# Subtest: closed body response detaches its real late pin with none
+ok 9 - closed body response detaches its real late pin with none # SKIP test name does not match pattern
+  ---
+  duration_ms: 3.046686
+  ...
+# Subtest: closed body response detaches its real late pin with read
+ok 10 - closed body response detaches its real late pin with read # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.472501
+  ...
+# Subtest: closed body response detaches its real late pin with handler-cleanup
+ok 11 - closed body response detaches its real late pin with handler-cleanup # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.680014
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 10
+# todo 0
+# duration_ms 4527.544413
+owned-wrapper-audit={"reapedAdopted": 0, "remaining": []}
+
+
+controlled-control20
+TAP version 13
+# Subtest: real HTTPS terminal settles before successful worker close
+ok 1 - real HTTPS terminal settles before successful worker close # SKIP test name does not match pattern
+  ---
+  duration_ms: 1.874268
+  ...
+# Subtest: real HTTPS terminal times out with retained authority
+ok 2 - real HTTPS terminal times out with retained authority # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.1301
+  ...
+# Subtest: real HTTPS body settles before successful worker close
+ok 3 - real HTTPS body settles before successful worker close # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.11837
+  ...
+# Subtest: real HTTPS body times out with retained authority
+ok 4 - real HTTPS body times out with retained authority # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.137677
+  ...
+# Subtest: real HTTPS history settles before successful worker close
+ok 5 - real HTTPS history settles before successful worker close # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.252507
+  ...
+# Subtest: real HTTPS history times out with retained authority
+ok 6 - real HTTPS history times out with retained authority # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.131667
+  ...
+# Subtest: real HTTPS activation settles before successful worker close
+ok 7 - real HTTPS activation settles before successful worker close # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.128717
+  ...
+# Subtest: real HTTPS activation times out with retained authority
+ok 8 - real HTTPS activation times out with retained authority
+  ---
+  duration_ms: 1239.676768
+  ...
+# one real activation hold; failed close retained authority; exact listeners rebound during teardown
+# 2 exact ports rebound; intercepted handles disposed; synthetic root removed
+# Subtest: closed body response detaches its real late pin with none
+ok 9 - closed body response detaches its real late pin with none # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.258979
+  ...
+# Subtest: closed body response detaches its real late pin with read
+ok 10 - closed body response detaches its real late pin with read # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.166222
+  ...
+# Subtest: closed body response detaches its real late pin with handler-cleanup
+ok 11 - closed body response detaches its real late pin with handler-cleanup # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.124096
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 10
+# todo 0
+# duration_ms 1360.145312
+owned-wrapper-audit={"reapedAdopted": 0, "remaining": []}
+
+
+ALL169 SOURCE FILE MODES AND SHA256
+26a2fd383a10d3e60ed23968c18c6d619f2f70232ad9b3be339ec3531c18fa9c  0664  packages/cli/src/backend-records.test.ts
+befb1bd0f3deff8379a6d815332ec733f30553c00d5ea9e1d4bec0a667c73815  0664  packages/cli/src/backend.ts
+bb2904e51f6e05748e41985ce218e25d37a6f1f7d531af5d1b75ebe01545aba2  0664  packages/cli/src/bounded-file.ts
+3a1a7ccda4a00f304d04413ea0fb868fc3a1a46f195438c54e5aab43c6711d0f  0664  packages/cli/src/cli-args.test.ts
+6cde026743d80e32ac106752e5bf05fc58c3810586362407f697c6e7a13ecaf2  0664  packages/cli/src/cli-args.ts
+c1ad89f2e679bece4ec9bafb3578c90343215e0d9d828c64af3cadc8b71d6e78  0664  packages/cli/src/cli-contracts.test.ts
+4ce580e1bbc31ab84a2eaa6d287f5ae1ee5bdfe47060bf7515cd2dbd1f2511cf  0664  packages/cli/src/cli-display.test.ts
+dd1693f740acb719fac472a725c16a2d8c20aec91b68b41727be56419a62cb26  0664  packages/cli/src/cli-display.ts
+5f154cc87e6ea8e38f3d4e07370c98091cc5538a76b85f9ab09dafdaad126254  0664  packages/cli/src/cloudflare-api.test.ts
+f1c6cccf50b53966bd68b08ec3568b3a734ce9f750f719d33fc95e6e8c64718b  0664  packages/cli/src/cloudflare-api.ts
+c48b94b3a20d33c9523474545b54d0bd7dd424e8dac2263d984bce526afce819  0664  packages/cli/src/cloudflare-headers.ts
+417489bb8ffd066e9915dd7895d67796c0552e6ee49a49dde442296acb28cb33  0664  packages/cli/src/cloudflare-pages.ts
+cad484f3bf4fc395f69f2d7da59921708672a7200198a5c1b338253aa6e4ece8  0664  packages/cli/src/cloudflare-snapshot.ts
+4f3307894d7e9d770c1fed6b20496471c40a3855deba5a2241c7bc792d3bbd13  0664  packages/cli/src/cloudflare-upload.test.ts
+7590d64cb9076eb6a11b627fad325de8ddc811602cf90a773d516ae5c3ceef8b  0664  packages/cli/src/command-runner.test.ts
+d562399866b8c3d21f8619803175c0e2acab935fe672b194a16edabf8fca00e9  0664  packages/cli/src/command-runner.ts
+527cb09b1ce7f75a4d723b59492b7652976f77556809081aaedf80e5fa12e6b8  0664  packages/cli/src/documents.ts
+e7354b5999edaa6a35baac09f470282d0505b8e67b952c6a4baf7d1f7527e977  0664  packages/cli/src/export-paths.test.ts
+820fc0b40b56abd939c7cbcf00a56a6d1fc4c174b3762d42e4d546d5362a8169  0664  packages/cli/src/html-validation.test.ts
+bb39f80602166c6437f4ea03e86fa290081069bd5bfdd41876da677963888834  0664  packages/cli/src/html-validation.ts
+ff159599acb60f4e02db9b4c920bd5bc36ed8d5a48455f99694c60eb91ffa15d  0664  packages/cli/src/hub-config.test.ts
+a31ea54be361f165a7b4ca99dc897c1d8ba809c0263fb1f76f84f173aef8a228  0664  packages/cli/src/hub-config.ts
+29de218e67e0d1c613119fb8346532fc195c452563a55fe8c789d8e70110ecbf  0664  packages/cli/src/hub-http.test.ts
+82f5706495aa84b18345aee66750e026528816b51c61e78f3168b19deeeedbae  0664  packages/cli/src/hub.ts
+8c2a86a01ee4e52016f1428aa2b28553b57326b95610293f88b70f93c73c66aa  0664  packages/cli/src/inbox-catalog.test.ts
+af42deba284a7ae16e5412ecf9606061f8ecad36e2ac540f7e966c4d5a55045b  0664  packages/cli/src/inbox-catalog.ts
+f3ee2b41bae60dbbd037dac4857edb513b0be759434bae14427138f5dc93db96  0664  packages/cli/src/inbox-cli.test.ts
+148d6e2b17d89fc78157e806c0fd557c2b8a8cb91bc0c4ba7fc4d67b86e19a08  0664  packages/cli/src/inbox-commands.ts
+d6cbc7332629917a47341f908c524a413d25e4a608b8d9541072d3c4ed819922  0664  packages/cli/src/inbox-home.ts
+280043e2adb2abe16a1bb3e1aadd431c10818305ab8e1d47dac0e35f1365c6a0  0664  packages/cli/src/inbox-picker.test.ts
+71fe831d428bd66480699cfe4ef0ca9ee1053eb795f634651c00c55f37959d22  0664  packages/cli/src/inbox-picker.ts
+526f110b7b9977043777cab58eb7a93bf67f722ca489cb84ae201970eb96ca26  0664  packages/cli/src/inbox-selection.test.ts
+827d62937fa3338edf483cc0472dcb4559cbc80ca6c0d3b845749f80bb5c4699  0664  packages/cli/src/inbox-selection.ts
+a72e15131315d3e0957ca2a1fdc3b58716ea5aefd120abbbd55ca098e71b238b  0664  packages/cli/src/inbox-service-selection.test.ts
+cb285f52e7037d60738ef37b8b491ae40ee3f56dc04aec64b00e70523a4e72a8  0664  packages/cli/src/inbox-ux.test.ts
+f8cf1d81481c03925896cb15bba2d78a316f0e562d5f0216a1dcd300b8bc6d45  0664  packages/cli/src/index.ts
+a0ba6e95fa94a7d9f28108b10ca0df07ce9a76d4e9e5101e4a3ed83fa359da9a  0664  packages/cli/src/local-document-source.test.ts
+ac767e38e38307a45edf644ed9dc498f93f9f35c62177cbd431e044b6466b20d  0664  packages/cli/src/local-document-source.ts
+664a9467ebc43db05afaee4bf2154b9f18b4289cfcbddf5d4f3e635f6c1b4778  0664  packages/cli/src/parse-srcset.d.ts
+dd3a2639639e2f37659347450c0be413a5389ab1885be0940bfc62ce4f866202  0664  packages/cli/src/path-containment.ts
+2fc88b9762e4d7b05f330c1fe1a5f2c8a6e568878640d4d77033bd7060be4489  0664  packages/cli/src/preferences.test.ts
+9e7594e7d31fb186f5694daa649dbeefe5339b3d14d317aa9b110f6c73871cf1  0664  packages/cli/src/preferences.ts
+a787e50965f9a758c87c02d5363a78b60b0f7d04dc86c977f5b28c56dbdb3448  0664  packages/cli/src/private-json.test.ts
+87388666ee9cec91cd19212635136c6035d3d7fade0b83936d8ac90cf71b8103  0664  packages/cli/src/private-storage.ts
+8ef32bb07db37bbbbcc36ad8f097e4a679a22d21ad63c9bfda1589f89cac963b  0664  packages/cli/src/publish-input.test.ts
+9dd43ea71ae9868e4188abad3afffa76dd773138dbb1a4977b8d4a63aa353138  0664  packages/cli/src/publish-input.ts
+97ccacd891621b5d497c41910be7b7e8a5dc7608b6620d8c9d9bc43659ca2f05  0664  packages/cli/src/remote-integrity.test.ts
+8767c943a83c201fc11a715d7b1d9d2317673f7bb594c08025640d044ed3d851  0664  packages/cli/src/remote-lock.ts
+cbf34d875801124a92d7cb80177689a83ba36a741ddd24c42f5e31feecacc0dc  0664  packages/cli/src/remote-records.ts
+da5c66ae5eea593df77daba609385491c4a360a1814703b8197b87fe2e51d0a7  0664  packages/cli/src/remote-recovery.test.ts
+bcdddd0c71c71784d8ba15722709c183c76e0aa8c74fe65e786d70ec2fc42bbb  0664  packages/cli/src/remote-workflow.ts
+c6ceebab958cbef56190cca3c424c1c79eb4aef70cdfe158580efe38e6086a70  0664  packages/cli/src/static-export.test.ts
+d05ebbfe4ef8040ced3caf78681b128fc32983204fc8c113394a27cf5a6af599  0664  packages/cli/src/static-export.ts
+6bdd1049db4a8c3808f603d843befadc6a4451abaf37bb88991cfe97429ca1c7  0664  packages/cli/src/storage-cleanup.test.ts
+048ce7eba76eceb05a9826adbfce9dc9bc8f897d24e9130a0e753e66b885da73  0664  packages/cli/src/sync-acquisition-deadline.test.ts
+6e380dd58fd67b2964c7ebc25f35fa48d340bfcfff66f8984a487696f1da4760  0664  packages/cli/src/sync-attempt-lifetime-fixtures.ts
+5f17fa6ec98ea86f654342a11626106c80b9545dd19ad2ae52754981a87e0ccb  0664  packages/cli/src/sync-attempt-lifetime.test.ts
+02b3950555f3bcdc32f55bdf53b233f34dbc84af376c3f05947a47de56937dde  0664  packages/cli/src/sync-cli-args.ts
+7903fa847a63d63bd637a366bf99e5ebcda3072096dece4b02767af0828c82a9  0664  packages/cli/src/sync-cli.ts
+1d3ec68f1ed2701a06cd6db7538a3984cb9a2069626c2f49a96fa8c8a57dc460  0664  packages/cli/src/sync-client.ts
+e5be4ffd61a7c2bb887a689c761ae575fade960dcd78d6b51dc12c37c3fe47ef  0664  packages/cli/src/sync-clock-skew.test.ts
+9c722e2760db11a23e420c67c8038bb9740d53a122ad1ff78545f5231a0792cc  0664  packages/cli/src/sync-enrollment.test.ts
+82602246b8fa57aaecf2fdb007385ea35a818b05707732ab5a10514aece9050b  0664  packages/cli/src/sync-enrollment.ts
+0f4967ed3b7007ca38e977d9bb288a771e53f6b393eded1d23d8c50211d11d89  0664  packages/cli/src/sync-failure.ts
+bec75756592e54619ded180de217dbf68efdba7e0121bc8b77660ec886dd1024  0664  packages/cli/src/sync-files.ts
+3bc14e18a86e56df206d1ed8846cff31c0276898db5be93d5c60467f36d9e5b7  0664  packages/cli/src/sync-finalization-child.ts
+ceb67694dd0dccd392b12523a3e3f8370570b5cf0eade2568df9987b1edf3205  0664  packages/cli/src/sync-finalization-lifecycle.test.ts
+ba96f42a9a00b69a0b1107b2c83b68f4331f69a19d85f86af3ca234874dec07a  0664  packages/cli/src/sync-fixture-proxy.ts
+aae2456047b8b5476949fe144f3839fc4d23e3a4f1c023cb41b576038519c515  0664  packages/cli/src/sync-http-server.ts
+2cf029adbe4f62e0558e63c3bf1406747cbfd5c13236f207db95d7081745b947  0664  packages/cli/src/sync-https-fixtures.test.ts
+d5f28209a455b5df3a9cc74c6ed80de6cf12f40aa07a705ca710e8e9229c6de5  0664  packages/cli/src/sync-https-fixtures.ts
+1e2210c6ce8af458b8bf7e48c48f265ddcc3bcf40ab4894fd0158ed43aa2df06  0664  packages/cli/src/sync-identity-fault-child.ts
+abfd0571af180a8baaaf7374c6e311789572ab1e3fd341c71106888a97fcbcdd  0664  packages/cli/src/sync-identity-faults.test.ts
+5a8b32fd319bea9165a50db12fe8119453d9da37537614c621bce3cc8c720f1d  0664  packages/cli/src/sync-ledger-policy.ts
+84b51ed36b695dfd48c05dcbe72cb2e643bdea609cc86bfe34bce703361d8e13  0664  packages/cli/src/sync-ledger-read-race.test.ts
+7ea1acfc9a45bc4167682d5fa6f9f586e256ace71baf2d6baa9cb14602576641  0664  packages/cli/src/sync-ledger-reader.ts
+dcc7738529f812d35fbed3388b8cc48022111a429323e25ef69efa0b4dee68a5  0664  packages/cli/src/sync-ledger.ts
+3ce7f3faf787eff94454fcb853d576bed853bcc4c30f047e536b5c48323b4d20  0664  packages/cli/src/sync-lifecycle.ts
+601ec38bb12b0f6bd844b991364adf362bcc2b4109776af1cfc8ed0fa79873ee  0664  packages/cli/src/sync-maintenance.ts
+994800604dd0b3d997d0b7f4f0bf664b749973729ff12c598a9b28c0e5cd0422  0664  packages/cli/src/sync-model.ts
+92c7e1e050e071db60bcb9064f9975c6f8b8646486376a8778b14ec41d88a41b  0664  packages/cli/src/sync-ownership-fault-child.ts
+66a21d4a9e928f5d53c2b83a11f2663272f9c8fd088316b842fa666f28cfa868  0664  packages/cli/src/sync-ownership-publication.test.ts
+504eaf1aac64bf054329405521767b6d6b28b6bf941ea0adfa9892bcbe590dfb  0664  packages/cli/src/sync-ownership-worker-child.ts
+5017a53148a5fef9f63b0bb770b0d6c22d8db49b33268b2917b2a9abf46a7bd1  0664  packages/cli/src/sync-ownership-worker.test.ts
+aa4114d68398276c9c729b986545ee183fd80ac9f47c95000fb9748b096dc23d  0664  packages/cli/src/sync-platform.test.ts
+888616fbd6d97206ade9218a1ff1d35cf77bc55c5661867c48f3acc6fabbb5a8  0664  packages/cli/src/sync-portable-acquisition.test.ts
+90fb342273a85f73e611dd7aa4dc7c54decc029b10b7249290503d9fd5f975fb  0664  packages/cli/src/sync-preaborted-reconciliation.test.ts
+40b0bbc888e15c93676da1434f69c3578665b050116650864bdc1ce738b6ed05  0664  packages/cli/src/sync-protocol-fault-child.ts
+a5ba51f46a3c7f6a94d75978906a4779056598b8b7bb4af2985044c10c4a95d2  0664  packages/cli/src/sync-protocol-faults.test.ts
+463ba26f5edcb30ec4578841d73e5304a9086aa46cfc1b09305f46ec8e078614  0664  packages/cli/src/sync-protocol-fixture.ts
+d74ade6b6837451e639ac7c0b223c372e4f381916ba8caef4f4b753db609d96c  0664  packages/cli/src/sync-protocol.test.ts
+8dec1300d96370fe104aef73e8307ecf93c9c58fd3e9112d0485c5784e4dccee  0664  packages/cli/src/sync-public-definition.ts
+9fa1041c528ae0393822b7b1302805cf6df8424c122e325b6602ab6d8fae1583  0664  packages/cli/src/sync-publication-inspection.test.ts
+7987881489930bbaba1b4b3a12bc628a033c60cadcf6c6a0f9a68128199269e4  0664  packages/cli/src/sync-publication.test.ts
+332681c4507cb36e535c8d43ce3753141a9c35ac790b1a3894415ca67899739c  0664  packages/cli/src/sync-publication.ts
+560cfa941c92fa563d10806c24bd8eb170dc26a12ca1f912bdf881c8823a4b4e  0664  packages/cli/src/sync-reader-compatibility.test.ts
+388b9775d794076234e41201166b4b4f74afbaddf97f36de8b98e2b65830179f  0664  packages/cli/src/sync-reconciliation.ts
+94fb92322c164d516d2a1d8f7cf84a71f744089bbd4146ae4b830c4d45de93f6  0664  packages/cli/src/sync-review-regressions.test.ts
+81e8267f0fdd8388cdb46be9c3b1d287db806b49a41a0ec23771f527fa1fa51d  0664  packages/cli/src/sync-revocation-order.test.ts
+c9c05f6e10f84c56e337949aeed9a5286c60155373075aae7e4863590f610b09  0664  packages/cli/src/sync-runtime-config.test.ts
+031dcc92a7bcc6c859779e291ffadd836540a7ce9aad288fc56f843c89ed1a49  0664  packages/cli/src/sync-runtime-config.ts
+5fc8c116c2d5826924e34155f9c9118d9005f3dc2171781a48a2eefa4ff12c02  0664  packages/cli/src/sync-shutdown-fixtures.ts
+b2290d9bd1ad30d9545c8fb5f5a7df0b6d3d578f528d2be5195c5b1f988bfd3c  0664  packages/cli/src/sync-shutdown-ingestion.test.ts
+9d3da9f34f8189233c361a6870f9161ce515446c509135005b3c7ca3c7874187  0664  packages/cli/src/sync-shutdown-ownership.test.ts
+b9c42dadc3fd5aa617d8e2fee52a5604924942f9cb052daf5e8067f0e2b88db5  0664  packages/cli/src/sync-staging.ts
+ec45b74172766d9a54f10a5278d0d2fb8495cce13bbc2fd3250f1bc0973a34de  0664  packages/cli/src/sync-storage-faults.test.ts
+764375ddb1752651d96b31bb108427141d765aaceebe1173a419b63f218b65e6  0664  packages/cli/src/sync-store.test.ts
+5dbfd00a4b56d0f54e1811697c08e5f93da353970705587e99ef5d784ab27f11  0664  packages/cli/src/sync-store.ts
+2d216aeb504feb4a866c882200ade1534e461624a316b3dccc65247d4df4ab1d  0664  packages/cli/src/sync-supervisor.test.ts
+d0fb5e1ae0267bb26e1ca30566f5b953d25e6fc071df36c318cd132e4966765c  0664  packages/cli/src/sync-supervisor.ts
+2fb3486f13bbd2377ae231a86212fd1e1f021d49ba4a1c99773eb081aecc6f1c  0664  packages/cli/src/sync-transport-lifecycle.test.ts
+caa5184036045c0a457199047a2204fee0b7e02958a5a788c002a5cac1b0c8ec  0664  packages/cli/src/sync-wire.ts
+76e449ad8a5e3c4f8d0ccb81e8e14736cd826aef9b688de32c8153bcd550d754  0664  packages/cli/src/sync-worker-client.ts
+a8aabd0566e84079862c842ff1e3610d5dcaee6725d1c34db9670b0ba83297c7  0664  packages/cli/src/sync-worker-credentials-child.ts
+c440f14fbd840c43d0d3167c36404ea5223c4e4dc2e787ca58226dabfa92a9fa  0664  packages/cli/src/sync-worker-credentials.test.ts
+52ee0e8898f733745052c816a254edc1c5a4dcceff80728a1c7680a0395abb2f  0664  packages/cli/src/sync-worker-fatal-child.ts
+66990e0ed5a2f9e1459085cf7f40250da162d6c23db1f758d897789a24f6fd2f  0664  packages/cli/src/sync-worker-fatal.test.ts
+9bd8eb8a056ab4ce5fdd40f718db488a527c38534d86fbb82b28e25f93ccf4fd  0664  packages/cli/src/sync-worker-fault-fixtures.ts
+b1bd7dd6f99c99be75055039de3ce19f01b03634c49395bc3e05c5c3208585d8  0664  packages/cli/src/sync-worker-faults.test.ts
+040c532804470d20fa2fa5c774bfd03e520778b548ad7bf51afa70401ef6887b  0664  packages/cli/src/sync-worker-integration.test.ts
+911a6bbe9da8b268d277843f0429fe5f9050f0eb953b0608b96c7a3992ea1f5a  0664  packages/cli/src/sync-worker-records.ts
+4c09d394676a9af3b464a16472568ffb3ef3b39cf43b16a56b585947b3135efd  0664  packages/cli/src/sync-worker-runtime.test.ts
+7b1804396e25d6c28d7a654867cc49ba874ea700ac1e19e4f8f328a8b51d2fb2  0664  packages/cli/src/sync-worker.ts
+57b63cde51902908564fb8a4a3f5fc80e7b70a1dd442fc6c89163ef9acfc6b1a  0664  packages/cli/src/tailscale-command.ts
+cf0c50ad05259ef18ffdbde0c741b4c10475aecdfa3c76c6fda299449cb8636c  0664  packages/cli/src/tailscale-config.ts
+102104afc33f4d8e0b781fbf747e29596001ed5627b31d396f2ec55bfc086090  0664  packages/cli/src/tailscale-records.test.ts
+55cd35f2df8362acc87acbe0b6e540667f5e96953739937eb5b2718b31ba50f6  0664  packages/cli/src/tailscale-records.ts
+7a0f32cec9803f09f2060c573e17bf1a8aafaeb2085bdac0b32b0bd85db6cc61  0664  packages/cli/src/tailscale-test-fixtures.ts
+6c14cc880cc3ec6eef56968b8da1302e4ec91a7a677c524a730df6cd57434926  0664  packages/cli/src/test-fixtures.ts
+237bdcd99401ba02d9ebb84bf102f967d7ee0229e1dab42104e219e2882685e3  0664  packages/cli/src/validation.ts
+872c9a066c841a33990282c9358a8cb1c1cc37fba79a5beebbe0d798b8e71361  0664  packages/cli/src/viewer-assets.ts
+a671b58176a946ce8369679c186a0e20daec81705b20bd1558dd5323dd6cac87  0664  packages/cli/src/viewer-background.test.ts
+e53c6596d876961420324a8098959e64e239855e5d5a174bbcd71d9cdb4f530f  0664  packages/cli/src/viewer-client.ts
+74f141bb8aa043d6e8566df7e3b3b45d950c3156c4dc53d9f26f7ce478da30a9  0664  packages/cli/src/viewer-http-server.ts
+e357c4423b113b2b65141da08721a6d5a9f6ff988c7f13afd2a56c9a49d00eec  0664  packages/cli/src/viewer-http.test.ts
+5e007f48daed112cb2e32699a3eb3011deabcb9ab4532411411a61f38e350911  0664  packages/cli/src/viewer-lan-http.test.ts
+333a4c567bacf44f8e30c29277f0edbf01a7b3cf371af02af2643f3d6b6a4859  0664  packages/cli/src/viewer-lifecycle.test.ts
+6523eb5c57217400d5ff956a9d52e10a2a05c41ab709b26ab1d74ec1c87e6421  0664  packages/cli/src/viewer-network.test.ts
+298556c5a6744402a13fad8cc7a677988adb01d7b98cb89a079084ffd9a984c7  0664  packages/cli/src/viewer-network.ts
+9f8d9a39fad3d1296eaa7b432b514e0d61791c4c6b71d984c33f79d575d9cbd4  0664  packages/cli/src/viewer-ownership.test.ts
+16314638b55738cd0ac49e0b1aade313eb05a3582904ad2d02afa09fbe8ce3e8  0664  packages/cli/src/viewer-ownership.ts
+c5645bef52a19a32817f1053fc3ca3ece069c24b6f7270419e4f955837f36e04  0664  packages/cli/src/viewer-process.test.ts
+b81ebb937928341451c795504d39f188f0d6d46e722d39cd1b70c85c2a806f68  0664  packages/cli/src/viewer-process.ts
+6c568f06ba721187e05fed6cf0fc144f097d26106a811841d5633aadc0f7fe0c  0664  packages/cli/src/viewer-readiness.test.ts
+d277896a0c2435c9c76b9e868d8186b6ef97745a01cc79ec2f7fac30f9778897  0664  packages/cli/src/viewer-records.test.ts
+5777c0df1101dbaacb0617377b5473edd4ca121d79ca773d6cff3d10cff1a8e3  0664  packages/cli/src/viewer-records.ts
+dce495bc3d533275600e3f3375748204d7a063edfdc4ef283d9ce6433f06a402  0664  packages/cli/src/viewer-render.ts
+304d7cfd2ea06a54846ff33470ecdd75506f152a341651f2357b1f619fdd72f3  0664  packages/cli/src/viewer-server.ts
+9561339a164c9827165ad531459dc5e0d93f5bcb9795f775678a005a2857b60c  0664  packages/cli/src/viewer-service-definition.ts
+4c5c8b1ed5cfcc0d14719a269f5d7b225d265d7943bd5bed64fe52f139d45218  0664  packages/cli/src/viewer-service-log.test.ts
+0cab405df9ad89469b26f24d85fe6c2901daded287d79d044e55345890120e3a  0664  packages/cli/src/viewer-service-log.ts
+85780313f2071c994ed3effa789affe50a1d38322d325fb30677fadd7d250bc3  0664  packages/cli/src/viewer-service-manager.ts
+a1cb721a22e494fc75f478c2f181d240e0e99118a16978b3d5acc2519ecc4bdb  0664  packages/cli/src/viewer-service-owner.test.ts
+4c64437969c6759573ac2fb7230fb8d48ac1b3bfab306a423551ae1537c1a698  0664  packages/cli/src/viewer-service-owner.ts
+d7bf6768eb4d528c89fcb632bd648179d12455fa25c63ad27ccf7a4c64ec521b  0664  packages/cli/src/viewer-service-runtime.ts
+2e3dab21f72fbfa35a36bbfee3ba10b911375e0097f71825e17a9bbbeec23e03  0664  packages/cli/src/viewer-service-status.test.ts
+8575180417a49e48ad2929a38fda30daf46ee0dffbed7b4504935b269663b687  0664  packages/cli/src/viewer-service-status.ts
+a8605bc2957e26918e301b4b3ab7fd6aba0b686e71be604b43972450133dbebf  0664  packages/cli/src/viewer-service.test.ts
+022f5f271cd29758a0e431b55efd8a3aabe8fc2de09a9e84e6b52895d061bb0d  0664  packages/cli/src/viewer-service.ts
+aad0dd079a1e9fe821b4af1332fbe689b17be24eb83e2b74c7c25debdfc47c94  0664  packages/cli/src/viewer-start-lock.ts
+573656bd43faf4eef1618fb461d74a4429f0d6fdd13fa113156d4364af7bb26f  0664  packages/cli/src/viewer-startup-races.test.ts
+3b3e82e3181af652e61abee93069cf550a3945dd26456a660fb5a3f496b46a07  0664  packages/cli/src/viewer-status-readonly.test.ts
+0a111a3e90dc5742d0553e2869839febadaf1b8a77846720071e552e17ef04fc  0664  packages/cli/src/viewer-status.test.ts
+92941f39bc018d073a8ab3f1c873a6699ded22783064ce87406ab47ab61f9544  0664  packages/cli/src/viewer-status.ts
+38b3a7dd34c0cd40feb7fa57bd8bd228b0c67ab2e952b5a628ffe3d6e0ca116a  0664  packages/cli/src/viewer-tailscale-lifecycle.test.ts
+28c1194cc24f4617fdc414c7db0ad9231a68b7a7c5acc847d7613b72df094847  0664  packages/cli/src/viewer-tailscale.test.ts
+a4152191eaafb2715ad17a82190473cb534f6a25cb4b9c2a57a56a835e19c937  0664  packages/cli/src/viewer-tailscale.ts
+57ea94fd60b4ce4b7082fd6b0161d06fce1f7953eea4c4e990ba41c13fe24307  0664  packages/cli/src/wrangler-command.ts
+a8c91664dca69138b1aba731132dc9ecfc78bcbffe535de03ab8621c6ec5d118  0664  packages/cli/src/wrangler-credentials.ts
+
+ALL336 FRESH COMPILED SHA256
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/backend-records.test.d.ts
+d679fd7776c5ac3d342a9e61645ff5f804bda64cbc4561ab92ece9ef1e22d710  packages/cli/dist/backend-records.test.js
+1a1127165682547d2cc30cd456928ab6a1b23bde61df80a442a30cf9e4e82475  packages/cli/dist/backend.d.ts
+2eefbe29665cccc707b2c3754eda38c50dade83f1e7200242cd7f7930feb6a4e  packages/cli/dist/backend.js
+10207162446c76b9a7e3b7a1cdb66041a60f282ef554c0cdd237ad610dd4c449  packages/cli/dist/bounded-file.d.ts
+9c7d83409d2f0f669c52d937db64cd1385f485b072149662eef6efeeb1a81d72  packages/cli/dist/bounded-file.js
+71d2fe1c4f065afbc784ea4db0a384c94421befd7ad05f8eb81ef0e11e23ab17  packages/cli/dist/cli-args.d.ts
+82b370ce3238d92c1e826dbbb2bde82923ae02ceb217a40774cbc1b261a9d09d  packages/cli/dist/cli-args.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/cli-args.test.d.ts
+905960a88e1b661e9fdf4f88b9f227a2877c03bf8e76845d6763fad07d831158  packages/cli/dist/cli-args.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/cli-contracts.test.d.ts
+6c8f1c29e553d5a400a81735c47ea571682b7e41ee2868b9feb76ee24777a263  packages/cli/dist/cli-contracts.test.js
+7cc956e81e0dccb978680be6c4371769d6dde89bb3eac1fa44f1f20106ea7464  packages/cli/dist/cli-display.d.ts
+b1b491ab54bb8361a3d637eae098ddc448ee26b8f43e18f55d94cc7b80d57025  packages/cli/dist/cli-display.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/cli-display.test.d.ts
+1dbc52ee4806c6e53024d27a8f01483d67bf1f5357aa74906054578609d57cc2  packages/cli/dist/cli-display.test.js
+63d7ab630607b605472b2137356144f7cf83a03309b84263a5f0ba4885781051  packages/cli/dist/cloudflare-api.d.ts
+f270c0b2725b0323df6c370efd2444c575d60b84eb1e7d05d31ed9c2181b1418  packages/cli/dist/cloudflare-api.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/cloudflare-api.test.d.ts
+5264471608bf9b82025a1785735301d68b446733803866efe903f0929d71f8cc  packages/cli/dist/cloudflare-api.test.js
+b7d1b2b4360e967eb11a08d852a05cdcdae2f3718529576405a3e0d6c0fde6b5  packages/cli/dist/cloudflare-headers.d.ts
+187b266eec8649d66459b2f9c4576380f62c6bf93981c1f78a4ee07197555afe  packages/cli/dist/cloudflare-headers.js
+5daf45e4d95ed62b5e9f77945eed1e5753aa7f7eafc8896ed7736c6f08ec256a  packages/cli/dist/cloudflare-pages.d.ts
+8e1ea2d4ef95c78f80896c5eff974229d032b4d757dc3a7e4e0b6da31f3e2c32  packages/cli/dist/cloudflare-pages.js
+3d8c6e51d5ad759ed8c7885b74657acd3cc3d3cbc05b55bd4144045e725e7e74  packages/cli/dist/cloudflare-snapshot.d.ts
+453951edcdd0e145cf214e050c8bcd4714b40f123aba450172d620192cfcfebd  packages/cli/dist/cloudflare-snapshot.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/cloudflare-upload.test.d.ts
+6a54eeffa9dd96d50b37f7d532bd7125564bf0a349960b8f4efdb0eedad4d31d  packages/cli/dist/cloudflare-upload.test.js
+ebb2c603d9d7d09cdef9048c19a035e22cb364dd79bd9b60ea094a70ada69030  packages/cli/dist/command-runner.d.ts
+8caa43e1d54b8b5bbf1ffddd44b1280ac1806b2fb4dd771f8dd4d4de00f15940  packages/cli/dist/command-runner.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/command-runner.test.d.ts
+9867178b0b0ff49fce6e925732934875092f0682a773b05217429519f9541814  packages/cli/dist/command-runner.test.js
+79c7300fc4b549615d4e878514f6038faec15e3d3650f3a399d1bfa19971dcc2  packages/cli/dist/documents.d.ts
+e051190b6da88e3259b74ca13d85e21aea94620bac646bae1962e7d7bfe54f9d  packages/cli/dist/documents.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/export-paths.test.d.ts
+5634fbb7cc34d17af4a46dd129e757235ca01936099a97a5e5c896bd55039c8f  packages/cli/dist/export-paths.test.js
+5387bffdf3c3e8fca2cf24caaa882aaca7f140d63962719236342398328b7b89  packages/cli/dist/html-validation.d.ts
+b2174942dbe712c5bf6eb7ae5f00f5c0018a145c0a757ae3fca02c4debc43844  packages/cli/dist/html-validation.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/html-validation.test.d.ts
+813e11dc9478bd1f86c00ebed23e156b10d49d39fa06b6fb09f606f5bb2c03ca  packages/cli/dist/html-validation.test.js
+6da6f970c52a2e07d6dcc55a2606ad6bc0ef3410eb57638e7e5310d0cf140ce8  packages/cli/dist/hub-config.d.ts
+3f8f9f98fa7e7696f767e88d3d0a2246114551310df9da5be1d55513647a28ba  packages/cli/dist/hub-config.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/hub-config.test.d.ts
+4f5da742c4d65bd8a470883d8b4228c8d562caaf9877a2a2b1303f414e04b27d  packages/cli/dist/hub-config.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/hub-http.test.d.ts
+7bd1caad671b920b4d6a8af3556a5af387f54e553465912714e3d9edc3eec543  packages/cli/dist/hub-http.test.js
+126715009bdd7cd1f11f6a7352fe0565c7912178defb34cf4bd47c32f6120b12  packages/cli/dist/hub.d.ts
+f3e3140a01c18ea2987cc030b23e379596b66b1127f0af74d7132becef1982f5  packages/cli/dist/hub.js
+b4657a0e41571b1b4bf672f69bda3ec75de0acc50af87eb8b9986a3d7b182d75  packages/cli/dist/inbox-catalog.d.ts
+87fea99c76a4061f261ae115f115fe243b6e3480952eb55e287819eb9cd8081a  packages/cli/dist/inbox-catalog.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/inbox-catalog.test.d.ts
+fd7deb3fb0b9fd718b9b513960868f497af318a6684c5f12d8706587834afe05  packages/cli/dist/inbox-catalog.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/inbox-cli.test.d.ts
+91c3c06e4131c72c24d5eb8aca6b803ebadf3bca9d551fcd549183af10f64d2c  packages/cli/dist/inbox-cli.test.js
+ade62448027145735ce16442785f51994046bb0a7af438871d31230bf27f3979  packages/cli/dist/inbox-commands.d.ts
+e684fc1e6cfb1ece757a7b38ac50a0661ff3a0b8bf6de5ebf0c163140626116f  packages/cli/dist/inbox-commands.js
+9751fcc8cff60c92c945853427b9b17addd41c76d220ede87cf846722cb8865d  packages/cli/dist/inbox-home.d.ts
+d24d766a98b216d409603d3940a98b22e91c542d7cc6eb48de582cca7521fced  packages/cli/dist/inbox-home.js
+de320f09ebe147816a81d821a9503e2967f73d9009bdc5313b1b1234550d4cc0  packages/cli/dist/inbox-picker.d.ts
+991e7e6c8224782e514d885d47480d3b32c3ef971178da4d793358e7327c370c  packages/cli/dist/inbox-picker.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/inbox-picker.test.d.ts
+b7e22c706f4704b66f096173cec17986c3bf7f17bfb5165d3cbb5ed55f2617b6  packages/cli/dist/inbox-picker.test.js
+6c5aae11fbedd051c9d1c318b71001c5946bd3e4a9e102d29f3b5b4b96fe39c4  packages/cli/dist/inbox-selection.d.ts
+c66368426e6aa75f2c97c314dcbbb05c77f3ab44caa5c40d0a9fa99471972d10  packages/cli/dist/inbox-selection.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/inbox-selection.test.d.ts
+89569116774ec484a436299f9ddd2e1fac668496c12b84ee9fd8990684d3d8ab  packages/cli/dist/inbox-selection.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/inbox-service-selection.test.d.ts
+1b4c27fa2f24dee49a189595c1a9df821cca845fab0f09b9a097baf926dcd05f  packages/cli/dist/inbox-service-selection.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/inbox-ux.test.d.ts
+41c353a23c5a08526694fb3083ea70369b136b349f1a3b7511a2a327ed763478  packages/cli/dist/inbox-ux.test.js
+3a79d0d0cda92a1658dd628aac6a3094abdc625e00b24ff2bae778c2f10b26bf  packages/cli/dist/index.d.ts
+bdc685e9de8707753c974422e3b4a81e1365daf6a541f7f7968a595bb404e3c7  packages/cli/dist/index.js
+03068e90b89d6d38b77e83afbbc14ed36de7d3f6bafb60926295e72a151cb176  packages/cli/dist/local-document-source.d.ts
+a839b9d268d0bc3654ff454d04e733745c9a5fffaa3d53267e6e720f9e1cc084  packages/cli/dist/local-document-source.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/local-document-source.test.d.ts
+a769950ca0161967c826c13e4df29e4ad7c700c74f93f2f74686e76f66281b1a  packages/cli/dist/local-document-source.test.js
+c15ad51ca2f65eb73fa477633a631d52a370f31402bef49ca936d4983325d8c0  packages/cli/dist/path-containment.d.ts
+8a52734cf43a49301b1e6cb9f7e0a4802d66e95f1eeb53b277ffe9836e386650  packages/cli/dist/path-containment.js
+ec3bebb78cf806aa47fb8ce4acb5b50f884add67b7c8dd7bf3848d9da16394fb  packages/cli/dist/preferences.d.ts
+459884b92a38e09325e340128660710facd4e674c8ad0206a0c9031478977075  packages/cli/dist/preferences.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/preferences.test.d.ts
+ba36da134e6ffc0cc8e295f03bc025c167643d599ea0769acc3aecc6d972b6d4  packages/cli/dist/preferences.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/private-json.test.d.ts
+e593ecfe63360efdac38d1be53933401de118ec053b8bc3db722d316cf27d7b6  packages/cli/dist/private-json.test.js
+38980684fd26719bed5370e52c324805cdd1ccf05b95c4cb584138fafe826315  packages/cli/dist/private-storage.d.ts
+75b8a1dbfda0d9d0442224ffcb947fcc17a886ba57cd5e51a94ccc2cd7a86bd4  packages/cli/dist/private-storage.js
+b80653ada296ed3496c689f2b2f68c4d5db096c9d7c1ab07a8dca1e353a405f3  packages/cli/dist/publish-input.d.ts
+6af4d4e77895d711f01426c77d7599f71d95043828600b598dc50e603d882b4d  packages/cli/dist/publish-input.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/publish-input.test.d.ts
+cf1a269af7f75d4f0de850632cb64bd743133a73f6afb6f10b921c2dffac96bc  packages/cli/dist/publish-input.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/remote-integrity.test.d.ts
+e410697631eea7644a0d5502a7c09b700fec108ac12256b3bc84bea6df5807c2  packages/cli/dist/remote-integrity.test.js
+e36af5f3cca36701b21142fedcceb2f8f4767489de53ce1bb964fb46e33a5c9b  packages/cli/dist/remote-lock.d.ts
+ef766ff6567f512f54c9b0f4dd902ba0025a886f7181881bb82712d7b827cfc2  packages/cli/dist/remote-lock.js
+fa2f6a43ffc7848154a8ebaa85076ea0c3c720ca11a577aa0802c0a359c9423c  packages/cli/dist/remote-records.d.ts
+3c240f54f9dfa443c32c4f284a31e5524cc6e0766542dad799572537384dacc0  packages/cli/dist/remote-records.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/remote-recovery.test.d.ts
+0c87ea5be655df478e6c5a3eadc4f682c4bd955863c88dc17c9c17eef3be0ab7  packages/cli/dist/remote-recovery.test.js
+483d0758f031c722db354baa092c642bfc69fefe82ed8d29992eb778c8af7cb6  packages/cli/dist/remote-workflow.d.ts
+366ddd446a5a8453faee4d3bc0d526220c155e3014c5e579ac5b2d45cc0c047e  packages/cli/dist/remote-workflow.js
+c7218063f7f02d008c9ff324505b6983254b2d5db4f7ae48eb11dfa05718ce07  packages/cli/dist/static-export.d.ts
+dd5f00c1a24d5e36b8e9e7db0fe5f51f606ffa6845666cdf73ea4ad192cb55ce  packages/cli/dist/static-export.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/static-export.test.d.ts
+6abb76872104c4d9a9f09743c595a7376384f6c77c03fe7b6b812e01a120c846  packages/cli/dist/static-export.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/storage-cleanup.test.d.ts
+0dd2a96274ee9ae4d85b72f6bb5376c166cf10dc05dea8f1665c32748e8841f9  packages/cli/dist/storage-cleanup.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-acquisition-deadline.test.d.ts
+6883618cf06497942221d17e8619f89cd43038a358b496cc361d8b02de986676  packages/cli/dist/sync-acquisition-deadline.test.js
+8fe625bdb6ecae3cd981309f856e7be4afb1fe59250536e07310b33bcb0c595d  packages/cli/dist/sync-attempt-lifetime-fixtures.d.ts
+9460a5eb6d07c2e0bbca2666347b0f6d5188c6c7a5f41a488c92d5352e52d9c5  packages/cli/dist/sync-attempt-lifetime-fixtures.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-attempt-lifetime.test.d.ts
+8df6c1377a3bef74fb397f81311d230569a015d51faa62830ed49f029d8f94df  packages/cli/dist/sync-attempt-lifetime.test.js
+1039c93b4b41fc7a8c42fc814692689a19ce6a4bf6f1fcd3c71264c03033afa9  packages/cli/dist/sync-cli-args.d.ts
+5333e6d4ca9653cd76e569a2a15f8aa7126163398c17d7aed235f6387093bfea  packages/cli/dist/sync-cli-args.js
+c35c210f8285665e73e9c82c78583475c8649aa43483981673d51f068ec1819c  packages/cli/dist/sync-cli.d.ts
+e8999de2ac0312d6f33d8d13615945d905b1de52aab2bea677418f114e388256  packages/cli/dist/sync-cli.js
+812f3dab5f019c952c76faa8a22ea0f6bd0d34c59f52b6b3ea4d7781fcdf7f63  packages/cli/dist/sync-client.d.ts
+5390eab23621b379377a6310fa824b650b5b1e619241e6e77e2ec5ee211226b5  packages/cli/dist/sync-client.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-clock-skew.test.d.ts
+840e7e1ab93eda58c1c7bd285dbcf612a56114fbc92c029282338ac934af7f71  packages/cli/dist/sync-clock-skew.test.js
+e8b9dd28a6fe66700e89de5a03d21d3c5e84a0a1b892919f1ff870e49e1fc50d  packages/cli/dist/sync-enrollment.d.ts
+39f0a3888c70d006183fcd7cf1b8f244795cf0e6ea23fa825c3e36be10e04677  packages/cli/dist/sync-enrollment.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-enrollment.test.d.ts
+c475a001b1436e7e517f5672d014df4f497958cce7f6b8b1537d3c95d4d4b470  packages/cli/dist/sync-enrollment.test.js
+fe8fa64a056bed7a337dcf0b8bb0019cefc849e2a2513d6425aca11af78e6166  packages/cli/dist/sync-failure.d.ts
+353576379bbc350acfa2f79a0801be2406380c0b2af48e3eeea097160609ba56  packages/cli/dist/sync-failure.js
+542659fa3227e18ca62e998b8d449690f27d86f84251bdb7f718d6878bb36644  packages/cli/dist/sync-files.d.ts
+a5e3c636fdd49a322c80920cb9280fc5fcee6251f32b8eab4e89c84e0bf49d54  packages/cli/dist/sync-files.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-finalization-child.d.ts
+7beaa2165456d49198d5955035264cc172e09c8ac9dec906ecef4670526b50e0  packages/cli/dist/sync-finalization-child.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-finalization-lifecycle.test.d.ts
+c9146ade67a784a56a15e1c6ca64f2ec9a3db5713f533a2b12b4f78fdcb647ba  packages/cli/dist/sync-finalization-lifecycle.test.js
+21e708790cc5ed82e8d05414753f5d7e2649ee8ec63ab92ecd2e7af85114f311  packages/cli/dist/sync-fixture-proxy.d.ts
+5d11cd379bb05f5260f3ffc510a0455ff10573ea6ea91d26c0d7ed95554c1b0e  packages/cli/dist/sync-fixture-proxy.js
+dc45bf227eef5e0a691e6a3c66ef9d81cfa306ec05006517c70aa69fd68bb0dd  packages/cli/dist/sync-http-server.d.ts
+84b258301bd373290cc020917a1cfb2b9950720b9d6b2f2bee0d9f64e48e9134  packages/cli/dist/sync-http-server.js
+728fb0451c7fc5dd54c4e8fd250af0734f26150cda4350af0d6ef8dcabe63992  packages/cli/dist/sync-https-fixtures.d.ts
+290b3cac368d7b0446c51c18ba03ba13f2f48ba2a19d460ab4cfc97e89b98fa4  packages/cli/dist/sync-https-fixtures.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-https-fixtures.test.d.ts
+ad1bf53468a9f32d808b58ff38cb8e5fd8e4bd9cf8c4a8b46cc6d28177e572cc  packages/cli/dist/sync-https-fixtures.test.js
+bbbcb2ab85d54c2d573671a316cc5798798364bb2a66a480101e34259dd685f1  packages/cli/dist/sync-identity-fault-child.d.ts
+3dc49b398abe4522c89e7966da957c51e1cfc9eee0ac1a9db086e3a78daeacc0  packages/cli/dist/sync-identity-fault-child.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-identity-faults.test.d.ts
+5e39f6615d0c1e0f6b5b01d8f6ab5d9e180f4e6b98fba90138654499ff924afc  packages/cli/dist/sync-identity-faults.test.js
+22a6cb1d9da658c0089f290a488ffecfb67239dbf0e2208f8dd1b8a64834c4ce  packages/cli/dist/sync-ledger-policy.d.ts
+b642dfb75363d86f7ef3a05d12ec31482814f4c167d6a2f14eef83521fd4835e  packages/cli/dist/sync-ledger-policy.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-ledger-read-race.test.d.ts
+e6baf5e0fd6e030d2b92527b95b5f08922648b718d2bea87175639926f609ca4  packages/cli/dist/sync-ledger-read-race.test.js
+7fc66c584be7cd763bcbfb565e8a73be798b7371880f12ee52cffdbd7f10acb7  packages/cli/dist/sync-ledger-reader.d.ts
+87f555cd84a56972039efc5db27b2a7777e6a22d8b434c6a08073482ca45ad5a  packages/cli/dist/sync-ledger-reader.js
+c826d5633a22594c2483e6c4caa97086a45254e2c0c3f1841573439c787c342f  packages/cli/dist/sync-ledger.d.ts
+689f7791775bb52c98a29fe241bdf5f931551a929b2986831f404c5056e8686c  packages/cli/dist/sync-ledger.js
+74e3694261d14cbd6e0c9761976aa30a19e366b8e126d0c4cb647ffff6ecb307  packages/cli/dist/sync-lifecycle.d.ts
+ff08bdb420bea811c2d86047a595ec2293cbb42a4291fa445329c009fcfdb453  packages/cli/dist/sync-lifecycle.js
+3f05d7ef5e8e33cb4bad7ad4f01c1f92c561f5bf7ab3e1f0f0764996f918ff25  packages/cli/dist/sync-maintenance.d.ts
+e73d6932ed2e78419ebcf4caf5a73c19050bb7a29cdddb27e649ed73c03f25ab  packages/cli/dist/sync-maintenance.js
+2a88fce519bb1d233687bd4a1e6562fd76b48b11a291885bdb2278c548ca728d  packages/cli/dist/sync-model.d.ts
+1a138e4ed775f4fcc7eb0230f5ac7632d23fded9ebb0defd3b897fcdfa44a019  packages/cli/dist/sync-model.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-ownership-fault-child.d.ts
+2fb9e8cce96a27aedeed4238becdd653361fc20eb1c2b48219c6d1c264e663bf  packages/cli/dist/sync-ownership-fault-child.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-ownership-publication.test.d.ts
+f71b4cf6d5fb5e2aff9ba3c4a4ba9a9e18a9c509a04651d310737b9974ea54d4  packages/cli/dist/sync-ownership-publication.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-ownership-worker-child.d.ts
+a097262e43f8e310029110c3793a9630b85f3b2713ba3359fd98e6e5d7d5c707  packages/cli/dist/sync-ownership-worker-child.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-ownership-worker.test.d.ts
+9029e16acca867f419d1623f9808b95ec7505c34826d44ed0c1c916af9befbc5  packages/cli/dist/sync-ownership-worker.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-platform.test.d.ts
+a29bcdc0d607eaf155368e252978c9669ced855218f005af01444eb30cf8a6d5  packages/cli/dist/sync-platform.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-portable-acquisition.test.d.ts
+29e34b37df6936117f5b2a2a723c9186945f9f11a3ce43f04ecd118df6b69c7c  packages/cli/dist/sync-portable-acquisition.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-preaborted-reconciliation.test.d.ts
+66cd0260ea919a055d4ccaf684e099c9618be0f7ec50d1f15652014bf5eb7f0e  packages/cli/dist/sync-preaborted-reconciliation.test.js
+7e9551c3cdb4006d0615f1ef5f0a07b44d48ec99fdd8784fabeaf7fc62edea85  packages/cli/dist/sync-protocol-fault-child.d.ts
+9803303b4166110a0b929575729e9bf11ddb6c751ee16c157954b96394f1e850  packages/cli/dist/sync-protocol-fault-child.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-protocol-faults.test.d.ts
+33fa33daff15386d308898f0ac48e547ff0339311bd937e376675007eb26a727  packages/cli/dist/sync-protocol-faults.test.js
+d7f8ca45ec1dedf59fb8bf6bef66abcad808d576f713c1cfc14909c0380e0a76  packages/cli/dist/sync-protocol-fixture.d.ts
+e43063357b83302b6ebe1708713f046cd2052a37b04899796e2587b7614dfa07  packages/cli/dist/sync-protocol-fixture.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-protocol.test.d.ts
+d13d5b23f7339eaf2618629665f176f7841bc5e775f3de23e7aefe010b67678c  packages/cli/dist/sync-protocol.test.js
+c97c5a27f8d5e2fec560c345805b8ad10c5e5503cc62674aca0ff30ea8b02648  packages/cli/dist/sync-public-definition.d.ts
+cfff8fa59f3256983f98518a5d96752eae2ca7c69995d5e7c4f76b091ef8c9f8  packages/cli/dist/sync-public-definition.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-publication-inspection.test.d.ts
+96a4ea1d0adb478c6d54263be3d9345f085faf3c1757d95857bec7c26d9894d7  packages/cli/dist/sync-publication-inspection.test.js
+7e414605d65f5027ed895fae53b504e573b245048bd97328b61f1c8f756b309d  packages/cli/dist/sync-publication.d.ts
+c5daccd063354ebeaf9b7152b80209a00ec7a4a470ae3e5b6d7863718cf36a8b  packages/cli/dist/sync-publication.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-publication.test.d.ts
+b1172680e7db17ccc29046599067e2960985cb469d23c94a5a2da7dd9bc8ecf7  packages/cli/dist/sync-publication.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-reader-compatibility.test.d.ts
+536246827a26119f0e0f8f503f8ff2a39e47d9ce19cf096cec45ea6b13429c9f  packages/cli/dist/sync-reader-compatibility.test.js
+1c1e0db35b08047bd0995855b68b1a0a2ada83c62a2bfb6c39219986909b9da7  packages/cli/dist/sync-reconciliation.d.ts
+226e7ffcb63bbb709be7e6b63b78ced791918a95fb905ae3c4ce3a4fdd9271a6  packages/cli/dist/sync-reconciliation.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-review-regressions.test.d.ts
+18cfc4c0e0f745f53d46488c9829d07dbf3452bd815f260a1f73c16fbfafeae2  packages/cli/dist/sync-review-regressions.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-revocation-order.test.d.ts
+1563c78769623a6791dea0ba807617853eb35880fe13dca44a459c839d13af0a  packages/cli/dist/sync-revocation-order.test.js
+0650bbb474d4dd8e6c72b3645e48adec5eb4e8311b9cab280b3a43ed54589e01  packages/cli/dist/sync-runtime-config.d.ts
+3844e1656bbc8248b052292d92d69824ddf30214c94ca814dc2187e76e15bd05  packages/cli/dist/sync-runtime-config.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-runtime-config.test.d.ts
+6fcfebcf38aa143f1ab7003d22f407d522d8fe474d9c6299049363acf1654f1e  packages/cli/dist/sync-runtime-config.test.js
+21b7f15f03953a224bfa42e5874807f8ca39834e3119370bc3af02592ec4a292  packages/cli/dist/sync-shutdown-fixtures.d.ts
+7084a5e710cd301229711a1bb93770580a70f25725de73a5f56ef17e2ae18e2c  packages/cli/dist/sync-shutdown-fixtures.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-shutdown-ingestion.test.d.ts
+f5a952bd1b25d955416e3df7f5732676212e29082699dac40b1913995e5979e0  packages/cli/dist/sync-shutdown-ingestion.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-shutdown-ownership.test.d.ts
+433d1393d0e0dc8dc500bd3a189b1fe824851c39a1a70a96fbd4d1f28989c59f  packages/cli/dist/sync-shutdown-ownership.test.js
+5e141b7efd6a481c96e6d473e767c6f307f9437f885d3be2216e05a7fd357ec0  packages/cli/dist/sync-staging.d.ts
+7671413e5c7231479e8d69b380a06c55d26670f4704eb8bcb1a7c6e153419bb3  packages/cli/dist/sync-staging.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-storage-faults.test.d.ts
+4381f968266d66287fd76351357d523cdbd330f653bcfcf7fd18143b00087e0d  packages/cli/dist/sync-storage-faults.test.js
+13e585ed1413ab9a1cb218ea0ade090d48b9979dbafbe86751e9ed45bfe590c5  packages/cli/dist/sync-store.d.ts
+8b6e5d188a3cf3d7508d65aa9ca3e043f513ff950f6ed7d98bcf3d99619d4ef8  packages/cli/dist/sync-store.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-store.test.d.ts
+80c87a5c586185894497c5266845c1eb84815f6c60c495eec1fcedec44575e6d  packages/cli/dist/sync-store.test.js
+940c40a573f73be0c01cd628aed0435a34094a289c722b561baba99025f89e9f  packages/cli/dist/sync-supervisor.d.ts
+846b92a7c38b148404622a7f288e096dad2e00a98a0ab962ed9206c6581fb489  packages/cli/dist/sync-supervisor.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-supervisor.test.d.ts
+92e155aadfdbd621af70ab63c8f715db8f9485b213440110ffdd5480fdb84940  packages/cli/dist/sync-supervisor.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-transport-lifecycle.test.d.ts
+d20e7b611660d29f4e1619bcf7b19a343cb1341c29c8d68639c6238d7fb474f4  packages/cli/dist/sync-transport-lifecycle.test.js
+a92d49b269077f0ed201fde729f6b4879d0949540cc9cebcf8ae037e0b83ba07  packages/cli/dist/sync-wire.d.ts
+395a760caa467a4517afd64395ba39e340105baa2f3ae0377a153647b60115a7  packages/cli/dist/sync-wire.js
+d39de433dd459978ea3389c8d67ab5b46892a8051d0c6c7039f6b59c9594ef38  packages/cli/dist/sync-worker-client.d.ts
+4c2526e59b3ceb59200f94ac54c144905998cf37c3bbbe9e756e43983b38d151  packages/cli/dist/sync-worker-client.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-worker-credentials-child.d.ts
+3b9610fef626919b8c466d1f8322a438faa88774440d2a0672f8b28c895f12cc  packages/cli/dist/sync-worker-credentials-child.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-worker-credentials.test.d.ts
+4958dfc0ad3b6bece6349c5d68e514b511896706bdd62619bb05f59bb720affe  packages/cli/dist/sync-worker-credentials.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-worker-fatal-child.d.ts
+d009132bbefa14ea0815d0654c9484a3bd5f0ca7129230eadcdd6bb8d7b02cc0  packages/cli/dist/sync-worker-fatal-child.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-worker-fatal.test.d.ts
+2c36ea6c575b7e096d00c0ac8400bb8440bb8e0fd0dd7cdbc85982c495f57d58  packages/cli/dist/sync-worker-fatal.test.js
+3f618b0a6bc0a3ab1ad2e05cf2d26118f39a90364d69000d4aaaaab72ed47161  packages/cli/dist/sync-worker-fault-fixtures.d.ts
+17fefc994e0f83f8b8aff89755729470e56c50879ac6efa150c14f53ab2042c2  packages/cli/dist/sync-worker-fault-fixtures.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-worker-faults.test.d.ts
+3963162a294ec614b2ba9f5e5c75fb703eb7256cf5f94eb147c4b88a12c4f64c  packages/cli/dist/sync-worker-faults.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-worker-integration.test.d.ts
+8a9519a2eb3fb80520dd08128cd650a5450eb70c1a53bdbf031c741b1d3c2397  packages/cli/dist/sync-worker-integration.test.js
+af4da753a85e021d978eb83f35fadbeda7ce7e5af34916c68e720e2aea650657  packages/cli/dist/sync-worker-records.d.ts
+afdde4b7132a2e4a6d8765f4b84789fa5dcd43e86580e6dc8dca265b636641be  packages/cli/dist/sync-worker-records.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/sync-worker-runtime.test.d.ts
+25f0042e122c7135fadf04b99b5e6b6c79d8faf3d63a7569ffd0bbbf3b95a133  packages/cli/dist/sync-worker-runtime.test.js
+c329c136ee5674ac94022dca4cf7278b0c1b6868bef378321b036e9cb0fc1912  packages/cli/dist/sync-worker.d.ts
+370aa97548dd2aa2c3710e75f5b39c3a1d6697e9add02399de3b3568416d094a  packages/cli/dist/sync-worker.js
+e15e1fd73ab996784755633e18de47c4ad58e9ad076b054eec794831b43ca544  packages/cli/dist/tailscale-command.d.ts
+f9b2e69eb4d06cf92cb247c8a2379ee40a8ce6836463fea4656d6f26e6adab1d  packages/cli/dist/tailscale-command.js
+b68ef36dd095a07a2c4a1fceca96d061b7cb46155630cee3b5d57711efcfc789  packages/cli/dist/tailscale-config.d.ts
+4e146a0fbc6e311ce7b77bf55c8b190e8c80ec89f5acb64b165a4b21040879ad  packages/cli/dist/tailscale-config.js
+430b1e4eab96ba68fc46d34f79227cd4c494aabfb94020308caefea86066fa6c  packages/cli/dist/tailscale-records.d.ts
+b6a7e5a4d4327f7ea724a9f668f9027047ba6359882e83c930af8ab9c862c9fd  packages/cli/dist/tailscale-records.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/tailscale-records.test.d.ts
+d15f74c72631c9091e09c1be2b383cb700c2ab9ffe1f2b44aadebd3cc823c482  packages/cli/dist/tailscale-records.test.js
+ec013def794ff8a58b17058c5c49d63fed51610aa85df4ddcba575b27b610b18  packages/cli/dist/tailscale-test-fixtures.d.ts
+59b1ca19499b04d0877c007797c0c619ce72de75f6ec6845d7156c8b0c2f7308  packages/cli/dist/tailscale-test-fixtures.js
+667e57ae458ae227d056fa6125ca3581c9d5d8da8186c31409b7abc8b712e4f4  packages/cli/dist/test-fixtures.d.ts
+fab19a45e139a069cbfb8935180a1478746e3b8aac449cb9c63b7cc6c01bc2de  packages/cli/dist/test-fixtures.js
+13fed6b1ff139bc9eeffcc162f6f2a6883161ff91e1fe853307307ad5dbf44d0  packages/cli/dist/validation.d.ts
+aa97a6ae87da67d739e0d045461efa32fedf1dc312562206fb275952b0a60c58  packages/cli/dist/validation.js
+e2fb7b87e4cc89cfd5c41b39702ddbd60804a7080464dd2362fcf91a159d5203  packages/cli/dist/viewer-assets.d.ts
+10ff7281de9b83dfef4ba07538ea23760e038e705eea39fd12b2bc30f0354b3b  packages/cli/dist/viewer-assets.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-background.test.d.ts
+d0ce4e204b4377b527dc00a1eba09756e2bd2ffbaa200bef82869472254f9459  packages/cli/dist/viewer-background.test.js
+da4fec4e67b6b7cf92552db8f9547ba8a4c077dad1a85eea3dd84fbc716e3a7c  packages/cli/dist/viewer-client.d.ts
+e6bfa537850e0156eb209b52cca85794be7840429fdfb14ec1b5969e6c1f7922  packages/cli/dist/viewer-client.js
+d0bdb1e1877d8fd34b44c01c90ae28120316a20af2c805ca66dfab763a4f6553  packages/cli/dist/viewer-http-server.d.ts
+ccfc074a3becdbf2edc43bb1e714bab2354c62b428b0bd7ca724f13b326136f6  packages/cli/dist/viewer-http-server.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-http.test.d.ts
+8cb9a8a93d0fe018efe174a3fbe8684de63fee0c93ebd0e56eff67c976a25fea  packages/cli/dist/viewer-http.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-lan-http.test.d.ts
+a3d9cc3bdeb98efc5245bd9dacc579b6f59fa3866db5c20e8f92c4d8f6ad5080  packages/cli/dist/viewer-lan-http.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-lifecycle.test.d.ts
+526ba980d0afed4e88b10fceb5ae0189bdb036caf396a47e09db697241d5aa64  packages/cli/dist/viewer-lifecycle.test.js
+0187290e2d61a2900859fe00fe66bdfbeea0af711c48e8fc589b46c71ce0f2f8  packages/cli/dist/viewer-network.d.ts
+01d88fb15b9abc1f3bd814e69403599994ab98fe244e41fb50f0a750408ac372  packages/cli/dist/viewer-network.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-network.test.d.ts
+6f1689bcc7c922c2720ff47ed2486db05f65a487417fc1bdbec731b38125914f  packages/cli/dist/viewer-network.test.js
+15ecb658481865b3ff6be14330acce0aa8aeb3130b3e332935660489159972b3  packages/cli/dist/viewer-ownership.d.ts
+9bcf2483cd78bbb90aeacf694b2d80d7486d85716d61ad471a4dcb8d6b92af27  packages/cli/dist/viewer-ownership.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-ownership.test.d.ts
+f4b8efbc32f0c3409fd84a49d3956744204abf99a02b49111ae9a8940f0d292c  packages/cli/dist/viewer-ownership.test.js
+7c4d5b004fa0a8fd710ca664c0b6f2d1ecc77ad5e5bc7c93fcc1a217c96d60b8  packages/cli/dist/viewer-process.d.ts
+f510b9982a1e53cd2896aea377b34583c7f1a69ddd1726f6c549e2a6c463c43e  packages/cli/dist/viewer-process.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-process.test.d.ts
+adb9441cf9f7c48fea171e5e0e1d06608bef956f028c947bef2cb85322636eb3  packages/cli/dist/viewer-process.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-readiness.test.d.ts
+74d5e75fb6ca34f32d6a267d5908b891f2632d3da4d30044b17072a04f06d89a  packages/cli/dist/viewer-readiness.test.js
+120607ec6db3262bb297d6c0801ab0760534242710555f8021999592fdd81c93  packages/cli/dist/viewer-records.d.ts
+05f7fded52fa5566c569c6d1ab5b41553c5ae789c256b73a682fd8ba2b5ae2dc  packages/cli/dist/viewer-records.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-records.test.d.ts
+54265ef3e34484784dcd98d534838a171b70d219e8d45e6cfec331681a539391  packages/cli/dist/viewer-records.test.js
+ba923a75be7afdff01a6b9e4def94469aa4d707e601ef3c9794495b39f71a3b1  packages/cli/dist/viewer-render.d.ts
+c8808418f405f1722266f18e2e2d5c05b829004067d7bf154032993711868bc4  packages/cli/dist/viewer-render.js
+29792712e68074aea702b30354c492a582b18c673728713ac5da8d5be1c24881  packages/cli/dist/viewer-server.d.ts
+b8b2959571f5ac8319adee1c20889ef17808e27dd30f36b665429dea4499a257  packages/cli/dist/viewer-server.js
+48328ff3821cabec5bfeace5d4ec3a9f3ddd6e4f14159103c17b46dfc4cc25d7  packages/cli/dist/viewer-service-definition.d.ts
+b879a4006ffb81e9d0f0927624251ae88efc2fdc3494675075e4a5a1a2b3c721  packages/cli/dist/viewer-service-definition.js
+fe11a6e49817274d4571f5ec29ec3d24529e1b3d48490456cad63e47090b9e36  packages/cli/dist/viewer-service-log.d.ts
+90988fb521869c766047939d02aee5f6d8e9334ad17a2ae8d9779b330476f09e  packages/cli/dist/viewer-service-log.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-service-log.test.d.ts
+48a04586e4c62b94280540ec58b01513df4b210b2f0ec9fcb33218a2190a5a2e  packages/cli/dist/viewer-service-log.test.js
+dd1afa4767875c0186257c4ecf8500d75835aa6f5e1f0de3cdd6bbdfe2b15e47  packages/cli/dist/viewer-service-manager.d.ts
+1bbcb5c988fd5d947bec1e4ad854913c077693155bec07f4db5b4e72def69d50  packages/cli/dist/viewer-service-manager.js
+d712f3c7e0a3d55dc6124498ff5436b3285b2f6cce7970e08aabed713c26c05f  packages/cli/dist/viewer-service-owner.d.ts
+db68bca91faafa26e62bb6c147349472ef161a087f8d82a4360fe0dcff8a238c  packages/cli/dist/viewer-service-owner.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-service-owner.test.d.ts
+fb47274ecdb1cc794844efadedc54bcdc928dc86ab1249a4f462130287eaba31  packages/cli/dist/viewer-service-owner.test.js
+a69ba5c8e17a7a6692d6f11b7b3764a553b3e7b4b58718e85d34a9d4efc67494  packages/cli/dist/viewer-service-runtime.d.ts
+ea38c276594c31d4e7bd94da896d65af1f751f40235020ab51a4d5ef27e2c931  packages/cli/dist/viewer-service-runtime.js
+0d56102ca06da5d050e0b7caa9406ef27ac807634be7311d5ca682b55eeb1897  packages/cli/dist/viewer-service-status.d.ts
+0e4506f54798f42afa8da216459ccf35f8547e02f7a3e5fefff8bf2a0150659c  packages/cli/dist/viewer-service-status.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-service-status.test.d.ts
+88a22e66d9bde543c9de8b24d7e2fd890fc424905b68884e05ad21d3ef238b8b  packages/cli/dist/viewer-service-status.test.js
+f2fe11b74c4a95d3497726e413b1ec5f4a5297f83e82501621ed2cfbfb89893c  packages/cli/dist/viewer-service.d.ts
+acee8eb2dc3c5f24db6106b1668d150fc15cbee3bfc03dbdaede93a57b626db3  packages/cli/dist/viewer-service.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-service.test.d.ts
+821169e9e6f86a09514f56a5275688a5405d3e48c79fc00ed210e476a9f2ae81  packages/cli/dist/viewer-service.test.js
+6b71b0b20197278bff57a6470d3b959e079e81b77849e42ac6ccd4ed1a01152e  packages/cli/dist/viewer-start-lock.d.ts
+20a09ff4c27add82c906b963b00047bd15e45e570f9e3f3505fec83b860f0409  packages/cli/dist/viewer-start-lock.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-startup-races.test.d.ts
+b7c88e5f7b9baf53616cad3d84ca6fd28d97260b54f945cd21458b66507fe4da  packages/cli/dist/viewer-startup-races.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-status-readonly.test.d.ts
+cb0b1abfb4030fbb110692bb5995d7e17b717a90eb5ca1d1a7cc0fc99c507009  packages/cli/dist/viewer-status-readonly.test.js
+46e2ddab6733d04a23d922a4699ef2edbef36f3aa25297da6c08edc896f2bdd2  packages/cli/dist/viewer-status.d.ts
+01c5b421cc19a08eb3c8912412ef96b182f90a293a56ba9d42d14f6b0b5832d6  packages/cli/dist/viewer-status.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-status.test.d.ts
+aab773a2ab71863bcd34fa4a16d59f25fd921c82ea9ea82b8503c261ffd2630b  packages/cli/dist/viewer-status.test.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-tailscale-lifecycle.test.d.ts
+67a82206ad75ce320cfbd5b31eecdccd9ed977090c506a2e44cf6f924e9bf4e9  packages/cli/dist/viewer-tailscale-lifecycle.test.js
+e4a4bf15e9cf76822547f87a305589e30d9bf3e0d539d37be4d0470a260f264c  packages/cli/dist/viewer-tailscale.d.ts
+108d9642cb0f74631c1fbbc428616edebc13cd7e3e35422146cb8df3f14eb84b  packages/cli/dist/viewer-tailscale.js
+8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881  packages/cli/dist/viewer-tailscale.test.d.ts
+5f61084de6290d2458dbb80705b15f984a2ffdfbddff7eb53b2aab20a33e3eee  packages/cli/dist/viewer-tailscale.test.js
+bf43e0b5cf6757db3a542917aeeecd76bfabec93854087c2a70f11fc48098088  packages/cli/dist/wrangler-command.d.ts
+6ea1542cd655512f7a5037de1a6f81136ec1e8a83f17e42ee962d21fbc60d03d  packages/cli/dist/wrangler-command.js
+ee545897d36689dd4f5df601c13047df9f56fe19c9891fce9f33ed3d104f68fa  packages/cli/dist/wrangler-credentials.d.ts
+cad5e01338fe2a74a0d10c153cf442d318bbaabfab6246d65691286c7642452c  packages/cli/dist/wrangler-credentials.js
+

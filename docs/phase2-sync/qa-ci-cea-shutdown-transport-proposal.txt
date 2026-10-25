@@ -1,0 +1,33 @@
+UNAPPLIED. Three test/fixture files at most. No production change is justified by this diagnosis.
+
+Gate A, #687 progress and cleanup, independent of #592
+
+File: packages/cli/src/sync-transport-lifecycle.test.ts. Scope: the disconnect case's initial pin admission wait.
+
+Retain the real client.pullBody request and its existing assert.rejects outcome. Put the initial reachedPin wait inside the existing try/finally. Race that wait against the retained request-settlement promise. If request settlement wins before pin admission, fail explicitly at that stage rather than awaiting a promise with no remaining producer until the 15-second case timeout. An unexpectedly successful pull must remain a failure. Settlement before admission must never be counted as exercising the intended held-pin contract.
+
+A small shape, for parent to implement and typecheck, is to race reachedPin against pulling.then(() => { throw new Error("Body request settled before pin admission"); }) inside try. The existing finally must still release and await heldLock and pinned on every path. Observe both race branches, including late rejection. Preserve the original request error if assert.rejects itself fails. Do not mask primary failure with an independent cleanup error.
+
+Keep requestMs250, server requestMs1000, leaseMs1400, actual lock acquisition1000, quiesce/closed-response600, all until limits, final request1000/pass4000, and case15000 exactly. Preserve one interrupted pin, the real held canonical store lock, no late headers or bytes, response close-listener removal, one actual late body handle closed, zero receiver documents/receipts before fresh admission, and genuine confirmed fresh reconciliation against the same server.
+
+Evidence: pin-red-node20 reproduces the original 15000ms timeout after actual request-deadline settlement with pinHits0. pin-control-node20-v4 releases the same real pre-pin lock before admission and passes all original assertions. The red's original hosted contender and timeout stage remain unknown. This gate improves bounded failure-stage evidence and cleanup. It does not make an early failed request into a passing shutdown/transport test and does not change production safety.
+
+Gate B, #592 outgoing source lifetime at root removal
+
+Files: packages/cli/src/sync-shutdown-ingestion.test.ts and, only for cleanup registration/error ordering, packages/cli/src/sync-shutdown-fixtures.ts. Scope: #592's outgoing remote-source reconciliation actor. Do not move the owned receiver worker or apply/close interception into another process. Do not extend this diagnosis to #591/#593 setup paths or all eight shutdown variants.
+
+Reuse the existing startProtocolFaultChild runner for that outgoing source pass only. Its existing run command already validates optional requestMs/deadlineMs. Pass the original3000/5000 values, existing route/peer identities, temporary token and original synthetic CA path. Return the actual parsed reconciliation result, including pending/aborted results. Never manufacture confirmed. No runner or production interface extension is needed.
+
+Register the exact runner's stop/reap in f.cleanup before launching protocol work, with ordering that first releases/awaits the held real receiver operation and retained source request. Then stop/reap the source actor, invoke public remote.recover only after its writer process is absent, and remove shared storage only after that barrier. Keep recovery separate from successful ownership release. A stop/reap or independent cleanup failure must retain fixture evidence rather than fall through to unconditional root removal. The current shared fixture collects cleanup failures but still removes root before throwing; source-lifetime failure needs an explicit fail-closed removal boundary. Keep original failure causes and all independent cleanup failures.
+
+Why this boundary is relevant: source-retained-node20 ran the unmodified selected test through an outside-repo diagnostic adaptation. The receiver's actual applyStream and worker.close stayed in parent PID113281, under the original test's prototype interception. Original one-hold, pending-close, lifetime, exact bytes, receipt, generation, no-late-mutation and actual-handle assertions all passed. Only outgoing reconciliation ran in source child113323. A real source watcher was held before enqueue, still pending at the child's actual exit. The exact child was reaped, then public source recovery returned, then root removal succeeded with no tracked parent store work pending. The actual source report was pending/verified-transport-failed because the receiver response was closed; this was not relabeled confirmed. Receiver custody was proved by the original durable receipt and body assertions.
+
+This is source actor custody around the demonstrated writer, not a universal home drain. writer-control-node20 establishes only exact retained-operation ordering. Bare recover before a pre-enqueue watcher is not a barrier, and must not be substituted. Do not make openRouteAttempt.close asynchronous, add private production hooks or registries, remove unknown locks, retry rm, add sleeps, or shorten any safety deadline.
+
+Required parent verification after authorization
+
+Keep both controlled red distinctions and all three invalid observer artifacts. Implement only the accepted fixture/wait scope, keep the same real one-hit boundaries, and verify affected complete flows on original deadlines. Parent retains interface freeze, containing/combined checks and two NEW independent reviews. This task ran no broad suites and releases no SHA. The Node20 source-retained diagnostic is feasibility evidence, not a compiled/typechecked proposed TypeScript patch or proof of timeout variants.
+
+#591 and #593
+
+No corrective code scope is proposed. Obtain their separate initial-confirmation and body/end-of-stream observations first, as specified in gate-report.txt. No evidence supports treating either as #592's late writer or #687's producerless wait.

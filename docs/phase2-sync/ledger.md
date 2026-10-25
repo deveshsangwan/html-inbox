@@ -487,3 +487,327 @@ Both NEW full-rubric focused confirmations ACCEPT CI190-A1 plus entirefinaltest-
 ### CI190 logical follow-up packaging
 
 Fixturecommit4bfba66e96760380b93845e57d9f4f334b06b678 owns both retained-sender/helper edits with original1000/5000ms requestbounds. Browsercommitc2e4f026e744c8ed09590d17f279cedb21dc41f1 adds only initial-navigation failure observation. Each exact staged export typecheck/build passed in an isolated temporary tree, then removed. Root source165d7f1e5bb and reviewed328compiledbytes remain. This evidence commit contains the complete first/final independent reports, gates, diagnoses and passing local receipts. Fulltests were onfinalreviewedbytes; no inventedfullintermediateverdict. Explicit nonforcepush/nativeActionsobservation follows. Bothhostedactorsunknown;noWindowsfix/physicalQAacceptanceclaim.
+
+### Cea native follow-up diagnosis and narrow implementation gates
+
+All three current native logs preserved. Windows24 final fixture PID lookup failed after nine semantic subtests; native actor unassigned. Parent read complete diagnosis and matched59artifacts/94capturedchildPIDabsences/112scopedlistenerreceipts, preserving invalid initialbaseline/directnumericSIGSTOP qualification. Gate45cd0e3f authorizes only retained close-status/closed-command final test oracle. Ubuntu24 static return count0instead2 has controlled original-response red/control and permanently-wrong-response negative; parent read full report and matched87artifacts/33PIDs/fourlisteners. Gatec57c2096 authorizes only DOMContentLoaded wait before exactcount. Two disjoint one-file source authors now active in own worktrees; no production edits or deadline changes. Ubuntu20 tenfail/onecancel across eightfiles remain unassigned under separate read-only triage. Root integration/combinedchecks/twofreshreviews/publication remain pending. No physicalQA release.
+
+### Windows fixture lifecycle correction integrated
+
+The one-file author is terminal. Parent read the complete handoff and full diff, matched every immutable artifact, gate45cd0e3f and exact authorized replacement, and verified70 captured retained PIDs absent. Typecheck/build and the full10-case fixture suite pass on exact20.20.2/24.21.0; actual patched compiled sentinel control also passes10/10. All328 outputs matched across the author builds/tests.84 scoped listener rebind receipts are preserved. Integrated only sync-https-fixtures.test.ts, SHA2cf029ad, with source165 aggregateebc98ba2. Production unchanged. Native actor remains unknown; simulation is not native PID-reuse evidence. Static readiness writer and Ubuntu20 diagnosis remain active; combined root checks and two fresh reviews await terminal phases. No publication or physicalQA release.
+
+### Static return readiness correction integrated
+
+Parent read the complete one-line source handoff, matched all immutable artifact hashes and frozen gatec57c2096, verified167 captured PID absences,38 scoped listener receipts and26 browser/context close pairs. Integrated only the original-file DOMContentLoaded wait after exact URL equality, before unchanged strict row count. Syntax passes on20/24.21; containing suites each13tests/12pass/one optional skip. Actual patched-source held-return control passes; completed wrong-body response still fails exact0!==2. Original hosted actor unknown, production unchanged. Both test-only source phases are terminal; Ubuntu20 triage now returned with a pre-aborted reporting reproduction, to inspect before any next source gate. Combined root checks and two fresh reviews remain pending; no publication or physicalQA SHA.
+
+### Ubuntu20 triage verified and first production gate frozen
+
+Parent read the full case map and separate interface proposal, verified all immutable artifacts/11valid command logs,44sampled owned identities absent and20captured endpoints.505 reproduces on20/24 through public persisted-error plus pre-aborted reconciliation; actual140ms lock control reaches the original assertion on20 and zero-hold passes. GateA narrowly reorders enabled-route cancellation before cached permanent errors, while preserving explicit lifecycle/unknown-route fences, durable error/ledger and zero communication. Only reconciliation plus one new real-store regression authorized. Typed acquisition-deadline policy is separate, still read-only.524 is corrected in the map: the failure is missing receiver history checkpoint before the fault-hit assertion. Other ten nonpassing cases remain unassigned and partitioned for bounded follow-ups; no blanket load or timeout waiver. One Node24 audit remains invalid. Combined checks/reviews/publication and physicalQA release remain pending.
+
+### Ubuntu20 follow-ups assigned
+
+Five isolated tasks now own the gated505 reporting correction, separate typed-acquisition-deadline design,490 staging-pair diagnosis,591/592/593/687 shutdown/body-progress diagnosis and524/578/584/690/746 setup/worker-progress diagnosis. Exact task IDs, scope and briefs are recorded in qa-ci-cea-ubuntu20-followup-plan.md and verification-qa.json. Runtime diagnostics use one bounded advisory admission mutex, preserving every original test/production budget and failed verdict. Windows/static source phases are already terminal and integrated. All remaining native causes stay unassigned until actual boundary evidence. No new source publication, combined-green or physicalQA claim.
+
+### Pre-aborted reporting correction integrated
+
+Parent read the complete terminal handoff and full188-line new regression/diff, verified all immutable hashes, gate61f2c84b,291sampled identities absent and142captured endpoints. The original implementation produced three expected status failures with five controls passing; final containing suites pass61/61 on20.20.2 and24.21.0, with typecheck/build. The original one-hit140ms lock reproducer now passes its unchanged505 assertion, while first-call raw deadline classification remains unchanged. Integrated only reconciliation ordering and the dedicated eight-test real-store regression, preserving ledger/bytes/receipts/retry state and explicit lifecycle fences. The author compiler/test setup failures and all44prior artifacts remain. Root now combines166CLI sources with the prior Windows fixture edit; no combined-green claim yet. Staging remaining discriminator and other diagnoses continue; separate GateB policy remains to freeze. No publication or physicalQA release.
+
+
+### Cea hosted follow-up, 2026-10-25 01:01:08 UTC
+
+Windows retained-child and static DOM readiness corrections are integrated. Gate A pre-aborted enabled-route reporting is integrated on exact verified author bytes; containing 61/61 passed on each runtime, not a new root combined run. Hybrid CLI source count166 / aggregate772d7ba98d6480d93b1fff8cfc8e1e04bea2f411c6b2f3ed695f7b6105519cf0.
+
+Parent read and verified Gate B design44artifacts; staging continuation52artifacts and26sampled identities; shutdown12command logs/76sampled identities; initial-progress97artifacts/90sampled identities. Invalid observers, runner failures and missing exact endpoints remain qualified in full reports. Original hosted actors remain unknown.
+
+| Phase | State | Author task | Criterion |
+| --- | --- | --- | --- |
+| Prepare16realoffersbeforepartialuploads | Dispatched, isolated source scope; runtime first | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-staging-offer-order-implementation-20261025-auto` | Exact frozen gate, original assertions/bounds, both-runtime receipts and scoped cleanup |
+| Queue-only initialclientadmission retry | Dispatched, isolated source scope; runtime held until parent release | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-acquisition-queue-implementation-20261025-auto` | Exact frozen gate, original assertions/bounds, both-runtime receipts and scoped cleanup |
+| Outgoing source custody and early request-settlement failure | Dispatched, isolated source scope; runtime held until parent release | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-shutdown-transport-fixture-implementation-20261025-auto` | Exact frozen gate, original assertions/bounds, both-runtime receipts and scoped cleanup |
+| Move avoidable worker-status CLI before foreground budget | Dispatched, isolated source scope; runtime held until parent release | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-history-fixture-order-implementation-20261025-auto` | Exact frozen gate, original assertions/bounds, both-runtime receipts and scoped cleanup |
+
+No production change is authorized for filesystem/cleanup deadline classification or the six separately unresolved initial-stage failures. No broad deadline increases, source snapshots tested by proxy, native hosted cause attribution, interim SHA, merge or physical-QA release. Root combined checks and two new independent reviews follow terminal integrated phases.
+
+
+### Staging integration, 2026-10-25 01:07:09 UTC
+
+Verified exact approved files-quota order patch, one tracked author file and empty author index/untracked inventory. Parent matched236artifact hashes and10successful command receipts; containing31/31 passed on exact20.20.2 and24.21.0. Actual patched-source15100ms hold control passed all16pairs, overflow413 and original ownership/no-custody/cleanup checks.465sampled owned identities absent;153captured listeners rebound. Historical diff-header analysis failure retained; no test failure in author phase. Native hosted actor remains unknown.
+
+Integrated sync-protocol-faults.test.ts SHAa5ba51f46a3c7f6a94d75978906a4779056598b8b7bb4af2985044c10c4a95d2. Current root166-source aggregatef52f3f6c13ecd7ba6a74583be55eeae6124919201197cd6e253de0357a4f260d is an integration pin, not a combined-test claim. Exact receipt: /tmp/html-inbox-qa-history-amcemjlx/cea-staging-integration-receipt.json.
+
+Gate B runtime released to same isolated author, task `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-acquisition-queue-runtime-release-20261025-auto`. It must run the prepared red before production changes. Shutdown and history authors remain held for sequential checks. No interim SHA released; combined checks and two new reviews remain required.
+
+
+### Queue correction integration, 2026-10-25 01:29:48 UTC
+
+Parent read full terminal report, both production diffs and all511lines of the new test.140artifact hashes matched; final exact20.20.2/24.21.0 receipts each contain303passing checks with overlap and name-filter exclusions disclosed. Both original pre-fix public reds hit one actual queue wait with150/154ms whole-pass time left and zero credentials/requests. Final original505held/zero controls, boundary negatives and real worker backoff/limit/reset/idempotent custody passed. Filesystem/cleanup deadlines and remote allowlist remain unchanged.
+
+Only sync-files.ts, sync-client.ts and new sync-acquisition-deadline.test.ts integrated on exact author hashes. Root167-source aggregatecd4d5b55c9325fe09a9a91dda060e3627823b19a8c603f00a0bbf4e1a16624c9 is an integration pin, not a root combined-test result.662sampled owned identities absent,29captured ports rebound. Test idle-clock advancement between completed passes is simulated scheduling evidence; actual request timers, storage and receipt controls remain real. All failed helper/test attempts retain their original classifications. Receipt /tmp/html-inbox-qa-history-amcemjlx/cea-acquisition-queue-integration-receipt.json.
+
+Shutdown/transport runtime released to same isolated author, task `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-shutdown-transport-runtime-release-20261025-auto`. History source remains prepared and held until this validation completes. Six earlier hosted initial-stage actors remain unassigned. Final combined checks, two NEW independent reviews and published hosted checks precede any physical-QA SHA release.
+
+
+### Shutdown/transport fixture integration, 2026-10-25 01:50:27 UTC
+
+Parent read full terminal report and final patch, verified17command log hashes and12unchanged historical diagnostic logs. Exact prepared three-file bytes remained frozen through final typecheck/build and66/66containing runs on each runtime. Source-watcher, healthy-pin and dual-cleanup controls passed; early-pin reds remained explicit failures under1s with no watchdog cancellation.1279sampled owned identities absent,268captured listeners rebound.
+
+First20containing run had14unedited cleanup-hook failures; corrected external runner live reaping produced final66/66without source/deadline/concurrency changes. TAP did not serialize individual original causes; qualification remains explicit. First source-watcher observer failed a too-early registry assertion; its retained observations and corrected recovery/removal-boundary control remain separate. Neither failure was overwritten or credited green.
+
+Integrated root167-source aggregate4bf624aee7d7f1d64a71b66aaef1b6624655b702fee29d33bceaf6c98930d9bd is not a final combined-test claim. Exact receipt /tmp/html-inbox-qa-history-amcemjlx/cea-shutdown-integration-receipt.json. No591/593setup policy changed; hosted causes remain unassigned. Final history runtime released, task `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-history-fixture-runtime-release-20261025-auto`. Combined checks and two new reviews follow all terminal source phases. No new SHA released.
+
+
+### History control remains incomplete, 2026-10-25 02:03:47 UTC
+
+Parent read full incomplete report, verified77artifact hashes and7exact logs, sole prepared source/index unchanged. Complete containing4/4 on each runtime does not close the required failed status control. Its hold ended253ms beforecommit; receiver committed+768ms but no source reconciliation ran, with preserved source retry due+7413ms. Actual foreground pending/exit2 is retained, remaining controls NOT RUN.198captured identities absent;6captured exact endpoints rebound;97old artifacts unchanged. No source integration.
+
+Source/contract assessment preserves foreground ticket backoff, matching Gate B durable scheduling controls. New control-only gate ec02fb1f173cc72636618e857715dd9d7d0ee5a44b9cf1348b596c3a4b2bc595 declares real public pause and actual-worker authenticated quiescence to keep retries constant across the same status delay; no reset or due-time bypass. Exact matching old-order red20/prepared positives20/24 and outstanding overbudget negatives are bounded. New task `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-history-controlled-backoff-continuation-20261025-auto`. No additional repo/production edits, blanket guarantee, native cause, root combined run, new review or SHA release.
+
+
+### All CEA sources integrated, 2026-10-25 02:18:24 UTC
+
+History continuation: parent read full terminal report, guard code and all five classifications, verified612artifact hashes/10exact logs. Actual prepared positives observed sender committed receipts at1686ms/1311ms and passed all original selected assertions. Matching old-order20 and overbudget observation20/24 remain expected original-assertion reds with actualpending/exit2/null sender receipts. Prior unguarded failed positive remains a REAL FAILED CONTROL; future backoff prevented source observation despite early receiver custody. No backoff reset or custody shortcut.123captured identities absent includingcleanup;30captured endpoints rebound. Earlier natural4/4each are reused on identical source/compiled bytes, not rerun.
+
+Integrated sole history file SHA040c532804470d20fa2fa5c774bfd03e520778b548ad7bf51afa70401ef6887b. All final CLI167sources match aggregate831bfb7c80e8c798283bb98ffa991e36eb167c86b8ca120562bc812ac0ea27e7. Receipt /tmp/html-inbox-qa-history-amcemjlx/cea-history-integration-receipt.json. All authors are terminal; no author runtime remains planned.
+
+| Phase | State | Evidence |
+| --- | --- | --- |
+| Windows lifecycle | Verified/integrated | Exact retained-child proof; nativeactorunknown |
+| Static Back readiness | Verified/integrated | DCL plus strictcount2 and wrong-response red |
+| Preabort Gate A | Verified/integrated |61/61containingeach; no requests/ledgerchanges |
+| Queue Gate B | Verified/integrated |303overlappingcheckseach; rawfilesystemerrorsunchanged |
+| Staging offer order | Verified/integrated |31/31each; exactpatchedholdcontrol |
+| Shutdown/transport fixtures | Verified/integrated |66/66each; controlsandretainedfailures |
+| History fixture order | Verified/integrated |4/4eachplusmatchedcontrols;failedfirstpositivepreserved |
+| Integrated combined verification | Scheduled | Exact24.21.0verifythen20.20.2units, stoponfailure |
+| Two NEW independent reviews | Pending green combined checks | Same final working-tree pin, full rubric |
+| Logical commits/hosted check/released QA SHA | Pending all checks/reviews | No merge/deployment or interim physical-QA SHA |
+
+Six original hosted initial-stage actors remain unassigned. This is not native/physical acceptance. The combined checker owns root build/output exclusively and must preserve all existing receipts and inherited residue.
+
+
+### Integrated check blocked, 2026-10-25 02:40:38 UTC
+
+Command1exit1 in314.367270s; Node24.21.0units1026/1020pass/4fail/1cancel/1Windows skip. Typecheck/build passed; later stages not reached. Command2NOTRUN. Exact four finalization failures and pagination timeout copied verbatim into qa-ci-cea-combined-attempt1-failures.txt. All167sources/371input paths/index/status frozen;332compiled outputs match permitted changes, aggregate db1e5031c55ca76b434de6519b59de42b8ffdad89ba3a3eb63099f4cba7834aa. Parent verified51immutable artifacts and original log SHAbe9c68925dc1a002385074d2a2a9f92dc487b95beebe3363944b4b9311337f6d.127adopted children reaped, none remaining; no new scratch. Parent read-only audit shape error retained separately and corrected without test/source rerun.
+
+| Phase | State | Task |
+| --- | --- | --- |
+| finalization actual-stage diagnosis | RELEASED first slot; read-only isolated167-source snapshot | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Adelegate-task%3Aphase2-ci-cea-combined-finalization-diagnosis-20261025-a` |
+| pagination actual-stage diagnosis | HELD for explicit release after finalization terminal; read-only isolated167-source snapshot | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Adelegate-task%3Aphase2-ci-cea-combined-pagination-diagnosis-20261025-a` |
+| Combined rerun | Not authorized until diagnosis/fix decision | Earlier red retained |
+| Two NEW independent reviews | Pending green combined checks | Not dispatched |
+| Published/check-green immutable QA SHA | Blocked; no interim release | PR79 head remainscea30b4 |
+
+These diagnostics retain separate causes and original strict deadlines/safety/custody assertions. No common load/actor explanation or production change is assumed. Source/runtime resources remain scoped and scheduling sequential.
+
+
+### Finalization diagnosis terminal, 2026-10-25 02:57:16 UTC
+
+Parent read full report/proposal, verified514artifact hashes and10command logs. Observed exact24.21.0 baseline4/4. One actual owned callback hold2800ms reproduced strict2000ms preaction margin failure with1444ms remaining;5200ms reproduced absent marker before any HTTPS start. Same0mscontrols passed original assertions and proved cancellation before ordinary expiry. These are sufficient controlled mechanisms, not the original causes;231predicate component remains unknown. No product/source correction or timeout change.109sampled owned identities independently absent;48captured endpoint rebinds verified. Raw child indexmetadata changed during inspection; clean source/logicalindex=HEAD and parentindex unchanged, no exactrawrestore claim.
+
+| Workstream | State | Task |
+| --- | --- | --- |
+| Pagination actual stage | Runtime released; exact borrowed167source/one unchanged observed case, no budget override | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-pagination-runtime-release-20261025-auto` |
+| Finalization fixture boundary | Read-only design; genuine preparation, strict timing/custody/ticket constraints and alternative evidence gaps | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-finalization-fixture-design-20261025-auto` |
+| Combined retry and reviews | Blocked pending diagnostic/design decision | No blind rerun; no source edit authorized |
+
+Original combined four failures/one cancellation remain. All existing167source bytes still match831bfb7c80e8c798283bb98ffa991e36eb167c86b8ca120562bc812ac0ea27e7. No new SHA released.
+
+
+### Finalization preparation gate, 2026-10-25 03:09:05 UTC
+
+Parent read complete source-bound design and checked actual viewer/worker/fixture APIs. Retained full result in qa-ci-cea-finalization-preparation-design.txt. Gate35902b8d3f1275d1dc1053ed8e7469422d728a3b37c63398a1985f7c27f61649 owns only sync-finalization-lifecycle.test.ts. Genuine source viewer starts before publication and is immediately registered for cleanup; actual viewerreuse, workerrecords/control identities, due/currentroute and zero prepublication custody/tickets are required. First TLS/history/body/receipt and all deadlines/margins remain aftercommit. No warmup ticket, reset, secondreconciler, production change or runnercap. This removes a known fixture responsibility, not proof of originalcause/guaranteedfix.
+
+Source preparation task `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-finalization-preparation-implementation-20261025-auto`; runtime HELD while pagination owns its first selected observation. No compile/test authorized before release. Bounded exact24 sixcase and real nativebind-order/control plus original budget sensitivity follow only explicit release, then parent combined20/24 and two NEW reviews. Existing combined red remains blocked and source167parent still831bfb7c80e8c798283bb98ffa991e36eb167c86b8ca120562bc812ac0ea27e7.
+
+
+### Prepared finalization source inspected, 2026-10-25 03:19:27 UTC
+
+Parent read the complete one-file patch and validation plan. Verified 348 artifact hashes, all 166 nonowned restorations and all 139 original assertion lines. Prepared target ceb67694dd0dccd392b12523a3e3f8370570b5cf0eade2568df9987b1edf3205 remains isolated and untested. Parent target and all 167 source hashes remain unchanged. Child raw-index metadata qualification is retained; staged tree equals HEAD.
+
+| Phase | State | Task |
+| --- | --- | --- |
+| Pagination registered comparison | Active; private syntax defect corrected before the original 0/250ms pair; no source deadline change | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-pagination-paced-pair-continuation-20261025-auto` |
+| Finalization viewer preparation | Source inspected; runtime HELD | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-finalization-preparation-implementation-20261025-auto` |
+| Combined retry, two fresh reviews and QA SHA | Blocked pending diagnostic and author results | Original combined red retained; no interim release |
+
+
+### Pagination comparison terminal and finalization runtime released, 2026-10-25 03:24:35 UTC
+
+Parent read complete pagination report/proposal, verified77artifact hashes and7command logs. Matching control passed5.024s with129durable events/returns and all original metadata assertions. One250ms callback-paced arm hit unchanged30s watchdog with95returns/96durable barriers and zeroidentityrequests. Late publication ENOENT after teardown is separate. This proves a sufficient controlled seed-budget mechanism, not the original combined cause or full paced semantic success. No outer override/source patch ran. Recorded cleanup30identities absent/fourrebinds; parent independently checked23command-descendant PIDs.
+
+| Phase | State | Task |
+| --- | --- | --- |
+| Pagination next discriminator | Pending separately authorized bounded observation; no runtime active | Prior original combined red retained |
+| Finalization prepared source | Runtime released for frozen exact24 six cases and matched controls | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-finalization-preparation-runtime-release-20261025-auto` |
+| Combined retry/reviews/QA SHA | Blocked pending author/diagnostic completion | No interim commit or SHA release |
+
+
+### Finalization fixture verified and integrated, 2026-10-25 03:51:02 UTC
+
+Parent read complete report and verified429artifacts/14command logs/228scoped identities absent. Exactprepared targetceb67694... integrated alone; resulting167source9c2539202ce4cd270cf4bec16d3dc4d772b2d69cf0c980617d9d75b6d36c54a3. Six actual cases pass;4100ms nativebind-order pair qualifies and both filesystem-budget reds still detect original assertions.71literalendpoint rebinds include reservations/probes; no71productlistener claim. Original causes unassigned; original combined red remains.
+
+| Phase | State | Task |
+| --- | --- | --- |
+| Finalization preparation | Verified/integrated | Parent integration receipt retained |
+| Pagination finite observation | Active, one private120s outerguard with same250ms pacing; no repositorypatch | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-pagination-finite-observation-20261025-auto` |
+| Combined checks/two NEW reviews/QA SHA | Pending diagnostic decision | No new commit or release |
+
+
+### Pagination full paced observation verified, 2026-10-25 04:07:18 UTC
+
+Parent read full report/proposal and verified86artifacts/sevenlogs/23scoped identities absent/twoactualrebinds. The oneprivate120s arm passed in41.856s with129starts/barriers/timerreturns/publicreturns and all11protocoloutcomes/128+1pages/aftercut/originalnegatives. Request/session bounds unchanged. This is controlled semantic completion, not current unchanged-suite/hosted cause acceptance.
+
+| Phase | State | Task |
+| --- | --- | --- |
+| Finalization preparation | Verified/integrated | Existing167source9c253920... |
+| Pagination aggregate budget/stages | Author gate96827dfa...; onefile, exactbothruntimecontaining andoneactualpatchedpacedcontrol | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-pagination-budget-implementation-20261025-auto` |
+| Combined retry/two NEW reviews/QA SHA | Pending author return | Original full red and all historical evidence retained |
+
+
+### Pagination author preflight corrected, 2026-10-25 04:16:55 UTC
+
+Preparedsource d74ade6b... remains unintegrated/unverified at runtime. A private scopechecker searched for nexttest from precedingreasoncomment and matchedselectedtestitself; no install/compiler/test ran. Parent read exact checker and fullpreparedpatch, corrected onlynextcaseboundary in a newpureprivatechecker, and verified358artifacthashes/alloutsidecasebytes/alloriginalawait/assertionlines. Oldfailure/rawindexqualification retained.
+
+Remaining author runtime released as `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-pagination-author-validation-continuation-20261025-auto`. Coordinator execution clarification permits ordinary private pre-target tool setup corrections with retained failures and immutable application hashes; compiler/test/pacing/admission/unsafecleanup failures still stop without test retry. No application assertion/timeout scope changed by this clarification. Root167source remains9c253920...; parent combined and twoNEWreviews still pending.
+
+
+### Established-runner validation transfer, 2026-10-25 04:29:15 UTC
+
+Author full24 printed39/39pass but its private sampler raisedESRCH beforefinalwaitpid. The supervisedcommand staysFAILED; Node20/paced checksNOTRUN. Parent read complete report, verified112artifacthashes and independentlychecked284recordedPIDsabsent. Parent corrected a read-onlyaudit JSON-shapeKeyError before anysourcewrite; no test rerun from that correction.
+
+Frozenpaginationtargetd74ade6b... is integrated for validation, not declaredverified. Current167sourceb3fe50512a22f17215abe1dcb0dac403a7f428c58892b2c94ccf42f4b9bcd82b. Remaining author checks move to established rootcheckkit, followed onlyifgreen by full24verify/20units. No authorrunnerreuse, blanketpass, interimcommit orQA SHA. Earlier fullred remains.
+
+
+### Established checks terminal: Node24 green, Node20 blocked, 2026-10-25 04:56:27 UTC
+
+Parent read complete report/failureblocks and verified150immutableartifacts/sixoriginalreceipts/source167. Bothprotocol39/39 and actualpatchedpaced1/1 completeall129/11outcomes. Full24verifygreen units1025/1026,skills48/50,browser22/23,site9/9,integrity/package. Full20units1023pass2fail1skip:203cleanupENOTEMPTY;453setRetryPausedlockdeadline. Tworesidualroots32entries retained;cleanupincomplete. Nooriginalactorassigned.
+
+| Phase | State | Task |
+| --- | --- | --- |
+| clock203 diagnosis | RELEASEDFIRST:one20baselineandregisteredred/control | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Adelegate-task%3Aphase2-ci-cea-node20-clock-cleanup-diagnosis-20261025-a` |
+| lock453 diagnosis | HELDread-onlypreparationuntilclockterminal | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Adelegate-task%3Aphase2-ci-cea-node20-linked-cut-diagnosis-20261025-a` |
+| Combined retry/two NEW reviews/QA SHA | Blocked pending diagnosis/fix gates | No new commit or release |
+
+
+### Linked-cut diagnosis prepared, 2026-10-25 05:07:05 UTC
+
+Parent read full preparation contract/terminalreport and verified579artifacthashes. Exactcompiled153 is parentsetRetryPaused(false) afterarm beforewake. Pausedtickissnapshot-only; outstandingbookkeeping/routewatcher mutationispossiblebutunproven. ProposalforuniquelyscopedtestchildIPC andkill/reap-before-unpausecontrol remainsUNAPPLIEDandrequiresparentgate. No runtime/compiler/Node/probe/admission occurred. Source167/compiled332 unchanged. Reported3docchanges+2addedreports are coordinators recorded prior ledger/report updates; no restore required. Clock203diagnosiscontinuesfirstslot;453runtimeHELD. No new codefix orQA SHA.
+
+
+### Clock cleanup mechanism verified, 2026-10-25 05:12:09 UTC
+
+Parent read the full qualified report and lifetime proposal, verified 886 artifact hashes and nine command logs, and checked recorded PIDs absent. One actual source watcher remained pending after close, created a real canonical lock during source/sync removal, and reproduced the original hook ENOTEMPTY. The matching control settled that producer before removal and passed all original assertions and cleanup. The historical actor remains unknown. The failed cache-inventory audit and qualified counter summary are retained.
+
+| Phase | State | Task |
+| --- | --- | --- |
+| Watcher lifetime interface | Read-only design; no production edit or runtime | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-clock-watcher-lifetime-design-20261025-auto` |
+| Linked pending cut | Runtime released for unchanged observed Node20 case and separately qualified private diagnostic pair | `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-linked-cut-observation-runtime-release-20261025-auto` |
+| Combined checks, two new reviews and QA SHA | Blocked pending corrections | Existing full Node24 green and Node20 red remain |
+
+
+### Awaitable watcher-close design inspected, 2026-10-25 05:31:31 UTC
+
+Parent read the full five-file candidate and caller/deadlock analysis, and verified 4 design artifacts. Await-only cleanup would leave queued watchers waiting behind the deliberately held late-pin lock. Candidate adds watcher-specific queue/acquisition cancellation while joining actual cleanup, keeps registry/listener until settlement, and awaits all three owners. It preserves current watcher-to-abort error classification, not a new raw-error channel. No source gate or edit yet.
+
+One static precision remains: timers/promises wraps signal.reason in AbortError. The private normal-stop exception must not accidentally abort the public attempt or swallow compound I/O errors. Read-only follow-up `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-watcher-cancel-boundary-precision-20261025-auto` must close that boundary before implementation. Linked-cut diagnosis retains the runtime slot. No new checks, commit or release.
+
+
+### Linked-cut mechanism and fixture gate, 2026-10-25 05:37:52 UTC
+
+Parent read the full causal narrative and proposal, verified 3,921 runtime artifacts and checked 73 known PIDs absent. Controlled unpause before retained-child kill failed after 10,007ms and 350 actual EEXIST attempts against the valid live pair. Kill/reap first then unpause passed ordinary dead-owner recovery and all intended-custody, byte, canonical, outbox, blocked-item and paused-receiver assertions. The original producer remains unknown; the passing observed baseline cut openRouteAttempt after unpause. Missing graceful foreground close events and all helper failures remain qualified.
+
+Two-file fixture gate efb3144230e1dde6ed96ea057c7811dcee01eb4192d5a2b388c4c08234a2fbb3 selects one real idempotent paused mutation, proves pending at its actual cut, kills/reaps before unpause, and preserves all original bounds. Author `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-linked-cut-fixture-implementation-20261025-auto` owns the runtime slot. Production ownership and default leases stay unchanged. Watcher lifetime precision remains read-only and ungated.
+
+Parent separately finished cleanup of the exact two attempt2 additions, checking all 736 recorded run PIDs absent and all 32 entry types, current UID, private-tree location and dev/inode identity. Metadata was recorded before exact removal; no secret file contents were read or copied. The original incomplete-cleanup receipt remains unchanged; the new parent receipt records completion. All other inherited scratch remains untouched.
+
+
+### Attempt-lifetime source gate frozen, 2026-10-25 05:42:31 UTC
+
+Parent read the full cancellation addendum and verified 5 artifacts. Normalize only the native retry timer AbortError/ABORT_ERR whose direct cause is the aborted signal reason, before existing acquisition cleanup and compound-error construction. Watcher suppression still accepts only its exact private stop. This intentionally changes retry cancellation error shape for existing signalled acquisition callers; unsignalled and portable catalog calls remain unchanged. Quiesce retains existing current-attempt scope, not permanent admission exclusion.
+
+Gate6370313e395b669619f111bc376060b2ab63be8a2e8c42a86d3782f9d7cda6c6 owns five production files, two narrow existing-test adaptations and dedicated real-producer regressions. Source preparation `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-attempt-lifetime-source-preparation-20261025-auto` may proceed in its isolated worktree; runtime remains HELD while the disjoint linked-cut fixture author validates. Parent source167 stays b3fe5051..., with no implementation integration yet. Combined checks and two new full-rubric reviews remain required before publication or QA SHA release.
+
+
+### Linked-cut fixture verified and integrated, 2026-10-25 06:02:33 UTC
+
+Parent inspected the exact two-file patch and full narrative, verified 924 artifacts, ten real waitpid/exit0 commands and 408 known PIDs absent. All three worker cases and 174 ownership-publication cases passed on each exact runtime, 177/177 each. Created/linked cuts prove scoped pending state, kill/reap/listener rebind before unpause, and real restarted custody while preserving blocked work and paused receiver. Missing graceful close observations remain qualified. No production ownership change or original-actor claim.
+
+Two tested files integrated, resulting source167 faff70c2f39c339078353a594300b98d2462dc04b50cbca49d00338afa2646c6. Parent compiled output remains the earlier636ec101... until its next authorized build. Existing fullNode24 green applies to the prior b3fe source; no new combined green is claimed.
+
+Watcher-lifetime author now has explicit runtime release, steered into its existing preparation task `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-attempt-lifetime-source-preparation-20261025-auto`. It must refresh only the two changed nonowned fixture dependencies, preserve owned edits, and validate the complete gate on both runtimes. No additional source-preparation permission turn is needed. Parent integration, combined checks and two new reviews follow its terminal handoff.
+
+
+### Lifetime author stopped at activation predicate, 2026-10-25 06:31:47 UTC
+
+Parent inspected the complete nine-file patch, including all 855 new test/helper lines, and the qualified narrative. Verified 1,268 artifacts, eleven command logs, frozen169 inputs and 2,587 known PIDs absent. Both typechecks/builds and dedicated25/25 each pass. Affected20 is463/461pass/1fail/1old-viewer-artifactskip; affected24 NOTRUN. Activation hits===1 missed unchanged4000ms; its actual value was not retained. All clock25 cases passed in that failed command. No source retuning or test rerun. A parent read-only log lookup initially omitted runtime/; corrected before any mutation, not a test result.
+
+Frozen169 source3530f944... remains UNINTEGRATED; parent167 sourcefaff70c2... and index are unchanged. Child initial binary index copy was omitted and raw hash changed, while all339 staged entries equalHEAD. No metadata-only byte claim or blind restore. Fresh independent diagnosis `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Adelegate-task%3Aphase2-ci-cea-activation-admission-diagnosis-20261025-a` has the only runtime slot and must capture actual predicate/request/close/queue state. No budget increase, source correction, broad rerun or generic-load attribution. Combined checks and two new reviews remain blocked.
+
+
+### Activation observation mechanism verified, 2026-10-25 06:53:13 UTC
+
+Parent read the causal narrative and verified 565 artifacts, seven command logs, 42 known PIDs absent and six exact endpoint rebinds. Natural selected case passed with ten zero reads then one at205.9ms. A genuine identity result held until native400ms socket close caused196zero reads and an early pending/verified-transport-failed pass, followed by the exact4sseam timeout. Matching live-socket control passed all original mutation/close/authority checks. Original affected-run values remain unknown; no production regression or interface correction is justified by this proof.
+
+Gate d3d518af82685845857d8c10acfa3c57de71bcb6aed3c35d3a67297dbb25b3cd authorizes only local waiter/pass diagnostics in the existing shutdown test loop. All timeouts, hits===1 and later assertions remain. The prior eight other authored files stay frozen;169source3530f944... remains unintegrated. Author `node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-activation-observation-implementation-20261025-auto` must validate the observation/control and remaining affected20/24 with the existing baseline viewer artifact supplied. No blind broad rerun, new production retune or QA SHA.
+
+
+### Awaitable attempt lifetime integrated, 2026-10-25 07:27:16 UTC
+
+Parent inspected the final observation delta and rechecked the nine-file patch against the prior fully read lifetime implementation. All eight other owned files match that implementation. Both final affected sets passed463/463 with no skips, including the old-viewer compatibility gate; the Node20 containing file passed11/11. A controlled activation transport miss retained the original timeout, and the matched control passed unchanged assertions. Earlier dedicated25/25 results on both runtimes remain applicable only to their byte-identical inputs; counts overlap. Original affected-run and historical cleanup actors remain unknown.
+
+The final cleanup helper exited1 at JSON serialization after its assertions, rebind loop and removals. Parent preserved that failure and verified1,137 artifact hashes,160 nonowned restorations,5,042 known PIDs absent and ten private paths removed through a new read-only postflight. Lost per-port timestamps and twelve uncaptured close callbacks remain qualified. No application, cleanup or rebind retry replaced the receipt. Child raw index changed while staged entries remainedHEAD; parent index remains byte-identical and empty.
+
+Nine integrated files produce169source aggregatefb9b5da57f33450997881995d71941e266fed2c3bbe344708835cbd37ee914f5. Parent dist is still the old332outputs pending the next build. The new storage-interface section records stable awaited close, watcher-only cancellation and its explicit error-policy and quiescence limits. Combined exactNode24.21 verification and fullNode20.20.2 units come next, then TWO NEW independent complete-correction reviews. No commit, push or interim QA SHA is released.
+
+
+### Combined lifetime check stopped, 2026-10-25 07:45:57 UTC
+
+Command1 fullNode24.21 verify exited1 after250.376813s:1051units,1049pass,onequeue-workerfailure,oneWindowsskip,no cancellations. Typecheck/build passed; laterverifygroups were not reached. Required command2Node20 was NOTSTARTED. Child expectedpending but receivedaborted after at least five actual local-acquisition backoff attempts; the failing ticket deadline/stage was not captured. No cause is assigned. All169source/336compiled/406nonignored/index/history pins held;65immutableartifacts and296recordedPIDsabsent verified by parent.
+
+The run initially left exactly one synthetic fixture with23entries. Parent recorded current metadata, checked exclusive-private-tree UID/type/dev/inode/nlink and known actor absence, then removed those exact entries without reading credential contents. Original incompletecleanupreceipt is unchanged; newparentreceipt records completion. No inherited residue or unknown authority was removed. Two metadata-only schema inspection errors occurred before mutations and remain qualified.
+
+Fresh independent Astra diagnosis node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Adelegate-task%3Aphase2-ci-cea-queue-backoff-cancellation-diagnosis-20261025-a now owns the onlyruntime slot. It may run one unchanged observed selected24case and one registered actual-callback red/control pair, preserving100/300ms budgets and all strict assertions. No source edit, timeout increase, broad retry or production blame is authorized. Source169fb9b5da5... and compiled3369d281586... are now aligned. Combinedgreen, two NEW independent full-rubricreviews and immutable physicalQA SHA remain blocked.
+
+
+### Queue-backoff deadline mechanism verified, 2026-10-25 08:13:55 UTC
+
+Parent read the complete causal report and verified403artifact hashes,42knownPIDsabsent and current169source/336output pins. Baseline and matched control passed all20backoffs/limit/reset/actualHTTPSidempotentcustody. One real final-snapshot read result held110ms after native completion caused the genuine300ms pass timer to fire, reproducing the unchanged pending-versus-aborted assertion. The watcher had closed normally; only the outer controller aborted. H2/H3 are excluded only for that controlled pass. Historical combined cause remainsUNKNOWN. Normal positive final margins33..126ms are observations, not a general capacity claim. No production correction is established.
+
+Frozen one-file gate05647fbf8882b1087f7f8d6bb0a404cd12afcd54709c43ede019decbe57d7cdf preserves all100/300/140ms limits and strictassertions, adding bounded ticket/deadline/queue observations for the next meaningful combined run. This does not make the fixture deterministic or turn the historical failure green. Author node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-queue-backoff-observation-implementation-20261025-auto owns runtime; no broader matrix, cap, timeout increase or cancellation-policy edit. Parent integration, combined verification and two NEW independent reviews remain. No interimQA SHA.
+
+
+### Natural fixture deadline captured, 2026-10-25 08:45:45 UTC
+
+Parent read complete observation-author report and one-file delta, verified428artifact hashes and37knownPIDsabsent. Typecheck/buildboth pass; containing20sixpass; containing24fivepass/onefailure. ControlledprobesNOTSTARTED afterstop. Newsource diagnostics captured attempt12completion342.027ms/-42ms. The external native trace shows actual300mspasstimer firing duringclose, then correctlyaborted/local-acquisition-deadline withzero requests. Normalstopwatcher andunchangedactiveidleoffset wereobserved. This explains that newinstrumentedfailure only; originalcombinedcauseUNKNOWN. Instrumentationoverhead remainsqualified. Root didnotintegrate thevalidation-incomplete observation source.
+
+Newonefilegatea0bc49f36fe36658e33bfc8a0204286d1a3033d42693a37a620f3ab49f178ffc authorizesonefixed1000msPOSITIVEworkerpass, retaining100msrequest/140msholder andALLstrictassertions. Directinitialclient100/300 andexplicitwholepass300negative/340holder remain unchanged, as do5000/30000custody and35/40/45watchdogs. No productionchange or furtherbudgetratchet. Author node:delegated-task:command%3Amcp%3A43510e6a-ae4a-403b-a7d0-f6ee4af09072%3Athread-send%3Aphase2-ci-cea-queue-backoff-positive-budget-implementation-20261025-auto ownsruntimeforbothcontainingfileswithoutpassivepreload, then110msactual-resultpositive/1100msexpirednegative. FullchecksandtwoNEWreviewsfollowterminalverifiedintegration;nointerimSHA.
+
+
+### Positive backoff fixture verified and integrated, 2026-10-25 09:04:01 UTC
+
+Parent read the complete report and both deltas, verified470artifact hashes and47knownPIDsabsent. Both containingfiles pass6/6withoutpreload. Realnativecompleted-result110mshold passesall20backoffs/limit/reset/actualHTTPSreceipts/idempotency with641msremaining atselection;1100msholdfiresreal1stimer andfailsunchangedstrictassertion withaborted/local-acquisition-deadline,zerorequests. Expectednegative remainsnativeexit1. All100originalassertionlines unchanged; direct100/300negatives/request100/holder140/otherwatchdogs preserved. No productionedit, deterministiccapacityclaim or historicalactorassignment.
+
+Integrated ONLYacquisition-deadline test including bounded observations and fixed1spositiveworkerpass. Current169source4967ad40861e64dfe33932a3383216c47b25a978f49ec736dd2dd15c792a5eba. Root336output9d281586... stillrequiresoneJSrebuild toauthor88393e78f3292bc7fbd61b78e5deb4fe6bec909e0795987e7515f714a33d069a. Indexbyte-identical/empty,diffcheckpasses. Newfull24then20combinedchecks areplannedunderfreshattempt4labels;twoNEWindependentreviewsaftergreen. Allfailedhistorypreserved;noQA SHA.
+
+
+### Current combined verification green, 2026-10-25 09:24:33 UTC
+
+Both exactcommands passed:fullNode24.21verify296.912625s,completeNode20.20.2units311.573814s. Fullgroups1133tests/1129pass/4documentedskips/0fail/0cancel/todo; units1051/1050pass/1Windows-onlyskip onEACHengine. Skills48/50,browser22/23,site9/9,14pageintegrity/packagesmokepass. Counts overlap. Parentreadfullreport,verified85immutableartifacts/all412nonignoredfiles/current169sources/336outputs and633knownrecordedPIDsabsent. Outer167/126adoptedchildrenreaped withremainingempty. No newfixture residue. ExactlythreeexpectedNCCcachefiles changed; inheritedscratchuntouched.
+
+Source4967ad40861e64dfe33932a3383216c47b25a978f49ec736dd2dd15c792a5eba;compiled88393e78f3292bc7fbd61b78e5deb4fe6bec909e0795987e7515f714a33d069a. OnlyauthorizedtestJSchangedduringbuild;all336frozen through20. tested-source-qa.sha256 nowrecords169currentfiles;old165d7fmanifest preservedastested-source-qa-ci190.sha256 andinhistoricalreceipts. Priorfailed/invalid/expectednegative receipts remain unchanged withactor/cleanupqualifications.
+
+Nextgate:TWO NEW independentfull-rubricreviewsoftheCOMPLETEcurrentworkingtreecorrectionagainstcea30b48cbef814511e2eedfc83d1793bc011354,eachreadingoriginalapprovedproposal/ninecontracts/currentgates/priorfindingsandnecessarysurroundinginteractions. Sol+Astraindependentfreshappownedtaskswilluseoneidenticalpin;Claudeunauthenticated,nocross-providercredit. No newsourceedit/check/reviewwaiver/commit/push/QA SHA. Physicalandnativeacceptanceremainunproven;hostedactors remainqualifiedunknown.
+
+
+### Both complete CEA reviews accepted, 2026-10-25 09:57:05 UTC
+
+BothNEW independentreviewers acceptedthecomplete98-file/415-file/169-source/336-output pin withoutactionablecodefindings. Parentreadbothcompletecausal/rubricreports andscopeappendices,verified46Sol+16Astraevidencehashesandallparentpins. BothranZEROapplicationprobes;suppliedtestsinspected/hashed,notrerun. NoClaude/cross-provider/nativecredit. AstraS1nonblockingstalesummarysuggestionacceptedandfixedONLYcurrentdocopening/status/unresolvedsummaryfields;oldvalues/failedreceiptsretained. Nocodechangedafterreview. Futureuser-selectedsubagentsareGPT6.1Sol;thealreadyactiveAstrareviewwasallowedtofinishunchanged.
+
+Freeze released afterbothterminalreportsread. Packagingplan:coupledproductionroute-attemptcancellation/queue/lifetime plusregressions;separatefixture/browserreliabilitychanges;thenverification/gates/reportsdocumentation. Intermediatecodecommitsmusttypecheckfromtheiractualstagedtrees. Finalsource1694967ad...andcompiled33688393e...remainexactreviewed/testedbytes. Normalfast-forwardpushonlytofeat/phase2-sync/PR79,basePR76unchanged. HostedgreenrequiredonresultingfullheadbeforephysicalQA release;nomerge/deploy/interimSHA.
+
+
+### Reviewed source packaged into logical commits
+
+c77c905143f7e2ed1546d71ea11b405d1b00d6f7 owns five coupled production modules, new regression/helper files and required direct-test asynchronous adaptations. 9effb5bbba56e9abc655e9c9be0b2ff0ba561b13 owns the remaining fixture/browser reliability changes. Bothactualstagedtrees independentlytypecheckedandbuiltunderexactNode24.21 fromdisposableGitexports withboundedownedsubreaper;allfourcommandsexit0/remainingemptyandexportsremoved. Intermediatefulltestsarenotclaimed. Finalsource169andall336builtbytesexactlymatchthe reviewed andbroad-testedpin. No rebase/reset/forcepush/main/siblingchange.
+
+Finaldocumentationcommitretainsallgates/failures/evidence/bothreportsandS1summaryrepair. NormalpublicationtoPR79comesnext;oneexactfullheadwillbereleasedtoindependentphysicalQAonlyafteritsnewhostedmatrixpasses. Thisfiledoesnotpredictitsowncommithash;GitandPRheadrecordpublicationlineage.

@@ -1,0 +1,433 @@
+ACCEPT
+
+Fresh independent complete-correction review against cea30b48cbef814511e2eedfc83d1793bc011354.
+One read-only Codex reviewer. No delegation and no access to the other new review.
+No actionable Critical, High, Medium, Low or Suggestion finding was found in the complete current correction and its necessary phase2 interactions. This accepts the local corrective change for parent triage. It supplies no hosted-green, physical acceptance, publication, merge, deployment or SHA-release authority.
+
+Review identity and frozen scope
+
+Authoritative parent: /home/agent/.t3/worktrees/html-inbox/feat-phase2-sync
+Parent branch: feat/phase2-sync
+HEAD and corrective review base: cea30b48cbef814511e2eedfc83d1793bc011354
+Historical original phase2 base: b843e126fdb10f7038e9305c6791707bcfee9ff5
+Frozen manifest: /tmp/html-inbox-cea-review-r1-pin/manifest.json
+Manifest SHA256: eefb389b68f548342a0a4844eacde55dcc15b0fc62ca78509598c3b247d95f53
+Complete tracked binary diff SHA256: cdd2dd3b4b82617f95c485f151d1367d2ae7a073ebd05e07b488f3ff41b6190a
+Scope: all98 changed files, tracked and untracked, all415 nonignored file pins, all169 source pins and all336 compiled pins. The 98-path appendix and scope-98.json account for every changed file, including all new tests, helper, raw evidence reports and manifests. Five production files change. All other executable changes are tests or test fixtures.
+
+The parent's source, frozen changed copies and complete tracked diff were authoritative. My initially clean app-owned checkout was used only for preservation checks. I did not review its committed source as if it contained the parent's uncommitted correction.
+
+Requirements and history used
+
+I read the complete approved-proposal.md, all nine required-contracts.md contracts, architecture.md, storage-interface.md, protocol-contract.md, protocol-interface.md, worker-cli-contract.md, worker-interface.md, worker-operations.md, and acceptance.md. No docs/phase2-sync/gates.md exists. All current CEA contract/continuation files were read. Current verification, followup, attempt-lifetime validation, ledger additions and structured verification records were inspected. Earlier ledger and review history were consulted to trace R1-R13, QA-R1-R11 and CI190-A1 and their accepted responses. The retained review-round1, addendum-r2, final-r3, cancellation-r4, QA-r1 through r4 and CI reports were indexed and consulted as historical findings, not new review credit. No Claude or cross-provider credit is claimed.
+
+This is a full review of the complete correction against CEA, including necessary storage, lifecycle, protocol, worker, publication and reader interactions. It is not a new line-by-line rereview of every unchanged phase2 file or every historical raw appendix. Long structured inventories were parsed and hash-checked; selected causal narratives, failure blocks, current terminal records and raw log stage/case evidence were inspected. No untracked executable file was excluded.
+
+Current correction disposition
+
+1. Pre-aborted cached-error reporting: ACCEPT. sync-reconciliation.ts:80-98 preserves explicit detached/blocked lifecycle fences and input/unknown-route validation. Enabled routes report cancellation before cached permanent errors. Persisted errors, configuration, receipts, obligations and bytes are not cleared. The eight new real-store cases prove both positive precedence and non-aborted/lifecycle/validation negatives with zero request or credential admission.
+
+2. Queue-only initial acquisition: ACCEPT. sync-files.ts:202-244 constructs StoreLockQueueDeadlineError only at the local Promise.race timer. The initial SyncClient.request catch at sync-client.ts:101-115 translates only the top-level class instance, preserving exact cause and an already-aborted caller's reason. The shared classifier and remote allowlist are unchanged. Filesystem ownership expiry, protected/recovery/cleanup failures, nested markers, aggregates and later startCommunication stay outside the translation. The marker is process-local provenance, not untrusted wire authority. The queue chain still prevents a cancelled/expired successor bypassing its prior holder.
+
+3. Watcher lifetime: ACCEPT. sync-store.ts:550-614 owns the complete admitted check before its first store await, uses an explicit admission guard and keeps the real 50ms unref interval/one-check rule. close is deliberately non-async, caches its exact drainer before synchronous private abort notification, and joins through ownership release. Only the exact private normal-stop object is ignored. Parent abort listener and registry entry remain until settlement, with current-map identity checks preserving newer attempts. No self-join is introduced inside mutation callbacks.
+
+4. Watcher acquisition and error identity: ACCEPT. mutate and withStoreLock carry an optional watcher signal. Cancellation before acquisition retires the queued watcher without stealing or bypassing unrelated ownership. After actual ownership acquisition, the abort check is inside finishLockOperation so release is awaited. The helper around exactly the native retry delay recognizes only nonaggregate AbortError/ABORT_ERR/direct-cause identity. Filesystem work and compound cleanup sit outside it, retaining their original errors. This intentionally changes retry-wait cancellation shape for existing signalled managed/portable acquisition callers, matching checkpoint cancellation. Unsignalled callers and portable catalog registration retain their behavior.
+
+5. Owners and result finalization: ACCEPT. Client, enclosing reconciliation and HTTP handler all await attempt.close. Handler activeRequests and the server-owned handler promise now include the watcher join. Reconciliation normalizes both attempt and outer-controller cancellation after awaited close and the final snapshot. Thus caller/pass expiry during finalization cannot turn into a positive pending/confirmed selection. Durable remote custody remains a separate fact. The two direct-test adaptations await actual close rather than discarding it.
+
+6. Late pin and failure-policy limits: ACCEPT within the original requirements. Detached read-only GET pinning remains independently owned and cannot send late headers/bytes or mint receipts. Attempt close is not whole-store quiescence or a future admission fence. Persisted route revocation remains the authority fence. Generic watcher failure still publicly aborts rather than exposing raw storage exceptions; close does not certify namespace recovery. Already-entered native I/O can exceed an existing close/quiesce bound, whose failure must stay honest. These are explicit unchanged policies, not reasons to infer successful cleanup. The new tests force a real queued watcher behind a real holder and retain the 1000ms server/600ms quiesce bounds.
+
+7. Windows retained-child oracle: ACCEPT as a test correction. The replaced final process.kill(savedPid,0) check was a later numeric lookup. The new assertions await the actual fixture's cached retained-child close result, reject commands on its closed IPC and retain exact listener rebinding. Existing readiness binds child.pid and all nine semantic TLS/fault/lifetime subtests remain. The retained live-sentinel simulation demonstrates oracle sensitivity, not actual native PID reuse or a Windows product fix.
+
+8. Static Back readiness: ACCEPT. The one DCL wait follows exact URL equality and precedes the unchanged strict row count. Rows are in parsed HTML. The controlled completed-wrong-response negative still fails 0 versus2. No polling relaxation, retry, content substitution or production change was added.
+
+9. Staging and transport/shutdown fixtures: ACCEPT. File-quota setup prepares16 genuine offers before opening partial PUTs; actual partial bodies,15s limits, quota accounting, real lease-only pause, complete pairs, live/unknown retention, overflow413 and no-custody checks remain. The one shutdown outgoing producer uses an existing retained runner, while the receiving worker/apply/close safety remains in the parent. Teardown settles receiver/source work, stops the exact retained producer, then recovers and removes storage. Independent cleanup failures are accumulated and unsafe roots retained. The pin case fails explicitly if the real request settles before admission, then settles its actual lock/request/pin. An early request cannot count as a passing pin-safety case.
+
+10. History and finalization preparation: ACCEPT. The avoidable source-status CLI now precedes publication. Genuine blocked-history observation, receiver startup, sender receipt and five-second publication success requirements remain. The real source viewer is prepared and immediately registered for cleanup; worker identities, due routes, zero tickets and empty prepublication custody/checkpoints are asserted. Publication still performs real viewer reuse, worker verification, first TLS/history/body/receipt and exact-ticket cancellation inside the original allowance. No warmup ticket, backoff reset or fabricated custody is introduced. The unsuccessful status-hold positive is correctly retained: early receiver custody without a sender receipt is still pending.
+
+11. Linked-cut test: ACCEPT. Narrow validated IPC selects one actual idempotent setRetryPaused(true) mutation against an already-paused synthetic home. Async context identifies its real candidate. At the cut, assertions prove the original pending obligation, unchanged blocked work, paused source/receiver, absent target bytes/records/receipts and, for linked cut, the exact complete v2 private account-owned two-name inode with actual child PID/start. The retained live holder is killed/reaped and its listeners rebound before parent unpause. Production dead-owner recovery and autonomous intended-server receipt remain the positive result. This avoids deadlocking a deliberately suspended live owner; it weakens no ownership rule.
+
+12. Pagination aggregate budget: ACCEPT. A case doing129 sequential durable seed publications has a legitimate aggregate workload distinct from a request or manifest lease. The120s case limit is supported by the supplied real post-durability pacing comparison: the old30s case exhausted during seeds, and the paced complete case took about42s. All129 publications,128+1 pages, after-cut mutation, nonce/scope/replay/cursor negatives and evidence equality remain. Request5000ms/session60000ms bounds do not change. Stage diagnostics add useful failure discrimination without protected payloads. The original actor remains unknown.
+
+13. Positive queue backoff budget: ACCEPT. A positive100ms queue timeout requires a live enclosing pass through140ms holder release, bookkeeping, watcher close and final snapshot. Its fixed1000ms test-only pass separates that positive contract from actual whole-pass cancellation. Direct100/300ms and explicit300ms/340ms-holder negatives, all20 retries, reset, restart suppression, custody5000/30000 and35/40/45s watchdogs remain. The natural instrumented300ms expiry was correct cancellation. The110ms native-result positive and1100ms timer-firing strict-assertion negative preserve sensitivity. Neither the longer fixture budget nor instrumentation guarantees arbitrary OS scheduling.
+
+14. Documentation and manifests: ACCEPT as evidence, with chronological interpretation. The current169 manifest exactly matches source and frozen input; the old165 archive exactly matches HEAD's former tested-source file. verification-qa.json was fully parsed into26087 scalar leaves, with current changed records assessed separately from retained older status fields. Current-verification and the final terminal CEA fields identify the latest green pin. Earlier in-progress/failed entries are historical and are not fresh assertions about runtime or current readiness. The new storage-interface contract accurately describes the implemented ownership and its limits.
+
+Original requirements and complete rubric
+
+R1, actual push/pull and independent worker: preserved. Both paths use the same apply/applyStream authority; owned worker startup/wake/periodic/current-holdings scheduling remains independent of the viewer and publisher. New lifetime joins do not install another scheduler.
+R2, existing named UUID target/canonical identities: preserved. Route/source/destination/revision bindings and canonical uniqueness remain validated; fixture preparation does not grant new target authority or create membership by alias.
+R3, cheap metadata dedup: preserved. Watcher checks and current holdings use metadata/availability, not HTML rehash. New native I/O tests use actual handles and bytes; routine zero-body-I/O tests remain in supplied broad evidence.
+R4, signed deletion/offline relay: preserved. Signed terminal application/ordering, atomic onward obligations and retained terminal identity remain under the same mutation authority. Private watcher cancellation cannot create a tombstone or undo custody.
+R5, detach/reconnect: preserved. Durable route revision fence remains prerequisite; active attempts drain visibly, and reconnect still starts fresh and terminal-first. close itself grants neither a new route nor continuing deletion-only access.
+R6, onward/cycles: preserved. Pure policy keeps source-or-redistribution and trusted history separate, canonical state plus per-route receipts prevents forwarding loops; no path/recipient/trust expansion appears.
+R7, intended-server durable confirmation: preserved. Publisher still requires its exact current matching committed receipt, distinguishes blocked/pending/cancelled, keeps durable local retry work and never substitutes receiver observation/202/readiness/onward completion. Late cancellation precedence remains correct.
+R8, verified LAN/Tailscale HTTPS: preserved. HTTPS verification, credential binding, allowlisted remote errors and listener separation remain. This review made no network/trust/credential action and proves no real infrastructure acceptance.
+R9, shared commit/checkpoint/current holdings: preserved. Per-item receipt, terminal-history readiness and full reconciliation checkpoints remain distinct. Empty-outbox holdings repair, receiver-incarnation binding and locked durability baseline remain in the surrounding code. No new persistence authority was created.
+
+Correctness/failure handling/concurrency: the key owned promises cover admission through cleanup, not only a callback body. Exact cancellation/error identity and queue ordering were reviewed. In-flight committed receiver data is not rolled back. No new material defect was found.
+Security/data integrity: no new untrusted path, credential disclosure, certificate bypass, owner-state fabrication, live-owner reclamation, receipt shortcut or signature/scope bypass was found. New child IPC is test-only, exact-key validated and bound to its synthetic argv home.
+Structure/separation: one store mutation/recovery/commit authority remains. Retry meaning is still shared. The optional watcher signal and one cached lifetime promise are direct mechanisms suited to the responsibility. A global drain registry, generic cleanup framework, larger storage rewrite or test-only access to private mutation methods would add risk without solving another demonstrated requirement.
+Conventions/TypeScript: purpose-revealing operation/type/predicate names, inferred implementation locals, boundary parsing and control-flow narrowing are retained. Added comments explain ordering/authority reasons. There are compact callbacks consistent with surrounding code; no material documented-standard breach, new any/non-null assertion/suppression or speculative abstraction warrants a finding.
+Test quality: all new executable files were reviewed. The39 new parent-level cases are8 preabort,6 acquisition and25 lifetime cases; the nested child is not another independent coverage total. Tests use actual stores, native callbacks/locks/handles/children and TLS where applicable. Original tracked assertion-bearing lines were compared: only the intended numeric-PID oracle changes and extraction of the existing assert.rejects argument differ; other original assertion lines remain. This textual check supplements semantic review and is not a proof that all test behavior is equivalent.
+Compatibility/lifecycle: normal close preserves the public signal; all production owners and direct test ownership were traced. Portable catalog remains without managed directory-fsync demand. Viewer/control/service/unenrolled behavior and reader rendering, hardlink/file guards, sandbox/CSP and export filtering are outside the changed production paths and remain represented by supplied compatibility/browser/package checks. No native Windows/macOS compatibility claim follows.
+
+Prior findings and unresolved objections
+
+R1 catalog journal baseline, R2 session retention/pressure, R3 selected-owner administrative preflight, R4 history-envelope handling, R5 holdings redistribution scope, R6 audit retry binding and R7 deterministic policy separation retain their committed corrections. R8 pressure503, R9 truncated error retry, R10 pre-pin response termination, R11 observed revocation invalidation, R12 lease/stage pair synchronization and R13 late cancellation normalization were traced through their changed callers and retained tests. No regression was found. Later QA publication/history classification, local monotonic leases, v2 candidate lock publication, safe zero-link ledger replacement, fatal unsuccessful CLI exit, eligible-route fresh credentials, failed-cleanup handle retention, handler drainage, bind coordination, portable error preservation and late ticket cancellation remain intact.
+
+Unassigned original hosted stages remain unassigned: #524 receiver checkpoint before lost-ready fault, #578 composite periodic predicate, #584 held-ACK setup, #591 initial live confirmation, #593 body EOF/admission, #690 initial control/ticket operation. Earlier finalization, clock cleanup, linked-cut and queue-backoff historical actors also remain unknown except for the explicitly controlled mechanisms. The latest exact-source local green does not erase those reds, establish their causes or prove hosted image/merge-tree equivalence. I found no evidence requiring another source correction from those uncaptured stages alone; exact committed hosted checks remain the next external evidence gate.
+
+The cleanup serialization failure is retained as native exit1. Lost endpoint timestamps and12 missing native close callbacks were not reconstructed; actual exit callbacks, later scoped PID absence and path-removal evidence are separate observations. Earlier incomplete cleanup receipts and later parent removal of exactly32 and23 proven-owned entries stay separate. The invalid samplers/provider interruption/private helper failures are not product passes. No synthetic observations are called native acceptance.
+
+Known limits stay explicit: unknown owners/interrupted.reap/PID ambiguity, null-start identity on macOS, orphan-candidate accumulation, coordinated schema2 mixed-version liveness, portable old creation window, manual boot setup, no trusted old-owner restore/general reclamation/indistinguishable same-anchor restore detection. Native Windows/macOS, exact Node20.0, real three-host LAN/Tailscale, OS sleep/boot, privileged service managers and physical power loss remain untested in this review. Safe failure/blocked unsupported cases remain requirements, not implicit trust exceptions.
+
+Supplied verification inspected, not rerun
+
+I independently verified all85 immutable artifacts in /tmp/html-inbox-cea-queue-budget-combined-evidence-ndv9w6qx. The two raw command logs were hashed and their TAP summaries/stages/resource evidence inspected. Exact supplied commands:
+
+python3 /tmp/html-inbox-phase2-checks-1mpkndv5/check-coordinator.py qa-ci-cea-integrated-verify2421-attempt4 bash /tmp/html-inbox-qa-history-amcemjlx/verify-hosted-node2421.sh
+  UTC2026-10-25T09:07:17.727532+00:00 to09:12:14.675846+00:00
+  nativeExit0; coordinator elapsed296.912625074s
+  logSHA256 e804054b601fee643ea8eef4bc0dbfcedf17b5288199ff44889d980db359729f
+  units1051/1050pass/1skip; skills50/48pass/2skip; browser23/22pass/1skip; site9/9pass
+  total1133/1129pass/4skip, zero fail/cancel/todo;14-page integrity and package smoke complete.
+
+python3 /tmp/html-inbox-phase2-checks-1mpkndv5/check-coordinator.py qa-ci-cea-integrated-unit20-attempt4 bash /tmp/html-inbox-qa-history-amcemjlx/node20-unit.sh
+  UTC2026-10-25T09:12:25.714767+00:00 to09:17:37.325058+00:00
+  nativeExit0; coordinator elapsed311.573813677s
+  logSHA256 b172517394667c1591c277c1207c904377fda7879ef8a4749c28c66d8cedf1bb
+  units1051/1050pass/1skip, zero fail/cancel/todo.
+
+These commands were supplied runs under bounded flock; I did not execute either. Counts overlap across runtimes and author controls. Skips are the native Windows taskkill case, two Windows PowerShell cases and optional live-CDN case, not skipped Linux managed positives. Full Node20 units do not establish Node20 browser/site/package reruns. Terminal receipt SHA25625fdce487022d98b3fc62d3ef976af78f7981f139295c6d1e0dc3a70fbb87a3c; terminal report SHA256bc47ad7731e3c823b5f9ea7659551beb54a279997a1c974d74a24a701dab28a2. Parent postflight SHA25678f318545eb1e1df3385ee8ab36f499743edd9fe72a352ff2aa3aaabdcdcfa45.
+
+Runtime binaries were hashed read-only, never executed by me:
+Node20.20.2 path /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node
+SHA2566295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd
+Node24.21.0 path /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node
+SHA2567fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c
+
+Independent commands, runtime and cleanup
+
+Application target invocations0 of at most2 allowed. No runtime mutex admission, Node run, compiler, install, build, full units/verify, network request, socket bind, credential fixture or signal was needed. Therefore own runtime test counts0, own test skips0 and own test exclusions0. Supplied results above are inspection credit only. No application probe/helper cleanup is being inferred from administrative Python success.
+
+Initial filesystem and binary-index snapshots were taken BEFORE any Git inspection at UTC2026-10-25T09:31:37.995970+00:00 for own and09:31:38.455818+00:00 for parent. Read commands used pwd, cat, sed, rg and Python3 path/hash/JSON inspection. All Git reads used GIT_OPTIONAL_LOCKS=0 or explicit git --no-optional-locks. Exact Git read forms were rev-parse HEAD; branch --show-current; status --porcelain=v1 --untracked-files=all; diff --cached --binary; diff --stat HEAD; diff HEAD -- named files; show HEAD:path. The final reproducible administrative audit is:
+python3 /tmp/html-inbox-cea-independent-review-sol-f_1cls3d/audit.py
+Its exact child Git argv, UTCStart/UTCEnd and native exits are in final-audit.json. Every captured Git/read shell invocation exited0. One private inline paragraph-index read emitted a Python SyntaxWarning for a regex escape and still exited0; no target or evidence bytes changed. Early ad hoc read calls have tool-recorded native exit/wall time but no separate per-call UTC receipt; I do not fabricate those timestamps. final-audit.log and final-audit-command-receipt.json record the audited administrative invocation. There are no independent application logs or probe-helper hashes to report.
+
+The final audit directly checked the633 known recorded PIDs from the supplied combined evidence with /proc/PID existence only: none present. No numeric-PID signal, process scan, new application/socket operation or cleanup mutation was used. Supplied outer audits record167 and126 adopted children reaped with empty remaining sets. Actual exit/close and exact owned endpoint rebind credit belongs to the original retained-child fixture assertions/logs. I do not relabel PID absence as a missing close event or claim whole-host absence. Latest supplied evidence has no new synthetic residue and exactly3 expected NCC cache changes; this reviewer created no runtime fixture, port or credential needing removal. Only this unique outside-root evidence directory is retained.
+
+Initial/final preservation
+
+Parent HEAD/branch/status/index unchanged. Empty cached diff and exact binary index e3dd34cce6446819560c71040ab9ba111d2c07087bc8b41e74f2922b3dcd1562.
+Own HEAD cea30b48cbef814511e2eedfc83d1793bc011354; branch t3/independent-correction-review; clean status; empty cached diff; exact binary index2ddece353bad451f1097dbbfb83d808459d271f7250fe31f76a7ec7ed7bc06cf.
+All340 own files/symlink entries and all2044 parent files/symlink entries retain initial bytes/membership. All98 changed parent/frozen copies,415 nonignored paths/modes/sizes/membership,169 source and336 compiled pins verify initially and finally.
+Source aggregate4967ad40861e64dfe33932a3383216c47b25a978f49ec736dd2dd15c792a5eba.
+Compiled aggregate88393e78f3292bc7fbd61b78e5deb4fe6bec909e0795987e7515f714a33d069a.
+No restoration write was necessary or performed. No foreign index bytes were restored and no staged content was changed.
+
+Complete98-path disposition appendix
+
+01. docs/phase2-sync/ledger.md
+    ACCEPT as chronological evidence. Current final entry binds exact green source/output pins and retains all historical failures/limits.
+    SHA256 7c55860f1d541e0fbfd0b2149333a0c21ecf1f6de75281c864a6338f050e96fd
+02. docs/phase2-sync/qa-ci-cea-acquisition-deadline-contract.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 e1389c128c3b160e83a84ab92db89b8ca16ea20f34d6af822268cc7694a1c582
+03. docs/phase2-sync/qa-ci-cea-acquisition-deadline-design.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 866bd73a53b78ba8f3899052a3101236599ac1c94c89333c97ef4d933eb07255
+04. docs/phase2-sync/qa-ci-cea-acquisition-deadline-implementation.txt
+    INSPECTED terminal author/validation evidence. Final-source identity, selected/overlapping counts, actual controls, runtime and cleanup qualifications checked; author checks are supplied evidence.
+    SHA256 b4303252f118312d8e19c9171353865d0218a5860dd40ba4181696e0c0844d8b
+05. docs/phase2-sync/qa-ci-cea-acquisition-deadline-trace.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 491a4171efa8029e2c3580d10dc8e557ab97a6839e4fb78f5bf3aaff263fc232
+06. docs/phase2-sync/qa-ci-cea-activation-admission-diagnosis.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 f5380303ea75e9db33b36c022a0ac8e6f4ccbe4e61df9e6f4fbad0d556d90b8a
+07. docs/phase2-sync/qa-ci-cea-activation-affected-failure.txt
+    INSPECTED retained failed/incomplete evidence. Native errors, unrun work and cleanup/helper qualifications remain failed or uncertain; no retroactive pass credit.
+    SHA256 62d8a3d9195680eb9d1482de70c99cd3a75c52aa6e21e656b478786ebfb59e72
+08. docs/phase2-sync/qa-ci-cea-activation-observation-contract.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 d3d518af82685845857d8c10acfa3c57de71bcb6aed3c35d3a67297dbb25b3cd
+09. docs/phase2-sync/qa-ci-cea-attempt-lifetime-author-stop.txt
+    INSPECTED retained failed/incomplete evidence. Native errors, unrun work and cleanup/helper qualifications remain failed or uncertain; no retroactive pass credit.
+    SHA256 c94ec74d4eed63965115a8de82f88479455db9e1bb025a88ecfeee23524d0367
+10. docs/phase2-sync/qa-ci-cea-attempt-lifetime-combined-attempt3.txt
+    INSPECTED retained failed/incomplete evidence. Native errors, unrun work and cleanup/helper qualifications remain failed or uncertain; no retroactive pass credit.
+    SHA256 d4a24b443d388c6207456a68c14753aef6d4d7ce5f915344bfde5ad1180a27a0
+11. docs/phase2-sync/qa-ci-cea-attempt-lifetime-contract.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 6370313e395b669619f111bc376060b2ab63be8a2e8c42a86d3782f9d7cda6c6
+12. docs/phase2-sync/qa-ci-cea-attempt-lifetime-validation.md
+    INSPECTED terminal author/validation evidence. Final-source identity, selected/overlapping counts, actual controls, runtime and cleanup qualifications checked; author checks are supplied evidence.
+    SHA256 a72ea3753c15e964c1b5cb34383fbb55366d2c84c52eed5dbe1fe976e470821f
+13. docs/phase2-sync/qa-ci-cea-clock-cleanup-diagnosis.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 4fc3eb1138350c73bd5b82f41f77240d19436186e44c5189cfa6b76b7b26526e
+14. docs/phase2-sync/qa-ci-cea-clock-cleanup-lifetime-proposal.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 18f9505538c4080bab91016ed1f77942d7ff562f70e41ace47d66954dad3082b
+15. docs/phase2-sync/qa-ci-cea-combined-attempt1-failures.txt
+    INSPECTED retained failed/incomplete evidence. Native errors, unrun work and cleanup/helper qualifications remain failed or uncertain; no retroactive pass credit.
+    SHA256 330a4d7f9cc7e0ac1f0b7eac31bca2e41a14fd898a7637042cdf113189e729c9
+16. docs/phase2-sync/qa-ci-cea-combined-attempt1.txt
+    INSPECTED retained failed/incomplete evidence. Native errors, unrun work and cleanup/helper qualifications remain failed or uncertain; no retroactive pass credit.
+    SHA256 cbdfb4a6b2f8b8c2c3fd1912db3760a5c903360ce6a54c3da0ed6f4e3029f49f
+17. docs/phase2-sync/qa-ci-cea-combined-attempt2-failures.txt
+    INSPECTED retained failed/incomplete evidence. Native errors, unrun work and cleanup/helper qualifications remain failed or uncertain; no retroactive pass credit.
+    SHA256 62042fb505bd324161694623d93ab26226ed8f4165dec04e9a1cc7ef21893b1b
+18. docs/phase2-sync/qa-ci-cea-combined-attempt2.txt
+    INSPECTED retained failed/incomplete evidence. Native errors, unrun work and cleanup/helper qualifications remain failed or uncertain; no retroactive pass credit.
+    SHA256 c9a86eda020a53787e730492636cf29910f2d39231791dbd93f3eaf58cd250c0
+19. docs/phase2-sync/qa-ci-cea-combined-current.txt
+    ACCEPT supplied current evidence. Exact two raw log hashes/terminal receipts and all85 artifacts verified; no independent rerun or native/physical credit.
+    SHA256 bc47ad7731e3c823b5f9ea7659551beb54a279997a1c974d74a24a701dab28a2
+20. docs/phase2-sync/qa-ci-cea-current-verification.md
+    ACCEPT supplied current evidence. Exact two raw log hashes/terminal receipts and all85 artifacts verified; no independent rerun or native/physical credit.
+    SHA256 588c26a1baaa35069bf13b30e0ba25a9c39004285e7af7df07954900a25e4b3f
+21. docs/phase2-sync/qa-ci-cea-finalization-diagnosis.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 ecf8f3cba15fab5371a7f69d3f453aa61e8588901089903be15a2b164fc3cbcc
+22. docs/phase2-sync/qa-ci-cea-finalization-preparation-contract.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 35902b8d3f1275d1dc1053ed8e7469422d728a3b37c63398a1985f7c27f61649
+23. docs/phase2-sync/qa-ci-cea-finalization-preparation-design.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 4d7b883d14def43b5072fde36f1230691f63d48e570dfe100fe9ece133e82661
+24. docs/phase2-sync/qa-ci-cea-finalization-preparation-implementation.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 4e0ddf521617ca5e39ba81b2f67a1d0aa63527802181faba36d780235e6483ec
+25. docs/phase2-sync/qa-ci-cea-finalization-proposal.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 bfce7889ef5fc7a940ff5945eabca14dd168e7d2983e4f57e47e4d3a0a2a1edc
+26. docs/phase2-sync/qa-ci-cea-followup.md
+    INSPECTED terminal author/validation evidence. Final-source identity, selected/overlapping counts, actual controls, runtime and cleanup qualifications checked; author checks are supplied evidence.
+    SHA256 cf3296fcfeba5971820d33c56ce31285ea1f03d373718cf828c75dde02adbcf0
+27. docs/phase2-sync/qa-ci-cea-history-control-continuation.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 ec02fb1f173cc72636618e857715dd9d7d0ee5a44b9cf1348b596c3a4b2bc595
+28. docs/phase2-sync/qa-ci-cea-history-fixture-order-contract.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 8736892da9b950d51c2c4b2c60692b183d5c4e2b7a9d24631ee0aa3f88d41596
+29. docs/phase2-sync/qa-ci-cea-history-order-continuation-report.txt
+    INSPECTED terminal author/validation evidence. Final-source identity, selected/overlapping counts, actual controls, runtime and cleanup qualifications checked; author checks are supplied evidence.
+    SHA256 bfa4295e8f4beb8ff0595950d7e886f9506f184fd08468097f11a1b01f4f9989
+30. docs/phase2-sync/qa-ci-cea-history-order-incomplete-report.txt
+    INSPECTED retained failed/incomplete evidence. Native errors, unrun work and cleanup/helper qualifications remain failed or uncertain; no retroactive pass credit.
+    SHA256 d84f74f6057290c0f6e2a61680060a7b20445d39971347bca54fd5e39dc4e4f9
+31. docs/phase2-sync/qa-ci-cea-initial-progress-diagnosis.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 b2125f90d27521ceeaaf0a062f174c9ac3c285ade62bbd8b46d650fb2d718ecf
+32. docs/phase2-sync/qa-ci-cea-initial-progress-proposal.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 f77ca9b98902acd3e3c7324eca3b617926e61d0db05934ef61292abc2c670a42
+33. docs/phase2-sync/qa-ci-cea-linked-cut-diagnosis.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 ca2b9227d058f66a9119503008374a2969215eb2a52965dec5dfb8a92be8e08a
+34. docs/phase2-sync/qa-ci-cea-linked-cut-fixture-contract.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 efb3144230e1dde6ed96ea057c7811dcee01eb4192d5a2b388c4c08234a2fbb3
+35. docs/phase2-sync/qa-ci-cea-linked-cut-fixture-implementation.txt
+    INSPECTED terminal author/validation evidence. Final-source identity, selected/overlapping counts, actual controls, runtime and cleanup qualifications checked; author checks are supplied evidence.
+    SHA256 693b59606fc7da98f872c6636497e4add30017044c0691782b17d7b1fb3270cd
+36. docs/phase2-sync/qa-ci-cea-linked-cut-fixture-proposal.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 d94cee3f07985daab25d88f4b92345dab7fed87c18c589a859b8a490267df0f8
+37. docs/phase2-sync/qa-ci-cea-linked-cut-preparation.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 97da57acf86a5681ee5ef227b68c91cbd7a9b0e50ccbeb9bbc0c736f2c5f490f
+38. docs/phase2-sync/qa-ci-cea-pagination-author-preflight-stop.txt
+    INSPECTED retained failed/incomplete evidence. Native errors, unrun work and cleanup/helper qualifications remain failed or uncertain; no retroactive pass credit.
+    SHA256 9af31c550a2f95029088090763947cff5b774e6d1cdb8ffacdafe16f020a472a
+39. docs/phase2-sync/qa-ci-cea-pagination-author-runner-stop.txt
+    INSPECTED retained failed/incomplete evidence. Native errors, unrun work and cleanup/helper qualifications remain failed or uncertain; no retroactive pass credit.
+    SHA256 912150bb27f11ab9e37e37805d067b87600d08666ca8216e2c686e2b8a469848
+40. docs/phase2-sync/qa-ci-cea-pagination-budget-contract.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 96827dfa1909d83ecf2fde838a6cda014c3ba0b9cfb17ac4e687327fc194332f
+41. docs/phase2-sync/qa-ci-cea-pagination-first-runtime.txt
+    INSPECTED terminal author/validation evidence. Final-source identity, selected/overlapping counts, actual controls, runtime and cleanup qualifications checked; author checks are supplied evidence.
+    SHA256 92df826be455d60f797bee7d06a646c35d6106dd38fdc729d18e697114973d5c
+42. docs/phase2-sync/qa-ci-cea-pagination-observation-proposal.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 0de81d6ed6d8d0117f625327356d2797dd1a96ac43b1b167114c4112bcf3d70f
+43. docs/phase2-sync/qa-ci-cea-pagination-observation.txt
+    INSPECTED terminal author/validation evidence. Final-source identity, selected/overlapping counts, actual controls, runtime and cleanup qualifications checked; author checks are supplied evidence.
+    SHA256 f2d056837414ac3d4a0c0b24b850fa9e8042a9d809711365346251206c5f0b2d
+44. docs/phase2-sync/qa-ci-cea-pagination-paced-pair.txt
+    INSPECTED terminal author/validation evidence. Final-source identity, selected/overlapping counts, actual controls, runtime and cleanup qualifications checked; author checks are supplied evidence.
+    SHA256 bbceabc37cc96e5b0cf8bb3c5638b705d2de8b6ba00249a557b724b7ab4a5c50
+45. docs/phase2-sync/qa-ci-cea-pagination-paced-proposal.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 66191ae976588868f9b7a515b941c243a2bc9461ded33fba88f64c01f1b60435
+46. docs/phase2-sync/qa-ci-cea-pagination-proposal.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 bee10ccee30bb793f3cc66141c8835425ae68063083c523204fe07e871277584
+47. docs/phase2-sync/qa-ci-cea-preabort-contract.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 61f2c84b3aff268d34bebb48677be9575502fb7b49176e6dcf67bad17d72b6d9
+48. docs/phase2-sync/qa-ci-cea-preabort-implementation.txt
+    INSPECTED terminal author/validation evidence. Final-source identity, selected/overlapping counts, actual controls, runtime and cleanup qualifications checked; author checks are supplied evidence.
+    SHA256 5c7f99a0633632e64a2f28b785b75541086710e284ae72c0930eeb8918f97521
+49. docs/phase2-sync/qa-ci-cea-preabort-proposal.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 79630b08b65a24e931356d7bfdc23c44f78a338b4fe88f0dbab4f0448b6fcecd
+50. docs/phase2-sync/qa-ci-cea-queue-backoff-diagnosis.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 9ce5ecfa3fbce6dded09b24d4d4ede33b283ba548c9909a578368f3ef70e3f9f
+51. docs/phase2-sync/qa-ci-cea-queue-backoff-observation-contract.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 05647fbf8882b1087f7f8d6bb0a404cd12afcd54709c43ede019decbe57d7cdf
+52. docs/phase2-sync/qa-ci-cea-queue-backoff-observation-stopped.txt
+    INSPECTED retained failed/incomplete evidence. Native errors, unrun work and cleanup/helper qualifications remain failed or uncertain; no retroactive pass credit.
+    SHA256 d7024813f43ef16937c699f5d9f2ebf50d02f5719d1d520cf86c8921e886640c
+53. docs/phase2-sync/qa-ci-cea-queue-backoff-positive-budget-contract.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 a0bc49f36fe36658e33bfc8a0204286d1a3033d42693a37a620f3ab49f178ffc
+54. docs/phase2-sync/qa-ci-cea-queue-backoff-positive-budget-implementation.txt
+    INSPECTED terminal author/validation evidence. Final-source identity, selected/overlapping counts, actual controls, runtime and cleanup qualifications checked; author checks are supplied evidence.
+    SHA256 f751d085efb588a9bda281f2ba67d8b31f5a1abb700ea4f067b60a9849e73f61
+55. docs/phase2-sync/qa-ci-cea-shutdown-transport-diagnosis.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 7f981996827c8699b71738b35c55188ce163d85d60b7c12a952ba7f581d32193
+56. docs/phase2-sync/qa-ci-cea-shutdown-transport-fixture-contract.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 9ebc19dd259a4c400b22037a7acc504ffff19bfb17985ade5724056fba166bfd
+57. docs/phase2-sync/qa-ci-cea-shutdown-transport-implementation.txt
+    INSPECTED terminal author/validation evidence. Final-source identity, selected/overlapping counts, actual controls, runtime and cleanup qualifications checked; author checks are supplied evidence.
+    SHA256 aef7d8ad36ea9bb93afaa98685978b94188d58e3cfc373397702eee05ab19d88
+58. docs/phase2-sync/qa-ci-cea-shutdown-transport-proposal.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 1420daa5b320c4cbe43fc76d810ce8f355d258f84884ff40bf44af8cc18464d3
+59. docs/phase2-sync/qa-ci-cea-staging-offer-order-contract.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 e9041f914f7f73e170d19cf0f9986ba36aca425b4a82deac8cf56cd208d2890b
+60. docs/phase2-sync/qa-ci-cea-staging-offer-order-implementation.txt
+    INSPECTED terminal author/validation evidence. Final-source identity, selected/overlapping counts, actual controls, runtime and cleanup qualifications checked; author checks are supplied evidence.
+    SHA256 dcd8b9de0b3ed5a4dd43acfd44e99babf4b223ad3a68c54fc587dbcd156ca230
+61. docs/phase2-sync/qa-ci-cea-staging-pair-diagnosis.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 af47d11dbbe9c0f26acc79f7ab4e43cb32232ea2e6eb04dc89978d7807725560
+62. docs/phase2-sync/qa-ci-cea-staging-pair-proposal.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 cecf2bf9fb4cccc58094120639535d3232e071f63dd4614d6e8a24092a0e55ab
+63. docs/phase2-sync/qa-ci-cea-static-readiness-contract.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 c57c20960c572adff2a32276523ff62decd0685438c3aa66d6e2f3087b38ce5d
+64. docs/phase2-sync/qa-ci-cea-static-readiness-diagnosis.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 87ce04c4a754f62d8133a6ed7e03d4ca19efc15950c95642edb110fb44f184dd
+65. docs/phase2-sync/qa-ci-cea-static-readiness-implementation.txt
+    INSPECTED terminal author/validation evidence. Final-source identity, selected/overlapping counts, actual controls, runtime and cleanup qualifications checked; author checks are supplied evidence.
+    SHA256 6b791fd63ad52d75b3bae78a0dc6025596e7019c62d4edba0ca230386e72739c
+66. docs/phase2-sync/qa-ci-cea-ubuntu20-followup-plan.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 44d0ae8a5cf331bb99bdfa2d8ed530b3118c8cd53c558d649ee0264c0680dbb2
+67. docs/phase2-sync/qa-ci-cea-ubuntu20-triage.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 bdd2489a9f9d707cef8f9a9bbbab8ec4b7806ea6e7f66a5fdef69026c1e40dbb
+68. docs/phase2-sync/qa-ci-cea-watcher-cancellation-addendum.txt
+    INSPECTED terminal author/validation evidence. Final-source identity, selected/overlapping counts, actual controls, runtime and cleanup qualifications checked; author checks are supplied evidence.
+    SHA256 b534e78aad5c21c7bb516fb5f2d02ff1350525e523d23d4e4cee6d2844dc465a
+69. docs/phase2-sync/qa-ci-cea-watcher-lifetime-design.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 261626b35eb47a8a9bac87be1ab21d3f8e9cb009bf566de1c1d05cbfd06e9d22
+70. docs/phase2-sync/qa-ci-cea-windows-lifecycle-contract.md
+    ACCEPT current gate/continuation. Scope, required real boundaries, preserved negatives/bounds and historical limitations checked against final source and original contracts.
+    SHA256 45cd0e3f63a9f39991baf39515202f3afe8e671c0eaf77128fe471661e5e1a66
+71. docs/phase2-sync/qa-ci-cea-windows-lifecycle-diagnosis.txt
+    INSPECTED causal/design evidence. Sufficient controlled mechanisms remain separate from unknown historical actors; unapplied/historical recommendations do not override later current gates.
+    SHA256 ce2c6cedb192b180e2bb44bcbcbb83aed8667aefd845c38a0c6c06fa5d798bdb
+72. docs/phase2-sync/qa-ci-cea-windows-lifecycle-implementation.txt
+    INSPECTED terminal author/validation evidence. Final-source identity, selected/overlapping counts, actual controls, runtime and cleanup qualifications checked; author checks are supplied evidence.
+    SHA256 701a213c9062b33f1c5bfe2faa7816cd0abbd930bd9534895add6c938c9b66bf
+73. docs/phase2-sync/qa-followup.md
+    ACCEPT. Historical lifetime checkpoint plus explicit latest positive-budget/current-green pointer; no claim of physical readiness.
+    SHA256 7a9a35574149245cf191a531e6ff4db009ba3b886797865274f56cab8f4c88a0
+74. docs/phase2-sync/storage-interface.md
+    ACCEPT. Awaitable close contract, no self-join under held lock, timer compatibility and raw-error/pin/quiescence limits match code.
+    SHA256 4cc38116b27f428743255d11ad63b3374c8d79a02b6082f7c64a4ba7ec9fa280
+75. docs/phase2-sync/tested-source-qa-ci190.sha256
+    ACCEPT historical archive. Byte-for-byte equals HEAD previous 165-file tested-source manifest.
+    SHA256 d7f1e5bbb5a4ebb0c66928f0ceb2402cc745770644697356f4099dff93340943
+76. docs/phase2-sync/tested-source-qa.sha256
+    ACCEPT. All 169 current source hashes and membership verified; aggregate matches frozen and supplied tested source.
+    SHA256 4967ad40861e64dfe33932a3383216c47b25a978f49ec736dd2dd15c792a5eba
+77. docs/phase2-sync/verification-qa.json
+    ACCEPT as structured history/current evidence. Parsed all 26087 leaves, inspected changed records and current terminal phase; full source/output identities checked.
+    SHA256 f241b904b9c2d4b011562706b0130bf03b0b8bdbbcb71c4422e8a10157228577
+78. packages/cli/src/sync-acquisition-deadline.test.ts
+    ACCEPT. Real queue marker, provenance negatives, raw/later deadline exclusion, abort/whole-pass negatives, durable worker limit/reset and real custody; fixed positive 1000ms pass.
+    SHA256 af6caa2bbfa674d75b4f6da461c41ad7de5025960bb10d10e6c0b9f2daa9d817
+79. packages/cli/src/sync-attempt-lifetime-fixtures.ts
+    ACCEPT. Actual async context, native handles/locks/retained children and observed producer promises; cleanup precedes root removal.
+    SHA256 6e380dd58fd67b2964c7ebc25f35fa48d340bfcfff66f8984a487696f1da4760
+80. packages/cli/src/sync-attempt-lifetime.test.ts
+    ACCEPT. 25 real producer/queue/native timer/client/pass/HTTP/release/registry/error identity cases; exact late-pin bounds retained.
+    SHA256 5f17fa6ec98ea86f654342a11626106c80b9545dd19ad2ae52754981a87e0ccb
+81. packages/cli/src/sync-client.ts
+    ACCEPT. Initial typed queue-only retry translation; exact cause; caller cancellation priority; request finalizer awaits close.
+    SHA256 1d3ec68f1ed2701a06cd6db7538a3984cb9a2069626c2f49a96fa8c8a57dc460
+82. packages/cli/src/sync-files.ts
+    ACCEPT. Queue-only marker, optional watcher signal, no holder bypass, owned post-acquisition cleanup and timer-only exact-reason normalization.
+    SHA256 bec75756592e54619ded180de217dbf68efdba7e0121bc8b77660ec886dd1024
+83. packages/cli/src/sync-finalization-lifecycle.test.ts
+    ACCEPT. Real viewer preparation/reuse and existing worker identity checks; no warmup ticket/custody; original assertions retained.
+    SHA256 ceb67694dd0dccd392b12523a3e3f8370570b5cf0eade2568df9987b1edf3205
+84. packages/cli/src/sync-http-server.ts
+    ACCEPT. Handler awaits attempt join before active-request decrement; existing close drainage owns the handler.
+    SHA256 aae2456047b8b5476949fe144f3839fc4d23e3a4f1c023cb41b576038519c515
+85. packages/cli/src/sync-https-fixtures.test.ts
+    ACCEPT. Final late numeric PID oracle replaced with retained child close result, closed IPC command and exact listener release.
+    SHA256 2cf029adbe4f62e0558e63c3bf1406747cbfd5c13236f207db95d7081745b947
+86. packages/cli/src/sync-ownership-worker-child.ts
+    ACCEPT. Strict narrow IPC, bounded operation ID and one actual already-paused mutation in async scope; no production hook.
+    SHA256 504eaf1aac64bf054329405521767b6d6b28b6bf941ea0adfa9892bcbe590dfb
+87. packages/cli/src/sync-ownership-worker.test.ts
+    ACCEPT. Pending state and actual owner pair proved at scoped cut; reap retained live holder before parent unpause; real restarted custody.
+    SHA256 5017a53148a5fef9f63b0bb770b0d6c22d8db49b33268b2917b2a9abf46a7bd1
+88. packages/cli/src/sync-preaborted-reconciliation.test.ts
+    ACCEPT. Eight real-store cases preserve full durable state, bytes, validation and zero communication.
+    SHA256 90fb342273a85f73e611dd7aa4dc7c54decc029b10b7249290503d9fd5f975fb
+89. packages/cli/src/sync-protocol-faults.test.ts
+    ACCEPT. All 16 real file-quota offers precede partial streams; original quotas, lease gap, ownership and overflow assertions remain.
+    SHA256 a5ba51f46a3c7f6a94d75978906a4779056598b8b7bb4af2985044c10c4a95d2
+90. packages/cli/src/sync-protocol.test.ts
+    ACCEPT. Only 129-seed aggregate watchdog becomes 120s; bounded stage diagnostics; request5000/session60000 and protocol assertions unchanged.
+    SHA256 d74ade6b6837451e639ac7c0b223c372e4f381916ba8caef4f4b753db609d96c
+91. packages/cli/src/sync-reconciliation.ts
+    ACCEPT. Lifecycle fences before cancellation; cancellation before cached error; awaited close and final outer-signal normalization.
+    SHA256 388b9775d794076234e41201166b4b4f74afbaddf97f36de8b98e2b65830179f
+92. packages/cli/src/sync-review-regressions.test.ts
+    ACCEPT. Direct attempt lifetime now uses awaited finally; audit/quarantine assertions retained.
+    SHA256 94fb92322c164d516d2a1d8f7cf84a71f744089bbd4146ae4b830c4d45de93f6
+93. packages/cli/src/sync-shutdown-fixtures.ts
+    ACCEPT. Independent cleanup errors collected; explicitly asserted failed close observed; root retained on unsafe cleanup.
+    SHA256 5fc8c116c2d5826924e34155f9c9118d9005f3dc2171781a48a2eefa4ff12c02
+94. packages/cli/src/sync-shutdown-ingestion.test.ts
+    ACCEPT. Retained outgoing producer for one body success case, actual receiver safety stays in parent; awaitable mock and bounded nonsecret diagnostics.
+    SHA256 b2812f9d91069b41709b6443b78e3382312d0b8c24bf16da9490ab77695af678
+95. packages/cli/src/sync-store.ts
+    ACCEPT. Stable cached close, synchronous admission stop, full watcher producer join, private exact stop, retained registry/listener, signal confined to watcher mutation.
+    SHA256 5dbfd00a4b56d0f54e1811697c08e5f93da353970705587e99ef5d784ab27f11
+96. packages/cli/src/sync-transport-lifecycle.test.ts
+    ACCEPT. Early request settlement explicitly fails pin admission; actual lock/request/pin all settled in cleanup without masking failures.
+    SHA256 2fb3486f13bbd2377ae231a86212fd1e1f021d49ba4a1c99773eb081aecc6f1c
+97. packages/cli/src/sync-worker-integration.test.ts
+    ACCEPT. Avoidable worker-status CLI moved before publish; genuine blocked-history observation and receiver startup retained.
+    SHA256 040c532804470d20fa2fa5c774bfd03e520778b548ad7bf51afa70401ef6887b
+98. scripts/viewer-browser.test.mjs
+    ACCEPT. DCL after exact Back URL and before strict two-row count; existing security/content assertions unchanged.
+    SHA256 5b1a1ea4004ac202188359b8687978603a309d862a39cc94f76209ecd32a6d04
+
+Terminal handoff
+
+ACCEPT. No actionable finding remains from this independent complete-correction review. Parent must read both independent terminal reports and owns triage, any follow-up checks, concrete committed/hosted-green state and eventual physical-QA handoff. This report releases no SHA and performs no publication action.
+runtimeReleased=true
+
+Final administrative audit native exit0, UTC2026-10-25T09:42:08.588661+00:00 to 2026-10-25T09:42:09.919596+00:00.
+Audit helper SHA256 69d38d0956502ffbf1ff2270357c321e118e3a17d48584a65fe20b6cf984e070
+Audit log SHA256 e2684cb0e99a7bd50b04b2a3b3f5cf784ed084f92a335ca7520ed57096a90f7c

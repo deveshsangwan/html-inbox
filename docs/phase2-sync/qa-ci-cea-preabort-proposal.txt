@@ -1,0 +1,17 @@
+UNAPPLIED. Parent source-interface gate required. No implementation or original test change was made.
+
+Supported gate A: pre-aborted reporting on an enabled route with a cached permanent error.
+
+For an existing active/reconnecting route, an already aborted caller signal must report status=aborted even when route.lastError is a cached permanent failure. Preserve the persisted error, route configuration, report, obligations and receipts. Resolve zero credentials, open zero attempts and start zero requests. Keep unknown-route validation and explicit detached/blocked lifecycle fences intact. Ordinary non-aborted permanent failures still report blocked and still require explicit retry. Do not change deadlines, retries, network authorization or schemas.
+
+The narrow implementation candidate is the ordering of the enabled-route cancellation and cached-error checks in sync-reconciliation.ts, currently lines 80-88. Separate the explicit lifecycle fence from the cached-error predicate. No new public option or API is needed. Parent must decide the exact lastError field convention for an aborted result; persistence must remain unchanged. This reporting change alone does not repair the first call's raw deadline-error classification.
+
+Regression evidence to preserve: original #505 assert at compiled line384; original 100ms request/300ms pass, <1500ms elapsed assertion, zero cancelled requests, durable obligation and exact saved bytes. Add the shortest real public-call regression from minimal-preabort.cjs, retaining the clear-error control and ordinary non-aborted permanent block. Keep detached/quarantine/revocation and all original cancellation assertions. Do not replace real authorization, requests, custody or error boundaries with fabricated success.
+
+Separate gate B, policy decision needed: typed local acquisition deadline classification.
+
+The valid controlled #505 run held the actual source mutation lock for140ms exactly once. SyncClient.request computes its original100ms deadline and awaits store.openRouteAttempt before constructing HTTPS. The real lock acquisition rejected Managed store lock deadline exceeded. The enclosing pass still had time inside its original300ms bound. classifySyncFailure maps every non-SyncProtocolError to blocked/local-validation-or-storage-failed and the pass persists that code. No request was started.
+
+A finite local authorization wait is distinguishable from EIO/ENOSPC, uncertain durability, schema/anchor faults and authorization rejection. If parent authorizes a correction, carry a typed acquisition-deadline outcome from its actual source to the existing failure-classification boundary. Treat only that proven transient deadline as retryable, preserving the whole-pass abort distinction and all genuine permanent/auth/storage failures. Do not classify by broad error text or globally treat filesystem errors as transient. This needs its own source-interface decision and positive/negative boundary tests. It is not automatically part of gate A and does not close any other original case.
+
+Hosted causal limit: neither gate assigns the original hosted lock contender, latency source or first-pass safe error. Controlled contention proves sufficiency, not original CI causation. No slow-I/O injection was used.

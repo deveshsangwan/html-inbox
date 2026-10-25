@@ -1,0 +1,118 @@
+READ-ONLY DIAGNOSIS TERMINAL, CASE203 ONLY. runtimeReleased=true.
+
+The registered Node20 controlled pair demonstrated the exact hookFailed ENOTEMPTY at source/sync and a matching meaningful control. The historical actor remains UNKNOWN. No cause is assigned to original case453 or to the preserved stat ESRCH/waitpid helper failure.
+
+The original receipt had duration1689.820284ms, hookFailed/ENOTEMPTY removing source/sync, no stack or actor trace. I read both supplied original receipt files completely, including all six command results. Inherited Node24 broad green and Node20 1023pass/2fail/1skip remain inherited evidence only. They were not repeated, replaced or waived.
+
+All167 CURRENT parent sources were individually hashed before copying and again after the targets. This includes newly added tests and prepared finalization/protocol source. Aggregate b3fe50512a22f17215abe1dcb0dac403a7f428c58892b2c94ccf42f4b9bcd82b. A private project was created from committed cea30b48cbef814511e2eedfc83d1793bc011354 and overlaid ONLY in that private tree. Original child bytes/modes/absence were saved separately. No borrowed source was overlaid into either checkout. All167 original child states remain identical, so no restorative source write was required.
+
+Own pnpm11.7.0 and dependency store were copied privately. One frozen-lockfile, ignore-scripts, offline setup passed with10 packages reused and0 downloaded. Own typecheck/build passed. All332 private compiled outputs individually equal the parent final compiled outputs; aggregate636ec101bfa1f336b5aac653d5d40f56e4c840cf41f215e8a0ec2271ebccceda. Dependency/lock setup was frozen; source and compiled pins are retained in the bundle. No root build/cache/wrapper/audit was written.
+
+Exact Node20 executable /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node, SHA6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd. Exact Node24 build/setup executable /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node, SHA7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c. Private bin symlinks selected these; the actual process exec argv confirms the Node20 path. No Node24 target matrix or test was run.
+
+Each runtime command used flock -w45 -E75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock. No admission75 occurred. No polling, retry, stress, natural rerun, full-file or full-suite invocation occurred. Own COPY of the established run-subreaper.py continuously reaped its children. Own command logger retained Popen ownership, called os.waitpid for the exact direct command PID and recorded native status. Observer ChildProcess instrumentation retained the actual object and its native exit/close events; it sent no PID signals. Environment is an explicit private HOME/XDG/TMP/PATH/cache allowlist in every receipt. Real synthetic TLS/stores and loopback endpoints were used.
+
+The ONE unchanged observed natural20 case passed,25 TAP cases with1 selected pass and24 name-filter exclusions. At root rm entry a real source mutation operation171/attempt103/watcher106 was still pending after both successful server closes; attempts and timers were already empty. It settled before the final source/sync removal, so no ENOTEMPTY occurred. This supplies an actual pending producer, not historical actor identity. Observation appends synchronous JSON and captures stacks/metadata, so its scheduling overhead is unmeasured and qualified. hrtime/native captured Date were used for traces; the test's mocked Date/performance and independent AsyncLocalStorage server contexts were not replaced.
+
+Ranked falsifiable hypotheses and the concrete hold/release predicates were frozen before the pair in preregistered-pair.txt and pair-registration.json. H1 predicted an admitted prelock source watcher can outlive close and recreate namespace during rm. H2 required another store operation, and H3 required an undrained HTTPS handler. The red had exactly one selected source watcher pending and both servers listeningfalse/sessions0/transfers0/sockets0/activeRequests0, making H2/H3 unnecessary for that controlled failure. They remain historically unknown.
+
+controlled-red20 PID328301 selected actual outer source attempt6, watcher9, mutate18. Its actual timer fired and reached original withStoreLock after original checkDirectory; exactly one hold occurred before enqueue at449.727670ms. Synchronous attempt.close returned848.851946ms with this same operation pending. All11 original assertion observations passed, including both real receiver lease-clock assertions, confirmed custody/committed status, zero completion requests, receiver-owned old cut, fresh identity purge, sessions/cachedBytes and activeRequests. Both original port rebind assertions passed.
+
+Root rm began1237.862903ms with only selected operation18 pending and no active attempt/timer. At1242.922139ms the actual final native source/sync rmdir cut observed the genuine directory inode6065190/dev37 empty. The released original watcher created/acquired genuine mutation.lock inode6065309/dev37/mode0600/nlink1/136bytes at1247.658701ms. Its protected callback was held only until the original final native rmdir completed. That syscall returned unchanged ENOTEMPTY at1247.825662ms, with the same directory inode and exactly that lock as its sole entry. No lock bytes, Stats, ledger, result or filesystem error was fabricated. Native test outcome was hookFailed/ENOTEMPTY at source/sync, exit1.
+
+After the original failed hook, that watcher resumed its actual store operation, encountered the already-removed ledger with ENOENT and self-released its own lock through existing production cleanup. Its existing catch observed the rejection; all tracked operations settled before process exit. This controlled expected consequence is not a second failed test or an unhandled rejection. No late ledger-state mutation or custody violation was shown.
+
+controlled-drain20 PID328380 selected the same actual source attempt6/watcher9/mutate18, exactly once, with identical test/source/runtime/observer. It held at458.298623ms and survived close at856.679367ms. Root rm interception began1241.590517ms. The sole controlled ordering factor moved release/settlement before original rm: actual lock acquisition1246.730960ms; actual authorization callback returned and real lock release settled1250.307586ms; producer-drained marker1250.384003ms had pending0. Original rm then ran once and returned1256.041367ms. All11 original assertion observations passed, original cleanup passed, exit0,1 selected pass/24 exclusions. The pair proves complete-producer-before-removal ordering, not a typed fixture implementation or a general public drain guarantee.
+
+The original25-case file was not altered. The other24 offset/expiry/identity/TLS cases were filtered exclusions, not passes. Existing real TLS verification and source/receiver async clock logic were exercised only as used by the selected case. Counts overlap across the three selected invocations and must not be summed as independent case coverage. Request/pass/case deadlines and lease/security/custody assertions were unchanged.
+
+UNAPPLIED minimum contract is in unapplied-lifetime-contract.txt. Retain actual watcher callback lifetimes synchronously before first await, stop admission/close listeners, settle admitted producers, then remove synthetic storage. Preserve complete in-process clock contexts and all assertions. Current openRouteAttempt has only synchronous close and no promise for the already-started watcher; current durability hooks expose no pre-await producer lifetime. No implementation-ready test-only source patch is claimed. Bare recover, quiesceRoute, lock-queue barriers, sleeps and rm retries are not validated fixes. Moving only reconciliation/clock authorship to the previous transport child runner is not proposed. The parent must gate any suitable test observation seam or narrow production lifetime change.
+
+Separately proven production limit: attempt.close and active-attempt removal can precede a foreground source watcher's genuine canonical-lock creation. This is a filesystem lifetime gap. Both HTTPS handler sets had drained; this does not establish a failure of the server's admitted-handler close contract. No late ledger-state mutation, data loss, lease bypass, forged receipt or original-actor attribution is claimed.
+
+One final administrative cleanup audit FAILED, retained unchanged as receipts/cleanup-audit.json/log plus audit.py. It completed its pin/source/index/producer/PID checks and exact port binds, then wrongly expected the entire private TMP inventory to contain only the red's3 empty directories. Own node-compile-cache was also present. No target was rerun, audit assertion changed or failed audit turned green. A separate cleanup-only command inventoried that own cache, removed only owned scratch and finished successfully. The failed audit did not persist its intermediate per-port timing data, so no independently timed rebind receipt is invented. The six original fixture rebind diagnostics are retained and provide exact endpoint authority.
+
+The first derived case-summaries.json used default0 for absent pending counters. It is preserved and qualified; case-summaries-qualified.json omits absent counters. Raw events, receipts and critical-causal-traces.json were unchanged. observer-syntax-original.cjs preserves the earlier pre-callback observer exactly by verified recorded hash; the final pair observer did not change after registration. No helper failure or qualification was hidden.
+
+Cleanup-only finalization observed all previously recorded PIDs absent. Each selected invocation recorded11 actual ChildProcess creations and matching11 exits/11 closes. Nine copied-subreaper command records end with remaining[]; logger waitpid statuses are retained, including final cleanup. Six exact fixture loopback endpoints rebound:33327,42639,37873,44129,34733,39811. Each selected test process exited with tracked operations0/attempts0/timers0. Red's owned lock self-released before cleanup; only its3 empty directories remained and were removed with exact empty-directory rmdir. No rm retry, canonical-lock forced unlink, foreign signal or historical scratch removal occurred. Own synthetic credentials/stores, private HOME/XDG/TMP/cache/dependency/bin trees were removed. Private frozen source/compiled/original-byte snapshots and immutable diagnostic evidence remain for parent inspection.
+
+The two inherited root residues were not inspected or changed. Their key bodies were not read/logged; no TLS-root provenance or historical writer is inferred. Known-owned PID/private-tree evidence is not a whole-host absence claim. The parent source167/compiled332 hashes still match. Child tracked/untracked/ignored status is empty; child index unchanged; parent index equals the inherited pin. Both HEADs remaincea30b48cbef814511e2eedfc83d1793bc011354, parent branchfeat/phase2-sync, child brancht3/diagnose-local-lease-expiry. No repository test/production/docs/workflow/staged-content change, PR action, commit, merge, deployment, Fleet/native/physical job or QA-SHA release occurred.
+
+Parent owns the next gate, implementation, checks, two NEW reviews and immutable QA handback. The authorized target phase is terminal. runtimeReleased=true after all flock invocations returned. Full artifacts follow.
+
+Runtime command receipts, expanded argv and native outcomes:
+
+setup
+UTC 2026-10-25T04:57:39.223535+00:00 -> 2026-10-25T04:57:40.977836+00:00; elapsed 1.754702146165073s; native exit 0; waitpid PID 326801 rawStatus 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-diagnosis-9zfcy46f/run-subreaper.py", "/tmp/qa-case203-diagnosis-9zfcy46f/bin/node24", "/tmp/qa-case203-diagnosis-9zfcy46f/deps/pnpm/bin/pnpm.cjs", "install", "--frozen-lockfile", "--ignore-scripts", "--offline", "--store-dir", "/tmp/qa-case203-diagnosis-9zfcy46f/cache/pnpm-store"]
+counts {}
+logSHA256 8a93a825cc35c1bdd40c9eaf779bd85e5c5aef1532b24c435b58d97a8bfaa8fe
+helperSHA256 {"run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "f7fb801b9a69aa57d337865f56abe2d1bc5ef125103ef42886a16b0744369735"}
+
+observer-syntax
+UTC 2026-10-25T04:58:45.988987+00:00 -> 2026-10-25T04:58:46.065340+00:00; elapsed 0.07657015416771173s; native exit 0; waitpid PID 327021 rawStatus 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-diagnosis-9zfcy46f/run-subreaper.py", "/tmp/qa-case203-diagnosis-9zfcy46f/bin/node20", "--check", "/tmp/qa-case203-diagnosis-9zfcy46f/observer.cjs"]
+counts {}
+logSHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+helperSHA256 {"observer.cjs": "03ddd5dfc9daebd0b373c004787c1f4f73bdba9fa91aba0aa9fff5f52da61b2f", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "f7fb801b9a69aa57d337865f56abe2d1bc5ef125103ef42886a16b0744369735"}
+
+typecheck
+UTC 2026-10-25T04:58:46.159215+00:00 -> 2026-10-25T04:58:46.498735+00:00; elapsed 0.33974064886569977s; native exit 0; waitpid PID 327032 rawStatus 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-diagnosis-9zfcy46f/run-subreaper.py", "/tmp/qa-case203-diagnosis-9zfcy46f/bin/node24", "node_modules/tsc-rs/bin/tsc-rs", "-p", "packages/cli/tsconfig.json", "--noEmit"]
+counts {}
+logSHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+helperSHA256 {"observer.cjs": "03ddd5dfc9daebd0b373c004787c1f4f73bdba9fa91aba0aa9fff5f52da61b2f", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "f7fb801b9a69aa57d337865f56abe2d1bc5ef125103ef42886a16b0744369735"}
+
+build
+UTC 2026-10-25T04:59:18.397555+00:00 -> 2026-10-25T04:59:18.884036+00:00; elapsed 0.486909287981689s; native exit 0; waitpid PID 327269 rawStatus 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-diagnosis-9zfcy46f/run-subreaper.py", "/tmp/qa-case203-diagnosis-9zfcy46f/bin/node24", "node_modules/tsc-rs/bin/tsc-rs", "-p", "packages/cli/tsconfig.json"]
+counts {}
+logSHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+helperSHA256 {"observer.cjs": "42298e06e164b6a5abe05b3d2d6d2b4d5075da13663481962f3f28c9cb6d9e1b", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "f7fb801b9a69aa57d337865f56abe2d1bc5ef125103ef42886a16b0744369735"}
+
+natural20
+UTC 2026-10-25T04:59:24.425463+00:00 -> 2026-10-25T04:59:25.972969+00:00; elapsed 1.5477783679962158s; native exit 0; waitpid PID 327305 rawStatus 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-diagnosis-9zfcy46f/run-subreaper.py", "/tmp/qa-case203-diagnosis-9zfcy46f/bin/node20", "--require", "/tmp/qa-case203-diagnosis-9zfcy46f/observer.cjs", "--test", "--test-reporter=tap", "--test-name-pattern=^local-before-completion lease expiry is bounded independently of remote timestamps and wall clock rollback$", "packages/cli/dist/sync-clock-skew.test.js"]
+counts {"tests": 25, "suites": 0, "pass": 1, "fail": 0, "cancelled": 0, "skipped": 24, "todo": 0}
+logSHA256 58a8a3e652d44d78b7b5ca940980fceaae9a65dfc2a02693d77b9f8d6142a654
+helperSHA256 {"observer.cjs": "42298e06e164b6a5abe05b3d2d6d2b4d5075da13663481962f3f28c9cb6d9e1b", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "f7fb801b9a69aa57d337865f56abe2d1bc5ef125103ef42886a16b0744369735"}
+
+controlled-red20
+UTC 2026-10-25T05:00:20.512754+00:00 -> 2026-10-25T05:00:21.948458+00:00; elapsed 1.4359887642785907s; native exit 1; waitpid PID 328293 rawStatus 256; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-diagnosis-9zfcy46f/run-subreaper.py", "/tmp/qa-case203-diagnosis-9zfcy46f/bin/node20", "--require", "/tmp/qa-case203-diagnosis-9zfcy46f/observer.cjs", "--test", "--test-reporter=tap", "--test-name-pattern=^local-before-completion lease expiry is bounded independently of remote timestamps and wall clock rollback$", "packages/cli/dist/sync-clock-skew.test.js"]
+counts {"tests": 25, "suites": 0, "pass": 0, "fail": 1, "cancelled": 0, "skipped": 24, "todo": 0}
+logSHA256 12d99d9d51c180353fc77186706ed5eaa23acd2e3adb8882d65c7c72fc722d65
+helperSHA256 {"observer.cjs": "42298e06e164b6a5abe05b3d2d6d2b4d5075da13663481962f3f28c9cb6d9e1b", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "f7fb801b9a69aa57d337865f56abe2d1bc5ef125103ef42886a16b0744369735"}
+
+controlled-drain20
+UTC 2026-10-25T05:00:48.735558+00:00 -> 2026-10-25T05:00:50.171847+00:00; elapsed 1.436567178927362s; native exit 0; waitpid PID 328372 rawStatus 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-diagnosis-9zfcy46f/run-subreaper.py", "/tmp/qa-case203-diagnosis-9zfcy46f/bin/node20", "--require", "/tmp/qa-case203-diagnosis-9zfcy46f/observer.cjs", "--test", "--test-reporter=tap", "--test-name-pattern=^local-before-completion lease expiry is bounded independently of remote timestamps and wall clock rollback$", "packages/cli/dist/sync-clock-skew.test.js"]
+counts {"tests": 25, "suites": 0, "pass": 1, "fail": 0, "cancelled": 0, "skipped": 24, "todo": 0}
+logSHA256 df79ed24a3f4ac362633cf0d7b8b94b89c693ce7118f2ca09a04b3d28c2f2ee3
+helperSHA256 {"observer.cjs": "42298e06e164b6a5abe05b3d2d6d2b4d5075da13663481962f3f28c9cb6d9e1b", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "f7fb801b9a69aa57d337865f56abe2d1bc5ef125103ef42886a16b0744369735"}
+
+cleanup-audit
+UTC 2026-10-25T05:03:59.552141+00:00 -> 2026-10-25T05:03:59.832845+00:00; elapsed 0.28092216700315475s; native exit 1; waitpid PID 329132 rawStatus 256; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-diagnosis-9zfcy46f/run-subreaper.py", "/usr/bin/python3", "/tmp/qa-case203-diagnosis-9zfcy46f/audit.py"]
+counts {}
+logSHA256 8cd85a5137c4695f8264700b1fb928201fb84f3adfe036833f6428cd0ec548d2
+helperSHA256 {"observer.cjs": "42298e06e164b6a5abe05b3d2d6d2b4d5075da13663481962f3f28c9cb6d9e1b", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "f7fb801b9a69aa57d337865f56abe2d1bc5ef125103ef42886a16b0744369735"}
+
+cleanup-finalize
+UTC 2026-10-25T05:05:06.055116+00:00 -> 2026-10-25T05:05:06.287911+00:00; elapsed 0.23305146675556898s; native exit 0; waitpid PID 329566 rawStatus 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-diagnosis-9zfcy46f/run-subreaper.py", "/usr/bin/python3", "/tmp/qa-case203-diagnosis-9zfcy46f/cleanup-finalize.py"]
+counts {}
+logSHA256 6484ef066a12bc93242e22a242f50e30b2289a3d7fc3231af01524ed4a9f7905
+helperSHA256 {"observer.cjs": "42298e06e164b6a5abe05b3d2d6d2b4d5075da13663481962f3f28c9cb6d9e1b", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "f7fb801b9a69aa57d337865f56abe2d1bc5ef125103ef42886a16b0744369735"}
+
+Other retained helper hashes:
+audit.py e71844df45bef88efc865f32bb361096882cbcc5b7ba1d4cabd234944ba979a0
+cleanup-finalize.py 03a44789801a2354fb6b891458992974cc2e48625b23244aa4205d831623669e
+observer-syntax-original.cjs 03ddd5dfc9daebd0b373c004787c1f4f73bdba9fa91aba0aa9fff5f52da61b2f
+preregistered-pair.txt 46db5f7a73ebb6a85bf505aab2ced956cda222d3493a9599967588025e818625
+pair-registration.json 69cd45c8ebe96ce4abcb496cd70a13ff5b9c6f928af8320621f4f95c0d97bcd0
+unapplied-lifetime-contract.txt 18f9505538c4080bab91016ed1f77942d7ff562f70e41ace47d66954dad3082b
+
+Source/index qualification from terminal-state.json: {"observedUTC": "2026-10-25T05:06:07.311971+00:00", "runtimeReleased": true, "child": {"HEAD": "cea30b48cbef814511e2eedfc83d1793bc011354", "branch": "t3/diagnose-local-lease-expiry", "indexSHA256": "9fc84a361f72b38312607f196c157c8eb53c79aeb9cba1846d8bc8edaadfb8f8", "statusIncludingIgnored": ""}, "parent": {"HEAD": "cea30b48cbef814511e2eedfc83d1793bc011354", "branch": "feat/phase2-sync", "indexSHA256": "e3dd34cce6446819560c71040ab9ba111d2c07087bc8b41e74f2922b3dcd1562"}, "allSourceMatches": true, "allCompiledMatches": true, "ownEnvironmentPathsRemaining": [], "lastCommandPIDStillPresent": false}
+
+Administrative initial copies/read-only inspections and retrospective extraction used shell/python tool calls, without separate native UTC receipts. These are not test/check coverage. No timestamps were fabricated for them. The exactly logged runtime/setup/typecheck/build/target/audit/cleanup commands are the nine entries above.

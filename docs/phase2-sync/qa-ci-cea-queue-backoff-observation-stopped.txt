@@ -1,0 +1,146 @@
+SOURCEWRITINGTERMINAL. runtimeReleased=true. Source written; validation INCOMPLETE.
+Stopped after the unexpected containing24 native exit1, as required by the authoritative gate. No source retuning or application rerun. The patched-source controlled red and matched control were NOT STARTED.
+
+Authoritative gate
+/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/docs/phase2-sync/qa-ci-cea-queue-backoff-observation-contract.md
+SHA256 05647fbf8882b1087f7f8d6bb0a404cd12afcd54709c43ede019decbe57d7cdf. Read and hashed before edits; exact copy retained.
+Existing T3-bound isolated checkout: /home/agent/.t3/worktrees/html-inbox/t3-b151001e, branch t3/diagnose-combined-sync-failure, HEADcea30b48cbef814511e2eedfc83d1793bc011354. Complete original365-entry bytes/modes/absences and binary index were saved BEFORE Git inspection. No dirty work was overwritten. The owned file was initially absent and is the only added checkout file.
+
+Exact one-file change
+/home/agent/.t3/worktrees/html-inbox/t3-b151001e/packages/cli/src/sync-acquisition-deadline.test.ts
+Source SHA256 a250b081b9e4e683003963c20ac644a5b5a9e1f911359c7a41be8d643d155f47
+Parent-relative one-file.patch SHA256 4bb9600c3b081141eb901ebf0164c45cef262c18808e2f7365c20927ddbf992a. Delta34 added lines/1 removed line relative to frozen169 baseline.
+The change records actual submitted deadline, native monotonic elapsed, margin at the existing completion poll, entry/exit idle offsets, existing poll count, admission/queue counters, up to4 recent admission observations, and up to1 route status/public-error summary. Public error strings are limited to64 characters. No ticket/route identity, path, arbitrary error object, credential or result body is emitted. The observation is recorded by t.diagnostic before the original ticket.error assertion and before return to the unchanged pending assertion. Node test reporters may buffer its display.
+No extra application request, snapshot, credential resolution, ticket, readiness wait, retry or repair. No promise, signal-listener or close wrapping was added, so original promise and cached close identities are untouched. No global timer/filesystem/module interception or production export was added to the test. The diagnostic buffer bound affects only retained metadata, not application capacity. The code documents that pending requires time through final result selection and observation does not make the deadlines deterministic.
+
+Assertion and timing preservation
+All100 original assertion-bearing source lines are byte-identical and in the same order. The patch removes only the original requestRun source line, replacing its inline Date.now()+passMs expression with the same expression evaluated once as submittedDeadlineAt and passed to the same single call. The original status poll remains one callsite; its condition,5ms delay and10s bound are unchanged. The original100ms request/300ms pass/140ms holder,35s child/40s retained-child watchdog/45s parent,20 finite attempts, restart/backoff/reset and positive custody budgets remain unchanged. All other original lines remain in sequence. No assertion accepts aborted, skips expiry or retries a failed ticket. static-preservation-proof.json and one-file.patch retain this proof.
+
+Frozen tested identity
+Full source169 manifest SHA256 d60436cc3613876f04aff29a6d461ee6631284b9cb646886cab78e6cfae4ce5c
+Full compiled336 manifest SHA256 9d8410bd2f1a9f184f36613a63148e18736d9dd0ebcd358b6e529da506f124a0
+Only changed compiled file SHA256 1853374fd8b9ce422423301b7febfa827a1b44bcd0ab82857d9aa4e55659e856  packages/cli/dist/sync-acquisition-deadline.test.js
+Both exact engines freshly typechecked and built the identical169-source view before the first application target. All336 outputs were identical across builds; the other335 outputs match the baseline. The fixed source/output hashes held through both target invocations and final cleanup. Borrowed source came from the complete immutable prepared169 view, not committed165.
+Node24.21.0 SHA256 7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c
+Node20.20.2 SHA256 6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd
+Parent current169 sources remain fb9b5da57f33450997881995d71941e266fed2c3bbe344708835cbd37ee914f5; parent336 outputs remain9d2815862665039fab5cad1615aaa3975325ed884c2c3966c75bcc98ff25c58f. No parent source/docs/index/dist changes.
+
+Validation results
+Fresh typecheck24/build24/typecheck20/build20 each native exit0. Helper syntax/initialization passed.
+Containing20 native exit0:6tests/6pass/0fail/0skip; worker child1/1pass. All26 ticket completion diagnostics retained, including20 queue attempts, finite-limit blocking, explicit reset, actual verified HTTPS custody with one source and one receiver receipt, then confirmed idempotent delivery without retransfers. Existing five negative controls also passed.
+Containing24 native exit1:6tests/5pass/1fail/0skip; worker child0pass/1fail. Existing five negative controls passed. Queue attempts1..11 passed; attempt12 failed the unchanged strict pending assertion at compiled478:30. The new diagnostics retained14 completed tickets. Retry-limit/reset/custody assertions after this failure were not reached and receive no Node24 credit.
+Patched-source red24/control24 NOT STARTED. The new natural failure is not substituted for the preregistered controlled red. Historical diagnostic A/B/C and original combined failures remain intact and are not counted as current patched-source validation.
+
+Retained actual failure
+{"submittedDeadlineAt": 1792917611388, "elapsedMs": 342.0269149999999, "remainingPassMs": -42, "idleOffsetAtEntryMs": 811933, "idleOffsetAtExitMs": 811933, "polls": 63, "admissionsAtEntry": 22, "admissionsAtExit": 24, "queueHitsAtEntry": 11, "queueHitsAtExit": 12, "recentAdmissions": [{"ordinal": 23, "elapsedMs": 42.57200299999977, "requestMarginMs": 258, "queueSelected": false, "parentAborted": false}, {"ordinal": 24, "elapsedMs": 64.66784700000017, "requestMarginMs": 100, "queueSelected": true, "parentAborted": false}], "ticketError": null, "routeCount": 1, "routes": [{"status": "aborted", "lastError": "local-acquisition-deadline"}]}
+No controlled hold was injected. In this instrumented containing24 invocation, external native events observed reconciliation begin35.122ms after ticket submission, with265ms remaining. Actual holder admission81.871ms; local queue timer167.022ms with133ms remaining; holder operation complete222.071ms; full holder release226.445ms; error bookkeeping226.962..274.109ms; its snapshot ended299.087ms with1ms remaining. Attempt close began299.198ms. The original pass timer fired299.984ms at wall margin0 while close still drained, followed by outer and public-attempt abort. The watcher rejected only with its private normal-stop reason; close settled312.430ms. Final snapshot ended319.349ms; route result returned319.583ms at margin-19ms, aborted/local-acquisition-deadline with zero requests. The existing ticket poll observed completion342.027ms at margin-42ms. Idle offset stayed811933ms.
+This captures the native deadline mechanism in this new invocation only. It does not attribute the historical combined failure or prove a production regression. Correct final cancellation behavior remains unchanged. The passive preload and source observations have real overhead.
+
+Observation limit
+The permanent remainingPassMs is measured at the existing ticket-completion poll. Worker bookkeeping and polling can occur after reconciliation result selection. Negative completion margin alone does not prove the production result was selected late. In containing24 queue attempts5 and8 were pending with negative completion margins; the external native trace is what establishes expiry during close for failed attempt12.
+The source addition preserves discrimination without claiming a deterministic timing fix, historical attribution or a successful validation series.
+
+Observational overhead
+Adds one monotonic start and one completion read per completed ticket, one monotonic and wall read plus bounded-array append per observed admission, one poll-counter increment per existing poll, plain counters/offset reads, bounded JSON serialization and t.diagnostic. No new awaited work, operation, timer, listener, promise observer or close wrapper. No exact counterfactual total cost was measured.
+Actual source observation counts: containing20=26 completion diagnostics,40 admission entries,1182 poll increments; containing24=14 completion diagnostics,24 admission entries,627 poll increments. Existing application polls were not duplicated.
+External target preload containing20: setup4.456143ms, accumulated event capture51.634280ms, stack capture41.505649ms, callbacks10995.
+External target preload containing24: setup5.172854ms, accumulated event capture32.330063ms, stack capture21.769826ms, callbacks4637. No dropped events or controlled holds.
+These measured intervals/counts exclude inseparable AsyncLocalStorage, wrapper, scheduling and final-flush effects. They are not an exact counterfactual total cost or proof of timing equivalence without instrumentation.
+
+Command version24: UTC 2026-10-25T08:24:06.194503+00:00 -> 2026-10-25T08:24:06.239294+00:00; elapsed0.044778480s; native exit0.
+Log SHA256 cae1aadf7f04424e715f7a437eff2f1ff0d536618af17a1ddcf2bff45a043d5d
+Exact admission argv ["/usr/bin/flock", "-w", "45", "-E", "75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/validation.py", "build24"]
+Exact executable argv ["/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "--version"]
+Exact subreaper argv ["/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/run-subreaper.py", "/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "--version"]
+Cwd /tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project
+
+Command typecheck24: UTC 2026-10-25T08:24:06.239849+00:00 -> 2026-10-25T08:24:06.590037+00:00; elapsed0.350195195s; native exit0.
+Log SHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+Exact admission argv ["/usr/bin/flock", "-w", "45", "-E", "75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/validation.py", "build24"]
+Exact executable argv ["/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/node_modules/tsc-rs/bin/tsc-rs", "-p", "tsconfig.json", "--noEmit"]
+Exact subreaper argv ["/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/run-subreaper.py", "/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/node_modules/tsc-rs/bin/tsc-rs", "-p", "tsconfig.json", "--noEmit"]
+Cwd /tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/packages/cli
+
+Command build24: UTC 2026-10-25T08:24:06.590487+00:00 -> 2026-10-25T08:24:07.108475+00:00; elapsed0.517977845s; native exit0.
+Log SHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+Exact admission argv ["/usr/bin/flock", "-w", "45", "-E", "75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/validation.py", "build24"]
+Exact executable argv ["/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/node_modules/tsc-rs/bin/tsc-rs", "-p", "tsconfig.json"]
+Exact subreaper argv ["/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/run-subreaper.py", "/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/node_modules/tsc-rs/bin/tsc-rs", "-p", "tsconfig.json"]
+Cwd /tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/packages/cli
+
+Command version20: UTC 2026-10-25T08:24:16.461009+00:00 -> 2026-10-25T08:24:16.506209+00:00; elapsed0.045188802s; native exit0.
+Log SHA256 6fff481f6924527bd54888ea44c72b86b23a9df4ad8ea7bad1ff4b48ebb0fd53
+Exact admission argv ["/usr/bin/flock", "-w", "45", "-E", "75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/validation.py", "build20"]
+Exact executable argv ["/tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node", "--version"]
+Exact subreaper argv ["/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/run-subreaper.py", "/tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node", "--version"]
+Cwd /tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project
+
+Command typecheck20: UTC 2026-10-25T08:24:16.506756+00:00 -> 2026-10-25T08:24:16.875799+00:00; elapsed0.369049738s; native exit0.
+Log SHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+Exact admission argv ["/usr/bin/flock", "-w", "45", "-E", "75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/validation.py", "build20"]
+Exact executable argv ["/tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/node_modules/tsc-rs/bin/tsc-rs", "-p", "tsconfig.json", "--noEmit"]
+Exact subreaper argv ["/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/run-subreaper.py", "/tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/node_modules/tsc-rs/bin/tsc-rs", "-p", "tsconfig.json", "--noEmit"]
+Cwd /tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/packages/cli
+
+Command build20: UTC 2026-10-25T08:24:16.876402+00:00 -> 2026-10-25T08:24:17.374109+00:00; elapsed0.497694358s; native exit0.
+Log SHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+Exact admission argv ["/usr/bin/flock", "-w", "45", "-E", "75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/validation.py", "build20"]
+Exact executable argv ["/tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/node_modules/tsc-rs/bin/tsc-rs", "-p", "tsconfig.json"]
+Exact subreaper argv ["/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/run-subreaper.py", "/tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/node_modules/tsc-rs/bin/tsc-rs", "-p", "tsconfig.json"]
+Cwd /tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/packages/cli
+
+Command syntax: UTC 2026-10-25T08:24:24.245215+00:00 -> 2026-10-25T08:24:24.320695+00:00; elapsed0.075470305s; native exit0.
+Log SHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+Exact admission argv ["/usr/bin/flock", "-w", "45", "-E", "75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/validation.py", "helper-check"]
+Exact executable argv ["/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "--check", "/tmp/html-inbox-queue-observation-author-y804qmnr/observe.cjs"]
+Exact subreaper argv ["/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/run-subreaper.py", "/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "--check", "/tmp/html-inbox-queue-observation-author-y804qmnr/observe.cjs"]
+Cwd /tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project
+
+Command helper-check: UTC 2026-10-25T08:24:24.321146+00:00 -> 2026-10-25T08:24:24.397197+00:00; elapsed0.076059542s; native exit0.
+Log SHA256 3def9f36cedd219abd02d9be10b20c07e4b71343f654545bcc0a30d70f4947bd
+Exact admission argv ["/usr/bin/flock", "-w", "45", "-E", "75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/validation.py", "helper-check"]
+Exact executable argv ["/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "--require", "/tmp/html-inbox-queue-observation-author-y804qmnr/observe.cjs", "-e", "process.stdout.write('private preload initialized\\n')"]
+Exact subreaper argv ["/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/run-subreaper.py", "/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "--require", "/tmp/html-inbox-queue-observation-author-y804qmnr/observe.cjs", "-e", "process.stdout.write('private preload initialized\\n')"]
+Cwd /tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project
+
+Command containing20: UTC 2026-10-25T08:24:48.492648+00:00 -> 2026-10-25T08:24:57.270392+00:00; elapsed8.777736379s; native exit0.
+Log SHA256 48eb993e1405c99203324ef4cbcc5cf377664f92ae695194dfd3a8f06b91b486
+Exact admission argv ["/usr/bin/flock", "-w", "45", "-E", "75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/validation.py", "containing20"]
+Exact executable argv ["/tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node", "--require", "/tmp/html-inbox-queue-observation-author-y804qmnr/observe.cjs", "--test", "--test-concurrency=1", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/packages/cli/dist/sync-acquisition-deadline.test.js"]
+Exact subreaper argv ["/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/run-subreaper.py", "/tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node", "--require", "/tmp/html-inbox-queue-observation-author-y804qmnr/observe.cjs", "--test", "--test-concurrency=1", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/packages/cli/dist/sync-acquisition-deadline.test.js"]
+Cwd /tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project
+
+Command containing24: UTC 2026-10-25T08:26:33.976781+00:00 -> 2026-10-25T08:26:39.589608+00:00; elapsed5.612815931s; native exit1.
+Log SHA256 784654538b119f04f29d1ff264a8d178e5e0f154643e897b59816e3ee7b0450a
+Exact admission argv ["/usr/bin/flock", "-w", "45", "-E", "75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/validation.py", "containing24"]
+Exact executable argv ["/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "--require", "/tmp/html-inbox-queue-observation-author-y804qmnr/observe.cjs", "--test", "--test-concurrency=1", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/packages/cli/dist/sync-acquisition-deadline.test.js"]
+Exact subreaper argv ["/usr/bin/python3", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/run-subreaper.py", "/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "--require", "/tmp/html-inbox-queue-observation-author-y804qmnr/observe.cjs", "--test", "--test-concurrency=1", "/tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project/packages/cli/dist/sync-acquisition-deadline.test.js"]
+Cwd /tmp/html-inbox-queue-observation-author-y804qmnr/runtime/project
+
+Command qualifications
+UTC intervals surround the inner direct Popen/waitpid subreaper invocation after successful mutex admission; admission wait is not included. The same flock -w45 -E75 lock was used for each build/target, without polling or retries. Both complete containing files ran through the original child launcher with the unchanged35/40/45s envelopes. Only --require of the unchanged external observer was injected into the exact --gate-b-acquisition-worker argv. Exact outer argv are retained; per-child random temporary-root argv strings were deliberately not persisted in numeric diagnostic metadata. No direct-child substitute was used.
+The already-issued read-only containing24 success qualifier asserted expected exit0 against actual exit1 and exited1. Its raw traceback is preserved in containing24-success-qualifier-original-failure.txt with a separate qualification. It did not mutate source, application state or cleanup, and was not retried. A separate read-only extraction retained the failure evidence. No native cleanup error or cleanup serialization failure occurred.
+
+Cleanup and custody of artifacts
+All37 recorded current validation PIDs are absent; all10 own subreaper receipts have remaining=[]. The two containing invocations retained24 native ChildProcess exit/close pairs. All6533 observed native file handles closed,4485 for containing20 and2048 for containing24. Counts cover intercepted fs/promises.open handles, not an independent enumeration of readFile internal handles. No global-host absence claim.
+All observed listeners emitted close and exact loopback binds were rechecked and closed. Node20 unique ports33689,35571,36319,39439,46843; Node24 ports35281,42539,44881. There are8 unique endpoints and13 rebind observations because the original Node20 parent also rebinds its5 child endpoints. Exact UTCs are retained in cleanup receipts.
+Node24 left23 entries in its new own synthetic root. Only after retained native exits/closes, known-PID absence, observed handle closure and exact port checks were those entries removed. Only metadata was read during cleanup. Original nRRbiq and all parent historical scratch were untouched. All own TLS/token/signing-key/store and HOME/XDG/TMP/cache resources, private borrowed source, dependency symlink and dist outputs are removed. The symlink target remains intact. No dependencies were installed/downloaded and no credential contents were copied. Original fixture temporary TLS behavior remained unchanged.
+All403 prior diagnostic artifact hashes and65 original combined artifact hashes still match. Native failed combined and prior controlled-red receipts remain failed and unchanged. Initial365 nonowned checkout entries preserve exact bytes/modes/membership; all initial absences persist. Only the owned source remains reviewable. Original binary index bytes/mode unchanged, SHA256eb50a97fbcb8c43aa704e7fda2b294132f82f7eda1d525ab8b51ceff92a1bcb5. No nonowned checkout state needed restoration because borrowing occurred only in the removed private project.
+Final cleanup UTC 2026-10-25T08:30:50.465724+00:00; runtimeReleased=true.
+
+Helper hashes and exclusions
+observe.cjs SHA256 ff89ec101a970c083f1fb8bbd14cac1e7061815892460c9b2c91f22e2cb514ef
+validation.py SHA256 958a4e4ec34c988b4ab2d8d75d5ab61e5fa82ef322c46a4baf1a99001b867574
+qualify.py SHA256 7a1712532466ca66baf3a3e1136667c98a612b7139325d43b983e511782df94c
+finish.py SHA256 42e8b926985d36603dac4fb88bf06d15d34a7024e78d4e62e8601805539946c7
+validation-preregistration.json SHA256 5bc330aa4a9c80df37a147f964541d6fe40258c734411a3339c2684f10dba08f
+static-preservation-proof.json SHA256 57a652a7b0bf8150011d7e29c6ad097f282eebdd4980e1359f32b3014d9f97ff
+one-file.patch SHA256 4bb9600c3b081141eb901ebf0164c45cef262c18808e2f7365c20927ddbf992a
+terminal-cleanup.json SHA256 e2c284a88f95e93373d26e3086ddc13f9a9d7b169a363f59dffec334d979d2e2
+Copied established subreaper SHA256 e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72
+observe.cjs is byte-identical to the prior preregistered diagnostic helper; observer-vs-diagnosis.patch is empty. The new private validation coordinator supplies the fixed engine/build/containing/control series and private paths. Its complete comparison against the previous orchestration runner is retained in validation-coordinator-vs-prior-runner.patch. The prospective strict-assertion line was read from the actual compiled patched source.
+No controlled probe on patched source, no Node20 controlled expansion, no broad/unit-matrix/verify/stress/cap work, no deadline override, no real inbox/service/settings/network/security/Fleet/Mac/GitHub/PR action, no review/delegation/commit/push/public comment/SHA release.
+Inspect/integrate and decide disposition of the stopped validation. One combined verification and TWO NEW independent full-rubric reviews remain parent-owned; none are claimed complete.
+
+Reporting-only qualification
+Two report-writer parse failures exited1 before any report code executed. Both failed helper versions and raw errors are preserved; the corrected paragraph was syntax-parsed before successful report generation. No application, source, process, endpoint or cleanup action was repeated. See report-writer-original-failure.txt, report-writer-second-failure.txt and report-writer-final-qualification.json. These reporting failures are separate from the retained containing24 native test failure.

@@ -1,0 +1,180 @@
+TERMINAL READ-ONLY SOURCE DIAGNOSIS
+
+Native Windows24.22.1 CI failure, PR79 committed head cea30b48cbef814511e2eedfc83d1793bc011354
+
+Conclusion
+
+The native Windows actor and native correction are NOT established. No production defect, Windows process leak, OS defect, PID reuse event, or browser cause is proven by the supplied run. What is established independently is that the final numeric-PID disappearance assertion can report the exact failure despite complete owned-child cleanup. A narrower retained-child lifecycle oracle is justified as a test-only proposal, not as a proven fix for the historical Windows actor.
+
+The controlled negative and matching control reached the actual existing fixture final loop after all nine original semantic cases. They used real TLS proxies, actual retained ChildProcess objects, and an actually retained unrelated IPC sentinel. The negative failed at unchanged compiled line 232 with Missing expected exception. The control passed by replacing only the final oracle in memory with cached owned close completion status and post-close command rejection. The same simulated numeric lookup still succeeded against the live sentinel in the control. Both probes independently verified actual exit, close and disconnect, actual PID absence for original proxy children, exact listener rebind/close, and the untouched responsive sentinel. This is SIMULATION of a post-close PID identity ambiguity. It does not reproduce OS PID reuse and does not assign the original Windows actor.
+
+Scope and source pin
+
+Root: /home/agent/.t3/worktrees/html-inbox/t3-a5bde7d5
+HEAD before/after: cea30b48cbef814511e2eedfc83d1793bc011354
+165 tracked packages/cli/src files before/after.
+Source aggregate before/after: d7f1e5bbb5a4ebb0c66928f0ceb2402cc745770644697356f4099dff93340943
+Aggregate algorithm: git ls-files packages/cli/src in its returned order; each line is SHA256(file bytes), two spaces, relative path, newline; SHA256 of the concatenated manifest.
+Root tracked/untracked porcelain status before/after: empty.
+Root index before/after SHA256: 4a2462bc6f51ed3e6585549041a39d8079538226765a6bd8acb8efab1147e2db, byte-identical.
+Own detached disposable worktree started from exactly that commit and had the same 165-file aggregate and empty porcelain status through cleanup. No production, test or repo-doc file was edited, staged or committed. The simulation returned a Proxy wrapper and the control compiled a one-line oracle replacement in memory; on-disk source and compiled modules were unchanged. The proposed patch was only written outside the repo and git apply --check passed.
+
+Hosted checkout ecac3334941d2d5df6655add5130b1042603fa5a is logged as merging cea into b843e126fdb10f7038e9305c6791707bcfee9ff5. git cat-file could not find that object locally. No fetch, reconstruction, merge-tree equivalence, hosted source identity or whole-tree equivalence is claimed. The local compiler places the relevant assertion at the same compiled line 232; that proves only the observed line correspondence.
+
+The user-supplied AGENTS.md instructions and diagnosing-bugs/unslop skills were read. Repository/ancestor searches found no additional AGENTS.md or CONTEXT.md. Read the complete relevant sync-https-fixtures.test.ts, sync-https-fixtures.ts and sync-fixture-proxy.ts; the retained CLI/sentinel/clock lifecycle portions of sync-worker-fault-fixtures.ts; sync-shutdown-fixtures.ts; relevant architecture/acceptance passages; ADR0001; transport and shutdown ownership contracts; package/compiler/lock configuration; verify workflow and unit runner. Old Ubuntu crash and Windows browser helper workflows were not executed or continued. No delegation, Mac/Fleet/remote discovery or Windows job occurred.
+
+Supplied Windows evidence
+
+Log: /tmp/html-inbox-ci-cea30b4-windows-NIdMMkQZ/windows24-job.log
+Bytes: 421715
+SHA256: e85880107c6107f86388c20f35ed37fd05e9deacf0c9d11d4ece043f13362418
+CRLF bytes were read without rewriting; precise newline counts are in windows-log-integrity.json. failure.json was read from the same supplied directory.
+Run/job: https://github.com/deveshsangwan/html-inbox/actions/runs/40144853504/job/121023900536
+Native Windows Server2025, Node24.22.1, as supplied and logged. Unit total940/pass281/fail1/skip658/cancel0/todo0. Parent fixture duration5540.2847ms. All NINE nested cases passed, including IPv6, trust rejection, fault controls and active listener stops. Parent failed at dist/sync-https-fixtures.test.js:232, corresponding to source line255.
+
+At the failing iteration, the preceding isRunning false assertion passed. In source that flag is assigned only by the retained child's close event. The stop closure retains its actual ChildProcess, caches its promise, and resolves from that child's close event. It sends stop over IPC, then uses child.kill for bounded 1000/1000/2000ms escalation. Readiness first checks the reported PID against child.pid. The child process closes its server and disconnects IPC, which allows normal event-loop exit. There is no numeric-PID polling in isRunning or successful stop. A later process.kill(savedNumber,0) is a fresh lookup, not continuation of the retained-child observation.
+
+No failed child index, PID, per-process identity, close status or Windows process object was logged at the exact failure. The loop stopped before rebind of that failed entry and all later entries, so do not claim every final Windows port rebind completed. Earlier nested listener-stop checks passed. Browser, skill and package stages were not reached in this run. No navigation trace was produced. The prior Windows browser issue stays unresolved and separate.
+
+Ranked falsifiable explanations
+
+Recorded in hypotheses.txt before discriminating probes and shown to the user. Natural baseline construction preceded these probes.
+
+1. A post-close numeric lookup reaches a different live process. Prediction: alias only the post-close returned numeric PID to an actual retained sentinel; the original final assertion fails while real owned exit/disconnect/rebind succeeds, and a retained lifecycle oracle passes with sentinel alive. Supported as a possible mechanism by the controlled pair, not as historical PID reuse.
+2. Windows exited process-object retention / signal-zero semantics alone. Prediction: pinned Node/libuv code must permit successful signal zero for an exited retained object if this explains the failure. The checked source instead tests exit status and signaling, so ordinary exited-object retention alone is insufficient. A native runtime/OS defect cannot be excluded by source reading.
+3. Owned child did not settle, or close was mistaken for an early notification. Prediction: actual retained exit/close/connected observations conflict with the final close flag or stop rejects. All 23 owned children in each observed local run had exit then close, IPC disconnect, nonnull termination status and absent actual PID. This falsifies that mechanism in these local executions, not an unobserved Windows runtime fault. The hosted passed close flag plus documented close contract makes ordinary fixture nonsettlement less consistent with the available evidence.
+4. Relevant hosted merge/configuration differs. Prediction: comparison of the actual hosted source/runtime could differ from parent. Local merge object is absent and native Windows unavailable, so this remains unresolved. No equivalence claim or remote execution was substituted.
+
+Primary lifecycle sources
+
+All are official Node or Microsoft primary sources, fetched and hash-pinned in sources/manifest.json. Failed nodejs.org versioned HTML reads are preserved in sources/read-errors.txt; exact-tag raw GitHub docs were then used.
+
+Node24.22.1 ChildProcess docs describe close after process end/stdio closure and disconnect as ending IPC. The tagged JS implementation sets exit status in onexit and counts the IPC pipe among close obligations. These support the retained lifecycle oracle; command rejection alone is not claimed to inspect an OS handle.
+https://github.com/nodejs/node/blob/v24.22.1/doc/api/child_process.md#event-close
+https://github.com/nodejs/node/blob/v24.22.1/lib/internal/child_process.js
+
+process.kill is a numeric PID operation. Its C++ implementation invokes uv_kill. The tagged bundled libuv version is 1.52.1. In Windows process.c, uv_kill opens the current process for that number; signal zero checks GetExitCodeProcess and WaitForSingleObject. Exited or signaled objects produce ESRCH; STILL_ACTIVE with WAIT_TIMEOUT succeeds. Thus an open handle to an exited object alone does not explain a successful check. Success against a different live process is compatible with that path, but was not captured in this hosted run.
+https://github.com/nodejs/node/blob/v24.22.1/doc/api/process.md#processkillpid-signal
+https://github.com/nodejs/node/blob/v24.22.1/src/node_process_methods.cc
+https://github.com/nodejs/node/blob/v24.22.1/deps/uv/src/win/process.c#L1250-L1317
+https://github.com/nodejs/node/blob/v24.22.1/deps/uv/include/uv/version.h
+
+Microsoft documents handle validity after termination, the limited PID lifetime, and a signaled process object on termination. These facts distinguish handle lifetime from live process identity; they do not identify the Windows actor.
+https://learn.microsoft.com/en-us/windows/win32/procthread/process-handles-and-identifiers
+https://learn.microsoft.com/en-us/windows/win32/procthread/terminating-a-process
+https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getexitcodeprocess
+
+Bounded loop and probe design
+
+Available local test runtimes were Linux x64 Node24.21.0 and Node20.20.2. They are not native Windows24.22.1. System default Node24.19.0 was inspected only and never used for these tests. Runtime versions including embedded OpenSSL/libuv and system OpenSSL3.5.7 are in runtime-versions.json. Supplied binary SHA256s matched before and after; binaries were only read.
+
+Node24.21.0: /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node
+SHA256: 7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c
+Node20.20.2: /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node
+SHA256: 6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd
+
+Own run-owned.py uses PR_SET_CHILD_SUBREAPER, a private allowlisted environment, private HOME/XDG/TMP/catalog/npm/Corepack/pnpm stores, scoped process observation, log hashing and an outer finite deadline. No parent's check-coordinator/run.py or receipts were used. Selected test timeout60000ms and all original assertions/deadlines remained unchanged in the natural cases. Dependencies were freshly installed from frozen lockfile with scripts disabled in this worktree, then tsc-rs0.7.0 built the source. No broad verify or other suite was executed.
+
+There were TWO natural Node24 selected executions including the invalid first wrapper, ONE natural Node20 selected execution, and exactly ONE negative/control pair on Node24. No stress/matrix or retry-until-green was used. Observed runs add retained-child/listener observations and route the existing live Linux SIGSTOP through the directly retained ChildProcess handle. Signal-zero probes remain native; process.kill is not made to return a canned success/error. Simulation alone aliases the public saved PID after genuine owned close to the actual live sentinel PID. Original proxy PIDs are separately retained and checked for actual absence.
+
+The controlled pair uses the same code, real fixture cases and aliasing model; only the final oracle changes. The control additionally asserts that the same aliased native signal-zero lookup still returns true, to prove that its success did not come from making the alias disappear. The public proposed oracle uses cached stop result plus rejection of a closed fixture stats command. A guard check against a real running fixture rejects isRunning false before stop, and connected is still true there. This prevents a vacuous lifecycle verdict. All independent cleanup evidence remains required even when the original final assertion is red.
+
+Results
+
+natural24: original TAP10/10, nine nested pass, but INVALID harness receipt, wrapper exit1/test exit unknown. Not counted as a verified green execution.
+natural24-observed: exit0; tests10/pass10/fail0/skip0/cancel0/todo0; 5.380s wrapper wall time.
+natural20-observed: exit0; tests10/pass10/fail0/skip0/cancel0/todo0; 6.067s.
+simulated-negative24: exit1; tests10/pass9/fail1/skip0/cancel0/todo0; 5.404s; exact Missing expected exception at compiled232 with expected /ESRCH/ and operator throws.
+simulated-control24: exit0; tests10/pass10/fail0/skip0/cancel0/todo0; 5.414s.
+Each observed run: 23 proxies and 28 exact listeners independently checked. Linux has the existing additional forced SIGSTOP/SIGKILL path, so these counts are not asserted as Windows child counts. All nine nested cases ran without skip locally. Sentinel negative/control runs each verified pre/post pings, absence of fixture-induced disconnect/exit and a later owned IPC stop with exit0 and PID absence.
+
+Invalid/failed helper receipts and deviations
+
+The first build command guessed a nonexistent tsc-rs/tsc.js entrypoint. It exited1 before compilation or tests. The exact failure log is retained. Reading package.json identified bin/tsc-rs; the corrected build exited0. This was a setup correction, not a test retry.
+
+The first natural24 wrapper encountered ProcessLookupError while reading a disappearing /proc child stat and terminated before writing its completion receipt. Its test continued to emit a complete green TAP10/10 with 23-child cleanup diagnostic. Exact test-process exit status, initial PID list and parent-reap custody are unavailable, so it stays INVALID. Afterward, a scoped process scan found no remaining Node/OpenSSL fixture process. The helper now ignores only ENOENT/ESRCH races; its original version and traceback are retained. This execution counts against the natural cap. It is not retroactively replaced by the later valid observed execution.
+
+That first uninstrumented Linux run also executed the existing numeric process.kill(unresponsive.pid,SIGSTOP) branch. This did not satisfy the requested retained-handle-only signal routing. The original source targets a directly owned ready proxy, but there is no independent exact signal-target observation for this invalid run. No foreign target is evidenced; do not claim proven handle-only delivery for it. Later probes route that signal through a currently retained live ChildProcess. No saved/foreign PID was signaled by diagnostic cleanup. All sentinel cleanup used owned IPC without signals.
+
+No unchanged natural Windows red was reproduced, so diagnosing-bugs native reproduce/minimise/fix phases cannot be declared complete. The simulation supplies an exact, tight, red-capable oracle loop but proves only the identity assumption. Investigation stops at this limit rather than requesting or starting unauthorized native work.
+
+Unapplied proposal and parent gate
+
+proposed-test-only.patch is 518 bytes, SHA256 a888724f5af97bdde6ef7d2cdcb9ba7644c8ac9587e1a963b36204856dcd8f44.
+Only sync-https-fixtures.test.ts final loop changes: keep isRunning false; await cached child.stop; require an exit code or termination signal; require child.stats rejection with the close-event error; preserve exact child.url rebind/close and upstream rebind/close. All nine nested semantic cases and all original deadline values remain. The proposal changes no helper export or production interface and adds no schema/framework.
+
+proposal-contract.txt records retained exit/disconnected IPC, exact listener closure, true TLS/fault/custody distinction, untouched sentinel, no PID-derived signal authority, no platform skip or timeout increase, and original physical-QA gaps. The synthetic extra native lookup assertion used to validate the simulation is not part of the proposed project patch. Parent owns the frozen implementation gate, integration, combined checks, two fresh independent reviews and publication. No gate, release or physical QA head is advanced here; physical QA remains parked at d3eaaf9fab4ae84e4d66eed0292027da8f023a48. No remote job, live data, service, security/network setting, public comment, PR mutation/watch, commit/push/merge/deploy or physical QA was performed. PR79 was linked app-locally as required by the harness and confirmed watching=false.
+
+Cleanup
+
+cleanup.json records 92 retained proxy children plus 2 sentinel children across valid observed runs, all with actual close/disconnect and actual PID absence, checked again absent at final inspection. There are 112 per-run exact listener rebind/close receipts. Rebinds do not claim broader system port ownership. Valid wrappers observed no remaining descendants, no adopted survivors and all sampled PIDs absent after completion. No global kill or foreign signal was used for cleanup.
+
+Synthetic credential directories were already removed by real fixture after hooks, and the private catalog was empty. Private HOME/XDG/TMP/cache/store directories, generated dependencies/dist, and this investigation's disposable worktree were removed. Other worktree registrations are byte-for-byte unchanged when this worktree's entry is excluded; no other worktree contents were written. Root node_modules/dist remain absent as before. Root source aggregate, committed head, clean status and exact index bytes remain unchanged, as do both read-only runtime binaries. The invalid initial run's precise PID/reap limit remains recorded and is not filled in from later runs.
+
+Preserved outside the repo: this report; full command/resource/log receipts; initial/final manifests; failed helper version and errors; external probe/cleanup source; downloaded primary sources; unapplied patch and contract. No synthetic private key, inbox data or installed dependency/cache remains in this bundle.
+
+Exact commands, timestamps and log identities
+
+Each following invocation ran through this investigation's own wrapper. Receipt JSON contains the full allowlisted environment, cwd, primary exit and sampled-resource observations. stdout/stderr bytes were captured together; logs have not been rewritten. Seconds shown below are wrapper elapsed time, not test duration. Setup used git worktree add --detach /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/worktree cea30b48cbef814511e2eedfc83d1793bc011354. Inspection commands and their raw results are retained in the conversation tool transcript; no earlier-task helper was run.
+
+install
+python3 /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/run-owned.py install 120 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node /home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/corepack/dist/pnpm.js install --frozen-lockfile --ignore-scripts --store-dir /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/pnpm-store
+startedUtc=2026-10-25T00:05:25.955426+00:00; endedUtc=2026-10-25T00:05:31.275972+00:00; elapsedSeconds=5.320528011769056
+exit=0; testExit=see valid process exit; logBytes=1366; logSha256=89cdde51dfb8a4e5bbb88bcc68a8479fe24b3f72df7ed72fa1ece7995da0267d
+log=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/install.log; receipt=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/install.json
+
+build
+python3 /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/run-owned.py build 60 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/worktree/node_modules/tsc-rs/tsc.js -p packages/cli/tsconfig.json
+startedUtc=2026-10-25T00:05:50.418933+00:00; endedUtc=2026-10-25T00:05:50.462291+00:00; elapsedSeconds=0.043334778398275375
+exit=1; testExit=see valid process exit; logBytes=793; logSha256=c8ab7bd0b58b4b57a0eb4e1398f0e83703c5f380e6062e7bd570d54c5a2088e7
+log=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/build.log; receipt=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/build.json
+
+build-corrected
+python3 /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/run-owned.py build-corrected 60 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/worktree/node_modules/tsc-rs/bin/tsc-rs -p packages/cli/tsconfig.json
+startedUtc=2026-10-25T00:05:57.807756+00:00; endedUtc=2026-10-25T00:05:58.268605+00:00; elapsedSeconds=0.46082072146236897
+exit=0; testExit=see valid process exit; logBytes=0; logSha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+log=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/build-corrected.log; receipt=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/build-corrected.json
+
+natural24
+python3 /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/run-owned.py natural24 80 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node --test --test-reporter=tap packages/cli/dist/sync-https-fixtures.test.js
+startedUtc=not captured; wrapper invalid; endedUtc=not captured; elapsedSeconds=unknown
+exit=1; testExit=None; logBytes=2601; logSha256=8eea015bda345f89c219731ed14c0f30f2a57a79dfb8cdb21fd4cdd4e08668a5
+log=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/natural24.log; receipt=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/natural24-invalid.json
+
+natural24-observed
+python3 /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/run-owned.py natural24-observed 80 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/run-fixture.cjs natural
+startedUtc=2026-10-25T00:07:37.920766+00:00; endedUtc=2026-10-25T00:07:43.300591+00:00; elapsedSeconds=5.37980748526752
+exit=0; testExit=see valid process exit; logBytes=1358; logSha256=ce5fb4f0de35f4049e1dd87774281ffba21c3fca9c5d1cb43efb64c8a81b467a
+log=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/natural24-observed.log; receipt=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/natural24-observed.json
+
+natural20-observed
+python3 /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/run-owned.py natural20-observed 80 /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/run-fixture.cjs natural
+startedUtc=2026-10-25T00:08:06.000610+00:00; endedUtc=2026-10-25T00:08:12.067551+00:00; elapsedSeconds=6.066926115192473
+exit=0; testExit=see valid process exit; logBytes=2565; logSha256=e188fcccee1ee00c69651de0a5554366c2ef1e412a78ee0b2cc0fdcd43682a63
+log=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/natural20-observed.log; receipt=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/natural20-observed.json
+
+simulated-negative24
+python3 /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/run-owned.py simulated-negative24 80 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/run-fixture.cjs negative
+startedUtc=2026-10-25T00:08:17.015741+00:00; endedUtc=2026-10-25T00:08:22.420041+00:00; elapsedSeconds=5.404292502440512
+exit=1; testExit=see valid process exit; logBytes=2057; logSha256=2e2560e1bba44a8c1936e89780321c719f77e0c026f3f47560f86cc6138c4f2f
+log=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/simulated-negative24.log; receipt=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/simulated-negative24.json
+
+simulated-control24
+python3 /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/run-owned.py simulated-control24 80 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/run-fixture.cjs control
+startedUtc=2026-10-25T00:08:44.108813+00:00; endedUtc=2026-10-25T00:08:49.522869+00:00; elapsedSeconds=5.414039357565343
+exit=0; testExit=see valid process exit; logBytes=1382; logSha256=3dc240e8fb0b5a362d6f7ff680a94b648fe49b29fdd4732c916d977cb12e6e80
+log=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/simulated-control24.log; receipt=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/simulated-control24.json
+
+patch-applicability
+python3 /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/run-owned.py patch-applicability 15 /usr/bin/git apply --check /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/proposed-test-only.patch
+startedUtc=2026-10-25T00:10:30.826534+00:00; endedUtc=2026-10-25T00:10:30.837870+00:00; elapsedSeconds=0.01132141798734665
+exit=0; testExit=see valid process exit; logBytes=0; logSha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+log=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/patch-applicability.log; receipt=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/patch-applicability.json
+
+cleanup
+python3 /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/run-owned.py cleanup 30 /usr/bin/python3 /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/cleanup-owned.py
+startedUtc=2026-10-25T00:11:03.836520+00:00; endedUtc=2026-10-25T00:11:04.642370+00:00; elapsedSeconds=0.8058314304798841
+exit=0; testExit=see valid process exit; logBytes=672; logSha256=9d687bdd2d03bf6fbe43822095260f6ba12cde800134710a0ccabe9e6ae1725b
+log=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/cleanup.log; receipt=/tmp/html-inbox-win-lifecycle-cea-_ah6z2kv/receipts/cleanup.json
+
+Primary-source response manifests and every preserved artifact are covered by artifacts.sha256. The report is complete; no implementation is applied or pending in the repo.

@@ -1,0 +1,15 @@
+# Subtest: real HTTPS activation times out with retained authority
+not ok 344 - real HTTPS activation times out with retained authority
+  ---
+  duration_ms: 4353.083521
+  location: '/tmp/qa-case203-source-preparation-9zaoemx8/runtime/project/packages/cli/dist/sync-shutdown-ingestion.test.js:61:9'
+  failureType: 'testCodeFailure'
+  error: 'Timed out waiting for real admitted mutation seam'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    waitUntil (/tmp/qa-case203-source-preparation-9zaoemx8/runtime/project/packages/cli/dist/sync-worker-fault-fixtures.js:47:11)
+    async TestContext.<anonymous> (/tmp/qa-case203-source-preparation-9zaoemx8/runtime/project/packages/cli/dist/sync-shutdown-ingestion.test.js:203:13)
+    async Test.run (node:internal/test_runner/test:797:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# 2 exact ports rebound; intercepted handles disposed; synthetic root removed

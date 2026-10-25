@@ -1,0 +1,99 @@
+BLOCKED: stop at first nonzero command or failed integrity/resource gate; no remaining commands run
+Terminal UTC 2026-10-25T04:50:55.574233+00:00. Exclusive root ignored build/runtime ownership released to parent.
+Source167 aggregate b3fe50512a22f17215abe1dcb0dac403a7f428c58892b2c94ccf42f4b9bcd82b; compiled332 aggregate 636ec101bfa1f336b5aac653d5d40f56e4c840cf41f215e8a0ec2271ebccceda.
+All387 nonignored paths individually inspected and hashed: 339 tracked/48 untracked. HEAD/branch/status/index remained pinned after every completed command. Raw index e3dd34cce6446819560c71040ab9ba111d2c07087bc8b41e74f2922b3dcd1562.
+Historical tested-source-qa manifest unchanged and intentionally not used as current pin. Ignored roots: ['node_modules/', 'packages/cli/bundle/', 'packages/cli/dist/'].
+
+COMMAND 1 qa-ci-cea-pagination-established-typecheck-build2421
+["python3", "/tmp/html-inbox-phase2-checks-1mpkndv5/check-coordinator.py", "qa-ci-cea-pagination-established-typecheck-build2421", "bash", "/tmp/html-inbox-cea-pagination-established-evidence-zc_5yzxj/scripts/command1.sh"]
+flock -w45 -E75 admission around command; dispatchUTC 2026-10-25T04:34:15.360521+00:00; returnUTC 2026-10-25T04:34:16.297001+00:00; nativeExit 0; coordinator elapsed 0.902880430s.
+LogSHA256 96e18f7e8d1c815c60b86b28863cb2707d5eb3bf4c1d4f4c92a633ce1a590cdb
+Original receipt /tmp/html-inbox-phase2-checks-1mpkndv5/receipts/qa-ci-cea-pagination-established-typecheck-build2421.json
+Groups []
+Skips []
+
+COMMAND 2 qa-ci-cea-pagination-established-containing2421
+["python3", "/tmp/html-inbox-phase2-checks-1mpkndv5/check-coordinator.py", "qa-ci-cea-pagination-established-containing2421", "bash", "/tmp/html-inbox-cea-pagination-established-evidence-zc_5yzxj/scripts/command2.sh"]
+flock -w45 -E75 admission around command; dispatchUTC 2026-10-25T04:35:02.009752+00:00; returnUTC 2026-10-25T04:35:40.205667+00:00; nativeExit 0; coordinator elapsed 38.162534714s.
+LogSHA256 4f6121037ac7a7b635de9339058724a8805a3def0913ae3c85c5276917139438
+Original receipt /tmp/html-inbox-phase2-checks-1mpkndv5/receipts/qa-ci-cea-pagination-established-containing2421.json
+Groups [{"tests": 39, "suites": 0, "pass": 39, "fail": 0, "cancelled": 0, "skipped": 0, "todo": 0, "duration_ms": 37996.694675}]
+Skips []
+
+COMMAND 3 qa-ci-cea-pagination-established-containing20
+["python3", "/tmp/html-inbox-phase2-checks-1mpkndv5/check-coordinator.py", "qa-ci-cea-pagination-established-containing20", "bash", "/tmp/html-inbox-cea-pagination-established-evidence-zc_5yzxj/scripts/command3.sh"]
+flock -w45 -E75 admission around command; dispatchUTC 2026-10-25T04:35:54.027675+00:00; returnUTC 2026-10-25T04:36:42.370161+00:00; nativeExit 0; coordinator elapsed 48.309597731s.
+LogSHA256 8644dca3c2214e154dfdc9ddfa828fa093cc0a91ab3b3552ac911b4c41686fe7
+Original receipt /tmp/html-inbox-phase2-checks-1mpkndv5/receipts/qa-ci-cea-pagination-established-containing20.json
+Groups [{"tests": 39, "suites": 0, "pass": 39, "fail": 0, "cancelled": 0, "skipped": 0, "todo": 0, "duration_ms": 48176.44575}]
+Skips []
+
+COMMAND 4 qa-ci-cea-pagination-established-paced2421
+["python3", "/tmp/html-inbox-phase2-checks-1mpkndv5/check-coordinator.py", "qa-ci-cea-pagination-established-paced2421", "bash", "/tmp/html-inbox-cea-pagination-established-evidence-zc_5yzxj/scripts/command4.sh"]
+flock -w45 -E75 admission around command; dispatchUTC 2026-10-25T04:36:52.826842+00:00; returnUTC 2026-10-25T04:37:35.202468+00:00; nativeExit 0; coordinator elapsed 42.342167854s.
+LogSHA256 fc385ab1cd4c61f06dc4b797e7d52b503522db7a74ef61cc9380cee9ac848165
+Original receipt /tmp/html-inbox-phase2-checks-1mpkndv5/receipts/qa-ci-cea-pagination-established-paced2421.json
+Groups [{"tests": 1, "suites": 0, "pass": 1, "fail": 0, "cancelled": 0, "skipped": 0, "todo": 0, "duration_ms": 42191.919084}]
+Skips []
+
+COMMAND 5 qa-ci-cea-integrated-verify2421-attempt2
+["python3", "/tmp/html-inbox-phase2-checks-1mpkndv5/check-coordinator.py", "qa-ci-cea-integrated-verify2421-attempt2", "bash", "/tmp/html-inbox-qa-history-amcemjlx/verify-hosted-node2421.sh"]
+flock -w45 -E75 admission around command; dispatchUTC 2026-10-25T04:38:04.241788+00:00; returnUTC 2026-10-25T04:43:04.003297+00:00; nativeExit 0; coordinator elapsed 299.725236177s.
+LogSHA256 1d4f1528987c446f8f8a0beaee1e167d4d93c5a5a50748985e86b557599c5736
+Original receipt /tmp/html-inbox-phase2-checks-1mpkndv5/receipts/qa-ci-cea-integrated-verify2421-attempt2.json
+Groups [{"tests": 1026, "suites": 0, "pass": 1025, "fail": 0, "cancelled": 0, "skipped": 1, "todo": 0, "duration_ms": 249704.374031}, {"tests": 50, "suites": 0, "pass": 48, "fail": 0, "cancelled": 0, "skipped": 2, "todo": 0, "duration_ms": 17730.572654}, {"tests": 23, "suites": 0, "pass": 22, "fail": 0, "cancelled": 0, "skipped": 1, "todo": 0, "duration_ms": 16608.743186}, {"tests": 9, "suites": 0, "pass": 9, "fail": 0, "cancelled": 0, "skipped": 0, "todo": 0, "duration_ms": 173.701849}]
+Skips [{"line": 6113, "text": "ok 813 - Windows rollback stops a real temporary descendant before its delayed file write # SKIP The real taskkill process-tree check requires Windows."}, {"line": 6917, "text": "\ufe63 Windows PowerShell resolves native npm shims and ignores function/script shadowing (0.063384ms) # SKIP"}, {"line": 6918, "text": "\ufe63 Windows PowerShell falls back for an unsupported installed shim without running it (0.052361ms) # SKIP"}, {"line": 6963, "text": "\ufe63 live CDN Tailwind and Mermaid rendering (0.159577ms) # Set HTML_INBOX_LIVE_CDN=1 for current upstream library checks"}]
+
+COMMAND 6 qa-ci-cea-integrated-unit20-attempt2
+["python3", "/tmp/html-inbox-phase2-checks-1mpkndv5/check-coordinator.py", "qa-ci-cea-integrated-unit20-attempt2", "bash", "/tmp/html-inbox-qa-history-amcemjlx/node20-unit.sh"]
+flock -w45 -E75 admission around command; dispatchUTC 2026-10-25T04:44:32.751988+00:00; returnUTC 2026-10-25T04:49:46.984076+00:00; nativeExit 1; coordinator elapsed 314.196271181s.
+LogSHA256 70ca06d05b563082d8aba65cc83f8c18348da9fd9ea35cba4b81b6fa7f710de2
+Original receipt /tmp/html-inbox-phase2-checks-1mpkndv5/receipts/qa-ci-cea-integrated-unit20-attempt2.json
+Groups [{"tests": 1026, "suites": 0, "pass": 1023, "fail": 2, "cancelled": 0, "skipped": 1, "todo": 0, "duration_ms": 314001.450968}]
+Skips [{"line": 5216, "text": "ok 813 - Windows rollback stops a real temporary descendant before its delayed file write # SKIP The real taskkill process-tree check requires Windows."}]
+
+Counts overlap between containing/selected/full suites; no distinct-coverage sum. Paced selection excludes38 original cases; native24 TAP skipped0 and1selectedpass.
+Paced trace: all129seed starts/barriers/250ms timer entries/exits/returns,11realprotocol outcomes,128+1pages,evidence129,actualaftercut and all original negatives verified. Request5000/session60000 unchanged; repository120000 outer used directly. Only helper evidence path and actualdist prefix changed. Historical helper30000 annotation is stale metadata.
+Original outer audits reapedAdopted counts [0, 0, 0, 0, 168, 126]; remaining [[], [], [], [], [], []]; audited adopted PIDs still present []; explicitly logged fixture PIDs still present []; retainedpacedPIDs [262756, 262768], present [].
+No continuing owned compiled processes: []. Raw scratch additions {"/tmp/html-inbox-phase2-checks-1mpkndv5/tmp": ["html-inbox-clock-skew-fixture-jULjGc", "html-inbox-clock-skew-fixture-jULjGc/source", "html-inbox-clock-skew-fixture-jULjGc/source/sync", "html-inbox-sync-tls-r5yYzc", "html-inbox-sync-tls-r5yYzc/1000.pem", "html-inbox-sync-tls-r5yYzc/ca-index", "html-inbox-sync-tls-r5yYzc/ca-index.attr", "html-inbox-sync-tls-r5yYzc/ca-index.old", "html-inbox-sync-tls-r5yYzc/ca-serial", "html-inbox-sync-tls-r5yYzc/ca-serial.old", "html-inbox-sync-tls-r5yYzc/expired-ca.cnf", "html-inbox-sync-tls-r5yYzc/expired.cnf", "html-inbox-sync-tls-r5yYzc/expired.csr", "html-inbox-sync-tls-r5yYzc/expired.key", "html-inbox-sync-tls-r5yYzc/expired.pem", "html-inbox-sync-tls-r5yYzc/openssl.cnf", "html-inbox-sync-tls-r5yYzc/rogue-ca.key", "html-inbox-sync-tls-r5yYzc/rogue-ca.pem", "html-inbox-sync-tls-r5yYzc/rogue.cnf", "html-inbox-sync-tls-r5yYzc/rogue.csr", "html-inbox-sync-tls-r5yYzc/rogue.key", "html-inbox-sync-tls-r5yYzc/rogue.pem", "html-inbox-sync-tls-r5yYzc/trusted-ca.key", "html-inbox-sync-tls-r5yYzc/trusted-ca.pem", "html-inbox-sync-tls-r5yYzc/trusted.cnf", "html-inbox-sync-tls-r5yYzc/trusted.csr", "html-inbox-sync-tls-r5yYzc/trusted.key", "html-inbox-sync-tls-r5yYzc/trusted.pem", "html-inbox-sync-tls-r5yYzc/wrong-host.cnf", "html-inbox-sync-tls-r5yYzc/wrong-host.csr", "html-inbox-sync-tls-r5yYzc/wrong-host.key", "html-inbox-sync-tls-r5yYzc/wrong-host.pem"], "/tmp/html-inbox-phase2-checks-1mpkndv5/home": [], "/tmp/html-inbox-phase2-checks-1mpkndv5/config": [], "/tmp/html-inbox-phase2-checks-1mpkndv5/data": [], "/tmp/html-inbox-phase2-checks-1mpkndv5/state": [], "/tmp/html-inbox-phase2-checks-1mpkndv5/runtime": []}; removals {"/tmp/html-inbox-phase2-checks-1mpkndv5/tmp": [], "/tmp/html-inbox-phase2-checks-1mpkndv5/home": [], "/tmp/html-inbox-phase2-checks-1mpkndv5/config": [], "/tmp/html-inbox-phase2-checks-1mpkndv5/data": [], "/tmp/html-inbox-phase2-checks-1mpkndv5/state": [], "/tmp/html-inbox-phase2-checks-1mpkndv5/runtime": []}. Cache additions0 /removals0 /bytechanges3; paths recorded in integrity receipt, not bucket counts. Newtmp roots []; privatepacedtmp [].
+Historical groups {'historicalReceiptAndLogFiles': 501, 'firstRoundLogManifest': 636, 'referencedHistoricalLogs': 487, 'previousEvidenceFiles': 433} preserved; memberships unchanged. Original global audit byteprefix200838, SHA256f1cddd141c492634c7d911aa985d24665881b9b6f57dcf13fa3cee2d15a461ae unchanged. Mutablegeneric outputs copied before and after; immutable copies are separate from mutable originals.
+Dispatch UTC and return UTC directly surround blocking flock+coordinator invocation and include admission. Coordinator elapsed is its original wall-time measurement, compiler inner UTC is printed around each native compiler. Trace UTC/monotonic values are original helper observations. No inferred descendant start or waitpid proof is manufactured.
+Original outer wrapper audits numeric adopted PID/status and remaining child lists. Explicitly logged fixture PIDs are checked absent; paced retained-child events additionally include native close/IPC and observed start ticks. Only exact logged paced endpoints receive numeric rebind credit; other cases cite original fixture assertions without inventing endpoint numbers or a global rebind count. Scratch inherited membership and cache hashes are bounded to established private roots; no whole-host/home safety claim. No saved-PID/foreign signals or inherited scratch/cache deletion.
+First combined red, provider interruptions, invalid static checker, parent checker correction and author ESRCH supervisor failure remain immutable. Author39/39TAP with missing waitpid is still failed; earlier control mechanisms do not assign original actors. Historical tested-source-qa manifest remains historical, not current pin.
+Local Linux synthetic namespace only. No hosted/native Windows/macOS/physical acceptance, review, commit or QA SHA release. Parent owns integration acceptance and two fresh reviews.
+Audit-tool qualifications: ["Initial command5 audit incorrectly demanded unchanged ncc build-cache packs. Original failure preserved; exact three normal prepack outputs classified narrowly with before/after hashes. No test rerun.", "Two read-only evidence lookups named absent script paths; raw errors retained, corrected only to existing package source.", "Earlier log parser could read adopted summary counts as PIDs. Final extraction accepts only explicit child PID reaped lines; original parser and earlier receipts retained.", "Initial unissued terminal draft described32residual entries as one root; corrected from actual path inventory to two roots (3clock+29TLS). Initial draft/inventory/code retained; no test or cleanup action changed."]
+
+Original failure YAML/stacks:
+command6.log:1095
+not ok 203 - local-before-completion lease expiry is bounded independently of remote timestamps and wall clock rollback
+  ---
+  duration_ms: 1689.820284
+  location: '/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-clock-skew.test.js:146:5'
+  failureType: 'hookFailed'
+  error: "ENOTEMPTY: directory not empty, rmdir '/tmp/html-inbox-phase2-checks-1mpkndv5/tmp/html-inbox-clock-skew-fixture-jULjGc/source/sync'"
+  code: 'ENOTEMPTY'
+  ...
+
+command6.log:2600
+not ok 453 - seeded pending publication survives real foreground linked cut and autonomously reaches intended custody
+  ---
+  duration_ms: 28119.664661
+  location: '/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-ownership-worker.test.js:129:5'
+  failureType: 'testCodeFailure'
+  error: 'Managed store lock deadline exceeded; unknown or live owners are never stolen'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    checkAcquisition (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-files.js:400:15)
+    acquireSyncOwnership (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-files.js:299:9)
+    async withProcessLock (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-files.js:224:23)
+    async withStoreLock (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-files.js:210:16)
+    async ManagedSyncStore.setRetryPaused (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-store.js:757:9)
+    async TestContext.<anonymous> (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-ownership-worker.test.js:153:9)
+    async Test.run (node:internal/test_runner/test:797:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+
+
+TERMINAL BLOCKERS: Node20 command6 exited1 with two original failures. Test203 hook ENOTEMPTY at clock-skew source/sync; original TAP includes no stack. Test453 store lock deadline at setRetryPaused; original stack retained. Two new residual synthetic roots remain: html-inbox-clock-skew-fixture-jULjGc has3path entries and html-inbox-sync-tls-r5yYzc has29,32total including roots/nested files/directories. The clock root matches the original test203 hook path; TLS root provenance remains unassigned. Both left untouched, no actor attribution. No green combined verdict or cleanup-complete claim.
+
+Artifact inventory: artifact-inventory.json + artifact-inventory.sha256. Full individual file inspection: all-387-file-inspection.json. Source/compiled before and every command checkpoint manifests retained. Exact per-case process/port evidence and capacity/progress citations retained separately. All receipts and raw logs are immutable copies.

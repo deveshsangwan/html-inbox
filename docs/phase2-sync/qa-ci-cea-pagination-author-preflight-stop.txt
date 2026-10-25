@@ -1,0 +1,60 @@
+TERMINAL AUTHOR STOP. Runtime released. Prepared patch is UNVERIFIED.
+Report UTC: 2026-10-25T04:14:43.137504+00:00
+
+The authoritative gate was read in full and hash-verified before source edits:
+/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/docs/phase2-sync/qa-ci-cea-pagination-budget-contract.md
+SHA256 96827dfa1909d83ecf2fde838a6cda014c3ba0b9cfb17ac4e687327fc194332f.
+Its rule says: "Any unexpected failure, missed hook or admission failure stops."
+That rule was applied to a private static source-scope checker failure before runtime.
+
+What stopped:
+The Python stdin checker exited 1 at its first scope assertion. Its new-case start pointed to the inserted reason comment; its search for the next test then matched the selected test itself. The displayed diff remained confined to the selected case. No corrected checker or runtime command was run. This is a private verification-tool failure, not evidence of a compiler, test, protocol, cleanup, pacing-hook or admission failure.
+The exact issued Python stdin is retained in receipts/static-scope-check.invalid.py and its complete raw error in receipts/static-scope-check.log. The script aborted before copying the authored source to the private build project or preparing a runner/pacing helper. receipts/static-failure.json records the native exit and command. The direct static command did not capture an exact UTC start/end; this omission is disclosed, not reconstructed from timestamps. No runtime command UTC, count, exclusion or pacing receipt exists for this author attempt.
+
+Prepared change:
+Only packages/cli/src/sync-protocol.test.ts remains modified in the isolated child worktree. The selected 129-descriptor case has a finite outer timeout of 120_000 ms, a short aggregate-seeding reason comment, and a local synchronous diagnostic helper. It records monotonic elapsed milliseconds, current stage, returned seed count and event. Seed progress is emitted after successful publication returns at 32, 64, 96 and 129. Milestones cover setup, both identities, inventory, push/pull pages, readiness, activation, after-cut publication, immutable evidence checks, every original rejection and assertion completion. The early after hook reports only "teardown entered" while retaining the last stage; it does not claim completed cleanup.
+The patch introduces no asynchronous operation or extra request. The inspected diff retains all original publications, assertions and protocol operations. This is inspection of a prepared patch, not successful automated scope/typecheck/runtime validation.
+The existing parent sender-child ownership and first-1000/retry-5000 request changes remain in the owned file. They are separated from this author's delta in the retained patches.
+
+Patch handoff:
+receipts/author-delta.patch: new pagination change against the refreshed parent target.
+receipts/parent-existing-delta.patch: earlier parent changes against this child's committed target.
+receipts/full-owned.patch: complete owned file diff against child HEAD, including earlier parent changes.
+receipts/authored-sync-protocol.test.ts: exact prepared full file.
+Starting parent target SHA256: 071140dae54c8537775d8cc54d053f3370e4fbade3270623ed1f66b589ad5e5f.
+Prepared target SHA256: d74ade6b6837451e639ac7c0b223c372e4f381916ba8caef4f4b753db609d96c.
+The parent was not edited. No commit, push, PR action, review, native/Fleet/physical job, merge, deployment or QA release occurred.
+
+Source custody:
+All current 167 manifest files were copied and individually hash/mode verified before overlaying the isolated child. The original bytes, modes and absences were retained first. This included the current finalization test, Gate A/B source and both new tests.
+Authoritative borrowed source aggregate: 9c2539202ce4cd270cf4bec16d3dc4d772b2d69cf0c980617d9d75b6d36c54a3.
+Temporary authored 167-file overlay aggregate: b3fe50512a22f17215abe1dcb0dac403a7f428c58892b2c94ccf42f4b9bcd82b.
+This aggregate describes an untested temporary source input, not a released QA SHA or a combined-check result.
+All 167 borrowed source files remain in borrowed/ with their manifest in inputs/. Original present files remain in original/, with original absence/mode records in snapshot.json. The old paired831 snapshot was not used for this author change.
+The exact Node24.21.0 and Node20.20.2 binary hashes were checked read-only during snapshot preparation. Neither binary was executed in this author attempt.
+Node24 SHA256: 7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c.
+Node20 SHA256: 6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd.
+
+Verification status:
+NOT RUN: frozen-lock ignore-scripts setup.
+NOT RUN: Node24 typecheck, build and full containing39-case file.
+NOT RUN: Node20 typecheck, build and full containing39-case file.
+NOT RUN: pacing helper/wrapper syntax checks.
+NOT RUN: patched-source Node24 selected250ms paced arm.
+Runtime commands0; selected/full-file executions0; no test exclusions or native pass/fail counts to credit; no authored compiled artifact; no runtime pacing hits or milestone proof. The existing controlled evidence does not validate this new source patch. No retry, new investigation or substitute probe followed the stop.
+
+Cleanup and index qualification:
+All166 nonowned borrowed files were restored to original bytes/modes/absences. Both originally absent tests were removed from the child overlay. Final worktree status contains only the owned protocol test. Child HEAD remains cea30b48cbef814511e2eedfc83d1793bc011354.
+Staged file entries from git ls-files --stage -z are byte-identical before/after, SHA256 ff30f7cc77cc15e69255077a685c1e3a82a3de516d6e21f3da988740bf4e8fab. GIT_OPTIONAL_LOCKS=0 was used for all git inspection.
+Raw index before SHA256: 823fc3b5ef0a9c9612312eedddd2ddd8dcda679cd39204e7fe047ad6f2b35ebf.
+Raw index after SHA256: 2058d275db5fcac0de4b4e2ba16cb58dce032568ce0a46773fe6c5c18a80871f.
+Raw index bytes and filesystem mtime/ctime changed. No raw-index-unchanged claim or attribution of the metadata change is made. index.original, index.after and the exact original staged-entry bytes are retained. Detailed stat values are in receipts/terminal-custody-cleanup.json.
+Only owned project, empty build directories, private environment and cache roots were removed. No dependencies were installed, no synthetic credentials were generated, no runtime children or listeners were started, no mutex was acquired and no signals or lock removals were performed. Scoped retained-child/rebind evidence is not applicable to this stopped attempt; there is no host-global absence claim.
+RuntimeReleased=true. No further runtime work is planned under this author attempt.
+
+Historical evidence:
+The full file memberships and hashes remain exact for prep347 files, runtime53, pair78 and observation87, including each bundle's manifest. Their artifact counts remain346/52/77/86.
+The original local full-root red, 30s controlled red, late publication ENOENT after teardown, initial invalid helper and earlier static-analysis counting failure all remain unchanged. The completed private120s observation remains sufficient controlled aggregate-budget evidence, not proof of original CI cause and not validation of this untested authored patch. No blanket host-pressure/common-cause claim.
+Parent integration, combined checks and two fresh full-rubric reviews remain outstanding. The immediate remaining prerequisite is an authorized continuation of verification after addressing the retained private static checker defect. No source or runtime pass is claimed by this terminal report.
+
+Complete cleanup/generic git command UTC/argv/native exits and source/index state are in receipts/terminal-custody-cleanup.json. New artifact hashes are listed in artifacts.sha256.json, excluding the manifest itself. Static command UTC limitation is explicit above.

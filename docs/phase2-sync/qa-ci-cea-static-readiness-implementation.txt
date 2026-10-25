@@ -1,0 +1,114 @@
+SOURCE WRITING FREEZE is terminal at 2026-10-25T00:22:35.803173+00:00. The only source change is one awaited DOMContentLoaded boundary in scripts/viewer-browser.test.mjs, immediately after the existing Back-to-inbox exact URL equality and before the unchanged strict two-row assertion. The exact approved one-line patch is applied. No further source writing is in progress.
+
+Worktree: /home/agent/.t3/worktrees/html-inbox/t3-d7783196, retained and still bound to this T3 project thread. HEAD remains cea30b48cbef814511e2eedfc83d1793bc011354. Final git status is exactly " M scripts/viewer-browser.test.mjs". git diff --numstat reports 1 insertion, 0 deletions in that one file. git diff --check and git diff --cached --exit-code both exited 0. No commits, pushes, public comments, PR mutation, watcher, merge, deployment, physical release or shared-worktree switching occurred in this implementation phase. Existing app-local PR79 link was only read.
+
+The frozen contract was fully read and SHA-verified BEFORE applying the source edit: /home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/docs/phase2-sync/qa-ci-cea-static-readiness-contract.md, SHA256 c57c20960c572adff2a32276523ff62decd0685438c3aa66d6e2f3087b38ce5d. It was rechecked at freeze with the same hash. Frozen contract bytes are copied into frozen-contract.txt outside the repository. Approved patch SHA256 4e89e72c5970524139b8770ef6f027a220b394e1b5b600eab6b191ef14bf3023 was verified before editing, and final canonical.patch is byte-identical to it. No parent-owned document was written.
+
+Final entire owned-file SHA256: 5b1a1ea4004ac202188359b8687978603a309d862a39cc94f76209ecd32a6d04. This same hash was checked before and after every build/syntax/browser command. Every browser command ran the actual repository scripts/viewer-browser.test.mjs. No scratch test module, loader source transform, inserted in-memory readiness oracle, replacement count, assertion interception or new success shortcut was used. final-viewer-browser.test.mjs is an evidence snapshot only and was never executed. The outside-repo preload forwards the actual source wait with its original arguments and records entry/completion; it does not add the wait. It changes response delivery only in the two explicitly selected probes, and confines all browser traffic.
+
+Exact source diff, fully inspected against HEAD:
+diff --git a/scripts/viewer-browser.test.mjs b/scripts/viewer-browser.test.mjs
+index adfcf9d..61286d2 100644
+--- a/scripts/viewer-browser.test.mjs
++++ b/scripts/viewer-browser.test.mjs
+@@ -61,6 +61,7 @@ for (const mode of ["local", "static"]) {
+ 
+     await page.getByRole("link", { name: "Back to inbox" }).click();
+     assert.equal(page.url(), inboxUrl);
++    await page.waitForLoadState("domcontentloaded");
+     assert.equal(await page.locator("[data-search-text]").count(), 2);
+     await assertTheme(page, "light");
+     await page.getByRole("link", { name: "Deployment notes", exact: true }).click();
+
+Original theme, document title/path, content/frame, sandbox, parent DOM isolation, blocked network and root-no-listing assertions are byte-for-byte retained. The strict URL assertion is unchanged. The count still uses assert.equal(await page.locator("[data-search-text]").count(), 2). No row polling, timeout override, sleep, navigation retry, new skip, concurrency setting, production edit, new framework or other test edit was added. The response scheduling timer exists only in the private probe hook. The original 30000ms case and existing 10000ms page/context/navigation defaults remain. Optional live-CDN checks retain their original condition and bounds.
+
+Validation finished without unexpected reds. Syntax passed on exact Node24.21.0 and Node20.20.2. The complete containing viewer-browser file passed once on each runtime, with 13 total tests, 12 passed, 0 failed, 1 existing optional live-CDN skip, 0 cancelled and 0 todo. No retries, broad verify, unrelated test file, new platform matrix or live CDN execution ran. Build was performed once in this own checkout. The same emitted build tree and same final test bytes were used for both runtime suites.
+
+build: UTC 2026-10-25T00:19:39.284298+00:00 through 2026-10-25T00:19:39.823583+00:00; exit 0; counts not applicable.
+Exact command: python3 /tmp/html-inbox-static-readiness-source-f50us453/runner.py build /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node node_modules/tsc-rs/bin/tsc-rs -p packages/cli/tsconfig.json
+Log /tmp/html-inbox-static-readiness-source-f50us453/artifacts/build/run.log; 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+Receipt /tmp/html-inbox-static-readiness-source-f50us453/artifacts/build/receipt.json.
+
+syntax-node24: UTC 2026-10-25T00:19:50.208540+00:00 through 2026-10-25T00:19:50.273629+00:00; exit 0; counts not applicable.
+Exact command: python3 /tmp/html-inbox-static-readiness-source-f50us453/runner.py syntax-node24 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node --check scripts/viewer-browser.test.mjs
+Log /tmp/html-inbox-static-readiness-source-f50us453/artifacts/syntax-node24/run.log; 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+Receipt /tmp/html-inbox-static-readiness-source-f50us453/artifacts/syntax-node24/receipt.json.
+
+syntax-node20: UTC 2026-10-25T00:19:50.213298+00:00 through 2026-10-25T00:19:50.278909+00:00; exit 0; counts not applicable.
+Exact command: python3 /tmp/html-inbox-static-readiness-source-f50us453/runner.py syntax-node20 /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node --check scripts/viewer-browser.test.mjs
+Log /tmp/html-inbox-static-readiness-source-f50us453/artifacts/syntax-node20/run.log; 0 bytes; SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+Receipt /tmp/html-inbox-static-readiness-source-f50us453/artifacts/syntax-node20/receipt.json.
+
+suite-node24: UTC 2026-10-25T00:19:50.386851+00:00 through 2026-10-25T00:20:04.799150+00:00; exit 0; counts {"tests": 13, "pass": 12, "fail": 0, "cancelled": 0, "skipped": 1, "todo": 0}.
+Exact command: python3 /tmp/html-inbox-static-readiness-source-f50us453/runner.py suite-node24 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node --import /tmp/html-inbox-static-readiness-source-f50us453/preload.mjs --test scripts/viewer-browser.test.mjs
+Log /tmp/html-inbox-static-readiness-source-f50us453/artifacts/suite-node24/run.log; 1334 bytes; SHA256 d4b8334e2dd6ff5e1896e08b24750bb879357d85c437d0020e3b50b03a6478bd.
+Receipt /tmp/html-inbox-static-readiness-source-f50us453/artifacts/suite-node24/receipt.json.
+
+suite-node20: UTC 2026-10-25T00:20:15.630020+00:00 through 2026-10-25T00:20:30.766021+00:00; exit 0; counts {"tests": 13, "pass": 12, "fail": 0, "cancelled": 0, "skipped": 1, "todo": 0}.
+Exact command: python3 /tmp/html-inbox-static-readiness-source-f50us453/runner.py suite-node20 /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node --import /tmp/html-inbox-static-readiness-source-f50us453/preload.mjs --test scripts/viewer-browser.test.mjs
+Log /tmp/html-inbox-static-readiness-source-f50us453/artifacts/suite-node20/run.log; 2727 bytes; SHA256 feb813c475f408c2308d9be98fda76a3045b666ef092b8f7203ff74cd378e502.
+Receipt /tmp/html-inbox-static-readiness-source-f50us453/artifacts/suite-node20/receipt.json.
+
+held-node24: UTC 2026-10-25T00:20:39.764574+00:00 through 2026-10-25T00:20:42.993597+00:00; exit 0; counts {"tests": 1, "pass": 1, "fail": 0, "cancelled": 0, "skipped": 0, "todo": 0}.
+Exact command: python3 /tmp/html-inbox-static-readiness-source-f50us453/runner.py held-node24 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node --import /tmp/html-inbox-static-readiness-source-f50us453/preload.mjs --test '--test-name-pattern=^static inbox preserves themes and isolates routed documents$' scripts/viewer-browser.test.mjs
+Log /tmp/html-inbox-static-readiness-source-f50us453/artifacts/held-node24/run.log; 196 bytes; SHA256 419acee4b8d1e4a426ef20381036cfc5347496f4bb3a1817eda63e794c286e1d.
+Receipt /tmp/html-inbox-static-readiness-source-f50us453/artifacts/held-node24/receipt.json.
+
+negative-node24: UTC 2026-10-25T00:21:05.672698+00:00 through 2026-10-25T00:21:07.985327+00:00; exit 1; counts {"tests": 1, "pass": 0, "fail": 1, "cancelled": 0, "skipped": 0, "todo": 0}.
+Exact command: python3 /tmp/html-inbox-static-readiness-source-f50us453/runner.py negative-node24 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node --import /tmp/html-inbox-static-readiness-source-f50us453/preload.mjs --test '--test-name-pattern=^static inbox preserves themes and isolates routed documents$' scripts/viewer-browser.test.mjs
+Log /tmp/html-inbox-static-readiness-source-f50us453/artifacts/negative-node24/run.log; 847 bytes; SHA256 dbce9a97f1c0fb9ba2bd8acc8f4a2f850047fe09dd60f712ab2ba6c6148acfd7.
+Receipt /tmp/html-inbox-static-readiness-source-f50us453/artifacts/negative-node24/receipt.json.
+
+Held-response control used actual patched source on Node24.21.0. The actual exported inbox response was 3832 bytes; the first 454 original bytes through the head were flushed, and only the original body tail was held for 500ms. UTC 00:20:41.981 hold began; 00:20:41.997 the real Back click returned at the expected inbox URL and the source DOMContentLoaded wait entered while held; 00:20:42.481 original bytes were released; 00:20:42.485 source wait completed. The trace records exact selector [data-search-text] queryCount call@151 returning 2. The original complete selected case passed in 2687.684388ms and continued through the second document, theme and root-no-listing checks. Returned inbox SHA256 df5265ea56e47941d852ccc584098319c251ec78f6686a51d126752f3f4d48ad matches the actual emitted inbox. Captured bodies all match the emitted asset at their route, and generated security-policy headers match. No DOM or count was manufactured.
+
+Permanent-error negative used that same actual source and assertion on Node24.21.0. Only the return inbox response body was substituted with the same synthetic snapshot's actual non-listing root HTML, 313 bytes, SHA256 fe7e292f7d7ccee581413560926346998bd4b499be526891bda657ae4d241205. The URL equality passed. UTC 00:21:07.799 source wait entered; 00:21:07.801 it completed; trace queryCount call@147 returned 0. The original assertion failed strictly 0 !== 2 at scripts/viewer-browser.test.mjs:65:12. Case duration 1764.830087ms, exit 1, 1 total/0 pass/1 fail/0 skipped. This is the sole intentional red and it was reported immediately, without scope expansion. The trace has exactly the intended wrong-body mismatch and unchanged generated policy headers. No assertion exception was caught or rewritten in the helper; the repository test failed naturally.
+
+browser-validation.json holds exact probe queryCount calls/results, route/body hashes, policy comparisons and manifest checks. All twelve retained synthetic snapshots validate their file digests and aggregate snapshot hashes: five from each full suite and one per probe. Each full suite observed 18 declared virtual CDN requests, fulfilled by the existing repository fixture handlers; expected Tailwind rendering and Mermaid module assertions passed. The resolver block and route guard prevented real external access. No unexpected CDN URL, pageerror or blocked-external event occurred. The selected probes made no CDN requests. Original document bytes and CSP/sandbox policies were preserved, and the negative has precisely the deliberate permanent response-body substitution.
+
+Runtime evidence: exact Node24 path /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node, SHA256 7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c; exact Node20 path /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node, SHA256 6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd. Both were read-only and their runtime versions are recorded by the preloader. Playwright 1.63.0 used the read-only cached Chrome Headless Shell 153.0.8010.12 binary, SHA256 ded93a9c9a53a1ae040f08124badcca95c938e9d5015ff340c3b5538c41bf39e. Local host remains Debian GNU/Linux 13.7, not native Ubuntu. No hosted Ubuntu-image, merge-tree or physical acceptance equivalence is claimed.
+
+Isolation: this phase used its own /tmp/html-inbox-static-readiness-source-f50us453 root, 0700 permissions, explicit minimal child environment, synthetic HOME/XDG/TMP/inbox/catalog directories, owned subreaper and fresh browser contexts/profiles. No parent wrapper or audit receipt was used or written. The preloader was adapted into this new scratch directory from this workstream's own prior hook, leaving all prior files immutable. Dependency files were copied into this own checkout from read-only pinned root dependencies, with a byte-identical pnpm lock and no package installation/network access. Build outputs existed only in this own checkout. Runtime binaries and browser cache were read-only. No real inbox, installed CLI, private credential, service, LAN/wildcard/Tailscale/Mac/Fleet/native Windows/provider setting or access was used.
+
+Cleanup is complete. Browser/context opens and closes match: suite-node24 12/12, suite-node20 12/12, held 1/1, negative 1/1, for 26 closed pairs. All 167 captured actual PIDs are absent with no reuse. Every receipt records captured PIDs with start times; cleanup.json records the combined exact list. No signals were issued, including no foreign signals. All 38 captured listener instances closed and rebound successfully at their exact 127.0.0.1 ports; no global port count is claimed. Per-run receipts contain initial rebinds and cleanup.json contains final rebinds. The fixture TMP directory was empty before removal. Own HOME/XDG/TMP/catalog paths, copied node_modules and packages/cli/dist were removed. No credentials were supplied; environment values existed only in subprocess mappings. The app-bound worktree is retained with only the one authorized file diff.
+Exact final successful rebind: negative-node24 127.0.0.1:45389.
+Exact final successful rebind: held-node24 127.0.0.1:33555.
+Exact final successful rebind: suite-node20 127.0.0.1:45593.
+Exact final successful rebind: suite-node20 127.0.0.1:39841.
+Exact final successful rebind: suite-node20 127.0.0.1:35375.
+Exact final successful rebind: suite-node20 127.0.0.1:42511.
+Exact final successful rebind: suite-node20 127.0.0.1:43829.
+Exact final successful rebind: suite-node20 127.0.0.1:33485.
+Exact final successful rebind: suite-node20 127.0.0.1:38749.
+Exact final successful rebind: suite-node20 127.0.0.1:39189.
+Exact final successful rebind: suite-node20 127.0.0.1:43187.
+Exact final successful rebind: suite-node20 127.0.0.1:33163.
+Exact final successful rebind: suite-node20 127.0.0.1:34851.
+Exact final successful rebind: suite-node20 127.0.0.1:41171.
+Exact final successful rebind: suite-node20 127.0.0.1:37939.
+Exact final successful rebind: suite-node20 127.0.0.1:34963.
+Exact final successful rebind: suite-node20 127.0.0.1:35837.
+Exact final successful rebind: suite-node20 127.0.0.1:44955.
+Exact final successful rebind: suite-node20 127.0.0.1:34629.
+Exact final successful rebind: suite-node20 127.0.0.1:46227.
+Exact final successful rebind: suite-node24 127.0.0.1:40309.
+Exact final successful rebind: suite-node24 127.0.0.1:37205.
+Exact final successful rebind: suite-node24 127.0.0.1:40153.
+Exact final successful rebind: suite-node24 127.0.0.1:39157.
+Exact final successful rebind: suite-node24 127.0.0.1:45393.
+Exact final successful rebind: suite-node24 127.0.0.1:36817.
+Exact final successful rebind: suite-node24 127.0.0.1:42967.
+Exact final successful rebind: suite-node24 127.0.0.1:35077.
+Exact final successful rebind: suite-node24 127.0.0.1:37127.
+Exact final successful rebind: suite-node24 127.0.0.1:40589.
+Exact final successful rebind: suite-node24 127.0.0.1:42517.
+Exact final successful rebind: suite-node24 127.0.0.1:40813.
+Exact final successful rebind: suite-node24 127.0.0.1:34895.
+Exact final successful rebind: suite-node24 127.0.0.1:44513.
+Exact final successful rebind: suite-node24 127.0.0.1:46659.
+Exact final successful rebind: suite-node24 127.0.0.1:40901.
+Exact final successful rebind: suite-node24 127.0.0.1:37627.
+Exact final successful rebind: suite-node24 127.0.0.1:35525.
+
+Preservation at freeze: all 339 tracked files were hashed and compared with before.json; exactly scripts/viewer-browser.test.mjs differs. All 165 CLI source files retain aggregate SHA256 d7f1e5bbb5a4ebb0c66928f0ceb2402cc745770644697356f4099dff93340943. Git index SHA256 before and after is fbdbd3341382a7bee420ef778d150109dc2fad3236642c52156b90bce746409f. The original 87 artifact hashes all still match, and their unchanged artifact-sha256.json SHA256 is 501d7db431979163fc7d1b363de1c94743b2b9872ac1960e504a61fdb4ae5ce2. All earlier receipt/probe files, helper failures, and trace/screenshot limitations remain immutable. In particular, prior files named boundary.png show recovered/loaded states, no blank assertion-time screenshot was established, two cache-path guesses failed before the recorded executable path was used, a legacy trace _sha1 body reader was invalid before content._file parsing, and the hosted merge object remained unavailable. See the original immutable diagnosis.txt for the full retained qualification list. No new helper failed or timed out in this phase; negative-node24 is an intentional product-response negative. Some terminal displays were truncated, while the full log/receipt files are retained.
+
+The accepted conclusion remains narrowly a test synchronization gap. DOMContentLoaded establishes that server-rendered HTML parsing has completed; the unchanged strict count establishes content correctness afterward. Permanent wrong content still fails inside the original bounds. The original hosted actor remains UNKNOWN. Other Windows and Ubuntu20 failures remain separate unresolved workstreams. Parent owns combined checks, two fresh independent reviews, root documentation and any later integration. No additional source change, commit or release is proposed here.

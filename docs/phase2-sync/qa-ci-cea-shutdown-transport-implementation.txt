@@ -1,0 +1,73 @@
+TERMINAL TEST-ONLY SHUTDOWN/TRANSPORT HANDOFF
+
+Runtime slot released. All validation and scoped cleanup ended at2026-10-25T01:44:20.504654Z. No further runtime is planned. Parent may release the history author. There is no source blocker against this narrow fixture gate; original hosted actors and #591/#593 setup causes remain unassigned.
+
+Freeze and scope
+
+App-bound worktree /home/agent/.t3/worktrees/html-inbox/t3-0ddce8e9, branch t3/sync-shutdown-diagnosis, HEAD cea30b48cbef814511e2eedfc83d1793bc011354. Authoritative parent contract was read and verified before edits, on runtime release, and at terminal: SHA2569ebc19dd259a4c400b22037a7acc504ffff19bfb17985ade5724056fba166bfd. The exact contract is retained as authoritative-contract.md.
+
+Only the three authorized files differ from the339-file committed baseline:
+packages/cli/src/sync-shutdown-ingestion.test.ts SHA25621f1719f6734cfb6dca56d01ccaa79b9d4a2a7cbb477c9842ceb57d06bbf61c6
+packages/cli/src/sync-shutdown-fixtures.ts SHA2565fc8c116c2d5826924e34155f9c9118d9005f3dc2171781a48a2eefa4ff12c02
+packages/cli/src/sync-transport-lifecycle.test.ts SHA2562fb3486f13bbd2377ae231a86212fd1e1f021d49ba4a1c99773eb081aecc6f1c
+
+These are the exact prepared bytes inspected by the parent. No source change occurred after that inspection or during validation. Full final.patch is byte-identical to prepared.patch, SHA2568550673800d63c93a0a9394a2d4c900b43710a9e73ac8ac735f54e1aff2d3bc4. Complete final165-source manifest aggregate dff8086b94939986c9c0dca2da7e6921f8bf7211ed7dfcbf8e2cdf4093ddd8ab. Raw index remains SHA256437624de8c53682bde2893fd813789a4d559c35f1ed591e447a9427c07701f13. Terminal tracked/untracked/ignored inspection contains only those three modified files,106 insertions/28 deletions; there are no untracked or ignored leftovers. Other336 tracked files and all production/other tests/helpers/docs are unchanged. All source and index checks passed before and after removal of owned build/dependency artifacts.
+
+Change behavior
+
+#592 alone uses the existing retained protocol runner for the outgoing remote source. The receiver worker, actual prototype applyStream interception, held real bytes and all receiver close/authority/body/receipt/handle assertions stay in the parent. IPC preserves actual returned route results and original3000/5000 request/pass. Cleanup registration precedes protocol work. Reverse cleanup releases the real gate and observes source-command plus receiver-close settlement independently, then stops/reaps the exact source actor, then invokes public remote.recover. A stop/reap failure prevents recovery, and any collected cleanup failure prevents root removal. Recovery is not treated as a universal drain.
+
+The shared fixture attempts independent registered cleanup, listener rebinds and each actual retained handle. It preserves independent failures in an AggregateError, retains the synthetic root on failure and removes its unhandled-rejection observer in finally. Teardown-initiated worker-close errors now propagate. A close explicitly initiated by a test returns the same real cached promise and remains the test's asserted outcome. Teardown observes that same promise without calling its earlier retained-authority rejection a successful ownership release. The existing expected-failure ownership/ingestion consumers pass unchanged.
+
+#687 retains the actual pullBody and assert.rejects promises. Disconnect pin admission is inside try/finally and races request settlement. A settled request before admission produces explicit test failure. An unexpectedly fulfilled request retains the original assert.rejects failure. Cleanup releases the gate, observes real lock/request settlement and then reads/awaits the late pin, so lock release cannot hide a subsequently assigned pin promise. Primary and independent cleanup failures are retained. All original250/1000/1400/600/4000/15000 bounds and one-pin, actual lock, no-late-output/listeners, actual-handle-close, zero-receipt and fresh same-server admission assertions remain. Quiesce/server-close keep their ordinary pin wait, now within cleanup coverage.
+
+No #591/#593 setup-policy correction was attempted. Their direct reconciliation paths, assertions and original bounds remain. Both cases passed in the final complete containing runs, but those local passes do not assign their hosted failures or erase the original reds.
+
+Exact runtime validation
+
+Read-only Node20.20.2 SHA2566295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd and Node24.21.0 SHA2567fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c were verified. Own dependency setup ran once on24. Both exact runtimes passed direct owned tsc-rs typecheck and build without changing engine settings. Final328 compiled files had aggregate1f8ecae6139fa2c1703fbe446bc012291eac10d06ddeebb48a30e5afb9816d87 before removal; all four tested file hashes match across the two final containing runs.
+
+Complete four containing consumers on each runtime, default concurrency and original deadlines:
+sync-finalization-lifecycle.test.js
+sync-shutdown-ingestion.test.js
+sync-shutdown-ownership.test.js
+sync-transport-lifecycle.test.js
+
+Final Node20 containing20-live-reap:66tests/66pass/0fail/0cancel/0skip, exit0,55073.479260ms; logSHA256df46b0246ddc1c90ae61ebc49c681616a4eebabfb4e9e76aac3a7bbe908ee0fc.
+Final Node24 containing24:66tests/66pass/0fail/0cancel/0skip, exit0,46695.178015ms; logSHA256bcb4c5c0ae034aaf9b941ac8a9804fa3a111a4bc5c2e76782b28e2e5a9cc4070.
+
+There are17 command receipts: owned install, four compiler checks, two final containing checks, eight qualified gate controls, plus two failed/qualified attempts described below. Do not sum overlapping selections into distinct coverage. commands-summary.txt has every exact invocation, UTC start/end, native exit, TAP counts and logSHA256. commands.json and individual receipt.json files retain exact environments/argv, helper/input hashes, scoped descendant identities, FD high-water sampling and reaping. The wrapper itself exits0 after recording native results; native exits in receipts are authoritative. No busy admission occurred and no outer budget expired.
+
+Gate controls on the actual patched source
+
+source-watcher20-qualified and source-watcher24 both pass the unmodified selected #592 test. The observer injects ONLY into the source child already created by the patched test; it does not use the old source-offloading shim. Exactly one actual50ms source watcher is held before lock enqueue and remains pending at the child's actual exit. The original receiver apply and worker.close execute in the parent PID, real apply reports committed, all original authority/bytes/receipt/count/generation/handle assertions pass, and exact source child reaping precedes public recovery. Reconstructed parent operation registry is empty before recovery and at root removal. Raw source route results are not relabeled confirmed. critical-evidence.json contains exact PIDs, watcher selection and lifecycle events. Native logs:
+20 SHA256b20e770e545a6dffc9d893ba79874c82f5a1e9910aaf070945719f243c47907b
+24 SHA2564432b6e12dbcceb7f3b02ff8a60dfbb59c8e3501c2c93a3ce7de08931cabbfc3
+
+pin-red20 and pin-red24 hold the genuine source mutation lock at pre-pin GET admission, retain the original250ms request, and release that lock on actual request settlement. Both have pinHits0 and exactly one boundary hit. Both now fail explicitly with Body request settled before pin admission, not a pass or outer watchdog:780.118381ms on20 and690.052703ms on24 including setup/cleanup; cancelled0. The historical15s red remains separately retained. Matching pin-control20 and pin-control24 release that same real boundary before admission and pass all original late-pin/actual-handle/no-late-bytes/zero-custody/fresh-confirmed-admission assertions. Neither request/case/close bounds nor production safety changed.
+Red20 logSHA2565ea6e9326a967945af895daaff164dbf5a2de7fbc1488e5cfad628dda912f8c2
+Control20 logSHA256112491b127c3a5c2da221b3fc285ad54289db2f791d38ec8150af7f651f44c60
+Red24 logSHA256023b9f5244f0ac8cb28d23d209759406c59213cb666eab37220b0c44c9beade8
+Control24 logSHA256e70d803cebc2d83de713521ccd4f9006a1155bba3adc933f5342a006ef21721b
+
+cleanup-retention20 and cleanup-retention24 drive the patched shared teardown with two independent one-hit causes: an actual ENOENT reading a deliberately absent owned cleanup record, and a synthetic acknowledgement failure after an actual retained FileHandle.close. The latter is a method-rejection fault, not a claim that the OS failed to close the descriptor. Both exact original error objects survive in the AggregateError. A later independent cleanup callback runs, the descriptor is actually closed, the same root inode and evidence files remain, and the fixture rejection observer is removed. Only after proof is captured does the control dispose its proven-owned evidence. It creates no worker/child and performs no removal retry. Each native control passes1test, with proof JSON retained.
+20 logSHA25687b66287660d11ea631fda8a82d50a0699e170af0a28a05796c1e24c753e8963
+24 logSHA256263d574ca8942df0b0a671fc273a94e7ec09b14202867ec5324994d023465f5f
+
+Failed attempts retained, not green
+
+containing20 completed normally with52pass/14fail among66; logSHA2568d18490dbd435abed5f03627672d416f5cfea423518c81fe746ac3ea19f97dc4. All fourteen failures were unedited finalization cleanup hooks. Their individual AggregateError causes were not serialized by TAP, so no blanket historical product-cause assignment is made. The prepared private runner reaped adopted detached children only after native test completion, allowing exited adopted workers to remain zombies during fixture PID checks. It reaped28 such children at completion. The runner was corrected outside the repo to reap adopted children while tests run, retaining the direct native child for its Popen owner. The final20/24 runs each reaped28 adopted children during active testing and passed66/66. Listener-only observation was added to those final runs for exact endpoint custody. No source, deadline or concurrency changed. The initial native failure is retained in full with qualification.json and gets no final-green credit.
+
+source-watcher20 completed the original body/close assertions and reaped the child, then failed an overly strict observer assertion that demanded an empty parent registry at receiver-close time. One genuine receiver route watcher was still settling at close and had settled before source recovery. The authorized boundary is no parent operation pending before recovery/removal. The helper was corrected to reconstruct the live retained-operation registry at that boundary while still requiring receiver handler/transfer counts0 at close. This failed attempt's native exit1, root retention, events, exact helper snapshot and invalid.json remain. logSHA256eecdac283193a3a5b85213952f45e93d884fc836b6b7939850810cbdfe8feda2. The qualified controls retain the close-time watcher observation rather than hiding it. No new production defect or global receiver quiescence claim follows from that transient snapshot.
+
+No failed attempt was overwritten or called green. All12 earlier diagnostic command logs were hash-verified unchanged, including original invalid observers and original controlled/hosted reds. No provider-interrupted helper was executed. Only this workstream's previously qualified observational helper was reused read-only for the pin boundary and actual source watcher.
+
+Cleanup and limitations
+
+terminal-audit.json records all1279 sampled owned process identities absent, empty remaining-child sets, no signals from the private runner, and all268 distinct captured literal loopback listeners rebound at exact observed endpoints. Original CLI tests deliberately send their own asserted SIGINTs through retained ChildProcess handles; the runner sent no cleanup signal.25ms sampling can miss transient processes/descriptors. Original actual-handle assertions and retained-child reap checks supplement it. Initial uninstrumented containing20 numeric endpoints were not independently captured; later captured endpoints are exact. No host-global process/FD/port claim is made.
+
+Before deletion, captured remaining owned private artifact metadata/hashes and verified no residual .lock/.reap names. Removed only own synthetic homes/CA/tokens/environments, own dependencies/caches and328 compiled files. Failed/invalid logs, helper snapshots, traces and receipts remain. Worktree and the exact three-file diff remain for parent integration. Both shared runtime binaries, original CI evidence and earlier diagnostic artifacts are untouched. Final cleanup itself used this task's own private-environment subreaper under the shared mutex, with its exact UTC/invocation/script hash retained in terminal-audit.json.
+
+This isolated checkout does not contain the parent's disjoint GateA/GateB/Windows/static/staging corrections. The final66/66 checks are containing checks on this frozen correction, not parent combined verification or full-suite closure. The original hosted merge object/image equivalence is not established. #591 initial confirmation and #593 missing admitted hold keep their original independent unknown causes; no new local pass closes them historically.
+
+No production/other-source/test/helper/doc edit, commit/push/PR mutation/watch, root wrapper, real inbox/service/credential, foreign PID signal, native/physical job, network/security/settings change, merge/deploy or SHA release occurred. Parent alone owns integration, interface freeze, combined checks and two NEW reviews. PhysicalQA remains parked at d3.

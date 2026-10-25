@@ -1,0 +1,112 @@
+Case 453 preparation. Runtime HELD. No causal verdict or applied fix.
+
+This child has performed filesystem/source inspection and private snapshot preparation only. No Node, compiler, installation, test, runtime probe, flock admission, worker, listener, or credential fixture was started. The parent must explicitly release runtime after the clock child terminal. An available mutex is not permission. A separate parent gate is required before the proposed test-only IPC change. The logger and copied subreaper have only passed Python ast.parse and compile; they have never run.
+
+The diagnosing-bugs skill normally requires a personally executed red loop before causal diagnosis. The user's preparation-only hold overrides that phase here. The original combined red is historical evidence, not this child's reproduction. Ranked hypotheses below are preregistration, not assigned blame. This child is already the requested research delegation and has not delegated further. Findings are private artifacts, not repository documentation or a PR review.
+
+Verified snapshot and preservation
+
+Parent: /home/agent/.t3/worktrees/html-inbox/feat-phase2-sync
+HEAD cea30b48cbef814511e2eedfc83d1793bc011354, branch feat/phase2-sync.
+Child: /home/agent/.t3/worktrees/html-inbox/t3-cee3b082
+HEAD cea30b48cbef814511e2eedfc83d1793bc011354, branch t3/diagnose-pending-publication.
+Private bundle: /tmp/html-inbox-case453-preparation-60bk2juq
+
+All 167 manifest entries were individually read and SHA256-verified against /tmp/html-inbox-qa-history-amcemjlx/source-cea-pagination-integrated.sha256. The SHA256 of that exact manifest is b3fe50512a22f17215abe1dcb0dac403a7f428c58892b2c94ccf42f4b9bcd82b. All 387 current nonignored parent files were copied by value into project/, with their individual bytes and modes recorded. The private project's 167 source bytes/modes match. No overlay was made in either checkout. child-original-source/ saves the child's 165 existing original source files; child-source-before-snapshot.json also records the two originally absent sources, sync-acquisition-deadline.test.ts and sync-preaborted-reconciliation.test.ts. They remain absent in the child checkout. There is nothing to restore to either checkout.
+
+The source pin includes prepared sync-finalization-lifecycle.test.ts and sync-protocol-faults.test.ts, plus both new tests. No historical tested-source-qa manifest was substituted. Relevant individual source hashes:
+65550efaafcbe2f1d308178903fe502669c25e40bd957b3f680fb2634ef759ad  sync-ownership-worker.test.ts
+ce3ffa43ec505bdcd8520dd7cab707ddbfa601cf67b3dd1b7e08ac4549c31c26  sync-ownership-worker-child.ts
+28aec0025c935bf27116a5b646790654f263ce7a7336b3f3607fa5c7f0f62630  sync-files.ts
+45b2cbdaa7d7e6938789bfb8400aafa45621a7e2acd3ecdd9b8a7ccd82934063  sync-store.ts
+7b1804396e25d6c28d7a654867cc49ba874ea700ac1e19e4f8f328a8b51d2fb2  sync-worker.ts
+ceb67694dd0dccd392b12523a3e3f8370570b5cf0eade2568df9987b1edf3205  sync-finalization-lifecycle.test.ts
+a5ba51f46a3c7f6a94d75978906a4779056598b8b7bb4af2985044c10c4a95d2  sync-protocol-faults.test.ts
+048ce7eba76eceb05a9826adbfce9dc9bc8f897d24e9130a0e753e66b885da73  sync-acquisition-deadline.test.ts
+90fb342273a85f73e611dd7aa4dc7c54decc029b10b7249290503d9fd5f975fb  sync-preaborted-reconciliation.test.ts
+
+All 332 current root compiled entries were individually verified, read-only, against compiled-after-command6.sha256. Its manifest SHA256 is 636ec101bfa1f336b5aac653d5d40f56e4c840cf41f215e8a0ec2271ebccceda. Four relevant compiled files were copied into reference-compiled/ for line mapping. This is verified reference output, not a child build. After runtime release, build only the copied project and require its complete 332-entry manifest to equal this reference before targeting the test. A mismatch stops; do not normalize differences away.
+
+The starting raw parent index SHA256 is e3dd34cce6446819560c71040ab9ba111d2c07087bc8b41e74f2922b3dcd1562. Child index SHA256 is 523bdbc52d01831ed81b098eacf785cf89ba2cda43da44e7dc8986de0628fa3e. Parent dirty status SHA256 is 4064f5541e14662fa42d2eb10a89d646fdc6a242c81eb95664e26399558cb414; child status is empty. Raw indexes and statuses are retained in this bundle. The child index naturally differs from the parent's dirty index; no source/index equivalence is claimed. Final-preservation.json records the terminal comparison.
+
+Exact symptom and compiled mapping
+
+Both required original receipt files were read in full and copied unchanged into this bundle. Original command6 native exit 1, 1026 cases, 1023 pass, 2 fail, 1 skip. Case 453 duration 28119.664661 ms. Error: Managed store lock deadline exceeded; unknown or live owners are never stolen.
+
+The verified compiled sync-ownership-worker.test.js line 153 is await f.source.store.setRetryPaused(false). It maps to source line 140, after await source.arm() at source 139 / compiled 152, and before wake at source 141 / compiled 154. The earlier setRetryPaused(true) is source 124 / compiled 137. Thus the original error is unpause, not initial pause, restart, or the later 12000 ms custody wait.
+
+Compiled sync-store.js:757 enters this.mutate; compiled sync-files.js:210 calls withProcessLock, :224 acquires mutation.lock, and :299 calls checkAcquisition after the acquisition loop. That is not the same-process StoreLockQueueDeadlineError timer. It also does not prove EEXIST occurred: candidate preparation/flush could have consumed the remaining deadline before the while condition. Observe actual boundaries instead of interpreting the common error text as owner evidence.
+
+Original command6.log:2600-2624 contains ready diagnostics for retained foreground children 302023 and 302055 and final fixture cleanup diagnostics. There is no emitted mutation-cut diagnostic for this failed case. The existing test only prints that message after its explicit kill, beyond the failing line. Missing printed IPC is therefore not proof that the hook missed. There is no retained canonical owner record, cut producer timestamp, or parent acquisition trace in that block. The original owner and exact producer remain unassigned.
+
+Original Node24 command5.log:3071-3085 passed this case in 4468.544784 ms and includes the actual linked cut, source child 268648, one candidate open/hit, 136-byte version-2 owner, exact two-link inode pair, retained child reap, real restart, exact 65-byte receiver, current intended receipt, confirmed outbox, blocked item and paused receiver. This is historical success and does not explain the Node20 failure. The original Node20 created case and idle case also passed. Counts overlap the full suite; no distinct-coverage addition is valid.
+
+Authoritative source/contract findings
+
+Read required-contracts.md, storage-interface.md, protocol-contract.md, worker-cli-contract.md, qa-lock-creation-contract.md, qa-shutdown-ownership-contract.md, qa-ci-cea-acquisition-deadline-contract.md and qa-ci-cea-finalization-preparation-contract.md from the verified private project. Read the complete sync-ownership-worker.test.ts, its child, sync-ownership-publication.test.ts and sync-ownership-fault-child.ts, plus the acquisition/reaper/worker/store/fixture paths. No on-disk AGENTS.md or root CONTEXT.md was found in the inspected checkouts; the supplied AGENTS.md instructions apply.
+
+1. Child arm is process-global. sync-ownership-worker-child.ts:12-16 sets armed without identifying a mutation. Its fs.link hook performs the real link first, then cut() emits the exact pair and waits forever at :33. It never releases the link cut itself. Holding a published lock owned by a live retained child must prevent competing parent store acquisition.
+2. sync-worker.ts:371-399 tick() reads store.snapshot(). That snapshot is read-only at sync-store.ts:128-142. tick gates new scheduling on enabled && !retryPaused. Therefore an unconditional claim that every paused timer tick acquires mutation.lock would be false.
+3. A pass already in progress can do bookkeeping at sync-worker.ts:358, or failure bookkeeping at :252. quiesce at :401-420 waits the captured current route promise, not the entire draining promise, future timers, or every later bookkeeping write. This leaves a plausible producer path across pause/quiesce, not proof it occurred in the original run.
+4. Store pause uses the real mutation lock with the default 10000 ms bound. Full version-2 owner bytes, held inode, mode/UID and exact two-name checks remain required. File write/sync/close/reopen, candidate directory flush, atomic no-replace link, installed file/directory flush, candidate unlink and final file/directory flush must not be weakened.
+5. A verified live owner must block. A dead owner requires full identity/inode recheck under the exclusive .reap guard. Unknown/partial/invalid owners and interrupted guards remain untouched. The existing typed local-queue correction does not authorize classifying this filesystem error as transient or retrying it.
+
+Ranked, falsifiable hypotheses for the future bounded observation
+
+H1: The armed real source child publishes and suspends its canonical mutation lock before the parent's unpause acquires ownership. Prediction: actual mutation-cut IPC plus the exact matching owner bytes/pid/start/inode/link pair precede the parent's successful acquisition or rejection; the same retained child remains alive through the timeout. A controlled pair differing only in unpause versus owned-child kill/reap ordering should reproduce the timeout before kill and permit acquisition/custody after kill. A paused worker mutation must be identified by its real method/call trace, not assumed to be tick().
+
+H2: A different live owner, unverifiable owner, or existing reaper guard is the blocker. Prediction: actual canonical identity/metadata or .reap presence fails the H1 exact-owned-child match. Killing the target child cannot establish permission to reclaim that authority. Stop without touching it. This is falsified by a stable valid pair identifying the retained cut child with no guard and no other relevant contender.
+
+H3: The 10000 ms acquisition budget is consumed in a specific local queue, candidate I/O, validation, or directory flush before useful link attempts. Prediction: captured operation timestamps account for the expiry at that boundary, with zero or insufficient successful link attempts, rather than a live target cut spanning contention. The recorded line 299 permits a zero-loop-iteration path. Do not call this generic load. Falsify by recording prompt candidate completion and repeated actual EEXIST against the exact live cut owner.
+
+H4: A verified-dead owner or exact reaper transition fails to reclaim under otherwise valid authority. Prediction: retained ChildProcess exit/close and identity evidence precede continuing contention; exact bytes/inodes persist or a specific validation/flush/guard failure is observed. This is a product hypothesis only after ruling out live/unknown/guard states. An unpause waiting on a still-live intentional cut instead falsifies this explanation for that run.
+
+Route backoff, pinning and receipt/incarnation state remain separate possible failures of the later custody predicate. They do not by themselves explain the original unpause acquisition stack. Observe them without clearing/resetting state; if the proposed control reaches a new later failure, stop and report that exact predicate.
+
+Bounded runtime sequence, UNEXECUTED
+
+A. After explicit parent release, prepare only private HOME/XDG/TMP/PATH/dependencies/cache. Copy dependency bytes into this bundle; do not use the parent's absolute-path bin shim, install, or write root build/cache. Invoke the copied tsc-rs entry with the pinned Node24 runtime, with cwd=project. Verify all source bytes/modes again and require complete compiled equivalence before a target test. Source and build gates are not tests.
+
+B. Use the copied established run-subreaper.py, SHA256 e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72. command-logger.py retains an actual Popen handle and uses os.waitpid for its direct flock child; the subreaper continuously waitpids adopted children. It writes only private receipts. No /proc descendant discovery sampler, global wrapper append, PID-only signal, or stale-PID cleanup. Helper static hashes are in helper-static-check.json. No runtime operation can be dispatched merely because a release_receipt file exists; the real parent instruction must have arrived first.
+
+C. Every build/target command must enter once through /usr/bin/flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock. Exit 75 stops and is not a test verdict; do not retry admission. Preserve a fresh log/receipt per command, actual argv, UTC dispatch/return, monotonic elapsed, native exits, waitpid statuses, pins and helper hashes.
+
+D. Exact pinned runtimes, SHA-verified read-only during preparation and never executed:
+/tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node
+6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd
+/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node
+7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c
+
+E. One unchanged-source observed Node20 selected case. Planned argv after the observer is prepared and statically recorded:
+[NODE20, "--require", BUNDLE + "/observer.cjs", "--test", "--test-reporter=tap", "--test-name-pattern=^seeded pending publication survives real foreground linked cut and autonomously reaches intended custody$", BUNDLE + "/project/packages/cli/dist/sync-ownership-worker.test.js"]
+NODE20/BUNDLE denote the exact paths immediately above, not shell interpolation. Preserve native count/skip output. Explicitly excluded are the idle empty-created case and seeded pending-created case. No containing suite, stress, natural rerun, runtime matrix or full suite. A baseline target failure stops for parent review. Only the subsequently registered red arm may have its exact expected failure; a baseline failure is not silently reclassified as that arm.
+
+Observer design, not implemented: a private preload delegates to the actual methods and preserves source/compiled bytes. Observe entry/settlement of parent setRetryPaused including its boolean, ordinal, stack and exact source home; candidate open/write/sync/close/first-link/result and relevant flush boundaries; and retained child spawn/error/IPC/exit/close. Retain existing actual ChildProcess objects. An explicit spawn wrapper may add only this observer preload to the exact ownership-child argv so its store-method scope and producer timestamps can be recorded. That argv change is instrumentation and must be disclosed. It must not change deadlines, action order, cut selection, worker configuration, or timer cadence. Buffer narrow events and write only to the private trace. Do not log full runtime records, headers, credentials, keys or arbitrary file contents. Ownership records alone may be retained for the requested authority proof.
+
+At parent unpause entry/rejection and received cut, record bounded read-only snapshots of the exact source mutation lock, token-derived candidate and optional .reap metadata: bytes/hash, pid/start, inode/dev/nlink/mode/UID. Record exact retained-child event state and narrowly sampled /proc start identity only for already retained children. Do not use observed PID numbers as signal authority. Read ledger snapshots to capture pending/blocked records, pause, route revision/backoff and current receipt state without mutation. Observation timing overhead is a limitation, never a claimed original reproduction rate.
+
+Minimal test-only proposal, UNAPPLIED and requiring a new parent gate
+
+Simply moving source.arm() after parent unpause is insufficient: the worker could deliver the pending item before the targeted cut. Simply extending a deadline cannot unblock a child deliberately waiting forever. Deleting a live/unknown lock or reaper guard is forbidden.
+
+Proposed bounded diagnostic interface: add a uniquely named IPC command such as {type:"cut-paused-mutation", operationId:<validated-id>} to the existing test-only ownership child. It uses the child's argv-bound synthetic home only, never a caller path or arbitrary method. Inside an async scope, verify the source is paused, tag exactly one invocation of the real ManagedSyncStore.setRetryPaused(true), and restrict the existing created/linked hook to the candidate produced by that invocation. This idempotent pause mutation reaches the actual atomic ownership implementation before protected work. The frozen hook proves exact owner identity and pair. Reject duplicate/out-of-scope commands and report unexpected completion as a missed cut. No production hook, environment fault switch, second reconciler or fabricated lock/receipt is needed. This intentionally selected producer tests the hypothesized ordering mechanism; it does not prove the original producer was the same operation.
+
+The parent could gate edits only to sync-ownership-worker.test.ts and sync-ownership-worker-child.ts, with a diff against the exact borrowed hashes above. This child has not made those edits. Gate the interface before implementing or running it. The observer alone must not silently install this interface into compiled output.
+
+Register ONE red/control pair using identical preparation and that exact real owned-child cut. The single changed variable is the ordering of parent unpause versus retained child SIGKILL/reap:
+- Red: receive and validate linked cut while source remains paused and the item remains pending; call real parent setRetryPaused(false) before killing the live child. Expect only the original filesystem acquisition deadline under its unchanged 10000 ms bound, with no pause commit, no custody and unchanged authoritative live pair. Then kill/reap through the retained ChildProcess and perform normal owned cleanup. Do not rerun the failed unpause or claim queue recovery from this red arm.
+- Control: receive the same valid cut with the same paused/pending/blocked state; SIGKILL/reap the retained child and prove exact listeners rebound; then call the same parent setRetryPaused(false), restart through actual foreground CLI, and require the original autonomous 12000 ms custody predicate and all exact receiver/outbox/receipt assertions. Product reaping must remove only the exact verified-dead pair. No manual authority cleanup. The case stays 40000 ms, stores 10000 ms, child lifetime 40000 ms, fixture lease 30000 ms, original request/pass bounds unchanged.
+
+Both arms must record exactly one scoped producer hit/candidate open, full version-2 bytes and exact two-link pair at the linked cut; ready identity; source pending at the actual cut; destination without target body/current custody at cut; original blocked obligation and paused receiver. Early delivery, extra/missed hits, wrong owner, unknown guard, altered pause, deadline failure at another line, or unhandled cleanup stops the plan. Positive requires actual restarted runtime, exact 65-byte body, one canonical target, intended receiver/destination UUID and current storage incarnation receipt, confirmed original obligation, blocked item preserved, receiver still paused across its restart, and both configured listeners closed/rebound. No fake receipt or precommitted seed counts.
+
+If later authorized as the fixture correction, required regression preserves all three existing cases and their original assertions: idle created with inherited startup; seeded pending created; seeded pending linked. Preserve original global-arm behavior for the idle case or explicitly justify its replacement in the new gate. Scoped-pending cases must establish real cut attribution and pending-at-cut, not only pre-arm pending. The expected-red pair proves that a live linked lock still blocks; the control proves actual recovery/custody. Further regression execution belongs to the parent gate, not this held preparation.
+
+Limits and terminal obligations
+
+The original actor stays unknown unless directly observed. A deliberately forced scoped producer proves only its ordering mechanism. A one-off observed pass does not falsify an intermittent race. Node24 historical green and pagination evidence do not assign a common cause. The prior helper ESRCH/lost-waitpid failure remains unrelated historical evidence. No deadline increase or default-lease substitution is proposed; the existing QA002 fixture-only 30000 ms workaround qualification remains.
+
+The two inherited residue roots were not opened, changed, removed or attributed by this child. All old bundles/logs were read-only. No repo source, test, docs, workflow, source-gate, staged content, commit, PR action, review, merge, deploy, network/security setting, real store, Fleet/native/physical job, or QA SHA release occurred. No public comment was sent.
+
+A later runtime terminal must include exact commands/counts/exclusions and source/build/helper pins; producer hits and missed predicates; actual retained-child exit/close plus wrapper waitpid/adopted receipts; absence checks only for exact known owned PIDs; numeric exact listener rebinds; and proof own synthetic credentials/stores are removed after shutdown. Do not claim whole-host absence. Preserve any failed receipts and owned leftover evidence rather than deleting uncertain authority. Parent owns any implementation gate, fix, integration checks, two NEW reviews and immutable QA handback.
+
+One preparation read-only command addressed nonexistent sync-protocol.ts. It exited 2; no target was executed. The raw stderr excerpt is retained in preparation-read-errors.txt. Corrected inspection used actual sync-http-server.ts, sync-lifecycle.ts and protocol-contract.md. This error does not affect verified source hashes or provide a test result.

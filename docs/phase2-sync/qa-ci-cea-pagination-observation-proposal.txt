@@ -1,0 +1,7 @@
+UNAPPLIED; parent decision only. No repository patch, production change, or new runtime is authorized by this report.
+
+The existing test-option boundary can distinguish a whole-case watchdog from protocol request/session limits. The private one-line 30_000 -> 120_000 diff is an observation control that completed this exact129-publication body under the registered250ms pacing. It is not a recommendation that120000ms is the right repository policy and does not establish the original combined failure's cause.
+
+If the parent elects to propose a source budget adjustment, keep it confined to this selected case's finite outer test option. Preserve all129 real publications, real durability,128+1 pages, intervening after-cut publication, immutable evidence and every original negative/custody/body assertion. Do not alter any request/session/lock/IPC/child bound, signature or authorization validation, clock, concurrency or persistent route policy. No production interface change is needed for this observation; no new fault switch is proposed.
+
+Remaining actual-cause discriminator: evidence from the failing combined context that locates its30s expiry relative to seed durable barriers/public returns, first identity, request outcomes, and cleanup. This report does not authorize collecting that evidence or repeating any application run. Parent owns any source proposal, combined checks and two new reviews.

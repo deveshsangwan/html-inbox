@@ -1,0 +1,74 @@
+SOURCE WRITING TERMINAL
+
+Gate A only. Worktree /home/agent/.t3/worktrees/html-inbox/t3-74158dc6 remains bound to t3/ubuntu20-failure-triage at HEAD cea30b48cbef814511e2eedfc83d1793bc011354. No commit or index change. Only packages/cli/src/sync-reconciliation.ts and NEW packages/cli/src/sync-preaborted-reconciliation.test.ts differ from the original clean checkout. All338 other tracked file hashes remain unchanged. Parent's other worktrees were not written.
+
+Authority
+
+Read and verified before editing the parent's qa-ci-cea-preabort-contract.md, SHA25661f2c84b3aff268d34bebb48677be9575502fb7b49176e6dcf67bad17d72b6d9. Its bytes still match at terminal audit. Contract copy is contract.md. Applied TDD and unslop within the already agreed real-store/reconciliation interfaces. No new permission or implementation gate was inferred. Gate B remains untouched and is not implemented here.
+
+Production change
+
+The7-added/1-removed-line correction separates the explicit detached/blocked lifecycle check from the cached permanent-error predicate. Existing parsing, duplicate/UUID/bound checks, store snapshot and unknown-route validation remain before route handling. Explicit lifecycle fences still return their prior status/error before cancellation. For active/reconnecting routes, the existing controller/deadline branch now precedes cached-error reporting. It returns aborted with lastError:null from the existing initialized result. It does not clear the persisted error or change route/configuration/retry/receipt state. Non-aborted cached permanent errors still block exactly as before.
+
+No sync-files, sync-client, sync-failure, wire/ledger/runtime schema, ownership, TLS, authorization, scheduling or deadline change. Original sync-protocol.test.ts, including100ms request/300ms pass, elapsed<1500ms, durable obligation, zero-cancelled-request and byte assertions, remains byte-for-byte unchanged. All other original source and tests match baseline hashes.
+
+Real regression and controls
+
+The new188-line file runs8 tests against real enrolled source/receiver stores. It establishes actual terminal-history readiness through validated store APIs, applies original bytes to the receiver, acknowledges the actual durable receipt, and creates pending work, configured runtime and persistent retry state. The active case uses real activation. The reconnecting case advances its route revision through configureRoute. It does not edit ledger files or fabricate custody.
+
+Each early-result case compares complete source AND receiver snapshots, covering generation, report records, outbox, receipts, runtime configuration, history and retry state, and checks the exact original source/receiver bytes. A transparent spy on the public openRouteAttempt method proves zero attempt-entry calls; it retains the real implementation. The credential callback must never run. Returned network counters must be zero. There are no real listeners or worker processes in the new fixture, and synthetic roots must be removed.
+
+Coverage: pre-aborted reconnecting and active routes with cached permanent failure; expired pass; pre-aborted clear cached error; ordinary non-aborted permanent block across two calls, followed by the real explicit retry and its pending work; real revoke/detached fence; real quarantine/blocked fence; unknown route plus malformed/duplicate/empty input and invalid request bound. Lifecycle controls supply both an aborted signal and expired deadline so cancellation cannot mask those fences.
+
+Red before implementation
+
+The first compiler invocation, build-red, exited2 on two mistakes in the new fixture: an unreachable needs-body comparison after assert.equal had already narrowed the result, and passing a function to recordRouteRun's numeric jitter argument. Both were corrected only in the new file. That failed compiler log and source hash remain; it is not claimed as a behavioral red.
+
+build-red-corrected then passed with reconciliation still identical to HEAD. regression-red20 ran8 tests on the original implementation:5 passed,3 failed,0 cancelled,0 skipped,1796.200835ms. Both enabled route states and expired-pass reporting failed actual blocked/expected aborted. Preservation/counter checks preceding those assertions passed. Clear-error, ordinary block/retry, lifecycle and validation controls passed. Red source manifest b6b0bd91fffc74c11a7a9993ebb69cc637c823f790a35172be53c92817723d3e is retained with reconciliation-baseline.ts and regression-red-source.ts.
+
+After the ordering correction, a typecheck/build passed on an intermediate source snapshot. Final test-only import/blank-line formatting then changed the source hash. Those intermediate receipts are retained separately, and do not stand in for final-byte verification. The runtime-tested red test differs from the final test only by that import/blank-line formatting; the exact red bytes are retained. No assertion or behavior was removed.
+
+Final-byte verification
+
+Baseline165-source manifest SHA256d7f1e5bbb5a4ebb0c66928f0ceb2402cc745770644697356f4099dff93340943.
+Final166-source manifest SHA25674a1f761d3d96b0446e4200fe6372eda5676b3bc91535c7f4e3fc207bf847d94.
+330 final compiled files have identical output from both runtime/compiler invocations, aggregate8edd0c0987cf0d0f04c3af2b1a5ab03cb740264e53cb264a25edd0c6167f8375.
+
+Final typecheck AND build pass on exact20.20.2 and24.21.0. Both containing invocations use the identical final source/compiled bytes and list only:
+sync-preaborted-reconciliation.test.js
+sync-protocol.test.js
+sync-revocation-order.test.js
+sync-publication.test.js
+
+Node20:61/61 pass,0 fail/cancel/skip,51503.047441ms.
+Node24:61/61 pass,0 fail/cancel/skip,40193.668271ms.
+All8 new tests pass in each containing invocation. No concurrency override, deadline override, broad verify or extra matrix was used. These are overlapping selected coverage, not122 independent tests or a full-unit/hosted result.
+
+Original controlled trigger on the actual final correction
+
+held-lock-frozen20 reuses the prior immutable140ms one-hit real-lock preload, SHA256721606291941dbbdb78fc2002a6fcdc1bdedda3e5d020ff0580cb84e7c44e661, copied into this owned scratch directory. It passes the unchanged original #505 test:1 pass,38 unmatched name-selection skips,0 fail/cancel,931.074772ms. Exactly one actual inner acquisition fails Managed store lock deadline exceeded under the unchanged100ms request/300ms pass. First reconciliation still returns blocked/local-validation-or-storage-failed with0 requests. The pre-aborted follow-up now returns aborted,lastError:null,0 requests. Thus the new ordering fixes this reporting symptom while leaving Gate B's raw local-deadline classification unchanged. The historical held-lock red/zero-hold control logs remain immutable; they were not relabeled.
+
+Isolation and runtime admission
+
+Every installer/compiler/test invocation used this worktree, an owned clean environment and Python subreaper. Dependencies, store and build environment existed only in this worktree. Each test got its own HOME/USERPROFILE/XDG/TMP/catalog under this scratch root. Application/proxy fixtures used synthetic CA/credentials and explicit loopback. Shared Node binaries were read-only and retain their requested hashes.
+
+Every one of the13 command receipts records the actual launcher /usr/bin/flock -w45 -E75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock followed by this task's mark-exec helper and exact command. The marker is created only after admission, so command-start UTC and time spent waiting are distinct. All13 were admitted within45s; no busy admission was counted as a test. The containing commands retain Node's default file concurrency and all original case bounds. The terminal rebind/removal audit also ran under that advisory mutex. No parent's wrapper, coordinator or audit file was used or written; only the authorized shared mutex was locked.
+
+Historical preservation
+
+All44 artifacts from /tmp/html-inbox-ubuntu20-triage-za3e9u5v still verify byte-for-byte against the same manifest44851568f0f2ff166c1ac251342958a8b505e9f4edee9b3dba80b4e7a1bc6bb4. Original10 failures/1 cancellation remain historical failed evidence. The old invalid Node24 outer audit still has no completed test/port verdict. The new valid Node24 containing run does not retroactively supply it with missing listener credit. #524's checkpoint-before-fault assertion distinction remains unchanged.
+
+Cleanup and source freeze
+
+Terminal UTC2026-10-25T00:41:36.635829+00:00. All291 sampled owned process identities are absent, disposing their descriptors; all142 captured127.0.0.1 listeners rebound again. Fixture-native reap/rebind checks also passed. Every command wrapper terminated with an empty remaining-child set and no wrapper signals. No saved/foreign PID was signalled. This is captured-process/fixture evidence, not a host-global handle assertion;50ms sampling can miss short-lived events.
+
+Own dependencies,330 compiled outputs, package store, private environments and temporary CA/signing/credential material were removed after process settlement. The T3 worktree and only the two owned edits remain. git diff --check passes; complete new-file and tracked diff was read and retained in owned-files.patch. Index SHA256f7a3497d1bc780aff4b3947a6bc0a58220b9ed6c9b4bdb4f1da5e36ed4711114 is unchanged. File hashes:
+sync-reconciliation.ts 71cfc27845cd81476e00a1457643dd9518b5ba8b87dddb6c0451c620917e01ab
+sync-preaborted-reconciliation.test.ts 90fb342273a85f73e611dd7aa4dc7c54decc029b10b7249290503d9fd5f975fb
+Patch SHA25602c4508472461cf1a86d76bff7391be1b1627f740435c6f1d77ead00faf498a6.
+
+Receipts and handoff
+
+commands-summary.txt and commands.json contain every exact argv, mutex launcher, wrapper/admission UTC, exit, counts and log SHA. Individual *.receipt.json files add environment, sampled process/fd/connection/listener metadata and cleanup. terminal-audit.json includes complete source/index/status and owned resource sets. source-baseline.sha256/source-red.sha256/source-final.sha256 and compiled-frozen20/24/terminal.sha256 retain membership/hashes. owned-files.patch includes the full new file. No source edits follow this freeze.
+
+Parent owns integration of only these terminal files, all other failure mechanisms, combined checks and TWO NEW independent full-rubric confirmations before any publication. This does not assign the original hosted contender or claim to fix other nonpassing cases. No native Windows/Mac/Fleet, remote job, real data/service, network/security setting, commit, push, comment, watch, PR mutation, merge, deploy or physical release occurred. Physical QA remains parked atd3.

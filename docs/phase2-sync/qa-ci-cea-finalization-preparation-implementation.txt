@@ -1,0 +1,80 @@
+TERMINAL ONE-FILE FINALIZATION PREPARATION AUTHOR HANDOFF
+
+Runtime released. Scoped cleanup ended2026-10-25T03:39:31.086489Z; the cleanup runner receipt ended03:39:31.111697Z and flock returned0. No runtime remains planned. This is author validation of the frozen one-file fixture gate, not integration, a new review, root combined green or original-cause closure.
+
+The six affected cases passed6/6 once on actual compiled prepared source, exact Node24.21.0. The preregistered native reader-bind preparation-order pair qualified with one4100ms hit per arm: actual prepared source passed and the explicitly original cold target failed its unchanged1000ms pre-action assertion. The original2800ms margin and5200ms absent-marker filesystem reds remain red against prepared source; both matching0ms controls passed. There were no unexpected failures, missed hooks, admission75, outer runner expiry, syntax failures, source corrections, retuning or natural reruns.
+
+Exact frozen source
+
+Authoritative contract was read and SHA-verified before overlay and at cleanup:35902b8d3f1275d1dc1053ed8e7469422d728a3b37c63398a1985f7c27f61649. Parent167source stayed at831bfb7c80e8c798283bb98ffa991e36eb167c86b8ca120562bc812ac0ea27e7. Only packages/cli/src/sync-finalization-lifecycle.test.ts is owned. Original targetfebcd2f3a664d1464da73c291aa93ab086aba419c3522a2caf831572cf87bd91; prepared/tested targetceb67694dd0dccd392b12523a3e3f8370570b5cf0eade2568df9987b1edf3205. Patch6be5c18f7cc88a50e3a8f0d8c00881c2e918203f2983e31a4cc4e94a324b583f,86insertions/3deletions, unchanged throughout validation.
+
+The exact166dependency overlay was reapplied around the owned target and resulting167source aggregate9c2539202ce4cd270cf4bec16d3dc4d772b2d69cf0c980617d9d75b6d36c54a3 verified. Frozen-lock ignore-scripts setup, owned tsc-rs typecheck and build passed. Prepared332compiled outputs aggregate537f8d5054f3a21b3f186fcc373a0fb26f0367301498966e9800daeed43d4160. Actual prepared compiled targetSHAc9146ade67a784a56a15e1c6ca64f2ec9a3db5713f533a2b12b4f78fdcb647ba was loaded in every prepared test invocation.
+
+The cold arm was separately compiled from the original target on the same166integrated dependencies. Its167source aggregate is831bfb7c80e8c798283bb98ffa991e36eb167c86b8ca120562bc812ac0ea27e7, its332compiled aggregate is the original combined db1e5031c55ca76b434de6519b59de42b8ffdad89ba3a3eb63099f4cba7834aa, and cold compiled targetSHAff015a363dbc43b733433404187d3bde8b138992e33c06acf750a1f8ef66cf90. This is an explicitly original cold fixture, not transformed prepared code or a claim that the cold arm contains new readiness assertions. Both compiler manifests and the exact compiled targets/child are retained.
+
+Behavior and preservation
+
+The one private helper starts the real selected source viewer through f.run withoutJSON, immediately remembers it for existing cleanup, verifies running/loopback status and checked viewer record identity, and retains only PID/process ID. Both authenticated worker statuses match retained process/inbox/incarnation/PID/configuration records. Source idle and empty tickets, exact destination ingestion URL and fresh enabled/unpaused ledgers are required. Routes must retain expected ID/revision/direction and reconnecting state; source must actually be due. Records, receipts, publication intents, outbox, history and full checkpoints must be empty before publication. Failed readiness fails rather than repairing state.
+
+Both completion loops call the helper after worker cleanup registration and before publicationArgs. Zero prepublication completion/ACK holds and the existing one target ticket remain. Following publication, the same actual running viewer PID/process ID is checked. The new record read is after the existing expiry-sensitive assertions. All139original assertion lines remain in the file; the six selected cases exercise their applicable original assertions. This is not coverage credit for the other20cases.
+
+Only real viewer spawning, native binding and initial readiness move before publication. Product ensureViewer reuse and final worker status remain real inside the original foreground bound. Target ticket admission, first verified TLS/history exchange, body transfer, receiver durability, source acknowledgement, completion hold and finalization all still happen after commit. Receiver safety and response/ACK interception stay in the parent. No sync f.json readiness, preflight ticket, second reconciler, wake/quiesce warmup, history/TLS warmup, policy reset, retry bypass, error clearing, new production hook or shared/child/unit-runner/API/schema change was introduced.
+
+Every original5000ms foreground,4000/5000ms observation,2000/1000/500ms margin,150ms cancellation,8000ms target CLI and20000ms case guard remains. Default test concurrency and actual application/race concurrency remain. Positive checks retain real receipt/canonical/body, exact-ticket/cancellation, signal/socket, enabled/unpaused retry and actual-handle/listener assertions.
+
+Six affected cases, exactly once
+
+containing-six: exit0,6tests/6pass/0fail/0cancel/0skip/0todo, native Node duration18608.901078ms, runner18.668707s. Original output shows remaining-before-action4099/4329/4210ms for completion calibration/viewer/status, and4330/4331/4320ms for held-ACK SIGINT/calibration/uninterrupted. Held-ACK calibration completed in26ms. Every target reached one actual receiver65-byte committed apply, source acknowledge and held completion. The three ACK cases each reached one actual ACK hold. Reuse checks passed. No uninterrupted cancellation was invented.
+
+Native reader-bind preparation-order pair
+
+The same external callback pacing4100ms, fixed before execution, selected only the actual detached source viewer, canonical private source home and configured nonzero127.0.0.1 reader port. It preserved native callback receiver/arguments and errors. Both hit and release recorded server.listening=true after actual native binding; the ephemeral viewer control listener was excluded. This is delayed callback completion after genuine bind, not simulated successful binding or a measured slow bind syscall.
+
+native-prepared: exit0,1/1,7.525842s. Actual reader PID233636, start identity retained in trace/runner, literal port44673. Exactly one hit at03:32:25.886Z and one release03:32:29.987Z. Genuine viewer command completed03:32:30.098Z; publication committed03:32:30.468Z. Thus the paced readiness finished before the foreground clock began. One target ticket, real receiver committed bytes/receipt, source acknowledge, one completion hold and same viewer identity were observed. Original pre-action margin4179ms and post-CLI3975ms passed; actual SIGINT issued the exact ticket cancel and aborted/closed its held request before expiry.
+
+native-cold: exit1,0pass/1fail,6.486983s. Original target, actual reader PID233977, literal port34879. Exactly one hit03:33:03.933Z and release03:33:08.034Z with native listener bound throughout. Publication had committed03:33:03.724Z. Real receiver committed65bytes03:33:04.263Z; source acknowledge03:33:04.277Z; completion was held03:33:04.326Z with4148ms remaining. Finalization marker appeared03:33:08.122Z,352ms before the actual request/pass deadline. The unchanged assertion observe actual activity before ordinary request expiry failed. No test SIGINT action was reached; selected CLI SIGTERM and subsequent request abort were teardown, not successful publication cancellation. The red's later post-action body/receipt assertions were not executed and get no credit.
+
+This pair captures a sufficient ordering mechanism in the controlled case and validates the actual prepared source against it. It does not identify the actor in any original combined red or guarantee general five-second throughput. The original cold target and prepared target differ by the disclosed frozen fixture patch; no other source dependency differs.
+
+Filesystem budget sensitivity after preparation
+
+margin-red: exit1,0pass/1fail,5.936583s. Exactly one real source directory-flushed callback completion retained2800ms after native fsync. Source eligibility was due, with no existing retry. The real ACK hold preceded the gate. Gate hit had4634ms and release1833ms remaining. Real receiver65-byte committed apply/source acknowledge occurred, then actual completion held with1473ms remaining. The unchanged completion.deadlineAt-Date.now()>2000 assertion failed before the test cancellation action.1473ms is the captured hold-time margin, not a fabricated exact assertion timestamp. Its later abort is teardown and gets no cancellation credit.
+
+margin-control: exit0,1/1,3.501424s. Exactly one0ms gate, the same real ACK/custody/completion path,4275ms before action, exact-ticket calibration37ms, actual abort/close and3822ms after CLI. All original assertions passed.
+
+missing-red: exit1,0pass/1fail,7.727823s. Exactly one5200ms actual callback gate,4633ms remaining at hit and release567ms after ticket deadline. Zero HTTPS starts, receiver applies, completion starts/holds or finalization markers. The unchanged original wait failed Timed out waiting for actual finalization hold. One best-effort ticket-cancel acknowledgement occurred27ms after the ticket deadline while the filesystem operation remained held. It does not prove cancellation of a held HTTPS request: no HTTPS request or custody existed. The selected child was stopped with SIGTERM by fixture teardown before gate release. No post-custody cancellation or missed-target credit is given.
+
+missing-control: exit0,1/1,3.406818s. Exactly one0ms gate, real custody/source acknowledgement, one completion hold and marker,4116ms before action, actual SIGINT ticket cancellation/request abort and3907ms after CLI. All original assertions passed.
+
+These controls retain honest pre-action failure after preparation. They do not classify a delayed filesystem callback as GateB's typed pre-ownership queue timer, alter filesystem/later-admission/cleanup error handling or broaden the remote allowlist. No route backoff or persistent policy was reset for green. The real earlier history failed positive with future backoff remains failed and qualified.
+
+Evidence and counts
+
+observe.cjs uses external existing-API/native callback wrappers through module exports, with no Module._compile hook or test source transformation. The actual compiled prepared target hash is logged at load and preserved. Passive observation overhead is not zero or calibrated. No raw headers, tokens, keys or bodies were logged; stage evidence contains safe identities/counts/timestamps/options. Actual generated TLS credentials stayed in private temporary fixtures and were removed.
+
+The runner was syntax-parsed before use, observer passed exact Node --check before any target, and cleanup helper was syntax-parsed before execution. No derived helper parse error, repair or retuning occurred. All install/compiler/syntax/test/cleanup commands used the shared flock-w45-E75 and this task's private continuously reaping runner. No root wrappers/audit files or parent build outputs were used. Node24.21.0 binary SHA7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c was read-only verified before and after; its adjacent package version is24.21.0. Node20 was not executed.
+
+There are14complete runner command logs/receipts plus the clean-environment bootstrap syntax receipt. Commands.json and commands-summary.txt retain exact child/outer argv, cwd, passed environment, UTC, native exit, duration, counts/exclusions and every input helper/runner SHA. Individual receipt folders contain exact helper snapshots and complete output.log. Critical-evidence.json qualifies the two native hits and all four FS hits, exact ticket/receipt/completion stages and failures. Stage-evidence.json retains full safe stage observations. Compiled-evidence/ and both332-file hash manifests preserve the actual two target versions.
+
+Seven test invocations selected12overlapping cases:9passes and3expected controlled failures,0cancel/skip/todo. There are6distinct affected case names, not12distinct new tests. The file declares26cases: containing-six excludes20 by name and each of six one-case invocations excludes25. Node reports only selected cases and skip0; filtered exclusions receive no passing coverage. No whole-file26/full-suite/Node20/concurrency-cap/stress matrix or natural repeat was run.
+
+Target logSHA256
+containing-six 7a739a8ed6fa76337076c8d7e159964157332ed7af3a0c93eff0247591efc31b
+native-prepared e85112c833e0677b91aa6c4fd58bc434a1cffebc3e5e93f84e2801dffabe3aa7
+native-cold fc90e7c2e720a9b1be999b3764c6f26defc4acbe9f532e0b0a3c77d995a77f34
+margin-red 25c4bf08d07b9ec5ca4692e1cb960d0f7f08b3bd10dbc0c32013e7380bab9121
+margin-control 9ff9744633580cd918f98105c20e142defea4d1185da91122f50b2f8e3400704
+missing-red 1bcb5194070ca9a004e1427301481b626fdff5672a1f577c6a33f38b13f5ff8e
+missing-control 50041e2d636b1b331d8b019e0bb16c1cc88295d602115eaeb5a97834854b9e5b
+
+Cleanup, source state and limits
+
+cleanup.json records226sampled unique owned PID/start identities absent,12adopted descendants reaped during command ownership, empty remaining-child sets, and71distinct captured literal loopback endpoints rebound at their exact addresses. Endpoints include reservations and teardown probes plus application listeners; this is not71independent product listeners.20ms sampling can miss transient processes. Retained fixture child-close/PID checks and actual handle-close/listener assertions supplement sampling. The cleanup runner separately sampled two additional owned identities and reaped its direct child; all228distinct identities across the14command receipts have empty remaining sets. The226identity pre-cleanup absence audit and the cleanup command's own remaining=[] proof are distinct. The runner sent no signals. Original tests' retained-child SIGINTs and teardown signals remain. No emergency/manual fallback cleanup or foreign signal was needed. There is no host-global PID/FD/port absence claim.
+
+All166nonowned source files were restored to their saved bytes/modes/absence, including removal of the two originally absent tests. Only the frozen owned test remains modified. Private dependency symlinks, dependencies/store/cache, both compiled runtime trees, cold build source tree, HOME/XDG/tmp and credentials/trust resources were removed after children stopped. Exact compiled targets remain as explicitly retained evidence only. No unknown lock was removed. Parent source167pin and authoritative contract remained unchanged; parent evolving docs were not edited here.
+
+HEAD remainscea30b48cbef814511e2eedfc83d1793bc011354. Sole owned diff is byte-identical to frozen prepared.patch. All339staged path/mode/object IDs equal HEAD. Raw index before/after this runtime interval both07c3d7f11e7e9be61c28d675c9ead52dcb07a6449cd6b7c4ff778dc9a253b31c; no raw index was written back. Earlier diagnostic/preparation raw-index metadata changes and failed equality audits remain qualified, with no exact historical raw restoration claim. Parent index remainse3dd34cce6446819560c71040ab9ba111d2c07087bc8b41e74f2922b3dcd1562.
+
+All514old diagnostic artifacts and348prepared artifacts were independently hash-verified unchanged at entry and cleanup. Their original setup/audit failures, invalid observers, failed positives and qualifications remain intact. New controlled reds are retained as reds. No new source/doc, production/child/shared-fixture/unit-runner edit, review, PR action, commit/push, native/Mac/Fleet/physical job, real inbox/service/credential/settings change, merge/deploy or interim QA SHA occurred.
+
+Original #230–233 combined actors remain unassigned; #231's historical ACK/completion predicate component is still unknown. Passing current prepared cases and controlled ordering evidence do not erase original local/hosted reds or establish hosted merge/image equivalence. Parent owns integration, required combined Node24/20 checks, two NEW reviews, any commits/hosted checks and immutable physical-QA release. Author runtime gate is terminal and released.

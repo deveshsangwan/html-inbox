@@ -1,0 +1,78 @@
+The bounded pagination comparison is terminal. Runtime is released. The registered sufficient mechanism was demonstrated; the original combined-run cause remains unknown. No repository/source/test/docs edit, deadline patch, PR action, commit, native/Fleet/physical action or SHA release occurred.
+
+The corrected zero-delay control passed in 5023.797993 ms. The single 250 ms arm cancelled at the original 30000 ms watchdog, with TAP duration 30066.768425 ms, while actual seed publications continued. At teardown entry, 95 publications had returned, publication 96 had reached its real ledger-directory-fsynced barrier and was still inside its registered timer, and zero identity/HTTPS requests had started. This is the predicted seed-budget failure, not a held protocol request or session-expiry result.
+
+Helper correction and source authority
+
+New private bundle: /tmp/html-inbox-515-pair-lr2ri8vu.
+The original /tmp/html-inbox-515-prep-_dzx33kv and /tmp/html-inbox-515-runtime-wfyubvck bundles remain byte-for-byte unchanged, including the invalid helper, full SyntaxError stack, earlier observed pass and all earlier reports. Their full memberships were checked before runtime and before cleanup: 347 and 53 files respectively, including the manifests for the original 346 and 52 artifacts.
+
+Only the authorized helper correction and evidence-path relocation were made. The normalized helper diff is exactly:
+
++"use strict";
+ module.exports = function installObservation({ label, delayMs }) {
+-"use strict";
+
+Corrected helper SHA256: 122c1377ea45dd2a8725fc2708ba3967b29acf3973f55c13a5ca916a6dda48fa.
+Unchanged zero-delay wrapper SHA256: a406dfa25eb78cbea83ac64e5c1a18fcde938cc460b82f3cf6fc988fa2a4570f.
+Unchanged 250 ms wrapper SHA256: 62971bc3a424764785de41ca7b10f6be0f95d2f7661e7c2c0bb701492597e7b9.
+Normalized-diff SHA256: 4f985306b329c9dff2e2ae474a4905bdf4b58f1b58f1c509c662d20549a83314.
+The original registration remains SHA256 a6b3e81599e89141a9cb7cc0636ed67f4405acb60ad566ff5f496e1b9c45bc80. Raw and normalized diffs and pre-execution hashes were saved before any command. No semantic instrumentation expansion occurred. The raw invalid helper and stack were also copied into prior-invalid/ without altering the originals.
+
+The derived module AND both wrappers each passed explicit exact-Node24.21.0 --check invocations under the owned mutex runner before either target. Setup then used frozen-lock/ignore-scripts installation and exactly one rebuild. No new natural baseline, matrix or Node20 invocation ran.
+
+All 167 source files, including both new tests, matched aggregate 831bfb7c80e8c798283bb98ffa991e36eb167c86b8ca120562bc812ac0ea27e7. The private project used the complete borrowed tree, never the stale committed CLI source. All 332 outputs matched the original combined-build aggregate db1e5031c55ca76b434de6519b59de42b8ffdad89ba3a3eb63099f4cba7834aa. This exact equivalence was checked before targets and before cleanup. No extra parent source was borrowed. Six pinned configuration files were copied from the prior owned bundle.
+
+The exact runtime binary was /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node, SHA256 7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c. Both target traces report v24.21.0 and that execPath. The original 30-second case watchdog, 5-second request bounds, 60-second session lease, 10-second default store acquisition bound, fixture bounds, clocks and assertions stayed unchanged.
+
+Matching control, first and exactly once
+
+Native test counts: tests 1, pass 1, fail 0, cancelled 0, skipped 0, todo 0, suites 0. Test duration 5023.797993 ms, TAP duration 5151.989470 ms. The exact name filter excludes 38 other cases from the 39-case containing file. Node24 omits those exclusions from TAP; none receives coverage credit. The adjacent expiry/capacity test remains excluded.
+
+There were exactly 129 seed publish starts, 129 real durable ledger events, 129 timer entries/exits and 129 successful publication returns, all in original order. Seed work took 3352.806031 ms; the maximum returned publication took 45.492805 ms. The configured zero-delay timers still waited on the real clock: measured total 142.430528 ms, maximum 1.391484 ms.
+
+All 11 actual client operations completed with their expected results. Missing first page, changed nonce and changed scope returned their original rejection outcomes; the original zero-premature-history-checkpoint assertion passed. Final push completed history, wrong locally pending ACK nonce rejected, correct activation succeeded and final-page replay rejected. Pull returned 128 descriptors, the actual after-cut publication completed, then page2 returned 1 descriptor with count129 and identical evidence. Cursor reuse rejected. Every original semantic assertion in the selected case passed. There was no fake response, manufactured ledger/inventory or receipt shortcut.
+
+This case proves metadata handshake/pagination behavior; history readiness is not body custody. It performs no receiver body transfer or sender committed-receipt confirmation. Instrumentation retains genuine source publication work and reports durable barriers separately from public operation returns.
+
+Control children 225644/startTicks540461326 and 225656/startTicks540461337 exited0, closed IPC and were reaped. Their exact 127.0.0.1 ports42865 and40359 were actually rebound/listened/closed by the unchanged fixture. The complete control gate was verified and recorded before the red arm was launched. No control error or late continuation error was observed.
+
+Paced red, second and exactly once
+
+The only configured experimental difference was delayMs250 instead of delayMs0 in the same corrected helper. Each timer runs after the actual native ledger directory flush and existing event callback succeed, before that event returns. Scope is limited to the selected case's real numbered seed publications in the owned synthetic source home. The helper never changes a syscall result, stored state, request, response or receipt. Real I/O, signing, validation and ownership operations still run.
+
+Native exit1; TAP tests1/pass0/fail0/cancelled1/skipped0/todo0/suites0. The original failure is testTimeoutFailure with 'test timed out after 30000ms'. Test duration30066.768425 ms; TAP duration30197.332308 ms. There are again 38 filtered exclusions, with no distinct additional test coverage credit.
+
+The arm reached 96 actual seed starts, 96 ledger-directory-fsynced events and 96 timer entries. Before cleanup, timers1 through95 had exited and publications1 through95 had returned. Publication96 reached its durable barrier at observer elapsed29875.522790 ms and entered its timer at29875.568725 ms. The last successful publication return, number95, was at29824.512473 ms. Cleanup began at30056.727198 ms while the 96th timer was still pending. The preceding complete publications continued advancing near the timeout; the last six returns and durable events are retained in the complete trace. No identity, client request, source inventory, activation, after-cut publication or page exchange had started.
+
+Completed publication durations remained finite, maximum328.850196 ms including the configured pacing. Across all96 eventual timer exits, measured waiting totaled24051.566130 ms; individual waits ranged249.506263 to250.974514 ms. That total includes the last timer's post-timeout completion. This is controlled callback pacing after real durable work, not measured native fsync latency, a calibrated replay of CI storage, or proof of general host pressure.
+
+Late continuation and cleanup evidence are separate
+
+Both application-stop operations succeeded after the timeout. Source child226538/startTicks540465592 closed with exit0 and its exact port45093 rebound. Receiver child226526/startTicks540465581 then closed with exit0 and port44367 rebound. The last stop returned at30113.864423 ms.
+
+Publication96's timer subsequently exited at30126.330698 ms. The still-pending public publication rejected at30127.224287 ms with nameError/codeENOENT, after teardown had begun and both application children had stopped. The fixed observer records the public-operation error category, not its underlying filesystem syscall/path/stack. Do not infer that uncaptured detail. No application-stop rejection or separate TAP cleanup-hook failure was reported. The complete TAP output and late event are preserved; no removal retry or forced lock cleanup was introduced.
+
+The late ENOENT does not reclassify the earlier recorded watchdog cancellation. The red arm receives no credit for unexecuted identity/manifest/nonce/scope/cursor or immutable-page assertions, nor for completing all129publications. A real durable barrier is not the same event as a successfully returned publication. The full paced semantic outcome remains unobserved.
+
+Causal conclusions and limits
+
+Sufficient mechanism DEMONSTRATED: added finite delays at actual sequential seed commit boundaries exhaust the original composite30s watchdog while genuine publication progress continues before the protocol begins. The matching zero-delay arm used the same helper/compiled source and completed all original semantics. The red reproduced the original failure class with target hits and direct stage evidence.
+
+Actual original combined-run cause UNKNOWN: the original #515 failure lacks internal progress and actor timing. It is not known whether it was seeding, in a handshake, awaiting a request or tearing down. This experiment does not identify native latency, scheduler/parallel-test effects or a product actor in that historical run. No common cause is assigned to its other four failures. Fresh fixtures, generated identities/ports and uncontrolled scheduling differ between executions; only the deliberate pacing setting was changed.
+
+Remaining unknowns: whether all129publications and all semantic assertions would finish under this same250ms pacing with a separately authorized longer observation guard, the precise syscall behind the late ENOENT, and the original combined-run stage/cause. No outer-budget override ran. No production/request/session/lock extension is supported or proposed here. The next discriminator and minimal UNAPPLIED diagnostic interface proposal are in minimal-unapplied-proposal.txt. Any further observation requires a new parent decision.
+
+The original local combined red remains tests1026/pass1020/fail4/cancelled1/skip1, with #515 timed out at30167.888558 ms. Original log SHA256 be9c68925dc1a002385074d2a2a9f92dc487b95beebe3363944b4b9311337f6d remains unchanged. Its typecheck/build passed; later stages were not reached and its Node20 command did not run. The earlier4.812s selected pass and the pre-test invalid control remain separate historical outcomes. All earlier hosted reds, controls and invalid observers remain qualified. The unguarded history positive remains genuinely failed from future route backoff; no policy reset or bypass was used here. GateB's typed initial same-process queue translation and excluded filesystem/later-admission/cleanup/remote-allowlist behavior were untouched.
+
+Receipts, resource scope and terminal cleanup
+
+Seven runtime commands ran, each under /usr/bin/flock -w45 -E75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock and the owned continuously reaping bounded runner: three syntax checks, one install, one build, one matching control and one paced red. No admission75 occurred. No command was retried. The runner retained scoped descendant PID/start identities and pidfds, continuously reaped waitable children and reported empty remainingOwned for every command. No timeout containment or signal occurred. Original parents reaped their children; no adopted orphan needed reaping.
+
+Exact command argv, UTC start/end, native and wrapper exits, complete output/error logs, process records, environment and helper/log hashes are retained in complete-command-receipts.json and receipts/*.json/*.log/*.processes.jsonl. All command environments were allowlisted into owned HOME/TMP/XDG/catalog/cache paths, with no inherited credentials, proxy settings or NODE_OPTIONS. Every code-bearing helper and wrapper is retained with its hash. The raw source/compiled pins, selected compiled case, input configs and original registration are retained too.
+
+At2026-10-25T03:19:45.363293+00:00, read-only audit found all30recorded unique process identities absent. Four exact captured listener ports had been rebound and closed. The fixture temporary tree was already empty. Before cleanup, the audit verified both entire historical bundles, all167source hashes/modes/memberships, all332compiled bytes, and original checkout byte/mode/absence state, HEAD/status/index and ignored membership. Parent docs evolved after the old371input; no unchanged371claim was made.
+
+Checkout HEAD remains cea30b48cbef814511e2eedfc83d1793bc011354, status empty and raw index SHA256823fc3b5ef0a9c9612312eedddd2ddd8dcda679cd39204e7fe047ad6f2b35ebf. Inspections used GIT_OPTIONAL_LOCKS=0. No overlay was applied, so no borrowed repository file needed restoration. The original two test absences remain intact. Only this new bundle's proven-owned build, project/dependencies, environment, cache and dependency symlink were removed after recorded actors stopped. No parent wrapper/audit was used or appended, no unknown lock removed, and no foreign PID signalled. The parent's shared lock file remains untouched.
+
+The runtime mutex was released when the paced arm's wrapper exited at2026-10-25T03:17:15.145444+00:00. No runtime followed. The later work was read-only evidence analysis and owned filesystem cleanup. No host-global process/FD absence, hosted merge/image equivalence, nativeWindows/macOS/Fleet, realLAN/Tailscale, physical persistence/sleep/restart, production readiness or releasedSHA is claimed.
