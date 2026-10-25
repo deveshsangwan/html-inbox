@@ -8,7 +8,7 @@ HTML Inbox is local-first. Publishing, deletion, and process management stay in 
 
 The CLI is packaged as a self-contained `html-inbox` executable with no runtime package dependencies.
 
-Version 0.3.0 lets you name independent local libraries and read an explicit set through a local hub. See [named inboxes and local reading](docs/named-inboxes.md) for selection, source membership, and exposure rules. Check the executable's `--help` for each command and flag; the published pinned `html-inbox@0.2.2` fallback lacks these features, and a checkout's version number alone does not prove support.
+Version 0.4.0 adds copying saved document text, selected passages, and code blocks from the reader. Named independent libraries and the read-only local hub introduced in 0.3.0 remain available. See [named inboxes and local reading](docs/named-inboxes.md) for selection, source membership, and exposure rules. Check the executable's `--help` for each command and flag; a checkout's version number alone does not prove support.
 
 Library commands select explicit `--inbox` / `--home`, then process `HTML_INBOX_NAME` / `HTML_INBOX_HOME`, then a configured default. Without a binding or default, registered entries require a one-operation choice by exact name or `#N` row in a fully interactive terminal. Redirecting stdin, stdout, or stderr disables the picker. Pipelines, non-TTY callers, and `--json` fail with available names and selector guidance on stderr, leaving stdout empty. Even one entry requires a choice. With no registered entries, legacy `~/.html-inbox` first use remains. A choice never saves a current inbox or default.
 
@@ -24,7 +24,7 @@ npx skills add deveshsangwan/html-inbox --skill html-inbox -g
 
 The skill installs agent instructions. The npm package supplies the executable. The installers are independent: adding a skill does not install a global CLI, and installing the CLI does not add a skill.
 
-On first use, the skill reuses a working, stable `html-inbox` 0.2.x or 0.3.x executable or selects the tested fallback `npx --yes html-inbox@0.2.2`. The [CLI resolution reference](skills/html-inbox/references/cli-resolution.md) defines the exact acceptance rules and fallback pin. It keeps that command prefix for the operation and preserves your inbox selection, catalog, port, saved viewer exposure, and Tailscale executable override. It checks actual command support before using newer features and reports unavailable capabilities without changing your destination or upgrading the pin. The HTML Inbox runtime requires Node.js 20 or newer. The fallback needs npm and registry access or a cached package.
+On first use, the skill reuses a working, stable `html-inbox` 0.2.x, 0.3.x, or 0.4.x executable or selects the tested fallback `npx --yes html-inbox@0.3.0`. That fallback supports named libraries and hubs but lacks the 0.4.0 reader copy dialog. The [CLI resolution reference](skills/html-inbox/references/cli-resolution.md) defines the exact acceptance rules and fallback pin. It keeps that command prefix for the operation and preserves your inbox selection, catalog, port, saved viewer exposure, and Tailscale executable override. It checks actual command support before using newer features and reports unavailable capabilities without changing your destination or upgrading the pin. The HTML Inbox runtime requires Node.js 20 or newer. The fallback needs npm and registry access or a cached package.
 
 `-g` installs the skill for your user across projects. Omit it to install in the current project. The installer lets you choose target agents; use `--agent codex` or `--agent claude-code` to choose explicitly:
 
@@ -74,6 +74,8 @@ npx skills update html-inbox -g
 For a project installation, run `npx skills update html-inbox -p` from that project. Use `html-inbox-remote` in place of `html-inbox` to update the optional Cloudflare skill. Omitting the skill name updates all skills in the selected scope. Interactive `npx skills update` without scope flags prompts for project, global, or both; `skills check` is an update alias, not a read-only check.
 
 You can also rerun the original individual `skills add` command with the same scope and agent selection. Refresh the complete skill directory, including bundled references and scripts. The skill's npm fallback stays pinned to its tested version until updated skill instructions change it.
+
+For 0.4.0, restart a verified viewer after updating to load the copy controls. Existing static readers gain them only through owner-controlled snapshot regeneration and publishing. There is no new CLI or permission migration from 0.3.x.
 
 For the 0.3 upgrade, add `--json` to viewer status/stop and service commands used by automation. Once catalog entries exist, bind unbound jobs with `--inbox`, absolute `--home`, `HTML_INBOX_NAME` / `HTML_INBOX_HOME`, or a deliberate default. With no entries, legacy home selection remains. The [named-inbox migration guide](docs/named-inboxes.md#upgrade-from-02x) covers the change.
 
@@ -127,7 +129,7 @@ Use `html-inbox viewer --foreground` to keep it attached for debugging, containe
 
 Detachment does not escape an agent's systemd scope or provide automatic restart. If that scope is stopped, its viewer stops too. Use the explicit [boot service](docs/self-hosting.md#start-at-boot) for links that must survive agent cleanup, logout, or reboot.
 
-Versions 0.2.x and 0.3.x share private control protocol 3. Stop a viewer started by 0.1.0 with its original executable before upgrading; newer CLIs refuse to signal incompatible or unverified process records. Restart an existing compatible viewer after updating to load the new code and named heading.
+Versions 0.2.x, 0.3.x, and 0.4.x share private control protocol 3. Stop a viewer started by 0.1.0 with its original executable before upgrading; newer CLIs refuse to signal incompatible or unverified process records. Restart an existing compatible viewer after updating to load the new code and reader controls.
 
 Manage the local library and viewer:
 

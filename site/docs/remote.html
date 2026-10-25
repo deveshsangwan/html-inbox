@@ -291,11 +291,19 @@ html-inbox remote status --json</code></pre>
           URL, test search and a document, and share that path rather than the
           site's root.
         </p>
+        <p>
+          Existing deployments do not change when the local CLI is updated.
+          Copy controls and their JSON resources appear after the owner generates
+          and publishes a new snapshot. Original document bytes and response
+          isolation policies remain intact.
+        </p>
         <h2 id="hosting-limits">Keep the snapshot within hosting limits</h2>
         <p>
           The current Cloudflare adapter checks a maximum of 20,000 upload files
           and 25 MiB per file before deployment. Generated viewer, document,
-          manifest, and policy files all contribute to the upload, so file count
+          manifest, and policy files all contribute to the upload. Version 0.4.0
+          adds a <code>copy.json</code> per document for saved text and code
+          copying, so file count
           is not the same as document count. Increasing
           <code>HTML_INBOX_MAX_BYTES</code> can let a local document exceed the
           remote file limit.

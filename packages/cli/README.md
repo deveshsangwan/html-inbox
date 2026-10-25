@@ -1,6 +1,6 @@
 # HTML Inbox
 
-Version 0.3.0 adds `inbox create`, `inbox register`, `--inbox` selection, and a local reading `hub` with explicit membership. See [named inboxes and local reading](https://github.com/deveshsangwan/html-inbox/blob/main/docs/named-inboxes.md) for selection, membership, and exposure rules. Check the actual executable's `--help` for each command and flag. The published pinned `html-inbox@0.2.2` fallback lacks these features; a checkout can report the same version with different capabilities. Updating a skill does not install or deploy them.
+Version 0.4.0 adds copying saved document text, selected passages, and code blocks from the reader. The named inbox commands and read-only local hub introduced in 0.3.0 remain available. See [named inboxes and local reading](https://github.com/deveshsangwan/html-inbox/blob/main/docs/named-inboxes.md) for selection, membership, and exposure rules. Check the actual executable's `--help` for each command and flag; a checkout can report the same version with different capabilities. Updating a skill does not install or deploy reader changes.
 
 HTML Inbox stores generated HTML reports in a local library, previews them through a sandboxed viewer, and can publish complete unlisted snapshots to a user-owned Cloudflare Pages project. The live viewer listens on loopback by default.
 
@@ -20,7 +20,7 @@ npx skills add deveshsangwan/html-inbox --skill html-inbox -g
 
 A skill supplies agent instructions; this npm package supplies the executable. The installers are independent. Adding a skill does not install a global CLI, and installing the CLI does not add a skill.
 
-On first use, the skill reuses a working, stable `html-inbox` 0.2.x or 0.3.x executable or uses its tested, version-pinned npm fallback for the operation. The tested fallback remains the published `npx --yes html-inbox@0.2.2`; it lacks named selection, the picker, and hubs. The [CLI resolution reference](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/cli-resolution.md) defines the exact acceptance rules and pin. It preserves your inbox selection, catalog, port, saved viewer exposure, and Tailscale executable override. It checks actual command support before using newer features and reports unavailable capabilities without changing your destination or upgrading the pin. The HTML Inbox runtime requires Node.js 20 or newer. The fallback needs npm and registry access or a cached package.
+On first use, the skill reuses a working, stable `html-inbox` 0.2.x, 0.3.x, or 0.4.x executable or uses its tested, version-pinned npm fallback for the operation. The tested fallback is the published `npx --yes html-inbox@0.3.0`; it includes named selection, the picker, and hubs, but its reader lacks the 0.4.0 copy dialog. The [CLI resolution reference](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/cli-resolution.md) defines the exact acceptance rules and pin. It preserves your inbox selection, catalog, port, saved viewer exposure, and Tailscale executable override. It checks actual command support before using newer features and reports unavailable capabilities without changing your destination or upgrading the pin. The HTML Inbox runtime requires Node.js 20 or newer. The fallback needs npm and registry access or a cached package.
 
 `-g` installs for your user across projects. Omit it for the current project. Choose an agent interactively or add `--agent codex` or `--agent claude-code`:
 
@@ -66,6 +66,8 @@ For project scope, run `npx skills update html-inbox -p` from that project. Subs
 
 You can also rerun the original `skills add` command with the same scope and agent selection. Refresh the whole skill, including its bundled references and scripts. The npm fallback remains pinned until updated skill instructions change it.
 
+For 0.4.0, restart a verified viewer after updating to load the copy controls. Existing static readers gain them only through owner-controlled snapshot regeneration and publishing. There is no new CLI or permission migration from 0.3.x.
+
 For the 0.3 upgrade, add `--json` to viewer status/stop and service commands used by automation. Once catalog entries exist, bind unbound jobs with `--inbox`, absolute `--home`, `HTML_INBOX_NAME` / `HTML_INBOX_HOME`, or a deliberate default. With no entries, legacy home selection remains. The [named-inbox migration guide](https://github.com/deveshsangwan/html-inbox/blob/main/docs/named-inboxes.md#upgrade-from-02x) covers the change.
 
 Before changing CLI versions, stop an older viewer with the executable that started it. The new CLI refuses unverified older process records. Confirm the viewer has stopped before installing the new version:
@@ -93,7 +95,7 @@ Startup waits for verified readiness. Use `--foreground` for debugging, containe
 
 Detachment does not escape an agent's systemd scope or provide automatic restart. Use an explicit [boot service](https://github.com/deveshsangwan/html-inbox/blob/main/docs/self-hosting.md#start-at-boot) for links that must survive agent cleanup, logout, or reboot. Graceful shutdown diagnostics include the timestamp, PID, and shutdown reason in `viewer.log`, foreground stderr, or the service journal.
 
-Versions 0.2.x and 0.3.x share private control protocol 3. Stop a viewer started by 0.1.0 with its original executable before upgrading; newer CLIs refuse incompatible or unverified process records. Restart an existing compatible viewer after updating to load the new code and named heading.
+Versions 0.2.x, 0.3.x, and 0.4.x share private control protocol 3. Stop a viewer started by 0.1.0 with its original executable before upgrading; newer CLIs refuse incompatible or unverified process records. Restart an existing compatible viewer after updating to load the new code and reader controls.
 
 Explicit self-hosting modes serve the complete live inbox for reading and searching:
 
@@ -111,6 +113,12 @@ Explicit `viewer service install`, `viewer service uninstall`, and `viewer servi
 ## Reading documents and appearance
 
 The inbox has a compact searchable list. Documents open beneath a slim toolbar on mobile and desktop. **Hide frame** gives the document the available browser area; the small **Show frame** button restores the toolbar. The iframe remains mounted, preserving document state and scroll. Document metadata is available in the details menu.
+
+Choose **Viewer options → Copy content...** to copy saved **Document text** or individual **Code blocks** as plain text. Use **Copy all**, select a portion and choose **Copy selection**, or pick a numbered code block. Code indentation, tabs, and trailing whitespace are preserved after normal HTML parsing. The preview stays loaded while the dialog is open.
+
+Copy text comes from the saved HTML, so scripted changes, edited form values, and chart visuals may be missing; CSS-hidden text can remain. To copy a selection from the current preview, use the browser's keyboard, context menu, or touch Copy. When automatic copying is unavailable or denied, use **Select all** in the dialog and your device's Copy command. This fallback also supports ordinary HTTP LAN readers. Copying changes only the reader's clipboard, and works in named viewers, the read-only hub, and newly generated static snapshots.
+
+If text stays fully selected after **Select all**, close and reopen the dialog before selecting a smaller portion.
 
 Appearance defaults to **System**, with **Light** and **Dark** overrides in the reader. The selected appearance applies to the inbox, frame, and documents that support it. Browser choices persist on that origin and device; they do not write to the CLI's preferences or sync across devices. Selecting System follows the reader's OS.
 

@@ -161,7 +161,7 @@
         </p>
         <h2 id="copy">Copy text and code</h2>
         <p>
-          Open <strong>Viewer options</strong>, then choose
+          In version 0.4.0 or newer, open <strong>Viewer options</strong>, then choose
           <strong>Copy content...</strong>. Copy all saved document text,
           select a portion and choose <strong>Copy selection</strong>, or
           switch to <strong>Code blocks</strong> and pick a numbered block.
@@ -184,6 +184,15 @@
         <p>
           If text stays fully selected after <strong>Select all</strong>,
           close and reopen the dialog before selecting a smaller portion.
+        </p>
+        <p>
+          Copying uses saved HTML rather than the live rendered page. HTML source,
+          Markdown, and formatted HTML are not clipboard formats in this release.
+          Restart an existing verified viewer after an authorized CLI update to
+          load these controls. Static readers gain them only when their owner
+          regenerates and publishes a snapshot. Loopback HTTP and valid HTTPS can
+          offer automatic copying; ordinary LAN or tailnet HTTP may require
+          manual Copy. Browser policy can deny writes even over HTTPS.
         </p>
         <h2 id="appearance">Choose appearance</h2>
         <p>

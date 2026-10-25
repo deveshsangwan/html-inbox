@@ -69,7 +69,7 @@ HTML_INBOX_PORT=4321 html-inbox viewer
 
 Native detachment creates a separate session on POSIX, but retains service-manager ownership such as a Linux systemd cgroup. Scope cleanup can terminate the detached viewer. Persistent availability requires an explicitly configured supervisor. Graceful shutdown logs its timestamp, PID, and first trigger before cleanup and completion after removing the matching process record. A signal reason identifies the received signal, not its sender.
 
-Versions 0.2.x and 0.3.x share private control protocol 3. Compatible running viewers retain their loaded code until restarted. The control health check is the source of truth for readiness. A viewer can be reused only when its protocol and opaque home identity match. Shutdown also matches the saved PID and per-process identity against current control health before signaling. Tailscale readiness additionally requires verification of the live Serve route. A private ownership journal tracks the exact HTTPS route and backend; startup failures and shutdown remove only that verified route, preserving the journal when external changes make cleanup unsafe.
+Versions 0.2.x, 0.3.x, and 0.4.x share private control protocol 3. Compatible running viewers retain their loaded code until restarted. The control health check is the source of truth for readiness. A viewer can be reused only when its protocol and opaque home identity match. Shutdown also matches the saved PID and per-process identity against current control health before signaling. Tailscale readiness additionally requires verification of the live Serve route. A private ownership journal tracks the exact HTTPS route and backend; startup failures and shutdown remove only that verified route, preserving the journal when external changes make cleanup unsafe.
 
 Boot configuration is an explicit service operation. Linux systemd system units and macOS LaunchDaemons run the foreground viewer as a selected normal user before login. Definitions preserve the inbox, exposure, port, executable paths, and required environment. Installation and removal require administrator privileges, reject unrelated definitions, and preserve documents. See [service setup](self-hosting.md).
 
@@ -134,13 +134,14 @@ i/<capability>/
   documents/<id>/
     index.html
     content/index.html
+    copy.json
 ```
 
 The root page contains no capability path. The owner marker contains only a schema version and opaque owner UUID. The manifest records sorted file digests and an aggregate snapshot hash without local paths. Original document bytes are copied to `content/index.html`; generated shell pages continue to embed them in sandboxed iframes.
 
 `security-headers.json` lives behind the capability path so the generic static output has no predictable file that discloses the bearer link. It is an adapter input rather than a file browsers consume. It describes common, root, shell, and document policies without provider routing syntax. A provider adapter must apply them to every corresponding route alias and must fail rather than publish without equivalent headers.
 
-The Cloudflare Pages adapter translates those policies into a compact `_headers` file in a disposable copy of the snapshot. The copy is deployed from its own root with Wrangler Direct Upload, then removed whether deployment succeeds or fails. The provider-neutral snapshot is never modified. Deployment preparation verifies every listed file digest, rejects extra and missing files, and checks the journaled snapshot hash before invoking Wrangler. A global common rule combines with separate root, inbox-shell, document-shell, and document-content rules so the content CSP never merges with the stricter shell CSP.
+The Cloudflare Pages adapter translates those policies into a compact `_headers` file in a disposable copy of the snapshot. The copy is deployed from its own root with Wrangler Direct Upload, then removed whether deployment succeeds or fails. The provider-neutral snapshot is never modified. Deployment preparation verifies every listed file digest, rejects extra and missing files, and checks the journaled snapshot hash before invoking Wrangler. A global common rule combines with separate root, inbox-shell, document-shell, and document-content rules so the content CSP never merges with the stricter shell CSP. A precise document copy-resource rule supplies JSON MIME without applying HTML sandbox policy to the payload.
 
 Wrangler is invoked as an argument array through an exact version pin. The Cloudflare account is selected with `CLOUDFLARE_ACCOUNT_ID`; API tokens remain inherited process credentials and are never command arguments, persisted state, or error output. The adapter validates the current Direct Upload limits (20,000 files and 25 MiB per file) and `_headers` limits (100 rules and 2,000 characters per line) before invoking Wrangler.
 

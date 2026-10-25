@@ -218,15 +218,15 @@
         </p>
         <p>
           A successful <code>html-inbox --version</code> returning a single
-          stable 0.2.x or 0.3.x version selects the installed executable. A missing,
+          stable 0.2.x, 0.3.x, or 0.4.x version selects the installed executable. A missing,
           failed, malformed, older, prerelease, or newer minor or major version
           selects the tested npm fallback. The skill checks that the fallback
-          reports exactly 0.2.2 before continuing. The
+          reports exactly 0.3.0 before continuing. The
           <a href="https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/cli-resolution.md">CLI resolution reference</a>
           defines the exact accepted version forms and pin.
         </p>
         <div class="docs-code">
-          <pre role="region" tabindex="0" aria-label="Pinned fallback verification command"><code>npx --yes html-inbox@0.2.2 --version</code></pre>
+          <pre role="region" tabindex="0" aria-label="Pinned fallback verification command"><code>npx --yes html-inbox@0.3.0 --version</code></pre>
         </div>
         <p>
           The fallback runs the package through npm without installing a global
@@ -267,10 +267,11 @@ html-inbox list --json
 html-inbox viewer status --json</code></pre>
         </div>
         <p>
-          The published 0.2.2 fallback lacks named selection, hubs, the picker,
-          publish JSON, and the new viewer/service JSON flags. Check actual help
+          The published 0.3.0 fallback supports named selection, hubs, the picker,
+          publish JSON, and viewer/service JSON flags. Its reader lacks the
+          <a href="viewer.html#copy">0.4.0 copy controls</a>. Check actual help
           before using each capability, including <code>inbox list --running</code>.
-          Older viewer status/stop and service commands already return JSON
+          Published 0.2.x viewer status/stop and service commands return JSON
           without a flag. A missing feature does not authorize changing the
           destination, clearing a binding, or upgrading the fallback.
           See <a href="named-inboxes.html#upgrade">0.3 migration</a>.
@@ -284,7 +285,7 @@ html-inbox viewer status --json</code></pre>
         </p>
         <p>
           The agent checks whether the selected CLI supports
-          <code>preferences</code> before saving the choice. The pinned 0.2.2
+          <code>preferences</code> before saving the choice. The pinned 0.3.0
           fallback supports this command; an older installed CLI such as 0.2.0
           may not. A CLI with preference support can save a different default:
         </p>
@@ -355,7 +356,7 @@ html-inbox viewer status --json</code></pre>
           exposure settings.
         </p>
         <p>
-          Versions 0.2.x and 0.3.x share protocol version 3. A 0.1.0 viewer needs its
+          Versions 0.2.x, 0.3.x, and 0.4.x share protocol version 3. A 0.1.0 viewer needs its
           original executable for shutdown before upgrading. Restart an
           existing viewer after a CLI update to load the new code, including
           the shutdown diagnostics introduced in 0.2.2.

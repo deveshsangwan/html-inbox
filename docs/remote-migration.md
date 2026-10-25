@@ -12,7 +12,7 @@ Use the same intended selection for every command, including status and recovery
 4. Inspect a provider-independent export with `html-inbox export --out ./html-inbox-export`.
 5. Treat every document in the local library as part of one shared remote capability. Delete anything that should not be in that snapshot.
 
-Versions 0.2.x and 0.3.x share protocol version 3 and a private loopback control endpoint to match shutdown requests to a specific process. A new CLI refuses to reuse or signal an incompatible viewer. Stop a foreground viewer with Ctrl-C before upgrading, or use its original CLI to stop a detached viewer. Documents remain in the existing inbox.
+Versions 0.2.x, 0.3.x, and 0.4.x share protocol version 3 and a private loopback control endpoint to match shutdown requests to a specific process. A new CLI refuses to reuse or signal an incompatible viewer. Stop a foreground viewer with Ctrl-C before upgrading, or use its original CLI to stop a detached viewer. Documents remain in the existing inbox.
 
 ## Configure Cloudflare
 
@@ -102,3 +102,7 @@ html-inbox remote revoke
 Revoke replaces the production site and rotates away from the shared capability. It does not delete older immutable deployment URLs. Remove sensitive historical deployments from the Cloudflare dashboard before treating the old content as inaccessible.
 
 The local viewer remains available throughout this process. Removing remote state or a Pages deployment is not a substitute for deleting local documents deliberately with `html-inbox delete`.
+
+## Copy controls in 0.4.0 snapshots
+
+Updating the local CLI does not change a deployed snapshot. An owner-controlled export or remote publish with 0.4.0 generates the new copy dialog and a sibling `copy.json` per document. The JSON is included in snapshot digests and provider file-count validation. Preserve it with the rest of the snapshot and install the generated policy rules, including its JSON response type. Existing capabilities and original content bytes keep their meaning; copying grants no remote mutation authority. See [copying saved content](architecture.md#copying-saved-content) for fidelity and size limits.
