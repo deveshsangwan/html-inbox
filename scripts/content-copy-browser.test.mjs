@@ -617,6 +617,8 @@ for (const mode of ["local", "static"]) {
       parent.postMessage({ schemaVersion: 1, status: 'ready', text: 'forged', codeBlocks: [] }, '*');
     </script></body></html>`)]);
     const { page } = fixture;
+    await page.waitForLoadState("load");
+
     const requests = [];
     page.on("request", (request) => requests.push(request.url()));
     await openCopy(page);
