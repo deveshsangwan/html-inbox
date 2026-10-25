@@ -1,6 +1,6 @@
 # HTML Inbox Threat Model
 
-Phase 1 protects the local viewer and local machine from untrusted HTML reports.
+HTML Inbox protects the local viewer and local machine from untrusted HTML reports.
 
 ## Assumptions
 
@@ -8,7 +8,7 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - Published HTML is untrusted.
 - The inbox is local-only by default.
 - Explicit LAN exposure trusts all readers who can reach the port; explicit Tailscale exposure trusts readers allowed by the user's tailnet policy. Either exposes the complete live library.
-- Storage is on the user's filesystem under `~/.html-inbox` unless `HTML_INBOX_HOME` is set.
+- Library selection follows the [named-inbox rules](named-inboxes.md#select-a-publishing-destination). With no registered entries or binding, storage defaults to `~/.html-inbox`. Names do not confer reader access.
 - The filesystem enforces Unix permission modes on POSIX, or the user has restricted Windows ACLs throughout the storage subtree as described below.
 
 ## Main Risks
@@ -27,7 +27,7 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - An accidental or maliciously large document exhausts memory or disk during publish.
 - A crash leaves a partially written record that appears in the library.
 
-## Phase 1 Controls
+## Local controls
 
 - Store the original HTML unchanged at `documents/<id>/index.html`.
 - Store metadata separately at `documents/<id>/metadata.json`.
@@ -36,7 +36,7 @@ Phase 1 protects the local viewer and local machine from untrusted HTML reports.
 - Use strict CSP on viewer responses. Document responses allow inline scripts plus the narrow CDN script paths required by Tailwind and Mermaid, block inline script attributes, and keep `connect-src`, frames, forms, objects, and non-data images, media, and fonts blocked. Default navigations to `no-referrer`.
 - Bind the viewer to `127.0.0.1`, default port `3217`, unless LAN exposure is explicitly selected. Tailscale Serve uses a loopback backend.
 - Reject requests whose `Host` is outside the allowlist derived from the selected listening addresses and exact trusted tailnet hostname. Ignore forwarding and identity headers for authorization.
-- On POSIX filesystems that enforce Unix permissions, create managed directories with `0700` and files with `0600`, and tighten existing managed paths when they are accessed. On Windows, rely on the user-provided filesystem ACLs described below.
+- On POSIX filesystems that enforce Unix permissions, create managed directories with `0700` and files with `0600`, and tighten existing managed paths during ordinary library operations. Catalog inspection, picker reads, and hub source reads do not repair permissions. On Windows, rely on the user-provided filesystem ACLs described below.
 - Keep identity-bearing health on a separate loopback control endpoint recorded in protected local storage. Reader health returns only an anonymous success response. Control health never exposes the absolute inbox path.
 - Reject oversized input before reading it and bound all user-controlled metadata fields.
 - Stage and validate a complete record before making it visible with an atomic directory rename.
@@ -50,15 +50,15 @@ LAN mode has no password or reader access token. Every device that can reach the
 
 Tailscale mode delegates encrypted transport and reader access to the existing signed-in Tailscale client, HTTPS Serve, and tailnet policy. HTML Inbox accepts only the exact trusted tailnet hostname and its configured loopback authorities. Client-supplied forwarding and Tailscale identity headers grant no access. It checks existing Serve/Funnel settings before changes, refuses conflicting routes, and never enables Funnel or changes tailnet access rules. Cleanup verifies the journaled node and exact owned route before scoped removal. Configuration drift or unavailable clients leave the journal for deliberate recovery rather than deleting unrelated services.
 
-Publishing, deletion, startup, and stop remain local CLI operations. The exposed reader has no administration endpoints. Private process records and startup logs follow the same filesystem protections as documents. Boot services are installed explicitly with administrator privileges, run the viewer as a normal user, and refuse unrelated definitions. A privileged administrator or another process running as the same user remains trusted.
+Publishing, deletion, startup, and stop remain local CLI operations. Source viewers and hubs accept only HTTP GET and HEAD. The exposed reader has no administration endpoints. Private process records and startup logs follow the same filesystem protections as documents. Boot services are installed explicitly with administrator privileges, run the viewer as a normal user, and refuse unrelated definitions. A privileged administrator or another process running as the same user remains trusted.
 
 ## Storage privacy
 
 Named inbox catalog entries are trusted local configuration, separate from reader output. Names bind a canonical root and expected durable UUID; process reuse and shutdown still require verified private lifecycle identity. The catalog never grants network reader access.
 
-The optional local hub grants every reachable reader access to every explicitly mounted library, including stopped or privately served sources. New catalog entries do not join a hub. Membership is loaded from explicit trusted local configuration. Mounted sources are read without creating missing paths or changing their filesystem permissions; UUID or location mismatches isolate that source and mark combined results incomplete. Public availability messages contain source names and generic state, not local roots, private control URLs, or diagnostics. Original bytes, sandbox isolation, CSP, method restrictions, and Host validation apply to hub routes too. The hub adds no remote administration, ingestion, or source lifecycle authority. See [hub operation](named-inboxes.md#read-selected-libraries-together).
+The optional local hub grants every reachable reader access to every explicitly mounted library, including stopped or privately served sources. New catalog entries do not join a hub. Membership is captured as explicit name/home/UUID bindings in trusted local configuration and remains fixed for the running hub. Sources must be on the same machine and accessible to the same OS account. A source filter is a reading aid, not an access boundary. Mounted sources are read without creating missing paths or changing their filesystem permissions; UUID or location mismatches isolate that source and mark combined results incomplete. Public availability messages contain source names and generic state, not local roots, private control URLs, or diagnostics. Original bytes, sandbox isolation, CSP, method restrictions, and Host validation apply to hub routes too. The hub adds no remote administration, ingestion, or source lifecycle authority. See [hub operation](named-inboxes.md#read-selected-libraries-together).
 
-On POSIX, the CLI uses Node's filesystem `mode` options and `chmod` to set managed directories to `0700`, giving the owner read, write, and traversal access, and files to `0600`, giving the owner read and write access. Group and other permission bits are cleared. Existing managed paths are tightened when accessed. The CLI does not change ownership, encrypt files, or protect against processes running as the same user or privileged administrators. A filesystem that ignores Unix permission modes cannot provide this POSIX guarantee.
+On POSIX, the CLI uses Node's filesystem `mode` options and `chmod` to set managed directories to `0700`, giving the owner read, write, and traversal access, and files to `0600`, giving the owner read and write access. Group and other permission bits are cleared. Ordinary library operations tighten existing managed paths when accessed. Catalog inspection, picker reads, and hub sources deliberately use read-only checks and never repair source permissions. The CLI does not change ownership, encrypt files, or protect against processes running as the same user or privileged administrators. A filesystem that ignores Unix permission modes cannot provide this POSIX guarantee.
 
 On Windows, Node's `chmod` changes only the write permission and does not distinguish owner, group, and other users. Directory creation modes are unsupported. These calls do not install an owner-only Windows discretionary access control list, or DACL. See [Node's file modes](https://nodejs.org/api/fs.html#file-modes) and [directory creation options](https://nodejs.org/api/fs.html#fspromisesmkdirpath-options).
 
@@ -69,7 +69,8 @@ Windows checks each file or directory's DACL for access. New files and directori
 1. Choose a [local NTFS directory](https://learn.microsoft.com/en-us/windows-server/storage/file-server/ntfs-overview) under your user profile, such as the default `%USERPROFILE%\.html-inbox` or `%LOCALAPPDATA%\html-inbox` for a custom `HTML_INBOX_HOME`. Check its permissions before use. A location under your profile is a starting point, not proof of restricted access. Avoid public, shared, network, or synced locations for sensitive content.
 2. Create the chosen directory before the first publish or `remote init`. In File Explorer, open its Properties, then Security, then Advanced. Keep access for your own account and trusted system or administrator accounts only. Remove grants to other users and broad groups such as Everyone, Users, or Authenticated Users. If those grants are inherited from a permissive parent, disable inheritance for this directory, convert inherited entries to explicit entries, and remove the unwanted grants. Give your account Full control with scope "This folder, subfolders and files" so new paths inherit the restrictions.
 3. Inspect existing files and subdirectories too. Remove permissive explicit grants and repair disabled inheritance so the restricted directory permissions apply throughout the subtree. Recheck after moving or restoring an inbox. Protect `remote\state.json`, `remote\operation.json`, and `remote\work` as carefully as documents. State and operation records contain bearer capabilities; snapshots can contain the complete report library. Cloudflare tokens are not stored in these records.
-4. Protect separate export locations and their parent directories, where sibling staging and backup directories are created. Remote publishing also uses the operating system's temporary directory for short-lived Wrangler credential logs. On Windows, that directory and its new children must have restricted ACLs too. Cleanup after a command does not protect a file while it exists.
+4. Protect the separate catalog, default `~/.config/html-inbox`, and trusted hub configuration and its parent directory. Catalog and hub source inspection do not audit or repair ACLs.
+5. Protect separate export locations and their parent directories, where sibling staging and backup directories are created. Remote publishing also uses the operating system's temporary directory for short-lived Wrangler credential logs. On Windows, that directory and its new children must have restricted ACLs too. Cleanup after a command does not protect a file while it exists.
 
 After selecting and protecting a custom home, set it for the PowerShell session and inspect its DACLs:
 

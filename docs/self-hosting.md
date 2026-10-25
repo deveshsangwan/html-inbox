@@ -4,6 +4,8 @@
 
 Detachment does not provide supervision or escape the launching process's service-manager ownership. On Linux, a viewer launched inside an agent's transient systemd scope remains in that scope even though it has a separate session and process group. Stopping a scope with `KillMode=control-group` also stops its detached viewer. `nohup`, `disown`, or another session do not move a process to a different cgroup. Use the explicit [boot service](#start-at-boot) below when shared links must survive agent cleanup, logout, or reboot. Ordinary startup never installs that service or changes the manager's cleanup policy.
 
+Keep the same explicit `--inbox`, absolute `--home`, or process binding throughout viewer commands. When catalog entries exist, unbound scripts require a selector or configured default; only a fully interactive terminal offers a picker. See [named selection and upgrades](named-inboxes.md#upgrade-from-02x). In 0.3.0, add `--json` to viewer status/stop and service commands for machine-readable output.
+
 First startup listens on loopback. Choose `--lan` or `--tailscale` explicitly to share the viewer. LAN access trusts everyone who can reach the port. The browser can read documents; publishing and deletion remain CLI commands.
 
 The last successful port and exposure are saved in the private inbox. Later starts and publishing reuse those settings unless you select a port or exposure explicitly. Stop the viewer before changing its exposure. `html-inbox viewer --loopback` resets saved exposure to loopback.
@@ -28,7 +30,9 @@ html-inbox viewer service status
 sudo /absolute/path/to/node /absolute/path/to/html-inbox viewer service uninstall --user alice
 ```
 
-`--user` selects the normal account. A sudo invocation can also use `SUDO_USER`. A root shell without a selected normal account must provide `--user`. The default inbox is that account's `~/.html-inbox`, even when sudo sets `HOME` to `/root`. Choose the normal account whose inbox the viewer will serve. The service cannot run as root; the administrator selects the intended account without a fixed UID threshold.
+`--user` selects the normal account. A sudo invocation can also use `SUDO_USER`. A root shell without a selected normal account must provide `--user`. With no catalog entries, binding, or default, the legacy inbox is that account's `~/.html-inbox`, even when sudo sets `HOME` to `/root`. Choose the normal account whose inbox the viewer will serve. The service cannot run as root; the administrator selects the intended account without a fixed UID threshold.
+
+Named service selection uses the catalog of the account invoking the CLI. Resolve the intended absolute `--home` as the normal user before elevation so sudo cannot select a different catalog. Named libraries retain the single fixed boot-service definition.
 
 To preserve a custom inbox, set its absolute path for installation, status, and removal. The directory's parent must already exist, and an existing inbox must belong to the selected user. Installation creates a missing inbox and assigns it to that user. It never recursively changes document ownership.
 
@@ -76,7 +80,7 @@ On macOS, inspect service state with `launchctl print system/com.html-inbox.view
 
 Linux installs `/etc/systemd/system/html-inbox-viewer.service`, sets `User=`, invokes the foreground viewer with `Type=exec`, and enables `multi-user.target`. macOS installs `/Library/LaunchDaemons/com.html-inbox.viewer.plist`, sets `UserName`, and uses the system launchd domain with `RunAtLoad`. Both restart failed processes and allow 120 seconds for graceful shutdown, including verified Tailscale cleanup. Commands that wait for a stop or restart allow 150 seconds for the manager to finish. Service status checks the manager and the viewer's private readiness information.
 
-Service readiness and status run the viewer status CLI as the selected user's UID and GID, including Tailscale checks. The administrator process invokes the system service manager, but does not execute the inbox's configured Tailscale command with administrator privileges.
+Service readiness and status run the viewer status CLI as the selected user's UID and GID, including Tailscale checks. They request `--json`, retrying without it only for an older parser's exact unsupported-JSON error. This keeps compatible saved 0.2.x executables usable without replacing the service. The administrator process invokes the system service manager, but does not execute the inbox's configured Tailscale command with administrator privileges.
 
 Uninstallation stops and disables the owned service, removes its definition, and preserves documents, saved configuration, inbox identity, and logs. Successful shutdown removes the matching active process record and any verified owned-route journal. Ordinary `viewer stop` stops the process without removing boot configuration. Use service uninstall to prevent boot startup.
 

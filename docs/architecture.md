@@ -1,6 +1,6 @@
 # HTML Inbox Architecture
 
-Phase 1 is a local-first inbox for trusted users publishing untrusted HTML. Documents may use the official Tailwind browser CDN or Mermaid v11 CDN so reports can stay small instead of embedding generated CSS and JavaScript.
+HTML Inbox is a local-first inbox for trusted users publishing untrusted HTML. Documents may use the official Tailwind browser CDN or Mermaid v11 CDN so reports can stay small instead of embedding generated CSS and JavaScript.
 
 ## Command
 
@@ -12,7 +12,7 @@ html-inbox publish ./report.html --title "SvelteKit Migration Report" --type rep
 
 ## Storage
 
-Default home:
+The 0.3 library selector resolves explicit flags, environment bindings, then a configured default. Registered entries without a binding require a one-operation terminal choice or fail for automation. See [selection rules](named-inboxes.md#select-a-publishing-destination). With no registered entries or bindings, the legacy default home is:
 
 ```text
 ~/.html-inbox
@@ -33,13 +33,15 @@ documents/<id>/metadata.json
 
 `index.html` is the original uploaded HTML bytes. `metadata.json` holds the generated id, title, type, publish time, and source file name.
 
-On POSIX filesystems that enforce Unix permissions, `private-storage.ts` creates and tightens managed directories to `0700` and files to `0600`. It rejects symbolic links and unexpected file types at the managed paths it checks, but does not change ownership. On Windows, Node's `chmod` does not establish owner-only ACLs. Privacy relies on existing file and directory ACLs and the permissions inherited when new paths are created. The CLI does not install or verify those ACLs, so a permissive `HTML_INBOX_HOME` can expose documents and remote state without a warning. The [Windows storage prerequisites](threat-model.md#windows-storage-prerequisites) apply to all local storage described as private here, including staging, trash, exports, and temporary credential logs.
+For ordinary library operations on POSIX filesystems that enforce Unix permissions, `private-storage.ts` creates and tightens managed directories to `0700` and files to `0600`. It rejects symbolic links and unexpected file types at the managed paths it checks, but does not change ownership. On Windows, Node's `chmod` does not establish owner-only ACLs. Privacy relies on existing file and directory ACLs and the permissions inherited when new paths are created. The CLI does not install or verify those ACLs, so a permissive `HTML_INBOX_HOME` can expose documents and remote state without a warning. The [Windows storage prerequisites](threat-model.md#windows-storage-prerequisites) apply to all local storage described as private here, including staging, trash, exports, and temporary credential logs.
 
 New records include a storage schema version. Legacy records without the field are read as schema version 1. Publishing validates metadata and writes both files in the private `documents/.staging/<id>` area, then makes the complete record visible with one same-filesystem directory rename. Interrupted staging records are never listed. A corrupt committed record is skipped with a diagnostic instead of breaking the rest of the library.
 
 ## Backend
 
-Named library selection and the optional local reading hub are described in [named inboxes](named-inboxes.md). A private per-user catalog binds intentional names to canonical homes and expected UUIDs. CLI operations resolve one destination before calling the existing store and lifecycle. Hub membership is separate trusted local configuration; it never controls publishing or auto-mounts catalog entries.
+Named library selection and the optional local reading hub are described in [named inboxes](named-inboxes.md). A private per-user catalog binds intentional names to canonical homes and expected UUIDs. CLI operations resolve one destination before calling the existing store and lifecycle. Hub membership is separate trusted local configuration; it never controls publishing or auto-mounts catalog entries. `inbox-catalog.ts`, `inbox-selection.ts`, and `inbox-picker.ts` own name bindings and destination choice. Catalog inspection and picker reads do not create missing sources or tighten permissions.
+
+`DocumentSource` in `documents.ts` is the read-only reader contract. `LocalDocumentSource` implements same-machine, same-account hub reads independently of `LocalDocumentBackend` storage preparation. It validates the canonical home, durable UUID, file types, ownership where available, and bounded reads without creating paths, changing modes, or writing runtime records. A corrupt committed source record makes that source unavailable. `hub-config.ts` freezes explicit name/home/UUID mounts; `hub.ts` provides their source objects to the shared reader. Healthy mounts remain readable when another source fails, and the shell marks results incomplete. Every reachable hub reader can read every mount, including sources whose standalone viewer is stopped or private.
 
 The local document store exposes these operations:
 
@@ -53,7 +55,7 @@ Deletion first renames a committed document into the private trash area so it di
 
 ## Viewer
 
-The viewer binds `127.0.0.1:3217` by default. Explicit LAN exposure selects a listening IP and serves the complete live inbox to reachable readers. Tailscale exposure keeps the backend on loopback and uses HTTPS Serve within the user's existing tailnet. Neither mode adds HTTP mutation or administration routes.
+The viewer binds `127.0.0.1:3217` by default. Explicit LAN exposure selects a listening IP and serves the complete live inbox to reachable readers. Tailscale exposure keeps the backend on loopback and uses HTTPS Serve within the user's existing tailnet. Both viewers and hubs accept only HTTP GET and HEAD. Neither adds HTTP mutation or administration routes. Hubs run in the foreground on loopback port 3218 by default, support explicit LAN binding, and do not manage Tailscale Serve, boot services, or source lifecycles.
 
 The reader accepts only explicit `Host` values derived from its configuration and reported interface URLs. Tailscale's exact verified DNS name is trusted configuration. Forwarded-host and identity headers do not authorize requests. The reader's `/health` response is anonymous. A separate loopback control listener returns the opaque inbox identity, protocol version, PID, and process identity through a private endpoint recorded under the inbox home.
 
@@ -67,7 +69,7 @@ HTML_INBOX_PORT=4321 html-inbox viewer
 
 Native detachment creates a separate session on POSIX, but retains service-manager ownership such as a Linux systemd cgroup. Scope cleanup can terminate the detached viewer. Persistent availability requires an explicitly configured supervisor. Graceful shutdown logs its timestamp, PID, and first trigger before cleanup and completion after removing the matching process record. A signal reason identifies the received signal, not its sender.
 
-The control health check is the source of truth for readiness. A viewer can be reused only when its protocol and opaque home identity match. Shutdown also matches the saved PID and per-process identity against current control health before signaling. Tailscale readiness additionally requires verification of the live Serve route. A private ownership journal tracks the exact HTTPS route and backend; startup failures and shutdown remove only that verified route, preserving the journal when external changes make cleanup unsafe.
+Versions 0.2.x and 0.3.x share private control protocol 3. Compatible running viewers retain their loaded code until restarted. The control health check is the source of truth for readiness. A viewer can be reused only when its protocol and opaque home identity match. Shutdown also matches the saved PID and per-process identity against current control health before signaling. Tailscale readiness additionally requires verification of the live Serve route. A private ownership journal tracks the exact HTTPS route and backend; startup failures and shutdown remove only that verified route, preserving the journal when external changes make cleanup unsafe.
 
 Boot configuration is an explicit service operation. Linux systemd system units and macOS LaunchDaemons run the foreground viewer as a selected normal user before login. Definitions preserve the inbox, exposure, port, executable paths, and required environment. Installation and removal require administrator privileges, reject unrelated definitions, and preserve documents. See [service setup](self-hosting.md).
 

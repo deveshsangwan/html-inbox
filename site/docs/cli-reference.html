@@ -77,6 +77,7 @@
             <ul>
               <li><a href="index.html">Getting started</a></li>
               <li><a href="agent-setup.html">Agent setup</a></li>
+              <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
               <li><a href="publishing.html">Publish documents</a></li>
               <li><a href="html-compatibility.html">HTML compatibility</a></li>
             </ul>
@@ -115,6 +116,7 @@
               <ul>
                 <li><a href="index.html">Getting started</a></li>
                 <li><a href="agent-setup.html">Agent setup</a></li>
+                <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
                 <li><a href="publishing.html">Publish documents</a></li>
                 <li>
                   <a href="html-compatibility.html">HTML compatibility</a>
@@ -151,9 +153,10 @@
         <p class="docs-eyebrow">HTML Inbox documentation</p>
         <h1>CLI reference</h1>
         <p class="docs-lead">
-          Commands operate on the library selected by HTML_INBOX_HOME. Run
-          html-inbox --help for the installed command set and html-inbox
-          --version to identify the release.
+          This reference describes 0.3.0. Library commands resolve one destination
+          from explicit flags, environment, or the configured default. Run
+          <code>html-inbox --help</code> for the actual installed command set
+          and <code>html-inbox --version</code> to identify the release.
         </p>
 
         <h2 id="global">Help and version</h2>
@@ -172,29 +175,82 @@ html-inbox -v</code></pre>
           unsupported flags return an error. The CLI has no browser
           administration API.
         </p>
+        <h2 id="selection">Library selection</h2>
+        <p>
+          Library commands accept <code>--inbox &lt;name&gt;</code> and absolute
+          <code>--home &lt;path&gt;</code>. Explicit selection overrides the entire
+          environment tier, then <code>HTML_INBOX_NAME</code> / <code>HTML_INBOX_HOME</code>
+          override the configured default. A name and home in the same tier must
+          match. Unknown names, missing roots, and changed identities fail.
+        </p>
+        <p>
+          With entries and no binding or default, stdin, stdout, and stderr must
+          all be TTYs for the picker. Enter an exact name or <code>#N</code> row;
+          <code>:q</code>, Ctrl-C, or EOF cancels. The choice applies once and
+          never saves a current inbox. Even one entry requires a choice.
+          Scripts, redirected streams, and JSON mode fail with guidance instead.
+          With no entries or bindings, legacy <code>~/.html-inbox</code> first use remains.
+          See <a href="named-inboxes.html#selection">selection details</a>.
+        </p>
+        <h2 id="catalog">Named inbox catalog</h2>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="Named inbox command syntax"><code>html-inbox inbox create &lt;name&gt; --home &lt;absolute-path&gt; [--json]
+html-inbox inbox register &lt;name&gt; --home &lt;absolute-path&gt; [--json]
+html-inbox inbox list [--running] [--json]
+html-inbox inbox default &lt;name&gt;
+html-inbox inbox default --clear</code></pre>
+        </div>
+        <p>
+          Create initializes a new library; register names an existing valid
+          library in place. Names use 1-63 lowercase letters, digits, underscores,
+          or hyphens, start with a letter or digit, and exclude reserved filenames.
+          Bindings capture canonical homes and UUIDs. List inspects registered
+          sources read-only and shows stopped, unavailable, or incompatible entries.
+          <code>--running</code> includes only privately verified running viewers;
+          it does not discover unregistered libraries or select a destination.
+          <code>--json</code> includes local paths. Defaults affect future unbound
+          operations only; <code>inbox default</code> has no JSON flag.
+        </p>
+        <h2 id="hub">Local reading hub</h2>
+        <div class="docs-code">
+          <pre role="region" tabindex="0" aria-label="Hub command syntax"><code>html-inbox hub init --config &lt;absolute-path&gt; --inbox &lt;name&gt; [--inbox &lt;name&gt; ...] [--name &lt;title&gt;]
+html-inbox hub --config &lt;absolute-path&gt; [--port &lt;port&gt;] [--loopback | --lan] [--host &lt;ip&gt;]</code></pre>
+        </div>
+        <p>
+          Init captures 1-128 explicit source bindings in a new config under an
+          existing canonical parent directory; it refuses replacement. Default
+          title is <code>Reading hub</code>. Startup runs in the foreground on
+          loopback port 3218, prints a reader URL, and stops with Ctrl-C. Sources
+          must be on this machine and accessible to the same OS account. Every
+          reachable reader can read every mount, including stopped or private
+          source viewers. Membership stays fixed; new catalog entries do not join.
+          Hubs do not configure Tailscale or boot services, and neither hub command
+          accepts <code>--json</code>. See <a href="named-inboxes.html#hub">hub operation</a>.
+        </p>
         <h2 id="documents">Documents</h2>
         <div class="docs-code">
           <pre
             role="region"
             tabindex="0"
             aria-label="Document command syntax"
-          ><code>html-inbox publish &lt;file.html&gt; --title &lt;title&gt; --type &lt;type&gt;
+          ><code>html-inbox publish &lt;file.html&gt; --title &lt;title&gt; --type &lt;type&gt; [--json]
 html-inbox list [--json]
 html-inbox delete &lt;id&gt; [--force] [--json]</code></pre>
         </div>
         <p>
           <code>publish</code> requires one regular UTF-8 <code>.html</code> or
           <code>.htm</code> file and both metadata flags. It prints a document
-          URL. It does not accept stdin, JSON input, or <code>--json</code>.
+          URL, or a receipt with <code>url</code>, <code>inbox</code>, and
+          <code>home</code> with <code>--json</code>. It does not accept stdin or JSON input.
           Title and type are non-empty text labels, limited to 200 and 64
           characters.
         </p>
         <p>
           <code>list</code> prints metadata in newest-first order, as
-          tab-separated text or JSON. <code>delete</code> requires the document
+          a readable table or JSON. <code>delete</code> requires the document
           ID, asks for confirmation unless <code>--force</code> is supplied, and
           reports metadata plus reclaimed bytes with <code>--json</code>.
-          Non-interactive deletion needs <code>--force</code>.
+          Non-interactive or JSON deletion needs <code>--force</code>.
         </p>
         <h2 id="preferences">Appearance preferences</h2>
         <div class="docs-code">
@@ -219,8 +275,8 @@ html-inbox delete &lt;id&gt; [--force] [--json]</code></pre>
             tabindex="0"
             aria-label="Viewer command syntax"
           ><code>html-inbox viewer [--foreground] [--loopback | --lan | --tailscale] [--host &lt;ip&gt;] [--port &lt;port&gt;]
-html-inbox viewer status
-html-inbox viewer stop</code></pre>
+html-inbox viewer status [--json]
+html-inbox viewer stop [--json]</code></pre>
         </div>
         <div class="docs-table-wrap">
           <table>
@@ -286,7 +342,9 @@ html-inbox viewer stop</code></pre>
           reuse the inbox's saved configuration, or loopback port 3217 on first
           startup. Stop the active viewer before changing configuration.
           <code>status</code> and <code>stop</code> accept no startup flags and
-          print JSON without a <code>--json</code> option.
+          print readable text by default. Add <code>--json</code> for machine-readable
+          fields; a successful status command can still report a stopped, conflicting,
+          or incompatible viewer.
         </p>
         <h2 id="service">Boot services</h2>
         <div class="docs-code">
@@ -294,19 +352,23 @@ html-inbox viewer stop</code></pre>
             role="region"
             tabindex="0"
             aria-label="Service command syntax"
-          ><code>html-inbox viewer service install [--user &lt;normal-user&gt;] [--loopback | --lan | --tailscale] [--host &lt;ip&gt;] [--port &lt;port&gt;]
-html-inbox viewer service uninstall [--user &lt;normal-user&gt;]
-html-inbox viewer service status [--user &lt;normal-user&gt;]</code></pre>
+          ><code>html-inbox viewer service install [--user &lt;normal-user&gt;] [--loopback | --lan | --tailscale] [--host &lt;ip&gt;] [--port &lt;port&gt;] [--json]
+html-inbox viewer service uninstall [--user &lt;normal-user&gt;] [--json]
+html-inbox viewer service status [--user &lt;normal-user&gt;] [--json]</code></pre>
         </div>
         <p>
           Install and uninstall require administrator privileges on Linux with
           systemd or macOS. The viewer runs as the selected normal account.
           <code>--user</code> or sudo's <code>SUDO_USER</code> selects that
           account; root itself is refused. Only install accepts networking
-          options. All service commands print JSON.
+          options. All service commands print readable text by default; use
+          <code>--json</code> for automation.
         </p>
         <p>
-          Use the same absolute <code>HTML_INBOX_HOME</code> for a custom inbox.
+          Use the same absolute <code>--home</code> or <code>HTML_INBOX_HOME</code>
+          for a custom inbox. Elevated named selection uses the invoking
+          account's catalog; resolve the normal user's intended home before sudo.
+          There is still one fixed boot-service definition per machine.
           See <a href="boot-services.html">boot services</a> for stable
           executable paths, permissions, and sudo examples.
         </p>
@@ -420,6 +482,22 @@ html-inbox remote revoke [--yes] [--json]</code></pre>
           captured output. Authentication comes from Wrangler's existing login
           or the Cloudflare token environment, not an HTML Inbox password.
         </p>
+        <h2 id="output">Output and automation migration</h2>
+        <p>
+          In 0.3.0, viewer status/stop and service commands require
+          <code>--json</code> to retain machine-readable output. Plain document
+          and catalog lists are readable tables. Plain publish, detached viewer
+          startup, and hub startup retain URL-only stdout. Named context, picker
+          text, and warnings go to stderr. JSON never prompts or grants approval;
+          deletion requires <code>--force</code> and revoke requires <code>--yes</code>.
+        </p>
+        <p>
+          Published 0.2.x viewer and service commands output JSON without that
+          flag. Check actual help before using new flags with an older CLI. The
+          published 0.2.2 skill fallback has no named selection or hub support.
+          See <a href="named-inboxes.html#upgrade">upgrade steps</a> and the
+          <a href="https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/cli-resolution.md">canonical CLI resolver rules</a>.
+        </p>
         <h2 id="environment">Environment variables</h2>
         <div class="docs-table-wrap">
           <table>
@@ -431,11 +509,20 @@ html-inbox remote revoke [--yes] [--json]</code></pre>
             </thead>
             <tbody>
               <tr>
+                <td><code>HTML_INBOX_NAME</code></td>
+                <td>Registered library name in the environment selection tier.</td>
+              </tr>
+              <tr>
+                <td><code>HTML_INBOX_CATALOG_HOME</code></td>
+                <td>Private per-user catalog, default <code>~/.config/html-inbox</code>. Independent of the selected library.</td>
+              </tr>
+              <tr>
                 <td><code>HTML_INBOX_HOME</code></td>
                 <td>
-                  <code>~/.html-inbox</code>. Selects library and private
-                  operational state. Relative paths resolve against the working
-                  directory. Boot operations default to the selected normal
+                  Library and private operational state in the environment selection
+                  tier. With no binding, default, or registered entries, the legacy
+                  home is <code>~/.html-inbox</code>. Relative paths resolve against the working
+                  directory. Unconfigured legacy boot operations use the selected normal
                   account's home.
                 </td>
               </tr>
@@ -450,7 +537,7 @@ html-inbox remote revoke [--yes] [--json]</code></pre>
                 <td><code>HTML_INBOX_MAX_BYTES</code></td>
                 <td>
                   <code>10485760</code>, or 10 MiB. Positive safe integer byte
-                  limit for a published document.
+                  limit for publish and hub document content reads.
                 </td>
               </tr>
               <tr>
@@ -503,12 +590,16 @@ html-inbox remote revoke [--yes] [--json]</code></pre>
           <p class="docs-toc-label">On this page</p>
           <ul>
             <li><a href="#global">Help and version</a></li>
+            <li><a href="#selection">Library selection</a></li>
+            <li><a href="#catalog">Named inbox catalog</a></li>
+            <li><a href="#hub">Local reading hub</a></li>
             <li><a href="#documents">Documents</a></li>
             <li><a href="#preferences">Appearance preferences</a></li>
             <li><a href="#viewer">Viewer</a></li>
             <li><a href="#service">Boot services</a></li>
             <li><a href="#export">Static export</a></li>
             <li><a href="#remote">Cloudflare remote commands</a></li>
+            <li><a href="#output">Output and migration</a></li>
             <li><a href="#environment">Environment variables</a></li>
           </ul>
         </nav>

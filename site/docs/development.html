@@ -77,6 +77,7 @@
             <ul>
               <li><a href="index.html">Getting started</a></li>
               <li><a href="agent-setup.html">Agent setup</a></li>
+              <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
               <li><a href="publishing.html">Publish documents</a></li>
               <li><a href="html-compatibility.html">HTML compatibility</a></li>
             </ul>
@@ -113,6 +114,7 @@
               <ul>
                 <li><a href="index.html">Getting started</a></li>
                 <li><a href="agent-setup.html">Agent setup</a></li>
+                <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
                 <li><a href="publishing.html">Publish documents</a></li>
                 <li>
                   <a href="html-compatibility.html">HTML compatibility</a>
@@ -225,6 +227,10 @@ corepack pnpm verify</code></pre>
                 </td>
               </tr>
               <tr>
+                <td>Named selection and hubs</td>
+                <td><code>inbox-catalog.ts</code>, <code>inbox-selection.ts</code>, <code>inbox-picker.ts</code>, <code>hub-config.ts</code>, <code>hub.ts</code>, <code>local-document-source.ts</code></td>
+              </tr>
+              <tr>
                 <td>Documents and storage</td>
                 <td>
                   <code>backend.ts</code>, <code>documents.ts</code>,
@@ -288,8 +294,8 @@ corepack pnpm verify</code></pre>
           public boundaries.
         </p>
         <p>
-          Keep the viewer read-only, preserve metadata escaping and document
-          isolation, and exercise process identity before adding any process
+          Keep viewer and hub HTTP routes read-only with GET/HEAD only. Preserve
+          metadata escaping and document isolation, and exercise process identity before adding any process
           action. Changes to external integration should use recording commands
           and temporary paths in tests, with real host checks performed
           deliberately.

@@ -77,6 +77,7 @@
             <ul>
               <li><a href="index.html">Getting started</a></li>
               <li><a href="agent-setup.html">Agent setup</a></li>
+              <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
               <li><a href="publishing.html">Publish documents</a></li>
               <li><a href="html-compatibility.html">HTML compatibility</a></li>
             </ul>
@@ -115,6 +116,7 @@
               <ul>
                 <li><a href="index.html">Getting started</a></li>
                 <li><a href="agent-setup.html">Agent setup</a></li>
+                <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
                 <li><a href="publishing.html">Publish documents</a></li>
                 <li>
                   <a href="html-compatibility.html">HTML compatibility</a>
@@ -219,8 +221,7 @@
         <p>
           Host validation checks the configured addresses and explicit trusted
           tailnet hostname. It does not authenticate a reader. Forwarding or
-          Tailscale identity headers grant no access. All reader routes remain
-          read-only; administration stays in the local CLI.
+          Tailscale identity headers grant no access. Source viewers and hubs accept only GET and HEAD; administration stays in the local CLI.
         </p>
         <p>
           Public <code>/health</code> exposes only anonymous success. Process
@@ -230,8 +231,10 @@
         </p>
         <h2 id="storage">Know where data lives</h2>
         <p>
-          The default inbox is <code>~/.html-inbox</code>.
-          <code>HTML_INBOX_HOME</code> selects another library. Original HTML is
+          The legacy inbox is <code>~/.html-inbox</code> when there are no
+          registered entries or bindings. Version 0.3.0 also supports explicit
+          <code>--inbox</code> / absolute <code>--home</code>, environment bindings,
+          and a configured default. See <a href="named-inboxes.html#selection">selection rules</a>. Original HTML is
           stored at <code>documents/&lt;id&gt;/index.html</code> and metadata at
           <code>documents/&lt;id&gt;/metadata.json</code>.
         </p>
@@ -244,8 +247,9 @@
         </p>
         <p>
           On POSIX filesystems that enforce permissions, managed directories use
-          <code>0700</code> and files use <code>0600</code>. Existing managed
-          paths are tightened when accessed. Symlink and regular-file checks
+          <code>0700</code> and files use <code>0600</code>. Ordinary library operations tighten existing managed paths when accessed.
+          Catalog inspection, picker reads, and hub source reads do not create
+          missing paths or tighten source permissions. They are not permission repair. Symlink and regular-file checks
           protect managed paths, and the process records have additional
           descriptor and link-count checks.
         </p>
@@ -254,6 +258,16 @@
           recursively, or protect against privileged administrators and
           processes running as the same account. A filesystem that ignores Unix
           mode bits cannot provide the POSIX privacy guarantee.
+        </p>
+        <p>
+          The per-user catalog is separate, default <code>~/.config/html-inbox</code>.
+          Entries bind canonical homes and durable UUIDs. A hub config captures
+          explicit mounts, fixed for that running hub. Only same-machine,
+          same-account sources are supported. Every reachable hub reader can read
+          every mount, even if a source viewer is stopped or private. Source filters
+          do not restrict access. Missing or mismatched sources mark results
+          incomplete while healthy sources remain readable. Protect catalog and
+          hub configuration as trusted local files. See <a href="named-inboxes.html#hub">hub boundaries</a>.
         </p>
         <h2 id="windows">Prepare Windows storage</h2>
         <p>
@@ -280,7 +294,9 @@
             child grants. Recheck after a restore or move.
           </li>
           <li>
-            Protect separate export paths and their parents. Remote operations
+            Protect the separate catalog, hub configuration and its parent,
+            and every source tree. Read-only inspection does not audit or repair
+            Windows ACLs. Protect separate export paths and their parents. Remote operations
             also need protected operating-system temporary storage for
             short-lived Wrangler logs.
           </li>
