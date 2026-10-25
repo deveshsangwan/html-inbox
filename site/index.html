@@ -336,7 +336,9 @@
               <h3>Find it again</h3>
               <p>
                 Search by title, type or source file. The background viewer
-                stays running after you close the terminal.
+                survives the launching CLI exiting. Use an explicit
+                <a href="docs/boot-services.html">boot service</a> for links
+                that must survive agent cleanup or reboot.
               </p>
               <a class="landing-text-link" href="docs/viewer.html"
                 >Manage the viewer</a
@@ -410,6 +412,14 @@
             <a href="docs/security-storage.html"
               >Understand reader access and storage</a
             >.
+          </p>
+
+          <p class="landing-access-note">
+            In 0.3.0, name independent libraries and choose each destination
+            explicitly. A local hub reads selected libraries together on this
+            machine without starting their viewers. Every reachable hub reader
+            can read every selected library.
+            <a href="docs/named-inboxes.html">Set up named inboxes and a reading hub</a>.
           </p>
 
           <div class="landing-hosting-notes">

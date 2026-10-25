@@ -8,11 +8,11 @@ HTML Inbox is local-first. Publishing, deletion, and process management stay in 
 
 The CLI is packaged as a self-contained `html-inbox` executable with no runtime package dependencies.
 
-The unreleased named-inbox work lets you name independent local libraries and read an explicit set through a local hub. See [named inboxes and local reading](docs/named-inboxes.md) for selection, source membership, and exposure rules. Check the executable's `--help` for each command and flag; the published pinned `html-inbox@0.2.1` fallback lacks these features, and a checkout's version number alone does not prove support.
+Version 0.3.0 lets you name independent local libraries and read an explicit set through a local hub. See [named inboxes and local reading](docs/named-inboxes.md) for selection, source membership, and exposure rules. Check the executable's `--help` for each command and flag; the published pinned `html-inbox@0.2.2` fallback lacks these features, and a checkout's version number alone does not prove support.
 
-With that support, library commands select explicit `--inbox` / `--home`, then process `HTML_INBOX_NAME` / `HTML_INBOX_HOME`, then a configured default. Without a binding or default, registered entries require a one-operation choice by exact name or `#N` row in a fully interactive terminal. Redirecting stdin, stdout, or stderr disables the picker. Pipelines, non-TTY callers, and `--json` fail with available names and selector guidance on stderr, leaving stdout empty. Even one entry requires a choice. With no registered entries, legacy `~/.html-inbox` first use remains. A choice never saves a current inbox or default.
+Library commands select explicit `--inbox` / `--home`, then process `HTML_INBOX_NAME` / `HTML_INBOX_HOME`, then a configured default. Without a binding or default, registered entries require a one-operation choice by exact name or `#N` row in a fully interactive terminal. Redirecting stdin, stdout, or stderr disables the picker. Pipelines, non-TTY callers, and `--json` fail with available names and selector guidance on stderr, leaving stdout empty. Even one entry requires a choice. With no registered entries, legacy `~/.html-inbox` first use remains. A choice never saves a current inbox or default.
 
-Use `html-inbox inbox list --running [--json]` for registered, verified running viewers. Human status, catalog, and document lists use text or tables; use advertised `--json` flags for automation. Check running-only, viewer JSON, and service JSON support separately. Plain publish, detached viewer startup, and hub startup retain URL-only stdout. Legacy viewer status/stop and service commands already emit JSON without a flag; check help before adding revised flags. JSON never prompts; deletion still requires `--force` and remote revocation `--yes`.
+Use `html-inbox inbox list --running [--json]` for registered, verified running viewers. Human status, catalog, and document lists use text or tables; use advertised `--json` flags for automation. Check running-only, viewer JSON, and service JSON support separately. Plain publish, detached viewer startup, and hub startup retain URL-only stdout. In 0.3.0, viewer status/stop and service commands print readable text by default; add `--json` in scripts that previously parsed their default JSON. Published 0.2.x commands emit JSON without that flag; check help before adding it to an older executable. JSON never prompts; deletion still requires `--force` and remote revocation `--yes`.
 
 ## Set up your agent
 
@@ -24,7 +24,7 @@ npx skills add deveshsangwan/html-inbox --skill html-inbox -g
 
 The skill installs agent instructions. The npm package supplies the executable. The installers are independent: adding a skill does not install a global CLI, and installing the CLI does not add a skill.
 
-On first use, the skill reuses a working, stable `html-inbox` 0.2.x executable or selects the tested fallback `npx --yes html-inbox@0.2.1`. It keeps that command prefix for the operation and preserves your inbox selection, catalog, port, saved viewer exposure, and Tailscale executable override. It checks actual command support before using newer features and reports unavailable capabilities without changing your destination or upgrading the pin. The HTML Inbox runtime requires Node.js 20 or newer. The fallback needs npm and registry access or a cached package.
+On first use, the skill reuses a working, stable `html-inbox` 0.2.x or 0.3.x executable or selects the tested fallback `npx --yes html-inbox@0.2.2`. The [CLI resolution reference](skills/html-inbox/references/cli-resolution.md) defines the exact acceptance rules and fallback pin. It keeps that command prefix for the operation and preserves your inbox selection, catalog, port, saved viewer exposure, and Tailscale executable override. It checks actual command support before using newer features and reports unavailable capabilities without changing your destination or upgrading the pin. The HTML Inbox runtime requires Node.js 20 or newer. The fallback needs npm and registry access or a cached package.
 
 `-g` installs the skill for your user across projects. Omit it to install in the current project. The installer lets you choose target agents; use `--agent codex` or `--agent claude-code` to choose explicitly:
 
@@ -75,6 +75,8 @@ For a project installation, run `npx skills update html-inbox -p` from that proj
 
 You can also rerun the original individual `skills add` command with the same scope and agent selection. Refresh the complete skill directory, including bundled references and scripts. The skill's npm fallback stays pinned to its tested version until updated skill instructions change it.
 
+For the 0.3 upgrade, add `--json` to viewer status/stop and service commands used by automation. Once catalog entries exist, bind unbound jobs with `--inbox`, absolute `--home`, `HTML_INBOX_NAME` / `HTML_INBOX_HOME`, or a deliberate default. With no entries, legacy home selection remains. The [named-inbox migration guide](docs/named-inboxes.md#upgrade-from-02x) covers the change.
+
 Before changing CLI versions, stop an older viewer using the executable that started it. The new CLI refuses to control unverifiable older process records. Confirm the viewer has stopped before installing the new version. For a global install:
 
 ```sh
@@ -111,7 +113,7 @@ html-inbox publish ./examples/report.html \
 
 The command stores the original HTML in the selected library, starts or reuses the background viewer, and prints a usable document URL. With no registered libraries, binding, or default, first use stores documents under `~/.html-inbox`. Set `HTML_INBOX_HOME` to choose another library or `HTML_INBOX_PORT` to select a port. Publishing preserves saved exposure and reuses an exposed viewer's network URL.
 
-On POSIX filesystems that enforce Unix permissions, the CLI creates and tightens managed directories to `0700` and files to `0600`. On Windows, privacy depends on the filesystem's existing and inherited access control lists. The CLI does not install or verify owner-only Windows ACLs. Keep `HTML_INBOX_HOME` in a protected local user directory and restrict access to its files and subdirectories, including `remote` state containing bearer capabilities. Follow the [Windows storage prerequisites](docs/threat-model.md#windows-storage-prerequisites) before storing sensitive reports or configuring remote publishing.
+On POSIX filesystems that enforce Unix permissions, ordinary library operations create and tighten managed directories to `0700` and files to `0600`. Catalog inspection, picker reads, and hub source reads do not repair source permissions. On Windows, privacy depends on the filesystem's existing and inherited access control lists. The CLI does not install or verify owner-only Windows ACLs. Keep `HTML_INBOX_HOME` in a protected local user directory and restrict access to its files and subdirectories, including `remote` state containing bearer capabilities. Follow the [Windows storage prerequisites](docs/threat-model.md#windows-storage-prerequisites) before storing sensitive reports or configuring remote publishing.
 
 HTML documents are limited to 10 MiB by default. Set `HTML_INBOX_MAX_BYTES` to a positive byte count when a deliberate workflow needs a different limit.
 
@@ -123,7 +125,9 @@ html-inbox viewer
 
 Use `html-inbox viewer --foreground` to keep it attached for debugging, containers, or a service manager. Failed background startup reports an error and keeps diagnostics under the protected inbox home.
 
-Stop a viewer started by an older HTML Inbox release before upgrading. The private control protocol has changed; the new CLI refuses to signal a process whose older record it cannot verify.
+Detachment does not escape an agent's systemd scope or provide automatic restart. If that scope is stopped, its viewer stops too. Use the explicit [boot service](docs/self-hosting.md#start-at-boot) for links that must survive agent cleanup, logout, or reboot.
+
+Versions 0.2.x and 0.3.x share private control protocol 3. Stop a viewer started by 0.1.0 with its original executable before upgrading; newer CLIs refuse to signal incompatible or unverified process records. Restart an existing compatible viewer after updating to load the new code and named heading.
 
 Manage the local library and viewer:
 
@@ -134,7 +138,7 @@ html-inbox viewer status
 html-inbox viewer stop
 ```
 
-Use `--json` with `list` or `delete` for automation. Non-interactive deletion requires `--force`. The viewer also supports server-rendered search across title, type, and source file name.
+Use `--json` with `publish`, `list`, `preferences`, `delete`, viewer status/stop, or service commands for automation. Non-interactive deletion requires `--force`. The viewer also supports server-rendered search across title, type, and source file name.
 
 ## Reading documents and appearance
 
@@ -169,7 +173,7 @@ html-inbox viewer --lan
 html-inbox viewer --lan --host 192.168.1.20 --port 4321
 ```
 
-LAN mode trusts everyone who can reach that port. There is no password, login, or reader token. The default LAN address is `0.0.0.0`; the CLI reports concrete interface URLs instead of a wildcard browser URL. `--host` selects an IP address on a multi-interface server, and `--port` overrides `HTML_INBOX_PORT`. The operating system's firewall determines which devices can reach the listener.
+LAN mode trusts everyone who can reach that port. There is no password, login, or reader token. First LAN startup, or a switch from another mode, binds `0.0.0.0` unless `--host` is supplied. An existing LAN configuration retains its saved host, including with explicit `--lan`. The CLI reports concrete interface URLs instead of a wildcard browser URL. `--host` selects an IP address on a multi-interface server, and `--port` overrides `HTML_INBOX_PORT`. The operating system's firewall determines which devices can reach the listener.
 
 Use an existing installed, connected Tailscale client to serve HTTPS within your tailnet:
 
@@ -244,7 +248,7 @@ Revocation rotates to a new undisclosed empty capability and removes the previou
 
 ## Supported HTML
 
-HTML Inbox accepts UTF-8 `.html` and `.htm` files. HTTPS links in `<a href>` are allowed, along with relative and fragment links; other navigation is rejected. Non-allowlisted external resources produce warnings and are blocked by the viewer CSP, except for the supported Tailwind browser and Mermaid v11 script entry points. Accepted HTML is still untrusted: validation is a compatibility and policy gate, not sanitization.
+HTML Inbox accepts UTF-8 `.html` and `.htm` files. HTTPS links in `<a href>` are allowed, along with relative and fragment links; other navigation is rejected. Non-allowlisted external resources produce advisory warnings. The runtime CSP blocks many warned features, but its script permissions are broader than the canonical Tailwind browser and Mermaid v11 entry URLs recognized by validation; a warning does not prove blocking. Accepted HTML is still untrusted: validation is a compatibility and policy gate, not sanitization.
 
 Document-relative assets also produce advisory warnings. See [HTML compatibility](docs/html-compatibility.md) for supported resources and ways to embed them.
 

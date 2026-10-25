@@ -15,7 +15,7 @@ Install the optional main skill only when the user chooses installation:
 npx skills@1.7.0 add deveshsangwan/html-inbox --skill html-inbox
 ```
 
-The current `skills@1.7.0` installer requires Node.js 22.20.0 or newer for skill installation or updates. HTML Inbox itself, including the fallback used by an already-installed skill, requires Node.js 20 or newer.
+The skills installer requires Node.js 22.20.0 or newer for skill installation or updates. HTML Inbox itself, including the fallback used by an already-installed skill, requires Node.js 20 or newer.
 
 Choose a supported agent explicitly when needed, for example by appending `--agent codex -y`. Verify that agent's installed directory contains `SKILL.md`, `references/cli-resolution.md`, and the bundled `scripts/windows-cli.cjs` before using it. Installer exit code zero alone does not prove every selected agent target succeeded.
 
@@ -27,7 +27,7 @@ Before running commands, follow [CLI resolution](./references/cli-resolution.md)
 
 Before any remote command, read the main skill's [library selection and hub operation](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/library-selection.md). It defines selection precedence, root/UUID validation, human exact-name or `#N` choices, non-interactive choice-required handling, default recovery, and output compatibility. Its local hub rules apply only when the user requests combined reading; a hub never selects or combines remote publication sources.
 
-Check the selected executable's `inbox --help` for every required command and flag. Named routing and the revised picker/output features are unreleased; the published pinned `html-inbox@0.2.1` fallback lacks them. A checkout can report the same version with different capabilities. Named commands do not establish `--running` support or viewer/service JSON support; follow the linked reference's separate gates before using them.
+Check the selected executable's `inbox --help` for every required command and flag. Named routing and the revised picker/output features are available starting in 0.3.0; the intentionally pinned, published `html-inbox@0.2.2` fallback lacks them. A checkout can report the same version with different capabilities. Named commands do not establish `--running` support or viewer/service JSON support; follow the linked reference's separate gates before using them.
 
 With named routing support, use the intended explicit selector, process binding, or configured default on every remote command. Apply the linked reference's precedence and same-tier name/home agreement. A missing, conflicting, or invalid destination/default fails without fallback. Treat a choice-required error as an unresolved destination and ask which listed library the user intends; even one registered entry needs a choice. Only an empty catalog retains unbound legacy-home first use. The linked reference defines every redirected-stream and JSON case; resolve the intended destination before retrying.
 
@@ -71,7 +71,7 @@ Setup is complete when `remote init` succeeds and `inbox remote status` reports 
 
 ## Snapshot appearance
 
-Snapshots use the same compact document toolbar and Hide frame / Show frame controls as the live viewer. Their setup default comes from the local inbox at export time; each reader can select System, Light, or Dark in their own browser. Browser changes do not sync back to the CLI or other devices. A new export is needed to change the snapshot's saved default.
+With CLI 0.2.1 or newer, snapshots use the same compact document toolbar and Hide frame / Show frame controls as the live viewer. Their setup default comes from the local inbox at export time; each reader can select System, Light, or Dark in their own browser. Browser changes do not sync back to the CLI or other devices. A new export is needed to change the snapshot's saved default. A compatible 0.2.0 executable supports ordinary remote operations but lacks these appearance controls.
 
 Remote publishing preserves original document bytes. When asked to author or adapt documents, use the main skill's [document appearance reference](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/document-appearance.md). Older documents with hardcoded colors need individual adaptation; the remote operation does not convert them.
 

@@ -80,6 +80,7 @@
                 <a href="index.html" aria-current="page">Getting started</a>
               </li>
               <li><a href="agent-setup.html">Agent setup</a></li>
+              <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
               <li><a href="publishing.html">Publish documents</a></li>
               <li><a href="html-compatibility.html">HTML compatibility</a></li>
             </ul>
@@ -116,6 +117,7 @@
                   <a href="index.html" aria-current="page">Getting started</a>
                 </li>
                 <li><a href="agent-setup.html">Agent setup</a></li>
+                <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
                 <li><a href="publishing.html">Publish documents</a></li>
                 <li>
                   <a href="html-compatibility.html">HTML compatibility</a>
@@ -174,8 +176,8 @@
         <p>
           The skill and CLI installers are independent. Adding a skill does not
           install a global executable. On first use, the skill reuses a working,
-          stable <code>html-inbox</code> 0.2.x CLI or selects
-          <code>npx --yes html-inbox@0.2.0</code> for the operation. The fallback
+          stable <code>html-inbox</code> 0.2.x or 0.3.x CLI or selects
+          <code>npx --yes html-inbox@0.2.2</code> for the operation. The fallback
           needs registry access or a cached package and preserves your existing
           viewer settings.
         </p>
@@ -189,8 +191,10 @@
         <h2 id="install">Install the CLI for terminal use</h2>
         <p>
           Install the latest published package from npm. These docs describe the
-          0.2 release, including background viewers and live self-hosting. Check
-          your installed version if a command is unavailable.
+          0.3.0 release, including named libraries, the terminal picker, readable
+          CLI output, and local reading hubs. Check actual
+          <code>--help</code> if a command is unavailable. The published 0.2.2
+          skill fallback lacks these new features.
         </p>
         <div class="docs-code">
           <pre
@@ -209,6 +213,17 @@ html-inbox --help</code></pre>
           <code>html-inbox</code> command. The CLI supports Linux,
           macOS, and Windows. Boot service installation supports Linux with
           systemd and macOS.
+        </p>
+        <h2 id="named">Choose a library</h2>
+        <p>
+          Name an existing library in place or create independent libraries for
+          Home, Development, or Office. Use <code>--inbox NAME</code> for the
+          intended destination. With registered entries and no binding or default,
+          a fully interactive terminal offers a one-operation picker. Scripts,
+          redirected streams, and JSON mode require a selector, environment
+          binding, or configured default. With no entries, legacy first use remains.
+          See <a href="named-inboxes.html">named inboxes and hubs</a> for commands
+          and reading selected libraries together on this machine.
         </p>
         <h2 id="first-document">Publish your first document</h2>
         <p>
@@ -243,13 +258,17 @@ html-inbox --help</code></pre>
         <p>
           Open the document URL printed by the command. HTML Inbox validates the
           file, stores its original bytes, and starts or reuses the viewer. A
-          new library lives at <code>~/.html-inbox</code> and first startup
+          new unbound library with no catalog entries lives at
+          <code>~/.html-inbox</code> and first startup
           listens on <code>127.0.0.1:3217</code>.
         </p>
         <p>
-          The viewer runs in the background and keeps running when the terminal
-          closes. Publish more files to add them to the same library. Every
-          publish creates a new document with its own ID.
+          The viewer runs in the background after the launching CLI exits.
+          Stopping an agent's systemd scope also stops its detached viewer; use
+          an explicit <a href="boot-services.html">boot service</a> for links
+          that must survive agent cleanup or reboot. Publish more files to add
+          them to the same library. Every publish creates a new document with
+          its own ID.
         </p>
         <h2 id="find-documents">Find and manage documents</h2>
         <div class="docs-code">
@@ -332,9 +351,9 @@ html-inbox viewer stop</code></pre>
           Update agent instructions separately using the
           <a href="agent-setup.html#update">skill update instructions</a>.
           Before changing CLI versions, stop an old viewer using the executable
-          that started it. The 0.2 private process-control protocol differs from
-          earlier releases, and the new CLI refuses to
-          signal a process it cannot verify. Confirm the old viewer has stopped
+          that started it. Versions 0.2.x and 0.3.x share private control protocol 3;
+          incompatible 0.1.0 viewers need their original executable for shutdown.
+          The CLI refuses to signal a process it cannot verify. Confirm the old viewer has stopped
           before installing the new version.
         </p>
         <div class="docs-code">
@@ -357,6 +376,13 @@ html-inbox viewer</code></pre>
           your documents. Saved exposure settings continue to apply.
         </p>
 
+        <p>
+          For 0.3, add <code>--json</code> to viewer status/stop and service
+          commands used by scripts. Bind automation before registering libraries
+          so redirected jobs keep their intended destination. Follow the
+          <a href="named-inboxes.html#upgrade">0.2-to-0.3 migration steps</a>.
+        </p>
+
         <nav class="docs-page-links" aria-label="Adjacent documentation pages">
           <a href="publishing.html">Next: Publish documents</a>
         </nav>
@@ -373,6 +399,7 @@ html-inbox viewer</code></pre>
           <ul>
             <li><a href="#agent-setup">Set up your agent</a></li>
             <li><a href="#install">Install the CLI for terminal use</a></li>
+            <li><a href="#named">Choose a library</a></li>
             <li><a href="#first-document">Publish your first document</a></li>
             <li><a href="#find-documents">Find and manage documents</a></li>
             <li><a href="#next-step">Choose where readers can open it</a></li>

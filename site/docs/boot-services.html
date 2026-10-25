@@ -77,6 +77,7 @@
             <ul>
               <li><a href="index.html">Getting started</a></li>
               <li><a href="agent-setup.html">Agent setup</a></li>
+              <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
               <li><a href="publishing.html">Publish documents</a></li>
               <li><a href="html-compatibility.html">HTML compatibility</a></li>
             </ul>
@@ -115,6 +116,7 @@
               <ul>
                 <li><a href="index.html">Getting started</a></li>
                 <li><a href="agent-setup.html">Agent setup</a></li>
+                <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
                 <li><a href="publishing.html">Publish documents</a></li>
                 <li>
                   <a href="html-compatibility.html">HTML compatibility</a>
@@ -197,7 +199,8 @@ command -v html-inbox</code></pre>
           without a selected normal account must supply <code>--user</code>.
         </p>
         <p>
-          The default library is the selected user's <code>~/.html-inbox</code>,
+          With no catalog entries, binding, or default, the legacy library is the
+          selected user's <code>~/.html-inbox</code>,
           even if sudo sets <code>HOME</code> to <code>/root</code>. Stop an
           existing detached viewer for that inbox before installing the service.
           Installation reports success only after the manager PID matches a
@@ -208,6 +211,14 @@ command -v html-inbox</code></pre>
           service. A user's login service would start too late; HTML Inbox
           installs a system service or LaunchDaemon for the before-login
           requirement.
+        </p>
+        <p>
+          Named selection uses the catalog of the account invoking the CLI.
+          Resolve the intended absolute home as the normal user before elevation,
+          then pass <code>--home</code> or <code>HTML_INBOX_HOME</code> consistently.
+          Unbound automation with catalog entries requires an explicit selection
+          or configured default. Named inboxes retain one fixed boot-service
+          definition per machine. See <a href="named-inboxes.html#services">service selection</a>.
         </p>
         <h2 id="custom-inbox">Keep a custom inbox</h2>
         <p>
@@ -292,7 +303,10 @@ HTML_INBOX_HOME=/home/alice/inboxes/reports html-inbox viewer service status</co
         <p>
           Status checks both the service manager and private viewer readiness.
           Status and readiness execute the CLI under the selected normal
-          account, including its Tailscale checks. The administrator process
+          account, including its Tailscale checks. In 0.3.0, service commands print
+          readable text; add <code>--json</code> for machine-readable output.
+          Internal readiness requests JSON and retries without that flag only
+          for a saved older CLI's exact unsupported-flag parser error. The administrator process
           does not execute an inbox-configured Tailscale path as root.
         </p>
         <div class="docs-table-wrap">
@@ -348,20 +362,31 @@ HTML_INBOX_HOME=/home/alice/inboxes/reports html-inbox viewer service status</co
         </div>
         <p>
           Uninstall stops and disables the owned service and removes its
-          definition. It preserves documents, private records, and logs. Include
-          the same <code>HTML_INBOX_HOME</code> for a custom library.
+          definition. It preserves documents, saved configuration, inbox
+          identity, and logs. Successful shutdown removes the matching active
+          process record and any verified owned-route journal. Include the same
+          <code>HTML_INBOX_HOME</code> for a custom library.
         </p>
         <p>
           <code>viewer stop</code> does not remove boot configuration. Use
           service uninstall when you want to prevent startup at the next boot or
           a later manager restart.
         </p>
+        <p>
+          Add <code>--json</code> to viewer status/stop and service commands in
+          scripts when migrating to 0.3.0. Keep the same library binding for
+          uninstall, install, and status. Follow the
+          <a href="named-inboxes.html#upgrade">complete 0.3 migration steps</a>.
+        </p>
         <h2 id="updating">Update a service installation</h2>
         <p>
           Uninstall the service with the old CLI before upgrading, then install
           the updated CLI and reinstall the service as the same normal account
-          with the intended inbox and exposure. This avoids incompatible old
-          process records and stale executable paths.
+          with the intended inbox and exposure. This loads the new code and
+          records stable executable paths. Versions 0.2.x and 0.3.x share protocol version
+          3; incompatible 0.1.0 viewers need their original executable for
+          shutdown. The new shutdown diagnostics require a viewer running
+          0.2.2 or newer.
         </p>
         <div class="docs-code">
           <pre

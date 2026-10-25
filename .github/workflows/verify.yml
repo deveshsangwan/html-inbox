@@ -53,6 +53,9 @@ jobs:
       - name: Unit and integration tests
         run: node scripts/run-unit-tests.mjs
 
+      - name: Systemd test harness cleanup
+        run: node --test scripts/viewer-systemd-cleanup.test.mjs
+
       - name: Skill CLI resolution
         run: node --test scripts/skill-cli-resolution.test.mjs scripts/skill-cli-windows.test.mjs
 

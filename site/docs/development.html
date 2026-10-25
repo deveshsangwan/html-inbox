@@ -77,6 +77,7 @@
             <ul>
               <li><a href="index.html">Getting started</a></li>
               <li><a href="agent-setup.html">Agent setup</a></li>
+              <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
               <li><a href="publishing.html">Publish documents</a></li>
               <li><a href="html-compatibility.html">HTML compatibility</a></li>
             </ul>
@@ -113,6 +114,7 @@
               <ul>
                 <li><a href="index.html">Getting started</a></li>
                 <li><a href="agent-setup.html">Agent setup</a></li>
+                <li><a href="named-inboxes.html">Named inboxes and hubs</a></li>
                 <li><a href="publishing.html">Publish documents</a></li>
                 <li>
                   <a href="html-compatibility.html">HTML compatibility</a>
@@ -171,6 +173,15 @@ corepack pnpm html-inbox --help</code></pre>
           source workspace has build and test dependencies.
         </p>
         <p>
+          Type checking, compilation, and package preparation use
+          <code>tsc-rs</code> pinned to <code>0.7.0</code>. The build emits
+          JavaScript and declarations; ncc bundles the emitted JavaScript into
+          the installed CLI. See the
+          <a href="https://github.com/deveshsangwan/html-inbox#typescript-compiler"
+            >compiler notes</a
+          > for platform prerequisites and version reporting.
+        </p>
+        <p>
           Installed-user examples use <code>html-inbox</code>. From the checkout
           root, substitute <code>corepack pnpm html-inbox</code> for that
           command.
@@ -185,8 +196,9 @@ corepack pnpm html-inbox --help</code></pre>
 corepack pnpm verify</code></pre>
         </div>
         <p>
-          The gate performs a clean build, unit and integration tests, Chromium
-          browser tests, and an installed-package smoke test. For focused work,
+          The gate runs type checking, a clean build, unit and integration
+          tests, manager-free harness and skill checks, Chromium browser tests,
+          website checks, and an installed-package smoke test. For focused work,
           run <code>corepack pnpm test</code> for source tests or
           <code>corepack pnpm build</code> before testing compiled files.
         </p>
@@ -213,6 +225,10 @@ corepack pnpm verify</code></pre>
                   <code>packages/cli/src/index.ts</code>,
                   <code>cli-args.ts</code>, <code>publish-input.ts</code>
                 </td>
+              </tr>
+              <tr>
+                <td>Named selection and hubs</td>
+                <td><code>inbox-catalog.ts</code>, <code>inbox-selection.ts</code>, <code>inbox-picker.ts</code>, <code>hub-config.ts</code>, <code>hub.ts</code>, <code>local-document-source.ts</code></td>
               </tr>
               <tr>
                 <td>Documents and storage</td>
@@ -278,8 +294,8 @@ corepack pnpm verify</code></pre>
           public boundaries.
         </p>
         <p>
-          Keep the viewer read-only, preserve metadata escaping and document
-          isolation, and exercise process identity before adding any process
+          Keep viewer and hub HTTP routes read-only with GET/HEAD only. Preserve
+          metadata escaping and document isolation, and exercise process identity before adding any process
           action. Changes to external integration should use recording commands
           and temporary paths in tests, with real host checks performed
           deliberately.
@@ -324,9 +340,9 @@ corepack pnpm verify</code></pre>
           <a href="https://github.com/deveshsangwan/html-inbox"
             >source repository</a
           >
-          and
+          tracks development; the
           <a href="https://www.npmjs.com/package/html-inbox">npm package</a>
-          contain the current released code and package metadata.
+          contains published releases and their package metadata.
         </p>
 
         <nav class="docs-page-links" aria-label="Adjacent documentation pages">

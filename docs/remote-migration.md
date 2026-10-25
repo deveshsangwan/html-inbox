@@ -1,15 +1,18 @@
 # Moving a local inbox to Cloudflare Pages
 
-Remote publishing does not move or mutate the local library. `~/.html-inbox/documents` remains the only document source of truth; each remote update is a complete generated snapshot.
+Remote publishing does not move or mutate the local library. The selected library's `documents/` remains the only document source of truth; each remote update is a complete generated snapshot.
+
+Use the same intended selection for every command, including status and recovery. For the 0.3 upgrade, see [named-inbox migration](named-inboxes.md#upgrade-from-02x). Registered entries require an explicit selector, process binding, or configured default in automation.
 
 ## Before publishing
 
-1. Upgrade the installed CLI with `npm install --global html-inbox@latest` and confirm it with `html-inbox --version`.
-2. Confirm the local library with `html-inbox list` and open the viewer.
-3. Inspect a provider-independent export with `html-inbox export --out ./html-inbox-export`.
-4. Treat every document in the local library as part of one shared remote capability. Delete anything that should not be in that snapshot.
+1. Stop any running viewer with the executable that started it before updating, so the next start loads the new code. A 0.1.0 viewer must be stopped with its original executable.
+2. Upgrade the installed CLI with `npm install --global html-inbox@latest` and confirm it with `html-inbox --version`.
+3. Confirm the local library with `html-inbox list` and open the viewer.
+4. Inspect a provider-independent export with `html-inbox export --out ./html-inbox-export`.
+5. Treat every document in the local library as part of one shared remote capability. Delete anything that should not be in that snapshot.
 
-The updated viewer uses protocol version 3 and a private loopback control endpoint to match shutdown requests to a specific process. Stop an older foreground viewer with Ctrl-C before upgrading, or use the previous CLI to stop its detached viewer. A new CLI refuses to reuse or signal an incompatible viewer. Documents remain in the existing inbox.
+Versions 0.2.x and 0.3.x share protocol version 3 and a private loopback control endpoint to match shutdown requests to a specific process. A new CLI refuses to reuse or signal an incompatible viewer. Stop a foreground viewer with Ctrl-C before upgrading, or use its original CLI to stop a detached viewer. Documents remain in the existing inbox.
 
 ## Configure Cloudflare
 
@@ -79,12 +82,13 @@ For these cases, or a shared home whose owner ran on another machine:
 After completing step 1, this Unix shell example performs steps 2 through 4:
 
 ```sh
-inbox_recovery_home="${HTML_INBOX_HOME:-$HOME/.html-inbox}"
+# Set this to the absolute home of the selected library.
+inbox_recovery_home="/absolute/path/to/selected-inbox"
 inbox_recovery_backup="$(mktemp -d)"
 cp -R "$inbox_recovery_home/remote" "$inbox_recovery_backup/remote" && \
   rm -f -- "$inbox_recovery_home/remote/mutation.lock" "$inbox_recovery_home/remote/mutation.lock.recovery" && \
-  html-inbox remote reconcile && \
-  html-inbox remote status
+  html-inbox remote reconcile --home "$inbox_recovery_home" && \
+  html-inbox remote status --home "$inbox_recovery_home"
 ```
 
 Keep the backup until reconciliation succeeds. If you cannot establish that every command using this home has stopped, leave both lock paths in place.

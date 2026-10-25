@@ -2,7 +2,18 @@
 
 Home, Development, and Office can be independent libraries with separate documents, viewer ports, preferences, exports, and exposure settings. Naming a library records its existing location. It does not move or combine documents.
 
-This page describes unreleased named-inbox and hub work, including the revised terminal choice and output behavior. The published `html-inbox@0.2.1` package lacks these features. Check the actual executable's `--help` for the commands and flags you need; a source checkout can report the same version with different capabilities. Reading these docs or updating a skill does not install or deploy a CLI.
+Named inboxes, the terminal picker, readable command output, and local hubs are available in 0.3.0. The published `html-inbox@0.2.2` skill fallback lacks these features. Check the actual executable's `--help` for the commands and flags you need; help is authoritative for a source checkout or older executable. Reading these docs or updating a skill does not install or deploy a CLI.
+
+## Upgrade from 0.2.x
+
+Before upgrading, stop the old viewer with the executable that started it and confirm shutdown. Stop a foreground viewer with Ctrl-C. For a boot service, uninstall with the old stable installation, update, and reinstall with the same intended home and exposure. See [service updates](../site/docs/boot-services.html#updating). Versions 0.2.x and 0.3.x share private control protocol 3. Restart compatible viewers to load the new code and named headings; 0.1.0 viewers still need their original executable for shutdown. Documents, preferences, and saved exposure remain in place.
+
+Update human and agent automation deliberately:
+
+- Add `--json` to viewer status/stop and service commands when parsing output. Plain status, catalog, and document lists are readable text or tables in 0.3.0. Plain publish and detached viewer startup retain URL-only stdout; `publish --json` adds a structured receipt.
+- Keep an explicit `--inbox`, absolute `--home`, process environment binding, or configured default across every command in a job. Registering even one library makes unbound automation fail instead of silently using the legacy home. Redirected streams and JSON mode never open the picker.
+- With no registered entries and no binding or default, legacy `~/.html-inbox` behavior remains. To name that existing library, register its absolute path in place, then update jobs to select it. Registration does not move documents or change saved network exposure.
+- Skill updates and CLI updates remain independent. The skill accepts stable installed 0.2.x and 0.3.x executables, with exact rules in the [CLI resolution reference](../skills/html-inbox/references/cli-resolution.md). Its fallback stays on published `html-inbox@0.2.2` until deliberately changed. Check actual help before using named selection, running-only filtering, publish JSON, viewer JSON, or service JSON. Missing capabilities never authorize publishing into another home or silently upgrading the pin.
 
 ## Name libraries deliberately
 
@@ -21,7 +32,7 @@ Registration preserves existing records and creates an identity for an existing 
 
 Registration requires an existing valid identity or a regular `documents/` directory. It checks library markers without scanning every stored report. Concurrent registrations serialize their name, root, and UUID claims and publish complete per-name records exclusively. If an interrupted writer leaves `registration.lock`, later writes fail after a bounded wait with recovery instructions. Stop every registration writer before removing only that stale lock. Catalog reads remain available.
 
-`inbox list` shows a human-readable table of names, viewer states, and running reader URLs. `inbox list --json` preserves the machine-readable result fields, including local locations. Stopped libraries stay registered. Missing, conflicting, and incompatible libraries remain visible.
+`inbox list` inspects the catalog and source lifecycle read-only, without creating missing paths, tightening permissions, refreshing saved LAN URLs, or repairing records. It shows a human-readable table of names, viewer states, and running reader URLs. `inbox list --json` preserves the machine-readable result fields, including local locations. Stopped libraries stay registered. Missing, conflicting, and incompatible libraries remain visible.
 
 To list only registered libraries with verified running viewers:
 
@@ -81,11 +92,11 @@ html-inbox viewer status --inbox development --json
 html-inbox viewer stop --inbox development --json
 ```
 
-Check help for each command and flag before using them with an older CLI. Legacy viewer status/stop and service commands already output JSON without `--json`; do not pass a new flag to them. Check service JSON flags independently of viewer JSON flags, and the running-only filter independently of named commands. The picker and revised flags require actual capability checks rather than a package-version assumption. If the required feature is absent, report its availability and preserve the intended destination. A missing capability does not authorize an upgrade or a publish into another home.
+In 0.3.0, viewer status/stop and service commands use readable text by default. Add `--json` when updating scripts that parsed their 0.2.x default JSON. Check help before using a flag with an older CLI. Published 0.2.x viewer status/stop and service commands output JSON without `--json`; do not pass that unsupported flag to them. Check service JSON flags independently of viewer JSON flags, and the running-only filter independently of named commands. The picker and revised flags require actual capability checks rather than a package-version assumption. If the required feature is absent, report its availability and preserve the intended destination. A missing capability does not authorize an upgrade or a publish into another home.
 
 JSON mode also suppresses destructive confirmation prompts. It does not imply approval: deletion still requires `--force`, and remote revocation still requires `--yes`.
 
-Named context and picker text go to stderr, preserving URL-only stdout for plain `publish`, detached viewer startup, and hub startup. `publish --json` returns the existing receipt with `url`, `inbox`, and `home`. Viewer status includes the configured name, and newly started viewers show it in the heading. Share the exact verified reader URL, keeping catalog paths and private control details local.
+Named context and picker text go to stderr, preserving URL-only stdout for plain `publish`, detached viewer startup, and hub startup. `publish --json` returns a receipt with `url`, `inbox`, and `home`. Viewer status includes the configured name, and newly started viewers show it in the heading. Share the exact verified reader URL, keeping catalog paths and private control details local.
 
 An optional default affects unbound future operations:
 
@@ -118,11 +129,11 @@ html-inbox hub init --config /absolute/path/to/reading-hub.json \
 html-inbox hub --config /absolute/path/to/reading-hub.json --port 4322
 ```
 
-`hub init` refuses to replace an existing config. It captures each selected library's canonical home and expected UUID. Adding another catalog entry or changing a default does not change hub membership. Review a new configuration deliberately when membership should change.
+`hub init` requires an existing canonical parent directory for its absolute config path and refuses to replace an existing config. Protect that file and its parent because it contains local source paths. Configurations accept 1-128 explicit sources with unique names, homes, and UUIDs. It captures each selected library's canonical home and expected UUID. Adding another catalog entry or changing a default does not change hub membership. Review a new configuration deliberately when membership should change.
 
 The hub serves one combined list and search over all selected inboxes, with inbox badges and a source filter. Document links contain the source name plus original document ID, so identical IDs in different libraries remain distinct. Content routes return the original bytes through the existing sandbox and CSP. Standalone viewer and export URLs retain their existing forms.
 
-Source viewers may be stopped. The hub reads existing files directly without creating directories, changing permission modes, writing preferences, or copying runtime records. A missing source never becomes a new empty library. Unavailable or mismatched sources produce an incomplete-results notice while healthy sources remain readable. Reader output contains selected source names and availability, without catalog paths, control endpoints, or detailed filesystem errors. The foreground hub writes source names and detailed failure causes to stderr for operator diagnosis.
+Both source viewers and the hub accept HTTP GET and HEAD only; readers cannot delete or administer documents. Source viewers may be stopped. The hub reads existing files directly without creating directories, changing permission modes, writing preferences, or copying runtime records. A missing source never becomes a new empty library. Unavailable or mismatched sources produce an incomplete-results notice while healthy sources remain readable. Reader output contains selected source names and availability, without catalog paths, control endpoints, or detailed filesystem errors. The foreground hub writes source names and detailed failure causes to stderr for operator diagnosis.
 
 A corrupt committed record makes its source unavailable rather than presenting a partial source as complete. Hub content reads use `HTML_INBOX_MAX_BYTES`, default 10 MiB per document. Set the same larger limit when reading libraries that were intentionally published with a larger limit. These source results are a reading view, not an authoritative inventory for deleting or replicating documents.
 
@@ -136,4 +147,4 @@ html-inbox hub --config /absolute/path/to/reading-hub.json --lan --host 192.168.
 
 Everyone who reaches that hub can read every selected library, even if its standalone viewer is stopped or private. Filtering is reading convenience, not access control. This version does not configure Tailscale Serve or boot services for hubs. Existing Tailscale routes and source viewers' saved modes remain independent.
 
-Only libraries accessible to the same OS account on the same machine are supported. Network replication, other accounts, remote ingestion, and migration of historical fragments are outside this version.
+Only libraries accessible to the same OS account on the same machine are supported. On POSIX, source directories and files must belong to the current account. Windows source checks do not establish ACL privacy; protect source trees, the catalog, and hub config under the [Windows storage prerequisites](threat-model.md#windows-storage-prerequisites). Network replication, other accounts, remote ingestion, and migration of historical fragments are outside this version.
