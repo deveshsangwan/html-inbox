@@ -488,12 +488,12 @@ function registerStorageFaultTests() {
   });
 
   test("unknown, live, PID-reused, and abandoned reaper records obey conclusive ownership checks", { timeout: 12_000 }, async (t) => {
-    const { home } = await enrolledStore(t);
+    const { home, store } = await enrolledStore(t);
     const lockPath = path.join(home, "sync", "mutation.lock");
-    const store = new ManagedSyncStore(home, { lockDeadlineMs: 60 });
+    const refusalStore = new ManagedSyncStore(home, { lockDeadlineMs: 60 });
     for (const contents of ["", "{", "{}", JSON.stringify({ token: randomUUID(), pid: process.pid, start: null })]) {
       await writeFile(lockPath, contents, { mode: 0o600 });
-      await assert.rejects(store.recover(), /lock deadline/);
+      await assert.rejects(refusalStore.recover(), /lock deadline/);
       assert.equal(await readFile(lockPath, "utf8"), contents);
       await assert.rejects(lstat(`${lockPath}.reap`), { code: "ENOENT" });
     }
@@ -502,7 +502,7 @@ function registerStorageFaultTests() {
     const dead = JSON.stringify({ token: randomUUID(), pid: 2_147_483_647, start: null });
     await writeFile(lockPath, dead, { mode: 0o600 });
     await writeFile(`${lockPath}.reap`, "interrupted-reaper", { mode: 0o600 });
-    await assert.rejects(store.recover(), /lock deadline/);
+    await assert.rejects(refusalStore.recover(), /lock deadline/);
     assert.equal(await readFile(lockPath, "utf8"), dead);
     assert.equal(await readFile(`${lockPath}.reap`, "utf8"), "interrupted-reaper");
     await rm(`${lockPath}.reap`);
@@ -523,7 +523,7 @@ function registerStorageFaultTests() {
       if (pid === process.pid && signal === 0) throw Object.assign(new Error("Synthetic inconclusive process probe"), { code: "EPERM" });
       return originalKill(pid, signal);
     });
-    await assert.rejects(store.recover(), /lock deadline/);
+    await assert.rejects(refusalStore.recover(), /lock deadline/);
     probe.mock.restore();
     assert.equal(parseObject(JSON.parse(await readFile(lockPath, "utf8")), "lock owner").pid, process.pid);
     await rm(lockPath);

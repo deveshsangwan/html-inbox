@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import http from "node:http";
 import { lstat, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -18,6 +18,7 @@ import type { SyncRuntimeConfig } from "./sync-runtime-config";
 import { defaultRuntimeConfig } from "./sync-runtime-config";
 import { availablePort } from "./test-fixtures";
 import { startOwnedSyncWorker } from "./sync-worker";
+import { readPrivateFile } from "./sync-files";
 
 export const syntheticBytes = Buffer.from("\ufeff<!doctype html>\r\n<html><body>worker fixture π</body></html>\r\n");
 
@@ -67,7 +68,7 @@ export async function writePrivateJson(file: string, value: unknown) {
   return file;
 }
 
-export async function createWorkerFixture(t: TestContext) {
+export async function createWorkerFixture(t: TestContext, options: { observeViewerStop?: boolean } = {}) {
   const root = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-worker-fault-")));
   const catalog = path.join(root, "catalog");
   const viewerPorts = new Set<number>();
@@ -79,6 +80,8 @@ export async function createWorkerFixture(t: TestContext) {
   let launchedCli = 0;
   let reapedCli = 0;
   const inboxes: { name: string; home: string; store: ManagedSyncStore }[] = [];
+  const observesViewerStop = options.observeViewerStop === true ||
+    t.name === "receiver worker independently pulls periodically while source push is paused and both viewers are stopped";
   const env = {
     PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, LANG: "C.UTF-8",
     HOME: root, USERPROFILE: root, HTML_INBOX_CATALOG_HOME: catalog,
@@ -126,7 +129,12 @@ export async function createWorkerFixture(t: TestContext) {
   function launch(args: string[], options: { entry?: string; timeoutMs?: number } = {}) {
     const selectedName = args[args.indexOf("--inbox") + 1];
     const viewerPort = selectedName ? selectedViewerPorts.get(selectedName) : undefined;
-    const child = spawn(process.execPath, [options.entry ?? path.join(__dirname, "index.js"), ...args], {
+    const binding = args.filter((arg) => arg === "--inbox").length === 1
+      ? inboxes.find((entry) => entry.name === selectedName && entry.home === path.join(root, selectedName)) : undefined;
+    const preload = options.entry === undefined && args[0] === "viewer" && args[1] === "stop" && binding && observesViewerStop
+      ? ["--require", path.join(__dirname, "viewer-record-observation-child.js")]
+      : [];
+    const child = spawn(process.execPath, [...preload, options.entry ?? path.join(__dirname, "index.js"), ...args], {
       cwd: root, env: { ...env, HTML_INBOX_PORT: String(viewerPort ?? 1) }, stdio: ["ignore", "pipe", "pipe"],
     });
     launchedCli += 1;
@@ -164,6 +172,26 @@ export async function createWorkerFixture(t: TestContext) {
 
   async function run(args: string[], expectedCode?: number) {
     const result = await launch(args).completion;
+    if (expectedCode !== undefined && result.code !== expectedCode && args[0] === "sync" && args[1] === "worker" && args.filter((arg) => arg === "--inbox").length === 1) {
+      const selected = inboxes.find((inbox) => inbox.name === args[args.indexOf("--inbox") + 1]);
+      if (selected) {
+        try {
+          const log = await readPrivateFile(path.join(selected.home, "sync", "worker", "worker.log"), 16 * 1024);
+          const messages = log.toString("utf8").split("\n").filter((line) =>
+            (line.startsWith("html-inbox: ") && !line.startsWith("html-inbox: Inbox ")) || line.startsWith('{"type":"credential-startup-failure",'));
+
+          // Worker logs can contain private paths and error text. Emit only fingerprints and fixed errno hints.
+          const failures = messages.slice(-4).map((line) => ({
+            messageSHA256: createHash("sha256").update(line.replace(/^html-inbox: /, "")).digest("hex"),
+            errnoHints: ["EADDRINUSE", "EADDRNOTAVAIL", "EACCES", "EPERM", "ENOENT", "EIO", "ENOSPC", "ECONNREFUSED", "ECONNRESET", "ETIMEDOUT", "ABORT_ERR"].filter((code) => line.includes(code)),
+          }));
+          t.diagnostic(JSON.stringify({ workerCommandFailure: selected.name, logBytes: log.length, failures }));
+        } catch {
+          t.diagnostic(JSON.stringify({ workerCommandFailure: selected.name, logAvailable: false }));
+        }
+      }
+    }
+
     if (expectedCode !== undefined) assert.equal(result.code, expectedCode, `${args.join(" ")}\n${result.stdout}\n${result.stderr}`);
     return result;
   }

@@ -299,7 +299,11 @@ for (const mode of ["calibration", "viewer", "status"] as const) {
     assert.ok(completion?.signal);
     assert.ok(completion.deadlineAt);
     assert.equal(completion.signal.aborted, false);
-    assert.ok(completion.deadlineAt - Date.now() > 1000, "observe actual activity before ordinary request expiry");
+
+    const observedAt = Date.now();
+    const remainingBeforeAction = completion.deadlineAt - observedAt;
+
+    assert.ok(remainingBeforeAction > 1000, `observe actual activity before ordinary request expiry: ${JSON.stringify({ mode, observedAt, deadlineAt: completion.deadlineAt, remainingBeforeAction, starts, holds, responseClosed, signalAborted: completion.signal.aborted })}`);
     const control = parseWorkerControlStatus(await contactWorker(source.home, "status"));
     assert.equal(control.tickets.length, 1);
     assert.equal(control.tickets[0].state, "running");

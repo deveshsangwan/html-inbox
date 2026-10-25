@@ -33,7 +33,14 @@ async function foreground(t: TestContext, f: WorkerFixture, selected: { home: st
     child.stderr?.destroy();
     if (child.connected) child.disconnect();
   });
-  child.on("message", (message: unknown) => messages.push(parseObject(message, "worker fixture IPC")));
+  child.on("message", (message: unknown) => {
+    const value = parseObject(message, "worker fixture IPC");
+    if (value.type === "permanent-route-failure" && (messages.filter((entry) => entry.type === value.type).length >= 4 || Buffer.byteLength(JSON.stringify(value)) > 4096)) {
+      return;
+    }
+
+    messages.push(value);
+  });
   child.stderr?.on("data", (chunk: Buffer) => { stderr += chunk.toString(); });
   child.stdout?.on("data", (chunk: Buffer) => { stdout += chunk.toString(); });
   const lifetime = setTimeout(() => child.kill("SIGKILL"), 40_000);
@@ -70,7 +77,8 @@ async function foreground(t: TestContext, f: WorkerFixture, selected: { home: st
     assert.equal(status.pid, child.pid);
     await f.rememberWorker(selected);
     t.diagnostic(`retained foreground child ${child.pid}, ready, inherited startup=${inherited}; fixture-only 30000ms lease on loopback`);
-    return { child, record, cleanup, waitFor, diagnostics: () => ({ stderr, stdout, exited, exitCode: child.exitCode, signalCode: child.signalCode }), async arm() {
+    return { child, record, cleanup, waitFor, diagnostics: () => ({ stderr, stdout, exited, exitCode: child.exitCode, signalCode: child.signalCode,
+      permanentRouteFailures: messages.filter((entry) => entry.type === "permanent-route-failure") }), async arm() {
       child.send({ type: "arm" });
       await waitFor("armed");
     }, async cutPausedMutation(operationId: string) {
@@ -241,7 +249,7 @@ for (const stage of ["created", "linked"]) {
       const sender = await f.source.store.snapshot();
       const receiver = await f.destination.store.snapshot();
       t.diagnostic(JSON.stringify({ queueFailure: String(error), senderPidGone: isPidGone(restarted.record.pid), receiverPidGone: isPidGone(destination.record.pid),
-        senderWorker: sender.worker, receiverWorker: receiver.worker, senderProcess: restarted.diagnostics(), receiverProcess: destination.diagnostics(), route: sender.routes[f.route.id], retry: sender.routeRetries[f.route.id],
+        senderWorker: sender.worker, receiverWorker: receiver.worker, originalSourceProcess: source.diagnostics(), senderProcess: restarted.diagnostics(), receiverProcess: destination.diagnostics(), route: sender.routes[f.route.id], retry: sender.routeRetries[f.route.id],
         outbox: Object.values(sender.outbox), receiverRecords: Object.keys(receiver.records) }));
       throw error;
     }

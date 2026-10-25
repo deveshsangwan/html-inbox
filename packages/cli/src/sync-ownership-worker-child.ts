@@ -1,7 +1,8 @@
 import { AsyncLocalStorage } from "node:async_hooks";
+import { createHash } from "node:crypto";
 import { constants } from "node:fs";
 import path from "node:path";
-import { assertExactKeys, parseObject, parseString } from "./sync-model";
+import { assertExactKeys, parseInteger, parseObject, parseString, parseUuid } from "./sync-model";
 import { ManagedSyncStore } from "./sync-store";
 
 const fs: typeof import("node:fs/promises") = require("node:fs/promises");
@@ -68,6 +69,144 @@ process.on("message", (value: unknown) => {
 const server: typeof import("./sync-http-server") = require("./sync-http-server");
 const createServer = server.createSyncIngestionServer;
 server.createSyncIngestionServer = (options) => createServer({ ...options, leaseMs: 30_000 });
+
+const reconciliation: typeof import("./sync-reconciliation") = require("./sync-reconciliation");
+const failure: typeof import("./sync-failure") = require("./sync-failure");
+const reconcileRoutes = reconciliation.reconcileSyncRoutes;
+type FailurePass = {
+  routeIds: string[];
+  signal?: AbortSignal;
+  authorization?: unknown;
+  error?: unknown;
+  emitted: boolean;
+  fingerprint?: ReturnType<typeof fingerprintFailure>;
+  classifiedAborted?: boolean;
+  classifiedReason?: boolean;
+  result?: Awaited<ReturnType<typeof reconcileRoutes>>;
+};
+const failureScope = new AsyncLocalStorage<FailurePass>();
+const failurePasses = new WeakMap<ManagedSyncStore, FailurePass>();
+let failureEvents = 0;
+let observationFaults = 0;
+
+function observationFault() {
+  observationFaults = Math.min(255, observationFaults + 1);
+}
+
+function fingerprintFailure(error: unknown) {
+  const frames = error instanceof Error ? (error.stack ?? "").split("\n").slice(1, 13).flatMap((line) => {
+    const frame = line.split(`${__dirname}${path.sep}`)[1]?.match(/^([a-z0-9-]+\.js):(\d{1,7}):(\d{1,7})/);
+    return frame ? [{ module: frame[1].slice(0, 80), line: Number(frame[2]), column: Number(frame[3]) }] : [];
+  }).slice(0, 4) : [];
+
+  return {
+    name: error instanceof Error && ["Error", "TypeError", "RangeError", "AggregateError", "AbortError"].includes(error.name) ? error.name : "other",
+    code: error instanceof Error && "code" in error && typeof error.code === "string" && ["EIO", "ENOSPC", "ENOENT", "EACCES", "EPERM", "ABORT_ERR"].includes(error.code) ? error.code : null,
+    messageSHA256: error instanceof Error ? createHash("sha256").update(error.message).digest("hex") : null,
+    frames,
+  };
+}
+
+reconciliation.reconcileSyncRoutes = (options) => {
+  const pass: FailurePass = { routeIds: options.routeIds, signal: options.signal, emitted: false };
+  failurePasses.set(options.store, pass);
+  const pending = failureScope.run(pass, () => reconcileRoutes(options));
+  void pending.then((result) => { pass.result = result; }, () => {}).catch(observationFault);
+
+  return pending;
+};
+
+const classify = failure.classifySyncFailure;
+failure.classifySyncFailure = (error) => {
+  const result = classify(error);
+  const pass = failureScope.getStore();
+  if (pass && result.code === "local-validation-or-storage-failed") {
+    try {
+      Object.assign(pass, { error, fingerprint: undefined });
+      pass.fingerprint = fingerprintFailure(error);
+      pass.classifiedAborted = pass.signal?.aborted;
+      pass.classifiedReason = pass.signal ? error === pass.signal.reason : undefined;
+    } catch {
+      observationFault();
+    }
+  }
+
+  return result;
+};
+
+const openAttempt = ManagedSyncStore.prototype.openRouteAttempt;
+ManagedSyncStore.prototype.openRouteAttempt = function (...args: Parameters<typeof openAttempt>) {
+  const pass = failureScope.getStore();
+  const pending = openAttempt.apply(this, args);
+  void pending.then(() => { if (pass) pass.authorization = args[0]; }, () => {}).catch(observationFault);
+
+  return pending;
+};
+
+function observePermanentWrite(call: "setRouteError" | "recordRouteRun", authorization: unknown, code: string | null, pass?: FailurePass) {
+  if (code !== "local-validation-or-storage-failed" || failureEvents >= 4 || pass?.emitted) {
+    return;
+  }
+
+  let routeId: string | null = null;
+  let revision: number | null = null;
+  let isMatched = false;
+  try {
+    const auth = parseObject(authorization, "failure authorization");
+    const observed = pass?.authorization === undefined ? null : parseObject(pass.authorization, "observed authorization");
+    routeId = parseUuid(auth.routeId);
+    revision = parseInteger(auth.revision, 1);
+    isMatched = !!pass?.fingerprint && pass.routeIds.includes(routeId) && observed?.routeId === routeId && observed.revision === revision &&
+      (call === "setRouteError" || !!pass.result?.routes.some((route) => route.routeId === routeId && route.lastError === code));
+  } catch {
+    observationFault();
+  }
+
+  const event = {
+    type: "permanent-route-failure", pid: process.pid,
+    stage: stage === "created" || stage === "linked" ? stage : "unknown",
+    operationId: operationId ?? null, cutHits: hits, call, routeId, revision,
+    attribution: isMatched ? "same-reconciliation-error" : "unmatched", error: isMatched ? pass?.fingerprint : null,
+    parentPassAbortedAtClassification: isMatched ? pass?.classifiedAborted ?? null : null,
+    errorWasParentPassReason: isMatched ? pass?.classifiedReason ?? null : null,
+    parentPassAbortedAtPersistence: pass?.signal?.aborted ?? null,
+    errorIsParentPassReason: isMatched && pass?.signal ? pass.error === pass.signal.reason : null,
+    observationFaults,
+  };
+  try {
+    if (Buffer.byteLength(JSON.stringify(event)) > 4096) {
+      observationFault();
+      return;
+    }
+
+    failureEvents += 1;
+    if (pass) {
+      pass.emitted = true;
+    }
+
+    process.send?.(event, (error) => { if (error) observationFault(); });
+  } catch {
+    observationFault();
+  }
+}
+
+const setRouteError = ManagedSyncStore.prototype.setRouteError;
+ManagedSyncStore.prototype.setRouteError = function (...args: Parameters<typeof setRouteError>) {
+  const pass = failureScope.getStore();
+  const pending = setRouteError.apply(this, args);
+  void pending.then(() => observePermanentWrite("setRouteError", args[0], args[1], pass), () => {}).catch(observationFault);
+
+  return pending;
+};
+
+const recordRouteRun = ManagedSyncStore.prototype.recordRouteRun;
+ManagedSyncStore.prototype.recordRouteRun = function (...args: Parameters<typeof recordRouteRun>) {
+  const pass = failurePasses.get(this);
+  const pending = recordRouteRun.apply(this, args);
+  void pending.then(() => observePermanentWrite("recordRouteRun", args[0], args[1], pass), () => {}).catch(observationFault);
+
+  return pending;
+};
 
 function isSelectedMutation() {
   const current = mutationScope.getStore();
