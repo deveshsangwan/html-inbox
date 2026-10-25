@@ -15,7 +15,7 @@ async function publishCopyDocument(backend) {
   return [await publishBrowserDocument(backend, "Copy fixture", "document-copy.html", html)];
 }
 
-async function createCopyFixture(t, mode, publish = publishCopyDocument) {
+async function createCopyFixture(t, mode, publish = publishCopyDocument, beforeNavigate) {
   const fixture = await createBrowserFixture(t, mode, publish, { browserType });
   await fixture.context.addInitScript(() => {
     if (window !== window.top) {
@@ -49,7 +49,9 @@ async function createCopyFixture(t, mode, publish = publishCopyDocument) {
   });
   const shellUrl = `${fixture.inboxUrl}documents/${fixture.documents[0].id}${mode === "static" ? "/" : ""}`;
   const copyUrl = `${shellUrl.replace(/\/$/, "")}/copy.json`;
-  await fixture.page.goto(shellUrl);
+  await beforeNavigate?.(fixture);
+  // The shell can copy saved content while an untrusted document is still loading.
+  await fixture.page.goto(shellUrl, { waitUntil: "domcontentloaded" });
 
   return { ...fixture, shellUrl, copyUrl };
 }
@@ -96,6 +98,37 @@ async function resolveFetch(page, index, text) {
 }
 
 for (const mode of ["local", "static"]) {
+  test(`${mode} prepares copy while the isolated document is still loading`, { timeout: 30_000 }, async (t) => {
+    let releaseDocument = () => {};
+    const documentGate = new Promise((resolve) => { releaseDocument = resolve; });
+    let signalDocumentRequest = () => {};
+    const documentRequested = new Promise((resolve) => { signalDocumentRequest = resolve; });
+
+    try {
+      const { page } = await createCopyFixture(t, mode, publishCopyDocument, async ({ context }) => {
+        await context.route(/\/documents\/[^/]+\/content\/?$/, async (route) => {
+          signalDocumentRequest();
+          await documentGate;
+          await route.continue();
+        });
+      });
+      await documentRequested;
+      assert.equal(await page.evaluate(() => document.readyState), "interactive");
+
+      await openCopy(page);
+      await page.getByRole("button", { name: "Copy all", exact: true }).click();
+      await assertStatus(page, "Copied.");
+      assert.deepEqual(await writes(page), [documentText]);
+      assert.equal(await page.evaluate(() => document.readyState), "interactive");
+
+      releaseDocument();
+      await page.frameLocator("iframe").getByRole("button", { name: "Increment runtime", exact: true }).waitFor();
+      await page.waitForLoadState("load");
+    } finally {
+      releaseDocument();
+    }
+  });
+
   test(`${mode} copies displayed selection offsets while preserving CR and CRLF in whole text and code`, { timeout: 30_000 }, async (t) => {
     const { page } = await createCopyFixture(t, mode, async (backend) => [
       await publishBrowserDocument(backend, "CR selection", "cr-selection.html", "<!doctype html><html><body><p>Before</p><pre><code>a&#13;b&#13;&#10;c</code></pre><p>After</p></body></html>"),
