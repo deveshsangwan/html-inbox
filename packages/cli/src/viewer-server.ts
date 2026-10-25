@@ -11,7 +11,7 @@ import { ManagedStorageError } from "./private-storage";
 import { startViewerHttpServer, type ViewerHttpServer } from "./viewer-http-server";
 import { resolveViewerNetworkConfig, type ViewerNetworkOptions } from "./viewer-network";
 import { cleanupTailscale, prepareTailscale, startTailscale, type PreparedTailscale } from "./viewer-tailscale";
-import { getInboxInstanceId, hasErrorCode, readSavedViewerConfiguration, readViewerRecord, removeViewerRecord, saveViewerConfiguration, writeViewerRecord, type ViewerRecord } from "./viewer-records";
+import { getInboxInstanceId, hasErrorCode, readSavedViewerConfiguration, readViewerRecord, removeViewerRecord, saveViewerConfiguration, ViewerRecordFormatError, writeViewerRecord, type ViewerRecord } from "./viewer-records";
 import { acquireViewerStartLock, hasInheritedViewerStartLock, isProcessAlive } from "./viewer-start-lock";
 import { spawnDetachedViewer } from "./viewer-process";
 import { getControlHealth, getViewerStatus, isPortListening, resolveViewerConfiguration, VIEWER_PROTOCOL_VERSION, type ViewerStatus } from "./viewer-status";
@@ -391,15 +391,28 @@ async function assertCanReplaceViewerRecord(home: string, status: ViewerStatus):
     assertCanStart(status);
   }
 
-  if (status.state !== "conflict") {
+  if (status.state !== "conflict" && status.state !== "stopped") {
     return;
   }
 
-  const record = await readViewerRecord(home);
+  const managed = await assertManagedLifecycle(home);
+  const record = await readViewerRecord(home).catch((error: unknown) => {
+    if (!managed && status.state === "stopped" && error instanceof ViewerRecordFormatError) {
+      return null;
+    }
+
+    throw error;
+  });
+
   if (!record) {
     return;
   }
 
+  if (managed && await verifyViewerLocalOwner(home, record) === "dead") {
+    return;
+  }
+
+  // Closed listeners can still leave admitted mutations draining under this owner.
   const hasLiveProcess = isProcessAlive(record.pid) || (await getControlHealth(record.controlUrl)).state !== "unavailable";
   if (hasLiveProcess) {
     throw new Error(status.reason ?? "Existing viewer process record is unverified; stop that viewer before starting another");

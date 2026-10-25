@@ -123,7 +123,16 @@ async function startReaderServer(
     ...reader.renderOptions,
     deletion: deletion ? { token: deletion.token } : undefined,
   } };
+  const pendingMutations = new Set<Promise<void>>();
+  let isClosing = false;
+  let closing: Promise<void> | undefined;
   const server = http.createServer((request, response) => {
+    if (isClosing) {
+      response.setHeader("Connection", "close");
+      sendText(response, 503, "Reader is closing");
+      return;
+    }
+
     if (
       hasSingleHeader(request, "host") &&
       (config.host === "0.0.0.0" || config.host === "::") &&
@@ -137,7 +146,7 @@ async function startReaderServer(
       }
     }
 
-    void routeReaderRequest(reader, config, urls, request, response, deletion).catch((error: unknown) => {
+    const handling = routeReaderRequest(reader, config, urls, request, response, deletion).catch((error: unknown) => {
       console.error(error);
 
       if (response.headersSent) {
@@ -147,8 +156,25 @@ async function startReaderServer(
 
       sendText(response, 500, "Internal Server Error");
     });
+
+    if (deletion && request.url?.startsWith("/api/")) {
+      pendingMutations.add(handling);
+      void handling.then(() => pendingMutations.delete(handling), () => pendingMutations.delete(handling));
+    }
   });
   let closed: Promise<void> | undefined;
+
+  function close(): Promise<void> {
+    isClosing = true;
+    return closing ??= (async () => {
+      try {
+        await closeServer(server, closed);
+      } finally {
+        // A disconnected request can still own a store mutation or helper child.
+        await Promise.allSettled([...pendingMutations]);
+      }
+    })();
+  }
 
   try {
     await listen(server, config.port, config.host);
@@ -156,11 +182,11 @@ async function startReaderServer(
     config = { ...config, port: getServerPort(server) };
     urls = getViewerUrls(config);
   } catch (error) {
-    await closeServer(server, closed);
+    await close();
     throw error;
   }
 
-  return { server, config, urls, close: () => closeServer(server, closed) };
+  return { server, config, urls, close };
 }
 
 async function routeReaderRequest(

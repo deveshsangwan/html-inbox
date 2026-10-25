@@ -65,6 +65,8 @@ The reader accepts only explicit `Host` values derived from its configuration an
 
 Live deletion requests require a process-scoped CSRF token and a matching Origin. These checks protect requests from other origins; they do not distinguish owners from reachable readers. Live shell responses use `frame-ancestors 'none'`. Stored document content retains its original bytes, opaque-origin iframe sandbox, and document CSP. Static exported or hosted snapshots are independent read-only copies and contain no live deletion controls or live viewer credentials.
 
+`ViewerReaderServer.close()` stops request admission and joins admitted mutation handlers after native listener closure. A disconnected client can still have a managed transaction or deletion helper in progress. Viewer lifecycle cleanup awaits that join before removing its matching process record and reporting stopped. Startup preserves that record while its owner is live or cannot be shown dead; closed listeners do not establish that the owner has finished. Managed replacement retains the existing anchored process-start death proof. Ordinary malformed records remain recoverable when stopped, while private-file and I/O failures prevent replacement. Existing finite CLI stop waits retain the record and report failure if shutdown has not completed. Successful reader close establishes settlement of its admitted requests, not successful deletion, worker shutdown, or an offline snapshot of all inbox writers.
+
 Use `HTML_INBOX_PORT` when the port is taken:
 
 ```sh
