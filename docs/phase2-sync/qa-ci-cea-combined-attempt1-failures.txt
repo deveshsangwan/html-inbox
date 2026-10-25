@@ -42,9 +42,9 @@ not ok 232 - actual admitted run with held ACK allows exact-ticket positive canc
   failureType: 'testCodeFailure'
   error: |-
     The expression evaluated to a falsy value:
-    
+
       ok(completion.deadlineAt - Date.now() > 2000)
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: true
@@ -67,9 +67,9 @@ not ok 233 - actual admitted run with held ACK confirms without interruption
   failureType: 'testCodeFailure'
   error: |-
     The expression evaluated to a falsy value:
-    
+
       ok(completion.deadlineAt - Date.now() > 2000)
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: true

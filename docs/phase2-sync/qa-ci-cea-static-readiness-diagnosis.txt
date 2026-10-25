@@ -50,7 +50,7 @@ Smallest UNAPPLIED proposal, saved as unapplied-readiness.patch outside the repo
 --- a/scripts/viewer-browser.test.mjs
 +++ b/scripts/viewer-browser.test.mjs
 @@ -61,6 +61,7 @@
- 
+
      await page.getByRole("link", { name: "Back to inbox" }).click();
      assert.equal(page.url(), inboxUrl);
 +    await page.waitForLoadState("domcontentloaded");

@@ -12,7 +12,7 @@ index adfcf9d..61286d2 100644
 --- a/scripts/viewer-browser.test.mjs
 +++ b/scripts/viewer-browser.test.mjs
 @@ -61,6 +61,7 @@ for (const mode of ["local", "static"]) {
- 
+
      await page.getByRole("link", { name: "Back to inbox" }).click();
      assert.equal(page.url(), inboxUrl);
 +    await page.waitForLoadState("domcontentloaded");

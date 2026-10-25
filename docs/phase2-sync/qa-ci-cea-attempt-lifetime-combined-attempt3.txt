@@ -32,17 +32,17 @@ not ok 193 - owned worker persists queue backoff through restart, blocks at its 
     ℹ skipped 0
     ℹ todo 0
     ℹ duration_ms 2583.619042
-    
+
     ✖ failing tests:
-    
+
     test at ../../../../home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-acquisition-deadline.test.js:63:29
     ✖ queue worker child (2578.170402ms)
       AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
       + actual - expected
-      
+
       + 'aborted'
       - 'pending'
-      
+
           at runWorkerScenario (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-acquisition-deadline.test.js:451:30)
           at async Test.run (node:internal/test_runner/test:1409:7)
           at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
@@ -53,10 +53,10 @@ not ok 193 - owned worker persists queue backoff through restart, blocks at its 
         operator: 'strictEqual',
         diff: 'simple'
       }
-    
-    
+
+
     1 !== 0
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: 0

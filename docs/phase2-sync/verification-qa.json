@@ -37460,14 +37460,94 @@
         }
       ],
       "intermediateFullTestsClaimed": false,
-      "documentationCommit": "This evidence commit; see Git history for its identity",
+      "documentationCommit": "b7477292d9d0c2fd2165dd28fe0306e87ca238c7",
       "codeUnchangedAfterReview": true,
       "source169Sha256": "4967ad40861e64dfe33932a3383216c47b25a978f49ec736dd2dd15c792a5eba",
       "compiled336Sha256": "88393e78f3292bc7fbd61b78e5deb4fe6bec909e0795987e7515f714a33d069a",
       "target": "Fast-forward feat/phase2-sync; PR79 stacked onPR76",
       "hostedAndPhysicalAcceptance": "Tracked on exact replacement PR79 head; physical QA release requires hosted green",
       "temporaryStageExportsAndDependencyLinksRemoved": true,
-      "remainingCompilerChildren": []
+      "remainingCompilerChildren": [],
+      "evidenceCopyFormatting": {
+        "scope": "Ten repository transcript copies only; trailing whitespace/extraEOFblanklines",
+        "verbatimCommit": "b7477292d9d0c2fd2165dd28fe0306e87ca238c7",
+        "originalExternalEvidenceUnchanged": true,
+        "originalWhitespaceCheckExit": 2,
+        "coordinatorMistake": "The documentation commit continued after the failed check before its result was inspected. A separate docs-only followup corrects formatting without rewriting history.",
+        "copies": [
+          {
+            "path": "docs/phase2-sync/qa-ci-cea-acquisition-deadline-design.txt",
+            "verbatimCommit": "b7477292d9d0c2fd2165dd28fe0306e87ca238c7",
+            "rawSHA256": "866bd73a53b78ba8f3899052a3101236599ac1c94c89333c97ef4d933eb07255",
+            "formattedSHA256": "f81ab9b3417cce8fee392d2af5582d8ad31a5a9d079055708938f3383ead61eb",
+            "change": "Trailing spaces/tabs and extra blank EOF lines only"
+          },
+          {
+            "path": "docs/phase2-sync/qa-ci-cea-acquisition-deadline-trace.txt",
+            "verbatimCommit": "b7477292d9d0c2fd2165dd28fe0306e87ca238c7",
+            "rawSHA256": "491a4171efa8029e2c3580d10dc8e557ab97a6839e4fb78f5bf3aaff263fc232",
+            "formattedSHA256": "1795d50614ff9c9851761591c9a64a09781f5b60e0423d1f4da496fd9097b07b",
+            "change": "Trailing spaces/tabs and extra blank EOF lines only"
+          },
+          {
+            "path": "docs/phase2-sync/qa-ci-cea-activation-admission-diagnosis.txt",
+            "verbatimCommit": "b7477292d9d0c2fd2165dd28fe0306e87ca238c7",
+            "rawSHA256": "f5380303ea75e9db33b36c022a0ac8e6f4ccbe4e61df9e6f4fbad0d556d90b8a",
+            "formattedSHA256": "faa2311fdd1418b13823bb6f3af76bf2a93a631728758e9eaf37af21ad7780e8",
+            "change": "Trailing spaces/tabs and extra blank EOF lines only"
+          },
+          {
+            "path": "docs/phase2-sync/qa-ci-cea-attempt-lifetime-combined-attempt3.txt",
+            "verbatimCommit": "b7477292d9d0c2fd2165dd28fe0306e87ca238c7",
+            "rawSHA256": "d4a24b443d388c6207456a68c14753aef6d4d7ce5f915344bfde5ad1180a27a0",
+            "formattedSHA256": "b63aa384f699123758be14c414aeff49cd06b3e261cda0dadd894e9c7a665bd1",
+            "change": "Trailing spaces/tabs and extra blank EOF lines only"
+          },
+          {
+            "path": "docs/phase2-sync/qa-ci-cea-combined-attempt1-failures.txt",
+            "verbatimCommit": "b7477292d9d0c2fd2165dd28fe0306e87ca238c7",
+            "rawSHA256": "330a4d7f9cc7e0ac1f0b7eac31bca2e41a14fd898a7637042cdf113189e729c9",
+            "formattedSHA256": "85efcf43d51614cf38f3036f681ae1f4a857a7eec09aae1c97a21ed5bb6f4fbb",
+            "change": "Trailing spaces/tabs and extra blank EOF lines only"
+          },
+          {
+            "path": "docs/phase2-sync/qa-ci-cea-combined-attempt1.txt",
+            "verbatimCommit": "b7477292d9d0c2fd2165dd28fe0306e87ca238c7",
+            "rawSHA256": "cbdfb4a6b2f8b8c2c3fd1912db3760a5c903360ce6a54c3da0ed6f4e3029f49f",
+            "formattedSHA256": "d41a59d5c536f73be72a610c787ab1da1428c93c35e471b9fda51df4ab5e5839",
+            "change": "Trailing spaces/tabs and extra blank EOF lines only"
+          },
+          {
+            "path": "docs/phase2-sync/qa-ci-cea-staging-pair-diagnosis.txt",
+            "verbatimCommit": "b7477292d9d0c2fd2165dd28fe0306e87ca238c7",
+            "rawSHA256": "af47d11dbbe9c0f26acc79f7ab4e43cb32232ea2e6eb04dc89978d7807725560",
+            "formattedSHA256": "b152dbf3a69c12f83dd9f62e3ec9f8723651fe572dc0a717545ba82d91b7ae18",
+            "change": "Trailing spaces/tabs and extra blank EOF lines only"
+          },
+          {
+            "path": "docs/phase2-sync/qa-ci-cea-static-readiness-diagnosis.txt",
+            "verbatimCommit": "b7477292d9d0c2fd2165dd28fe0306e87ca238c7",
+            "rawSHA256": "87ce04c4a754f62d8133a6ed7e03d4ca19efc15950c95642edb110fb44f184dd",
+            "formattedSHA256": "686ae697e5dc05a9f41e5863078e7dc8144c6fc8f3f08e2a1abadf965aaeafb8",
+            "change": "Trailing spaces/tabs and extra blank EOF lines only"
+          },
+          {
+            "path": "docs/phase2-sync/qa-ci-cea-static-readiness-implementation.txt",
+            "verbatimCommit": "b7477292d9d0c2fd2165dd28fe0306e87ca238c7",
+            "rawSHA256": "6b791fd63ad52d75b3bae78a0dc6025596e7019c62d4edba0ca230386e72739c",
+            "formattedSHA256": "5f9459b42b4ec710d276bda8b7dde8c657d2230da77bd349c8b1abe2ac864ec6",
+            "change": "Trailing spaces/tabs and extra blank EOF lines only"
+          },
+          {
+            "path": "docs/phase2-sync/qa-ci-cea-windows-lifecycle-implementation.txt",
+            "verbatimCommit": "b7477292d9d0c2fd2165dd28fe0306e87ca238c7",
+            "rawSHA256": "701a213c9062b33f1c5bfe2faa7816cd0abbd930bd9534895add6c938c9b66bf",
+            "formattedSHA256": "8227467eb73c46ce1d9480bf8810cc0ef50e5748929b81280a1af07c85ee6b0b",
+            "change": "Trailing spaces/tabs and extra blank EOF lines only"
+          }
+        ],
+        "codeAndTestOutcomesChanged": false
+      }
     }
   },
   "historicalUnresolvedObjectionsAtCeaStart": [

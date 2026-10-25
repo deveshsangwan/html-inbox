@@ -157,6 +157,6 @@ index c08e664..fd89097 100644
 +    await assert.rejects(child.stats(), /HTTPS fixture child closed/);
      await assertListenerReleased(child.url);
    }
- 
+
 
 No source write occurred after the recorded freeze. Preserve the exact final file for parent integration; this report does not authorize combined checks, reviews or publication on behalf of the parent.
