@@ -198,8 +198,10 @@ html-inbox viewer --foreground</code></pre>
         <p>
           Stop the old process with its previous executable before installing a
           newer release. For an old foreground process, use Ctrl-C. The new CLI
-          refuses an older private control protocol rather than signaling an
-          unverified PID.
+          refuses an incompatible private control protocol rather than
+          signaling an unverified PID. This applies to 0.1.0 viewers; 0.2.x
+          keeps protocol version 3. Restart an existing viewer after updating
+          to load new code, including the 0.2.2 shutdown diagnostics.
         </p>
         <p>
           If the older viewer already exited but left <code>viewer.json</code>,

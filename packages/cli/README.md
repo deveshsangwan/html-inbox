@@ -83,7 +83,9 @@ html-inbox viewer stop
 
 Startup waits for verified readiness. Use `--foreground` for debugging, containers, or service managers. Publishing starts or reuses the same viewer and prints its document URL.
 
-Stop an older viewer before upgrading. The new private control protocol refuses unverified older process records.
+Detachment does not escape an agent's systemd scope or provide automatic restart. Use an explicit [boot service](https://github.com/deveshsangwan/html-inbox/blob/main/docs/self-hosting.md#start-at-boot) for links that must survive agent cleanup, logout, or reboot. Graceful shutdown diagnostics include the timestamp, PID, and shutdown reason in `viewer.log`, foreground stderr, or the service journal.
+
+Version 0.2.x keeps the same private control protocol. Stop a viewer started by 0.1.0 with its original executable before upgrading; newer CLIs refuse incompatible or unverified process records. Restart an existing 0.2.x viewer after updating to load the new code.
 
 Explicit self-hosting modes serve the complete live inbox for reading and searching:
 

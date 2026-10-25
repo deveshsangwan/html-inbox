@@ -13,7 +13,7 @@ Live Tailscale access uses the local viewer through HTTPS Serve and follows tail
 npx skills add deveshsangwan/html-inbox --skill html-inbox
 ```
 
-The current `skills@1.7.0` installer requires Node.js 22.20.0 or newer for skill installation or updates. HTML Inbox itself, including the fallback used by an already-installed skill, requires Node.js 20 or newer.
+The skills installer requires Node.js 22.20.0 or newer for skill installation or updates. HTML Inbox itself, including the fallback used by an already-installed skill, requires Node.js 20 or newer.
 
 Choose a supported agent explicitly when needed, for example by appending `--agent codex -y`. Verify that agent's installed directory contains `SKILL.md`, `references/cli-resolution.md`, and the bundled `scripts/windows-cli.cjs` before using it. Installer exit code zero alone does not prove every selected agent target succeeded.
 
@@ -47,7 +47,7 @@ Setup is complete when `remote init` succeeds and `inbox remote status` reports 
 
 ## Snapshot appearance
 
-Snapshots use the same compact document toolbar and Hide frame / Show frame controls as the live viewer. Their setup default comes from the local inbox at export time; each reader can select System, Light, or Dark in their own browser. Browser changes do not sync back to the CLI or other devices. A new export is needed to change the snapshot's saved default.
+With CLI 0.2.1 or newer, snapshots use the same compact document toolbar and Hide frame / Show frame controls as the live viewer. Their setup default comes from the local inbox at export time; each reader can select System, Light, or Dark in their own browser. Browser changes do not sync back to the CLI or other devices. A new export is needed to change the snapshot's saved default. A compatible 0.2.0 executable supports ordinary remote operations but lacks these appearance controls.
 
 Remote publishing preserves original document bytes. When asked to author or adapt documents, use the main skill's [document appearance reference](https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/document-appearance.md). Older documents with hardcoded colors need individual adaptation; the remote operation does not convert them.
 

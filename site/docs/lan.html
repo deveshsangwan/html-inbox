@@ -159,7 +159,10 @@
 html-inbox viewer --lan</code></pre>
         </div>
         <p>
-          The default LAN bind address is <code>0.0.0.0</code>. The CLI reports
+          First LAN startup or a switch from another mode binds
+          <code>0.0.0.0</code> unless <code>--host</code> is supplied. Existing
+          LAN configuration retains its saved host, including with explicit
+          <code>--lan</code>. The CLI reports
           concrete IPv4 interface URLs such as
           <code>http://192.168.1.20:3217</code>, not the wildcard address. Open
           a reported URL on another device connected to the same network.

@@ -196,6 +196,22 @@ html-inbox delete &lt;id&gt; [--force] [--json]</code></pre>
           reports metadata plus reclaimed bytes with <code>--json</code>.
           Non-interactive deletion needs <code>--force</code>.
         </p>
+        <h2 id="preferences">Appearance preferences</h2>
+        <div class="docs-code">
+          <pre
+            role="region"
+            tabindex="0"
+            aria-label="Appearance preference command syntax"
+          ><code>html-inbox preferences [--appearance &lt;system|light|dark&gt;] [--json]</code></pre>
+        </div>
+        <p>
+          Available since 0.2.1. Read or set the default appearance stored in
+          the selected inbox. The default is <code>system</code>; readers can
+          override it in their own browsers. <code>--json</code> prints the
+          resolved preference. Reading without <code>--appearance</code> does
+          not create a preference file. Static exports capture the saved
+          default when created.
+        </p>
         <h2 id="viewer">Viewer</h2>
         <div class="docs-code">
           <pre
@@ -232,8 +248,11 @@ html-inbox viewer stop</code></pre>
               <tr>
                 <td><code>--lan</code></td>
                 <td>
-                  Choose live LAN readers. Default bind <code>0.0.0.0</code>;
-                  all reachable readers are trusted.
+                  Choose live LAN readers. First LAN startup or a switch from
+                  another mode binds <code>0.0.0.0</code> without an explicit
+                  host. Existing LAN configuration retains its saved host,
+                  including with explicit <code>--lan</code>. All reachable
+                  readers are trusted.
                 </td>
               </tr>
               <tr>
@@ -485,6 +504,7 @@ html-inbox remote revoke [--yes] [--json]</code></pre>
           <ul>
             <li><a href="#global">Help and version</a></li>
             <li><a href="#documents">Documents</a></li>
+            <li><a href="#preferences">Appearance preferences</a></li>
             <li><a href="#viewer">Viewer</a></li>
             <li><a href="#service">Boot services</a></li>
             <li><a href="#export">Static export</a></li>

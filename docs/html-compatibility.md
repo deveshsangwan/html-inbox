@@ -34,8 +34,11 @@ are also blocked; attach handlers from an inline script instead.
 - `https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs`
 
 Use the Mermaid entry URL in a module script or an inline module import. Other
-remote script entry URLs produce warnings and are blocked. External images and
-stylesheets are blocked even when their host serves a supported script.
+remote script entry URLs produce advisory warnings. URLs outside the document
+CSP's script sources are blocked, but those sources include the Mermaid `dist/`
+subtree for module chunks and the Tailwind CDN origin. A noncanonical script URL
+inside those sources can warn and still load. External images and stylesheets
+remain blocked even when their host serves a supported script.
 
 ## Navigation and local references
 

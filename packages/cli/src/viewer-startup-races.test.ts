@@ -8,6 +8,7 @@ import { startViewer, stopViewer } from "./viewer-server";
 
 test("shutdown waits for an in-flight readiness commit and removes its completed record", async (t) => {
   const home = await temporaryHome(t);
+  const log = t.mock.method(console, "error", () => {});
   const writeRecord = viewerRecords.writeViewerRecord;
   const remove = t.mock.method(viewerRecords, "removeViewerRecord");
   t.mock.method(
@@ -15,12 +16,14 @@ test("shutdown waits for an in-flight readiness commit and removes its completed
     "writeViewerRecord",
     async (recordHome: string, record: viewerRecords.ViewerRecord) => {
       process.emit("SIGTERM");
+      process.emit("SIGINT");
       await delay(50);
       assert.equal(
         remove.mock.callCount(),
         0,
         "shutdown must wait for the pending readiness write",
       );
+      assert.equal(log.mock.callCount(), 1, "completion must wait for the readiness write");
 
       await writeRecord(recordHome, record);
     },
@@ -32,6 +35,9 @@ test("shutdown waits for an in-flight readiness commit and removes its completed
   );
   assert.equal(await viewerRecords.readViewerRecord(home), null);
   assert.equal(remove.mock.callCount(), 1);
+  assert.equal(log.mock.callCount(), 2, "repeated signals and startup rollback share one shutdown");
+  assert.match(String(log.mock.calls[0].arguments[0]), /shutting down \(SIGTERM\)$/);
+  assert.match(String(log.mock.calls[1].arguments[0]), /stopped \(SIGTERM\)$/);
 });
 
 test(

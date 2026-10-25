@@ -200,6 +200,12 @@ html-inbox preferences --json</code></pre>
           URL for the active exposure.
         </p>
         <p>
+          Detachment does not escape an agent's systemd scope or provide
+          automatic restart. Stopping that scope also stops its viewer. Use an
+          explicit <a href="boot-services.html">boot service</a> for links that
+          must survive agent cleanup, logout, or reboot.
+        </p>
+        <p>
           First startup binds <code>127.0.0.1</code> on port <code>3217</code>.
           The last successful port, address, and exposure are saved in the
           selected inbox. Later starts and publishing reuse them, even after
@@ -307,7 +313,7 @@ html-inbox viewer --loopback</code></pre>
           your existing tailnet policy. No mode adds browser administration or
           mutation routes.
         </p>
-        <h2 id="diagnostics">Find startup diagnostics</h2>
+        <h2 id="diagnostics">Find lifecycle diagnostics</h2>
         <p>
           Detached startup writes diagnostics to <code>viewer.log</code> inside
           the private inbox. Failed startup reports that path. The default
@@ -315,6 +321,17 @@ html-inbox viewer --loopback</code></pre>
           it is not a process identity check. The separate secret loopback
           control URL belongs in protected local records and should not be
           shared.
+        </p>
+        <p>
+          Starting with 0.2.2, graceful shutdown records its timestamp, viewer
+          PID, and first reason:
+          <code>SIGTERM</code>, <code>SIGINT</code>, <code>reader-close</code>, or
+          <code>startup-failure</code>. A <code>stopped</code> record follows
+          successful cleanup. A signal record cannot identify who sent it;
+          correlate the PID and timestamp with the service manager's journal.
+          A forced kill or power loss may leave no shutdown record.
+          Restart an existing viewer after updating the CLI to load these
+          diagnostics; older compatible 0.2.x viewers may lack them.
         </p>
         <p>
           See
@@ -346,7 +363,7 @@ html-inbox viewer --loopback</code></pre>
             <li><a href="#foreground">Keep it attached</a></li>
             <li><a href="#status-stop">Inspect and stop it</a></li>
             <li><a href="#exposure">Change reader exposure</a></li>
-            <li><a href="#diagnostics">Find startup diagnostics</a></li>
+            <li><a href="#diagnostics">Find lifecycle diagnostics</a></li>
           </ul>
         </nav>
       </aside>

@@ -13,7 +13,7 @@ This skill owns publishing and live viewer operation. Cloudflare Pages hosts a s
 npx skills add deveshsangwan/html-inbox --skill html-inbox-remote
 ```
 
-The current `skills@1.7.0` installer requires Node.js 22.20.0 or newer for skill installation or updates. HTML Inbox itself, including the fallback used by an already-installed skill, requires Node.js 20 or newer.
+The skills installer requires Node.js 22.20.0 or newer for skill installation or updates. HTML Inbox itself, including the fallback used by an already-installed skill, requires Node.js 20 or newer.
 
 Choose a supported agent explicitly when needed, for example by appending `--agent codex -y`. Verify that agent's installed directory contains `SKILL.md`, `references/cli-resolution.md`, `references/document-appearance.md`, `assets/document-template.html`, and the bundled `scripts/windows-cli.cjs` before using it. Installer exit code zero alone does not prove every selected agent target succeeded.
 
@@ -83,7 +83,7 @@ The source must be a regular `.html` or `.htm` file containing valid UTF-8 and a
 
 Blocking HTML policy errors reject publishing. These include `javascript:` or `vbscript:` URL attributes, navigation to `data:` URLs, `<meta http-equiv="refresh">`, and `<a>` or `<area>` links with non-HTTPS schemes or protocol-relative URLs. HTTPS, relative, and fragment links are allowed.
 
-Inline scripts and the supported Tailwind browser and Mermaid v11 script entry points are allowed. Inline event handlers, `<base>`, and non-allowlisted external scripts or asset URLs produce advisory warnings. Publishing continues, and the viewer CSP blocks the warned features.
+Inline scripts and the supported Tailwind browser and Mermaid v11 script entry points are allowed. Inline event handlers, `<base>`, and non-allowlisted external scripts or asset URLs produce advisory warnings. Publishing continues. The viewer CSP blocks many warned features, but its script sources are broader than the canonical entry URLs; verify the affected behavior instead of treating a warning as proof of blocking.
 
 When publishing fails, preserve the exact error, fix the named condition in the source, and retry the same publish contract. Do not bypass validation, weaken viewer security, or claim that a CDN works without rendering it in the viewer.
 
@@ -98,6 +98,10 @@ inbox viewer
 inbox viewer status
 inbox viewer stop
 ```
+
+Detachment keeps the launching process's service-manager ownership. On Linux, stopping an agent's systemd scope also stops its detached viewer. For links that must survive agent cleanup, logout, or reboot, follow the explicitly authorized [boot service workflow](#manage-boot-startup). Ordinary startup and publishing never install that service.
+
+Starting with 0.2.2, graceful shutdown records its timestamp, viewer PID, first trigger, and cleanup completion in the existing diagnostic stream. A signal reason does not identify its sender, and a forced kill can prevent a shutdown record. Older compatible 0.2.x executables may lack these records.
 
 Use `inbox viewer --foreground` when the user wants an attached process for debugging, containers, or an external service manager. It keeps the terminal occupied and prints its listening address to stderr. Startup failures report an error and retain private diagnostics under the selected inbox home.
 
@@ -166,7 +170,7 @@ sudo /absolute/path/to/node /absolute/path/to/html-inbox viewer service uninstal
 
 Run ordinary status as the selected normal user and select that user's inbox. For a custom library, preserve the same absolute `HTML_INBOX_HOME` during installation, status, and removal as shown in the full guide. The explicit `--loopback` example chooses loopback; choose LAN or Tailscale options only when the user requests that exposure. Omitting networking options preserves saved settings.
 
-The service records absolute Node/CLI paths, inbox and network settings, and the Tailscale executable when needed. Reinstall after moving or replacing those installation paths. CLI and skill updates are separate operations. Service status checks both the manager and private viewer readiness. Uninstall stops and disables only the owned boot service and preserves documents and private state. `viewer stop` does not remove boot configuration; use service uninstall to prevent future boot startup.
+The service records absolute Node/CLI paths, inbox and network settings, and the Tailscale executable when needed. Reinstall after moving or replacing those installation paths. CLI and skill updates are separate operations. Service status checks both the manager and private viewer readiness. Uninstall stops and disables only the owned boot service and preserves documents, saved configuration, inbox identity, and logs. Successful shutdown removes the matching active process record and any verified owned-route journal. `viewer stop` does not remove boot configuration; use service uninstall to prevent future boot startup.
 
 ## Security boundary
 
