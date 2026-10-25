@@ -2,6 +2,14 @@
 
 All notable changes to HTML Inbox will be documented here.
 
+## 0.2.2 - 2026-10-25
+
+- Record timestamped shutdown requests and completion with the viewer PID and first trigger, preserving serialized startup and cleanup.
+- Explain why detached viewers remain owned by a launching systemd scope and point persistent reader links to the existing explicit boot service workflow.
+- Preserve the original failure and attempt every cleanup stage in the synthetic scope test harness, including setup failures, with manager-free regression coverage in CI.
+
+The CLI and process-control protocol are unchanged. After updating, restart an existing 0.2.x viewer to load the new diagnostics; stored documents and saved exposure settings persist. Persistent service installation remains an explicit administrator operation. Stop viewers started by 0.1.0 with their original executable before upgrading.
+
 ## 0.2.1 - 2026-10-20
 
 - Replace stacked viewer headers with a compact toolbar and responsive inbox list on mobile and desktop.
