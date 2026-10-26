@@ -1,5 +1,13 @@
 # Physical QA correction follow-up
 
+## Windows portable contention follow-up
+
+Hosted Verify 429 on `1723c01aed1871679ebe01845d0a8a61ac9fd09a` passed both Ubuntu jobs and macOS Node 20. Windows Node 24 failed the unchanged 24-process catalog-registration case when an existing-lock snapshot's read-only open returned `EPERM`. All 18 viewer-health cases passed in that Windows job. The original Windows holder and filesystem state were not captured. Pending deletion is a possible mechanism, not an assigned historical cause.
+
+Portable acquisition already waited on Windows exclusive-create `EPERM`. It now also defers a direct Windows portable-reaper snapshot open denial, after safe metadata checks and before any handle is returned. This private typed outcome grants no owner-death or cleanup authority. The existing acquisition deadline, cancellation and retry schedule remain; only a fresh successful exclusive creation admits protected work. A persistent last denial returns the original error. Non-Windows errors, other errno values, lstat/read failures, release validation, managed ownership and compound cleanup failures retain their operational-error behavior. No aggregate is unwrapped for retry and no lock is forcibly removed.
+
+A public-API control with a real holder reproduced the read-open failure before the correction, then recovered only after that holder's real validated release. Eleven new controlled cases cover this boundary, persistent denial and abort, operational-error distinctions, release refusal and guarded compound cleanup. Complete portable suites pass 23/23 on exact Node 20.20.2 and 24.21.0; the unchanged catalog suite passes 43/43 on each. These platform/syscall controls are simulations on Linux. Native Windows confirmation and the historical actor remain separate from local evidence. Existing QA003 recovery limits and the two unresolved office timing observations are unchanged.
+
 ## October 27 focused physical retest and office follow-up
 
 Independent QA tested exact `72eec8219b01276beda5d46a0d4f3a9a49c117cd` on three clean checkouts with identical source and compiled bytes. Targeted QA001/QA002/QA004, mixed LAN/Tailscale body pull, canonical cycle and offline deletion passed in 244.618 seconds. Original workers remained stable for the sampled 185.539-second window with the default 60000 ms lease and default timings. QA003's specific unpublished-candidate creation window passed nine actual cuts total, three per host, without deleting canonical authority. General arbitrary-cut recovery and power-loss guarantees remain excluded.

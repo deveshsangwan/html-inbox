@@ -529,12 +529,25 @@ class UnverifiableLockError extends Error {
   }
 }
 
-// This exception belongs only to lock publication. General private-file readers still require one link.
-async function lockSnapshot(lockPath: string, privateMode = true) {
+class PortableLockOpenDeniedError extends Error {
+  constructor(readonly denial: Error) {
+    super("Portable lock snapshot open was denied", { cause: denial });
+  }
+}
+
+// Only lock publication permits this checked two-link transition; general private-file readers require one link.
+async function lockSnapshot(lockPath: string, privateMode = true, portableContention = false) {
   for (let attempt = 0; attempt < 4; attempt += 1) {
     const checked = await lstat(lockPath);
     checkLockFile(checked, checked.nlink, privateMode);
-    const file = await open(lockPath, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    const file = await open(lockPath, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK).catch((error: unknown) => {
+      if (portableContention && process.platform === "win32" && error instanceof Error &&
+          !(error instanceof AggregateError) && hasCode(error, "EPERM")) {
+        throw new PortableLockOpenDeniedError(error);
+      }
+
+      throw error;
+    });
     try {
       const before = await file.stat();
       checkLockFile(before, before.nlink, privateMode);
@@ -584,7 +597,7 @@ async function lockSnapshot(lockPath: string, privateMode = true) {
 
 async function reaperSnapshot(lockPath: string, privateMode: boolean) {
   try {
-    return await lockSnapshot(lockPath, privateMode);
+    return await lockSnapshot(lockPath, privateMode, !privateMode);
   } catch (error) {
     if (error instanceof UnverifiableLockError || hasCode(error, "ENOENT")) {
       return null;
@@ -772,7 +785,14 @@ async function acquirePortableOwnership(lockPath: string, owner: LockOwner, dead
     }
 
     if (permissionError === undefined) {
-      await reclaimDeadLock(lockPath);
+      try {
+        await reclaimDeadLock(lockPath);
+      } catch (error) {
+        // A denied Windows read may be a pending deletion, but proves no owner dead.
+        // Wait for a fresh exclusive create; compound cleanup errors must still escape.
+        if (!(error instanceof PortableLockOpenDeniedError)) throw error;
+        permissionError = error.denial;
+      }
     }
 
     await waitForOwnershipRetry(Math.min(20, Math.max(1, deadline - Date.now())), signal);

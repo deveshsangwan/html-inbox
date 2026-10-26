@@ -40,6 +40,229 @@ async function portableFixture(t: TestContext, catalog = false) {
   return { root, directory, lock, handles, assertClosed };
 }
 
+async function withPlatform(platform: string, operation: () => Promise<void>) {
+  const descriptor = Object.getOwnPropertyDescriptor(process, "platform");
+  assert.ok(descriptor);
+  Object.defineProperty(process, "platform", { value: platform });
+  try {
+    await operation();
+  } finally {
+    Object.defineProperty(process, "platform", descriptor);
+  }
+}
+
+test("portable Windows contention waits after a denied snapshot open until the actual holder releases", async (t) => {
+  const f = await portableFixture(t);
+  const holder = await acquireSyncOwnership(f.lock, Date.now() + 1000, undefined, { mode: "portable" });
+  const denied = Object.assign(new Error("Controlled portable snapshot open denial"), { code: "EPERM" });
+  const open = fs.open;
+  let hits = 0;
+  let holderReleased = false;
+  let release: Promise<void> | undefined;
+  await withPlatform("win32", async () => {
+    t.mock.method(fs, "open", async (...args: Parameters<typeof open>) => {
+      if (args[0] === f.lock && typeof args[1] === "number" && hits === 0) {
+        hits += 1;
+        release = holder.release().then(() => { holderReleased = true; });
+        throw denied;
+      }
+
+      return open(...args);
+    });
+
+    try {
+      const successor = await acquireSyncOwnership(f.lock, Date.now() + 1000, undefined, { mode: "portable" });
+      try {
+        assert.equal(hits, 1);
+        assert.ok(release);
+        await release;
+        assert.equal(holderReleased, true, "actual holder release completed");
+        assert.notEqual(successor.owner.token, holder.owner.token);
+        assert.equal((await readSyncOwnership(f.lock))?.token, successor.owner.token);
+      } finally {
+        await successor.release();
+      }
+    } finally {
+      t.mock.restoreAll();
+      await (release ?? holder.release());
+    }
+  });
+
+  await f.assertClosed();
+  await assert.rejects(fs.lstat(f.lock), { code: "ENOENT" });
+});
+
+for (const mode of ["deadline", "abort"] as const) {
+  test(`persistent Windows snapshot denial preserves ${mode} without replacing the holder`, async (t) => {
+    const f = await portableFixture(t);
+    const holder = await acquireSyncOwnership(f.lock, Date.now() + 1000, undefined, { mode: "portable" });
+    const original = await fs.readFile(f.lock);
+    const info = await fs.lstat(f.lock);
+    const denial = Object.assign(new Error("Controlled persistent snapshot denial"), { code: "EPERM" });
+    const reason = new Error("Stop the denied contender");
+    const controller = new AbortController();
+    const open = fs.open;
+    let hits = 0;
+    let acquired = false;
+    await withPlatform("win32", async () => {
+      t.mock.method(fs, "open", async (...args: Parameters<typeof open>) => {
+        if (args[0] === f.lock && typeof args[1] === "number") {
+          hits += 1;
+          if (mode === "abort") controller.abort(reason);
+          throw denial;
+        }
+
+        return open(...args);
+      });
+
+      try {
+        const deadline = Date.now() + 100;
+        await assert.rejects(acquireSyncOwnership(f.lock, deadline, controller.signal, { mode: "portable" })
+          .then(() => { acquired = true; }), (error: unknown) => error === (mode === "abort" ? reason : denial));
+
+        if (mode === "deadline") assert.ok(Date.now() >= deadline, "persistent denial must wait until the acquisition deadline");
+
+        assert.ok(hits > 0);
+        assert.equal(acquired, false);
+        assert.deepEqual(await fs.readFile(f.lock), original);
+        assert.equal((await fs.lstat(f.lock)).ino, info.ino);
+      } finally {
+        t.mock.restoreAll();
+        await holder.release();
+      }
+    });
+
+    await f.assertClosed();
+  });
+}
+
+for (const [platform, code, phase] of [
+  ["linux", "EPERM", "open"],
+  ["win32", "EACCES", "open"],
+  ["win32", "EIO", "open"],
+  ["win32", "EPERM", "read"],
+  ["win32", "EPERM", "lstat"],
+  ["win32", "EPERM", "aggregate"],
+] as const) {
+  test(`portable ${platform} ${phase} ${code} remains an operational failure`, async (t) => {
+    const f = await portableFixture(t);
+    const holder = await acquireSyncOwnership(f.lock, Date.now() + 1000, undefined, { mode: "portable" });
+    const original = await fs.readFile(f.lock);
+    const primary = Object.assign(new Error("Controlled portable inspection failure"), { code });
+    const failure = phase === "aggregate" ? Object.assign(new AggregateError([primary], "Uncertain inspection cleanup"), { code }) : primary;
+    const open = fs.open;
+    const lstat = fs.lstat;
+    let hits = 0;
+    await withPlatform(platform, async () => {
+      t.mock.method(fs, "open", async (...args: Parameters<typeof open>) => {
+        if (args[0] === f.lock && typeof args[1] === "number") {
+          if (phase === "open" || phase === "aggregate") {
+            hits += 1;
+            throw failure;
+          }
+
+          const file = await open(...args);
+          if (phase === "read") t.mock.method(file, "read", async () => { hits += 1; throw failure; });
+          return file;
+        }
+
+        return open(...args);
+      });
+      if (phase === "lstat") t.mock.method(fs, "lstat", async (...args: Parameters<typeof lstat>) => {
+        if (args[0] === f.lock) { hits += 1; throw failure; }
+        return lstat(...args);
+      });
+
+      try {
+        await assert.rejects(acquireSyncOwnership(f.lock, Date.now() + 1000, undefined, { mode: "portable" }), (error: unknown) => error === failure);
+        assert.equal(hits, 1);
+        assert.deepEqual(await fs.readFile(f.lock), original);
+      } finally {
+        t.mock.restoreAll();
+        await holder.release();
+      }
+    });
+
+    await f.assertClosed();
+  });
+}
+
+test("portable Windows release does not retry a denied validation open", async (t) => {
+  const f = await portableFixture(t);
+  const holder = await acquireSyncOwnership(f.lock, Date.now() + 1000, undefined, { mode: "portable" });
+  const original = await fs.readFile(f.lock);
+  const denial = Object.assign(new Error("Controlled release validation denial"), { code: "EPERM" });
+  const open = fs.open;
+  let hits = 0;
+  await withPlatform("win32", async () => {
+    t.mock.method(fs, "open", async (...args: Parameters<typeof open>) => {
+      if (args[0] === f.lock && typeof args[1] === "number") { hits += 1; throw denial; }
+      return open(...args);
+    });
+
+    try {
+      const released = holder.release();
+      await assert.rejects(released, (error: unknown) => error === denial);
+      assert.equal(holder.release(), released);
+      assert.equal(hits, 1);
+    } finally {
+      t.mock.restoreAll();
+      await holder.closeHandles();
+    }
+  });
+
+  await f.assertClosed();
+  assert.deepEqual(await fs.readFile(f.lock), original);
+});
+
+test("portable Windows guarded denial never hides a separate cleanup failure", async (t) => {
+  const f = await portableFixture(t);
+  const bytes = Buffer.from(JSON.stringify({ token: "synthetic-dead-owner", pid: process.pid, start: null }));
+  await fs.writeFile(f.lock, bytes, { mode: 0o600 });
+  const denial = Object.assign(new Error("Controlled guarded snapshot open denial"), { code: "EPERM" });
+  const cleanup = Object.assign(new Error("Controlled reaper close failure"), { code: "EIO" });
+  const open = fs.open;
+  const kill = process.kill;
+  let guarded = false;
+  let hits = 0;
+  let closes = 0;
+  await withPlatform("win32", async () => {
+    // Only this synthetic record's death proof is simulated; guard and file operations are real.
+    t.mock.method(process, "kill", (...args: Parameters<typeof kill>) => {
+      if (args[0] === process.pid && args[1] === 0) throw Object.assign(new Error("Controlled owner absence"), { code: "ESRCH" });
+      return kill(...args);
+    });
+    t.mock.method(fs, "open", async (...args: Parameters<typeof open>) => {
+      if (args[0] === f.lock && typeof args[1] === "number" && guarded) { hits += 1; throw denial; }
+      const file = await open(...args);
+      if (args[0] === `${f.lock}.reap`) {
+        guarded = true;
+        const close = file.close.bind(file);
+        t.mock.method(file, "close", async () => {
+          closes += 1;
+          await close();
+          if (closes === 1) throw cleanup;
+        });
+      }
+
+      return file;
+    });
+
+    try {
+      await assert.rejects(acquireSyncOwnership(f.lock, Date.now() + 1000, undefined, { mode: "portable" }), (error: unknown) =>
+        error instanceof AggregateError && errorCauses(error).includes(denial) && errorCauses(error).includes(cleanup));
+      assert.equal(hits, 1);
+      assert.equal(closes, 2);
+    } finally {
+      t.mock.restoreAll();
+    }
+  });
+
+  await f.assertClosed();
+  assert.deepEqual(await fs.readFile(f.lock), bytes);
+  await assert.rejects(fs.lstat(`${f.lock}.reap`), { code: "ENOENT" });
+});
+
 for (const catalog of [false, true]) {
   test(`${catalog ? "ordinary createInbox registration" : "portable ownership"} initial stat failure closes its actual new descriptor and retains unknown name`, async (t) => {
     const f = await portableFixture(t, catalog);
