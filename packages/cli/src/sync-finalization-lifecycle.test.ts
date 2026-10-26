@@ -18,7 +18,6 @@ import { startOwnedSyncWorker } from "./sync-worker";
 import { contactWorker, parseWorkerControlStatus } from "./sync-worker-client";
 import { isRouteDue } from "./sync-ledger-policy";
 import { SyncClient, type SyncRequestOptions } from "./sync-client";
-import { availablePort } from "./test-fixtures";
 import { readViewerRecord } from "./viewer-records";
 
 const test = process.platform === "win32" ? platformTest.skip : platformTest;
@@ -221,7 +220,7 @@ for (const mode of ["calibration", "viewer", "status"] as const) {
     const receiver = await f.inbox("receiver");
     const a = await source.store.snapshot();
     const b = await receiver.store.snapshot();
-    const port = await availablePort();
+    const port = await f.allocatePort();
     const receiverUrl = `https://127.0.0.1:${port}`;
     const tokenPath = path.join(f.root, "token");
     await writeFile(tokenPath, Buffer.alloc(48, 79).toString("base64url"), { mode: 0o600 });
@@ -358,7 +357,7 @@ for (const mode of ["signal", "calibration", "continue"] as const) {
     const receiver = await f.inbox("receiver");
     const a = await source.store.snapshot();
     const b = await receiver.store.snapshot();
-    const port = await availablePort();
+    const port = await f.allocatePort();
     const receiverUrl = `https://127.0.0.1:${port}`;
     const tokenPath = path.join(f.root, "token");
     await writeFile(tokenPath, Buffer.alloc(48, 79).toString("base64url"), { mode: 0o600 });

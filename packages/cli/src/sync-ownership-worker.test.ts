@@ -12,7 +12,6 @@ import { contactWorker, parseWorkerControlStatus } from "./sync-worker-client";
 import { readWorkerRecordOffline, workerPaths } from "./sync-worker-records";
 import { createOwnedPullPair, createWorkerFixture, isPidGone, syntheticBytes, waitUntil, type WorkerFixture } from "./sync-worker-fault-fixtures";
 import { createSyncHttpsCredentials } from "./sync-https-fixtures";
-import { availablePort } from "./test-fixtures";
 
 const test = process.platform === "win32" ? platformTest.skip : platformTest;
 
@@ -118,7 +117,7 @@ test("ready retained real foreground CLI cuts its next empty mutation candidate,
   const f = await createWorkerFixture(t);
   const tls = await createSyncHttpsCredentials(t);
   const inbox = await f.inbox("only");
-  const port = await availablePort();
+  const port = await f.allocatePort();
   await f.configure(inbox, { schemaVersion: 1, intendedTarget: null, listener: { host: "127.0.0.1", port, tlsRef: "listener" },
     timings: { foregroundMs: 1000, requestMs: 1000, reconcileMs: 1000, passMs: 3000 }, credentials: {}, trust: {},
     tls: { listener: { key: tls.trusted.keyPath, cert: tls.trusted.certPath } } });

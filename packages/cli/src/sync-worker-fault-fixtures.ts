@@ -16,7 +16,7 @@ import { assertLoopbackClosed, startSyncApplication } from "./sync-protocol-fixt
 import { ManagedSyncStore } from "./sync-store";
 import type { SyncRuntimeConfig } from "./sync-runtime-config";
 import { defaultRuntimeConfig } from "./sync-runtime-config";
-import { availablePort } from "./test-fixtures";
+import { createFixturePortScope } from "./fixture-port-leases";
 import { startOwnedSyncWorker } from "./sync-worker";
 import { readPrivateFile } from "./sync-files";
 
@@ -70,6 +70,7 @@ export async function writePrivateJson(file: string, value: unknown) {
 
 export async function createWorkerFixture(t: TestContext, options: { observeViewerStop?: boolean } = {}) {
   const root = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-worker-fault-")));
+  let portScope: Awaited<ReturnType<typeof createFixturePortScope>> | undefined;
   const catalog = path.join(root, "catalog");
   const viewerPorts = new Set<number>();
   const workerPorts = new Set<number>();
@@ -119,12 +120,24 @@ export async function createWorkerFixture(t: TestContext, options: { observeView
       try { await assertLoopbackClosed(`http://127.0.0.1:${port}`); } catch (error) { failures.push(error); }
     }
 
-    await rm(root, { recursive: true, force: true });
-    assert.equal(await exists(root), false, "fixture homes, catalog and credentials removed");
-    assert.equal(reapedCli, launchedCli, "every directly owned CLI process closed and was reaped");
+    try {
+      await rm(root, { recursive: true, force: true });
+      assert.equal(await exists(root), false, "fixture homes, catalog and credentials removed");
+    } catch (error) { failures.push(error); }
+    try { assert.equal(reapedCli, launchedCli, "every directly owned CLI process closed and was reaped"); } catch (error) { failures.push(error); }
+
+    if (portScope) {
+      try {
+        if (failures.length) await portScope.abandon();
+        else await portScope.release();
+      } catch (error) { failures.push(error); }
+    }
     t.diagnostic(`${reapedCli} owned CLI children reaped; ${runtimePids.size} runtime PIDs absent; ${viewerPorts.size + workerPorts.size} ports rebound; synthetic root removed`);
     if (failures.length) throw new AggregateError(failures, "Worker fixture cleanup failed");
   });
+
+  portScope = await createFixturePortScope();
+  const allocatePort = portScope.allocatePort;
 
   function launch(args: string[], options: { entry?: string; timeoutMs?: number } = {}) {
     const selectedName = args[args.indexOf("--inbox") + 1];
@@ -210,7 +223,7 @@ export async function createWorkerFixture(t: TestContext, options: { observeView
 
   async function inbox(name: string, enroll = true) {
     const home = path.join(root, name);
-    selectedViewerPorts.set(name, await availablePort());
+    selectedViewerPorts.set(name, await allocatePort());
     await run(["inbox", "create", name, "--home", home], 0);
     const store = new ManagedSyncStore(home);
     const selected = { name, home, store };
@@ -254,7 +267,7 @@ export async function createWorkerFixture(t: TestContext, options: { observeView
     return status;
   }
 
-  return { root, env, inboxes, resources, run, json, launch, inbox, configure, rememberWorker, rememberViewer, publicationArgs, publish };
+  return { root, env, inboxes, resources, run, json, launch, inbox, configure, rememberWorker, rememberViewer, publicationArgs, publish, allocatePort };
 }
 
 export type WorkerFixture = Awaited<ReturnType<typeof createWorkerFixture>>;
@@ -337,8 +350,8 @@ export async function createOwnedPullPair(t: TestContext) {
   const b = await destination.store.snapshot();
   const tokenPath = path.join(f.root, "token");
   await writeFile(tokenPath, randomBytes(48).toString("base64url"), { mode: 0o600 });
-  const sourcePort = await availablePort();
-  const destinationPort = await availablePort();
+  const sourcePort = await f.allocatePort();
+  const destinationPort = await f.allocatePort();
   const sourceUrl = `https://127.0.0.1:${sourcePort}`;
   const destinationUrl = `https://127.0.0.1:${destinationPort}`;
   const config: SyncRuntimeConfig = {

@@ -72,8 +72,21 @@ function completion(route: SyncRoute, states: OriginState[], nonce = "fresh_nonc
 test("enrollment evacuates before enumeration, preserves legacy case and exact original bytes, and blocks prepared old writers", async (t) => {
   const home = await temporaryHome(t);
   const first = new LocalDocumentBackend(home, () => {}, () => "Case_ID");
-  const second = new LocalDocumentBackend(home, () => {}, () => "case_ID");
   const firstMetadata = await first.publish(input);
+  const firstEntry = await lstat(path.join(home, "documents", "Case_ID"));
+  const caseAlias = await lstat(path.join(home, "documents", "case_ID")).catch((error: unknown) => {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") return undefined;
+
+    throw error;
+  });
+  if (caseAlias) {
+    assert.equal(caseAlias.dev, firstEntry.dev);
+    assert.equal(caseAlias.ino, firstEntry.ino);
+  }
+
+  // Legacy directory names can alias by case; managed canonical identities must remain distinct.
+  const secondId = caseAlias ? "Other_ID" : "case_ID";
+  const second = new LocalDocumentBackend(home, () => {}, () => secondId);
   await second.publish(input);
   const oldStaging = path.join(home, "documents", ".staging", "late");
   await mkdir(oldStaging);
@@ -95,6 +108,21 @@ test("enrollment evacuates before enumeration, preserves legacy case and exact o
   assert.deepEqual((await inspectInboxHome(home)).instanceId, ledger.inboxId);
   await store.enroll();
   assert.equal(Object.keys((await store.snapshot()).records).length, 2);
+});
+
+test("managed canonical identities preserve case-only document IDs on every supported filesystem", async (t) => {
+  const { store } = await enrolled(t);
+  const secondBytes = Buffer.from("<!doctype html><html><body>different case identity</body></html>");
+  const first = await store.publish(input, "Case_ID");
+  const second = await store.publish({ ...input, originalBytes: secondBytes }, "case_ID");
+  const ledger = await store.snapshot();
+
+  assert.equal(Object.keys(ledger.records).length, 2);
+  assert.notEqual(canonicalKey(ledger.inboxId, "Case_ID"), canonicalKey(ledger.inboxId, "case_ID"));
+  assert.equal(ledger.records[canonicalKey(ledger.inboxId, "Case_ID")].sha256, sha256(input.originalBytes));
+  assert.equal(ledger.records[canonicalKey(ledger.inboxId, "case_ID")].sha256, sha256(secondBytes));
+  assert.deepEqual((await store.getDocument(first.id))?.originalBytes, input.originalBytes);
+  assert.deepEqual((await store.getDocument(second.id))?.originalBytes, secondBytes);
 });
 
 test("managed publication owns caller bytes before its first await and queues creation/deletion atomically", async (t) => {

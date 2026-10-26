@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import type { CommandInvocation, CommandRunner } from "./command-runner";
 import { cp, lstat, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -795,8 +795,36 @@ test("injected scheduling gap makes actual owned worker catch up before its long
 
   // The narrow store mutation removes pause without issuing a wake; the clock hook is the only trigger.
   await f.source.store.setRetryPaused(false);
-  await worker.gap();
-  await waitUntil("scheduling gap catch-up custody", () => f.source.store.deliveryStatus(f.route.id, f.sourceId, record.originDocumentId), (delivery) => delivery.isCommitted);
+  const gapStartedAt = Date.now();
+  let custodyWaitStartedAt: number | undefined;
+  try {
+    await worker.gap();
+    custodyWaitStartedAt = Date.now();
+    await waitUntil("scheduling gap catch-up custody", () => f.source.store.deliveryStatus(f.route.id, f.sourceId, record.originDocumentId), (delivery) => delivery.isCommitted);
+  } catch (error) {
+    try {
+      const failedAt = Date.now();
+      const [snapshot, proxy] = await Promise.allSettled([f.source.store.snapshot(), f.proxy.stats()]);
+      const ledger = snapshot.status === "fulfilled" ? snapshot.value : undefined;
+      const route = ledger?.routes[f.route.id];
+      const retry = ledger?.routeRetries[f.route.id];
+      const pending = ledger && Object.values(ledger.outbox).filter((entry) => entry.routeId === f.route.id && entry.disposition === "pending");
+      t.diagnostic(JSON.stringify({ kind: "scheduling-gap-custody-failure", startedAt, gapStartedAt, custodyWaitStartedAt, failedAt,
+        sourceSnapshotAvailable: !!ledger, proxyStatsAvailable: proxy.status === "fulfilled",
+        worker: ledger && { enabled: ledger.worker.enabled, retryPaused: ledger.worker.retryPaused, lastRunAt: ledger.worker.lastRunAt },
+        route: route && { revision: route.revision, state: route.state },
+        retry: retry && { attempts: retry.attempts, nextAttemptAt: retry.nextAttemptAt, blocked: retry.blocked,
+          lastErrorSHA256: retry.lastError === null ? null : createHash("sha256").update(retry.lastError).digest("hex") },
+        pending: pending && { count: pending.length, due: pending.filter((entry) => entry.nextAttemptAt <= failedAt).length },
+        workerEvents: worker.messages.slice(-32).map((event) => ({ type: ["ready", "pass", "gap", "closed"].find((type) => event.type === type) ?? "unknown" })),
+        bodyStartsBeforeGap: before, bodyStartsAfterFailure: proxy.status === "fulfilled" ? proxy.value.routes.body.starts : undefined,
+      }));
+    } finally {
+      // Failure observation must preserve the original application error.
+      throw error;
+    }
+  }
+
   assert.ok((await f.proxy.stats()).routes.body.starts > before);
   assert.equal(worker.messages.filter((message) => message.type === "gap").length, 1);
   await assertReceiverCommitted(f.destination, f.sourceId, record.originDocumentId);
