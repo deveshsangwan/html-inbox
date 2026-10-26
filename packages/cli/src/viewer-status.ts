@@ -1,6 +1,7 @@
 import { assertManagedLifecycle } from "./sync-lifecycle";
 import { verifyViewerLocalOwner } from "./viewer-ownership";
 import { DEFAULT_PORT } from "./backend";
+import http from "node:http";
 import net from "node:net";
 import { readInboxIdentity } from "./inbox-home";
 import { ManagedStorageError } from "./private-storage";
@@ -160,6 +161,47 @@ type ControlHealth =
   | { state: "unavailable" | "invalid" | "incompatible" }
   | { state: "ready"; instanceId: string; processId: string; pid: number; managedCompatible: boolean };
 
+function readControlHealth(controlUrl: string, signal: AbortSignal): Promise<Buffer | null> {
+  return new Promise((resolve, reject) => {
+    // Runtime fetch can throw outside its promise when undici applies socket QoS during shutdown.
+    const request = http.get(controlUrl, { agent: false, signal }, (response) => {
+      void (async () => {
+        try {
+          const status = response.statusCode ?? 0;
+          if ([301, 302, 303, 307, 308].includes(status) && response.headers.location !== undefined) {
+            throw new Error("Viewer control redirects are not allowed");
+          }
+
+          if (status < 200 || status >= 300) {
+            return null;
+          }
+
+          const chunks: Buffer[] = [];
+          let size = 0;
+          for await (const chunk of response) {
+            const bytes = Buffer.from(chunk);
+            size += bytes.length;
+            if (size > 16 * 1024) {
+              throw new SyntaxError("Viewer control health exceeds its response limit");
+            }
+
+            chunks.push(bytes);
+          }
+
+          return Buffer.concat(chunks);
+        } finally {
+          response.destroy();
+        }
+      })().then(resolve, reject);
+    });
+    request.once("upgrade", (_response, socket) => {
+      socket.destroy();
+      reject(new Error("Viewer control health does not support protocol upgrades"));
+    });
+    request.once("error", reject);
+  });
+}
+
 export async function getControlHealth(controlUrl: string, options: { deadlineAt?: number; signal?: AbortSignal } = {}): Promise<ControlHealth> {
   const controller = new AbortController();
   const abort = () => controller.abort();
@@ -167,12 +209,12 @@ export async function getControlHealth(controlUrl: string, options: { deadlineAt
   if (options.signal?.aborted) abort();
   const timer = setTimeout(abort, Math.max(1, Math.min(400, (options.deadlineAt ?? Infinity) - Date.now())));
   try {
-    const response = await fetch(controlUrl, { signal: controller.signal, redirect: "error" });
-    if (!response.ok) {
+    const body = await readControlHealth(controlUrl, controller.signal);
+    if (body === null) {
       return { state: "invalid" };
     }
 
-    const value: unknown = await response.json();
+    const value: unknown = JSON.parse(new TextDecoder().decode(body));
     if (!isRecord(value) || value.ok !== true || typeof value.instanceId !== "string" ||
         typeof value.protocolVersion !== "number" || !Number.isSafeInteger(value.protocolVersion) || value.protocolVersion < 1) {
       return { state: "invalid" };
