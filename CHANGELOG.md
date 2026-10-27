@@ -12,6 +12,7 @@ All notable changes to HTML Inbox will be documented here.
 - Bind managed writers to canonical home, filesystem identity and inbox UUID; publish ownership atomically, check stale ledger generations safely, drain admitted mutations/watchers before shutdown, and preserve unsafe/unknown authority failures.
 - Support explicit copied-home quarantine and fork while retaining provenance. Keep reader deletion, sandbox/CSP, named selection, Tailscale route ownership and ordinary Windows behavior.
 - Use bounded native HTTP for private viewer health, including rejected HTTP upgrades, and wait within the existing deadline for direct Windows portable-reaper read-open denial. Preserve other operational and compound cleanup errors.
+- On deployment timeout or output-limit failure, send a final SIGKILL to the command's POSIX process group when its direct child closes, preserving the original error.
 - Correct public output, export, deletion, migration and release guidance. Both skills accept installed stable 0.6.x and retain a published, verified 0.5.0 preparation fallback, which has no managed-sync commands.
 
 ### Upgrade to 0.6.0
