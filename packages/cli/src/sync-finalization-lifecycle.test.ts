@@ -451,8 +451,26 @@ for (const mode of ["signal", "calibration", "continue"] as const) {
 
     const args = await f.publicationArgs(source, ["--wait-ms", "5000", "--json"]);
     const cli = f.launch(["ack", mode === "signal" ? "signal" : "continue", ...args], { entry: path.join(__dirname, "sync-finalization-child.js"), timeoutMs: 8000 });
-    await waitUntil("actual run acknowledgement and HTTPS completion held", async () => [acknowledgementHolds, holds],
-      (value) => value[0] === 1 && value[1] === 1, 4000);
+    try {
+      await waitUntil("actual run acknowledgement and HTTPS completion held", async () => [acknowledgementHolds, holds],
+        (value) => value[0] === 1 && value[1] === 1, 4000);
+    } catch (error) {
+      const sourceStatus = sourceWorker.status();
+      const destinationStatus = destinationWorker.status();
+      t.diagnostic(JSON.stringify({
+        phase: "held-ack-preparation-failed", mode, acknowledgementHolds, starts, holds,
+        acknowledgementClosed, responseClosed,
+        completionAborted: completion?.signal?.aborted ?? null,
+        completionRemainingMs: completion?.deadlineAt ? completion.deadlineAt - Date.now() : null,
+        cliExitCode: cli.child.exitCode, cliSignal: cli.child.signalCode,
+        sourceState: sourceStatus.processState, destinationState: destinationStatus.processState,
+        ticketCount: sourceStatus.tickets.length,
+        tickets: sourceStatus.tickets.slice(0, 2).map((ticket) => ({ state: ticket.state, hasError: ticket.error !== null })),
+      }));
+
+      throw error;
+    }
+
     assert.ok(acknowledgement);
     assert.equal(starts, 1);
     assert.ok(completion?.signal);

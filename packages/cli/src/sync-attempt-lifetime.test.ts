@@ -98,12 +98,13 @@ test("cancelled watcher queue entries neither wait for nor bypass an unrelated r
   const release = latch();
   const enqueued = latch();
   const directory = path.join(f.sourceHome, "sync");
+  let selected: WatcherCheck | undefined;
+  observer.hooks.enqueued = (check) => { selected ??= check; enqueued.release(); };
+
   const holder = locks.withStoreLock(directory, 1000, async () => { held.release(); await reached(release.promise, "unrelated holder released"); });
   f.cleanup.push(async () => { release.release(); await holder; });
   await reached(held.promise, "unrelated actual canonical lock acquired");
   const owner = await locks.readSyncOwnership(path.join(directory, "mutation.lock"));
-  let selected: WatcherCheck | undefined;
-  observer.hooks.enqueued = (check) => { selected ??= check; enqueued.release(); };
   await reached(enqueued.promise, "watcher entered genuine local queue");
   let successorCalls = 0;
   const successor = locks.withStoreLock(directory, 1000, async () => { successorCalls += 1; });
