@@ -44,6 +44,12 @@ export class NodeCommandRunner implements CommandRunner {
         settled = true;
         clearTimeout(timer);
         clearTimeout(forceTimer);
+
+        // A closed child can leave SIGTERM-resistant descendants without open pipes.
+        if (failure && process.platform !== "win32") {
+          terminateProcessTree(child, "SIGKILL");
+        }
+
         action();
       };
 

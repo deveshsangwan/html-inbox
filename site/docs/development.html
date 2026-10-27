@@ -153,11 +153,12 @@
           published CLI continues to support Node.js 20 or newer.
         </p>
         <p>
-          Live UI deletion requires a reader running 0.5.x. The skill fallback
-          stays pinned to published 0.4.0, with copy and named-inbox support but
-          no UI deletion. Before an authorized upgrade, review the
-          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
-          and saved exposure and hub mounts.
+          Live UI deletion is available in running 0.5.x and 0.6.x readers.
+          The skill fallback is published 0.5.0, including deletion, copying and
+          named inboxes but no managed sync. Review saved exposure and hub mounts,
+          the <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>,
+          and <a href="named-inboxes.html#upgrade-060">0.6.0 opt-in enrollment</a>
+          before upgrading.
         </p>
 
         <h2 id="source-checkout">Set up a source checkout</h2>
@@ -356,6 +357,25 @@ corepack pnpm verify</code></pre>
           contains published releases and their package metadata.
         </p>
 
+        <h2 id="managed">Managed boundaries and release audit</h2>
+        <p>
+          Managed storage, signed history and custody live in
+          <code>sync-store.ts</code>, <code>sync-ledger.ts</code> and
+          <code>sync-model.ts</code>. Ownership and bounded generation reads are
+          separate in <code>sync-files.ts</code> and
+          <code>sync-ledger-reader.ts</code>. Protocol/client/HTTPS ingestion,
+          independent worker lifecycle and foreground publication have distinct
+          modules and contracts. Reader/control reachability does not grant route
+          authorization. Preserve those boundaries, CSP, checked ownership,
+          durable receipts and existing deadline/cancellation rules.
+        </p>
+        <p>
+          Before release, audit all current docs, actual packed/installed README,
+          CLI help/parser and both installed skills against the exact candidate.
+          Preserve historical receipts and declared scope limits. See the
+          <a href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/releasing.md">stable release checklist</a>
+          and <a href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/phase2-sync/worker-operations.md">managed operator guide</a>.
+        </p>
         <nav class="docs-page-links" aria-label="Adjacent documentation pages">
           <a href="troubleshooting.html">Previous: Troubleshooting</a>
         </nav>

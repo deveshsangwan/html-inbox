@@ -1,8 +1,8 @@
 # Moving a local inbox to Cloudflare Pages
 
-Live UI deletion requires a reader running 0.5.x. The skill fallback stays pinned to published 0.4.0, with copy and named-inbox support but no UI deletion. Before an authorized upgrade, review the [0.5.0 permission change](named-inboxes.md#upgrade-to-050) and saved exposure and hub mounts.
+Live UI deletion is available in running 0.5.x and 0.6.x readers. The skill fallback is published 0.5.0, with deletion, copying and named-inbox support but no managed sync. Before an authorized upgrade, review the [0.5.0 permission change](named-inboxes.md#upgrade-to-050) and saved exposure and hub mounts.
 
-Remote publishing does not move or mutate the local library. The selected library's `documents/` remains the only document source of truth; each remote update is a complete generated snapshot.
+Remote publishing does not move or mutate the local library. Each remote update is a generated snapshot of eligible local originals. Unenrolled originals live under `documents/`; enrolled storage uses its managed ledger and immutable bodies. All origin-provenance records are excluded from public export, including synced imports, detached imports and fork-inherited originals.
 
 Use the same intended selection for every command, including status and recovery. For the 0.3 upgrade, see [named-inbox migration](named-inboxes.md#upgrade-from-02x). Registered entries require an explicit selector, process binding, or configured default in automation.
 
@@ -12,9 +12,9 @@ Use the same intended selection for every command, including status and recovery
 2. Upgrade the installed CLI with `npm install --global html-inbox@latest` and confirm it with `html-inbox --version`.
 3. Confirm the local library with `html-inbox list` and open the viewer.
 4. Inspect a provider-independent export with `html-inbox export --out ./html-inbox-export`.
-5. Treat every document in the local library as part of one shared remote capability. Delete anything that should not be in that snapshot.
+5. Treat every eligible local original as part of one shared remote capability. Inspect that eligible set before publishing; readable synced/detached imports and fork-inherited records are excluded. Remote publishing has no per-document sharing filter.
 
-Versions 0.2.x, 0.3.x, 0.4.x, and 0.5.x share protocol version 3 and a private loopback control endpoint to match shutdown requests to a specific process. A new CLI refuses to reuse or signal an incompatible viewer. Stop a foreground viewer with Ctrl-C before upgrading, or use its original CLI to stop a detached viewer. Documents remain in the existing inbox.
+Versions 0.2.x, 0.3.x, 0.4.x, 0.5.x, and 0.6.x share protocol version 3 and a private loopback control endpoint to match shutdown requests to a specific process. A new CLI refuses to reuse or signal an incompatible viewer. Stop a foreground viewer with Ctrl-C before upgrading, or use its original CLI to stop a detached viewer. Documents remain in the existing inbox.
 
 ## Configure Cloudflare
 

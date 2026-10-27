@@ -1,0 +1,23 @@
+# Queue backoff settlement observation
+
+The read-only diagnosis at `/tmp/html-inbox-cea-diagnosis-z3fon6_t/terminal-report.txt` establishes one sufficient final-snapshot deadline mechanism. It does not identify the original combined-run cause. A genuine 300ms pass expiry correctly returns `aborted`, even when the earlier local queue rejection was retryable. Preserve the latest final cancellation normalization.
+
+## Source boundary
+
+Own only `packages/cli/src/sync-acquisition-deadline.test.ts`, starting from the complete integrated 169-source manifest `fb9b5da57f33450997881995d71941e266fed2c3bbe344708835cbd37ee914f5`. The corresponding 336 compiled files have aggregate `9d2815862665039fab5cad1615aaa3975325ed884c2c3966c75bcc98ff25c58f`. No production, shared fixture, unit runner or other test change is authorized. Parent owns documentation and integration.
+
+Add bounded local observations only to the existing worker scenario and its ticket helper. Preserve the single original `requestRun`, the original polling operations, all original assertions in order, and all original control flow and timing values. No extra application snapshot, request, credential resolution, ticket, readiness wait, retry or repair. Preserve the 100ms request, 300ms pass, 140ms holder, 35s child, 40s retained-child and 45s parent limits, plus the existing negative and positive custody budgets.
+
+Record each ticket's actual submission deadline, monotonic elapsed time, margin at the existing completion observation, idle-clock offset at entry and exit, original poll count, admission/queue counters and a bounded route status/error summary. Emit the diagnostic before the existing completion/result assertions so a failed strict assertion retains its ticket evidence. Do not emit route identities, paths, credentials, arbitrary errors or complete result objects. Existing later custody diagnostics remain unchanged.
+
+The existing mocked acquisition boundary may additionally retain bounded admission timestamps, initial local queue-marker rejection, holder return and the supplied parent signal's observed abort. Observing returned attempt signals or close settlement is allowed only if original promise and cached close identity are preserved, observers cannot throw, and their listeners are removed through owned cleanup. Keep at most a fixed small recent-event buffer per ticket. No global timer, filesystem or module-body interception belongs in the permanent test. The full diagnostic preload remains an external controlled probe only. Do not broaden this into a general tracing abstraction.
+
+An observed expired pass still fails the original strict `pending` assertion. Do not accept `aborted` as a substitute, skip a case, synthesize custody, move idle time during an active pass, alter retry counts or retry a failed ticket. Document that the positive case requires remaining time through final result selection. Observation alone does not make that condition deterministic or resolve the historical failure.
+
+## Bounded validation
+
+Use the same isolated diagnostic workstream with exact Node24.21.0 and Node20.20.2. Read and hash this gate before source edits. Save original bytes, modes, absences and binary index before Git inspection. Preserve all prior artifacts. Use the shared bounded runtime mutex and established direct-child subreaper; no polling or fragile descendant sampler.
+
+Run typecheck/build and the complete containing file once on each runtime using identical final source bytes. Then run one actual-patched-source controlled red and one matched control on Node24 using the existing registered final-snapshot boundary. Adapt only private project/evidence paths and diagnostic assertions required by the new line layout; retain exact helper diffs and hashes. The same genuine native read result, real pass timer and original assertions must be reached. The red must fail the unchanged strict assertion and its new diagnostic must record the expired ticket. The control must pass all original retry-limit, reset and actual HTTPS custody assertions. A missed hold is not a passing probe.
+
+No Node20 controlled expansion, broad check, matrix, stress, cap, natural rerun or deadline override. Private pre-target helper errors may be corrected with retained qualification. Compiler, unexpected target, admission or cleanup failure stops remaining commands. Retain expected red as a failed command. Return the exact one-file patch, source/compiled manifests, commands, UTC intervals, logs and cleanup receipts. Parent must inspect and integrate before one new combined verification and two fresh independent reviews. No commit, publication, physical QA or retest SHA release.

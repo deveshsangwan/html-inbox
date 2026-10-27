@@ -11,14 +11,22 @@ export interface ViewerStartLock {
   release(): Promise<void>;
 }
 
-export async function acquireViewerStartLock(home: string): Promise<ViewerStartLock> {
+export async function acquireViewerStartLock(home: string, deadlineAt?: number, signal?: AbortSignal): Promise<ViewerStartLock> {
+  signal?.throwIfAborted();
   await ensurePrivateDirectory(home);
   const lockPath = path.join(home, "viewer-start.lock");
-  const deadline = Date.now() + 60_000;
+  const deadline = Math.min(Date.now() + 60_000, deadlineAt ?? Infinity);
 
   while (Date.now() < deadline) {
+    signal?.throwIfAborted();
     try {
-      return await createLock(lockPath);
+      const lock = await createLock(lockPath);
+      if (signal?.aborted) {
+        await lock.release();
+        signal.throwIfAborted();
+      }
+
+      return lock;
     } catch (error) {
       if (!hasErrorCode(error, "EEXIST")) {
         throw error;
@@ -31,7 +39,7 @@ export async function acquireViewerStartLock(home: string): Promise<ViewerStartL
       continue;
     }
 
-    await delay(50);
+    await delay(Math.min(50, Math.max(1, deadline - Date.now())), undefined, { signal });
   }
 
   throw new Error(`Another viewer startup is still running; inspect ${lockPath}`);

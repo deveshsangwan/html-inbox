@@ -1,0 +1,134 @@
+TERMINAL ACCEPT
+
+CI190-A1 is RESOLVED. Accept the retained sender fixture ownership response, its additive reply-observation parameter and the final retry-budget correction. Accept the browser response as diagnostics only. No actionable Critical, High, Medium, Low or Suggestion finding remains in this focused confirmation.
+
+This is a NEW independent Codex Sol round2 review, with no delegation or continuation of either earlier reviewer. I read both complete first-round reports, their disagreement, the triage and amended crash gate. The original whole-change and accepted corrective reviews retain their credit. This review assesses the entire final uncommitted test-only follow-up and necessary interactions under the full original rubric. It does not claim a new exhaustive review of untouched phase2 implementation, native Windows success, hosted readiness, physical acceptance or production readiness. No Claude or cross-provider review is claimed.
+
+Root /home/agent/.t3/worktrees/html-inbox/feat-phase2-sync
+Branch feat/phase2-sync
+HEAD/current review base 190ff7853e8a85cebb2d7983b14ae83b53f95b09
+Original whole-change base b843e126fdb10f7038e9305c6791707bcfee9ff5
+PR https://github.com/deveshsangwan/html-inbox/pull/79
+Report and all reviewer receipts /tmp/html-inbox-ci190-r2-independent-n86sd3nf
+
+CI190-A1 disposition and original effective bounds.
+
+At packages/cli/src/sync-protocol.test.ts:463, runSender now accepts requestMs=1000. Line465 forwards that value unchanged in the same IPC command. Line475 uses the default for the faulted pass; line489 explicitly supplies5000 for the successful retry. The two parameterized cases retain timeout25000, command reply observation25000 and reconciliation deadline30000.
+
+At HEAD the first pass supplied requestMs1000 to pair.run. The final pass omitted an override. pair.run forwards its extra options directly to reconcileSyncRoutes. sync-model.ts:8 defines attemptMs5000 and foregroundMs30000. sync-reconciliation.ts:52-54 validates those effective values and forwards requestMs with the pass deadline. sync-client.ts:98-100 independently caps each request by requestMs. The retained child validates the IPC values at sync-protocol-fault-child.ts:190-192 and forwards them unchanged. The runner's unrelated default2000 is bypassed by these explicit payload values.
+
+Thus both original and current first/retry allowances are1000/5000ms. The larger case, reply or pass limits are not being used to excuse a shorter request bound. Reversing exactly the parameter, object shorthand and final argument in memory reproduces the first-round test file SHA256d7b1a51ab72e2f3531e75792ee8773d3ca1cfaccc1853467c90c9acd10b1234c. No additional code change is hidden in this round. request-bound-and-browser-proof.json retains the exact HEAD/current case text and call-chain proof.
+
+Astra's Medium finding was correct despite fast passing tests; Sol's earlier acceptance of the stricter value is superseded on this point. The parent accepted the smaller compatibility correction. No new timing failure, held response, matrix or hosted-cause attribution was needed or attempted to close this static regression.
+
+Crash sender ownership and helper interactions: ACCEPT.
+
+The senderContext adapter at sync-protocol.test.ts:459-461 registers the existing helper's after callback in the source fixture's stopApplications list synchronously. The helper registers that callback before child.send/options and readiness waiting at sync-protocol-fault-child.ts:103-108. Startup/readiness rejection therefore leaves a registered owner cleanup. Source cleanup awaits its writers before recursive removal at sync-protocol.test.ts:31-37.
+
+Both passes use the same actual runner process, source home, peer ID, route ID, token and CA. The child uses the real ManagedSyncStore, reconciler, verified HTTPS client and receiver. Its existing receipt fault hook remains unarmed here. The parent's publication, explicit retry and final recovery are awaited store operations; it starts no direct reconciliation in either changed case. No second mutation authority, background worker or sender listener is introduced.
+
+The successful path awaits sender.stop before public source.recover and the final receiver oracle. Existing stop caches its promise, waits for actual close, requires exit0/no signal for normal stop, disconnected IPC and PID ESRCH. A fallback SIGKILL cannot satisfy that normal-stop result. The later registered source cleanup awaits the cached outcome. An uncertain/rejected stop prevents the subsequent source removal instead of swallowing the failure. Receiver stop/crash/restart remains on its existing cleanup path.
+
+The optional helper command wait is validated by parseInteger(waitMs,1,300000) before sequence allocation, IPC connection inspection and send. It rejects unsafe, fractional, nonfinite, nonnumeric and out-of-range inputs. Only the private reply wait receives the override. Ready, fault and stop observations, every old command caller and the existing8000ms default remain unchanged. I inspected runner/proxy uses in sync-protocol-faults, the retained transport final admission and publication-inspection custody/suppression callers. Their payload timing and cleanup registration remain independent of the new second command argument. The supplied97-case checks cover those four containing files on both runtimes.
+
+The actual crash assertions remain: one reached receiver fault, first result unconfirmed, zero precommit or one postcommit receipt, empty staging, same-port receiver restart, explicit source retry, final confirmed result, one canonical record and receipt, and exact committed-before-receipt receipt equality. Exact original body bytes, including BOM, CRLF and Unicode, are additionally checked. The reply must have no error, an object result and exactly one parsed route. No assertion, quota, production deadline or case bound is weakened.
+
+The unchanged openRouteAttempt implementation clears its interval and unregisters on close, while an already admitted watcher may still settle afterward. A retained process exit owns that child's remaining timers/descriptors; normal public recovery handles complete dead-owner evidence. This is a scoped fixture lifetime boundary. It is not a general whole-home shutdown/backup API and does not permit stealing live, unknown or ambiguous ownership.
+
+Browser observation and error isolation: ACCEPT as diagnostics only.
+
+scripts/document-isolation-browser.test.mjs remains SHA256c6cb12c7204c6f7363eaae66741c301458ece75f637b7ab4cd94ff6244d8debc. The accepted proposal patch remains42e0f8dfb85207fe61ae3a4095cd0ca8ba5c1bfeffb2c3c277b77a8114f12973. Replacing just the current navigation-observation block in memory with the original goto reconstructs HEAD's entire browser file. All text outside that insertion is unchanged.
+
+The seven listener types observe request, response, completion, failure, DOMContentLoaded, load and pageerror around the original goto. Request-object identity keeps pending state accurate for repeated URLs. Headers do not count as body completion. The event prefix stops at32 entries while pending tracking continues. This is a small synthetic initial shell with fixed assets and the existing short navigation bound; it is not a general logger for arbitrary secret-bearing pages. The event cap is not misrepresented as a bound on URL length or total pending requests.
+
+Only goto failure emits the diagnostic. The same caught error is rethrown. All added listener references are removed in finally on success or failure before storage/cookie seeding or opening the untrusted document. Output reads no headers, bodies, DOM contents, storage or credential files. The viewer-only secret is still unseeded in this window; export capability and fixture data are synthetic. No demonstrated sensitive-output issue warrants additional redaction machinery here.
+
+Default load waiting,5000ms context/navigation behavior,120000ms parent bound, routing, concurrency, browser/context/server lifecycle and every CSP/sandbox/opaque-origin/opener/storage/cookie/indexedDB/fetch/CDN/module/assertViewerUnchanged assertion remain. The change neither controls requests nor supplies readiness, retries or successful navigation. A page-only root stall can still require native route/server tracing. I did not rerun browser controls or expand accepted diagnostics in this confirmation.
+
+Full rubric applied to both responses and their necessary interactions.
+
+1. Functional correctness and missed requirements. The runner retains real crash/durability/receipt semantics while owning its writer lifetime. CI190-A1 restores the exact prior retry allowance. Browser observation preserves the original operation and failure. All six design contracts, six acceptance groups and nine required contracts remain binding. Actual-payload push, independent pull and empty-outbox current-holdings repair, existing destination UUID mappings/canonical origins, metadata dedup with actual inbound verification, receiver-specific custody, independent scheduling, signed deletion/authorized relays/cycles, silent detach, terminal-first reconnect and clone/restore quarantine/future-origin fork are unchanged production paths with retained review credit.
+
+2. Edge cases and failure handling. I assessed readiness failure, IPC/error replies, first-pass failure, both storage crash cuts, restart/retry, normal/error source cleanup, cached stop, public recovery and old helper callers. For the browser I assessed success/rejection, event truncation, pending resources, identical error propagation and listener disposal before secret seeding. Cleanup failure is not converted to success. Unknown historical actors and incomplete tracing remain explicit.
+
+3. Security and data integrity. The same route scope, synthetic token, trusted CA, signed states, store authority and durable receiver oracles remain. No owner, path, credential, transport, deletion, export or public control authority expands. Receipt metadata is not substituted for exact durable/current custody. The browser adds no request/header/body access or isolation relaxation. Production bytes remain identical to HEAD.
+
+4. Concurrency. Source cleanup owns the runner before readiness and explicitly awaits exit before recovery/removal. Other source mutations use the existing lock. Receiver admitted-handler drainage remains separate from the runner boundary. Browser listeners are page-local, synchronous observations disposed before later content actions. No global collector, second scheduler or competing storage authority is introduced.
+
+5. Unwarranted assumptions. Fast local success does not prove preservation of request allowances; the static call chain does. Both originalCI190 hosted actors and both earlier01657 actors remainUNKNOWN. Saved natural trace analysis, old controlled teardown experiments, synthetic browser holds and actual native failures remain different evidence categories. No local timing or cleanup observation identifies the hosted writer/resource or establishes hosted merge-tree equivalence.
+
+6. Structure and separation. The existing retained runner, cleanup list, public recovery and direct bounded parser are appropriate owners for this change. Browser instrumentation stays at the original failing call. No production close redesign, generalized tracing layer, speculative abstraction or wholesale store rewrite is justified.
+
+7. Repository conventions and TypeScript. Names reveal purpose; comments explain the process boundary and reply budget. Added boundary values use existing validation, useful callback-contract typing and local inference/control-flow checks. There is no added any, non-null assertion, suppression or type workaround. Compact callbacks follow the existing fixture adapters. I reject style-only restructuring without a concrete correctness or maintenance benefit.
+
+8. Test quality and gaps. Both unchanged semantic crash cases execute on both requested exact runtimes, retain real faults and receiver oracles and add byte equality. Supplied containing suites cover old helper callers; supplied full verification covers unchanged compatibility. No name-filter exclusion receives pass credit. Browser accepted positives/negatives retain their prior evidence status. No new exhaustive untouched-phase2 claim or timing experiment is made.
+
+9. Backward compatibility and lifecycle. Existing helper calls preserve8000ms observations and their2000/8000 runner payload defaults where omitted. Crash first/retry1000/5000, reply/case25000 and pass30000 match original effective bounds. Production schemas, APIs, worker/store/client/scheduler, ordinary legacy/service behavior, reader/list/search/original bytes/CSP/sandbox/export remain unchanged. Prior accepted catalog intent, scoped holdings, pin/session drainage, atomic retry/revision fencing, history classification, monotonic lease, atomic owner publication, ledger replacement, fatal cause/FD preservation, inbound settlement, typed reaper errors, fresh route credentials, genuine confirmation, cancellation and portable acquisition corrections retain their credit.
+
+10. Simpler safer alternatives. Explicit per-pass request values are the minimal CI190-A1 correction. Bare recovery cannot drain work admitted before lock enqueue; sleeps, removal retries or force-reaping ownership would conceal uncertainty. Existing process ownership is sufficient for this specified sender. Local browser listeners are sufficient observation; a guessed timeout/readiness/concurrency change is unsupported. No further change is requested.
+
+Read scope and supplied evidence.
+
+I inspected all15 pinned paths, including every untracked report/document, complete first-round reports, triage/amended gate, the full tracked diff against HEAD and current status/index. I read the full approved proposal, required contracts, acceptance, frozen architecture, storage/protocol/worker interfaces and operations, both complete01657-R2 reports, both completeQA-R4 reports and QA follow-up. Ledger additions and relevant retained history/dispositions were assessed with the current gates. I inspected the changed test/helper, browser setup/assertions/teardown and necessary fixture/store/reconciler/client/caller code. This does not claim a fresh line-by-line rereview of every unchanged test, production module or historical ledger entry.
+
+The full verification JSON was parsed/traversed, including24187 scalar fields and15959 strings. Its changed/current records and retained qualifications were compared structurally to HEAD in verification-semantic-diff.json. Previous broad and completeNode20 command objects are retained exactly in historicalCombinedRuns. Current ci190RetryBudgetCorrection checks and integrity equal the supplied terminal receipt exactly; its concise cleanup summary agrees with the receipt's detailed cleanup. Earlier source9fdd/compiled605 records remain historical, not current authority. A few older pending-check sentences are historical checkpoints; the final correction section/current finalAudit and authoritative user context supply the current result.
+
+I independently matched all98 immutable artifact sizes/hashes, all647 current/historical log hashes, all480 retained historical receipt/log files, all636 first-round log pins and all167 prior evidence files with exact previous-evidence membership. These sets overlap and are not summed. I inspected all336 check-input before/after records. Three subsequent existing documentation files differ from those check-time hashes: ledger, combined verification and verification JSON. The new triage makes the current review15 paths/337 nonignored files. Current source and all15 review files match the authoritative final pin. No test/source change after the supplied checks is concealed by those documentation updates.
+
+All six supplied exact final commands are exit0 on d7f1 source: typecheck/build on24.21; containing97/97 each24.21 and20.20.2; unchanged complete24.21 verify1094tests/1090pass/4skips; complete20 units1012/1011pass/1skip. Full verify partitions are units1012/1011, skills50/48, browser23/22 and site9/9, with14-page integrity and package smoke. Zero fail/cancel/todo. Counts overlap. Skips are Windows taskkill, two Windows PowerShell cases and optional liveCDN. I checked the summaries at their actual log lines and each six-command log hash, rather than rerunning broad suites. Exact argv/start/end evidence/elapsed/groups/hashes are in supplied-evidence-audit.json and the immutable terminal receipt.
+
+The compiler changed only sync-protocol.test.js. Compiled328 then stayed at5830 through the later full rebuild. The original six outer audits report adopted0/0/0/0/165/126 and remaining[]; all291 actual recorded adopted PIDs are independently absent. These are supplied executions, separate from my own tests below.
+
+Cleanup/timing qualifications remain intact. The supplied directory-only inspection helper failed before mutation on a Chromium regular file. Subsequent exact path/descriptor/inode/UID checks authorized removal of that one new zero-byte single-linkUID1001 file. Inherited scratch/cache remain. The typecheck was too short for /proc sampling, so observed log birth and elapsed/receipt-derived start retain their explicit labels. Neither administrative issue reran tests or changes their verdicts. Prior480/636/167 records and audit-prefix evidence remain preserved.
+
+Sol's first-round browser test actually passed7/7 and then its driver failed a TMP-empty audit on one owned regular Chromium file. Its cleanup-only continuation removed the owned environment, without rerun. Its lost in-memory adoption count and precise times are not reconstructed here. Astra's separate first-round clean receipts retain their own scope. The provider-interrupted Ubuntu diagnosis remains partial, with no completed controlled causal pair; no unfinished helper was executed or expanded. The saved natural selected test passed despite the lifetime overlap, and the parent replay-red is trace analysis rather than a fresh ENOTEMPTY reproduction. Windows held-CSS/root/route negatives remain supplied controlled failures with different signatures, and do not choose the native cause.
+
+Independent commands, environment and exact execution receipts.
+
+Driver argv ["python3","/tmp/html-inbox-ci190-r2-independent-n86sd3nf/run-focused.py"]. Linuxx64, UID1001. It established concurrent child subreaping and ran only the following two existing focused selections sequentially on frozen compiled bytes. There was no install/build, parent run.py/check-coordinator, new test assertion or controlled timing hold. The observation-only preloads record own process starts/exits, child spawn/ready URL/exit and actual loopback listener addresses. They do not alter a response, filesystem result, deadline or assertion. No new watcher-lifetime experiment was run.
+
+Each invocation had a separate private HOME/USERPROFILE/ZDOTDIR/XDG_CONFIG_HOME/XDG_DATA_HOME/XDG_STATE_HOME/XDG_RUNTIME_DIR/XDG_CACHE_HOME/TMPDIR/TMP/TEMP/HTML_INBOX_HOME/catalog and PATH. PATH used an owned node symlink to the exact pinned runtime plus/usr/bin:/bin. NODE_DISABLE_COMPILE_CACHE=1; LANG=C.UTF-8; TZ=UTC. PLAYWRIGHT_BROWSERS_PATH named the existing read-only cache, but no browser was launched. Complete literal environment dictionaries are in crash2421.json, crash20.json and independent-commands.json.
+
+crash2421 argv:
+["/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node","--require","/tmp/html-inbox-ci190-r2-independent-n86sd3nf/crash2421-observe.cjs","--test","--test-reporter=tap","--test-name-pattern=^actual server crash at (body-flushed|committed-before-receipt) resolves by repeatable durable receiver receipt$","packages/cli/dist/sync-protocol.test.js"]
+Runtime v24.21.0; binary SHA2567fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c.
+UTC2026-10-24T23:48:46.999484+00:00 through2026-10-24T23:48:49.811601+00:00; elapsed2.812114729s.
+Exit0;2tests/2pass/0fail/cancel/skip/todo. TAP duration2762.988715ms.
+Log crash2421.log SHA2564cc2a57120ee89688506c38125d1418303811ac47c1362dec34900d96db4d8d2.
+
+crash20 argv:
+["/tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node","--require","/tmp/html-inbox-ci190-r2-independent-n86sd3nf/crash20-observe.cjs","--test","--test-reporter=tap","--test-name-pattern=^actual server crash at (body-flushed|committed-before-receipt) resolves by repeatable durable receiver receipt$","packages/cli/dist/sync-protocol.test.js"]
+Runtime v20.20.2; binary SHA2566295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd.
+UTC2026-10-24T23:48:50.130560+00:00 through2026-10-24T23:48:53.194802+00:00; elapsed3.064242785s.
+Exit0;39reported/2pass/37name-filter exclusions/0fail/cancel/todo. Only2 semantic cases receive pass credit.
+Log crash20.log SHA256ba04aec0c903f38114628cc49e19ed9b818772deba68a37e25fe2fdf6ecf4906.
+
+There was no own failed runtime test, timeout, signal or rerun-to-green. No independent negative/browser/broad/native/hosted check ran. Supplied controlled negatives remain separately qualified.
+
+Reviewer administrative errors are preserved. One initial read-only search named absent config.ts, then used the actual files. The first evidence audit incorrectly assumed historicalCombinedRuns wrapped broad andNode20 together; it failed an assertion because the list stores those exact objects separately. A later combined source/browser proof incorrectly compared the concise repository cleanup summary to the entire raw cleanup object, and also failed an assertion. Neither was a test or product failure. Corrected scratch audits compare exact historical object membership and the actual cleanup summary fields. Their valid audits exit0 without any runtime rerun or repository mutation. administrative-errors.json records both assertion failures; no clean-first-attempt audit is claimed.
+
+Own resources and cleanup.
+
+crash2421 captured PIDs [77704,77710,77747,77769,77807,77840,77852,77881]. Source sender PIDs77769 and77852 are explicitly logged reaped before public source recovery. Exact captured loopback ports42959 and44479 rebound/listened/closed.
+crash20 captured PIDs [77918,77924,77956,77967,77979,78004,78015,78026]. Exact captured loopback ports42581 and44101 rebound/listened/closed. Each fixture retains its actual stop/ESRCH/port assertions.
+
+All16 captured test/worker/fixture PIDs are absent. The concurrent subreaper reaped each direct runner and adopted0 in each command; test fixtures reaped their own application/sender children. Zero adoption does not mean no children ran. The separate driverPID77680 is also absent. Both owned private environment trees had empty TMP and were removed, including synthetic homes/catalogs/TLS/signing material. No captured listener remains. The four exact captured ports are checked again at terminal. These are logged endpoints, including ordinary rebind probes of the same endpoints, not a host-global port/FD inventory. No foreign/saved PID was signalled and no inherited resource was removed.
+
+Pins and terminal boundary.
+
+Initial audit completed2026-10-24T23:47:40.270606+00:00. final-pins.json is produced after report preparation by the same read-only audit-pins.py with final argument. Both verify all15 exact file hashes/lengths and membership/status, all165 source hashes/exact membership, all328 compiled hashes/exact membership, branch/HEAD, raw index and full diff identity. Repository tested-source-qa.sha256 equals source-ci190-retry-budget-corrected.sha256. git diff HEAD --check exits0. The empty index remains unchanged.
+
+Review-manifest SHA256fd76c9ac22c3c715a09e1e90e1cd3dbe32e04cf63464b62da2dbc7974cfa17f3.
+Source165 aggregate d7f1e5bbb5a4ebb0c66928f0ceb2402cc745770644697356f4099dff93340943.
+Compiled328 aggregate5830eda81e66d1ebc4dd1908c132f4826efdb94c6d6b5c9b172c3ef1cc9c2d45.
+Browser SHA256c6cb12c7204c6f7363eaae66741c301458ece75f637b7ab4cd94ff6244d8debc.
+Raw index SHA256f9974ba6445f99cb2a4cdc69f7478504417b26e6178dcac91620adeef6177cb6.
+Index-entry-list SHA256db257ba5948b73b62de7f7a810972b809d2e1cc408c72e8df2de29e7cace130d.
+Full diff HEAD SHA2560f775677c894af85f73f12fb886b0e2e1f2854bf3a3e0aecb800937ee9371dfb.
+Approved proposal SHA256adf73962209382ca60aa96b43c2fc81def153e87e98c3232bddcd7c6e6237da5.
+
+Only sync-protocol.test.ts and sync-protocol-fault-child.ts differ among165CLI sources; the other163 are identical to HEAD. All production paths remain unchanged. The complete tracked diff additionally contains only coordinator docs/source manifest and the browser test diagnostic insertion. No source/docs/dist/dependency/index changes, build/install, stage/commit/push/merge/deploy/public comment/watch/physical handoff occurred. No Mac/Fleet/remote/nativeWindows action, real inbox/credential/service contact, wildcard/LAN/Tailscale listener or settings/security change occurred. PR79 app-local registration succeeded and the final app list reports watching=false. No unrelated PR was linked.
+
+Unknown locks/interrupted.reap, conservative PID/start ambiguity, orphan candidates, hostile same-account replacement, unavailable trusted old-owner recovery/general reclamation and indistinguishable same-anchor restore retain their documented limits. Managed schema2/coordinated versions/POSIX opt-in, manual boot supervision, native Mac/Windows/exactNode20.0, real networks/viewers, OS sleep/boot/power loss and privileged-manager transitions remain unproven here. BothCI190 and both01657 hosted actors remainUNKNOWN. Browser diagnostics do not fix Windows behavior. Physical QA remains parked atd3eaaf9.
+
+This report is terminal and releases no SHA. The parent must fully read BOTH new terminal reports before changing frozen repository/build/dependency state. The parent owns later packaging, normal native observation and any exact immutable physical-QA handoff. No continuing diagnostic matrix or reviewer child remains running.

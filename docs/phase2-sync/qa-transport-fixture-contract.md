@@ -1,0 +1,17 @@
+# Transport fixture storage-removal boundary
+
+This coordinator gate authorizes a test-only correction for the transport disconnect teardown blocker. It does not change production shutdown, ownership, deadlines or sync behavior.
+
+Starting source: 164 CLI files, aggregate `dcf508a4c89f4f741027624b4db1bfe017cc40a3cf639787a72bdafea7d24626`, at HEAD `d3eaaf9fab4ae84e4d66eed0292027da8f023a48`. The QA-R10/R11 author's complete Node 24 run failed only the disconnect test's cleanup with `ENOTEMPTY` at receiver/sync. Its original natural writer was not captured. That failed run remains failed; later empty residue and green subsets do not establish its historical cause.
+
+An isolated diagnosis preserved the unchanged source and assertions. Five capped natural runs passed. Controlled runs held a real final-pass receiver route watcher before mutation-lock enqueue, then allowed recursive fixture removal to proceed. A real canonical lock was created after original contents were removed, reproducing the same cleanup failure on Node 20 and 24. This proves a possible mechanism, not the original actor.
+
+A negative control additionally calls public receiver.recover while that watcher is held before enqueue. Recovery returns first; releasing the watcher still causes the exact cleanup error. Therefore a bare recover call does not establish the necessary ordering.
+
+The accepted alternative runs only the final fresh receiver reconciliation in the existing retained protocol runner. Require its genuine confirmed result, stop and reap that exact child, then call public receiver.recover before inspecting the receiver and removing fixture storage. The diagnostic preload proves one real child watcher pending before enqueue at confirmed reply; stopping the child removes that writer before recovery. Both matching controls pass with zero tracked parent watchers, pins, applies and body handles. This is a boundary for the identified final-pass writer, not a general whole-home quiescence or backup guarantee.
+
+The exact proposed two-file patch is `/tmp/qa-transport-diagnosis-mmkxtu61/proposed-test-only.patch`, SHA256 `50e374685b04a36708f9f0b29f7ab227c4936fe509a9c1774393d61cce9efdd2`. Coordinator ownership is limited to `sync-transport-lifecycle.test.ts` and the existing test-only `sync-protocol-fault-child.ts`.
+
+Reuse `startProtocolFaultChild` for that final receiver pass only. Preserve the original 1000-millisecond request, 4000-millisecond pass and 15000-millisecond case bounds. Add optional runner IPC requestMs/deadlineMs fields validated through existing bounded integer validation. Existing callers retain their 2000/8000 defaults. Register runner stop in the fixture's existing reverse-order cleanup before shared storage removal, including error paths. Retain all body, receipt, session, attempt, late-pin handle and fresh-admission assertions, including proof that the same ingestion server accepts the new request. Do not replace the test with connection success.
+
+No sleep, removal retry, force-cleaning canonical locks, extra deadline, production API/hook, private-state access or weaker assertion is permitted. Keep all original and diagnostic failures, invalid-helper qualification and exact command/log hashes. Inspect the terminal diagnosis and cleanup evidence, apply only this patch, run typecheck/build and complete transport plus protocol-fault containing suites on both runtimes, then required full combined checks and fresh independent confirmations. No commit or physical-QA head is released by this gate.

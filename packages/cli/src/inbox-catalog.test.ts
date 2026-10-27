@@ -207,11 +207,7 @@ for (const { platform, code, failureMode, canRegister } of [
       if (failureMode === "persistent") {
         Date.now = () => start + (attempts >= 3 ? 10_001 : 0);
       } else if (failureMode === "deadline-boundary") {
-        let clockReads = 0;
-        Date.now = () => {
-          clockReads += 1;
-          return start + (clockReads === 1 ? 0 : clockReads === 2 ? 9_999 : 10_000);
-        };
+        Date.now = () => start + (attempts >= 2 ? 10_000 : attempts === 1 ? 9_999 : 0);
       }
 
       fs.open = async (...args) => {
@@ -239,6 +235,67 @@ for (const { platform, code, failureMode, canRegister } of [
     `;
 
     await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, home, platform, code, failureMode, String(canRegister)], { timeout: 5000 });
+  });
+}
+
+for (const outcome of ["existing", "storage", "cancelled"]) {
+  test(`portable ownership preserves ${outcome} after an earlier Windows permission denial`, async (t) => {
+    const { catalogHome } = await catalogFixture(t);
+    await mkdir(catalogHome);
+    const modulePath = path.join(__dirname, "sync-files.js");
+    const worker = `
+      const assert = require("node:assert/strict");
+      const fs = require("node:fs/promises");
+      const path = require("node:path");
+      const [modulePath, catalogHome, outcome] = process.argv.slice(1);
+      Object.defineProperty(process, "platform", { value: "win32" });
+      const lockPath = path.join(catalogHome, "registration.lock");
+      const permissionError = Object.assign(new Error("Exclusive lock open denied"), { code: "EPERM" });
+      const storageError = Object.assign(new Error("Storage failed"), { code: "EIO" });
+      const cancellation = new Error("Acquisition cancelled");
+      const controller = new AbortController();
+      const perform = fs.open;
+      const start = Date.now();
+      let attempts = 0;
+      Date.now = () => start + (attempts >= 2 ? 10_000 : 0);
+
+      fs.open = async (...args) => {
+        if (args[0] === lockPath && args[1] === "wx") {
+          attempts += 1;
+          if (attempts === 1) throw permissionError;
+          if (outcome === "storage") throw storageError;
+          if (outcome === "cancelled") {
+            controller.abort(cancellation);
+            throw permissionError;
+          }
+        }
+        return perform(...args);
+      };
+
+      (async () => {
+        if (outcome === "existing") await fs.writeFile(lockPath, "unknown owner", { mode: 0o600 });
+        const before = outcome === "existing" ? await fs.lstat(lockPath) : undefined;
+        const { acquireSyncOwnership } = require(modulePath);
+        await assert.rejects(acquireSyncOwnership(lockPath, start + 10_000, controller.signal, { mode: "portable" }), error => {
+          if (outcome === "storage") return error === storageError;
+          if (outcome === "cancelled") return error === cancellation;
+          return error !== permissionError && error instanceof Error &&
+            error.message === "Managed store lock deadline exceeded; unknown or live owners are never stolen";
+        });
+        assert.equal(attempts, 2);
+        if (outcome === "existing") {
+          const after = await fs.lstat(lockPath);
+          assert.equal(after.dev, before.dev);
+          assert.equal(after.ino, before.ino);
+          assert.equal(await fs.readFile(lockPath, "utf8"), "unknown owner");
+        } else {
+          await assert.rejects(fs.lstat(lockPath), { code: "ENOENT" });
+        }
+        await assert.rejects(fs.lstat(lockPath + ".reap"), { code: "ENOENT" });
+      })().catch(error => { console.error(error); process.exitCode = 1; });
+    `;
+
+    await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, outcome], { timeout: 5000 });
   });
 }
 
@@ -373,6 +430,53 @@ test("catalog reads retry valid default replacement and unlink races before and 
 
     const expected = { inboxes: [first, second], ...(mode === "unlink" ? {} : { defaultName: replacementBlocked ? "first" : "second" }) };
     assert.deepEqual(catalog, expected, mode);
+  }
+});
+
+test("catalog retries native zero-link inode observations during atomic replacement", { skip: process.platform === "win32" }, async (t) => {
+  const { root, catalogHome } = await catalogFixture(t);
+  await createInbox("first", path.join(root, "first"), catalogHome);
+  await createInbox("second", path.join(root, "second"), catalogHome);
+  await setDefaultInbox("first", catalogHome);
+  const modulePath = path.join(__dirname, "inbox-catalog.js");
+  const worker = `
+    const assert = require("node:assert/strict");
+    const fs = require("node:fs/promises");
+    const path = require("node:path");
+    const [modulePath, catalogHome, mode] = process.argv.slice(1);
+    const target = path.join(catalogHome, "default.json");
+    const perform = fs.lstat;
+    let hits = 0;
+    fs.lstat = async (...args) => {
+      if (args[0] !== target || (mode === "once" && hits)) return perform(...args);
+      hits += 1;
+      const old = await fs.open(target, "r");
+      try {
+        await fs.writeFile(target + ".replacement", JSON.stringify({ schemaVersion: 1, name: "second" }), { mode: 0o600 });
+        await fs.rename(target + ".replacement", target);
+        const unlinked = await old.stat();
+        assert.equal(unlinked.nlink, 0);
+        return unlinked;
+      } finally {
+        await old.close();
+      }
+    };
+    (async () => {
+      if (mode === "once") {
+        const result = await require(modulePath).readInboxCatalog(catalogHome, { readOnly: true });
+        assert.equal(result.defaultName, "second");
+        assert.equal(hits, 1);
+      } else {
+        await assert.rejects(require(modulePath).readInboxCatalog(catalogHome, { readOnly: true }), /changed repeatedly during read/);
+        assert.equal(hits, 10);
+      }
+      process.stdout.write(JSON.stringify({ mode, hits }));
+    })().catch(error => { console.error(error); process.exitCode = 1; });
+  `;
+
+  for (const mode of ["once", "always"]) {
+    const result = await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, mode], { timeout: 5000 });
+    assert.deepEqual(JSON.parse(result.stdout), { mode, hits: mode === "once" ? 1 : 10 });
   }
 });
 

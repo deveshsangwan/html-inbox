@@ -1,0 +1,162 @@
+TERMINAL BLOCKER: command1 exited1. Command2 was not started. No rerun, diagnosis, source/doc edit or fix was performed.
+
+Command1
+python3 /tmp/html-inbox-phase2-checks-1mpkndv5/check-coordinator.py qa-ci-cea-integrated-verify2421-attempt1 bash /tmp/html-inbox-qa-history-amcemjlx/verify-hosted-node2421.sh
+Exact wrapper argv: ["python3", "/tmp/html-inbox-phase2-checks-1mpkndv5/run-subreaper.py", "python3", "/tmp/html-inbox-phase2-checks-1mpkndv5/run-isolated.py", "bash", "/tmp/html-inbox-qa-history-amcemjlx/verify-hosted-node2421.sh"]
+Process start UTC from /proc: 2026-10-25T02:22:39.620000+00:00
+Log creation UTC: 2026-10-25T02:22:40.086177+00:00
+Original receipt written UTC: 2026-10-25T02:27:54.454299+00:00
+Native wrapper exit: 1
+Elapsed seconds: 314.3672695159912
+Original outer log: /tmp/html-inbox-phase2-checks-1mpkndv5/receipts/qa-ci-cea-integrated-verify2421-attempt1.log
+Log SHA256: be9c68925dc1a002385074d2a2a9f92dc487b95beebe3363944b4b9311337f6d
+Unit counts: tests=1026 pass=1020 fail=4 cancelled=1 skipped=1 todo=0 suites=0 duration_ms=309989.56718
+TAP root plan1..937 includes nested cases; total unit count is1026.
+Typecheck/build completed. The failed unit stage stopped the chain. Skills, browser, site integrity/site tests and package smoke were not reached.
+
+Original failure/cancellation blocks
+Original log line 1541
+# Subtest: real post-custody HTTPS completion is aborted by late status CLI cancellation
+not ok 230 - real post-custody HTTPS completion is aborted by late status CLI cancellation
+  ---
+  duration_ms: 14031.719953
+  type: 'test'
+  location: '/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-finalization-lifecycle.test.js:197:5'
+  failureType: 'testCodeFailure'
+  error: 'Timed out waiting for actual finalization hold'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    waitUntil (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-worker-fault-fixtures.js:47:11)
+    async TestContext.<anonymous> (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-finalization-lifecycle.test.js:269:22)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+
+Original log line 1557
+# Subtest: actual admitted run with held ACK SIGINT cancels its HTTPS attempt
+not ok 231 - actual admitted run with held ACK SIGINT cancels its HTTPS attempt
+  ---
+  duration_ms: 13832.272836
+  type: 'test'
+  location: '/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-finalization-lifecycle.test.js:320:5'
+  failureType: 'testCodeFailure'
+  error: 'Timed out waiting for actual run acknowledgement and HTTPS completion held'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    waitUntil (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-worker-fault-fixtures.js:47:11)
+    async TestContext.<anonymous> (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-finalization-lifecycle.test.js:417:9)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+
+Original log line 1573
+# Subtest: actual admitted run with held ACK allows exact-ticket positive cancellation
+not ok 232 - actual admitted run with held ACK allows exact-ticket positive cancellation
+  ---
+  duration_ms: 9739.138928
+  type: 'test'
+  location: '/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-finalization-lifecycle.test.js:320:5'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+
+      ok(completion.deadlineAt - Date.now() > 2000)
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-finalization-lifecycle.test.js:429:26)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+
+Original log line 1597
+# Subtest: actual admitted run with held ACK confirms without interruption
+not ok 233 - actual admitted run with held ACK confirms without interruption
+  ---
+  duration_ms: 8432.204305
+  type: 'test'
+  location: '/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-finalization-lifecycle.test.js:320:5'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+
+      ok(completion.deadlineAt - Date.now() > 2000)
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-finalization-lifecycle.test.js:429:26)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1409:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+
+Original log line 3603
+# Subtest: 129 descriptors paginate one immutable cut; missing pages, changed scope, nonce replay and expiry fail
+not ok 515 - 129 descriptors paginate one immutable cut; missing pages, changed scope, nonce replay and expiry fail
+  ---
+  duration_ms: 30167.888558
+  type: 'test'
+  location: '/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-protocol.test.js:239:1'
+  failureType: 'testTimeoutFailure'
+  error: 'test timed out after 30000ms'
+  code: 'ERR_TEST_FAILURE'
+  ...
+
+The fifth not-ok block is the pagination testTimeoutFailure; TAP summary counts one cancellation. Four failed tests plus this cancelled test are retained without reclassification.
+
+Skips
+Original log line 6115: ok 813 - Windows rollback stops a real temporary descendant before its delayed file write # SKIP The real taskkill process-tree check requires Windows.
+
+Command2
+python3 /tmp/html-inbox-phase2-checks-1mpkndv5/check-coordinator.py qa-ci-cea-integrated-unit20-attempt1 bash /tmp/html-inbox-qa-history-amcemjlx/node20-unit.sh
+Not started because command1 exited1. No receipt/log was created for its unique label. There is no exit, duration or test count for current Node20. Preflight Node20 version/hash proof and old generic Node20 snapshots are not a current test result.
+
+Source and checkout integrity
+Current manifest: /tmp/html-inbox-qa-history-amcemjlx/source-cea-all-integrated.sha256
+All167 source files/membership match before/after. Aggregate SHA256: 831bfb7c80e8c798283bb98ffa991e36eb167c86b8ca120562bc812ac0ea27e7
+HEAD cea30b48cbef814511e2eedfc83d1793bc011354, branch feat/phase2-sync, all371 nonignored input-file hashes/membership, status and empty index remain unchanged. Raw index SHA256: e3dd34cce6446819560c71040ab9ba111d2c07087bc8b41e74f2922b3dcd1562
+All-file inventory: 339 tracked and 32 untracked nonignored files. Per-file input/before/after hashes are in all-371-file-inspection.json.
+Ignored memberships remain node_modules/, packages/cli/bundle/, packages/cli/dist/, with no new/outside-allowlist paths.
+Historical repository tested-source-qa manifest remains unchanged at SHA256 d7f1e5bbb5a4ebb0c66928f0ceb2402cc745770644697356f4099dff93340943; it was not required to equal or used instead of the new167-source pin.
+
+Compiler footprint
+Before build: 328 files, aggregate 5830eda81e66d1ebc4dd1908c132f4826efdb94c6d6b5c9b172c3ef1cc9c2d45
+After build: 332 files, aggregate db1e5031c55ca76b434de6519b59de42b8ffdad89ba3a3eb63099f4cba7834aa
+New outputs: sync-acquisition-deadline.test.d.ts, sync-acquisition-deadline.test.js, sync-preaborted-reconciliation.test.d.ts, sync-preaborted-reconciliation.test.js
+Changed existing outputs: sync-client.js, sync-files.d.ts, sync-files.js, sync-https-fixtures.test.js, sync-protocol-faults.test.js, sync-reconciliation.js, sync-shutdown-fixtures.d.ts, sync-shutdown-fixtures.js, sync-shutdown-ingestion.test.js, sync-transport-lifecycle.test.js, sync-worker-integration.test.js
+Removed outputs: none. Every changed/new output corresponds to an actual changed/new TypeScript source. No old328 unchanged assertion was applied to the rebuild.
+No post-build Node20 comparison was performed because command2 was blocked. Built bytes and all source hashes are retained for parent diagnosis.
+
+Historical evidence preservation
+coordinatorHistoricalReceiptsAndLogs: 492 files, zero hash changes.
+firstRoundPinnedLogs: 636 files, zero hash changes.
+referencedHistoricalLogs: 487 files, zero hash changes.
+previousImmutableEvidence: 267 files, zero hash changes.
+These evidence groups overlap and are not summed. Prior evidence folder membership also remains unchanged.
+Original append-only outer-audit prefix: 196823 bytes, SHA256 806298982f1081f084565edaa35827d50e118890a88867b212d13186b1870062, unchanged. Exactly one authorized outer audit was appended.
+All generic verify/network/exits were copied into this unique evidence directory. Preflight generic snapshots and parent input JSON were captured before mutable wrapper outputs changed. No historical named receipt/log or previous immutable artifact was overwritten.
+
+Runtime and resource audit
+Exact Node24.21.0 binary SHA2567fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c and verify wrapper SHA256cd07002e13202858c5c9f0cc094cbc93b9bc4f2b1fa06431a488f422d79f1299 match before/after. Exact Node20.20.2 binary SHA2566295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd remains unchanged and was used only for preflight version proof.
+The authorized original subreaper continuously reaped own adopted descendants. Original audit: exit1, reapedAdopted127, remaining=[]. Every audited adopted PID and explicitly logged reaped fixture PID is absent. No owned compiled process or matching parent wrapper/unit runner remains.
+Raw isolated TMP/HOME/XDG path deltas are empty: no new fixture/cache/scratch paths and no inherited removals. Inherited residue and cache remain untouched. No arbitrary PID signal or scratch/unknown-lock removal was performed.
+Per-case process/port/resource assertions are retained verbatim with original log line numbers. No unlogged numeric endpoint or global rebind total is inferred. Failed/cancelled tests do not gain a missing assertion by this audit.
+The read-only post-command gate failed only commandExitZero. This expected block is recorded separately in expected-post-command-stop.json. It is not an additional product test or an audit correction/rerun. All source/history/compiler/resource checks passed.
+
+Qualifications
+No causal attribution or diagnosis is assigned to these failures. Parent owns fixes/reviews.
+Historical hosted actors, controlled sufficient mechanisms, failed positives, invalid observers, provider interruptions and historical cleanup qualifications retain their distinctions.
+The typed queue-expiry worker idle-clock offset is between completed retries. These results do not establish native backoff elapsed time, hosted-image equivalence, Windows/macOS, physical transport or readiness.
+The historical repository tested-source manifest remains unchanged and was not required to equal the new167-source pin.
+
+Local synthetic namespace verification only. No readiness, hosted pass, native Windows/macOS, physical transport/power-loss acceptance, released SHA, commit/PR action or new review result is claimed.
+Terminal blocker is handed to the parent now. Exclusive ignored build/runtime ownership is released. Parent owns any diagnosis, corrections and two new full-rubric reviews.

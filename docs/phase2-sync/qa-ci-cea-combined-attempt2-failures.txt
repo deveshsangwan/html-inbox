@@ -1,0 +1,28 @@
+COMMAND 6, log line 1095
+not ok 203 - local-before-completion lease expiry is bounded independently of remote timestamps and wall clock rollback
+  ---
+  duration_ms: 1689.820284
+  location: '/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-clock-skew.test.js:146:5'
+  failureType: 'hookFailed'
+  error: "ENOTEMPTY: directory not empty, rmdir '/tmp/html-inbox-phase2-checks-1mpkndv5/tmp/html-inbox-clock-skew-fixture-jULjGc/source/sync'"
+  code: 'ENOTEMPTY'
+  ...
+
+COMMAND 6, log line 2600
+not ok 453 - seeded pending publication survives real foreground linked cut and autonomously reaches intended custody
+  ---
+  duration_ms: 28119.664661
+  location: '/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-ownership-worker.test.js:129:5'
+  failureType: 'testCodeFailure'
+  error: 'Managed store lock deadline exceeded; unknown or live owners are never stolen'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    checkAcquisition (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-files.js:400:15)
+    acquireSyncOwnership (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-files.js:299:9)
+    async withProcessLock (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-files.js:224:23)
+    async withStoreLock (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-files.js:210:16)
+    async ManagedSyncStore.setRetryPaused (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-store.js:757:9)
+    async TestContext.<anonymous> (/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/packages/cli/dist/sync-ownership-worker.test.js:153:9)
+    async Test.run (node:internal/test_runner/test:797:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...

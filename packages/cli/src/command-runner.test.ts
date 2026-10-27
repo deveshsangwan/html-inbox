@@ -82,3 +82,36 @@ test("command timeout stops descendant processes", async (t) => {
   await delay(400);
   await assert.rejects(readFile(lateMarker), /ENOENT/);
 });
+
+test("failed commands stop SIGTERM-resistant descendants after the parent closes", {
+  skip: process.platform === "win32" ? "POSIX process-group signals" : false,
+}, async (t) => {
+  const runnerHome = await temporaryHome(t);
+  const readyMarker = path.join(runnerHome, "ready.txt");
+  const lateMarker = path.join(runnerHome, "late.txt");
+  const descendantScript = [
+    'process.on("SIGTERM", () => {});',
+    'process.once("disconnect", () => {',
+    `  setTimeout(() => require("node:fs").writeFileSync(${JSON.stringify(lateMarker)}, "late"), 300);`,
+    '});',
+    `require("node:fs").writeFileSync(${JSON.stringify(readyMarker)}, "ready");`,
+    'process.send("ready");',
+  ].join("\n");
+  // IPC readiness establishes the signal handler before output triggers failure.
+  const parentScript = `const child = require("node:child_process").spawn(process.execPath, ["-e", ${JSON.stringify(descendantScript)}], { stdio: ["ignore", "ignore", "ignore", "ipc"] }); child.once("message", () => process.stdout.write("x".repeat(1024 * 1024 + 1)));`;
+
+  await assert.rejects(
+    new NodeCommandRunner().run({
+      command: process.execPath,
+      args: ["-e", parentScript],
+      cwd: runnerHome,
+      env: {},
+      timeoutMs: 5_000,
+    }),
+    /more than 1 MiB/,
+  );
+  assert.equal(await readFile(readyMarker, "utf8"), "ready");
+
+  await delay(400);
+  await assert.rejects(readFile(lateMarker), /ENOENT/);
+});

@@ -1,0 +1,102 @@
+TERMINAL source/check/cleanup freeze for #490. The exact authorized one-file patch is applied and uncommitted. Every required check passed on the final source bytes: exact Node20.20.2 and24.21.0 typecheck/build, both actual quotas on both runtimes, full containing suite31/31on each, and one actual patched-source Node20 registered hold control. Runtime admission is released; no further runtime work is planned. Original hosted actor and latency remain UNKNOWN.
+
+Worktree /home/agent/.t3/worktrees/html-inbox/t3-76f9edc7, branch t3/diagnose-shared-staging-timeout. HEAD stayscea30b48cbef814511e2eedfc83d1793bc011354. Only packages/cli/src/sync-protocol-faults.test.ts is modified; staged diff and untracked file lists are empty. Raw index SHA2562c8df865b31126387928cee7d813c481eb9d9abda7820ecdb1b3749d15bb0547 is unchanged. Final owned-file SHA256a5ba51f46a3c7f6a94d75978906a4779056598b8b7bb4af2985044c10c4a95d2.165source aggregate changed fromd7f1e5bbb5a4ebb0c66928f0ceb2402cc745770644697356f4099dff93340943 tofb3ec70eb793831b2af1dcd98b4e8786c69bea95b9fd1ce60f4a92e91b08a181. All338other tracked files match the baseline byte-for-byte. source-freeze.json pins every tracked file before typecheck/build; terminal-audit.json proves all final checks used those same bytes.
+
+Read authoritative coordinator contract /home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/docs/phase2-sync/qa-ci-cea-staging-offer-order-contract.md and verified SHA256e9041f914f7f73e170d19cf0f9986ba36aca425b4a82deac8cf56cd208d2890b before editing. Exact authorized patch SHA256e97eebe332043cf07a43619126827fb34d509851a42619116b14fab132ff5038 is identical to the normalized sole-file diff. The change has eight net added lines, Git9insertions/1deletion. Files quota prepares all16genuine offers on the same four owning applications before any partial body. The existing per-index body/pair loop consumes them. Bytes quota follows its original offer/request order via the existing fallback. No hold is in repository source.
+
+Every preservation requirement remains: all six real application processes, four retained transfers per owning process, same shared home and actual global staging quota, initial confirmed reconciliation, exact offer parsing/assertions, one reached durable lease-only fsync pause/hits1, then16complete pairs/32entries, age mutation and one null-start lease, real public recovery retaining live/unknown ownership, genuine spare overflow413, no premature receipts, final stage/record/body zero checks. Budgets remain30s case,5s pair/cleanup,3s helper HTTP,15s partial client/body/socket/absolute connection and60s offer lease. No retry, sleep, removal loop, skipped reservation, fake result/custody, production/API change or new serialization of retained bodies was introduced.
+
+The complete original31-artifact bundle /tmp/html-inbox-490-reservation-2zsupv8_ and52-artifact continuation /tmp/html-inbox-490-pair-continuation-axh11mlb remain byte-for-byte unchanged, including their manifests, original unknown admission timestamp, wrong-build receipt, red/control evidence and analysis failure. baseline.json records both complete trees and terminal-audit.json verifies them again. Their positives, red, admission75 and failed analysis retain their original classifications. Hosted ecac333merge equivalence is not claimed.
+
+One initial new static audit compared raw Git diff text against the approved difflib patch and rejected Git's extra function context in the hunk header. The file change itself was exact. initial-diff-header-comparison-failure.json retains this analysis mistake; normalized-sole-file.patch proves the exact approved file-byte delta. No source correction or test rerun resulted. Initial setup completed after that failed text comparison; the byte check was corrected before typecheck/build or tests. No compiler/test/admission failed in this source-author phase.
+
+All10authorized runtime commands acquired shared flock-w45-E75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock around this task's copied private bounded subreaper runner. New evidence root /tmp/html-inbox-490-source-author-by6_8y4n. Each command used its own synthetic HOME/XDG/TMP/inbox/cache, isolated env and real loopback fixtures. Exact admission and runtime UTC, argv, environments, exit/count/log SHA and cleanup are in commands.json and individual receipts. No root wrappers/audit files were written. No admission retry or extra matrix/experiment occurred.
+
+Runtime binaries were read-only and exact: Node20.20.2 SHA6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd; Node24.21.0 SHA7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c. Own frozen-lock pnpm11.7.0 install used ignore-scripts/private cache/store. Typecheck and build ran via each exact runtime and actual tsc-rs bin. Both builds produced identical328compiled files, aggregate62ebc61cf3a61c45594f9725ea7682696af4da27f5e38e628ca4e74c3fbbcb89. Relative to the original baseline, only sync-protocol-faults.test.js changed; all327other compiled files are identical, including production. No typecheck/build was skipped or replaced by an in-memory source patch.
+
+Ordinary quota and containing-suite executions used listeners.cjs, which only observes real net.Server listen events and owned child spawn/close. It forwards itself to actual owned Node children despite their sanitized env. It never transforms test code or request/storage results and does not read or log secrets/bodies. This permits exact listener rebind evidence without host-global scans. No test concurrency override, deadline override or hold was used in these ordinary runs.
+
+Required ordinary results, all exit0:
+- Node20quota selection: bytes1660.428828ms, files3939.851508ms. Native31entries,2pass/0fail/0cancel/29unmatched selection skips;9exact listeners rebound.
+- Node24quota selection: bytes1516.045799ms, files5333.490395ms. Native2entries,2pass/0fail/0cancel/0skip;9exact listeners rebound.
+- Complete containing sync-protocol-faults suite Node20:31pass/0fail/0cancel/0skip, native47297.297816ms, wrapper47.358712s;64exact listeners rebound.
+- Complete containing suite Node24:31pass/0fail/0cancel/0skip, wrapper37.507980s;65exact listeners rebound. Native total duration is retained in containing24.log.
+These overlap and are not a count of distinct aggregate repository coverage. Node20name filtering reports unmatched skips; Node24omits them. Neither changes the original hosted two skips. Both original quota overflow and owner-retention assertions executed successfully in selected and containing runs, so no additional negative was necessary or run.
+
+The last runtime command was exactly one actual patched-source Node20files control. hold-observer.cjs loads the compiled output of this applied TypeScript source, inserts the registered15100ms hold before actual request at preflight index1 and adds bounded real event/lease observation. It does not create or reorder the offer loop: that order comes from the actual source patch. The disk test and loaded test plus full observation-only diff are retained. Original assertions remain; the overflow assertion still evaluates the actual request outcome. No hold, monkeypatch or diagnostics entered repo source.
+
+Actual-source hold result: selected native20474.676602ms, wrapper20.695244s, exit0; native31entries,1pass/0fail/0cancel/30unmatched selection skips. Hold configured15100ms, observed15100.924877ms, ending670.767011ms before partial0creation. Actual source all-offers-prepared checkpoint was5.625908ms before partial0creation. All16genuine process-bound offers preceded bodies; overflow offer was later. All17actual offers returnedHTTP200/statusneeds-body with transfer hashes/expiries retained.
+
+Relative to actual-source control partial0creation: exactly one real durable lease-only pause/hits1at33.247211ms; all16pairs at1698.367453ms; public recovery entry1702.197100ms and exit1726.816045ms; overflow outcome2466.745268ms. Six real application processes were retained. Partial lease owners124821/124832/124843/124854each own exactly4; their actual PID/start/token-hash/stage evidence is retained. The same shared store directory and real mutation-lock reservation are exercised.
+
+Full recovery snapshots retain the same16lease ownership fields and32stage/lease entries with exactly one null-start lease, proven by patched-source-recovery-proof.json. The genuine spare body reached reserve with16existing reservations, produced the only quota reserve error, and delivered real HTTP413with response end. No retained body received a premature success response. Original zero receipts/records/bodies and aborted-stage cleanup assertions all passed. All six real application children were reaped and exact listeners rebound. Source-order/hold timing and actual requests/events are in patched-hold20-evidence.json; no body/header/key/raw transfer or lease token was dumped.
+
+This validates the accepted sufficient mechanism correction in the actual applied source while retaining all original bounds. The earlier registered red still proves expiration and owned release of stream0near15s, successful new pair1, then failure at index1. Original hosted actor and latency remain UNKNOWN. Preparing offers does not promise every possible body admission/storage delay fits15s. No unrelated cancellation, GateB/deadline design, shutdown/transport, progress, Windows/static, docs or production source was changed.
+
+Terminal notification was sent immediately when source/check/cleanup freeze completed at2026-10-25T01:03:31.861823Z so parent can release GateB runtime. All465sampled owned process identities absent, no private-runner cleanup signals or remaining children, all153distinct captured literal127.0.0.1ports rebound at command completion and again at terminal audit. The containing suite intentionally kills its own retained fault actors as part of unchanged tests; that is separate from the private runner's zero cleanup signals.25mssampling can miss short-lived setup children, and no host-global process/FD/port claim is made. Exact per-run retained child close/reap diagnostics and endpoints remain in traces/receipts.
+
+Original fixture hooks removed their synthetic stores/TLS credentials. Own node_modules,328dist files, private dependency/corepack stores and10command environments were removed after source/compiled integrity recording.14proven-owned resource roots removed; no removal retry, foreign PID signal, unknown-lock deletion or global environment/process scan. App-bound worktree and all prior/new evidence remain. Terminal source status is the sole intended modified test, no staged or untracked files, unchanged HEAD/index, clean diff-check.
+
+No commit/push, PR action/watch/comment, merge/deploy, physicalQA or SHA release occurred. Parent owns integration, combined checks and two new reviews. PhysicalQA remains parked atd3. No further source or runtime work is pending in this author phase.
+
+Exact commands/UTC/exits/counts/log hashes:
+
+setup
+flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-490-source-author-by6_8y4n/runner.py setup 180 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node /home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/corepack/dist/pnpm.js install --frozen-lockfile --ignore-scripts --store-dir /tmp/html-inbox-490-source-author-by6_8y4n/pnpm-store
+admissionUTC 2026-10-25T00:58:56.778643+00:00 -> 2026-10-25T00:59:02.166318+00:00 exit=0
+runtimeUTC 2026-10-25T00:58:56.816045+00:00 -> 2026-10-25T00:59:02.160012+00:00 exit=0 counts={}
+logSHA256 3d1ec54cd6daa7df85be683d9a39f801291d7cd60c228c8d58dd1cdc2591eefb
+
+typecheck20
+flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-490-source-author-by6_8y4n/runner.py typecheck20 90 /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node node_modules/tsc-rs/bin/tsc-rs -p packages/cli/tsconfig.json --noEmit
+admissionUTC 2026-10-25T00:59:23.223490+00:00 -> 2026-10-25T00:59:23.607450+00:00 exit=0
+runtimeUTC 2026-10-25T00:59:23.261512+00:00 -> 2026-10-25T00:59:23.601333+00:00 exit=0 counts={}
+logSHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+build20
+flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-490-source-author-by6_8y4n/runner.py build20 90 /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node node_modules/tsc-rs/bin/tsc-rs -p packages/cli/tsconfig.json
+admissionUTC 2026-10-25T00:59:35.033562+00:00 -> 2026-10-25T00:59:35.592429+00:00 exit=0
+runtimeUTC 2026-10-25T00:59:35.069200+00:00 -> 2026-10-25T00:59:35.586085+00:00 exit=0 counts={}
+logSHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+typecheck24
+flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-490-source-author-by6_8y4n/runner.py typecheck24 90 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node node_modules/tsc-rs/bin/tsc-rs -p packages/cli/tsconfig.json --noEmit
+admissionUTC 2026-10-25T00:59:43.436843+00:00 -> 2026-10-25T00:59:43.840965+00:00 exit=0
+runtimeUTC 2026-10-25T00:59:43.473470+00:00 -> 2026-10-25T00:59:43.834491+00:00 exit=0 counts={}
+logSHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+build24
+flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-490-source-author-by6_8y4n/runner.py build24 90 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node node_modules/tsc-rs/bin/tsc-rs -p packages/cli/tsconfig.json
+admissionUTC 2026-10-25T00:59:47.719745+00:00 -> 2026-10-25T00:59:48.286090+00:00 exit=0
+runtimeUTC 2026-10-25T00:59:47.756315+00:00 -> 2026-10-25T00:59:48.272141+00:00 exit=0 counts={}
+logSHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+quotas20
+flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-490-source-author-by6_8y4n/runner.py quotas20 60 /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node --require /tmp/html-inbox-490-source-author-by6_8y4n/listeners.cjs --test --test-reporter=tap '--test-name-pattern=^real concurrent HTTPS streams share the staging (bytes|files) quota across application processes$' packages/cli/dist/sync-protocol-faults.test.js
+admissionUTC 2026-10-25T00:59:58.756393+00:00 -> 2026-10-25T01:00:04.572625+00:00 exit=0
+runtimeUTC 2026-10-25T00:59:58.791907+00:00 -> 2026-10-25T01:00:04.566013+00:00 exit=0 counts={"tests": 31, "suites": 0, "pass": 2, "fail": 0, "cancelled": 0, "skipped": 29}
+logSHA256 5928deab5e62242bccdbff24e6087a3a4717d0355380ca913a68231527fe8183
+
+quotas24
+flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-490-source-author-by6_8y4n/runner.py quotas24 60 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node --require /tmp/html-inbox-490-source-author-by6_8y4n/listeners.cjs --test --test-reporter=tap '--test-name-pattern=^real concurrent HTTPS streams share the staging (bytes|files) quota across application processes$' packages/cli/dist/sync-protocol-faults.test.js
+admissionUTC 2026-10-25T01:00:29.425556+00:00 -> 2026-10-25T01:00:36.536938+00:00 exit=0
+runtimeUTC 2026-10-25T01:00:29.461807+00:00 -> 2026-10-25T01:00:36.525940+00:00 exit=0 counts={"tests": 2, "suites": 0, "pass": 2, "fail": 0, "cancelled": 0, "skipped": 0}
+logSHA256 dfa5f1dc65b89b4df0e5d9d9a8b942f9514aea97e7df63c2b6926739e8ab62c7
+
+containing20
+flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-490-source-author-by6_8y4n/runner.py containing20 240 /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node --require /tmp/html-inbox-490-source-author-by6_8y4n/listeners.cjs --test --test-reporter=tap packages/cli/dist/sync-protocol-faults.test.js
+admissionUTC 2026-10-25T01:00:50.565055+00:00 -> 2026-10-25T01:01:37.968696+00:00 exit=0
+runtimeUTC 2026-10-25T01:00:50.600481+00:00 -> 2026-10-25T01:01:37.959275+00:00 exit=0 counts={"tests": 31, "suites": 0, "pass": 31, "fail": 0, "cancelled": 0, "skipped": 0}
+logSHA256 44889b947cf9f03075aacbc46c2440ef65e00fd86c3aec14440176c928d1af63
+
+containing24
+flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-490-source-author-by6_8y4n/runner.py containing24 240 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node --require /tmp/html-inbox-490-source-author-by6_8y4n/listeners.cjs --test --test-reporter=tap packages/cli/dist/sync-protocol-faults.test.js
+admissionUTC 2026-10-25T01:01:56.706801+00:00 -> 2026-10-25T01:02:34.265291+00:00 exit=0
+runtimeUTC 2026-10-25T01:01:56.747586+00:00 -> 2026-10-25T01:02:34.255675+00:00 exit=0 counts={"tests": 31, "suites": 0, "pass": 31, "fail": 0, "cancelled": 0, "skipped": 0}
+logSHA256 567ba495939e996aab58d45f14665e2756fc3d6086c241adbd98a35da8003253
+
+patched-hold20
+flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-490-source-author-by6_8y4n/runner.py patched-hold20 45 /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node --require /tmp/html-inbox-490-source-author-by6_8y4n/hold-observer.cjs --test --test-reporter=tap '--test-name-pattern=^real concurrent HTTPS streams share the staging files quota across application processes$' packages/cli/dist/sync-protocol-faults.test.js
+admissionUTC 2026-10-25T01:02:47.612922+00:00 -> 2026-10-25T01:03:08.359047+00:00 exit=0
+runtimeUTC 2026-10-25T01:02:47.651461+00:00 -> 2026-10-25T01:03:08.346794+00:00 exit=0 counts={"tests": 31, "suites": 0, "pass": 1, "fail": 0, "cancelled": 0, "skipped": 30}
+logSHA256 88b80e077bce2f3780c48de5925a875853f9bfad16cbd99559df67e25bad33db

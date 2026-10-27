@@ -1,0 +1,127 @@
+FINAL STATIC INTERFACE PRECISION ADDENDUM, CASE203. Entire addendum UNAPPLIED. This corrects the timer-cancellation gap in the preceding design. No application runtime, Node invocation, test, probe, install, build, mutex admission, polling or source/index change occurred. The453 child retains runtime ownership. This is neither a new review nor runtime verification credit.
+
+Decision
+
+Normalize Node's timer cancellation wrapper only in a private helper whose try block contains exactly one await of the existing node:timers/promises delay. Replace the two acquisition retry-delay calls with this helper. Do not normalize at a filesystem operation, acquireSyncOwnership, withStoreLock or watcher catch. The outer watcher still ignores only its unique private stop object by exact identity.
+
+The current source does not already enforce that identity. Managed retry at sync-files.ts:299 and portable retry at735 directly await delay(..., undefined, {signal}). checkAcquisition at407-409 calls signal.throwIfAborted(), which throws signal.reason. The supplied native-timer contract is different: a timer aborted while waiting rejects AbortError/code ABORT_ERR with direct cause equal to signal.reason. Thus today's observable rejection depends on whether cancellation hits a checkpoint or a retry wait. The prior proposal omitted this normalization and would incorrectly mark a normal watcher close as public attempt abortion at the retry wait.
+
+Exact intended private helper
+
+This is proposed TypeScript text in this addendum only, not a source patch or a claimed typechecked implementation:
+
+async function waitForOwnershipRetry(milliseconds: number, signal?: AbortSignal): Promise<void> {
+  try {
+    await delay(milliseconds, undefined, { signal });
+  } catch (error) {
+    if (signal?.aborted && error instanceof Error && !(error instanceof AggregateError) &&
+        error.name === "AbortError" && "code" in error && error.code === "ABORT_ERR" &&
+        error.cause === signal.reason) {
+      throw signal.reason;
+    }
+
+    throw error;
+  }
+}
+
+Use this exact call at both existing retry sites:
+
+await waitForOwnershipRetry(Math.min(20, Math.max(1, deadline - Date.now())), signal);
+
+The helper has no callback parameter and performs no filesystem work, acquisition, owner inspection, reclamation, flush, release or cleanup. The try must not expand to include reclaimDeadLock, candidate operations or any other surrounding work. It never walks causes or unwraps an AggregateError. Its structural check is confined to this trusted native timer primitive; it is not an error-provenance predicate reusable elsewhere.
+
+All predicates matter. The signal must be aborted; the rejection must be a non-aggregate Error with the native timer name and exact code; its DIRECT cause must be the very same reason object/value. An unrelated AbortError with a different reason remains the original object. An ordinary I/O error while the signal happens to be aborted remains the original object. An aggregate whose name/code have been changed to resemble a timer abort remains the original aggregate. A filesystem AbortError with even the same direct cause remains untouched because that filesystem await is outside this helper's try.
+
+The actual primitive establishes origin. JavaScript error properties are not an unforgeable brand: a test which replaces this timer with a deliberately forged, fully identical error at this same leaf cannot demand that a structural helper distinguish it from the native result. That is not necessary to protect errors from filesystem/acquisition cleanup, which never cross this normalization try. A custom timer/event framework or a new cancellation taxonomy would add complexity without improving the required separation.
+
+Public and private interface scope
+
+No new export is needed. acquireSyncOwnership(lockPath, deadline, signal?, options?) and SyncOwnershipOptions stay exactly as declared; no new option selects cancellation style. The preceding proposed public changes remain only these:
+
+openRouteAttempt(...): Promise<{ signal: AbortSignal; close: () => Promise<void> }>
+withStoreLock<T>(directory: string, deadlineMs: number, operation: () => Promise<T>, signal?: AbortSignal): Promise<T>
+
+The optional queue signal is supplied by the watcher through the proposed private mutate/withProcessLock threading. The existing acquireSyncOwnership signal parameter is reused. The new retry helper is private in sync-files.ts, replacing only its managed and portable retry waits. This precision does not add a sixth production source file or change wire, ledger, ownership record, deadline, token or TLS contracts.
+
+Compatibility must be explicit
+
+Calls with no signal retain their existing timer behavior, deadline error, ownership work and cleanup. The ordinary portable catalog registration passes undefined and is unaffected. Calls cancelled at checkAcquisition also retain the existing exact signal.reason behavior.
+
+For EXISTING calls which supply a signal and cancel during an actual retry delay, the returned pure-cancellation error changes from Node's AbortError wrapper to signal.reason. This affects both managed and portable mode and can change name/code/message/cause/identity observed by a caller. It makes retry cancellation consistent with checkpoint cancellation but is an intentional compatibility change, not a claim of identical error shape. If caller.reason is itself an aggregate or a non-Error value, its exact value is preserved; the new watcher uses its own unique Error reason.
+
+Actual existing signalled production path inspected: sync-worker-records.ts:130-131 acquireWorkerExclusion forwards its signal to acquireSyncOwnership; sync-worker-client.ts:139 supplies options.signal during ensureOwnedSyncWorker. The inspected worker client/records/worker/CLI code contains no AbortError-name or ABORT_ERR-code dispatch that must be changed for this normalization. That bounded source audit does not promise every external future consumer is compatible. Tests/helpers also pass signals, including sync-ownership-fault-child.ts:111 and the guarded-substitution ownership regression. Their cancellation assertions must retain meaningful behavior; no assertion is weakened here and none was run. The gate must acknowledge this retry-only compatibility change rather than hide it in an implementation detail.
+
+An opt-in acquisition flag or private caller-brand registry could avoid changing existing signalled consumers, but would enlarge the public options/cancellation policy or add cross-module state solely for error spelling. I recommend the small consistent leaf normalization with the compatibility change recorded. Do not quietly add such an option or brand as a writer convenience.
+
+Cleanup and compound-error ordering
+
+Managed mode: the normalized private stop escapes the timer helper into acquireSyncOwnership's EXISTING outer catch. That catch still owns candidate/canonical inspection, inode checks, owned-name removal, required flushes and held/parent handle cleanup. It must await all those operations. Successful pure-stop cleanup rethrows the original exact stop object. A cleanup/flush/close failure instead produces the existing AggregateError with the stop and the additional failure(s). The watcher must not ignore that aggregate, even if one cause is its private stop or the signal is aborted.
+
+Portable mode at its retry wait: exclusive open already returned EEXIST, so there is no newly acquired portable file from that iteration. reclaimDeadLock has completed before entering the helper; its failures are not normalized. If portable creation succeeds and cancellation hits its later checkAcquisition instead, the existing nested finishLockOperation still validates/removes only its owned created file and closes its handle before propagating the stop or an operation-plus-cleanup aggregate. The helper does not move or replace that cleanup.
+
+The proposed withStoreLock same-process queue wait can reject its own optional-signal wait directly with signal.reason. That operation does not use Node's timer AbortError wrapper; do not introduce a broad normalization catch around it. It still removes its abort listener/timer and preserves queue ordering. Once acquisition has started, there must be no race which returns merely on abort while the original acquisition continues creating or cleaning a candidate.
+
+Acquisition-success-then-close race
+
+The ownership handoff must remain under finishLockOperation. The intended withProcessLock placement is:
+
+const ownership = await acquireSyncOwnership(path.join(directory, "mutation.lock"), deadline, signal);
+return finishLockOperation(async () => {
+  checkAcquisition(deadline, signal);
+  return await operation();
+}, () => ownership.release());
+
+Do NOT put the new signal check between the successful acquire await and entry into finishLockOperation. A stop at that unprotected handoff would throw while owning a real lock and bypass its release.
+
+If close wins after acquire returned but before protected work starts, the check throws the exact private stop INSIDE the protected operation and release is awaited. If release fails, the existing aggregate contains both stop and release failure. If close wins after protected work has begun, the already-admitted operation and release still settle normally or fail under their existing rules. A signal flag alone does not establish completion, does not retroactively cancel successful work, and does not authorize dropping the ownership object. close's cached promise joins that full result.
+
+Watcher classification remains as already proposed
+
+At the watcher catch, the only benign-close test is error === privateWatcherStop. The timer helper makes that identity possible after successful retry-cancellation cleanup. All other errors follow today's observed public abort path. In particular, an AggregateError containing the private stop is still a real observed failure, never benign private cancellation. This addendum does not promote watcher errors into new close rejections or erase the preceding design's explicit generic-abort/raw-error visibility limitation. Stronger propagation remains a separately gated error-policy decision.
+
+Registry retention, iteration and admission
+
+Retaining an entry until the admitted watcher settles does not itself create an abort loop. invalidateAttempts iterates the current Set and calls controller.abort. An already-aborted controller emits no second abort notification. Retention therefore means a later fence sees a draining attempt; it does not cause repeated synchronous observer dispatch for that controller. Ordinary close only cancels the PRIVATE watcher controller, so it must not public-abort itself to manufacture a removal event.
+
+The existing public abort listeners perform synchronous cancellation/response destruction; they can invoke close reentrantly. Promise-based join completion and registry removal happen later. JavaScript Set iteration is live, but removing a current entry is safe, and proposed close must not delete/re-add an entry as it progresses. No new loop, new periodic invalidation or self-reinserted entry is needed.
+
+Every actual openRouteAttempt reaches asynchronous store inspection/lock waiting before its startCommunication callback registers a new entry. An abort listener calling that public method does not synchronously append an endless chain of entries during the current invalidateAttempts loop. There is no need to replace the loop with a new registry framework or change its filtering. This is an audit of the current production path, not a promise about arbitrary future code which might mutate a private Set directly.
+
+Delayed removal must delete only this exact entry, then examine the CURRENT per-home Set in one synchronous cleanup step. Fetch the Set after the join; do not cache an old Set before await and later unconditionally delete the home key merely because the old Set is empty. The existing get/delete/size logic has no await between those actions. An equally explicit implementation may check that the map still names the same Set before deleting its empty home key. Other live/new entries must survive. Concurrent close calls share one cleanup, so there is no second delayed unregister deleting a successor's container.
+
+There IS a separate existing new-admission race: quiesceRoute aborts currently registered entries once and then repeatedly checks the Set. It is not an admission fence. A new matching entry registered after that abort batch can be observed by a later check without having received that particular abort, causing a bounded wait/failure; an attempt admitted after the final empty check can start after quiesce returns. Retention does not create this property and does not solve it. Do not advertise quiesce as permanent exclusion or erase a draining entry to make it return.
+
+Actual CLI mapping removal first persists revokeRoute, then asks the worker to quiesce that route, so the route fence, not an empty registry, rejects new stale admission. CLI pause first persists retryPaused, then quiesces local worker work; the command explicitly permits incoming pushes to continue. Worker/global quiesce therefore also does not promise all future inbound activity has stopped. Standalone quiesce tests with an active route must keep their producer/admission scope explicit. A successful store-removal claim still requires all relevant admission to be closed by its owner. No new admission-fence scope is proposed by this precision addendum.
+
+Stable close promise must precede abort notification
+
+Required synchronous first-close order is:
+
+1. Return the existing cached promise if one exists.
+2. Mark watcher admission closed and clear its timer.
+3. Capture its already-admitted, already-observed check promise and CREATE/CACHE the single drainer promise that will join it and then unregister.
+4. Only then call the private watcher controller's abort(privateWatcherStop).
+5. Return the cached drainer.
+
+The drainer can be scheduled from the captured promise; its asynchronous continuation cannot run until this synchronous segment yields. Cache it BEFORE abort, because abort event delivery is synchronous and can reenter close directly or through a test/native adapter. A reentrant invocation must receive the very same promise and must not create a second cleanup, restart a watcher or observe an undefined in-progress result. Do not use an async close wrapper, and do not assign closing only after abort returns. Capture the full observed producer, not just a reference which a cancellation callback might clear before it is captured.
+
+Parent listener and registry removal remain AFTER that joined producer settles. Cancellation or another route fence during the drain must still reach the public attempt. Existing self-await restrictions remain: the producer must not await its own close, and a caller should initiate close but await it outside a protected callback whose release is needed for the producer to finish. Queue cancellation removes ordinary not-yet-acquired checks from that dependency; it is not a universal proof that native I/O or self-await can be interrupted.
+
+Negative and positive controls for the author, not run here
+
+- Pure timer stop in managed contention: retain a genuine separate owner, observe the real contender's own completed candidate and real native retry wait, close/abort with the private reason, then require exact reason identity only after its candidate, held descriptors and parent cleanup settle. The unrelated canonical owner stays byte/inode-identical and unsignalled. Public watcher signal stays un-aborted for this normal close. Matching no-stop/deadline control retains existing owner and deadline behavior.
+- Pure timer stop in portable contention: retain a genuine portable owner, hit the real retry wait, cancel, and require exact reason identity with no owned-file acquisition and no foreign name removal. Calls with undefined signal retain their existing deadline and ordinary success behavior. This validates the recorded compatibility choice for portable signal callers, not a newly imposed portable POSIX flush requirement.
+- Unrelated AbortError at the timer seam: mismatch the direct cause or code/name while this signal is aborted; require the exact original rejection object. A real non-abort native timer failure or controlled one-shot error remains original. No production error injection option is introduced.
+- I/O outside the timer: make a genuine selected candidate/open/link/reclaim/flush/close operation reject while the signal is also aborted. Require the exact storage failure/aggregate through the original acquisition cleanup. Even an AbortError-shaped rejection with this reason as cause must not be normalized when it came from one of those outside awaits. Distinguish this actual source seam from a forged native-timer wrapper at the timer seam.
+- Compound cancellation plus cleanup failure: cancel during the actual retry wait, hold an owned candidate cleanup native flush/close, and prove no close join completion before it is released. When that cleanup rejects, require the existing aggregate's original stop and actual cleanup cause(s), correct retained namespace evidence and public watcher abort classification. Never pass by searching for one nested stop and discarding the remaining causes.
+- Acquired-before-close: let acquire return a real ownership handle, then close before the new protected check runs. Require no protected callback, actual owned release/flush/handle disposal before close settlement, and exact stop identity on successful cleanup. Separate release-failure control retains the stop-plus-release aggregate and safe names. A close after protected work has begun joins that work and real release; no early-return race is accepted.
+- Reentrant/concurrent close: an abort notification immediately calls close again. Require strict promise identity, one private cancellation, one unregister and no new interval/check. Delay the actual producer release, prove both close observations follow its completion, and preserve another independently opened live entry in the same home's Set when the old entry unregisters.
+- Registry/fence controls: invalidate an already-aborted draining entry repeatedly without duplicate abort notifications or reinsertion; verify other entries are visited. A true producer held beyond the existing quiesce bound must cause honest failure with its entry still retained. A separately admitted active-route attempt is not evidence of a new permanent exclusion promise; mapping-revoked admission must still fail under the persisted route fence. No deadline increase or natural polling/stress loop is proposed.
+
+All these are additions to the preceding real-producer/clock/security/late-pin/R13 plan. No runtime outcome, compatibility pass, test count or new review credit is claimed by this addendum. The original203 actor remains unknown; both server-handler drains were complete in the accepted mechanism trace. No conclusion about453 changes.
+
+Read-only proof and artifact scope
+
+initial-static-state.json and terminal-static-state.json retain individual current source hashes and both raw index hashes. All167 parent source files matched the established pin before and after this static continuation; the five proposed production files are separately listed in the final read scope. All886 inventoried original diagnosis artifacts and all six files in the previous design bundle were checked unchanged. The preceding audit/cache and absent-counter qualifications remain intact.
+
+One administrative rg read had an absent shell glob; its exact stderr and corrected read qualification are preserved in administrative-read-error.txt. It performed no runtime or source action. No old artifact was overwritten. Only this new private addendum bundle was written. Parent alone freezes and implements the complete five-file gate, performs runtime/checks and obtains the required reviews. No permission question, PR, commit, deployment, Fleet/native/physical job or new QA SHA is produced here.

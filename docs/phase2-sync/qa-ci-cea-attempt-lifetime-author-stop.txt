@@ -1,0 +1,181 @@
+SOURCE-AUTHOR TERMINAL, SAME203. runtimeReleased=true. VALIDATION STOPPED, NOT AN ACCEPTED FIX OR QA HANDOFF.
+
+Both exact-runtime typechecks/builds passed, and all25 dedicated lifetime regressions passed on BOTH Node20.20.2 and Node24.21.0. The first18-file affected invocation, on Node20, failed1 of463cases:461pass/1fail/1skip. Per the explicit gate I stopped, performed only resource cleanup/restoration, and did not run affected24, rerun tests, retune instrumentation or edit frozen source after the failure. The original full combined check and two new parent reviews remain required.
+
+The failure is real HTTPS activation times out with retained authority, TAP344, hook location compiled sync-shutdown-ingestion.test.js:61:9. Native exit1, duration4353.083521ms, testCodeFailure/ERR_TEST_FAILURE, error Timed out waiting for real admitted mutation seam. Stack points to waitUntil in sync-worker-fault-fixtures.js:47 and this test at compiled line203. Its exact missed predicate is await waitUntil("real admitted mutation seam", async () => hits, value => value === 1, 4000). The subsequent assert.equal(hits,1) and worker.close timeout/retained-authority assertions were not reached in that failed case. The receipt does not retain the counter's value, so zero hits, multiple hits or another missed observation are not distinguished. No generic load explanation, production cause or fixture cause is assigned. Do not count this case as demonstrated activation shutdown behavior. The original failure block is retained verbatim in affected20-original-failure-blocks.txt.
+
+The one exclusion is the existing actual pinned old viewer enrollment guard. Its test requires HTML_INBOX_BASELINE_CLI with an untouched compiled b843e126 CLI; that external artifact was not supplied to the private allowlisted environment. Its original TAP skip text is retained. No assertion or test source was weakened to create this exclusion. It is not a passing case or a hosted/native acceptance claim.
+
+Source preparation followed the authoritative gate at saved authoritative-gate.md, SHA6370313e395b669619f111bc376060b2ab63be8a2e8c42a86d3782f9d7cda6c6. The parent167 b3fe50512a22f17215abe1dcb0dac403a7f428c58892b2c94ccf42f4b9bcd82b baseline and every seven-owned-file baseline were individually verified before edits. Original child bytes/modes/absence were saved for all167 borrowed paths. Meaningful new tests/helper were saved in tests-first/ with a receipt before any owned production change. Subsequent static test refinements were preserved before the first compiler. No old-source compilation/runtime comparison of the new test file was claimed: it exercises the new fourth-signal interface. The already-recorded original case203 controlled native red/control remains the accepted old-bug proof, with historical actor unknown.
+
+After explicit parent runtime release, ONLY the two nonowned linked-cut dependencies were refreshed: sync-ownership-worker-child.ts and sync-ownership-worker.test.ts. The complete updated parent167 manifest is source-linked-cut167.sha256, SHA faff70c2f39c339078353a594300b98d2462dc04b50cbca49d00338afa2646c6. Their new individual hashes and original b3fe hashes are recorded in dependency-refresh.json, and both versions are retained. All seven owned baselines remained unchanged in the parent. The original b3fe baseline is not overwritten or mislabeled as current.
+
+The implementation is limited to five production files. sync-store.ts retains the full admitted watcher promise before its first store await, keeps the50ms unref interval and one-check guard, stops admission synchronously, caches one non-async close promise before private abort, and removes only its entry/parent listener after join. Watcher-only cancellation is passed through mutate into the optional fourth withStoreLock signal. Parent cancellation remains visible through the drain, while a normal private stop does not public-abort. Existing unknown/unsafe/fence/custody/ownership checks remain intact.
+
+sync-files.ts cancels genuine local queue waits without bypassing the previous holder, passes the signal into real native acquisition, and checks post-acquire cancellation INSIDE finishLockOperation so the acquired owner is released. Both retry delays use the private timer-only helper. Only a non-aggregate Error with native AbortError name, ABORT_ERR code, an aborted signal and direct cause exactly signal.reason is normalized to that reason. No filesystem, reclaim, acquire or release await is inside that helper try. Existing compound failures and namespace evidence remain intact. No new production export, stop class, brand registry, policy/schema or deadline was added.
+
+sync-client.ts, sync-reconciliation.ts and sync-http-server.ts await their real attempt close. Reconciliation checks both outer controller and attempt signal after close plus its final snapshot/count await; HTTP activeRequests decrements only after join. Original best-effort session completion precedes close. Detached read-only pins remain independent. Worker/publication/R13 final foreground normalization, actual receiver custody, original clock test logic, all wire/ledger/runtime/lock formats, credentials, grants and request/pass/default limits remain unchanged.
+
+Existing-test changes are only the shutdown-ingestion close mock awaiting its real close before the existing intentional fault, and the review-regression direct attempt using try/finally close before fixture teardown. Every54 and64 original assertion-bearing line respectively was preserved exactly after indentation normalization. New files are sync-attempt-lifetime.test.ts and the one permitted helper sync-attempt-lifetime-fixtures.ts. There are no other owned modifications or untracked source files.
+
+The source was frozen before any compiler or target execution. All169 source files are in prepared-source/, including the two new files and the refreshed dependencies. Manifest prepared-source169.sha256 aggregate3530f9442605fd0f38b64147477e4a6c84b63fab2ce3a10bf1d44b3e76bf41db. Parent-relative-final.patch is the authoritative nine-file patch against current parent source. Full-owned-versus-HEAD.patch additionally includes existing parent corrections retained inside those owned files; it is not the minimal integration delta. Earlier static-inspection/draft patch artifacts are preserved but the final frozen patch supersedes them for application. No source changed after source-freeze.json.
+
+Runtime used a new private project copied from the isolated checkout plus this full169 frozen view. No parent dist was borrowed. Frozen-lockfile/ignore-scripts/offline pnpm11.7.0 setup reused10packages and downloaded0 with private PM/dependency/cache/HOME/XDG/TMP/PATH. Exact Node20 and Node24 paths/hashes are in engines.json. Fresh typecheck24/build24/typecheck20/build20 each exited0. Both builds produced the same336 individual compiled files, compiled-after24.sha256 and compiled-after20.sha256, aggregate cd70359446495ce52f6740e7ab7da88d18201a345a2647513b63873fd4844a90. Those files remained byte-identical after targets. No rebuild happened while tests were active. Parent historical332 compiled aggregate636e remains historical and was never represented as this build.
+
+Every runtime command used shared flock -w45 -E75 at the specified diagnostic mutex, an own byte-identical copy of the established continuously reaping subreaper, and own logger Popen with explicit os.waitpid/status. No admission75 occurred. The passive child/listener observer passed syntax checks on both exact runtimes before targets. No natural rerun/stress/full-unit/root verify/cap or arbitrary extra test was run. The required affected list was one explicit18-file invocation on20; its planned24 companion was not dispatched after the failed command. All exact expanded argv, UTC, native exits/counts/exclusions/log/helper hashes are below and in all-command-summary.json.
+
+Dedicated actual-producer evidence is25/25 on each runtime, no skips. Both native-release join and matching release-first control passed their real flush/handle/order assertions. One real pre-enqueue producer and a genuine local queued producer retire without bypassing their unrelated holder; concurrent/reentrant close returns the same promise and an already-fired callback delivered after close admits no work. All three client/pass/HTTPS owners join their actual selected producer, cancellation during join and final snapshot wins status while real committed receiver bytes/receipt remain. The late-pin regression forces a real queued server watcher, retains its independent real pin/holder, and keeps existing1000ms server/600ms quiesce bounds. Managed/portable native retry wrappers yield exact stop identity, unrelated native abort/I/O/aggregate and filesystem abort-shaped controls preserve original objects, and a stop plus actual performed close rejection retains both compound causes and public abort classification. The native async_hooks acquisition-success handoff witnesses a real canonical file and prevents protected work while awaiting actual owner release. Revocation/pause/unknown/unsafe and retained registry/new-entry/listener cases passed.
+
+Those one-shot/native-handle conditions were runtime assertions in the unchanged frozen dedicated test source and the original TAP cases passed. No extra raw watcher-ID/inode diagnostic stream was fabricated; numeric witness values not printed by the tests are not claimed. The external queued-callback delivery is explicitly a test scheduler interception of an already-fired native callback, not a claim about every Node clearInterval implementation. Negative faults were one-shot controlled errors at real public/native seams, not fabricated positive custody, stats, owners or results.
+
+All25 original clock-skew cases passed by exact original TAP names inside the FAILED affected20 command, including the actual local-before-completion case and its independent AsyncLocalStorage server clocks, local elapsed/wall rollback and real TLS/custody/session checks. clock25-in-affected20.json retains the name-level extraction. Clock source was byte-identical to the parent baseline and was never edited. Node24's clock/affected suite was NOT run after the gate failure. The case453 dependency integration was exercised as part of the affected20 ownership-worker file; no original cause is reassigned and no independent case453 matrix was duplicated. Counts across runtimes/subsets and historical runs must not be summed as distinct acceptance coverage.
+
+Two explicit compatibility limits remain. Existing signalled acquire callers cancelled during retry waits now receive their exact signal.reason instead of the native timer wrapper, consistent with checkpoint cancellation; ordinary unsignalled/portable catalog behavior remains. Existing watcher failures other than the exact private stop are still observed and converted to the generic public abort signal. close joins that observed chain; it does not expose raw watcher storage failures or prove uncertain namespace cleanup succeeded. A stronger raw-error/fatal-worker policy remains outside scope. A read-only detached pin can still have its independent lock/handle lifetime; close is not whole-store exclusion. Quiesce is not a permanent admission fence, and uninterruptible native I/O can still cause honest existing-bound failure rather than false quiescence.
+
+Cleanup audit completed successfully after the failed target command. All2587 recorded known command/application/adopted PIDs were absent. Actual ChildProcess records contain2488 creations and2488 native exit events;2482 close callbacks were observed, with6 missing close-callback records listed in cleanup-audit-result.json. No missing native exit, no remaining copied-subreaper child and no extant known PID was substituted by a manufactured close event. The11 outer command receipts include explicit waitpid status; the failing affected20's copied subreaper reaped83adopted children and reported remaining[]. Sanitized fixture child environments sometimes omit the preload; original retained-child fixture assertions and copied-subreaper adoption records are distinct evidence, not invented descendant start identities.
+
+All429 exact observed loopback host/port pairs rebound and closed in the final audit; there were no excluded non-loopback observations. Exact endpoint/timestamp records and original fixture rebind diagnostics are retained in cleanup-audit-result.json. The failed activation test itself also reported2exact rebinds/intercepted handle disposal/synthetic root removal. Only own scoped resources were checked, not whole-host absence. Own synthetic store/TLS roots and credential/authority names were absent, and own environment/PM/dependency/cache/bin trees were removed. The known private Node compile cache was handled explicitly, avoiding the earlier inventory mistake. No real home/settings/service/VPN/network/security/credential change or inherited scratch deletion occurred. The parent-owned historical32-entry residue cleanup was not inspected or redone here.
+
+Only after all actors were dead were all160 NONOWNED borrowed child source paths restored to their saved original bytes/modes/absence, including the two dependency updates. The isolated checkout now retains exactly seven modified owned files and two new owned test files. The complete current169 prepared source and private fresh336 compiled files remain available in the bundle for later parent reapplication/inspection; the restored checkout deliberately no longer carries all borrowed current dependencies. Do not run it directly as a full current parent view without reapplying those dependencies under the next gate. Parent167 source pins remained current/unchanged by this child.
+
+Index qualification is material. Raw child index hash changed from9fc84a361f72b38312607f196c157c8eb53c79aeb9cba1846d8bc8edaadfb8f8 to fd0311bb21e311aecf5291b1acef69aaf6f114bb096f56ad24e6dd3962f92b30 during source/Git inspections. Initial hash/metadata were saved but the initial binary index copy was omitted. Every terminal staged path/object/mode/stage,339entries, equals HEAD and staged diff is empty; no direct index write or blind restoration was performed. Git cache refresh is plausible but not directly traced, so raw-byte preservation and a metadata-only byte difference are NOT claimed. The final raw index, index-qualification.json and both metadata observations are retained. This corrects the broader wording in the restoration-state record; the separate index qualification is authoritative.
+
+No commits, pushes, PR actions, reviews, deployment, native/Fleet/physical job or QA SHA were produced. The runtime mutex has actually returned from every owned command and runtimeReleased=true. This is a stopped author handback with a frozen tested source, not final acceptance. Parent's next concrete discriminator is the missed activation hits===1 counter plus actual route/request state at that unchanged bound; no further instrumentation or fix was applied here. Parent owns that new gate, remaining Node24 affected validation, integration/full combined checks and TWO NEW full-rubric reviews.
+
+FULL ORIGINAL FAILURE BLOCK
+# Subtest: real HTTPS activation times out with retained authority
+not ok 344 - real HTTPS activation times out with retained authority
+  ---
+  duration_ms: 4353.083521
+  location: '/tmp/qa-case203-source-preparation-9zaoemx8/runtime/project/packages/cli/dist/sync-shutdown-ingestion.test.js:61:9'
+  failureType: 'testCodeFailure'
+  error: 'Timed out waiting for real admitted mutation seam'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    waitUntil (/tmp/qa-case203-source-preparation-9zaoemx8/runtime/project/packages/cli/dist/sync-worker-fault-fixtures.js:47:11)
+    async TestContext.<anonymous> (/tmp/qa-case203-source-preparation-9zaoemx8/runtime/project/packages/cli/dist/sync-shutdown-ingestion.test.js:203:13)
+    async Test.run (node:internal/test_runner/test:797:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# 2 exact ports rebound; intercepted handles disposed; synthetic root removed
+
+EXACT RUNTIME COMMAND RECEIPTS
+
+setup
+UTC 2026-10-25T06:06:07.494484+00:00 -> 2026-10-25T06:06:09.245440+00:00; elapsed 1.751335248351097s; nativeExit 0; waitpid PID 358363 status 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/run-subreaper.py", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/bin/node24", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/deps/pnpm/bin/pnpm.cjs", "install", "--frozen-lockfile", "--ignore-scripts", "--offline", "--store-dir", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/cache/pnpm-store"]
+counts {}
+exclusions []
+logSHA256 ce600ad0000a170591eab9c3a2c50b661916d99d8caa22f11d17ee4854d666e3
+helperSHA256 {"observe.cjs": "0bbe42edd820908784cb6eb05a9340774d08b1ee3e1e47c622fe09ce6ac10c2c", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "a48a902a990f780dbaa7e3d35317e27206ef74d20486757446aeaf2151461a2d"}
+
+observe-syntax20
+UTC 2026-10-25T06:06:33.443848+00:00 -> 2026-10-25T06:06:33.520375+00:00; elapsed 0.07693526055663824s; nativeExit 0; waitpid PID 358560 status 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/run-subreaper.py", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/bin/node20", "--check", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/observe.cjs"]
+counts {}
+exclusions []
+logSHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+helperSHA256 {"observe.cjs": "0bbe42edd820908784cb6eb05a9340774d08b1ee3e1e47c622fe09ce6ac10c2c", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "a48a902a990f780dbaa7e3d35317e27206ef74d20486757446aeaf2151461a2d"}
+
+observe-syntax24
+UTC 2026-10-25T06:06:33.612659+00:00 -> 2026-10-25T06:06:33.760922+00:00; elapsed 0.1486454550176859s; nativeExit 0; waitpid PID 358571 status 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/run-subreaper.py", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/bin/node24", "--check", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/observe.cjs"]
+counts {}
+exclusions []
+logSHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+helperSHA256 {"observe.cjs": "0bbe42edd820908784cb6eb05a9340774d08b1ee3e1e47c622fe09ce6ac10c2c", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "a48a902a990f780dbaa7e3d35317e27206ef74d20486757446aeaf2151461a2d"}
+
+typecheck24
+UTC 2026-10-25T06:06:39.302769+00:00 -> 2026-10-25T06:06:39.651059+00:00; elapsed 0.34870018623769283s; nativeExit 0; waitpid PID 358600 status 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/run-subreaper.py", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/bin/node24", "node_modules/tsc-rs/bin/tsc-rs", "-p", "packages/cli/tsconfig.json", "--noEmit"]
+counts {}
+exclusions []
+logSHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+helperSHA256 {"observe.cjs": "0bbe42edd820908784cb6eb05a9340774d08b1ee3e1e47c622fe09ce6ac10c2c", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "a48a902a990f780dbaa7e3d35317e27206ef74d20486757446aeaf2151461a2d"}
+
+build24
+UTC 2026-10-25T06:06:47.964744+00:00 -> 2026-10-25T06:06:48.469345+00:00; elapsed 0.504958744160831s; nativeExit 0; waitpid PID 358633 status 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/run-subreaper.py", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/bin/node24", "node_modules/tsc-rs/bin/tsc-rs", "-p", "packages/cli/tsconfig.json"]
+counts {}
+exclusions []
+logSHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+helperSHA256 {"observe.cjs": "0bbe42edd820908784cb6eb05a9340774d08b1ee3e1e47c622fe09ce6ac10c2c", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "a48a902a990f780dbaa7e3d35317e27206ef74d20486757446aeaf2151461a2d"}
+
+typecheck20
+UTC 2026-10-25T06:06:48.632515+00:00 -> 2026-10-25T06:06:48.992228+00:00; elapsed 0.360092805698514s; nativeExit 0; waitpid PID 358688 status 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/run-subreaper.py", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/bin/node20", "node_modules/tsc-rs/bin/tsc-rs", "-p", "packages/cli/tsconfig.json", "--noEmit"]
+counts {}
+exclusions []
+logSHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+helperSHA256 {"observe.cjs": "0bbe42edd820908784cb6eb05a9340774d08b1ee3e1e47c622fe09ce6ac10c2c", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "a48a902a990f780dbaa7e3d35317e27206ef74d20486757446aeaf2151461a2d"}
+
+build20
+UTC 2026-10-25T06:07:03.997730+00:00 -> 2026-10-25T06:07:04.506378+00:00; elapsed 0.5090224398300052s; nativeExit 0; waitpid PID 358964 status 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/run-subreaper.py", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/bin/node20", "node_modules/tsc-rs/bin/tsc-rs", "-p", "packages/cli/tsconfig.json"]
+counts {}
+exclusions []
+logSHA256 c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+helperSHA256 {"observe.cjs": "0bbe42edd820908784cb6eb05a9340774d08b1ee3e1e47c622fe09ce6ac10c2c", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "a48a902a990f780dbaa7e3d35317e27206ef74d20486757446aeaf2151461a2d"}
+
+dedicated20
+UTC 2026-10-25T06:07:19.123184+00:00 -> 2026-10-25T06:07:26.696559+00:00; elapsed 7.573825201950967s; nativeExit 0; waitpid PID 359034 status 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/run-subreaper.py", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/bin/node20", "--require", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/observe.cjs", "--test", "--test-reporter=tap", "packages/cli/dist/sync-attempt-lifetime.test.js"]
+counts {"tests": 25, "suites": 0, "pass": 25, "fail": 0, "cancelled": 0, "skipped": 0, "todo": 0}
+exclusions []
+logSHA256 b71e970319695f714668aeb5b747d59b0c484e5adabaea710766dc50a5929d02
+helperSHA256 {"observe.cjs": "0bbe42edd820908784cb6eb05a9340774d08b1ee3e1e47c622fe09ce6ac10c2c", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "a48a902a990f780dbaa7e3d35317e27206ef74d20486757446aeaf2151461a2d"}
+
+dedicated24
+UTC 2026-10-25T06:07:47.334915+00:00 -> 2026-10-25T06:07:53.096992+00:00; elapsed 5.762554220855236s; nativeExit 0; waitpid PID 359971 status 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/run-subreaper.py", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/bin/node24", "--require", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/observe.cjs", "--test", "--test-reporter=tap", "packages/cli/dist/sync-attempt-lifetime.test.js"]
+counts {"tests": 25, "suites": 0, "pass": 25, "fail": 0, "cancelled": 0, "skipped": 0, "todo": 0}
+exclusions []
+logSHA256 64fb63d9c7a8a9c5986ea473e1102d647b47798f7831f221e427d246f0daf38f
+helperSHA256 {"observe.cjs": "0bbe42edd820908784cb6eb05a9340774d08b1ee3e1e47c622fe09ce6ac10c2c", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "a48a902a990f780dbaa7e3d35317e27206ef74d20486757446aeaf2151461a2d"}
+
+affected20
+UTC 2026-10-25T06:08:07.787254+00:00 -> 2026-10-25T06:12:04.776853+00:00; elapsed 236.9920495953411s; nativeExit 1; waitpid PID 360183 status 256; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/run-subreaper.py", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/bin/node20", "--require", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/observe.cjs", "--test", "--test-reporter=tap", "packages/cli/dist/sync-clock-skew.test.js", "packages/cli/dist/sync-acquisition-deadline.test.js", "packages/cli/dist/sync-preaborted-reconciliation.test.js", "packages/cli/dist/sync-transport-lifecycle.test.js", "packages/cli/dist/sync-revocation-order.test.js", "packages/cli/dist/sync-shutdown-ingestion.test.js", "packages/cli/dist/sync-shutdown-ownership.test.js", "packages/cli/dist/sync-ownership-publication.test.js", "packages/cli/dist/sync-portable-acquisition.test.js", "packages/cli/dist/sync-ownership-worker.test.js", "packages/cli/dist/sync-worker-fatal.test.js", "packages/cli/dist/sync-worker-faults.test.js", "packages/cli/dist/sync-finalization-lifecycle.test.js", "packages/cli/dist/sync-publication.test.js", "packages/cli/dist/sync-publication-inspection.test.js", "packages/cli/dist/sync-review-regressions.test.js", "packages/cli/dist/sync-store.test.js", "packages/cli/dist/sync-protocol.test.js"]
+counts {"tests": 463, "suites": 0, "pass": 461, "fail": 1, "cancelled": 0, "skipped": 1, "todo": 0}
+exclusions ["ok 454 - actual pinned old viewer blocks enrollment before migration and before old control probe # SKIP An untouched compiled b843e126 CLI must be supplied through HTML_INBOX_BASELINE_CLI"]
+logSHA256 1ccfa76a808764b5c12fa0c134899e84dad2256407a8c51083e351e03f75fbfe
+helperSHA256 {"observe.cjs": "0bbe42edd820908784cb6eb05a9340774d08b1ee3e1e47c622fe09ce6ac10c2c", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "a48a902a990f780dbaa7e3d35317e27206ef74d20486757446aeaf2151461a2d"}
+
+cleanup-audit
+UTC 2026-10-25T06:13:54.381001+00:00 -> 2026-10-25T06:13:54.623704+00:00; elapsed 0.24309733044356108s; nativeExit 0; waitpid PID 375820 status 0; admissionOnly False
+argv ["flock", "-w45", "-E75", "/tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock", "/usr/bin/python3", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/run-subreaper.py", "/usr/bin/python3", "/tmp/qa-case203-source-preparation-9zaoemx8/runtime/cleanup-audit.py"]
+counts {}
+exclusions []
+logSHA256 80e23bb1ea0c0a28f25c9af0150d0f6f601ad61ae9617425d96a6476a6018754
+helperSHA256 {"observe.cjs": "0bbe42edd820908784cb6eb05a9340774d08b1ee3e1e47c622fe09ce6ac10c2c", "run-subreaper.py": "e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72", "run.py": "a48a902a990f780dbaa7e3d35317e27206ef74d20486757446aeaf2151461a2d"}
+
+FROZEN OWNED FILE HASHES
+6e380dd58fd67b2964c7ebc25f35fa48d340bfcfff66f8984a487696f1da4760  packages/cli/src/sync-attempt-lifetime-fixtures.ts
+5f17fa6ec98ea86f654342a11626106c80b9545dd19ad2ae52754981a87e0ccb  packages/cli/src/sync-attempt-lifetime.test.ts
+1d3ec68f1ed2701a06cd6db7538a3984cb9a2069626c2f49a96fa8c8a57dc460  packages/cli/src/sync-client.ts
+bec75756592e54619ded180de217dbf68efdba7e0121bc8b77660ec886dd1024  packages/cli/src/sync-files.ts
+aae2456047b8b5476949fe144f3839fc4d23e3a4f1c023cb41b576038519c515  packages/cli/src/sync-http-server.ts
+388b9775d794076234e41201166b4b4f74afbaddf97f36de8b98e2b65830179f  packages/cli/src/sync-reconciliation.ts
+94fb92322c164d516d2a1d8f7cf84a71f744089bbd4146ae4b830c4d45de93f6  packages/cli/src/sync-review-regressions.test.ts
+b2290d9bd1ad30d9545c8fb5f5a7df0b6d3d578f528d2be5195c5b1f988bfd3c  packages/cli/src/sync-shutdown-ingestion.test.ts
+5dbfd00a4b56d0f54e1811697c08e5f93da353970705587e99ef5d784ab27f11  packages/cli/src/sync-store.ts
+
+PATCH HASHES
+parent-relative-final.patch afa40d883537beecf5aa2494061145e894db90641d099df5b0c89bfde0ae1c9d
+full-owned-versus-HEAD.patch c1c82adcbba2dd58be5255d5fba1d49fd1b2aeb8b7220a3242b1b7b25ea08d4e
+
+OTHER HELPER HASHES
+cleanup-audit.py bbd03926e9251f9aebbaec67dcea09dce4beb9a72ebf52ee21608117f93bba89
+
+OWNED CHECKOUT STATUS
+ M packages/cli/src/sync-client.ts
+ M packages/cli/src/sync-files.ts
+ M packages/cli/src/sync-http-server.ts
+ M packages/cli/src/sync-reconciliation.ts
+ M packages/cli/src/sync-review-regressions.test.ts
+ M packages/cli/src/sync-shutdown-ingestion.test.ts
+ M packages/cli/src/sync-store.ts
+?? packages/cli/src/sync-attempt-lifetime-fixtures.ts
+?? packages/cli/src/sync-attempt-lifetime.test.ts
+
+Administrative initial copying, static hashing/diff inspection and final restoration used filesystem/Python/Git tool calls without application runtime. Their source snapshots/static receipts remain; no compiler/test credit or inferred native timestamps are fabricated for those actions. Runtime command timestamps surround actual flock/subreaper invocation.

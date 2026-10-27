@@ -1,0 +1,19 @@
+# Lock compound-error preservation correction gate
+
+The coordinator's actual managed acquisition probe rejects candidate write with EIO and then rejects its first close. The close helper's second attempt closes the handle. Acquisition fails and leaves no canonical lock or candidate, but the returned failure contains only the close rejection. The original write error is lost through the nested finally. The expected-correct probe exits 1 in 0.126 seconds with exactly one write fault, two close calls and zero owned children remaining.
+
+This is a narrow failure-reporting gap against the frozen ownership contract's requirement to retain original causes and namespace uncertainty. It does not show unauthorized acquisition, foreign unlink or data loss. Successful cleanup does not excuse dropping the original failure.
+
+## Source ownership and unchanged contracts
+
+Continue the original atomic-ownership writer in its existing isolated worktree. Production scope remains sync-files.ts; regression scope is its owned sync-ownership-publication.test.ts and only an existing owned ownership fixture if a concrete test requires it. Parent retains documentation and integration. The fatal/credential writer operates separately on sync-worker.ts and sync-cli.ts, so their production ownership is disjoint.
+
+Preserve public interfaces, owner schema, candidate/install/release/reaper authority, the exact file-then-directory flush sequence, general private-file guards, process identity rules and portable catalog compatibility. No new platform gate, durability demand on ordinary catalog callers, namespace cleanup authority, retry policy, age-based recovery or force-unlink is authorized.
+
+When both an operation and its required handle cleanup fail, retain both original errors and any namespace uncertainty. Close-only failures must still reject acquisition or an explicit release. Required cleanup attempts must not be skipped. Inspect the nested managed ownership paths for the same demonstrated finally masking pattern, including candidate completion, checked directory setup and checked snapshot/pair validation. A small private helper is permitted only where actual repeated operation/cleanup call sites justify it; no public generic error framework or unrelated storage refactor is authorized. readSyncOwnership's public unknown/null behavior remains.
+
+Add a dedicated expected-correct regression for the exact candidate write plus first-close rejection. It must prove one write hit, the actual second close attempt, no acquisition/protected callback, original EIO and close errors both retained, no leaked handle and only proven-owned cleanup. Include analogous actual nested-path controls where correction is necessary, and preserve existing performed-then-rejected link/unlink/close and reaper compound-error tests. Failure of cleanup must retain evidence rather than removing an uncertain name speculatively.
+
+The coordinator's red probe is /tmp/html-inbox-qa-history-amcemjlx/lock-write-close-probe.cjs and receipt qa-lock-write-close-compound-red. Its cleanup removes only its own mkdtemp root and intercepts only its own candidate. Run the same expected-correct probe against the changed module plus affected owned regression suites on Node 20 and 24. Do not weaken any existing assertion or deadline. Preserve all failed receipts and record exact final source bytes, commands, exits, counts, log hashes and cleanup.
+
+Only local synthetic fixtures and temporary credentials are authorized. No live services, real inboxes, remote hosts, security/network settings, persistent grants, commits, pushes, merges or deployment. Return SOURCE WRITING TERMINAL with a complete tracked/untracked owned diff. Root will integrate the correction with the independent worker changes, run complete broad checks and obtain both fresh whole-correction reviews before publishing a physical-retest SHA.

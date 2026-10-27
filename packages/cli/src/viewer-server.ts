@@ -1,3 +1,5 @@
+import { assertManagedLifecycle } from "./sync-lifecycle";
+import { currentViewerLocalOwner, verifyViewerLocalOwner } from "./viewer-ownership";
 import { setTimeout as delay } from "node:timers/promises";
 import { randomUUID } from "node:crypto";
 import { realpath, rm } from "node:fs/promises";
@@ -9,7 +11,7 @@ import { ManagedStorageError } from "./private-storage";
 import { startViewerHttpServer, type ViewerHttpServer } from "./viewer-http-server";
 import { resolveViewerNetworkConfig, type ViewerNetworkOptions } from "./viewer-network";
 import { cleanupTailscale, prepareTailscale, startTailscale, type PreparedTailscale } from "./viewer-tailscale";
-import { getInboxInstanceId, hasErrorCode, readSavedViewerConfiguration, readViewerRecord, removeViewerRecord, saveViewerConfiguration, writeViewerRecord, type ViewerRecord } from "./viewer-records";
+import { getInboxInstanceId, hasErrorCode, readSavedViewerConfiguration, readViewerRecord, removeViewerRecord, saveViewerConfiguration, ViewerRecordFormatError, writeViewerRecord, type ViewerRecord } from "./viewer-records";
 import { acquireViewerStartLock, hasInheritedViewerStartLock, isProcessAlive } from "./viewer-start-lock";
 import { spawnDetachedViewer } from "./viewer-process";
 import { getControlHealth, getViewerStatus, isPortListening, resolveViewerConfiguration, VIEWER_PROTOCOL_VERSION, type ViewerStatus } from "./viewer-status";
@@ -20,11 +22,14 @@ export async function ensureViewer(
   home: string,
   input?: number | ViewerNetworkOptions,
   inboxName?: string,
+  options: { deadlineAt?: number; signal?: AbortSignal } = {},
 ): Promise<ViewerStatus> {
-  const lock = await acquireViewerStartLock(home);
+  options.signal?.throwIfAborted();
+  await assertManagedLifecycle(home);
+  const lock = await acquireViewerStartLock(home, options.deadlineAt, options.signal);
   try {
     const config = await resolveViewerConfiguration(home, input);
-    const existing = await getViewerStatus(home, undefined, { refreshLanUrls: false });
+    const existing = await getViewerStatus(home, undefined, { refreshLanUrls: false, ...options, probeMissingRecord: false });
     if (existing.state === "running") {
       const record = await readViewerRecord(home);
       if (!record || !existing.pid) {
@@ -35,22 +40,28 @@ export async function ensureViewer(
         throw new Error(`Viewer is already running with ${record.config.exposure} exposure on ${record.config.host}:${record.config.port}; stop it before changing configuration`);
       }
 
-      return getViewerStatus(home);
+      return getViewerStatus(home, undefined, options);
     }
 
     await assertCanReplaceViewerRecord(home, existing);
-    const status = await getViewerStatus(home, config.port, { refreshLanUrls: false });
+    const status = await getViewerStatus(home, config.port, { refreshLanUrls: false, ...options });
     assertCanStart(status);
-    await clearPreviousTailscaleRoute(home);
+    await clearPreviousTailscaleRoute(home, undefined, options);
     await getInboxInstanceId(home);
     await rm(path.join(home, "viewer.json"), { force: true });
+
+    options.signal?.throwIfAborted();
+    if (options.deadlineAt !== undefined && Date.now() + 200 >= options.deadlineAt) {
+      throw new Error("Viewer startup deadline leaves insufficient readiness/cleanup budget");
+    }
 
     const saved = await readSavedViewerConfiguration(home);
     const detached = await spawnDetachedViewer(home, config, lock.token, saved?.tailscaleExecutable, inboxName);
     try {
       const startupTimeout = config.exposure === "tailscale" ? 45_000 : 10_000;
-      const deadline = Date.now() + startupTimeout;
+      const deadline = Math.min(Date.now() + startupTimeout, options.deadlineAt ?? Infinity);
       while (Date.now() < deadline) {
+        options.signal?.throwIfAborted();
         const failure = detached.getFailure();
         if (failure) {
           throw new Error(`Viewer child could not start: ${failure.message}`);
@@ -60,7 +71,7 @@ export async function ensureViewer(
           throw new Error(`Viewer child exited before readiness (${detached.child.signalCode ?? detached.child.exitCode})`);
         }
 
-        const ready = await getViewerStatus(home, config.port);
+        const ready = await getViewerStatus(home, config.port, options);
         if (ready.state === "running" && ready.pid === detached.child.pid) {
           return ready;
         }
@@ -69,21 +80,25 @@ export async function ensureViewer(
           throw new Error("Viewer child uses an incompatible protocol");
         }
 
-        await delay(50);
+        await delay(Math.min(50, Math.max(1, deadline - Date.now())), undefined, { signal: options.signal });
       }
 
       throw new Error(`Viewer child did not become ready within ${startupTimeout / 1000} seconds`);
     } catch (error) {
       try {
-        await detached.close();
+        await detached.close(options.signal?.aborted || options.deadlineAt !== undefined && Date.now() + 200 >= options.deadlineAt);
       } catch (terminationError) {
         const message = error instanceof Error ? error.message : String(error);
         throw new AggregateError([error, terminationError], `${message}. Failed viewer child process tree could not be verified as stopped; ownership journal retained. Verify command descendants have exited before retrying viewer stop. Private diagnostics: ${detached.logPath}`);
       }
 
+      if (options.signal?.aborted || options.deadlineAt !== undefined && Date.now() >= options.deadlineAt) {
+        throw new Error("Viewer foreground startup cancelled; saved publication is intact and any private exposure journal is retained for verified cleanup", { cause: error });
+      }
+
       try {
         // A failed child may journal a route before committing viewer.json.
-        await clearPreviousTailscaleRoute(home);
+        await clearPreviousTailscaleRoute(home, undefined, options);
         const record = await readViewerRecord(home).catch(() => null);
         if (record && record.pid === detached.child.pid) {
           await removeViewerRecord(home, record.processId);
@@ -101,6 +116,7 @@ export async function ensureViewer(
 }
 
 export async function stopViewer(home: string, port?: number): Promise<ViewerStatus> {
+  await assertManagedLifecycle(home);
   const lock = await acquireViewerStartLock(home);
   try {
     const status = await getViewerStatus(home, port, { refreshLanUrls: false });
@@ -131,6 +147,12 @@ export async function stopViewer(home: string, port?: number): Promise<ViewerSta
 
     if (!status.pid || !record) {
       throw new Error("Viewer is running but its process record is missing or stale");
+    }
+
+    if (await assertManagedLifecycle(home)) {
+      if (await verifyViewerLocalOwner(home, record) !== "live") {
+        throw new Error("Managed viewer process is no longer live; no signal sent");
+      }
     }
 
     // Recheck the private endpoint immediately before signalling a recorded PID.
@@ -178,6 +200,7 @@ export async function startViewer(
   input: number | ViewerNetworkOptions,
   inboxName?: string,
 ): Promise<http.Server> {
+  await assertManagedLifecycle(home);
   const inherited = await hasInheritedViewerStartLock(home);
   const lock = inherited ? null : await acquireViewerStartLock(home);
   try {
@@ -189,7 +212,9 @@ export async function startViewer(
     await assertCanReplaceViewerRecord(home, existing);
     const instanceId = await getInboxInstanceId(home);
     const processId = randomUUID();
-    const health = { instanceId, processId, protocolVersion: VIEWER_PROTOCOL_VERSION, pid: process.pid };
+    const localOwner = await currentViewerLocalOwner(home);
+    const health = { instanceId, processId, protocolVersion: VIEWER_PROTOCOL_VERSION, pid: process.pid,
+      capabilities: { managedLedgerSchemas: [1], dynamicFormatSwitch: true } };
     let reader: ViewerHttpServer | undefined;
     let prepared: PreparedTailscale | undefined;
     let startup: Promise<void> | undefined;
@@ -286,6 +311,7 @@ export async function startViewer(
 
       await writeViewerRecord(home, {
         ...health,
+        localOwner,
         config: reader.config,
         urls: reader.urls,
         controlUrl: reader.controlUrl,
@@ -365,24 +391,37 @@ async function assertCanReplaceViewerRecord(home: string, status: ViewerStatus):
     assertCanStart(status);
   }
 
-  if (status.state !== "conflict") {
+  if (status.state !== "conflict" && status.state !== "stopped") {
     return;
   }
 
-  const record = await readViewerRecord(home);
+  const managed = await assertManagedLifecycle(home);
+  const record = await readViewerRecord(home).catch((error: unknown) => {
+    if (!managed && status.state === "stopped" && error instanceof ViewerRecordFormatError) {
+      return null;
+    }
+
+    throw error;
+  });
+
   if (!record) {
     return;
   }
 
+  if (managed && await verifyViewerLocalOwner(home, record) === "dead") {
+    return;
+  }
+
+  // Closed listeners can still leave admitted mutations draining under this owner.
   const hasLiveProcess = isProcessAlive(record.pid) || (await getControlHealth(record.controlUrl)).state !== "unavailable";
   if (hasLiveProcess) {
     throw new Error(status.reason ?? "Existing viewer process record is unverified; stop that viewer before starting another");
   }
 }
 
-async function clearPreviousTailscaleRoute(home: string, owner?: { instanceId: string; processId: string }): Promise<void> {
+async function clearPreviousTailscaleRoute(home: string, owner?: { instanceId: string; processId: string }, options: { deadlineAt?: number; signal?: AbortSignal } = {}): Promise<void> {
   try {
-    const result = await cleanupTailscale(home, owner, { executable: process.env.HTML_INBOX_TAILSCALE_COMMAND });
+    const result = await cleanupTailscale(home, owner, { executable: process.env.HTML_INBOX_TAILSCALE_COMMAND, ...options });
     if (result.state !== "stopped") {
       throw new Error(`Tailscale cleanup ${result.state}: ${result.reason ?? "private ownership journal retained"}`);
     }

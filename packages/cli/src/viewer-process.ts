@@ -1,3 +1,4 @@
+import { assertManagedLifecycle } from "./sync-lifecycle";
 import { spawn, type ChildProcess } from "node:child_process";
 import { constants } from "node:fs";
 import { open } from "node:fs/promises";
@@ -11,7 +12,7 @@ export interface DetachedViewer {
   child: ChildProcess;
   logPath: string;
   getFailure(): Error | null;
-  close(): Promise<void>;
+  close(immediate?: boolean): Promise<void>;
 }
 
 export async function spawnDetachedViewer(
@@ -21,6 +22,7 @@ export async function spawnDetachedViewer(
   tailscaleExecutable?: string,
   inboxName?: string,
 ): Promise<DetachedViewer> {
+  await assertManagedLifecycle(home);
   const entry = process.argv[1];
   if (!entry) {
     throw new Error("Cannot locate html-inbox executable to start viewer");
@@ -64,11 +66,11 @@ export async function spawnDetachedViewer(
     child,
     logPath,
     getFailure: () => failure,
-    close: () => terminateChild(child),
+    close: (immediate) => terminateChild(child, immediate),
   };
 }
 
-async function terminateChild(child: ChildProcess): Promise<void> {
+async function terminateChild(child: ChildProcess, immediate = false): Promise<void> {
   if (!child.pid) {
     return;
   }
@@ -91,7 +93,7 @@ async function terminateChild(child: ChildProcess): Promise<void> {
     return;
   }
 
-  terminateChildGroup(child, "SIGTERM");
+  terminateChildGroup(child, immediate ? "SIGKILL" : "SIGTERM");
   let deadline = Date.now() + 1000;
   while (child.exitCode === null && child.signalCode === null && Date.now() < deadline) {
     await delay(25);

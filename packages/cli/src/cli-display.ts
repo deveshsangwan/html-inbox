@@ -99,7 +99,15 @@ export function formatDocumentTable(documents: readonly DocumentMetadata[]): str
     return "No documents.";
   }
 
-  const titles = documents.map((document) => formatDisplayText(document.title));
+  const titles = documents.map((document) => {
+    const title = formatDisplayText(document.title);
+    const origin = document.origin;
+    if (!origin) {
+      return title;
+    }
+
+    return `${title} [origin ${formatDisplayText(origin.inboxId)}/${formatDisplayText(origin.documentId)}${origin.detached ? "; detached" : ""}]`;
+  });
   const types = documents.map((document) => formatDisplayText(document.type));
   const dates = documents.map((document) => formatDisplayText(document.createdAt));
   const titleWidth = Math.max("TITLE".length, ...titles.map((title) => title.length));

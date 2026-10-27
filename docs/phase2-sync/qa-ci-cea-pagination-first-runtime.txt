@@ -1,0 +1,68 @@
+Read-only #515 diagnostic is terminal. Runtime is released. No source/test/docs edit, overlay, PR action, commit, native job, physical action or released SHA occurred.
+
+The single unchanged observed selected case PASSED on exact Node24.21.0 in4812.450390ms. The supplied original LOCAL combined timeout remains failed at30167.888558ms against its30000ms watchdog. A later attempted matching control failed before the test loaded because of my external helper's JavaScript syntax error. The stop rule was obeyed: no repair/retry and no paced-red arm ran. This report does not establish a sufficient timeout mechanism or the actual original cause.
+
+Source and build authority
+
+All346 preparation artifacts were reverified before runtime and again before cleanup. All167 borrowed source hashes/modes/membership match manifest831bfb7c80e8c798283bb98ffa991e36eb167c86b8ca120562bc812ac0ea27e7 and the parent's current167source files. Both new tests were included. The old371input was used for source provenance only. Parent documentation subsequently evolved; no unchanged371claim is made.
+
+The original worktree is /home/agent/.t3/worktrees/html-inbox/t3-b7b3e389, HEAD cea30b48cbef814511e2eedfc83d1793bc011354. It stayed clean. Its165present original source files retain their bytes/modes; the two originally absent tests stay absent. Raw index SHA256 remains823fc3b5ef0a9c9612312eedddd2ddd8dcda679cd39204e7fe047ad6f2b35ebf. The original index backup and source backups remain under /tmp/html-inbox-515-prep-_dzx33kv. All git inspection used GIT_OPTIONAL_LOCKS=0.
+
+Runtime used /tmp/html-inbox-515-runtime-wfyubvck/project, populated with ALL167borrowed source files and six build configuration files copied from this isolated checkout. No extra parent code was borrowed. The one build produced332files. Their exact packages/cli/dist manifest aggregate is db1e5031c55ca76b434de6519b59de42b8ffdad89ba3a3eb63099f4cba7834aa, identical to the original combined-run build. The selected compiled test SHA256 is63d642542eb6026ccfbde9c275512ae7a1b2eadbf162998ba5456dff20061c6c. All332bytes were reverified before removal. The complete compiled hash manifest and a copy of the selected compiled test are retained as evidence.
+
+Node binary is /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node, SHA2567fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c, reverified before runtime and cleanup. The failed control's native diagnostic also identifies v24.21.0. No Node20 runtime ran.
+
+Observed selected case
+
+The original30s case watchdog,5sclient/application request bounds,60ssession lease,10sdefault store acquisition bound,8sfixture IPC wait,5schild close wait and180sfixture child containment lifetime were unchanged. There was no concurrency override, mocked clock, retry reset, fake filesystem success or fabricated response/receipt. The method observer's runtime change from the reviewed prep draft was only the evidence-directory literal. It wraps actual methods, adds synchronous JSONL logging and some promise callbacks, and therefore has instrumentation overhead. It does not instrument the application children's internals; their restricted original spawn environment is preserved.
+
+TAP counts are tests1/pass1/fail0/cancelled0/skipped0/todo0/suites0; case4812.450390ms, TAP total4937.611507ms, owned runner elapsed5.008673402s. The original containing-file range is39top-level cases506through544. The exact name filter excluded38, which Node24 omits from selected TAP. Those exclusions receive no coverage credit and are not platform skips. The neighboring explicit expiry/capacity test was excluded. Its checks cannot be credited merely because the selected title contains the word expiry.
+
+Both actual loopback application children were ready before seeding. In the test process, relative to observer initialization, seed publication1started at483.903032ms and publication129returned at3596.302677ms. Total seed elapsed3112.399645ms. All129distinct real seed publications returned, in order, and all129reached their actual ledger-directory-fsynced event. Individual publication durations ranged9.522365to42.820114ms. These are durable barrier observations and returned public operations, not a claim of remote custody.
+
+All11direct SyncClient.json calls reached actual HTTPS requests. Native statuses were six200 and five409. Maximum complete client operation was132.330978ms. Every recorded initial attempt received its real5000ms deadline. There was no request-aborted/deadline failure in this observation.
+
+The source inventory returned129states at generation133 in34.037770ms. Missing-first-page rejection returned409incomplete-history. The128descriptor first push page returned continue. Changed nonce and changed scope each returned409incomplete-history. The original zero-premature-history-checkpoint assertion passed. The final push page returned terminal-inventory-ready with evidence.count129. Wrong local ACK nonce rejected at activateOutbound, and the correct ACK then activated. Replayed final push returned409invalid-history-transition.
+
+Independent pull then obtained a source identity and returned128descriptors with a next cursor. The actual after-cut publication returned in53.790560ms. Page2returned1descriptor with evidence.count129; the original deep equality assertion verified unchanged evidence across pages. Cursor reuse returned409invalid-history-transition. All original negative assertions remained sensitive in this passing execution. History readiness is not body custody; this case performs no receiver body transfer or sender committed-receipt confirmation.
+
+Cleanup started after those semantic operations. Application stop calls returned in 13.587853 and 6.413609 ms. Children 218811/startTicks 540362565 and 218823/startTicks 540362575 exited 0, closed IPC and were reaped by the original fixture. Exact captured 127.0.0.1 ports 44029 and 45833 were actually rebound/listened/closed by that fixture; the observer recorded those native listening/close events. The complete child/start records in observed-summary.json and pre-cleanup-audit.json are authoritative.
+
+Controlled pair registration and invalid control
+
+After the natural observation, pair-preregistration.json froze one comparison at2026-10-25T03:01:07.673942+00:00. Its single variable was an added0msversus250ms timer at the existing ledger-dir-fsynced callback after native successful directory flush, only for the selected case's actual seed publications inside this runtime's owned synthetic homes. The intended red would exceed the composite30s budget before all129publishes while individual operations remained finite and no identity exchange had begun. That prediction was never tested.
+
+The matching-control invocation started2026-10-25T03:01:25.002618+00:00 and exited1after0.041907884s. Its preload failed with:
+SyntaxError: Illegal 'use strict' directive in function with non-simple parameter list
+
+The derived helper wrapped the reviewed observer in installObservation({label,delayMs}) while leaving its use-strict directive inside that function. Node rejected the helper before any test registration or pacing hook. Test counts are unavailable because the test runner never started. Target hits0; semantic assertion coverage0. This is INVALID CONTROL/PREPARATION evidence, not a product regression, successful sensitivity test, or a cumulative-budget red. The complete failed helper, wrapper, stack and native exit are retained. No helper repair, syntax-check retry, control rerun, paced-red invocation or outer-budget override occurred afterward.
+
+A separate earlier static inspection guard also failed before selected runtime because it expected the emitted literal30000instead of tsc-rs's preserved30_000. It was a file-inspection assertion, not a compiler/test/control failure. The corrected literal inspection passed and the entire compiled aggregate matched the original combined build. No build or runtime was repeated for that guard. Its complete stderr and explanation are retained in static-pin-attempt1-error.txt; the original inline command remains in the tool transcript.
+
+Causal distinctions
+
+Sufficient mechanism: NONE demonstrated. The original test has sequential real publication work before identity, and the local observer measured it. The pacing comparison did not execute. Do not use the predicted32250ms cumulative timer budget as experimental evidence, or borrow the earlier unrelated session-capacity pacing result as proof for #515.
+
+Actual original cause: UNKNOWN. The original log has no per-publication/handshake/request/cleanup trace. This selected pass on exact source and compiled bytes establishes successful behavior under this isolated observed execution. It does not identify the failed combined run's actor, reproduce its concurrency/interleaving, establish hosted equivalence or erase its red.
+
+Remaining unknowns: whether original #515 was still seeding, capturing/completing a manifest, awaiting an incomplete request, or cleaning up when its watchdog expired; the responsible native operation if any; and whether a paced full semantic run would complete after30s. No blanket host-pressure/common-cause attribution is made. The other four combined failures remain outside this task.
+
+Precise next discriminator: collect the same coarse stage/commit/request/cleanup observations in a future separately authorized combined execution where the original failure context can recur. A new parent decision could instead authorize a repaired, syntax-checked version of the one registered comparison. Both require new authority after the unexpected-control-failure stop. There is no evidence supporting a timeout patch now. The minimal UNAPPLIED diagnostics-only proposal is in minimal-unapplied-proposal.txt.
+
+Prior evidence and contract limits
+
+The original local combined log remains SHA256be9c68925dc1a002385074d2a2a9f92dc487b95beebe3363944b4b9311337f6d, tests1026/pass1020/fail4/cancelled1/skip1. Typecheck/build passed; later stages were not reached; the current Node20command was not run. That original cancellation and all earlier hosted reds, controls, invalid observers and cleanup qualifications remain unchanged.
+
+The genuine unguarded history positive remains failed due its actual future route-backoff eligibility; receiver custody did not imply a sender receipt. No backoff reset or policy bypass occurred here. GateB remains only the typed same-process queue timer at initial openRouteAttempt. Filesystem acquisition, later admission, cleanup and remote error allowlist policies remain unchanged.
+
+Runtime admission, receipts and cleanup
+
+There were four mutex-protected runtime commands: frozen-lock/ignore-scripts install, one build, one selected observed case, and one invalid matching-control invocation. Every command ran through /usr/bin/flock -w45 -E75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock and my own continuously reaping bounded Python subreaper. No admission75occurred. Installation used pnpm11.7.0and an owned private dependency/cache tree; no scripts ran. Build used locked tsc-rs0.7.0. The runner's containment limits were180sinstall and90sbuild/test/control, without changing any test or product timeout. No containment timeout or signal occurred.
+
+Exact argv, isolated allowlisted environment, cwd, UTC start/end, native exits, retained descendants/start identities, complete output and log/helper hashes are in receipts/{install,build,selected-observed,matching-control}.json, their .log/.processes.jsonl files and the corresponding .outer.json/.outer.log files. env.json is retained as nonsecret environment evidence. No inherited credentials/proxies/NODE_OPTIONS were passed. Process observation was restricted to the runner's descendants via /proc children and retained pidfds. The runner continuously called waitpid with WNOHANG; all four final remainingOwned arrays are empty. No adopted orphan needed reaping; original parents reaped their children. This does not imply no child activity occurred.
+
+At2026-10-25T03:03:50.620733+00:00, all17unique sampled retained identities including runners and application children were absent; none had a reused current PID. Two actual captured port rebinds are recorded. Original fixture temp trees were already empty. Final audit reverified all346old artifacts, all167borrowed/source membership/hashes/modes, all332compiled files, original checkout bytes/modes/absences, HEAD/status/index and ignored membership BEFORE cleanup.
+
+Only this runtime's proven-owned build/project/dependency/cache/environment roots and its own dependency symlink were removed, after recorded processes/handles had stopped. No repository overlay existed, so no source restoration was necessary. Source backups, borrowed snapshots, selected compiled evidence, configuration inputs and all successful/failed receipts remain private outside the repository. No parent audit was appended, parent wrapper used, unknown lock removed, foreign PID signalled or host-global absence claimed. Runtime ended at the failed control; the shared mutex was released by its completed flock invocation and was not polled again. No further runtime is planned.
+
+No production readiness, nativeMac/Windows/Fleet, realLAN/Tailscale, physicalpower-loss/sleep/restart, hostedmerge/imageequivalence or releasedSHA claim is made.

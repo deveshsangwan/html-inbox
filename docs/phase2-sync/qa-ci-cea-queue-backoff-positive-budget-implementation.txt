@@ -1,0 +1,137 @@
+SOURCEWRITINGTERMINAL runtimeReleased=true
+Authorized one-file source correction and bounded validation complete. Registered expired negative remains native exit1.
+
+Owned source: /home/agent/.t3/worktrees/html-inbox/t3-b151001e/packages/cli/src/sync-acquisition-deadline.test.ts
+Gate SHA256 a0bc49f36fe36658e33bfc8a0204286d1a3033d42693a37a620f3ab49f178ffc
+Owned file SHA256 af6caa2bbfa674d75b4f6da461c41ad7de5025960bb10d10e6c0b9f2daa9d817
+Full source169 SHA256 aggregate 4967ad40861e64dfe33932a3383216c47b25a978f49ec736dd2dd15c792a5eba
+Compiled336 SHA256 aggregate 88393e78f3292bc7fbd61b78e5deb4fe6bec909e0795987e7515f714a33d069a
+Owned compiled JS SHA256 48dc71b55313aee9b789324ec30fe073676d27d9f445842aa67cab8d182af827
+
+One local queuePassMs=1000 constant used only for positive worker config and runTicket default. Existing observations retained. Two concise comments explain the enclosing pass and idle-only clock offset. No production code changed.
+Minimal delta against authored observation d60436cc3613876f04aff29a6d461ee6631284b9cb646886cab78e6cfae4ce5c: delta-vs-observation.patch.
+Complete one-file delta against parent fb9b5da57f33450997881995d71941e266fed2c3bbe344708835cbd37ee914f5: delta-vs-parent.patch.
+All100 original assertion-bearing lines are byte-identical in order against BOTH baselines. All168 nonowned sources and335 nonowned outputs match both baselines. Both exact-engine builds emitted identical336 outputs.
+Request100/holder140, direct-client100/300, manual100/300 with340holder, all20attempts, wake/restart/limit/reset, actual verified HTTPS receipts/idempotency, custody5000/30000 and35/40/45s watchdogs remain unchanged.
+No source diagnostics were removed or changed by this budget correction. The positive default now uses1000ms; no further increase is authorized.
+
+containing24: nativeExit=0; UTC 2026-10-25T08:54:57.927364+00:00 through 2026-10-25T08:55:05.956489+00:00; elapsed=8.029117s; parent tests/pass/fail/skip=6/6/0/0; nested child tests/pass/fail=1/1/0.
+Complete containing file passed once without any external Node preload. Original nested child retained. No load, capacity or deterministic scheduling claim.
+Retained 26 unique completion diagnostics, 20 queue attempts, 1105 existing polls and 40 admission observations; external preload=False.
+containing20: nativeExit=0; UTC 2026-10-25T08:55:23.981231+00:00 through 2026-10-25T08:55:32.505874+00:00; elapsed=8.524635s; parent tests/pass/fail/skip=6/6/0/0; nested child tests/pass/fail=1/1/0.
+Complete containing file passed once without any external Node preload. Original nested child retained. No load, capacity or deterministic scheduling claim.
+Retained 26 unique completion diagnostics, 20 queue attempts, 1154 existing polls and 40 admission observations; external preload=False.
+positive24: nativeExit=0; UTC 2026-10-25T08:56:03.097577+00:00 through 2026-10-25T08:56:10.478944+00:00; elapsed=7.381358s; parent tests/pass/fail/skip=1/1/0/0; nested child tests/pass/fail=1/1/0.
+One genuine completed native final-snapshot result held for configured110ms. Native1000ms pass live at result selection; all original20 attempts/limit/reset/HTTPS/idempotency assertions passed.
+Retained 26 unique completion diagnostics, 20 queue attempts, 1147 existing polls and 40 admission observations; external preload=True.
+negative24: nativeExit=1; UTC 2026-10-25T08:56:33.104954+00:00 through 2026-10-25T08:56:37.157555+00:00; elapsed=4.052592s; parent tests/pass/fail/skip=1/0/1/0; nested child tests/pass/fail=1/0/1.
+Registered native exit1 at unchanged strict pending assertion; later limit/reset/custody not reached in this negative.
+Retained 8 unique completion diagnostics, 6 queue attempts, 527 existing polls and 12 admission observations; external preload=True.
+The nested child and its containing parent describe the same scenario; counts are not summed as independent cases. Controlled selected runs exclude five unselected containing cases. Both ordinary files include all five original negative/classification cases, including the genuine300ms whole-pass expiry.
+
+positive24 actual queue-attempt6 proof: submittedDeadlineAt=1792918590294; fixed hold=110ms; measured hold=109.945660ms; one native read/hold/release after same-holder release, real local queue marker and awaited close. Native result elapsed=358.834281ms, margin=641ms, status=pending, lastError=local-acquisition-deadline, requests=0.
+Source completion elapsed=411.164209ms, poll margin=589ms, idle offset entry/exit=23711/23711ms, admissions=10->12, queueHits=5->6, ticketError=None.
+  pass-start: submitted-relative monotonic=10.227769ms; deadline margin=989ms; phase=reconciliation
+  pass-timer-scheduled: submitted-relative monotonic=10.434452ms; deadline margin=989ms; phase=reconciliation
+  lock-operation-admitted: submitted-relative monotonic=35.817215ms; deadline margin=964ms; phase=reconciliation
+  queue-timer-fired: submitted-relative monotonic=128.688665ms; deadline margin=871ms; phase=client-admission
+  lock-released: submitted-relative monotonic=182.214663ms; deadline margin=817ms; phase=reconciliation
+  setRouteError-start: submitted-relative monotonic=182.907749ms; deadline margin=817ms; phase=reconciliation
+  setRouteError-end: submitted-relative monotonic=231.322187ms; deadline margin=768ms; phase=reconciliation
+  attempt-close-start: submitted-relative monotonic=237.540548ms; deadline margin=762ms; phase=pass-admission
+  controller-abort: submitted-relative monotonic=237.611580ms; deadline margin=762ms; phase=reconciliation; reason=watcher-normal-stop
+  attempt-close-end: submitted-relative monotonic=239.359465ms; deadline margin=760ms; phase=pass-admission
+  selected-native-boundary: submitted-relative monotonic=240.882923ms; deadline margin=759ms; phase=final-snapshot
+  native-result-hold-start: submitted-relative monotonic=240.985748ms; deadline margin=759ms; phase=final-snapshot
+  native-result-hold-end: submitted-relative monotonic=350.931408ms; deadline margin=649ms; phase=final-snapshot
+  pass-result: submitted-relative monotonic=358.834281ms; deadline margin=641ms; phase=reconciliation
+Measured target observer overhead: {"dropped": 0, "eventCostMs": 54.58067600000634, "observerCallbacks": 10739, "preloadSetupMs": 4.840152, "stackCostMs": 42.02453399999828}
+
+negative24 actual queue-attempt6 proof: submittedDeadlineAt=1792918619011; fixed hold=1100ms; measured hold=1100.126812ms; one native read/hold/release after same-holder release, real local queue marker and awaited close. Native result elapsed=1353.759077ms, margin=-354ms, status=aborted, lastError=local-acquisition-deadline, requests=0.
+Source completion elapsed=1390.542248ms, poll margin=-391ms, idle offset entry/exit=22329/22329ms, admissions=10->12, queueHits=5->6, ticketError=None.
+  pass-start: submitted-relative monotonic=8.598464ms; deadline margin=991ms; phase=reconciliation
+  pass-timer-scheduled: submitted-relative monotonic=8.753823ms; deadline margin=991ms; phase=reconciliation
+  lock-operation-admitted: submitted-relative monotonic=37.235610ms; deadline margin=962ms; phase=reconciliation
+  queue-timer-fired: submitted-relative monotonic=131.612144ms; deadline margin=868ms; phase=client-admission
+  lock-released: submitted-relative monotonic=182.615133ms; deadline margin=817ms; phase=reconciliation
+  setRouteError-start: submitted-relative monotonic=183.129519ms; deadline margin=816ms; phase=reconciliation
+  setRouteError-end: submitted-relative monotonic=234.877469ms; deadline margin=765ms; phase=reconciliation
+  attempt-close-start: submitted-relative monotonic=241.817808ms; deadline margin=758ms; phase=pass-admission
+  controller-abort: submitted-relative monotonic=241.908491ms; deadline margin=758ms; phase=reconciliation; reason=watcher-normal-stop
+  attempt-close-end: submitted-relative monotonic=243.742458ms; deadline margin=756ms; phase=pass-admission
+  selected-native-boundary: submitted-relative monotonic=245.323824ms; deadline margin=754ms; phase=final-snapshot
+  native-result-hold-start: submitted-relative monotonic=245.435908ms; deadline margin=754ms; phase=final-snapshot
+  pass-timer-fired: submitted-relative monotonic=1000.019990ms; deadline margin=-1ms; phase=reconciliation
+  controller-abort: submitted-relative monotonic=1000.277907ms; deadline margin=-1ms; phase=reconciliation; reason=pass-abort
+  native-result-hold-end: submitted-relative monotonic=1345.562720ms; deadline margin=-346ms; phase=final-snapshot
+  pass-result: submitted-relative monotonic=1353.759077ms; deadline margin=-354ms; phase=reconciliation
+Measured target observer overhead: {"dropped": 0, "eventCostMs": 16.673391999999623, "observerCallbacks": 2858, "preloadSetupMs": 4.8193499999999965, "stackCostMs": 13.426920999998543}
+
+The positive native timer was cleared unfired with641ms remaining. The negative native timer fired1000.019990ms after submission while the completed native read result was held; the outer controller aborted at1000.277907ms. Attempt close had already finished at243.742458ms, so after-final-snapshot cancellation correctly selected aborted with-354ms remaining. The strict assertion remains compiled480:30. Earlier watcher-normal-stop during close is expected; no non-normal watcher/fence/pause cause is shown.
+Both controlled active passes held their intentional idle offsets fixed (positive23711ms, negative22329ms). The native bracket intersections include those values. Admission parity stayed two admissions per queue attempt. No idle-offset mutation or alternate admission cut explains these selected results.
+These controlled observations demonstrate the intended contract under the two fixed delays. They do not identify the original combined actor or prove arbitrary scheduling determinism. Production cancellation normalization remains untouched.
+
+Exact command receipts (argv arrays are literal; cwd/env and outer admission wrappers are retained in JSON):
+version24: UTC 2026-10-25T08:52:56.324365+00:00 -> 2026-10-25T08:52:56.368681+00:00; nativeExit=0; elapsed=0.044303s; logSHA256=cae1aadf7f04424e715f7a437eff2f1ff0d536618af17a1ddcf2bff45a043d5d
+["/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "--version"]
+typecheck24: UTC 2026-10-25T08:52:56.369121+00:00 -> 2026-10-25T08:52:56.714185+00:00; nativeExit=0; elapsed=0.345074s; logSHA256=c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+["/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "/tmp/html-inbox-queue-budget-author-huxqk4p1/runtime/project/node_modules/tsc-rs/bin/tsc-rs", "-p", "tsconfig.json", "--noEmit"]
+build24: UTC 2026-10-25T08:52:56.714568+00:00 -> 2026-10-25T08:52:57.204799+00:00; nativeExit=0; elapsed=0.490238s; logSHA256=c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+["/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "/tmp/html-inbox-queue-budget-author-huxqk4p1/runtime/project/node_modules/tsc-rs/bin/tsc-rs", "-p", "tsconfig.json"]
+version20: UTC 2026-10-25T08:53:52.835480+00:00 -> 2026-10-25T08:53:52.879365+00:00; nativeExit=0; elapsed=0.043876s; logSHA256=6fff481f6924527bd54888ea44c72b86b23a9df4ad8ea7bad1ff4b48ebb0fd53
+["/tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node", "--version"]
+typecheck20: UTC 2026-10-25T08:53:52.879780+00:00 -> 2026-10-25T08:53:53.233778+00:00; nativeExit=0; elapsed=0.354006s; logSHA256=c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+["/tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node", "/tmp/html-inbox-queue-budget-author-huxqk4p1/runtime/project/node_modules/tsc-rs/bin/tsc-rs", "-p", "tsconfig.json", "--noEmit"]
+build20: UTC 2026-10-25T08:53:53.234134+00:00 -> 2026-10-25T08:53:53.721023+00:00; nativeExit=0; elapsed=0.486897s; logSHA256=c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+["/tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node", "/tmp/html-inbox-queue-budget-author-huxqk4p1/runtime/project/node_modules/tsc-rs/bin/tsc-rs", "-p", "tsconfig.json"]
+syntax: UTC 2026-10-25T08:54:38.709650+00:00 -> 2026-10-25T08:54:38.784761+00:00; nativeExit=0; elapsed=0.075103s; logSHA256=c0c995b22eb3c65694ab86944a29d651b4779b2780c2b5493b240bbc0c1f030c
+["/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "--check", "/tmp/html-inbox-queue-budget-author-huxqk4p1/observe.cjs"]
+helper-check: UTC 2026-10-25T08:54:38.785150+00:00 -> 2026-10-25T08:54:38.860354+00:00; nativeExit=0; elapsed=0.075212s; logSHA256=3def9f36cedd219abd02d9be10b20c07e4b71343f654545bcc0a30d70f4947bd
+["/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "--require", "/tmp/html-inbox-queue-budget-author-huxqk4p1/observe.cjs", "-e", "process.stdout.write('private preload initialized\\n')"]
+containing24: UTC 2026-10-25T08:54:57.927364+00:00 -> 2026-10-25T08:55:05.956489+00:00; nativeExit=0; elapsed=8.029117s; logSHA256=4be1a29add5fa82eb119db117f982f98815fd1183f569f0d09e14a44a0dffda6
+["/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "--test", "--test-concurrency=1", "/tmp/html-inbox-queue-budget-author-huxqk4p1/runtime/project/packages/cli/dist/sync-acquisition-deadline.test.js"]
+containing20: UTC 2026-10-25T08:55:23.981231+00:00 -> 2026-10-25T08:55:32.505874+00:00; nativeExit=0; elapsed=8.524635s; logSHA256=3b1807ba928a68cdc075824b84ce20c614945cc7cdb2bdd0c3e998a96f4254d4
+["/tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node", "--test", "--test-concurrency=1", "/tmp/html-inbox-queue-budget-author-huxqk4p1/runtime/project/packages/cli/dist/sync-acquisition-deadline.test.js"]
+positive24: UTC 2026-10-25T08:56:03.097577+00:00 -> 2026-10-25T08:56:10.478944+00:00; nativeExit=0; elapsed=7.381358s; logSHA256=36fe7d590b9f9ec645104df71ca023a922038e0babe0802cc8a8a0e79b466dea
+["/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "--require", "/tmp/html-inbox-queue-budget-author-huxqk4p1/observe.cjs", "--test", "--test-isolation=none", "--test-concurrency=1", "--test-name-pattern=^owned worker persists queue backoff through restart, blocks at its limit, and retries into real idempotent custody$", "/tmp/html-inbox-queue-budget-author-huxqk4p1/runtime/project/packages/cli/dist/sync-acquisition-deadline.test.js"]
+negative24: UTC 2026-10-25T08:56:33.104954+00:00 -> 2026-10-25T08:56:37.157555+00:00; nativeExit=1; elapsed=4.052592s; logSHA256=87b078812812e85532ab6509b769e5c6dbf061ce3135f02afbedfc44b32f20ec
+["/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node", "--require", "/tmp/html-inbox-queue-budget-author-huxqk4p1/observe.cjs", "--test", "--test-isolation=none", "--test-concurrency=1", "--test-name-pattern=^owned worker persists queue backoff through restart, blocks at its limit, and retries into real idempotent custody$", "/tmp/html-inbox-queue-budget-author-huxqk4p1/runtime/project/packages/cli/dist/sync-acquisition-deadline.test.js"]
+All build/target commands used bounded flock -w45 -E75 at /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock; each exact wrapper argv is in dispatch-*.json. No admission poll/retry. The unchanged directPopen/waitpid subreaper wrapped every recorded command. The administrative negative dispatcher exited0 after verifying its expected native1; this does not alter the application exit.
+Node24 SHA256 7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c; Node20 SHA256 6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd. Version receipts report v24.21.0 and v20.20.2. Both typecheck and build native0 before all targets.
+The external helper injects --require only into the exact original --gate-b-acquisition-worker child argv. Each probe retained the original outer test, native child entry, assertions and watchdogs. No direct-child substitute. Only three external-observer lines changed; observer-helper.diff and hashes are retained. Private coordinator diffs are separate.
+
+Ordinary containing runs had no external Node preload and used the unchanged original nested-child supervisor. These finite runs make no load, capacity, stress or deterministic OS scheduling claim.
+Permanent source observations are synchronous performance/Date.now samples, scalar counters, up to4 recent admissions,1 route summary and64-character public codes. They add no await, application call, listener, timer, close wrapper or promise replacement. Their elapsed cost was not separately isolated; no zero-overhead claim.
+Controlled probes include external setup/logger/stack-capture costs listed below. AsyncLocalStorage, wrappers and scheduling have additional unmeasured effects. The configured native holds were exactly110 and1100ms; measured elapsed holds reflect native timer scheduling.
+Source completion-poll margin differs from actual result-selection margin. The source diagnostic is observational; no completion-margin assertion was added.
+The controlled delayed FileHandle.read retains the real native result, after native completion. Other observer wrappers retain original promise and close identities. No compiled/source body transformation, fake error/result/clock, production hook or deadline override.
+The positive budget separates queue expiry from whole-pass expiry. It is one fixed test correction and does not guarantee arbitrary stalls cannot exceed1000ms.
+
+Cleanup: completedUTC=2026-10-25T08:57:44.182659+00:00; runtimeReleased=true; 47 recorded PIDs absent;22 externally observed child exit/close pairs;4 original nested-child close/native-exit receipts;5097 externally observed file handles closed;18 unique exact loopback endpoints rebound and closed; all12 subreaper command audits have no remaining children.
+The registered failed negative left23 entries in its NEW private fixture; metadata identity was recorded and only those owned entries removed after native exit/close, known-PID absence, handle closure and exact-port checks. The original parent nRRbiq root and all historical scratch were untouched.
+Known-PID absence is scoped to retained receipts; no global-host absence claim. File-handle counts cover intercepted native fs/promises.open calls, not independent enumeration of readFile internal handles. Controlled native child exit/close callbacks and all subreaper waitpid evidence retained. Ordinary no-preload runs retain original nested-child close/native-exit receipts and original process absence/rebind assertions; independent handles and unlogged callback timestamps are not claimed.
+No nonowned checkout file or index was changed. The owned observation test was already present; only its authorized budget/comment bytes changed. All 365 nonowned checkout entries and initial absences remain exact. Borrowed source169 and compiled336 existed only in the removed private project. Dependency symlink was unlinked without traversal.
+Binary index SHA256 eb50a97fbcb8c43aa704e7fda2b294132f82f7eda1d525ab8b51ceff92a1bcb5; bytes and mode unchanged, snapshot taken before git inspection. Final git status remains only the owned untracked test file in the existing T3 checkout. No stage/switch/reset/force cleanup or shared worktree edit.
+All428 observation-author +403 diagnostic +65 original-combined artifact hashes verified unchanged before and after. Parent169 source and336 outputs remain fb9b5da57f33450997881995d71941e266fed2c3bbe344708835cbd37ee914f5 / 9d2815862665039fab5cad1615aaa3975325ed884c2c3966c75bcc98ff25c58f. Parent docs were not edited.
+No native cleanup failure or report serialization failure occurred in this new series. The one pre-target read-only lookup failure remains qualified separately.
+
+originalCombined: Node24 command1 native1 after250.376813s,1051tests/1049pass/1fail/1Windows-onlyskip; typecheck/build passed, later verify not reached,Node20 not started. Historical actor remains UNKNOWN. All65 artifacts preserved.
+diagnostic: Prior H1 sufficiency and original controlled red native1 remain valid only for their own invocations;403 immutable artifacts preserved. No new historical attribution.
+observationAuthor: Prior300ms authored sourcea250b081... and source169d604... retained. Its instrumented containing24 native1 correctly captured native300ms expiry during close; controls NOTSTARTED and validation INCOMPLETE. All428 artifacts preserved. This new series does not retroactively qualify it green.
+newNegative: Fixed1100ms control remains native1, original pending assertion at compiled480:30. Registered failure is evidence of preserved cancellation semantics, not a passing application command.
+pretargetHelper: One read-only assertion-line lookup failed because it guessed assert_1 rather than emitted strict_1. Raw failure retained in pretarget-lookup-failure.txt. Corrected once before any target. No build/application retry; exact failed-helper UTC was not recorded and was not reconstructed.
+
+Helper SHA256 values:
+dispatch.py 157e4afccc5edaf56b13d45d84f5cacbee24685266707a59584e14155d1bcde4
+finish.py d736a6865a9415c7dbe25a09ed7305f5dc9d70de6d60c80112c78b0f1bddb1c4
+qualify-command.py cf549488e5a53070ad88895bd4c9faac875febb1565611ff38a9bc5151e0cf2b
+qualify.py e22a486ca9937e5a36d793d7dfebb7c4d1e01c74f3bf6622edc78b7ed0a9da11
+register.py 0d6e0c0b83939a6c6f5966fe07671aa395f4c297a064c979d9e4e245cfbade11
+validation.py c00b434ed6e6bf4d603457f44c74817d1f371879e4f6c143555fabfb6373f84d
+write-terminal.py 63004bda5c9ff06baaa03be613fcf875ababf6552e0a2462f9a334e88e0d0670
+observe.cjs 140ea04654e96ca10e90cb1f255163207eac8eeca5dc1d3941b63aa51f11a52e
+runtime/run-subreaper.py e958ba7d0325bd90ec3fc72996398472e0be40489919b1c7bb8e771b530e0a72
+observer-helper.diff f9e4689d66085dd7ca9d22c990fbca203cd0c7d013f3c397f2ab33bebef905d1
+
+Exclusions: No full unit or broad verify run; No Node20 controlled probe; No stress/cap/natural rerun or further budget expansion; No implementation outside owned test; No review; No parent source/docs/index/dist writes; No dependency install/download; No real inbox/service/settings/network/VPN/security/Fleet/Mac/GitHub/PR action; No commits/push/public comments/QA SHA release; No historical scratch cleanup or credential-content copies.
+Parent owns inspect/integrate, combined checks, TWO NEW independent full-rubric reviews, commit/hosted green and ONE QA SHA.

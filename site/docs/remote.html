@@ -153,16 +153,19 @@
         <p class="docs-eyebrow">HTML Inbox documentation</p>
         <h1>Export and publish static snapshots</h1>
         <p class="docs-lead">
-          A snapshot contains the complete library at a point in time. It is
-          separate from the live loopback, LAN, or Tailscale viewer and does not
-          move your local documents.
+          A public snapshot contains eligible local originals at a point in time.
+          Synced imports, detached imports and fork-inherited originals are
+          excluded, even when readable in the live library. Authorized reading
+          or relay does not grant public republication. A snapshot is separate
+          from the live viewer and does not move your local documents.
         </p>
         <p>
-          Live UI deletion requires a reader running 0.5.x. The skill fallback
-          stays pinned to published 0.4.0, with copy and named-inbox support but
-          no UI deletion. Before an authorized upgrade, review the
-          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
-          and saved exposure and hub mounts.
+          Live UI deletion is available in running 0.5.x and 0.6.x readers.
+          The skill fallback is published 0.5.0, including deletion, copying and
+          named inboxes but no managed sync. Review saved exposure and hub mounts,
+          the <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>,
+          and <a href="named-inboxes.html#upgrade-060">0.6.0 opt-in enrollment</a>
+          before upgrading.
         </p>
 
         <p>
@@ -291,8 +294,9 @@ html-inbox remote status</code></pre>
         </p>
         <h2 id="publish-updates">Publish later changes</h2>
         <p>
-          <code>remote publish</code> deploys every current local document as a
-          complete new snapshot and prints the production capability URL. Local
+          <code>remote publish</code> deploys the eligible local-original set as a
+          complete new snapshot and prints the production capability URL. Synced
+          imports, detached imports and fork-inherited originals are excluded. Local
           publishing and deletion through the CLI, live viewer, or hub do not
           deploy automatically.
         </p>
@@ -324,8 +328,9 @@ html-inbox remote status --json</code></pre>
           adds a <code>copy.json</code> per document for saved text and code
           copying, so file count
           is not the same as document count. Increasing
-          <code>HTML_INBOX_MAX_BYTES</code> can let a local document exceed the
-          remote file limit.
+          <code>HTML_INBOX_MAX_BYTES</code> can let an ordinary local document
+          exceed the remote file limit, but cannot raise the managed 10 MiB body
+          cap. The separate encoded copy-JSON limit is also 10 MiB.
         </p>
         <p>
           The adapter also bounds generated <code>_headers</code> rules and

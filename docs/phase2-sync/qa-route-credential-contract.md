@@ -1,0 +1,27 @@
+# Per-route credential freshness correction gate
+
+The complete Node 20 unit run and the original focused credential-rotation test failed at the current-revision receipt wait. An independent test-only diagnosis retained the failed state and identified a pass-wide credential snapshot crossing explicit retry. Both workers remained alive at the expected configuration revision. The sender resolved its old token before retry, then used that snapshot 125 ms after retry completed. The receiver held the correct new token, returned an actual identity 403, and the sender persisted a new permanent block. No revision-2 custody receipt existed. This is not a longer receipt-persistence wait or receiver liveness failure.
+
+Controlled old-resolver cases fail on Node 20 and 24. A test-only fresh-route-resolver control passes on both, with exact receiver bytes, one canonical report and current-revision committed custody. Those controls establish the mechanism, not a production correction. No assertion, deadline, token-validation policy or original command order was weakened.
+
+## Source ownership and interface
+
+The existing isolated fatal-worker writer owns sync-worker.ts. Route this correction through that same writer. Its additive fatal callback and shutdown changes remain governed by qa-fatal-worker-contract.md, SHA256796b384e6d351f446cd55b4e5dbf7d2e7004b9ce835dd72d6c64e9ebab2eeec0. Do not start another writer on the same checkout or silently overlap its functions.
+
+Within startOwnedSyncWorker().drain(), remove the outgoing pass-wide credential capture. For each route that passes the latest validated route/state/pause and isRouteDue checks, resolveRuntimeCredentials from that current validated configuration and only that route immediately before unavailable-credential handling and route reconciliation. Preserve runtime/configuration revision checks, authorization fences, request deadlines and scoped TLS resolution. Listener startup credential resolution is unchanged; listener refresh continues through its existing configuration-revision replacement.
+
+Public interfaces and persisted/wire/runtime-record schemas do not change. No change is indicated to the CLI retry handler, store.retry, reconciliation failure classification, generic private-file policy, ownership protocol or ledger reader. Permanent failures still need explicit retry; token-file replacement alone must not clear them. Missing or malformed credentials remain blocked. Detach, revocation, revision, pause, cancellation, unrelated-route independence and current custody checks remain mandatory. Do not add a second reconciler, new retry-generation scheme or automatic unauthorized retry.
+
+This correction addresses credential capture before a later route becomes eligible. It does not claim to fence every already-active request across explicit retry. Broader active-request retry semantics require separate evidence and a concrete gate.
+
+## Regression and verification
+
+Keep the original sync-worker-faults credential-rotation test unchanged and run it on Node 20 and 24. Add a dedicated sync-worker-credentials.test.ts and, if necessary, a uniquely named child helper. Existing reserved tests and all other production files remain unchanged beyond the fatal writer's separately authorized scope.
+
+Use a stable reconciliation-call seam, not a hook that disappears when credential resolution moves. Hold entry to an unrelated first route's reconciliation while the rotated route is blocked. The old implementation has already captured both route tokens; the corrected implementation has resolved only the first route. Replace the target token and complete the real explicit retry while held, then release. Prove exactly one controlled hold, actual target identity authorization, exact receiver bytes, one canonical record, current-revision committed receipt, the same worker identities and retained unrelated-route custody. The old implementation must produce the unauthorized reblock and no current-revision receipt. A missed hold is not a passing regression.
+
+Run wrong-token, malformed/missing-reference, permanent-block, pause, cancellation, removal/revocation and unrelated-route controls alongside the affected worker suites. Do not increase existing timeouts or weaken assertions. Final combined verification must include all original worker cases and the integrated fatal behavior on Node 20 and 24, followed by two fresh correction reviews.
+
+The diagnosis report, ten exact test commands and retained logs are in /tmp/html-inbox-rotation-diagnosis-hy9qckdh. They record five exact failures and five passes, including two diagnostic freshness controls. The final diagnostic helper differs from its runtime-tested version only in formatting and typed generic adapter dispatch, and was typechecked; do not attribute runtime test credit to the final helper bytes. The production regression must run on its exact final bytes.
+
+Only synthetic stores, temporary credentials and bounded loopback fixtures are authorized. Keep credentials out of artifacts, retain/reap owned children, rebind exact ports and remove owned synthetic stores. No real inbox, live service, installed CLI, network/security settings, persistent grants, remote Mac, commit, push, merge or deployment is authorized for the writer. Parent owns integration, documentation, broad verification, independent review and the immutable physical-retest SHA.

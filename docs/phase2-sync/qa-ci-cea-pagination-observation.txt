@@ -1,0 +1,124 @@
+TERMINAL — #515 pagination observation-only continuation; runtime released; no further runtime planned.
+Report UTC: 2026-10-25T04:03:33.772729+00:00
+Evidence bundle: /tmp/html-inbox-515-observation-kz9svlrt
+
+Outcome: the single authorized250ms-paced arm completed all original selected-case body/assertions with only its PRIVATE compiled outer guard set to120000ms.
+Native TAP: tests1/pass1/fail0/cancelled0/skipped0/todo0; case 41856.278799ms; TAP total 41978.218909ms; command/runner/flock exits0.
+This is observation-only completion, not an unchanged-test pass, a repository-source pass, a current-parent combined check, hosted-merge equivalence, or approval for a source deadline change.
+Exactly one invocation. No baseline/control repeat, retuning, Node20, full suite, repository edit or remote operation occurred in this continuation.
+
+Sufficient mechanism: the prior registered matching0ms control passed5023.797993ms, with129 seed returns and all11 protocol outcomes. Its250ms red cancelled at the original30s watchdog after30066.768425ms, with95 returns/96 native durable barriers and zero identity requests at teardown.
+The present arm uses the same old source, same original compiled output and same corrected250ms helper. It allows the remaining genuine serial seed work to finish before completing the entire protocol body. Together these demonstrate a finite cumulative seed-work mechanism sufficient to exceed the30s outer case budget under the registered intervention.
+Actual original cause: UNKNOWN. The original LOCAL full-root #515 cancellation30167.888558ms had no corresponding inner-stage trace. None of these selected arms establishes which actor or boundary consumed that original budget. No host-pressure/common-cause inference is made.
+Remaining unknown: original combined-run seed versus handshake/request versus cleanup phase; actual original operation latency distribution. The precise next discriminator is described in minimal-unapplied-proposal.txt, with no additional run authorized.
+
+Source and binary custody:
+  Old paired167 aggregate:831bfb7c80e8c798283bb98ffa991e36eb167c86b8ca120562bc812ac0ea27e7.
+  All167 source files, bytes/modes/membership were copied from the retained prep/borrowed snapshot, including both originally absent new tests. No overlay was applied to the checkout.
+  Current parent aggregate9c2539202ce4cd270cf4bec16d3dc4d772b2d69cf0c980617d9d75b6d36c54a3 is disclosed coordinator metadata only; its evolved source was neither read nor borrowed for this arm. No unchanged371 claim.
+  One frozen-lock ignore-scripts install and one build used the complete old167 tree. Exact332 pre-override aggregate:db1e5031c55ca76b434de6519b59de42b8ffdad89ba3a3eb63099f4cba7834aa.
+  Private332 aggregate after one guard: cf8a7e11b75d99a983935137adc38a2232750a38a1c019da7ff6ed9eeedd5d55.
+  Original selected compiled file SHA256: 63d642542eb6026ccfbde9c275512ae7a1b2eadbf162998ba5456dff20061c6c.
+  Private selected compiled file SHA256: 05b9ee740722971aca15ae17aa74c5c59c303d1fff264d1b950c702395ac0deb.
+  All331 other compiled files, all declarations and all source bytes remained identical. The selected file inverse replacement reconstructs its exact original bytes. The test executed in the same332-output directory, preserving __dirname and original relative fixture/child paths.
+  Node24.21.0:/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node
+  Node SHA256:7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c.
+  Original paired helper SHA256:122c1377ea45dd2a8725fc2708ba3967b29acf3973f55c13a5ca916a6dda48fa.
+  Path-relocated helper SHA256:2f7b3d26d107597a3d5fcdcd765d38a876ee9e8501ae2e963772cf6536b33715. Normalized helper diff is empty; raw path diff retained.
+  Wrapper SHA256:c17b37565a4c99ce9efed70a843177aaad9f9dcf711d4c8f10be94cf9511399e. Only label changed from paced-red; delayMs remains250.
+  Helper legacy testWatchdogMs:30000 metadata was deliberately preserved. It is NOT the effective private guard; the exact compiled diff below establishes120000ms.
+
+Exact private guard diff:
+--- original/sync-protocol.test.js
++++ private-observation/sync-protocol.test.js
+@@ -236,7 +236,7 @@
+     strict_1.default.equal(counters.bodyTransfers, 0);
+     strict_1.default.equal((await f.b.store.listDocuments()).length, 0);
+ });
+-test("129 descriptors paginate one immutable cut; missing pages, changed scope, nonce replay and expiry fail", { timeout: 30_000 }, async (t) => {
++test("129 descriptors paginate one immutable cut; missing pages, changed scope, nonce replay and expiry fail", { timeout: 120_000 }, async (t) => {
+     const f = await pair(t, { sourceListener: true });
+     for (let index = 0; index < 129; index += 1) {
+         await f.a.store.publish(input, `page-${String(index).padStart(3, "0")}`);
+Diff SHA256:ea3e4f1d367aa77f474fdb9cef9d36a2ff5ca748a234983c87fd26c6eeeb0751. Exactly one selected name/old literal/new literal were verified before execution and again before cleanup.
+
+Reached stages and limits:
+  Seed:129 starts,129 native ledger-dir-fsynced barriers,129 timer entries,129 timer exits,129 public returns, each in strict per-operation order. UTC 2026-10-25T03:56:31.292Z through 2026-10-25T03:57:11.484Z; elapsed 40191.625573ms.
+  Maximum successful seed operation:345.231663ms. Nominal pacing total:32250ms; measured timer-held total:32316.507445ms; range 249.202805..251.589871ms.
+  Pacing occurred only after the real durability event callback returned successfully in the owned synthetic seed store. No fake syscall, manufactured ledger/inventory, response or receipt; after-cut publication was not paced.
+  First identity at observer elapsed40684.563827ms, after all129 returns. Identity through last request outcome:1207.430518ms, including inventory, activation and after-cut work.
+  All11 real requests had actual5000ms admission deadlines (4999..5000ms remaining at capture). Maximum client call:155.844967ms; maximum openRouteAttempt:71.911638ms.
+  Both application fixtures used request5000ms/session60000ms. Actual identity expiries retained; expiry-minus60000 lies within each observed identity request interval. That issuance time is inferred, not an internal child trace.
+  Source inventory returned129. Push pages128+1 completed readiness. Wrong local activation nonce rejected before valid activation. Pull page1 returned128; actual after-cut publish crossed its native barrier and returned; page2 returned1/count129; original deepEqual of both evidence objects passed; used cursor rejected.
+  Original history-checkpoint absence assertion and all original body/security/custody assertions completed in this private arm. Native assertion success supplies the checks intentionally not duplicated in the observer.
+  Request/session/lock/IPC/fixture child lifetime/concurrency/clocks/persistent backoff/signature and authorization policies were unchanged. Fixture IPC wait8s, stop wait5s and child lifetime180s remained exact. Private runner containment180s was not reached; it is not a protocol allowance.
+  Six successful JSON outcomes, five expected409 protocol rejections, plus one expected local activation nonce rejection. No unexpected publication/request/cleanup rejection or late continuation error in this arm.
+
+Actual request outcomes (all complete HTTP responses):
+  1: receiver identity and challenge; HTTP200; return; 155.844967ms; UTC 2026-10-25T03:57:11.641Z.
+  2: missing/order: final page before first; HTTP409; incomplete-history; 77.931286ms; UTC 2026-10-25T03:57:11.757Z.
+  3: first push page: 128 descriptors; HTTP200; continue; 83.726929ms; UTC 2026-10-25T03:57:11.841Z.
+  4: changed evidence nonce rejected; HTTP409; incomplete-history; 79.448760ms; UTC 2026-10-25T03:57:11.921Z.
+  5: changed scope rejected; HTTP409; incomplete-history; 78.399412ms; UTC 2026-10-25T03:57:11.999Z.
+  6: final push page: one descriptor and readiness; HTTP200; terminal-inventory-ready; 115.401744ms; UTC 2026-10-25T03:57:12.117Z.
+  7: completed push replay rejected; HTTP409; invalid-history-transition; 78.821483ms; UTC 2026-10-25T03:57:12.270Z.
+  8: source identity and pull session; HTTP200; return; 133.966588ms; UTC 2026-10-25T03:57:12.404Z.
+  9: first immutable pull page: 128 descriptors; HTTP200; return; 85.907657ms; UTC 2026-10-25T03:57:12.490Z.
+  10: second immutable pull page: one descriptor; HTTP200; return; 82.652227ms; UTC 2026-10-25T03:57:12.611Z.
+  11: used cursor rejected; HTTP409; invalid-history-transition; 81.217814ms; UTC 2026-10-25T03:57:12.693Z.
+
+Observation limits and exclusions:
+  Observer records wall UTC and monotonic stage times/per-publication progress. Its elapsed origin is helper load, not the Node case start; native TAP case duration is reported separately.
+  Timings include unchanged async wrappers, AsyncLocalStorage and synchronous trace-write overhead. No overhead subtraction or fake clock. The measured timer wait can differ slightly from the requested250ms.
+  The two application child processes do not load this observer; their internal storage/session timing is not directly instrumented. Actual public outcomes and unchanged child code bound the claims.
+  There are39 statically registered cases in the file:26 literals plus13 parameterized cases. One selected;38 excluded by exact name filter, unreported as skipped in Node24 TAP. Full excluded names are in receipts/filtered-exclusions.json.
+  Although the selected title mentions expiry, the dedicated expiration/exhaustion test is excluded. No new expiration-boundary assertion or other excluded-case credit is claimed.
+  A report-analysis assertion initially counted only26 literal registrations. Its original script and raw stack are retained as receipts/analyze-observation-invalid-count.py and analysis.log. The corrected static tally expands the six explicit registration loops. This did not rerun or alter the application/helper/test.
+
+Commands, UTC, exits and complete receipts:
+  Every install/build/guard preparation/syntax check/target used the own continuously reaping retained-pidfd/subreaper runner under flock-w45-E75 on the shared diagnostic mutex. No admission75 or containment signal occurred.
+  receipts/complete-command-receipts.json retains all seven exact command argv, cwd, full allowlisted nonsecret environment, inner/outer UTC timestamps, native exits, process events and log/script hashes. Each <label>.log combines complete stdout/stderr; <label>.outer.log retains wrapper output.
+  install: UTC 2026-10-25T03:52:28.021022+00:00 -> 2026-10-25T03:52:33.433998+00:00; command/runner/flock exits 0/0/0; elapsed 5.412984400s.
+    argv: /usr/bin/flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-515-observation-kz9svlrt/scripts/run-owned.py install 180 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node /run/user/1001/fnm_multishells/208595_1792895829028/bin/pnpm install --frozen-lockfile --ignore-scripts --store-dir /tmp/html-inbox-515-observation-kz9svlrt/cache/pnpm
+    log SHA256:062d3001d8a62360187c2b978b77bc2334257b4b720b0551ea96a1d48d60a873; process-log SHA256:b359845b3a96d911aac0b6426a476feaea96001b0b5add0a0e66df3775a0e1e2.
+  build: UTC 2026-10-25T03:53:29.746653+00:00 -> 2026-10-25T03:53:30.181730+00:00; command/runner/flock exits 0/0/0; elapsed 0.435084894s.
+    argv: /usr/bin/flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-515-observation-kz9svlrt/scripts/run-owned.py build 90 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node /tmp/html-inbox-515-observation-kz9svlrt/project/node_modules/tsc-rs/bin/tsc-rs -p packages/cli/tsconfig.json --outDir /tmp/html-inbox-515-observation-kz9svlrt/build
+    log SHA256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855; process-log SHA256:1e2a8910d99d0f390dbd32bc8eb9a75c753f1e84ea33da1768c33c552ab6ba06.
+  guard-copy: UTC 2026-10-25T03:53:56.776065+00:00 -> 2026-10-25T03:53:56.899214+00:00; command/runner/flock exits 0/0/0; elapsed 0.123157238s.
+    argv: /usr/bin/flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-515-observation-kz9svlrt/scripts/run-owned.py guard-copy 30 /usr/bin/python3 /tmp/html-inbox-515-observation-kz9svlrt/scripts/prepare-private-guard.py
+    log SHA256:20513975d3e9069e257c0e80c7db22f612904ce97185e8979b0dc8f3538dae58; process-log SHA256:b0482c7101ff65647225b1520ba16f8dee7e9039b8798dbb2031ae4cb30edcc6.
+  syntax-helper: UTC 2026-10-25T03:56:19.269646+00:00 -> 2026-10-25T03:56:19.311525+00:00; command/runner/flock exits 0/0/0; elapsed 0.041887306s.
+    argv: /usr/bin/flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-515-observation-kz9svlrt/scripts/run-owned.py syntax-helper 30 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node --check /tmp/html-inbox-515-observation-kz9svlrt/scripts/pair-observe.cjs
+    log SHA256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855; process-log SHA256:c26504a1ffc9b5b35d200590e148d49a7ff927fa2201050e1ce683a7db1d4007.
+  syntax-wrapper: UTC 2026-10-25T03:56:23.247262+00:00 -> 2026-10-25T03:56:23.289154+00:00; command/runner/flock exits 0/0/0; elapsed 0.041900815s.
+    argv: /usr/bin/flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-515-observation-kz9svlrt/scripts/run-owned.py syntax-wrapper 30 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node --check /tmp/html-inbox-515-observation-kz9svlrt/scripts/observation-only.cjs
+    log SHA256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855; process-log SHA256:45d296829fcaa641f4b5cfad5bcdc54cf6e18e9c1828f57a1d66523e115d80b8.
+  syntax-private-test: UTC 2026-10-25T03:56:25.709639+00:00 -> 2026-10-25T03:56:25.751715+00:00; command/runner/flock exits 0/0/0; elapsed 0.042085398s.
+    argv: /usr/bin/flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-515-observation-kz9svlrt/scripts/run-owned.py syntax-private-test 30 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node --check /tmp/html-inbox-515-observation-kz9svlrt/build/sync-protocol.test.js
+    log SHA256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855; process-log SHA256:8e929dea57aa6ffaf68b591b7cf7b988522015a390379e74455f1d35afa0ef9c.
+  observation-only: UTC 2026-10-25T03:56:30.710691+00:00 -> 2026-10-25T03:57:12.748503+00:00; command/runner/flock exits 0/0/0; elapsed 42.037833373s.
+    argv: /usr/bin/flock -w 45 -E 75 /tmp/html-inbox-qa-history-amcemjlx/cea-diagnostic-runtime/runtime.lock /usr/bin/python3 /tmp/html-inbox-515-observation-kz9svlrt/scripts/run-owned.py observation-only 180 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node --require /tmp/html-inbox-515-observation-kz9svlrt/scripts/observation-only.cjs --test --test-reporter=tap --test-name-pattern '^129 descriptors paginate one immutable cut; missing pages, changed scope, nonce replay and expiry fail$' /tmp/html-inbox-515-observation-kz9svlrt/build/sync-protocol.test.js
+    log SHA256:f8da7d4cabc15faa2f6c195c03a0024cfe397776d61206b9443f7a96dcf46eae; process-log SHA256:bfcd6c88d828bd9dccf728c4e34758552ef3c674506c71293f12448bd03a4ff5.
+  The derived helper, wrapper AND actual private compiled test each passed an explicit exactNode24 --check before the one target. Syntax checks receive no test credit.
+  Paths/env were confined to the new private roots. No real inbox/settings/service/credentials or parent build output was used.
+
+Retained actor and endpoint cleanup:
+  Child PID243206/startTicks540704167; actual127.0.0.1:38617; native child exit0/close/disconnected; exact rebind UTC2026-10-25T03:57:12.717Z; rebind listener closed UTC2026-10-25T03:57:12.717Z.
+  Child PID243218/startTicks540704178; actual127.0.0.1:34629; native child exit0/close/disconnected; exact rebind UTC2026-10-25T03:57:12.707Z; rebind listener closed UTC2026-10-25T03:57:12.707Z.
+  All23 sampled owned PID/start identities absent at final audit, including both application children. Every runner remainingOwned list empty; no adopted remainder; no runner signals. These are scoped retained identities, not host-global absence claims.
+  Original fixture stop/reap assertions and exact port rebinds completed before removal. Own tmp had no entries. No unknown locks removed and no foreign PID signalled.
+  Removed only owned project/dependencies/build/cache/environment/trust/temp roots and the owned dependency symlink. All logs, nonsecret traces, hashes, scripts, original/private selected compiled copies and input config pins remain.
+  Checkout HEAD cea30b48cbef814511e2eedfc83d1793bc011354, clean status/ignored state, raw index823fc3b5ef0a9c9612312eedddd2ddd8dcda679cd39204e7fe047ad6f2b35ebf and all original source bytes/modes/absences verified before cleanup. GIT_OPTIONAL_LOCKS=0; no overlay, so no restoration needed.
+  Runtime mutex released with outer command exit at 2026-10-25T03:57:12.754963+00:00. Runtime work remaining:false.
+
+Historical evidence retained without changed bytes or artifact membership:
+  /tmp/html-inbox-515-prep-_dzx33kv: 347 files including its manifest; artifact memberships346/52/77 respectively remain exact.
+  /tmp/html-inbox-515-runtime-wfyubvck: 53 files including its manifest; artifact memberships346/52/77 respectively remain exact.
+  /tmp/html-inbox-515-pair-lr2ri8vu: 78 files including its manifest; artifact memberships346/52/77 respectively remain exact.
+  Original full-root LOCAL red remains tests1026/pass1020/fail4/cancelled1/Windows-skip1; typecheck/build passed, later stages not reached; current Node20 command NOT RUN. Its log SHA256 remainsbe9c68925dc1a002385074d2a2a9f92dc487b95beebe3363944b4b9311337f6d.
+  The4812.450390ms observed selected pass remains control evidence only. The first pair helper syntax failure remains BEFORETEST/targethits0, separate from the later corrected control and red.
+  The original paced-red late publication96 ENOENT occurred after teardown; preserved separately, not reclassified as the primary watchdog failure and not repeated here. No downstream assertion credit attaches to that red.
+  All earlier hosted/local reds, controls and invalids, including the real unguarded history positive that failed because of future backoff, retain their existing outcomes. This arm supplies no claim about those separate failures.
+
+Minimal UNAPPLIED proposal: see minimal-unapplied-proposal.txt. No source budget change is applied or approved. Parent owns any proposal, combined checks and two new reviews. Diagnosis terminal; no additional preparation or application run remains.
+Artifact integrity: artifacts.sha256.json lists every retained artifact except itself. Complete raw error/output and all private script hashes are included; receipts/helper-hashes.json is the compact helper index.

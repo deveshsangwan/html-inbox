@@ -5,7 +5,7 @@ description: Publish HTML artifacts to HTML Inbox. Use for publishing, opening o
 
 # HTML Inbox
 
-Publish a finished HTML artifact into the local private document library. `publish` stores the original bytes, starts or reuses a detached viewer, and returns its document URL after the CLI verifies readiness.
+Publish a finished HTML artifact into the selected local library. `publish` stores the original bytes and starts or reuses a detached viewer. An unenrolled library returns its document URL after readiness. An enrolled library reports durable local storage separately from intended-server delivery and viewer readiness.
 
 This skill owns publishing and live viewer operation. Cloudflare Pages hosts a separate static snapshot. When the user requests Cloudflare setup, snapshot publishing, recovery, or revocation, install the optional remote skill if it is absent:
 
@@ -33,7 +33,7 @@ Keep the resolved selector on preferences, publish, list, delete, export, remote
 
 During an explicit HTML Inbox setup request, offer the optional appearance choice once: **System** by default, or **Light** or **Dark**. Skipping the question keeps System. Installation and ordinary publishing continue without this question.
 
-First check `inbox --help` for the `preferences` command. The pinned 0.4.0 fallback supports it, but an older installed 0.2.x executable may not. If absent, keep System and explain that saving a setup preference requires a CLI with `preferences` support; continue other authorized setup work. Keep the selected CLI and version pin unchanged.
+First check `inbox --help` for the `preferences` command. The pinned 0.5.0 fallback supports it, but an older installed 0.2.x executable may not. If absent, keep System and explain that saving a setup preference requires a CLI with `preferences` support; continue other authorized setup work. Keep the selected CLI and version pin unchanged.
 
 When supported, inspect `inbox preferences --json`. If the selected inbox home already contains `preferences.json`, preserve its preference and skip the setup question unless the user asks to change it. Otherwise, save the chosen value, or the default when skipped:
 
@@ -69,19 +69,25 @@ inbox publish ./report.html --title "SvelteKit Migration Report" --type report
 
 Quote paths and metadata when they contain shell-significant characters. Keep the selected `HTML_INBOX_HOME`, `HTML_INBOX_PORT`, and `HTML_INBOX_TAILSCALE_COMMAND` unchanged throughout the operation. Ordinary publishing preserves the inbox's saved port and exposure. Choose a different library or port only for a user-requested change or a verified port conflict.
 
-Publishing is complete only when the command exits successfully and prints a document URL. It may be loopback HTTP, a LAN interface URL, or Tailscale HTTPS, depending on the active configuration. Use that exact printed URL, including when publishing into an already exposed viewer. Do not construct a URL after a failed command or replace an exposed URL with localhost.
+For an unenrolled library, publication succeeds when the command exits 0 and prints its document URL. It may use loopback HTTP, a LAN interface URL, or Tailscale HTTPS. Preserve the exact reader URL, including an already exposed viewer's network URL.
+
+Managed publication requires a CLI with the advertised `sync` commands. The published 0.5.0 fallback has no managed-sync capability; report that prerequisite rather than changing the executable, inbox or format. Enrollment is a separate opt-in operation, never a publishing prerequisite to perform automatically. Read the [managed worker and publication contract](https://github.com/deveshsangwan/html-inbox/blob/main/docs/phase2-sync/worker-operations.md) before configuring or operating managed sync.
+
+When `publish --json` is available, use it for managed automation. Its saved result has `local.durable`, document identity, `delivery`, `worker`, `viewer.url` and `onward.awaited: false`. Human output is multiline: Saved locally, Delivery, reader URL when available, and onward information. Exit 0 means confirmed intended-server custody or an unconfigured local-only save; 2 means durable pending, 3 durable blocked, and 130 cancellation after save when that result is present. A saved result is evidence of local persistence even when delivery is nonzero. Preserve its report identity, intended target and obligations. Report the actual pending, blocked or cancelled state and verified viewer availability; continue only the authorized status, retry or recovery operation. Duplicate publication or choosing another target would create a different obligation. Exit 1 or missing saved evidence requires inspection, not an assumption that nothing was saved.
+
+This step is complete when local persistence, delivery and viewer readiness are each known or their uncertainty is reported. Share only the returned reader URL; a missing or failed viewer has no link to invent. Pending or blocked custody is not successful delivery.
 
 ### 3. Verify the artifact
 
-Open the printed URL when visual correctness matters. Check that the document shell loads, the title and type are correct, and the iframe renders the expected content. For charts, external assets, or other runtime-dependent output, also check the browser console and failed network requests; publish success proves storage, not rendering.
+When the result contains a reader URL and visual correctness matters, open that exact URL. Check that the document shell loads, the title and type are correct, and the iframe renders the expected content. For charts, external assets, or other runtime-dependent output, also check the browser console and failed network requests. Durable storage or confirmed delivery does not prove rendering. If a managed result has no ready viewer, retain the saved report identity and report viewer unavailability; creating another publication would not repair that existing outcome.
 
-Verification is complete when the expected content is visible without relevant console or network failures. If browser verification is unavailable, report that limitation instead of claiming the artifact rendered correctly.
+Verification is complete when the expected content is visible without relevant console or network failures, or when the actual viewer/browser limitation is reported. Claim rendering only for observed content.
 
 ### 4. Hand off
 
-Give the user the printed document URL and identify the published title and type. Explain who can reach it for the selected mode. When the running viewer supports UI deletion, explain that every reachable live reader can read and permanently delete documents. Mention a custom home or port only when it helps the user operate their inbox. Share only reader URLs; keep private control URLs, tokens, process records, and diagnostics out of reader handoffs.
+Give the user the returned reader URL when available and identify the report, title and type. For managed publication, state durable local storage, actual delivery state and viewer readiness separately; pending, blocked or cancelled delivery is not confirmed custody. If no reader is ready, give the saved identity and that limitation without inventing a URL. Explain who can reach an available link. When the reader supports UI deletion, explain its reachable-reader authority and managed retention distinction. Mention a custom home or port only when useful. Keep private control URLs, tokens, process records and diagnostics out of reader handoffs.
 
-The handoff is complete when the user has a clickable URL and any verification limitation is explicit.
+The handoff is complete when the user has the actual saved/delivery outcome, an available clickable reader URL or an explicit viewer limitation, and any rendering-verification limitation. Preserve pending work for its existing target.
 
 ## Delete one document
 
@@ -89,19 +95,19 @@ For an authorized deletion, identify the intended inbox and document first. Use 
 
 In a live viewer with UI deletion support, **Delete** is available in each list row's three-dot menu and in document options. The modal shows the title, filename, and inbox, explains permanent deletion, and defaults to Cancel. Confirm only the authorized document. Every reachable live reader has this authority on loopback, LAN, and Tailscale, without a startup grant or separate reader login. Hub filters do not limit it.
 
-Deletion removes the stored copy from its original inbox. It preserves the original source file, existing exports, and remote snapshots. There is no Undo or bulk deletion. If purge fails after removal from the live list, report that cleanup failure and the document's absence accurately. A missing or replaced source is a failure; preserve it rather than recreating storage or choosing another inbox. Deletion is complete when the result confirms removal and any cleanup failure is reported. Static exported or hosted copies remain read-only and contain no live viewer credentials.
+In an unenrolled inbox, deletion removes the saved files; report a purge failure separately from removal from the live list. In a managed inbox, deleting a local original signs terminal state for its authorized copies when they reconnect. Deleting an imported copy suppresses it only in the destination inbox. Managed bodies remain retained, with no disk-reclamation or secure-erasure guarantee. Original source files, existing exports and remote snapshots remain unchanged. There is no Undo or bulk deletion. A missing or replaced source fails without recreating storage or choosing another inbox. This step is complete when the result confirms the intended deletion or suppression and any cleanup failure is reported. Static exported or hosted copies remain read-only and contain no live viewer credentials.
 
 ## Validation gate
 
-The source must be a regular `.html` or `.htm` file containing valid UTF-8 and an explicit `<html>` tag or `<!doctype html>` declaration. The default size limit is 10 MiB.
+The source must be a regular `.html` or `.htm` file containing valid UTF-8 and an explicit `<html>` tag or `<!doctype html>` declaration. The ordinary default size limit is 10 MiB. Managed bodies have a fixed 10 MiB cap; a lower input limit can restrict them further.
 
 Blocking HTML policy errors reject publishing. These include `javascript:` or `vbscript:` URL attributes, navigation to `data:` URLs, `<meta http-equiv="refresh">`, and `<a>` or `<area>` links with non-HTTPS schemes or protocol-relative URLs. HTTPS, relative, and fragment links are allowed.
 
 Inline scripts and the supported Tailwind browser and Mermaid v11 script entry points are allowed. Inline event handlers, `<base>`, and non-allowlisted external scripts or asset URLs produce advisory warnings. Publishing continues. The viewer CSP blocks many warned features, but its script sources are broader than the canonical entry URLs; verify the affected behavior instead of treating a warning as proof of blocking.
 
-When publishing fails, preserve the exact error, fix the named condition in the source, and retry the same publish contract. Do not bypass validation, weaken viewer security, or claim that a CDN works without rendering it in the viewer.
+When input validation rejects the source before persistence, preserve the exact error, fix the named source condition, and retry the same publish contract. For other errors or a saved managed result, follow the publish gate and inspect the existing report before deciding the next operation. Preserve validation, viewer security and any rendering limitation.
 
-When publishing succeeds with warnings, preserve the printed URL, report the warnings, and verify the affected behavior in the viewer. Replace any required blocked feature with supported markup before republishing.
+When publication emits warnings, retain its saved/delivery outcome and any available reader URL, report the warnings, and verify the affected behavior when a viewer is available. Explain unsupported behavior. Changing an already saved report requires a separate authorized publication.
 
 ## Operate the viewer
 

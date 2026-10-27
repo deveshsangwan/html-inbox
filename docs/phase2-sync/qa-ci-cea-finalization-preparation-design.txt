@@ -1,0 +1,36 @@
+I recommend a **one-file fixture gate** to prepare the real source viewer before publication and verify the existing worker owners. This removes one identifiable setup responsibility from the cancellation cases. It does not establish that viewer startup caused the original reds or that preparation will resolve them.
+
+1. **Own only `sync-finalization-lifecycle.test.ts`.** Add a private preparation helper used by both completion-test loops, preserving their calibration, SIGINT and uninterrupted controls. Keep `sync-finalization-child.ts`, shared fixtures, production code and the unit runner unchanged.
+
+   After both temporary workers start and cleanup is registered, before `publicationArgs()`:
+
+   - Run the genuine named-inbox viewer command through `f.run(["viewer", "--inbox", source.name], 0)`. There is no `viewer start` action and startup does not support `--json`.
+   - Call `f.rememberViewer(source)` immediately. Require verified running/loopback status and retain the actual viewer record’s PID/process ID for reuse checks after publication.
+   - Use `contactWorker(home, "status")` and `parseWorkerControlStatus` for both workers. Require identities/configuration matching their retained worker records, source idle with zero tickets, and receiver ingestion listening at the exact configured URL.
+   - Read fresh ledgers. Require enabled/unpaused workers, the configured route/revision, current `isRouteDue(...) === true`, and empty canonical records, receipts, publication intents and outbox before publication. Failed readiness remains a setup failure; do not repair eligibility.
+
+   These operations use existing APIs. Avoid `f.json()` for sync readiness: it calls `rememberWorker`, which would register these in-process workers’ PID for eventual disappearance. That would incorrectly make cleanup wait for the test process itself. See the [fixture implementation](/tmp/html-inbox-finalization-research-wurv5h_f/borrowed-source/packages/cli/src/sync-worker-fault-fixtures.ts:171).
+
+2. **Be precise about what moves.** Genuine viewer spawning, binding and initial readiness move before publication. The publisher still calls real `ensureViewer`; its [verified reuse path](/tmp/html-inbox-finalization-research-wurv5h_f/borrowed-source/packages/cli/src/viewer-server.ts:30) remains inside the foreground deadline. Its final worker-status lookup also remains there.
+
+   After commit, the original five seconds still cover delivery inspection, owned-worker verification, the single publication ticket, route admission, verified TLS/history exchange, actual body transfer, receiver durability, sender acknowledgement, completion hold and finalization. The `4000/5000` observation waits still include target CLI startup and durable publication. Preparation grants no additional time.
+
+   Require zero completion/ACK holds before launch and exactly the existing one target ticket afterward. Retain actual bytes, receipts, request signal/socket closure, cancellation counts and every `2000/1000/500ms` margin. Receiver safety stays in the parent process.
+
+3. **Exclude history/TLS warmup from this smallest gate.** An empty protocol pass through the same worker is possible in principle, but the current interfaces make it a larger change:
+
+   - A preflight `requestRun` leaves a second retained ticket, violating the one-ticket contract.
+   - `requestWake()` creates background work without returning its completion promise.
+   - `status().processState === "idle"` does not prove the whole drain finished.
+   - `quiesce()` can abort current work and can return before a newly requested drain establishes `current`.
+   - Current completion interception selects the first completion operation; warmup could consume the target hold.
+
+   Safely preparing history would therefore need an explicitly observed settled background pass, separately armed target interception and proof of zero custody. That complexity is unnecessary for viewer preparation. Keep routes genuinely reconnecting; perform their first TLS/history exchange after publication.
+
+The proposed gate should receive bounded verification on exact Node24 only: one run of the six affected loop cases, then one representative matched preparation-order comparison using a held callback after genuine native viewer binding. The prepared arm must finish that same real readiness work before publication; the cold arm leaves it afterward. Require one reached callback in each arm, actual viewer reuse, zero prepublication tickets/custody and unchanged cancellation assertions. Retain the existing filesystem-budget red/control sensitivity against the prepared fixture. No deadline extensions, natural rerun loop or missed-hook credit. This is a proposed plan, not authorization to execute it.
+
+A file-concurrency cap is a legitimate **separate harness capacity boundary**. The [current runner](/home/agent/.t3/worktrees/html-inbox/t3-11f52b83/scripts/run-unit-tests.mjs:17) supplies no cap. Exact Node24.21.0 documents file-level concurrency, and its implementation resolves the default to `max(availableParallelism() - 1, 1)`. That establishes no actual local or hosted CPU count. A file cap would leave concurrency inside each application/test process intact. [Exact CLI documentation](https://raw.githubusercontent.com/nodejs/node/v24.21.0/doc/api/cli.md), [exact implementation](https://raw.githubusercontent.com/nodejs/node/v24.21.0/lib/internal/test_runner/test.js).
+
+I would not select a cap from these isolated passes. The missing discriminator is a stage trace correlated with actual overlapping test-file/fixture processes, effective runner options and available parallelism, own-process scheduler delay/CPU usage, event-loop delay, and the start/end of the specific outstanding lock, filesystem or network operation. Wall time or low CPU alone cannot distinguish scheduling delay from awaited I/O or a stalled producer. #231 still additionally needs separate ACK/completion predicate values.
+
+No runtime, lock admission, repository edit or old-artifact modification occurred in this assessment. The prior clean working-tree/logical-index result and raw-index-metadata qualification remain. Parent owns any preparation gate, subsequent verification and correction decision.

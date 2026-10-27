@@ -150,11 +150,12 @@
           search, open, and permanently delete any document.
         </p>
         <p>
-          Live UI deletion requires a reader running 0.5.x. The skill fallback
-          stays pinned to published 0.4.0, with copy and named-inbox support but
-          no UI deletion. Before an authorized upgrade, review the
-          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
-          and saved exposure and hub mounts.
+          Live UI deletion is available in running 0.5.x and 0.6.x readers.
+          The skill fallback is published 0.5.0, including deletion, copying and
+          named inboxes but no managed sync. Review saved exposure and hub mounts,
+          the <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>,
+          and <a href="named-inboxes.html#upgrade-060">0.6.0 opt-in enrollment</a>
+          before upgrading.
         </p>
         <p>
           Keep the same <code>--inbox</code>, absolute <code>--home</code>, or
@@ -263,10 +264,13 @@ html-inbox viewer --lan</code></pre>
 html-inbox viewer status</code></pre>
         </div>
         <p>
-          Publishing reuses the exposed viewer and prints a network document
-          URL. Other readers see the new record immediately. The original
-          sandbox, CSP, metadata escaping, storage checks, and Host validation
-          continue to apply.
+          Unenrolled publication reuses the exposed viewer and prints its
+          network document URL. Managed publication reports durable storage,
+          delivery and viewer readiness separately; an available reader URL is
+          in <code>viewer.url</code> in JSON output. See
+          <a href="publishing.html#managed">managed publication</a> before
+          parsing its output. The original sandbox, CSP, metadata escaping,
+          storage checks and Host validation continue to apply.
         </p>
         <p>
           Host validation limits request authorities; it does not authenticate
@@ -298,6 +302,15 @@ html-inbox viewer --loopback</code></pre>
           configuration.
         </p>
 
+        <p>
+          This listener is for readers, not sync ingestion. Managed synchronization
+          needs separate explicit routes, credentials and TLS on an explicit
+          unicast listener IP; wildcard reader LAN setup grants no replication
+          authority. Viewer stop leaves an independent worker running. Managed
+          original deletion signs terminal state for authorized copies on
+          reconnection; imported deletion is local suppression and bodies remain
+          retained. See <a href="named-inboxes.html#upgrade-060">managed operation</a>.
+        </p>
         <nav class="docs-page-links" aria-label="Adjacent documentation pages">
           <a href="viewer.html">Previous: Viewer</a
           ><a href="tailscale.html">Next: Tailscale access</a>

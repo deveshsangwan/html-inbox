@@ -415,11 +415,13 @@
           </p>
 
           <p class="landing-access-note">
-            Live UI deletion requires a reader running 0.5.x. The skill fallback
-            stays pinned to published 0.4.0, with copy and named inboxes but no UI
-            deletion. Before an authorized upgrade, review the
-            <a href="docs/named-inboxes.html#upgrade-050">deletion permission
-            change</a> for all exposures and hub mounts.
+            Live deletion is available in supporting 0.5.x and 0.6.x readers.
+            The skill fallback is published 0.5.0, including copying, deletion and
+            named inboxes but no managed sync. Review the
+            <a href="docs/named-inboxes.html#upgrade-050">reader permission change</a>
+            and <a href="docs/named-inboxes.html#upgrade-060">0.6.0 opt-in managed upgrade</a>.
+            Managed workers run independently; original deletion propagates signed
+            terminal state and imported deletion is local suppression. Bodies remain retained.
           </p>
           <p class="landing-access-note">
             In 0.3.0, name independent libraries and choose each destination
@@ -447,8 +449,8 @@
             <article>
               <h3>Share a static snapshot</h3>
               <p>
-                Export your library or publish it to a Cloudflare Pages project
-                you own. The unlisted snapshot URL is a bearer link: anyone with
+                Export eligible local originals or publish them to a Cloudflare Pages project
+                you own. Synced, detached and fork-inherited imports are excluded. The unlisted snapshot URL is a bearer link: anyone with
                 it can read and reshare the snapshot.
               </p>
               <a class="landing-text-link" href="docs/remote.html"

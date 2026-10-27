@@ -1,3 +1,4 @@
+import { parseViewerLocalOwner, type ViewerLocalOwner } from "./viewer-ownership";
 import { randomUUID } from "node:crypto";
 import { constants } from "node:fs";
 import { lstat, open, readFile, rm } from "node:fs/promises";
@@ -18,6 +19,7 @@ export interface ViewerRecord {
   controlUrl: string;
   startedAt: string;
   shutdownError?: string;
+  localOwner?: ViewerLocalOwner;
 }
 
 export interface SavedViewerConfiguration {
@@ -29,6 +31,8 @@ export interface SavedViewerConfiguration {
 export interface ViewerRecordReadOptions {
   readOnly?: boolean;
 }
+
+export class ViewerRecordFormatError extends Error {}
 
 export async function getInboxInstanceId(home: string): Promise<string> {
   await ensurePrivateDirectory(home);
@@ -54,6 +58,7 @@ export async function readViewerRecord(
   options: ViewerRecordReadOptions = {},
 ): Promise<ViewerRecord | null> {
   const value = await readPrivateJson(path.join(home, "viewer.json"), options);
+
   if (value === null) {
     return null;
   }
@@ -63,6 +68,18 @@ export async function readViewerRecord(
     throw new Error("Older viewer process record: stop the older viewer with its previous executable before starting this version");
   }
 
+  try {
+    return parseViewerRecord(value, home);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new ViewerRecordFormatError(error.message, { cause: error });
+    }
+
+    throw error;
+  }
+}
+
+function parseViewerRecord(value: unknown, home: string): ViewerRecord {
   if (!isRecord(value) || !isValidPid(value.pid) || typeof value.instanceId !== "string" ||
       typeof value.processId !== "string" || typeof value.protocolVersion !== "number" ||
       !Number.isSafeInteger(value.protocolVersion) || value.protocolVersion < 1 ||
@@ -96,6 +113,7 @@ export async function readViewerRecord(
     urls: parseViewerUrls(value.urls, config),
     controlUrl: value.controlUrl,
     startedAt: value.startedAt,
+    ...(value.localOwner === undefined ? {} : { localOwner: parseViewerLocalOwner(value.localOwner) }),
     ...(value.shutdownError ? { shutdownError: value.shutdownError } : {}),
   };
 }
@@ -219,7 +237,17 @@ async function readPrivateJson(
     }
 
     const bytes = await readBoundedFile(file, 64 * 1024, `Viewer record is too large: ${filePath}`);
-    const value: unknown = JSON.parse(bytes.toString("utf8"));
+    let value: unknown;
+    try {
+      value = JSON.parse(bytes.toString("utf8"));
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw new ViewerRecordFormatError(error.message, { cause: error });
+      }
+
+      throw error;
+    }
+
     if (options.readOnly && value === null) {
       throw new Error(`Invalid viewer record at ${filePath}`);
     }

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { lstat, readFile, readdir, realpath, rename, rm } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
+import { ManagedSyncStore } from "./sync-store";
 import { parseDocumentMetadata, DOCUMENT_SCHEMA_VERSION, DeleteResult, DocumentBackend, DocumentMetadata, isSafeDocumentId, PublishInput, StoredDocument } from "./documents";
 import { deleteStoredDocument } from "./document-deletion";
 import {
@@ -42,6 +43,11 @@ export class LocalDocumentBackend implements DocumentBackend {
   ) {}
 
   async publish(input: PublishInput): Promise<DocumentMetadata> {
+    input = { ...input, originalBytes: Buffer.from(input.originalBytes) };
+    if (await ManagedSyncStore.isEnrolled(this.home)) {
+      return new ManagedSyncStore(this.home).publish(input, this.createDocumentId());
+    }
+
     await this.prepareStorage();
     const metadata = parseDocumentMetadata({
       schemaVersion: DOCUMENT_SCHEMA_VERSION,
@@ -71,6 +77,10 @@ export class LocalDocumentBackend implements DocumentBackend {
   }
 
   async listDocuments(): Promise<DocumentMetadata[]> {
+    if (await ManagedSyncStore.isEnrolled(this.home)) {
+      return new ManagedSyncStore(this.home).listDocuments();
+    }
+
     await this.prepareStorage();
     const documentsDir = path.join(this.home, "documents");
     let entries: string[];
@@ -91,6 +101,10 @@ export class LocalDocumentBackend implements DocumentBackend {
   }
 
   async getDocument(id: string): Promise<StoredDocument | null> {
+    if (await ManagedSyncStore.isEnrolled(this.home)) {
+      return isSafeDocumentId(id) ? new ManagedSyncStore(this.home).getDocument(id) : null;
+    }
+
     const metadata = await this.getDocumentMetadata(id);
     if (!metadata) {
       return null;
@@ -113,6 +127,10 @@ export class LocalDocumentBackend implements DocumentBackend {
       return null;
     }
 
+    if (await ManagedSyncStore.isEnrolled(this.home)) {
+      return new ManagedSyncStore(this.home).getDocumentMetadata(id);
+    }
+
     await this.prepareStorage();
     return this.readMetadata(id);
   }
@@ -120,6 +138,10 @@ export class LocalDocumentBackend implements DocumentBackend {
   async deleteDocument(id: string): Promise<DeleteResult | null> {
     if (!isSafeDocumentId(id)) {
       return null;
+    }
+
+    if (await ManagedSyncStore.isEnrolled(this.home)) {
+      return new ManagedSyncStore(this.home).deleteDocument(id);
     }
 
     await this.prepareStorage();

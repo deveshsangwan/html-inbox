@@ -158,11 +158,12 @@
           process or external configuration belongs to it.
         </p>
         <p>
-          Live UI deletion requires a reader running 0.5.x. The skill fallback
-          stays pinned to published 0.4.0, with copy and named-inbox support but
-          no UI deletion. Before an authorized upgrade, review the
-          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
-          and saved exposure and hub mounts.
+          Live UI deletion is available in running 0.5.x and 0.6.x readers.
+          The skill fallback is published 0.5.0, including deletion, copying and
+          named inboxes but no managed sync. Review saved exposure and hub mounts,
+          the <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>,
+          and <a href="named-inboxes.html#upgrade-060">0.6.0 opt-in enrollment</a>
+          before upgrading.
         </p>
 
         <h2 id="selection">An inbox choice is required</h2>
@@ -180,8 +181,8 @@
           status/stop and service commands after upgrading. Published 0.2.x
           commands lack those new flags. Check actual help and preserve the
           destination if an older executable lacks a requested capability.
-          The published 0.4.0 fallback supports named inboxes, hubs, and the
-          reader copy dialog, but has no UI deletion. See <a href="named-inboxes.html#upgrade">migration steps</a>.
+          The published 0.5.0 fallback supports named inboxes, hubs, and the
+          reader copy dialog, but has live-reader deletion but no managed sync. See <a href="named-inboxes.html#upgrade">migration steps</a>.
         </p>
         <h2 id="viewer">Viewer does not start</h2>
         <p>
@@ -235,7 +236,7 @@ html-inbox viewer --foreground</code></pre>
           newer release. For an old foreground process, use Ctrl-C. The new CLI
           refuses an incompatible private control protocol rather than
           signaling an unverified PID. This applies to 0.1.0 viewers; 0.2.x,
-          0.3.x, 0.4.x, and 0.5.x share protocol version 3. Restart an existing viewer after updating
+          0.3.x, 0.4.x, 0.5.x, and 0.6.x share protocol version 3. Restart an existing viewer after updating
           to load new code, including the 0.2.2 shutdown diagnostics and 0.4.0 copy controls.
         </p>
         <p>
@@ -371,6 +372,37 @@ html-inbox remote reconcile</code></pre>
           diagnostics before sharing them.
         </p>
 
+        <h2 id="managed">Keep managed saved work intact</h2>
+        <p>
+          A managed publish can save locally and return 2 pending, 3 blocked, or
+          130 cancelled after save. Inspect <code>local.durable</code>, document
+          identity, <code>delivery</code>, <code>worker</code> and
+          <code>viewer.url</code>. Preserve the same inbox, report, intended target
+          and obligations. Use <code>sync status --document LOCAL_ID --json</code>
+          with the original selector; do not duplicate-publish or switch targets
+          because delivery is nonzero. If no saved evidence exists or exit 1
+          reports uncertain persistence, inspect that uncertainty before retrying.
+        </p>
+        <p>
+          Worker enablement can persist despite startup failure. Check worker
+          status, private logs and the configured listener rather than assuming
+          it is running. TLS, credentials, matching route revisions and authorized
+          history are operator-provisioned; unavailable history blocks safely.
+          Explicit retry clears the selected route's retry block, while credential
+          replacement alone does not. Wake/status do not reset attempts. An
+          unrecoverable state/cleanup failure exits unsuccessfully with a sanitized
+          diagnostic; inspect it before restarting. Never delete unknown locks,
+          format barriers or history to force progress.
+        </p>
+        <p>
+          Copied/moved homes or mismatched UUID/filesystem anchors require the
+          explicit-home <a href="named-inboxes.html#upgrade-060">restore quarantine
+          and fork procedure</a>. Keep copied endpoints/PIDs from controlling the
+          original process. Viewer stop does not stop the independent worker,
+          and pause still permits authorized incoming pushes. For backup, join
+          all writers, workers, viewers and mounting hubs. See the
+          <a href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/phase2-sync/worker-operations.md">operator guide</a>.
+        </p>
         <nav class="docs-page-links" aria-label="Adjacent documentation pages">
           <a href="cli-reference.html">Previous: CLI reference</a
           ><a href="development.html">Next: Development</a>

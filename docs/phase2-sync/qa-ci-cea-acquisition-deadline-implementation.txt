@@ -1,0 +1,63 @@
+Gate B source writing is terminal. The frozen e1389c128c3b160e83a84ab92db89b8ca16ea20f34d6af822268cc7694a1c582 gate is implemented in the same app-bound t3-c24e9b83 worktree. Runtime was explicitly released by the coordinator before setup. This is an author handoff, not review credit, combined verification or release approval.
+
+Worktree: /home/agent/.t3/worktrees/html-inbox/t3-c24e9b83
+HEAD: cea30b48cbef814511e2eedfc83d1793bc011354
+Index SHA256: 7de9a69fdf99aebcaa48be82e60f1803c25240e8caf8ec7355a505582cb35762
+Original 165-file manifest SHA256: d7f1e5bbb5a4ebb0c66928f0ceb2402cc745770644697356f4099dff93340943
+Final 166-file manifest SHA256: 95c0ee540f851dc10bb7acc12f2fa43aa196e35e1638af47965853eccad6080b
+Complete diff SHA256: 471e4374f781b209af41c8fbb2e52cf4a09521f4e4bb445f951687a13e9df83f
+
+Only these files are dirty:
+ M packages/cli/src/sync-files.ts
+   SHA256 28aec0025c935bf27116a5b646790654f263ce7a7336b3f3607fa5c7f0f62630
+ M packages/cli/src/sync-client.ts
+   SHA256 15512f302a6328bf343cf900cd5fb44996abb0203af4e77e90194d4901f3262c
+?? packages/cli/src/sync-acquisition-deadline.test.ts
+   SHA256 048ce7eba76eceb05a9826adbfce9dc9bc8f897d24e9130a0e753e66b885da73
+
+All other 163 original source files match their baseline hashes. HEAD and raw index are preserved, with no staged changes. The final tracked and untracked content was inspected. Exact bytes are also in final-source/, and complete-source.diff includes the new file. Parent Gate A and its test, Windows/static/staging files were not copied or changed. No repository docs, commits, pushes or PR actions occurred.
+
+The production diff adds 19 lines and removes 2. sync-files exports StoreLockQueueDeadlineError and constructs it only in the existing local queue timer. sync-client translates only a top-level instance rejected by its initial openRouteAttempt. The caller's already-aborted signal reason wins; otherwise the existing SyncProtocolError carries status 503, local-acquisition-deadline and the identical marker as cause. Queue behavior, deadlines, filesystem ownership and cleanup are unchanged. The classifier and remote allowlist remain unchanged.
+
+The marker proves failure before entering filesystem acquisition for this invocation. The client catch is safe because this initial attempt has not registered authority or begun credentials/HTTPS. It is not a general cleanup-success marker. A raw marker outside this catch remains blocked. Ordinary portable/unmanaged catalog callers retain their existing behavior, including their separate acquisition, flush and disposal rules.
+
+Evidence against the ranked hypotheses:
+1. A same-process queue expiry caused the controlled first-call misclassification. Before production changes, both exact runtimes failed the new public regression and original held-lock #505. Each new regression hit the real queue once, spent its 100 ms request deadline with about 150 ms of the 300 ms pass left, and started no credentials or HTTPS. The original reproduction returned blocked/local-validation-or-storage-failed, then failed its unchanged pre-aborted assertion. Final held controls return pending/local-acquisition-deadline and pass that assertion. This establishes the controlled mechanism, not the historical hosted contender.
+2. Whole-pass expiry or explicit abort could masquerade as that result. Separate final controls preserve the exact explicit abort reason while pass time remains, and produce aborted on a real 340 ms hold crossing an unchanged 300 ms pass. The latter sends zero requests and leaves the ledger unchanged. Its existing reported lastError can still be local-validation-or-storage-failed; nothing is persisted as a new retry. Gate A's separate cancellation ordering is not redesigned.
+3. Filesystem/authority failures could accidentally become transient. A real independently held mutation.lock deadline remains the same raw error at the public client, keeps the existing owner, and leaves the ledger unchanged. A real later startCommunication queue expiry stays raw/blocked. A successor enters after an expired queue waiter without ever invoking the expired callback. Existing ownership, portable, shutdown and storage fault tests retain actual I/O, write/sync/close/unlink, uncertain namespace, corrupt state, anchor and aggregate coverage.
+4. A wrapped marker or remote claim could excuse a different failure. Same-text errors, structural lookalikes, nested causes, aggregates with an I/O member, EIO/ENOSPC and authorization/identity errors preserve top-level identity. Aggregate members remain intact. Raw markers classify blocked, and the remote allowlist rejects the new local code. Actual TLS-envelope and protocol authorization controls also pass.
+5. Retry could lose durability or run forever. The real owned worker persists the route retry, suppresses wake and a closed/restarted lifetime owner before the existing due time, reaches attempt 20 through twenty actual queue failures, and stays blocked through another wake/restart. Explicit store.retry clears the block. The reconnecting live outbox remains unchanged during failures; no eligible item or receipt is invented. After removing contention, verified HTTPS gives exact receiver bytes and one canonical receipt on each side. The repeated pass transfers zero bodies and retains identical receipts.
+
+The worker lifetime owners restart inside the isolated test child; this does not claim an OS crash/restart experiment. Fresh ManagedSyncStore instances read the durable state. The first backoff suppression uses real wall time. For attempts 2–20, a test clock advances only between completed passes to the persisted nextAttemptAt. Every failure uses a real 140 ms hold and 100/300 ms request/pass bounds. This proves durable scheduling decisions and finite accounting, not forty minutes of elapsed native backoff. The separate successful custody phase uses stock positive-control bounds of 5000/30000 ms. No original test or production deadline was extended to obtain green.
+
+The test-only child necessity is recorded in test-child-necessity.txt. Its entry point is inside the authorized new test file. Real admitted-attempt watchers can outlive close(); the parent retains storage until natural child exit/reap and then rebinds the captured exact ports. No additional production helper or test file was added.
+
+Final results, identical source bytes on exact Node 20.20.2 and 24.21.0:
+Check                                  Node 20               Node 24
+typecheck + build                      both exit 0           both exit 0
+new containing file                    6 pass                6 pass
+original #505, real 140 ms hold         1 pass / 38 filtered  1 pass
+original #505, zero-hold control        1 pass / 38 filtered  1 pass
+ownership / portable / shutdown        207 pass              207 pass
+selected storage / auth assertions     49 pass / 21 filtered 49 pass
+full sync-protocol file                39 pass               39 pass
+Total executed passing checks          303                   303
+Final failures/cancellations            0 / 0                 0 / 0
+
+Node 20 emits filtered tests as TAP skips; Node 24 omits them. These totals include the two separately run #505 controls as well as its unchanged case in the full protocol file. No full-repository matrix, test concurrency change, admission retry or root wrapper was used. All 33 setup/compiler/test/audit invocations have exact argv, cwd, private environment, UTC start/end, exit, TAP count, log SHA and runner/spec SHA in command-receipts.txt and the individual receipt.json files. The common boundary was flock -w 45 -E 75 around the owned bounded subreaper. No admission 75 occurred. Both runtime binary digests were verified again in source-freeze.json.
+
+All earlier failures remain:
+- base-red-20/base-red-24: expected first public-boundary red.
+- base-original505-20/base-original505-24: expected original held-lock red.
+- expanded-typecheck: test-only callback typing and private-property access errors, corrected without production changes.
+- expanded-tests-20: missed intended fault because both outer and inner admissions were locally initiated; the zero-request assertion rejected four real requests. Corrected test selection uses actual admission order.
+- admission-count-tests-20: incorrect inbound-style fullyReconciled expectation on successful outbound delivery. Retained ledger evidence already showed a committed receipt. Corrected assertions use outbound confirmed status, public deliveryStatus, exact bytes, receipt counts and idempotence.
+No failed result was relabeled as a pass. The two failed child fixtures retain nonsecret ledger/body/port evidence plus original hashes in failed-fixture-evidence/ and failed-fixture-retention.json. Synthetic private keys/tokens were removed during owned cleanup.
+
+Cleanup completed at 2026-10-25T01:23:54.881600+00:00. The audit verified 662 previously sampled owned PID/start identities absent, rebound and closed all 29 captured literal loopback ports, and removed 35 proven-owned environment/dependency/build/store directories. Its own receipt then confirmed both sampled audit children absent with zero cleanup signals. At 2026-10-25 01:24:37 UTC, the audit's eight empty environment directories were removed using rmdir, exit 0. Logs, receipts, source snapshots, failed evidence and the app-bound worktree are retained. Existing affected fixtures additionally report their own exact rebinds; the 29 count covers only literal endpoints captured in this author's evidence. No global process, FD or port claim is made.
+
+The original eleven hosted nonpassing cases retain separate causes. The original log and complete triage/design evidence remain in their earlier locations, including /tmp/html-inbox-gate-b-design-hjyIcc4u. #524's receiver history-checkpoint failure is still understood to precede its fault-hit assertion. The successful isolated protocol runs do not assign its hosted cause. The hosted ecac333 merge object remains unavailable; no image/merge-tree equivalence is asserted.
+
+Remaining limits are the frozen gate's limits: no filesystem-deadline taxonomy, no arbitrary cause traversal, no general attempt-quiescence guarantee, and no relaxation of uncertain cleanup, storage, authorization, revision, target or corruption failures. No native-hosted cause or physical readiness claim. PhysicalQA stays parked at d3; no SHA release.
+
+Parent can integrate exactly the three frozen files. Parent still owns combined checks with its disjoint changes and two new reviews. No author runtime remains active or planned.

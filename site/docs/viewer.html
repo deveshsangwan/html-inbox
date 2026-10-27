@@ -151,11 +151,12 @@
           the CLI.
         </p>
         <p>
-          Live UI deletion requires a reader running 0.5.x. The skill fallback
-          stays pinned to published 0.4.0, with copy and named-inbox support but
-          no UI deletion. Before an authorized upgrade, review the
-          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
-          and saved exposure and hub mounts.
+          Live UI deletion is available in running 0.5.x and 0.6.x readers.
+          The skill fallback is published 0.5.0, including deletion, copying and
+          named inboxes but no managed sync. Review saved exposure and hub mounts,
+          the <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>,
+          and <a href="named-inboxes.html#upgrade-060">0.6.0 opt-in enrollment</a>
+          before upgrading.
         </p>
 
         <h2 id="reading">Read with more document space</h2>
@@ -187,11 +188,18 @@
         </p>
         <p>
           If a source is unavailable or replaced, deletion fails without
-          recreating it or choosing another target. Deletion first moves the
+          recreating it or choosing another target. Unenrolled deletion first moves the
           record out of the live library, then purges its files. If purge fails,
           the document is already absent and the cleanup failure is reported.
           Static exported and hosted snapshots are read-only independent copies
           with no live deletion controls or live viewer credentials.
+        </p>
+        <p>
+          In a managed inbox, deleting a local original signs terminal deletion
+          for its authorized copies when they reconnect. Deleting an imported
+          copy suppresses it only in this inbox. Managed bodies remain retained,
+          with no disk-reclamation or secure-erasure guarantee. See
+          <a href="named-inboxes.html#upgrade-060">managed enrollment and compatibility</a>.
         </p>
         <h2 id="copy">Copy text and code</h2>
         <p>
@@ -274,8 +282,9 @@ html-inbox preferences --json</code></pre>
           The command starts a detached process or reuses the viewer for this
           inbox. It returns after a private readiness check and prints a usable
           inbox URL. The process survives terminal closure.
-          <code>publish</code> uses the same startup path and returns a document
-          URL for the active exposure.
+          Unenrolled <code>publish</code> uses the same startup path and returns a
+          document URL for the active exposure. Managed publication saves before
+          independent viewer readiness/delivery and reports those states separately.
         </p>
         <p>
           Detachment does not escape an agent's systemd scope or provide
@@ -439,6 +448,13 @@ html-inbox viewer --loopback</code></pre>
           <a href="boot-services.html#diagnostics">service diagnostics</a>.
         </p>
 
+        <p>
+          A managed sync worker has a separate lifetime and ingestion listener.
+          Stopping this viewer does not stop that worker. Before a consistent
+          backup or managed-runtime upgrade, stop and join every writer, worker,
+          viewer and mounting hub. See
+          <a href="named-inboxes.html#upgrade-060">managed migration and rollback</a>.
+        </p>
         <nav class="docs-page-links" aria-label="Adjacent documentation pages">
           <a href="html-compatibility.html">Previous: HTML compatibility</a
           ><a href="lan.html">Next: LAN access</a>

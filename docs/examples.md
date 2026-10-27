@@ -1,5 +1,7 @@
 # Try the examples
 
+These plain URL examples describe unenrolled libraries. Managed publishing returns a saved-local/delivery result, can exit nonzero after a durable save, and uses JSON `viewer.url`. Preserve the saved report and intended target rather than duplicating it; see [managed publication](phase2-sync/worker-operations.md).
+
 From a built source checkout, publish any of these files. Each command prints
 its local viewer URL. Open that URL, then use **Back to inbox** to see the library.
 

@@ -1,0 +1,13 @@
+No source change is applied or authorized by this report. Do not change the30000ms case watchdog,5000ms request bounds,60000ms lease, setup order,129real seed publications,128+1pages, after-cut publication, signatures, authorization, immutable evidence or negative assertions on the present evidence.
+
+The narrow test-interface proposal is additive diagnostics using the existing TestContext.diagnostic API:
+- Record monotonic test-body start and pair-ready stages.
+- After each actual seed publish returns, record committed-loop count1..129 and elapsed milliseconds. A separate existing ledger-dir-fsynced counter can distinguish a reached durable barrier from a returned operation.
+- Record entry/outcome for identity, source inventory, push completion, activation, pull page1, after-cut publication and pull page2/cursor-reuse rejection. Record page counts and expected rejection category only; never tokens, nonce/cursor values, keys, signatures or payload.
+- Record actual test cleanup child close and exact listener release evidence through the existing fixture. Avoid making another status/control request part of the test's active budget.
+
+This proposal would make a future separately authorized combined failure distinguishable. It is not a correction of a demonstrated product bug and has not been implemented/typechecked/tested as a repository patch. A parent gate should decide whether to integrate diagnostics and where their output belongs. The current observer already supplied these measurements for the one selected run, with disclosed synchronous logging and async-wrapper overhead.
+
+The original combined-run cause cannot be recovered from its TAP timeout alone. The strongest next discriminator is the same coarse stage evidence in a separately authorized combined run, so the last durable count, completed publish count, current request/deadline and cleanup stage are observed at the actual failure. No such full-suite invocation is authorized to this agent.
+
+An optional diagnostic continuation could complete the previously registered real-operation pacing comparison only after a NEW parent decision. Its matching-control did not load because the helper placed a use-strict directive inside a function with a destructured parameter. The minimal helper-only repair is to move the directive to module scope before the function. Preserve the failed helper/log; make a new version, syntax-check under the shared mutex, and seek a new bounded experiment authorization. Do not silently retry the failed control or treat the unexecuted red as evidence. A larger outer-budget observation still requires its own parent decision after a real unchanged30s red with continuing progress.

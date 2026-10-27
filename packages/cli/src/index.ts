@@ -13,13 +13,18 @@ import { ensureViewer, getViewerStatus, resolveViewerConfiguration, startViewer,
 import { parseCommand, type CliCommand } from "./cli-args";
 import { isRecord } from "./validation";
 import { containsPath } from "./path-containment";
-import { parseViewerNetworkConfig } from "./viewer-network";
-import { getViewerServiceStatus, installViewerService, resolveViewerServiceHome, uninstallViewerService } from "./viewer-service";
+import { parseViewerNetworkConfig, resolveViewerNetworkConfig } from "./viewer-network";
+import { getViewerServiceStatus, installViewerService, inspectViewerServiceSelection, resolveViewerServiceHome, uninstallViewerService } from "./viewer-service";
+import { runViewerOwnerPreflight, VIEWER_OWNER_PREFLIGHT } from "./viewer-service-owner";
 import { configureViewerServiceLogging } from "./viewer-service-log";
 import { readPreferences, setAppearancePreference } from "./preferences";
 import { resolveInboxSelection, type ResolvedInboxSelection } from "./inbox-selection";
 import { runInboxCommand, runHubCommand } from "./inbox-commands";
 import { formatDocumentTable, formatViewerServiceResult, formatViewerStatus, formatViewerStopResult } from "./cli-display";
+import { resolveEnrollmentSelection } from "./sync-enrollment";
+import { isSyncCommand, isOfflineSyncCommand, runOfflineSyncCommand, runSyncCommand } from "./sync-cli";
+import { assertManagedLifecycle } from "./sync-lifecycle";
+import { formatManagedPublication, publishManagedDocument } from "./sync-publication";
 import { promptForInbox } from "./inbox-picker";
 import { runDocumentDeletionWorker } from "./document-deletion-worker";
 
@@ -27,7 +32,34 @@ export const USAGE = `Usage: html-inbox <command> [options]
 
 Commands:
   publish <file.html> --title <title> --type <type> [--json]
-      Store an HTML document and print its active viewer URL.
+      Save an HTML document. Unenrolled plain output is its active viewer URL.
+      Managed output separates durable local storage, delivery and viewer readiness.
+
+  sync enroll --inbox <name> --yes [--json]
+  sync configure --inbox <name> --config <absolute-runtime-json> [--json]
+  sync status [--document <local-id>] [--json]
+  sync mapping add --config <absolute-mapping-json>
+  sync mapping remove <route-uuid> --revision <current>
+  sync mapping reconnect <route-uuid> --revision <current> --config <absolute-json>
+  sync target set <destination-uuid> --peer <peer-uuid> | sync target clear
+  sync run [--route <uuid>] | sync retry --route <uuid> | sync pause | sync resume
+  sync worker enable | start [--foreground] | startup | status | stop | disable | wake
+  sync worker supervisor render --platform <systemd|launchd> --user <normal-user>
+  sync worker supervisor status --definition <absolute-definition>
+  sync restore inspect --home <canonical-home>
+  sync restore quarantine --home <canonical-home> --expect-inbox <uuid> --yes
+  sync fork --home <canonical-home> --expect-inbox <uuid> --yes
+      Managed replication uses explicit matching peer grants and its own owned worker.
+      All sync commands accept --json; offline restore/fork require explicit --home.
+      Enrollment is an explicit POSIX-only format upgrade; ordinary Windows libraries remain supported.
+      Configure routes, credentials and TLS separately. Viewer stop does not stop a sync worker.
+      Managed publish accepts --wait-ms <100..300000> (default 30000),
+      --request-timeout-ms <100..30000> (default 5000), and paired
+      --target-inbox <uuid> / --target-peer <uuid>; unenrolled publish rejects these flags.
+      Managed JSON includes local.durable, delivery, worker and viewer.url.
+      Exits: 0 confirmed or unconfigured local-only, 2 durable pending, 3 durable blocked,
+      130 cancellation after save when a saved result is present; 1 error/uncertain persistence.
+      Preserve saved reports and intended targets rather than duplicate-publishing on delivery failure.
 
   list [--json]
       List locally stored documents.
@@ -40,7 +72,8 @@ Commands:
       Delete a document after confirmation.
 
   export --out <directory> [--capability <value>] [--json]
-      Build a provider-independent static snapshot of the local library.
+      Build a static snapshot of eligible local originals only.
+      Synced imports, detached imports and fork-inherited originals are excluded.
 
   remote init --account <id> --project <name> [--branch <name>] [--adopt] [--json]
   remote publish [--json]
@@ -92,6 +125,8 @@ Environment:
   HTML_INBOX_CATALOG_HOME         Private catalog, default ~/.config/html-inbox.
   HTML_INBOX_HOME                 Library directory, default ~/.html-inbox.
   HTML_INBOX_PORT                 Port override, default 3217 on first startup.
+  HTML_INBOX_MAX_BYTES            Ordinary input/read limit, default 10485760 bytes.
+                                  Does not raise the managed 10 MiB body cap.
   HTML_INBOX_TAILSCALE_COMMAND    Path to an existing Tailscale executable.
 
 Selection:
@@ -101,6 +136,15 @@ Selection:
   Without named inboxes, the legacy ~/.html-inbox home remains available.`;
 
 export async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
+  if (argv[0] === VIEWER_OWNER_PREFLIGHT) {
+    if (argv.length !== 2) {
+      throw new Error("Viewer owner preflight requires one bounded input");
+    }
+
+    console.log(JSON.stringify(await runViewerOwnerPreflight(argv[1])));
+    return;
+  }
+
   const parsed = parseCommand(argv);
   const command = parsed.command;
 
@@ -124,14 +168,24 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     return;
   }
 
+  if (isSyncCommand(parsed) && isOfflineSyncCommand(parsed)) {
+    const result = await runOfflineSyncCommand(parsed);
+    console.log(parsed.json ? JSON.stringify(result) : JSON.stringify(result, null, 2));
+    return;
+  }
+
   const legacyHome = parsed.command === "viewer service"
     ? await resolveViewerServiceHome({ user: parsed.user })
     : undefined;
   const json = ("json" in parsed && parsed.json === true) ||
     ("options" in parsed && "json" in parsed.options && parsed.options.json === true);
   const canChooseInbox = stdin.isTTY && stdout.isTTY && stderr.isTTY && !json;
-  const selection = await resolveInboxSelection(parsed, process.env, legacyHome, {
+  const selection = parsed.command === "sync enroll" ? await resolveEnrollmentSelection(parsed) : await resolveInboxSelection(parsed, process.env, legacyHome, {
     requireSelection: true,
+    ...(parsed.command === "viewer service" ? { inspectHome: async (selectedHome: string) => {
+      const inspected = await inspectViewerServiceSelection(selectedHome, parsed.user);
+      return { home: inspected.home, ...(inspected.instanceId ? { instanceId: inspected.instanceId } : {}) };
+    } } : {}),
     ...(canChooseInbox ? { chooseInbox: promptForInbox } : {}),
   });
   const home = selection.home;
@@ -139,7 +193,24 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
     console.error(`html-inbox: Inbox ${selection.name} (${home})`);
   }
 
+  if (isSyncCommand(parsed)) {
+    const result = await runSyncCommand(parsed, selection);
+    console.log(typeof result === "string" ? result : JSON.stringify(result, null, parsed.json ? undefined : 2));
+    return;
+  }
+
   if (command === "publish") {
+    if (await assertManagedLifecycle(home)) {
+      const publication = await publishManagedDocument(parsed.options, selection);
+      console.log(parsed.json ? JSON.stringify(publication.result) : formatManagedPublication(publication.result));
+      process.exitCode = publication.exitCode;
+      return;
+    }
+
+    if (parsed.options.target || parsed.options.waitMs !== undefined || parsed.options.requestTimeoutMs !== undefined) {
+      throw new Error("Sync publication options require an enrolled inbox");
+    }
+
     const url = await publishCommand(parsed.options, selection);
     console.log(parsed.json ? JSON.stringify({ url, inbox: selection.name ?? null, home }) : url);
     return;
@@ -184,22 +255,25 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<void
 
   if (command === "viewer service") {
     if (parsed.action === "status") {
-      const status = await getViewerServiceStatus({ home });
+      const status = await getViewerServiceStatus({ home, user: parsed.user });
       console.log(parsed.json ? JSON.stringify(status, null, 2) : formatViewerServiceResult("status", status, selection.name));
       return;
     }
 
     if (parsed.action === "uninstall") {
-      const status = await uninstallViewerService({ home });
+      const status = await uninstallViewerService({ home, user: parsed.user });
       console.log(parsed.json ? JSON.stringify(status, null, 2) : formatViewerServiceResult("uninstall", status, selection.name));
       return;
     }
 
-    const saved = await resolveViewerConfiguration(home);
-    const config = await resolveViewerConfiguration(home, {
+    const inspected = await inspectViewerServiceSelection(home, parsed.user, undefined, true);
+    const saved = inspected.configuration ?? resolveViewerNetworkConfig(getViewerPort());
+    const exposure = parsed.exposure ?? saved.exposure;
+    const config = resolveViewerNetworkConfig({
       port: parsed.port ?? (process.env.HTML_INBOX_PORT ? getViewerPort() : saved.port),
-      exposure: parsed.exposure,
-      host: parsed.host,
+      exposure,
+      host: parsed.host ?? (exposure === saved.exposure ? saved.host : undefined),
+      tailscaleHostname: exposure === "tailscale" ? saved.tailscaleHostname : undefined,
     });
     const status = await installViewerService({ home, ...config, user: parsed.user });
     console.log(parsed.json ? JSON.stringify(status, null, 2) : formatViewerServiceResult("install", status, selection.name));

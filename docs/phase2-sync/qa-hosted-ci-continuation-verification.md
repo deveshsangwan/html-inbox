@@ -1,0 +1,24 @@
+# Hosted CI continuation verification
+
+Both first focused reviews were read against the unchanged13-file/165-source pin. Sol accepted both corrections. Astra accepted the session budget but reproduced an enabled early-startup failure followed by a short final custody timeout returning a false foreground deadline. Both identified six directory buckets incorrectly summarized as six cache entries. Root accepted the reporting gap and corrected the count to555entries with6rootbuckets after releasing the freeze. The original immutable receipts and both reports remain unchanged.
+
+Under gate `e195cf69e6fb8c135d1510607e10242d25d22638fb5ca847b3ac27c02ff5194e`, the private inspector retains one unavailable flag only within that inspection. Actual current confirmation, validated stronger diagnoses and genuine overall expiry keep precedence. The outer normalization, all deadlines, prior18 dedicated cases and accepted session budget remain unchanged. A new real-lock regression is red19/18pass/1expectedfailure before correction on both runtimes, then containing60/60 and affected125/125 pass on identical bytes. Earlier handoff prose saying the capacity case was excluded was incorrect; actual retained argv and logs include it. The continuation handoff records that correction without rewriting history.
+
+Current165-source aggregate is `99261687aadcfad5f973a50e7e9abcf8d6a1e6020a45f4e01f9a07338180fc30`. Current HEAD/base remains `01657ea6fd6dcb1d4c4f3f5ed4233828ab135f27`; all follow-up changes are uncommitted.
+
+```sh
+python3 /tmp/html-inbox-phase2-checks-1mpkndv5/check-coordinator.py qa-hosted-ci-continuation-node2421-verify-attempt1 bash /tmp/html-inbox-qa-history-amcemjlx/verify-hosted-node2421.sh
+python3 /tmp/html-inbox-phase2-checks-1mpkndv5/check-coordinator.py qa-hosted-ci-continuation-node20-units-attempt1 bash /tmp/html-inbox-qa-history-amcemjlx/node20-unit.sh
+```
+
+Both commands exited0 sequentially. Full unchanged pnpmverify on exact Node24.21.0 completed in289.284647s: units1012/1011pass/1Windowsskip,skills50/48/2Windows,browser23/22/1optionalCDN,site9/9. Total1094/1090pass/4skips,0fail/cancel/todo, plus typecheck/build,14-page integrity and package smoke. Complete compiled Node20.20.2 units completed299.927463s,1012/1011pass/1Windowsskip. Counts overlap. Log SHA256 values are `eb466a109aa5bd58c05cba9d62ef1e45ac2ef7bf3bdff17130a260fea58353b9` and `9035d1dc466adc9528352523c7b927dace48b73a4fffa0711af01b2764c24093`. Exact UTC commands/counts/runtime proof and qualifications remain in verification-qa.json and `/tmp/html-inbox-hosted-ci-continuation-evidence-fdobunq2/terminal-receipt-verified.json`.
+
+All165sources,324tracked/untracked files, branch,HEAD,status,index and ignored paths stayed unchanged. Build changed exactly the two expectedJSoutputs; all328compiled files then remained identical throughNode20. All454historicalreceipt/logfiles, originalauditprefix and52prior evidence artifacts were preserved. Audits reaped167and126adopted children, all independently verified absent, withremaining[]. No owned processes or new scratch paths remained. Inherited cache and residue were untouched. Neither local green nor controlled reproductions assign the original hosted actors.
+
+The final complete follow-up is frozen for two NEW independent focused confirmations. Original whole-change reviews and previous focused findings remain retained. No new committed or physical-QA SHA is released. Real three-device/native/privileged/power-loss limits and ownership/reaper/restore qualifications are unchanged.
+
+### Both final hosted-CI confirmations accepted
+
+Both NEW focused reviewers accepted the unavailable-inspection aggregation and corrected cache count with no new actionable finding. Sol independently passed56/56 on Node20.20.2 and24.21.0. Astra passed31/31 on each, including the unchanged prior failing reproducer. Counts overlap complete verification. The accepted session-budget patch remains byte-identical. Root read both full reports, verified all18frozen file hashes,165source and328compiled hashes, four independent command logs, and independently checked518/98recorded PIDs absent. Their191/28captured port rebinds are report-scoped, not host-global claims. All603current/historical log hashes match. Reports are review-ci-01657-r2-sol.md and review-ci-01657-r2-astra.md.
+
+The final source remains99261687aadcfad5f973a50e7e9abcf8d6a1e6020a45f4e01f9a07338180fc30, unchanged since complete checks. Full exact24.21.0 verification1094/1090pass/4documentedskips and completeNode20 units1012/1011pass/1skip stay authoritative. Source freeze is released only for logical commit packaging and evidence. No additional production correction is pending. Original hosted actors remain unknown; physicalQA is still parked. A published exact head must pass hosted checks before release to QA. No merge or deployment.

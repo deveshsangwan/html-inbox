@@ -156,11 +156,12 @@
           of operating it safely.
         </p>
         <p>
-          Live UI deletion requires a reader running 0.5.x. The skill fallback
-          stays pinned to published 0.4.0, with copy and named-inbox support but
-          no UI deletion. Before an authorized upgrade, review the
-          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
-          and saved exposure and hub mounts.
+          Live UI deletion is available in running 0.5.x and 0.6.x readers.
+          The skill fallback is published 0.5.0, including deletion, copying and
+          named inboxes but no managed sync. Review saved exposure and hub mounts,
+          the <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>,
+          and <a href="named-inboxes.html#upgrade-060">0.6.0 opt-in enrollment</a>
+          before upgrading.
         </p>
 
         <p>
@@ -260,9 +261,13 @@
         <p>
           The <a href="viewer.html#delete">deletion confirmation</a> shows the
           title, filename, and inbox and defaults to Cancel. There is no Undo or
-          bulk deletion. The stored record leaves the live library before its
-          files are purged; if purge fails, the record is already absent and the
-          cleanup failure is reported. The original source file, existing
+          bulk deletion. In an unenrolled inbox, the record leaves the live
+          library before its files are purged; if purge fails, the record is
+          already absent and the cleanup failure is reported. In a managed inbox,
+          deleting a local original signs terminal state for authorized copies
+          when they reconnect. Deleting an imported copy suppresses it only in
+          that destination. Bodies remain retained, so managed deletion promises
+          neither disk reclamation nor secure erasure. The original source file, existing
           exports, and remote snapshots remain unchanged. Static exported and
           hosted copies are read-only and contain no live viewer credentials.
         </p>
@@ -277,15 +282,17 @@
           The legacy inbox is <code>~/.html-inbox</code> when there are no
           registered entries or bindings. Version 0.3.0 also supports explicit
           <code>--inbox</code> / absolute <code>--home</code>, environment bindings,
-          and a configured default. See <a href="named-inboxes.html#selection">selection rules</a>. Original HTML is
-          stored at <code>documents/&lt;id&gt;/index.html</code> and metadata at
-          <code>documents/&lt;id&gt;/metadata.json</code>.
+          and a configured default. See <a href="named-inboxes.html#selection">selection rules</a>.
+          Unenrolled HTML is stored at <code>documents/&lt;id&gt;/index.html</code>
+          and metadata at <code>documents/&lt;id&gt;/metadata.json</code>. Managed
+          enrollment replaces that directory with a format barrier and uses a
+          private sync ledger, immutable bodies and signed provenance.
         </p>
         <p>
           The inbox also contains saved viewer configuration, process records,
           logs, identity and startup locks, optional Tailscale ownership, and
           optional remote state. Remote records contain capability secrets;
-          temporary snapshot work can contain the complete library. Treat them
+          temporary snapshot work can contain all eligible local originals. Treat them
           as sensitive even when the reports themselves are public.
         </p>
         <p>
@@ -372,18 +379,26 @@ icacls &quot;$env:HTML_INBOX_HOME&quot; /T</code></pre>
         <p>
           Back up the complete selected inbox to preserve documents, metadata,
           configuration, and remote intent. Keep the backup as private as the
-          original. Stop its standalone viewer and every hub mounting the
+          original. Stop and join its independent sync worker, standalone viewer and every hub mounting the
           inbox. Wait for pending writes to finish, and keep all other local
           writers, including publishing, deletion, remote commands, and
           automation, stopped until the copy finishes. A stopped standalone
           viewer does not prevent deletion through a running hub.
+          Viewer shutdown does not stop a sync worker. Pausing retries is not a
+          backup boundary because authorized incoming pushes can continue.
         </p>
         <p>
           Do not run an old active process record or copy locks as evidence that
           a process is alive on another machine. During restore, keep original
-          HTML and metadata together. Review startup records and retained
+          HTML and metadata together for an ordinary library; keep managed ledger,
+          immutable bodies and related state together for an enrolled home.
+          Copied endpoints and PIDs must never be used to control the original
+          process. Managed copies/restores can require explicit-home inspection,
+          quarantine and a fresh fork, with the expected old UUID. There is no
+          trusted old-owner recovery or automatic detection of an indistinguishable
+          full restore. Review startup records and retained
           Tailscale or remote ownership before using a restored library; follow
-          <a href="troubleshooting.html">recovery guidance</a> rather than
+          <a href="named-inboxes.html#upgrade-060">managed recovery guidance</a> rather than
           deleting journals to bypass safety checks.
         </p>
         <p>
@@ -407,8 +422,20 @@ icacls &quot;$env:HTML_INBOX_HOME&quot; /T</code></pre>
         </p>
         <h2 id="scope">Know the unsupported guarantees</h2>
         <p>
-          HTML Inbox does not provide multi-user roles, recipient
-          authentication, fine-grained document permissions, synchronization,
+          Version 0.6.0 provides explicit opt-in managed synchronization on POSIX
+          systems. It uses separately configured routes, credentials and TLS, and
+          an independent worker. Viewer shutdown does not stop that worker.
+          Before a consistent backup, stop and join every writer, worker, viewer
+          and mounted hub. Read the
+          <a href="named-inboxes.html#upgrade-060">enrollment and rollback limits</a>
+          and the
+          <a href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/phase2-sync/worker-operations.md">worker, restore-quarantine and fork guide</a>.
+          Ownership schema 2 requires coordinated runtimes; the managed ledger
+          uses schema 1. Ordinary Windows libraries remain supported; managed
+          Windows enrollment is unsupported.
+        </p>
+        <p>
+          HTML Inbox does not provide multi-user roles, reader authentication, fine-grained document permissions,
           malware scanning, guaranteed secret-link confidentiality, or
           guaranteed erasure. It does not fully contain navigation by allowed
           document scripts or in-frame resource exhaustion.

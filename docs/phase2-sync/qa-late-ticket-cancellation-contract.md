@@ -1,0 +1,25 @@
+# Late foreground ticket cancellation
+
+This gate extends only the earlier finalization-only restriction in qa-finalization-bind-contract.md. Required user contract 7 requires cancellation to stop the current foreground attempt where possible while preserving saved data and queued retries. Reporting cancelled JSON alone is insufficient when the publishing invocation's own submitted ticket still has a cancellable request.
+
+The previous author correctly implemented its frozen scope and reported a running ticket without claiming an active request. Root then reproduced the stronger case on the integrated163-source correction. A real verified HTTPS completion response after genuine receiver custody is held. SIGINT reaches the retained publishing CLI during its final status await. JSON/exit are now consistent, but the completion request remains active, signal un-aborted and ticket running. At observation, 4042ms/3934ms remain before expiry on Node24/20. Calling the existing authorized local cancel operation with the same150ms bound returns cancelled:true and closes that exact response/aborts its signal. Receiver bytes and its committed receipt remain exact. These are expected-correct reds, not data loss or remote rollback.
+
+Exact proof: coordinator late-active-request-probe-v3.cjs and receipts qa-late-active-request-red-node24/-node20. The earlier prototype missed its completion seam and is not product evidence. The v2 established a held request; v3 adds actual remaining-deadline and successful explicit-cancel controls. All owned children, three exact ports per invocation and synthetic homes/credentials/sentinels are cleaned. No production edit followed merely from a running-ticket label.
+
+## Production scope and behavior
+
+Only sync-publication.ts may change. Track whether cancellation has already been requested for the exact ticket submitted by this publication. A small private operation may deduplicate the two concrete cancellation sites. Keep the current early cancellation point for prompt interruption/pending completion. After the final viewer/status awaits, if interrupted and a foreground ticket was submitted but no cancellation was attempted, invoke the existing authenticated contactWorker cancel operation for that ticket.
+
+Use the SAME existing budget, Math.min(deadlineAt, Date.now()+150), and existing best-effort failure handling. Do not extend foreground/attempt bounds, add retries, wait for unrelated worker work, cancel any other ticket, pause background retries, change grants or claim remote rollback. If the deadline has expired or the owned worker is unavailable, retain honest cancellation output and durable work. A failed best-effort cancel is not permission to erase a report or invent remote availability.
+
+After the last cancellation await, apply final cancellation normalization immediately before result/exit construction with no further awaited work. Preserve QA-R5's no redundant inspection after validated confirmation. No-signal confirmed and local-only behavior remains. No worker/client/store/protocol/ledger/runtime schema change is authorized. Earlier binding and ownership-snapshot fixes remain byte-unchanged.
+
+## Tests and evidence
+
+The same isolated author owns this narrow publication follow-up and its two new finalization test/helper files. Refresh the exact integrated163 parent baseline final-tested-source.sha256 from /tmp/html-inbox-finalization-98th4vp8, aggregate25524dce6c3ebbbcaffe1b238886be37cf95c0c04cb89c8cf7d48735debe2055. Do not copy committed d3 over current fixes.
+
+Require actual CLI regressions for both late finalization boundaries, one genuine receiver confirmation, exactly one best-effort cancellation for this publication's ticket, consistent exit130/cancelled pending/null returned receipt, and unchanged genuine receiver custody/canonical bytes plus enabled/unpaused durable retries. No-signal controls issue no cancellation. Earlier cancellation attempts must not be duplicated and a publication without a submitted ticket must not cancel shared background work.
+
+Include a real HTTPS post-custody request held before ordinary expiry, positive calibration that the existing local cancel can abort it, and proof the corrected CLI does so without test-issued cancellation. Capture exact request/hold/signal/cancel counts, sufficient remaining deadline and real socket/attempt termination. Do not count a missed hold or natural deadline expiry as success. Preserve all existing deadlines and assertions. Synthetic loopback-only faults, isolated private stores and temporary keys remain the limit; signal only retained owned children. Reap and verify listeners/FDs/roots afterward.
+
+Record pre-fix red and post-fix green on20/24, complete affected suites and exact commands/exits/log hashes/cleanup. Return refreshed-parent delta and source manifests with nonowned snapshots restored. Parent owns integration, unchanged broad/completeNode20 checks and two fresh independent focused confirmations with all prior findings and this extension. No interim SHA, push, merge, deployment or physical-QA handoff before those gates.

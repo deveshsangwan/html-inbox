@@ -24,7 +24,7 @@ Override with:
 HTML_INBOX_HOME=/path/to/inbox
 ```
 
-Document layout:
+Unenrolled document layout:
 
 ```text
 documents/<id>/index.html
@@ -36,6 +36,14 @@ documents/<id>/metadata.json
 For ordinary library operations on POSIX filesystems that enforce Unix permissions, `private-storage.ts` creates and tightens managed directories to `0700` and files to `0600`. It rejects symbolic links and unexpected file types at the managed paths it checks, but does not change ownership. On Windows, Node's `chmod` does not establish owner-only ACLs. Privacy relies on existing file and directory ACLs and the permissions inherited when new paths are created. The CLI does not install or verify those ACLs, so a permissive `HTML_INBOX_HOME` can expose documents and remote state without a warning. The [Windows storage prerequisites](threat-model.md#windows-storage-prerequisites) apply to all local storage described as private here, including staging, trash, exports, and temporary credential logs.
 
 New records include a storage schema version. Legacy records without the field are read as schema version 1. Publishing validates metadata and writes both files in the private `documents/.staging/<id>` area, then makes the complete record visible with one same-filesystem directory rename. Interrupted staging records are never listed. A corrupt committed record is skipped with a diagnostic instead of breaking the rest of the library.
+
+## Managed storage and replication
+
+Explicit POSIX enrollment replaces the legacy documents directory with a regular-file barrier and creates a checked managed ledger, immutable bodies, signed canonical origin history and durable obligations. Original ownership, imported provenance, terminal deletion and destination-local suppression remain distinct. Origin keys, peer/source/destination UUIDs, epochs, route revisions and approved scopes are validated independently of transport credentials. Redistribution and complete-history delegation require their own explicit grants; reader reachability and local hub membership grant neither.
+
+The independent worker owns dedicated authenticated HTTPS ingestion and explicit outgoing routes. Credentials, CA files and TLS keys are operator-provisioned private references; no pairing, discovery, certificate bypass, firewall change or automatic supervision is added. Viewer process control and public reader routes remain separate from ingestion and sync administration. A missing body or incomplete inventory cannot invent origin deletion.
+
+Managed ownership records use schema 2; the managed ledger uses schema 1. Writers and workers need coordinated compatible runtimes. The default foreground wait is 30 seconds, request budget 5 seconds, reconciliation period 30 seconds and pass budget 60 seconds. Managed bodies are limited to 10 MiB, descriptors 64 KiB, ledger metadata 64 MiB and canonical records including terminal history 10,000. The ordinary `HTML_INBOX_MAX_BYTES` setting cannot raise these bounds. Retained bodies, tombstones and orphans have no general reclamation or secure-erasure guarantee. See [migration/rollback](named-inboxes.md#upgrade-to-060), [managed architecture](phase2-sync/architecture.md) and [worker operations](phase2-sync/worker-operations.md).
 
 ## Backend
 
@@ -51,11 +59,11 @@ The local document store exposes these operations:
 - `getDocument(id)` for original document bytes
 - `deleteDocument(id)`
 
-Deletion first renames a committed document into the private trash area so it disappears from the library atomically, then removes the trash record. If removal fails after the rename, the document is already absent from the live library and the operation reports the cleanup failure. Trash is an internal cleanup location, with no Undo. Deletion preserves the original publish source file and existing exported or remote snapshots. Search is a server-rendered filter over title, type, and source file name. There is no update, sync, tags, auth, or database layer in the local product.
+Deletion first renames a committed document into the private trash area so it disappears from the library atomically, then removes the trash record. If removal fails after the rename, the document is already absent from the live library and the operation reports the cleanup failure. Trash is an internal cleanup location, with no Undo. Deletion preserves the original publish source file and existing exported or remote snapshots. Search is a server-rendered filter over title, type, and source file name. This describes the ordinary unenrolled backend. Opt-in managed sync uses a separate ledger, signed history, retained bodies and authenticated routes; see [managed architecture](phase2-sync/architecture.md). Reader authentication and multi-user roles are not added.
 
 The hub explicitly binds a deletion writer for each mounted source to its captured canonical root, durable inbox UUID, and filesystem identity. This binding supports existing local libraries accessible to the same OS account. It does not add mutation to arbitrary document sources. Each deletion revalidates that binding; an unavailable or replaced source fails without recreating directories or choosing another source. Catalog name changes and list filters cannot retarget it.
 
-Deletion runs in a short-lived helper using the existing Node executable. The helper checks its working directory against the captured inbox identity and performs mutations through relative paths. This keeps those operations attached to the selected root when its external pathname changes, without changing the viewer's working directory. A per-document lock serializes cooperating CLI, viewer, and hub deletions through quarantine and purge. A detected root change after removal reports a cleanup failure. Other same-account processes remain trusted; arbitrary concurrent changes to descendants are outside this guarantee.
+Unenrolled deletion runs in a short-lived helper using the existing Node executable. The helper checks its working directory against the captured inbox identity and performs mutations through relative paths. This keeps those operations attached to the selected root when its external pathname changes, without changing the viewer's working directory. A per-document lock serializes cooperating CLI, viewer, and hub deletions through quarantine and purge. A detected root change after removal reports a cleanup failure. Other same-account processes remain trusted; arbitrary concurrent changes to descendants are outside this guarantee.
 
 ## Viewer
 
@@ -65,17 +73,19 @@ The reader accepts only explicit `Host` values derived from its configuration an
 
 Live deletion requests require a process-scoped CSRF token and a matching Origin. These checks protect requests from other origins; they do not distinguish owners from reachable readers. Live shell responses use `frame-ancestors 'none'`. Stored document content retains its original bytes, opaque-origin iframe sandbox, and document CSP. Static exported or hosted snapshots are independent read-only copies and contain no live deletion controls or live viewer credentials.
 
+`ViewerReaderServer.close()` stops request admission and joins admitted mutation handlers after native listener closure. A disconnected client can still have a managed transaction or deletion helper in progress. Viewer lifecycle cleanup awaits that join before removing its matching process record and reporting stopped. Startup preserves that record while its owner is live or cannot be shown dead; closed listeners do not establish that the owner has finished. Managed replacement retains the existing anchored process-start death proof. Ordinary malformed records remain recoverable when stopped, while private-file and I/O failures prevent replacement. Existing finite CLI stop waits retain the record and report failure if shutdown has not completed. Successful reader close establishes settlement of its admitted requests, not successful deletion, worker shutdown, or an offline snapshot of all inbox writers.
+
 Use `HTML_INBOX_PORT` when the port is taken:
 
 ```sh
 HTML_INBOX_PORT=4321 html-inbox viewer
 ```
 
-`viewer` and `publish` share the same detached startup path. The child runs `viewer --foreground`, retains the selected inbox and exposure configuration, and writes diagnostics in protected local storage. Startup serialization prevents concurrent callers from creating duplicate viewers. Saved configuration survives `stop`; the active process record identifies only the current viewer. Status and stop use the recorded local control endpoint instead of a network reader URL.
+`viewer` and unenrolled `publish` share the same detached startup path. Managed publication durably saves before independent viewer readiness and delivery; its result reports those outcomes separately. The child runs `viewer --foreground`, retains the selected inbox and exposure configuration, and writes diagnostics in protected local storage. Startup serialization prevents concurrent callers from creating duplicate viewers. Saved configuration survives `stop`; the active process record identifies only the current viewer. Status and stop use the recorded local control endpoint instead of a network reader URL.
 
 Native detachment creates a separate session on POSIX, but retains service-manager ownership such as a Linux systemd cgroup. Scope cleanup can terminate the detached viewer. Persistent availability requires an explicitly configured supervisor. Graceful shutdown logs its timestamp, PID, and first trigger before cleanup and completion after removing the matching process record. A signal reason identifies the received signal, not its sender.
 
-Versions 0.2.x, 0.3.x, 0.4.x, and 0.5.x share private control protocol 3. Compatible running viewers retain their loaded code until restarted. The control health check is the source of truth for readiness. A viewer can be reused only when its protocol and opaque home identity match. Shutdown also matches the saved PID and per-process identity against current control health before signaling. Tailscale readiness additionally requires verification of the live Serve route. A private ownership journal tracks the exact HTTPS route and backend; startup failures and shutdown remove only that verified route, preserving the journal when external changes make cleanup unsafe.
+Versions 0.2.x, 0.3.x, 0.4.x, 0.5.x, and 0.6.x share private control protocol 3. Compatible running viewers retain their loaded code until restarted. The control health check is the source of truth for readiness. A viewer can be reused only when its protocol and opaque home identity match. Shutdown also matches the saved PID and per-process identity against current control health before signaling. Tailscale readiness additionally requires verification of the live Serve route. A private ownership journal tracks the exact HTTPS route and backend; startup failures and shutdown remove only that verified route, preserving the journal when external changes make cleanup unsafe.
 
 Boot configuration is an explicit service operation. Linux systemd system units and macOS LaunchDaemons run the foreground viewer as a selected normal user before login. Definitions preserve the inbox, exposure, port, executable paths, and required environment. Installation and removal require administrator privileges, reject unrelated definitions, and preserve documents. See [service setup](self-hosting.md).
 
@@ -112,7 +122,7 @@ HTML is untrusted by default. HTML policy validation uses an HTML5 parser before
 
 Validation is a gate, not a sanitizer. Accepted HTML is still rendered only in the sandboxed viewer path. The iframe enables scripts without `allow-same-origin`, popup, or top-navigation permission, so documents receive an opaque origin and cannot access the viewer DOM or same-origin storage. Links and allowed scripts can navigate the current preview frame, while `_blank` links remain blocked. Its CSP permits inline document configuration and the allowlisted CDN script paths, blocks inline script attributes, and continues to block connections, frames, forms, objects, and non-data image, media, and font loads.
 
-Input is bounded before reading. HTML files default to a 10 MiB limit, configurable through `HTML_INBOX_MAX_BYTES`, and metadata fields have explicit length limits.
+Input is bounded before reading. Ordinary HTML input/read limits default to 10 MiB and can be configured through `HTML_INBOX_MAX_BYTES`. A lower setting can also reject managed publishing; a larger setting cannot raise the managed 10 MiB body cap. The managed descriptor, ledger and canonical-record bounds are separate, as is the 10 MiB encoded copy-JSON cap. Metadata fields have explicit length limits.
 
 Supported CDN entry URLs are deliberately limited to the canonical major-version URLs:
 
@@ -124,7 +134,7 @@ Mermaid's CSP source includes its `dist/` subtree because the entry module loads
 
 ## Remote publishing
 
-Remote publishing follows [ADR 0001](adr/0001-static-remote-inbox.md). The local library remains the only mutable source of truth. A provider-independent module generates a complete static snapshot under a 128-bit capability path, and a deployment workflow sends that immutable snapshot through a Cloudflare Pages adapter. Remote publishing administration remains local and the root of the deployed site does not list inboxes. Live deletion changes only the source library; existing exports and deployments retain their copied documents until explicitly replaced or removed.
+Remote publishing follows [ADR 0001](adr/0001-static-remote-inbox.md). The local library remains the only mutable source of truth. A provider-independent module generates a static snapshot of eligible local originals under a 128-bit capability path, and a deployment workflow sends that immutable snapshot through a Cloudflare Pages adapter. Every metadata.origin report is excluded, including synced imports, detached imports and fork-inherited originals. Remote publishing administration remains local and the root of the deployed site does not list inboxes. Live deletion changes only the source library; existing exports and deployments retain their copied documents until explicitly replaced or removed.
 
 The provider-independent export layout is:
 

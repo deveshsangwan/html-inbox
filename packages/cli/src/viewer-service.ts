@@ -1,3 +1,4 @@
+import { preflightViewerServiceHome } from "./viewer-service-owner";
 import path from "node:path";
 import { rm } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
@@ -36,6 +37,14 @@ export async function resolveViewerServiceHome(
   runtime: ViewerServiceRuntime = defaultRuntime(),
 ): Promise<string> {
   supportedPlatform(runtime);
+  if (!options.user) {
+    const saved = await readOwnedDefinition(getDefinitionPath(runtime), options.home, supportedPlatform(runtime));
+    if (saved) {
+      await verifiedServiceOwner(saved.definition, undefined, runtime);
+      return path.resolve(options.home ?? saved.definition.home);
+    }
+  }
+
   const user = await selectUser(options.user, runtime);
   return path.resolve(options.home ?? path.join(user.home, ".html-inbox"));
 }
@@ -51,6 +60,10 @@ export async function installViewerService(
   const contents = renderViewerServiceDefinition(definition);
   const definitionPath = getDefinitionPath(runtime);
   const previous = await readOwnedDefinition(definitionPath, options.home, platform);
+  if (previous) {
+    await verifiedServiceOwner(previous.definition, definition.user.name, runtime);
+  }
+
   const before = await queryManager(runtime, definitionPath, previous !== null);
   await prepareViewerServiceInbox(definition, runtime);
 
@@ -79,13 +92,14 @@ export async function installViewerService(
 }
 
 export async function uninstallViewerService(
-  options: Pick<ViewerServiceOptions, "home">,
+  options: Pick<ViewerServiceOptions, "home" | "user">,
   runtime: ViewerServiceRuntime = defaultRuntime(),
 ): Promise<ViewerServiceStatus> {
   assertAdministrator(runtime);
 
   const definitionPath = getDefinitionPath(runtime);
   const previous = await readOwnedDefinition(definitionPath, options.home, supportedPlatform(runtime));
+  await preflightServiceSelection(options, previous?.definition, runtime);
   const before = await queryManager(runtime, definitionPath, previous !== null);
   if (!previous) return { state: "not-installed", enabled: false, definitionPath };
 
@@ -113,15 +127,40 @@ export async function uninstallViewerService(
 }
 
 export async function getViewerServiceStatus(
-  options: Pick<ViewerServiceOptions, "home">,
+  options: Pick<ViewerServiceOptions, "home" | "user">,
   runtime: ViewerServiceRuntime = defaultRuntime(),
 ): Promise<ViewerServiceStatus> {
   const definitionPath = getDefinitionPath(runtime);
   const saved = await readOwnedDefinition(definitionPath, options.home, supportedPlatform(runtime));
+  await preflightServiceSelection(options, saved?.definition, runtime);
   const manager = await queryManager(runtime, definitionPath, saved !== null);
   if (!saved) return { state: "not-installed", enabled: false, definitionPath };
 
   return describeService(saved.definition, manager, runtime, definitionPath);
+}
+
+export async function inspectViewerServiceSelection(home: string, requestedUser: string | undefined, runtime: ViewerServiceRuntime = defaultRuntime(), readConfiguration = false) {
+  const saved = await readOwnedDefinition(getDefinitionPath(runtime), home, supportedPlatform(runtime));
+  const user = saved ? await verifiedServiceOwner(saved.definition, requestedUser, runtime) : await selectUser(requestedUser, runtime);
+  return preflightViewerServiceHome({ home, user, readConfiguration });
+}
+
+async function verifiedServiceOwner(definition: ViewerServiceDefinition, requestedUser: string | undefined, runtime: ViewerServiceRuntime) {
+  if (requestedUser !== undefined && requestedUser !== definition.user.name) {
+    throw new Error("Selected user differs from installed service owner");
+  }
+
+  const user = await selectUser(definition.user.name, runtime);
+  if (user.uid !== definition.user.uid || user.gid !== definition.user.gid || user.home !== definition.user.home) {
+    throw new Error("Installed service account binding differs from the current normal account");
+  }
+
+  return user;
+}
+
+async function preflightServiceSelection(options: Pick<ViewerServiceOptions, "home" | "user">, saved: ViewerServiceDefinition | undefined, runtime: ViewerServiceRuntime) {
+  const user = saved ? await verifiedServiceOwner(saved, options.user, runtime) : await selectUser(options.user, runtime);
+  await preflightViewerServiceHome({ home: options.home, user });
 }
 
 function getDefinitionPath(runtime: ViewerServiceRuntime) {

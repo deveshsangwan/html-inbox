@@ -158,11 +158,12 @@
           normal user before anyone logs in.
         </p>
         <p>
-          Live UI deletion requires a reader running 0.5.x. The skill fallback
-          stays pinned to published 0.4.0, with copy and named-inbox support but
-          no UI deletion. Before an authorized upgrade, review the
-          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
-          and saved exposure and hub mounts.
+          Live UI deletion is available in running 0.5.x and 0.6.x readers.
+          The skill fallback is published 0.5.0, including deletion, copying and
+          named inboxes but no managed sync. Review saved exposure and hub mounts,
+          the <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>,
+          and <a href="named-inboxes.html#upgrade-060">0.6.0 opt-in enrollment</a>
+          before upgrading.
         </p>
 
         <h2 id="prerequisites">Choose stable paths and an account</h2>
@@ -189,6 +190,26 @@ command -v html-inbox</code></pre>
           Linux requires systemd as the system service manager. macOS uses the
           system launchd domain. Windows supports the ordinary CLI and viewer,
           but these service commands do not install Windows boot services.
+        </p>
+        <h2 id="sync-workers">Supervise sync workers separately</h2>
+        <p>
+          These service commands administer the viewer only. A managed sync worker
+          has its own lifetime and ingestion listener; stopping or uninstalling a
+          viewer service leaves it independent. Enablement or detached startup
+          does not prove restart after boot. Review the separate UUID-named
+          systemd/launchd definitions produced by
+          <code>sync worker supervisor render</code>, install them manually with
+          stable absolute Node/CLI paths and the normal owner, then verify exact
+          definition/manager/worker identity through supervisor status. Unknown
+          manager state remains unproven. See
+          <a href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/phase2-sync/worker-operations.md#manual-boot-supervision">manual sync supervision</a>.
+        </p>
+        <p>
+          Before backup or a coordinated managed-runtime upgrade, stop and join
+          every worker, writer, viewer and mounting hub. Routes, credentials, TLS
+          and ingestion are explicitly configured; viewer LAN or Tailscale Serve
+          setup is not worker setup. See
+          <a href="named-inboxes.html#upgrade-060">0.6.0 enrollment and rollback</a>.
         </p>
         <h2 id="install">Install a loopback service</h2>
         <div class="docs-code">
@@ -398,7 +419,7 @@ HTML_INBOX_HOME=/home/alice/inboxes/reports html-inbox viewer service status</co
           Uninstall the service with the old CLI before upgrading, then install
           the updated CLI and reinstall the service as the same normal account
           with the intended inbox and exposure. This loads the new code and
-          records stable executable paths. Versions 0.2.x, 0.3.x, 0.4.x, and 0.5.x share protocol version
+          records stable executable paths. Versions 0.2.x, 0.3.x, 0.4.x, 0.5.x, and 0.6.x share protocol version
           3; incompatible 0.1.0 viewers need their original executable for
           shutdown. The new shutdown diagnostics require a viewer running
           0.2.2 or newer; reader copy controls require 0.4.0 or newer.

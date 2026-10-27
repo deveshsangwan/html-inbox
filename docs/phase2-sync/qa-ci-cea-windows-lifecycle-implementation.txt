@@ -1,0 +1,162 @@
+TERMINAL SOURCE-WRITING FREEZE
+
+The exact authorized 518-byte patch is applied, unstaged, to only packages/cli/src/sync-https-fixtures.test.ts in the T3-bound worktree. Typecheck/build passed under both exact local runtimes, the complete containing suite passed on both, and the existing sentinel identity control passed against actual patched compiled source. No further source writes or test executions are planned in this child workstream.
+
+Authorization and scope
+
+Gate read and SHA-verified before any edit:
+/home/agent/.t3/worktrees/html-inbox/feat-phase2-sync/docs/phase2-sync/qa-ci-cea-windows-lifecycle-contract.md
+SHA256 45cd0e3f63a9f39991baf39515202f3afe8e671c0eaf77128fe471661e5e1a66
+The gate was verified again at freeze and after cleanup.
+
+Authorized patch: applied-authorization.patch, 518 bytes
+SHA256 a888724f5af97bdde6ef7d2cdcb9ba7644c8ac9587e1a963b36204856dcd8f44
+Read-only git apply --check preceded git apply. The patch was applied directly to this child T3 checkout only. The temporary test checkout began detached at the same exact parent and received only the final owned file bytes, not another worktree's uncommitted changes.
+
+T3 checkout: /home/agent/.t3/worktrees/html-inbox/t3-a5bde7d5
+HEAD remains cea30b48cbef814511e2eedfc83d1793bc011354
+Source count165 before/after.
+Baseline source aggregate d7f1e5bbb5a4ebb0c66928f0ceb2402cc745770644697356f4099dff93340943
+Final source aggregate ebc98ba2d7467284f699e2ad98ea1b401116b4207ad270ac21dbc59bec7db9a0
+Manifest convention is unchanged: git ls-files packages/cli/src order, SHA256(file bytes), two spaces, path, newline; hash concatenated manifest.
+Final owned file: 16919 bytes, SHA256 2cf029adbe4f62e0558e63c3bf1406747cbfd5c13236f207db95d7081745b947
+Actual git diff: owned-final.diff, 734 bytes, SHA256 96ae048ec2aa12a7ed0c4c172d1b4175c0f95743d13008cf42aeeb60fd3c4d66
+The git diff includes Git's headers and extended hunk header; its bytes differ from the authorized 518-byte unified patch, but the final source is exactly the original file with that patch's one replacement. This equality is asserted directly in freeze-and-cleanup.py.
+Index SHA256 remains 4a2462bc6f51ed3e6585549041a39d8079538226765a6bd8acb8efab1147e2db, byte-identical, with no staged changes.
+Final porcelain status is exactly:
+ M packages/cli/src/sync-https-fixtures.test.ts
+
+The complete owned file and full diff were inspected. git diff --check passed. No other tracked or untracked repository file changed. The T3-bound worktree is preserved. Parent's worktree and docs were read only; old Windows browser, Ubuntu static/cluster files and prior helper workflows were untouched.
+
+Final behavior
+
+The final loop still first asserts child.isRunning is false. It then awaits the cached actual retained-child stop result, requires a nonnull exit code or signal, and requires a post-close stats command to reject with the existing child-closed error. Exact child listener rebind/close follows immediately, and upstream rebind/close is preserved.
+
+All nine nested semantic cases, original TLS/trust/hostname/expiry/IPv6 conditions, fault controls, body limits, cancellation, active listener/lifetime stops and forced owned-child cleanup remain byte-for-byte unchanged. All original timeouts including60000ms and1000/1000/2000ms stop escalation remain unchanged. No helper/API/export/production/platform-skip/credential/security logic changed. These tests prove transport fixture plumbing, never application custody.
+
+Validation and exact runtime identities
+
+Local Linux x64 Node24.21.0:
+/tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node
+SHA256 7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c
+Local Linux x64 Node20.20.2:
+/tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node
+SHA256 6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd
+Both supplied binaries were only read and their hashes matched before checks and after cleanup. Full versions and system OpenSSL are in runtimes.json. System default Node24.19.0 was not used to execute checks; its Corepack script was launched by pinned Node24.21.0 for the isolated installation.
+
+Fresh dependency setup used pnpm11.7.0 frozen lockfile, ignore-scripts, and a private store/cache/HOME. Rust compiler tsc-rs0.7.0 was invoked with --noEmit and then for emit under each runtime. Both typechecks and builds exited0. All328 generated file bytes were identical between the Node24 and Node20 builds and remained identical through every test. Compiled test SHA256 ad1bf53468a9f32d808b58ff38cb8e5fd8e4bd9cf8c4a8b46cc6d28177e572cc. Compiled manifest aggregate b9b0623b8a7690a19b08d7b4c9f8f5341e93f54c66d75aa1a9192ec30d671546. The temporary source manifest matched the final T3 source manifest before cleanup.
+
+Three selected suite executions, each once, no retry/stress/matrix:
+- patched-natural24: exit0; tests10/pass10/fail0/skip0/cancel0/todo0.
+- patched-natural20: exit0; tests10/pass10/fail0/skip0/cancel0/todo0.
+- patched-sentinel24: exit0; tests10/pass10/fail0/skip0/cancel0/todo0.
+All nine nested cases executed and passed in every run. No new helper failure or invalid receipt occurred in this continuation.
+
+run-patched-fixture.cjs loads the actual on-disk compiled test with ordinary require(testPath). It has NO custom Module loader or _compile substitution. It verifies the three patched oracle expressions and absence of the original final numeric probe before executing. Each lifecycle receipt records actualPatchedOracle=true and the same compiled test hash. A preserved copy of the actual executed compiled test is actual-patched-compiled.test.js.
+
+The observer reuses retained ChildProcess/listener capture. The existing live Linux SIGSTOP call is routed to that exact retained live child.kill after exitCode/signalCode/connected/exit-event guards; results are native. Signal-zero probes remain native and diagnostic code does not manufacture a process result. Proxy stop escalation remains the original retained helper implementation. No uninstrumented numeric SIGSTOP suite was rerun.
+
+The scratch sentinel mode retains the same post-close public PID alias model, with an actual unrelated live IPC sentinel. The actual patched final oracle executes unchanged from disk; afterward the observer exercises all23 retired-number aliases and requires the native lookup to find the live sentinel. Thus the old identity premise still fails in the model while actual owned lifecycle cleanup succeeds. The sentinel answers pings before/after fixture cleanup, has no fixture-induced exit/disconnect, then closes by its separate owned IPC stop with exit0 and no signal. The control remains SIMULATION, not native Windows PID reuse or assignment of the historical actor. A real running child also rejects the isRunning=false guard before stop.
+
+All original evidence remains immutable
+
+The original diagnosis bundle /tmp/html-inbox-win-lifecycle-cea-_ah6z2kv remains unchanged. All59 listed artifacts were SHA-verified before this edit and after cleanup. Original manifest SHA256 remains9bcbace30ebdeacad77fbfab619e3160b2c77a9002776f49431d258dbe16101f. Its original red/control logs, both helper failures, invalid first baseline and direct numeric SIGSTOP deviation remain preserved and qualified. They were not overwritten, retried or reclassified. The first old invalid baseline still has no verified test exit/reap receipt.
+
+Native Windows actor is UNKNOWN. No Windows run, hosted merge equivalence, native correction or PID reuse event is claimed. The unresolved Windows browser diagnosis remains separate. No remote/Mac/Fleet discovery, live data/service, network/security setting, public comment, PR watch/mutation, commit/push/merge/deploy or physical QA occurred. Parent owns integration, combined checks after other phases terminal, two fresh independent reviews and publication. Physical QA remains parked at d3eaaf9fab4ae84e4d66eed0292027da8f023a48.
+
+Resources and cleanup
+
+Own run-owned.py uses a private allowlisted HOME/XDG/TMP/catalog/cache environment and PR_SET_CHILD_SUBREAPER, captures exact commands/UTC/exit/log hashes and samples scoped descendants. No parent coordinator wrapper or root audit write was used. All selected-run wrapper receipts report exit0, no timeout, zero remaining descendants, and every sampled PID absent after completion. No adopted survivors remained.
+
+Each selected run recorded23 actual retained proxy children with disconnect, exit before close, nonnull exit-or-signal status, connected=false and actual PID absence. Across three runs that is69 proxies, plus one sentinel,70 retained children total. All were checked absent again at final inspection. Each run independently rebound and closed28 exact owned listeners,84 scoped rebind/close receipts total, not a claim of84 globally unique ports. cleanup.json contains each PID and listener receipt. No saved/foreign process was signaled and no PID lookup authorized cleanup or a signal.
+
+Credential roots were removed by actual fixture after hooks and the private catalog was empty before removal. Generated dependencies/dist, private HOME/XDG/TMP/npm/Corepack/pnpm stores and the temporary detached worktree were removed. Only the disposable test file copy was restored to its baseline before removing that temporary checkout. The T3-bound checkout remains present with ONLY the authorized tracked test edit. Its node_modules/dist remain absent as at start. Other worktree registrations were unchanged by cleanup. The frozen test bytes, clean unchanged index and gate hash were verified after cleanup.
+
+Source-writing freeze recorded at 2026-10-25T00:21:53.105835+00:00. Cleanup completed at 2026-10-25T00:21:53.846633+00:00.
+
+Exact commands and log identities
+
+Each invocation below used this continuation's own wrapper, cwd at its disposable worktree, and private environment recorded in each receipt JSON. Output bytes are combined stdout/stderr as captured, not rewritten. Typecheck/build logs are empty and have the standard empty SHA256. No broad verification is implied by these selected checks.
+
+install
+python3 /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/run-owned.py install 120 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node /home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/corepack/dist/pnpm.js install --frozen-lockfile --ignore-scripts --store-dir /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/pnpm-store
+UTC 2026-10-25T00:19:20.453218+00:00 -> 2026-10-25T00:19:26.135652+00:00
+exit=0; elapsedSeconds=5.68241501506418; logBytes=1366; logSha256=06b7145ab5bfead55d47886cf84808950b21fb2fe6f398c51a791c19278d1ea1
+log=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/install.log
+receipt=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/install.json
+
+typecheck24
+python3 /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/run-owned.py typecheck24 60 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/worktree/node_modules/tsc-rs/bin/tsc-rs -p packages/cli/tsconfig.json --noEmit
+UTC 2026-10-25T00:19:51.776341+00:00 -> 2026-10-25T00:19:52.246984+00:00
+exit=0; elapsedSeconds=0.4706277549266815; logBytes=0; logSha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+log=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/typecheck24.log
+receipt=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/typecheck24.json
+
+build24
+python3 /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/run-owned.py build24 60 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/worktree/node_modules/tsc-rs/bin/tsc-rs -p packages/cli/tsconfig.json
+UTC 2026-10-25T00:19:52.347944+00:00 -> 2026-10-25T00:19:53.101505+00:00
+exit=0; elapsedSeconds=0.7535434197634459; logBytes=0; logSha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+log=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/build24.log
+receipt=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/build24.json
+
+typecheck20
+python3 /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/run-owned.py typecheck20 60 /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/worktree/node_modules/tsc-rs/bin/tsc-rs -p packages/cli/tsconfig.json --noEmit
+UTC 2026-10-25T00:19:59.587452+00:00 -> 2026-10-25T00:20:00.142284+00:00
+exit=0; elapsedSeconds=0.5548159666359425; logBytes=0; logSha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+log=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/typecheck20.log
+receipt=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/typecheck20.json
+
+build20
+python3 /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/run-owned.py build20 60 /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/worktree/node_modules/tsc-rs/bin/tsc-rs -p packages/cli/tsconfig.json
+UTC 2026-10-25T00:20:00.235346+00:00 -> 2026-10-25T00:20:00.955393+00:00
+exit=0; elapsedSeconds=0.7200326258316636; logBytes=0; logSha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+log=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/build20.log
+receipt=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/build20.json
+
+patched-natural24
+python3 /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/run-owned.py patched-natural24 80 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/run-patched-fixture.cjs natural
+UTC 2026-10-25T00:20:01.174838+00:00 -> 2026-10-25T00:20:06.835304+00:00
+exit=0; elapsedSeconds=5.660464383661747; logBytes=1356; logSha256=7c1389ea572e80ff6ec475132cfe74a7c91cda950b489c22e18607f25741d04e
+log=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/patched-natural24.log
+receipt=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/patched-natural24.json
+
+patched-natural20
+python3 /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/run-owned.py patched-natural20 80 /tmp/html-inbox-phase2-checks-1mpkndv5/npm-cache/_npx/ebaba8b9e55fd0a9/node_modules/node/bin/node /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/run-patched-fixture.cjs natural
+UTC 2026-10-25T00:20:21.760786+00:00 -> 2026-10-25T00:20:28.333748+00:00
+exit=0; elapsedSeconds=6.572944204322994; logBytes=2564; logSha256=db414d3a9ecebb71056ba586356dbe6595017aa60f9a68cfb927473cb920a463
+log=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/patched-natural20.log
+receipt=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/patched-natural20.json
+
+patched-sentinel24
+python3 /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/run-owned.py patched-sentinel24 80 /tmp/html-inbox-hosted-node2421-oz5llfie/runtime/node_modules/node-linux-x64/bin/node /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/run-patched-fixture.cjs sentinel
+UTC 2026-10-25T00:20:42.227754+00:00 -> 2026-10-25T00:20:47.790368+00:00
+exit=0; elapsedSeconds=5.562607717700303; logBytes=1385; logSha256=03215a951c951ca34e4b1d822ebc40db4e6bc3d22630dfd834ffd0a83b3465e1
+log=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/patched-sentinel24.log
+receipt=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/patched-sentinel24.json
+
+freeze-cleanup
+python3 /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/run-owned.py freeze-cleanup 30 /usr/bin/python3 /tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/freeze-and-cleanup.py
+UTC 2026-10-25T00:21:52.951123+00:00 -> 2026-10-25T00:21:53.859720+00:00
+exit=0; elapsedSeconds=0.9085558895021677; logBytes=2061; logSha256=ea085d62d2cf37bc5f53abe68b98269efeca2eea453831b80103999485d9b327
+log=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/freeze-cleanup.log
+receipt=/tmp/html-inbox-win-lifecycle-impl-cea-yn62lclz/receipts/freeze-cleanup.json
+
+Full final owned diff
+
+diff --git a/packages/cli/src/sync-https-fixtures.test.ts b/packages/cli/src/sync-https-fixtures.test.ts
+index c08e664..fd89097 100644
+--- a/packages/cli/src/sync-https-fixtures.test.ts
++++ b/packages/cli/src/sync-https-fixtures.test.ts
+@@ -252,7 +252,9 @@ test("real subprocess HTTPS fixtures validate trust, faults and cleanup", { time
+   await upstream.stop();
+   for (const child of children) {
+     assert.equal(child.isRunning, false);
+-    assert.throws(() => process.kill(child.pid, 0), /ESRCH/);
++    const stopped = await child.stop();
++    assert(stopped.code !== null || stopped.signal !== null);
++    await assert.rejects(child.stats(), /HTTPS fixture child closed/);
+     await assertListenerReleased(child.url);
+   }
+
+
+No source write occurred after the recorded freeze. Preserve the exact final file for parent integration; this report does not authorize combined checks, reviews or publication on behalf of the parent.

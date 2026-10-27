@@ -1,6 +1,6 @@
 # Tailscale viewer integration
 
-Live UI deletion requires a reader running 0.5.x. The skill fallback stays pinned to published 0.4.0, with copy and named-inbox support but no UI deletion. Before an authorized upgrade, review the [0.5.0 permission change](named-inboxes.md#upgrade-to-050) and saved exposure and hub mounts.
+Live UI deletion is available in running 0.5.x and 0.6.x readers. The skill fallback is published 0.5.0, including deletion, copying and named inboxes but no managed sync. Before an authorized upgrade, review the [0.5.0 permission change](named-inboxes.md#upgrade-to-050) and saved exposure and hub mounts.
 
 HTML Inbox uses an existing installed, signed-in Tailscale CLI. It never installs a client, logs in, changes access policy, enables Funnel, or resets Serve configuration. Reader reachability follows the user's tailnet policy. Every reachable live reader can read and permanently delete individual documents, just as on loopback and LAN. Deletion needs no startup grant or separate reader login. Publishing and process control stay in the local CLI.
 
@@ -15,6 +15,10 @@ The reader binds to `127.0.0.1`. Serve terminates tailnet HTTPS on the connected
 The HTTP foundation must allow the exact prepared hostname, ignore forwarded and Tailscale identity headers for authorization, and return only `{"ok":true}` from the reader's `/health`. Identity belongs to the separate private loopback control endpoint. The module checks reader health with both the tailnet Host and a loopback Host before configuring Serve. A reader exposing process or inbox identity fails this check.
 
 Keep the intended `--inbox`, absolute `--home`, or process binding across startup, status, and cleanup. With registered entries, unbound automation requires a selector or configured default. See [named selection and the 0.3 upgrade](named-inboxes.md#upgrade-from-02x).
+
+## Managed synchronization is separate
+
+Tailscale reader Serve setup does not configure sync ingestion or authorize replication. Managed routes, peer/destination UUIDs, approved origin scopes, credentials and TLS are explicit endpoint configuration. A worker's listener uses an explicit unicast IP and its own TLS settings, not the viewer's wildcard LAN or Serve defaults. Viewer stop leaves an independent sync worker running. Managed originals sign terminal state on authorized reconnection; imported deletion is local suppression and bodies remain retained. See [worker operations](phase2-sync/worker-operations.md) and [migration/backup limits](named-inboxes.md#upgrade-to-060).
 
 ## Worker contract
 

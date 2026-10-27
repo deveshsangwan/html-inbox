@@ -156,11 +156,12 @@
           use npm. You do not need a source checkout.
         </p>
         <p>
-          Live UI deletion requires a reader running 0.5.x. The skill fallback
-          stays pinned to published 0.4.0, with copy and named-inbox support but
-          no UI deletion. Before an authorized upgrade, review the
-          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
-          and saved exposure and hub mounts.
+          Live UI deletion is available in running 0.5.x and 0.6.x readers.
+          The skill fallback is published 0.5.0, including deletion, copying and
+          named inboxes but no managed sync. Review saved exposure and hub mounts,
+          the <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>,
+          and <a href="named-inboxes.html#upgrade-060">0.6.0 opt-in enrollment</a>
+          before upgrading.
         </p>
 
         <h2 id="agent-setup">Set up your agent</h2>
@@ -183,8 +184,8 @@
         <p>
           The skill and CLI installers are independent. Adding a skill does not
           install a global executable. On first use, the skill reuses a working,
-          stable <code>html-inbox</code> 0.2.x, 0.3.x, 0.4.x, or 0.5.x CLI or selects
-          <code>npx --yes html-inbox@0.4.0</code> for the operation. The fallback
+          stable <code>html-inbox</code> 0.2.x, 0.3.x, 0.4.x, 0.5.x, or 0.6.x CLI or selects
+          <code>npx --yes html-inbox@0.5.0</code> for the operation. The fallback
           needs registry access or a cached package and preserves your existing
           viewer settings.
         </p>
@@ -200,8 +201,8 @@
           Install the latest published package from npm, then check its version.
           Named libraries, the terminal picker, readable CLI output, and local
           hubs require 0.3.0 or newer. Reader copying requires 0.4.0 or newer;
-          live UI deletion requires a running 0.5.x reader. The skill fallback
-          stays pinned to verified 0.4.0 and has no UI deletion. Check actual
+          live UI deletion requires a running 0.5.x or 0.6.x reader. The skill fallback
+          stays pinned to verified 0.5.0 and has live-reader deletion but no managed sync. Check actual
           <code>--help</code> and the running reader before relying on a feature.
         </p>
         <div class="docs-code">
@@ -264,11 +265,19 @@ html-inbox --help</code></pre>
           ><code>html-inbox publish ./report.html --title &quot;Project update&quot; --type report</code></pre>
         </div>
         <p>
-          Open the document URL printed by the command. HTML Inbox validates the
-          file, stores its original bytes, and starts or reuses the viewer. A
+          For an unenrolled library, open the document URL printed by the command.
+          HTML Inbox validates the file, stores its original bytes, and starts or reuses the viewer. A
           new unbound library with no catalog entries lives at
           <code>~/.html-inbox</code> and first startup
           listens on <code>127.0.0.1:3217</code>.
+        </p>
+        <p>
+          Opt-in managed publishing reports durable local storage separately from
+          intended-server delivery and viewer readiness. Saved pending, blocked
+          or cancelled work can return nonzero without losing the report. Keep
+          its identity and target instead of publishing a duplicate. See
+          <a href="publishing.html#managed">managed output and exit codes</a> and
+          <a href="named-inboxes.html#upgrade-060">0.6.0 migration limits</a>.
         </p>
         <p>
           The viewer runs in the background after the launching CLI exits.
@@ -374,7 +383,7 @@ html-inbox viewer stop</code></pre>
           Update agent instructions separately using the
           <a href="agent-setup.html#update">skill update instructions</a>.
           Before changing CLI versions, stop an old viewer using the executable
-          that started it. Versions 0.2.x, 0.3.x, 0.4.x, and 0.5.x share private control protocol 3;
+          that started it. Versions 0.2.x, 0.3.x, 0.4.x, 0.5.x, and 0.6.x share private control protocol 3;
           incompatible 0.1.0 viewers need their original executable for shutdown.
           The CLI refuses to signal a process it cannot verify. Confirm the old viewer has stopped
           before installing the new version.
