@@ -158,11 +158,12 @@
           loopback.
         </p>
         <p>
-          Live UI deletion requires a reader running 0.5.x. The skill fallback
-          stays pinned to published 0.4.0, with copy and named-inbox support but
-          no UI deletion. Before an authorized upgrade, review the
-          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
-          and saved exposure and hub mounts.
+          Live UI deletion is available in running 0.5.x and 0.6.x readers.
+          The skill fallback is published 0.5.0, including deletion, copying and
+          named inboxes but no managed sync. Review saved exposure and hub mounts,
+          the <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>,
+          and <a href="named-inboxes.html#upgrade-060">0.6.0 opt-in enrollment</a>
+          before upgrading.
         </p>
         <p>
           Keep the same <code>--inbox</code>, absolute <code>--home</code>, or
@@ -378,6 +379,16 @@ html-inbox viewer status</code></pre>
           record the exact reviewed official source and CLI contracts.
         </p>
 
+        <p>
+          Tailscale reader Serve setup does not configure or authorize managed
+          replication. Worker ingestion uses separate explicit routes, UUID/origin
+          grants, credentials and TLS; there is no automatic peer/certificate
+          discovery or tailnet-wide grant. Viewer stop does not stop the independent
+          worker. Managed original deletion propagates signed terminal state on
+          authorized reconnection, imported deletion is local suppression, and
+          bodies remain retained. See
+          <a href="named-inboxes.html#upgrade-060">managed setup and backup limits</a>.
+        </p>
         <nav class="docs-page-links" aria-label="Adjacent documentation pages">
           <a href="lan.html">Previous: LAN access</a
           ><a href="boot-services.html">Next: Boot services</a>

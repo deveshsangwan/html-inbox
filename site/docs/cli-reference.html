@@ -153,17 +153,18 @@
         <p class="docs-eyebrow">HTML Inbox documentation</p>
         <h1>CLI reference</h1>
         <p class="docs-lead">
-          This reference describes 0.5.0. Library commands resolve one destination
+          This reference describes 0.6.0. Library commands resolve one destination
           from explicit flags, environment, or the configured default. Run
           <code>html-inbox --help</code> for the actual installed command set
           and <code>html-inbox --version</code> to identify the release.
         </p>
         <p>
-          Live UI deletion requires a reader running 0.5.x. The skill fallback
-          stays pinned to published 0.4.0, with copy and named-inbox support but
-          no UI deletion. Before an authorized upgrade, review the
-          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
-          and saved exposure and hub mounts.
+          Live UI deletion is available in running 0.5.x and 0.6.x readers.
+          The skill fallback is published 0.5.0, including deletion, copying and
+          named inboxes but no managed sync. Review saved exposure and hub mounts,
+          the <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>,
+          and <a href="named-inboxes.html#upgrade-060">0.6.0 opt-in enrollment</a>
+          before upgrading.
         </p>
 
         <h2 id="global">Help and version</h2>
@@ -241,15 +242,18 @@ html-inbox hub --config &lt;absolute-path&gt; [--port &lt;port&gt;] [--loopback 
             role="region"
             tabindex="0"
             aria-label="Document command syntax"
-          ><code>html-inbox publish &lt;file.html&gt; --title &lt;title&gt; --type &lt;type&gt; [--json]
+          ><code>html-inbox publish &lt;file.html&gt; --title &lt;title&gt; --type &lt;type&gt; [--json] [--wait-ms &lt;ms&gt;] [--request-timeout-ms &lt;ms&gt;] [--target-peer &lt;uuid&gt; --target-inbox &lt;uuid&gt;]
 html-inbox list [--json]
 html-inbox delete &lt;id&gt; [--force] [--json]</code></pre>
         </div>
         <p>
           <code>publish</code> requires one regular UTF-8 <code>.html</code> or
-          <code>.htm</code> file and both metadata flags. It prints a document
-          URL, or a receipt with <code>url</code>, <code>inbox</code>, and
-          <code>home</code> with <code>--json</code>. It does not accept stdin or JSON input.
+          <code>.htm</code> file and both metadata flags. Unenrolled publication
+          prints a document URL, or JSON with <code>url</code>, <code>inbox</code>
+          and <code>home</code>. Managed publication has the
+          <a href="#output">saved/delivery result</a> with <code>viewer.url</code>.
+          Its timing/target flags are rejected for unenrolled libraries; target
+          overrides must be paired. It does not accept stdin or JSON input.
           Title and type are non-empty text labels, limited to 200 and 64
           characters.
         </p>
@@ -258,6 +262,8 @@ html-inbox delete &lt;id&gt; [--force] [--json]</code></pre>
           a readable table or JSON. <code>delete</code> requires the document
           ID, asks for confirmation unless <code>--force</code> is supplied, and
           reports metadata plus reclaimed bytes with <code>--json</code>.
+          Managed deletion reports <code>reclaimedBytes: 0</code>: originals sign
+          terminal state and imports are suppressed locally while bodies remain.
           Non-interactive or JSON CLI deletion needs <code>--force</code>.
         </p>
         <h2 id="preferences">Appearance preferences</h2>
@@ -451,8 +457,9 @@ html-inbox remote revoke [--yes] [--json]</code></pre>
               <tr>
                 <td><code>remote publish</code></td>
                 <td>
-                  Deploy the complete current local library as a static
-                  snapshot.
+                  Deploy eligible local originals as a static snapshot.
+                  Synced imports, detached imports and fork-inherited
+                  originals are excluded.
                 </td>
               </tr>
               <tr>
@@ -502,18 +509,116 @@ html-inbox remote revoke [--yes] [--json]</code></pre>
         <p>
           Since 0.3.0, viewer status/stop and service commands require
           <code>--json</code> to retain machine-readable output. Plain document
-          and catalog lists are readable tables. Plain publish, detached viewer
+          and catalog lists are readable tables. Unenrolled plain publish, detached viewer
           startup, and hub startup retain URL-only stdout. Named context, picker
           text, and warnings go to stderr. JSON never prompts or grants approval;
           CLI deletion requires <code>--force</code> and revoke requires <code>--yes</code>.
         </p>
         <p>
+          Managed publication prints a multiline Saved locally / Delivery / reader
+          URL / onward receipt. Its JSON has <code>local.durable</code>, document
+          identity, <code>delivery</code>, <code>worker</code>, and the optional
+          reader link at <code>viewer.url</code>. Exit 0 means confirmed
+          intended-server custody or unconfigured local-only storage; 2 means
+          durable pending, 3 durable blocked, and 130 cancellation after save
+          when a saved result is present. Exit 1 covers validation, persistence
+          or uncertain durability. Preserve the saved report, intended target
+          and obligations; nonzero delivery status is not permission to duplicate
+          publication or choose another destination. Viewer readiness is separate.
+          Inspect uncertainty before retrying when no saved evidence is present.
+        </p>
+        <p>
           Published 0.2.x viewer and service commands output JSON without that
           flag. Check actual help before using new flags with an older CLI. The
-          published 0.4.0 skill fallback supports named selection, hubs, and
-          <a href="viewer.html#copy">reader copy controls</a>, but has no UI deletion.
+          published 0.5.0 skill fallback supports named selection, hubs, and
+          <a href="viewer.html#copy">reader copy controls</a>, but has live-reader deletion but no managed sync.
           See <a href="named-inboxes.html#upgrade">upgrade steps</a> and the
           <a href="https://github.com/deveshsangwan/html-inbox/blob/main/skills/html-inbox/references/cli-resolution.md">canonical CLI resolver rules</a>.
+        </p>
+        <h2 id="sync">Managed sync commands and limits</h2>
+        <p>
+          Managed sync is an explicit POSIX-only format upgrade of a named inbox.
+          Ordinary Windows libraries remain supported. Use top-level
+          <code>html-inbox --help</code> for command help; per-subcommand help is
+          not provided. Every sync variant accepts <code>--json</code>.
+          Without it, ordinary sync results are pretty JSON; supervisor render
+          prints definition text. Managed publish uses its separate plain receipt.
+          Preserve the selected inbox for online commands. Offline restore/fork
+          requires explicit <code>--home</code> rather than <code>--inbox</code>.
+        </p>
+        <div class="docs-code"><pre role="region" tabindex="0" aria-label="Managed sync command reference"><code>html-inbox sync enroll --inbox research --yes --json
+html-inbox sync configure --inbox research --config /absolute/private/runtime.json --json
+html-inbox sync status --inbox research --document LOCAL_ID --json
+html-inbox sync mapping add --inbox research --config /absolute/private/mapping.json --json
+html-inbox sync mapping remove ROUTE_UUID --inbox research --revision CURRENT --json
+html-inbox sync mapping reconnect ROUTE_UUID --inbox research --revision CURRENT --config /absolute/private/mapping.json --json
+html-inbox sync target set DESTINATION_UUID --peer PEER_UUID --inbox research --json
+html-inbox sync target clear --inbox research --json
+html-inbox sync run --route ROUTE_UUID --inbox research --json
+html-inbox sync retry --route ROUTE_UUID --inbox research --json
+html-inbox sync pause --inbox research --json
+html-inbox sync resume --inbox research --json
+html-inbox sync worker enable --inbox research --json
+html-inbox sync worker start --foreground --inbox research
+html-inbox sync worker startup --inbox research --json
+html-inbox sync worker status --inbox research --json
+html-inbox sync worker stop --inbox research --json
+html-inbox sync worker disable --inbox research --json
+html-inbox sync worker wake --inbox research --json
+html-inbox sync worker supervisor render --inbox research --platform systemd --user NORMAL_USER
+html-inbox sync worker supervisor status --inbox research --definition /absolute/installed-definition --json
+html-inbox sync restore inspect --home /canonical/copied-home --json
+html-inbox sync restore quarantine --home /canonical/copied-home --expect-inbox OLD_UUID --yes --json
+html-inbox sync fork --home /canonical/copied-home --expect-inbox OLD_UUID --yes --json</code></pre></div>
+        <p>
+          Inspect has no <code>--expect-inbox</code> flag; quarantine/fork require
+          it and explicit consent. Mapping remove/reconnect requires the expected
+          current revision. Removal reports <code>removed</code> and
+          <code>quiesced</code> separately and can exit 3 with quiescence false.
+          Retained copies stay detached. Reconnect needs matching fresh endpoint
+          revisions and trusted terminal history before live reattachment.
+        </p>
+        <p>
+          Worker enable persists enablement before startup, even if startup fails.
+          Start requires enablement; startup skips a disabled worker. Stop ends
+          the current owned process but keeps enablement; later authorized work
+          can restart it. Disable persists disabled state before stopping. Wake
+          requires enablement and starts or reuses the owned runtime before
+          requesting catch-up. It does not enable a disabled worker.
+          Run performs one bounded pass
+          and does not enable automatic sync. Pause stops locally initiated work,
+          while authorized incoming pushes may continue. Resume does not clear
+          permanent blocks; explicit route retry clears retry/backoff state.
+          Replacing a credential file alone does not reset a blocked route.
+        </p>
+        <p>
+          Default foreground wait is 30,000 ms, absolute request budget 5,000 ms,
+          periodic reconciliation 30,000 ms and pass budget 60,000 ms. Managed
+          publish accepts <code>--wait-ms</code> from 100 to 300,000 and
+          <code>--request-timeout-ms</code> from 100 to 30,000. Paired
+          <code>--target-peer</code> and <code>--target-inbox</code> UUID flags pin
+          only that publication; unenrolled publish rejects these managed flags.
+          Runtime reconcile bounds are 1,000–300,000 ms and pass bounds
+          100–60,000 ms. Transient retries start at one second, cap at five minutes
+          with jitter, and block after twenty consecutive failures. Status and
+          wake do not reset them. No listener, target or enabled worker exists by
+          default. Clearing an intended target changes foreground waiting, not
+          existing obligations or approved background routes. Local-only output
+          does not prove that replication is disabled.
+        </p>
+        <p>
+          Provision receiving enrolled inboxes, matching endpoint route IDs and
+          revisions, approved origin/key/epoch scopes, credentials and TLS
+          explicitly. Runtime JSON requires schemaVersion, intendedTarget,
+          listener, timings, credentials, trust and tls; use null for unconfigured
+          listener/target. Local references resolve canonical absolute private
+          files. Tokens are canonical base64url for 32–96 random bytes. TLS uses
+          system trust or an explicit CA, never certificate bypass. Ingestion
+          binds an explicit unicast literal IP; viewer LAN wildcards and Tailscale
+          reader Serve are separate. Exact JSON examples are in the
+          <a href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/phase2-sync/worker-interface.md">runtime and mapping interface</a>.
+          Read the <a href="named-inboxes.html#upgrade-060">enrollment, rollback
+          and retention limits</a> before mutation.
         </p>
         <h2 id="environment">Environment variables</h2>
         <div class="docs-table-wrap">
@@ -554,7 +659,10 @@ html-inbox remote revoke [--yes] [--json]</code></pre>
                 <td><code>HTML_INBOX_MAX_BYTES</code></td>
                 <td>
                   <code>10485760</code>, or 10 MiB. Positive safe integer byte
-                  limit for publish and hub document content reads.
+                  limit for ordinary publish and hub content reads. A lower input
+                  limit can reject managed publication, but a larger value cannot
+                  raise managed storage's fixed 10 MiB body cap. Descriptors,
+                  ledger metadata and canonical record counts have separate bounds.
                 </td>
               </tr>
               <tr>

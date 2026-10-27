@@ -31,8 +31,7 @@ HTML Inbox protects the local viewer and local machine from untrusted HTML repor
 
 ## Local controls
 
-- Store the original HTML unchanged at `documents/<id>/index.html`.
-- Store metadata separately at `documents/<id>/metadata.json`.
+- In unenrolled libraries, store original HTML unchanged at `documents/<id>/index.html` and metadata at `documents/<id>/metadata.json`. Opt-in managed storage uses its checked ledger, immutable bodies and signed provenance instead.
 - Validate published HTML in two tiers. See "Publish-time validation tiers" below.
 - Render documents through a dedicated viewer path inside an iframe sandboxed with only `allow-scripts`. Omitting `allow-same-origin` gives the document an opaque origin and prevents access to the viewer DOM and same-origin storage. Omitting popup and top-navigation permissions keeps links in the current frame and blocks `_blank` targets.
 - Use strict CSP on viewer responses. Document responses allow inline scripts plus the narrow CDN script paths required by Tailwind and Mermaid, block inline script attributes, and keep `connect-src`, frames, forms, objects, and non-data images, media, and fonts blocked. Default navigations to `no-referrer`.
@@ -44,7 +43,7 @@ HTML Inbox protects the local viewer and local machine from untrusted HTML repor
 - Stage and validate a complete record before making it visible with an atomic directory rename.
 - Offer single-document deletion in live list rows and document options. Show the title, filename, and inbox in a permanent-deletion confirmation with Cancel selected by default. Keep CLI confirmation and automated `--force` behavior.
 - Require a process-scoped CSRF token and matching Origin for live deletion. Retain Host validation and set `frame-ancestors 'none'` on live shell responses. The token protects requests from other origins, not documents from reachable readers.
-- Atomically rename a deleted record out of the live library before purging its files. Report a purge failure after that rename accurately, since the record is already absent. There is no Undo or bulk deletion. Preserve the original publish source file and existing exports and remote snapshots.
+- In unenrolled libraries, atomically rename a deleted record out of the live library before purging its files. Report a purge failure after that rename accurately. Managed originals sign terminal deletion for authorized copies on reconnection; imported deletion is destination-local suppression. Managed bodies remain retained, without disk reclamation or secure-erasure guarantees. There is no Undo or bulk deletion. Preserve original publish sources and existing exports and remote snapshots.
 - Validate the configured listening IP and port at the boundary. Report usable addresses rather than wildcard browser URLs.
 - Treat verified local control health as the readiness signal, and verify the HTTPS Serve route before reporting Tailscale readiness.
 
@@ -66,7 +65,7 @@ The optional local hub grants every reachable reader read and deletion authority
 
 For each source, the hub explicitly binds a deletion writer to its captured canonical root, durable inbox UUID, and filesystem identity, under the same OS account. It validates that binding before deletion, without accepting arbitrary source mutations or browser-provided filesystem targets. A missing, unavailable, or replaced source fails without recreating storage or choosing another source. UUID, filesystem identity, or location mismatches isolate that source and mark combined results incomplete. Public availability messages contain source names and generic state, not local roots, private control URLs, or diagnostics. Original bytes, sandbox isolation, document CSP, Host validation, and deletion request checks apply to hub routes too. The hub adds no publishing, ingestion, membership management, or source lifecycle endpoints. See [hub operation](named-inboxes.md#read-selected-libraries-together).
 
-Deletion uses the existing Node executable in a short-lived helper whose working directory is the captured inbox root. It validates that directory before mutation and uses relative paths, keeping root-bound mutations attached to that directory if its external pathname changes. Cooperating deletions share a per-document lock. Identity and snapshot checks detect changes around the operation; they do not provide atomic protection against arbitrary descendant substitutions by other trusted same-account processes. Do not replace document or internal storage directories during deletion. Detected drift after removal produces a cleanup warning instead of success.
+For unenrolled libraries, deletion uses the existing Node executable in a short-lived helper whose working directory is the captured inbox root. It validates that directory before mutation and uses relative paths, keeping root-bound mutations attached to that directory if its external pathname changes. Cooperating deletions share a per-document lock. Identity and snapshot checks detect changes around the operation; they do not provide atomic protection against arbitrary descendant substitutions by other trusted same-account processes. Do not replace document or internal storage directories during deletion. Detected drift after removal produces a cleanup warning instead of success.
 
 On POSIX, the CLI uses Node's filesystem `mode` options and `chmod` to set managed directories to `0700`, giving the owner read, write, and traversal access, and files to `0600`, giving the owner read and write access. Group and other permission bits are cleared. Ordinary library operations tighten existing managed paths when accessed. Catalog inspection, picker reads, and hub sources deliberately use read-only checks and never repair source permissions. The CLI does not change ownership, encrypt files, or protect against processes running as the same user or privileged administrators. A filesystem that ignores Unix permission modes cannot provide this POSIX guarantee.
 
@@ -155,14 +154,14 @@ live. Tier 2 is a statement about the served runtime only.
 
 - Multi-user auth
 - HTTP publishing, remote editing, process control, and service administration
-- Sync
+- Automatic peer pairing, certificate discovery, or managed enrollment on Windows
 - HTML rewriting or sanitization
 - Fine-grained permissions
 - Malware scanning
 - Protection against in-frame CPU or memory exhaustion
 - Offline rendering or vendoring of CDN dependencies
 
-Add those only when the product stops being local-first single-user software. Static remote snapshots are covered by the extension below.
+Managed synchronization is a separate POSIX-only opt-in capability, not reader authentication or multi-user access control. Routes, authorized origins, credentials and TLS are explicit operator configuration. Independent workers keep running after viewer shutdown; consistent backups require every writer, worker and mounted reader to settle. Ownership schema 2 and managed ledger schema 1 require coordinated runtimes. Older CLIs must not write an enrolled home. Copies and restores can require quarantine and a deliberate fork. Unknown locks, identity ambiguity, retained bodies/orphans, general reclamation and physical power-loss limits remain. See [migration and rollback](named-inboxes.md#upgrade-to-060) and [worker operations](phase2-sync/worker-operations.md). Static remote snapshots are covered below.
 
 ## Remote snapshot extension
 

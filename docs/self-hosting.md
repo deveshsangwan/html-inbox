@@ -1,6 +1,6 @@
 # Run HTML Inbox on a home server
 
-Live UI deletion requires a reader running 0.5.x. The skill fallback stays pinned to published 0.4.0, with copy and named-inbox support but no UI deletion. Before an authorized upgrade, review the [0.5.0 permission change](named-inboxes.md#upgrade-to-050) and saved exposure and hub mounts.
+Live UI deletion is available in running 0.5.x and 0.6.x readers. The skill fallback is published 0.5.0, with deletion, copying and named-inbox support but no managed sync. Before an authorized upgrade, review the [0.5.0 permission change](named-inboxes.md#upgrade-to-050) and saved exposure and hub mounts.
 
 `html-inbox viewer` starts or reuses a detached viewer and returns after verifying that it is ready. The viewer survives terminal closure. `html-inbox viewer --foreground` keeps the process attached for debugging or an external service manager.
 
@@ -19,6 +19,10 @@ html-inbox viewer
 html-inbox viewer status
 html-inbox viewer stop
 ```
+
+## Managed sync workers
+
+Viewer shutdown and viewer boot-service removal do not stop an independent sync worker. Before a consistent backup or an authorized format/runtime change, stop and join every worker, writer, viewer and hub mounting that home. Managed synchronization is a POSIX-only opt-in operation with explicit route, credential and TLS setup. Its supervision is configured separately and manually; it is not installed by viewer service commands. Read the [0.6.0 migration and rollback guide](named-inboxes.md#upgrade-to-060) and [worker operations](phase2-sync/worker-operations.md). Managed deletion retains bodies; originals sign terminal state for authorized copies on reconnection, while imported deletion is local suppression.
 
 ## Start at boot
 

@@ -158,11 +158,12 @@
           moving or combining documents. Hubs support the same machine and OS account.
         </p>
         <p>
-          Live UI deletion requires a reader running 0.5.x. The skill fallback
-          stays pinned to published 0.4.0, with copy and named-inbox support but
-          no UI deletion. Before an authorized upgrade, review the
-          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
-          and saved exposure and hub mounts.
+          Live UI deletion is available in running 0.5.x and 0.6.x readers.
+          The skill fallback is published 0.5.0, including deletion, copying and
+          named inboxes but no managed sync. Review saved exposure and hub mounts,
+          the <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>,
+          and <a href="named-inboxes.html#upgrade-060">0.6.0 opt-in enrollment</a>
+          before upgrading.
         </p>
         <h2 id="catalog">Name an existing or new library</h2>
         <div class="docs-code">
@@ -279,9 +280,9 @@ html-inbox hub --config /absolute/path/to/reading-hub.json --port 4322</code></p
           process-scoped CSRF tokens and matching Origin for deletion and
           <code>frame-ancestors 'none'</code> on live shells. Publishing, process
           control, and membership remain CLI operations. Hubs do not manage
-          source lifecycles, Tailscale Serve, or boot services. Cross-account
-          access, network replication, remote ingestion, and historical-fragment
-          migration are outside this release.
+          source lifecycles, Tailscale Serve, or boot services. Cross-account access, network replication and remote ingestion are outside
+          the local hub. Managed sync is a separate opt-in capability; hub mounts
+          do not configure or authorize it.
         </p>
         <p>
           Choose <strong>Delete</strong> in a row's three-dot menu or document
@@ -299,6 +300,45 @@ html-inbox hub --config /absolute/path/to/reading-hub.json --port 4322</code></p
           install, status, and uninstall. Named libraries retain the single fixed
           boot-service definition per machine. Use deliberately installed stable
           Node and CLI paths. See <a href="boot-services.html">boot setup and ownership</a>.
+        </p>
+        <h2 id="upgrade-060">Choose managed sync explicitly in 0.6.0</h2>
+        <p>
+          Installation preserves ordinary libraries and does not enroll or connect
+          them. Managed synchronization is an opt-in per-inbox POSIX format
+          upgrade; ordinary Windows use remains supported. Stop older writers,
+          readers, hubs and independent workers with their original executable,
+          verify settlement, and make a consistent backup before enrollment.
+          A stopped viewer does not stop its sync worker.
+        </p>
+        <div class="docs-code"><pre role="region" tabindex="0" aria-label="Explicit managed enrollment"><code>html-inbox sync enroll --inbox research --yes --json</code></pre></div>
+        <p>
+          Enrolled storage uses managed ledger schema 1 and ownership schema 2.
+          Coordinate CLI, writer and worker versions; private viewer protocol 3
+          alone does not establish storage compatibility. Configure both endpoints'
+          routes, UUIDs, approved origin scopes, credentials and TLS explicitly.
+          Pairing, certificates, exposure and boot supervision are not automatic.
+          See the <a href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/phase2-sync/worker-operations.md">worker operations guide</a>.
+        </p>
+        <p>
+          Managed publish distinguishes durable local storage from delivery and
+          viewer readiness. JSON uses <code>local.durable</code>,
+          <code>delivery</code>, <code>worker</code> and <code>viewer.url</code>.
+          Exit 2 is durable pending, 3 durable blocked, and 130 cancellation after
+          save when a saved result is present. Preserve the report, intended target
+          and obligations instead of publishing again. Managed original deletion
+          signs terminal state for authorized copies on reconnection; imported
+          deletion is destination-local suppression. Bodies remain retained.
+        </p>
+        <p>
+          No in-place downgrade or unenroll command exists. Preserve a quiescent
+          pre-enrollment backup for an explicit offline rollback; an older CLI
+          must not write an enrolled home. Copies and restores require inspection,
+          quarantine and a deliberate fork under the
+          <a href="https://github.com/deveshsangwan/html-inbox/blob/main/docs/named-inboxes.md#upgrade-to-060">migration and rollback guide</a>.
+          Fork-inherited reports stay detached imports. Static/cloud exports
+          exclude imports and fork-inherited originals. Retained payloads,
+          orphans and physical power-loss limits remain; deletion promises no
+          disk reclamation or secure erasure.
         </p>
         <h2 id="upgrade-050">Understand the 0.5.0 permission change</h2>
         <p>
@@ -325,18 +365,18 @@ html-inbox hub --config /absolute/path/to/reading-hub.json --port 4322</code></p
           with the intended account, home, and exposure.
         </p>
         <p>
-          Versions 0.2.x through 0.5.x share private control protocol 3. Installing
+          Versions 0.2.x through 0.6.x share private control protocol 3. Installing
           a new executable does not reload a running viewer. Restart each
           authorized viewer and hub to load 0.5.0. Package publication does not
           upgrade a running installation. The skill fallback stays pinned to
-          published 0.4.0 and has no UI deletion.
+          published 0.5.0 and has live-reader deletion but no managed sync.
         </p>
         <h2 id="upgrade">Upgrade humans and agents from 0.2.x</h2>
         <p>
           Stop an old viewer with the executable that started it, or Ctrl-C for
           foreground mode, and confirm shutdown before updating. For boot startup,
           uninstall with the old installation, update, then reinstall with the
-          intended home and exposure. Versions 0.2.x, 0.3.x, 0.4.x, and 0.5.x share protocol 3;
+          intended home and exposure. Versions 0.2.x, 0.3.x, 0.4.x, 0.5.x, and 0.6.x share protocol 3;
           restart compatible viewers to load the new code. Incompatible 0.1.0
           viewers still require their original executable for shutdown. Documents,
           preferences, and saved exposure persist. Follow the
@@ -346,7 +386,7 @@ html-inbox hub --config /absolute/path/to/reading-hub.json --port 4322</code></p
         <ul>
           <li>Add <code>--json</code> to viewer status/stop and service commands
             when parsing output. They print readable text by default in 0.3.0.
-            Document and catalog lists are readable tables. Plain publish,
+            Document and catalog lists are readable tables. Unenrolled plain publish,
             detached viewer startup, and hub startup keep URL-only stdout.
             <code>publish --json</code> returns <code>url</code>, <code>inbox</code>,
             and <code>home</code>.</li>
@@ -355,10 +395,10 @@ html-inbox hub --config /absolute/path/to/reading-hub.json --port 4322</code></p
             Use <code>--inbox</code>, absolute <code>--home</code>, an environment
             binding, or a deliberate default. No entries preserves legacy behavior.</li>
           <li>Update skills separately. The skill accepts stable installed 0.2.x,
-            0.3.x, 0.4.x, and 0.5.x CLIs and keeps its fallback on published
-            <code>npx --yes html-inbox@0.4.0</code>. That fallback supports named
+            0.3.x, 0.4.x, 0.5.x, and 0.6.x CLIs and keeps its fallback on published
+            <code>npx --yes html-inbox@0.5.0</code>. That fallback supports named
             selection, hubs, the picker, publish JSON, viewer/service JSON
-            flags, and reader copying, but has no UI deletion. Check actual help for each capability, including
+            flags, and reader copying, but has live-reader deletion but no managed sync. Check actual help for each capability, including
             <code>inbox list --running</code>. Older viewer and service commands
             already output JSON without the new flag. Preserve the intended
             destination when a feature is unavailable.</li>

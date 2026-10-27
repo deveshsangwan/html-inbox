@@ -66,6 +66,16 @@ try {
   const installedPackage = JSON.parse(
     await readFile(path.join(installedRoot, "package.json"), "utf8"),
   );
+  const sourcePackage = JSON.parse(
+    await readFile(path.join(repositoryRoot, "packages", "cli", "package.json"), "utf8"),
+  );
+  assert.equal(installedPackage.version, sourcePackage.version, "Archive must match the reviewed source version");
+  assert.deepEqual(
+    await readFile(path.join(installedRoot, "README.md")),
+    await readFile(path.join(repositoryRoot, "packages", "cli", "README.md")),
+    "Packed and installed README must match the reviewed CLI README",
+  );
+
   assert.deepEqual(installedPackage.bin, { "html-inbox": "bundle/index.js" });
   assert.equal(installedPackage.dependencies, undefined);
   assert.equal(installedPackage.devDependencies, undefined);

@@ -32,7 +32,8 @@ export const USAGE = `Usage: html-inbox <command> [options]
 
 Commands:
   publish <file.html> --title <title> --type <type> [--json]
-      Store an HTML document and print its active viewer URL.
+      Save an HTML document. Unenrolled plain output is its active viewer URL.
+      Managed output separates durable local storage, delivery and viewer readiness.
 
   sync enroll --inbox <name> --yes [--json]
   sync configure --inbox <name> --config <absolute-runtime-json> [--json]
@@ -49,7 +50,16 @@ Commands:
   sync restore quarantine --home <canonical-home> --expect-inbox <uuid> --yes
   sync fork --home <canonical-home> --expect-inbox <uuid> --yes
       Managed replication uses explicit matching peer grants and its own owned worker.
-      Publish accepts --wait-ms, --request-timeout-ms and paired --target-inbox/--target-peer.
+      All sync commands accept --json; offline restore/fork require explicit --home.
+      Enrollment is an explicit POSIX-only format upgrade; ordinary Windows libraries remain supported.
+      Configure routes, credentials and TLS separately. Viewer stop does not stop a sync worker.
+      Managed publish accepts --wait-ms <100..300000> (default 30000),
+      --request-timeout-ms <100..30000> (default 5000), and paired
+      --target-inbox <uuid> / --target-peer <uuid>; unenrolled publish rejects these flags.
+      Managed JSON includes local.durable, delivery, worker and viewer.url.
+      Exits: 0 confirmed or unconfigured local-only, 2 durable pending, 3 durable blocked,
+      130 cancellation after save when a saved result is present; 1 error/uncertain persistence.
+      Preserve saved reports and intended targets rather than duplicate-publishing on delivery failure.
 
   list [--json]
       List locally stored documents.
@@ -62,7 +72,8 @@ Commands:
       Delete a document after confirmation.
 
   export --out <directory> [--capability <value>] [--json]
-      Build a provider-independent static snapshot of the local library.
+      Build a static snapshot of eligible local originals only.
+      Synced imports, detached imports and fork-inherited originals are excluded.
 
   remote init --account <id> --project <name> [--branch <name>] [--adopt] [--json]
   remote publish [--json]
@@ -114,6 +125,8 @@ Environment:
   HTML_INBOX_CATALOG_HOME         Private catalog, default ~/.config/html-inbox.
   HTML_INBOX_HOME                 Library directory, default ~/.html-inbox.
   HTML_INBOX_PORT                 Port override, default 3217 on first startup.
+  HTML_INBOX_MAX_BYTES            Ordinary input/read limit, default 10485760 bytes.
+                                  Does not raise the managed 10 MiB body cap.
   HTML_INBOX_TAILSCALE_COMMAND    Path to an existing Tailscale executable.
 
 Selection:

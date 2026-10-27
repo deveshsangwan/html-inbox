@@ -1,6 +1,6 @@
 # ADR 0001: Publish remote inboxes as static snapshots
 
-Status: accepted. Explicit live self-hosting and permanent single-document deletion amend the original loopback-only, read-only viewer restriction. The static snapshot decision remains in force.
+Status: accepted, with live-reader and 0.6.0 managed-sync amendments below. The original static snapshot decision remains in force for Cloudflare/public exports.
 
 ## Context
 
@@ -14,15 +14,21 @@ A multi-user administration server would need authentication, authorization, ten
 
 ### Local ownership
 
-The local library remains the only source of truth and the only mutable document store. The CLI is the only remote-publishing administrator.
+For static/cloud publishing, the selected local library is the deployment source of truth and the CLI is the administrator. The separate managed-sync extension below governs authorized replicated stores.
 
 The viewer remains loopback-only by default. Explicit LAN mode exposes the live library to everyone who can reach its port. Explicit Tailscale mode exposes it through HTTPS Serve under the user's tailnet policy, with a loopback backend. Every reachable live viewer or hub reader can read and permanently delete individual documents, without a startup grant, reader login, or network-mode restriction. The owner chooses the network and trusts its reachable readers with deletion. Hub source filters do not restrict authority. Publishing and process management remain local CLI operations; process health uses a separate private local control endpoint.
 
-Each live list row's three-dot menu and document options offer Delete with a confirmation that shows title, filename, and inbox, explains permanent deletion, and defaults to Cancel. There is no Undo or bulk deletion. The operation renames a record out of its source library before purging it, and reports cleanup failure if purge fails after the record disappears. It preserves the original source file and existing static copies.
+Each live list row's three-dot menu and document options offer Delete with a confirmation that shows title, filename, and inbox, explains permanent deletion, and defaults to Cancel. There is no Undo or bulk deletion. In unenrolled libraries the operation renames a record out before purging it, and reports cleanup failure if purge fails after the record disappears. It preserves the original source file and existing static copies. Managed retention and signed terminal state are described below.
 
 The hub explicitly binds each local source's deletion writer to its captured canonical root, durable inbox UUID, and filesystem identity under the same OS account. It revalidates that binding before deletion. Missing, unavailable, or replaced sources fail without recreation or an alternate target. This does not grant arbitrary source mutation. Live requests require the process-scoped CSRF token and matching Origin, retain Host checks, and use `frame-ancestors 'none'` on live shells. Original document sandbox and CSP remain intact.
 
 These live modes are independent of capability-protected static snapshots. Exported and hosted snapshots remain read-only independent copies, contain no live deletion controls or live viewer credentials, and retain their copied documents after live deletion. Snapshot deployment and revocation semantics are unchanged. See the [architecture](../architecture.md#viewer) and [threat model](../threat-model.md#live-self-hosting).
+
+### Managed-sync amendment in 0.6.0
+
+Explicit POSIX enrollment adds independent authenticated HTTPS replication with operator-configured routes, revisions, origin-key/epoch grants and credentials. Reader reachability, hub membership and Cloudflare capability URLs grant no replication authority. The public reader and its private control interface do not become ingestion or publishing endpoints. Static deployment remains an explicit, separate operation.
+
+Managed original deletion signs terminal state for authorized copies on reconnection; imported deletion is destination-local suppression. Bodies remain retained, without disk reclamation or secure erasure. Public exports include eligible local originals only and exclude synced imports, detached imports and fork-inherited originals. Existing snapshots remain independent. See [managed architecture](../phase2-sync/architecture.md), [worker operations](../phase2-sync/worker-operations.md), and [migration/rollback limits](../named-inboxes.md#upgrade-to-060). The original decision and its deferred automatic Cloudflare deployment remain historical context, not a whole-product no-sync claim.
 
 ### Provider-independent snapshot
 

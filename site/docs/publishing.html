@@ -159,11 +159,12 @@
           Tailscale.
         </p>
         <p>
-          Live UI deletion requires a reader running 0.5.x. The skill fallback
-          stays pinned to published 0.4.0, with copy and named-inbox support but
-          no UI deletion. Before an authorized upgrade, review the
-          <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>
-          and saved exposure and hub mounts.
+          Live UI deletion is available in running 0.5.x and 0.6.x readers.
+          The skill fallback is published 0.5.0, including deletion, copying and
+          named inboxes but no managed sync. Review saved exposure and hub mounts,
+          the <a href="named-inboxes.html#upgrade-050">0.5.0 permission change</a>,
+          and <a href="named-inboxes.html#upgrade-060">0.6.0 opt-in enrollment</a>
+          before upgrading.
         </p>
 
         <p>
@@ -216,17 +217,50 @@
                 <td>HTML file</td>
                 <td>
                   10 MiB by default, or the positive byte limit in
-                  <code>HTML_INBOX_MAX_BYTES</code>.
+                  <code>HTML_INBOX_MAX_BYTES</code> for ordinary input/read limits.
+                  Managed bodies remain capped at 10 MiB regardless of a larger
+                  setting; a lower input setting can still reject publication.
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
         <p>
-          Publishing validates input and ensures a healthy viewer before adding
+          Unenrolled publishing validates input and ensures a healthy viewer before adding
           the new record. The command prints a document URL on stdout.
           Compatibility warnings go to stderr and do not prevent storage. An
           invalid file or failed viewer startup returns an error.
+        </p>
+        <h2 id="managed">Read managed publication outcomes separately</h2>
+        <p>
+          In an enrolled inbox, publication durably saves the report, its intended
+          target and retry obligations before independent viewer/delivery work.
+          Human output is multiline: Saved locally, Delivery, reader URL when
+          available and onward information. JSON includes document identity,
+          <code>local.durable</code>, <code>local.queued</code>,
+          <code>delivery</code>, <code>worker</code>, <code>viewer.url</code>
+          and <code>onward.awaited: false</code>.
+        </p>
+        <p>
+          Exit 0 means exact current intended-server committed custody or an
+          unconfigured local-only save. Local-only means no foreground target is
+          configured; approved background routes can still queue and replicate.
+          Exit 2 means durable pending, 3 durable
+          blocked, and 130 cancellation after save when a saved result is present.
+          Exit 1 covers validation, persistence or uncertain errors. A missing
+          viewer can coexist with a saved report. Preserve the document identity,
+          intended target and obligations; inspect status for that existing work
+          instead of publishing a duplicate or selecting another target. A saved
+          reader link may be shared with its actual delivery state, without
+          claiming confirmed delivery. Cancellation cannot undo a remote commit.
+        </p>
+        <p>
+          Managed enrollment is a separate POSIX-only format upgrade. Descriptors
+          are capped at 64 KiB, ledger metadata at 64 MiB, and canonical records
+          including terminal history at 10,000. Existing original deletion can
+          update its record at capacity. Oversized or unsupported legacy content
+          can block enrollment; preserve history and inspect the failure. See
+          <a href="named-inboxes.html#upgrade-060">migration and rollback limits</a>.
         </p>
         <p>
           Each publish creates a new ID, including when the title or file name
@@ -328,7 +362,8 @@ html-inbox list</code></pre>
         <p>
           For automation, use <code>--force</code>. <code>--json</code> changes
           successful output to JSON with the metadata and reclaimed byte count;
-          JSON mode never prompts and requires <code>--force</code>.
+          JSON mode never prompts and requires <code>--force</code>. Managed
+          deletion reports zero reclaimed bytes because bodies remain retained.
         </p>
         <div class="docs-code">
           <pre
@@ -343,13 +378,13 @@ html-inbox list</code></pre>
           static exports, and Cloudflare deployments remain unchanged. Static
           copies are read-only and contain no live viewer credentials. Run
           <code>remote publish</code> to replace the remote snapshot with the
-          current library, and consider
+          eligible local-original set, and consider
           <a href="remote.html#revoke">historical deployment limits</a> before
           assuming older content is inaccessible.
         </p>
         <h2 id="automation">Use output in scripts</h2>
         <p>
-          Capture the publish URL from stdout. Keep warnings visible on stderr
+          For an unenrolled library, capture the publish URL from stdout. Keep warnings visible on stderr
           so you can inspect compatibility problems. A warning alone does not
           prove that the browser blocks the feature.
         </p>
@@ -363,13 +398,16 @@ html-inbox list --inbox development --json &gt; documents.json
 html-inbox viewer status --inbox development --json</code></pre>
         </div>
         <p>
-          <code>publish --json</code> returns a receipt with <code>url</code>,
+          Unenrolled <code>publish --json</code> returns a receipt with <code>url</code>,
           <code>inbox</code>, and <code>home</code>. <code>list</code>,
           <code>preferences</code>, <code>delete</code>, <code>export</code>, remote
           commands, viewer status/stop, and service commands support <code>--json</code>.
           Viewer and service commands print readable text by default in 0.3.0;
           add the flag when migrating scripts that parsed their 0.2.x default JSON. CLI errors return a
-          nonzero exit status. A status command can succeed while reporting a
+          nonzero exit status. Managed automation must inspect the
+          <a href="#managed">saved-local and delivery result</a>, including
+          <code>viewer.url</code>, rather than treating nonzero delivery as failed
+          local storage. A status command can succeed while reporting a
           stopped, conflicting, incompatible, or failed state; inspect its JSON
           state before treating the viewer as ready.
         </p>

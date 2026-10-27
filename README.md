@@ -4,15 +4,15 @@
 
 HTML Inbox is a local library for generated HTML reports, notes, and dashboards. The CLI validates and stores each document, then opens it through a viewer with an isolated document frame and a restrictive Content Security Policy. The viewer listens on loopback by default, with explicit LAN and Tailscale reader modes for self-hosting.
 
-HTML Inbox is local-first. Every reachable live viewer or hub reader can delete individual documents. Unenrolled inboxes permanently remove the saved files. Publishing and process management stay in the local CLI. Optional Cloudflare Pages publishing deploys complete read-only static snapshots; LAN and Tailscale modes serve the live library. See [ADR 0001](docs/adr/0001-static-remote-inbox.md).
+HTML Inbox is local-first. Every reachable live viewer or hub reader can delete individual documents. Unenrolled inboxes permanently remove the saved files. Publishing and process management stay in the local CLI. Optional Cloudflare Pages publishing deploys read-only static snapshots of eligible local originals. Synced imports, detached imports and fork-inherited originals are excluded. LAN and Tailscale modes serve the live library. See [ADR 0001](docs/adr/0001-static-remote-inbox.md).
 
 The CLI is packaged as a self-contained `html-inbox` executable with no runtime package dependencies.
 
-Version 0.5.0 adds permanent single-document deletion for every reachable live viewer and hub reader. UI deletion requires a running 0.5.x reader. Version 0.4.0 includes reader copying, and 0.3.0 introduced named independent libraries and local hubs. See [named inboxes and local reading](docs/named-inboxes.md) for selection, source membership, and exposure rules. Check the executable's `--help` and the running reader for actual capabilities. Updating a skill does not update the CLI or a running viewer.
+Version 0.6.0 adds opt-in managed synchronization on POSIX systems, with independently running workers and explicit route, credential and TLS configuration. Ordinary unenrolled libraries remain supported on Windows. Managed publication and deletion have different delivery and retention outcomes; read the [0.6.0 migration and rollback limits](docs/named-inboxes.md#upgrade-to-060) before enrollment. Version 0.5.0 introduced live-reader deletion, 0.4.0 reader copying, and 0.3.0 named libraries and local hubs. Check the executable's `--help` and the running reader for actual capabilities. Updating a skill does not update the CLI or a running viewer.
 
 Library commands select explicit `--inbox` / `--home`, then process `HTML_INBOX_NAME` / `HTML_INBOX_HOME`, then a configured default. Without a binding or default, registered entries require a one-operation choice by exact name or `#N` row in a fully interactive terminal. Redirecting stdin, stdout, or stderr disables the picker. Pipelines, non-TTY callers, and `--json` fail with available names and selector guidance on stderr, leaving stdout empty. Even one entry requires a choice. With no registered entries, legacy `~/.html-inbox` first use remains. A choice never saves a current inbox or default.
 
-Use `html-inbox inbox list --running [--json]` for registered, verified running viewers. Human status, catalog, and document lists use text or tables; use advertised `--json` flags for automation. Check running-only, viewer JSON, and service JSON support separately. Plain publish, detached viewer startup, and hub startup retain URL-only stdout. In 0.3.0, viewer status/stop and service commands print readable text by default; add `--json` in scripts that previously parsed their default JSON. Published 0.2.x commands emit JSON without that flag; check help before adding it to an older executable. JSON never prompts; CLI deletion still requires `--force` and remote revocation `--yes`.
+Use `html-inbox inbox list --running [--json]` for registered, verified running viewers. Human status, catalog, and document lists use text or tables; use advertised `--json` flags for automation. Check running-only, viewer JSON, and service JSON support separately. Unenrolled plain publication, detached viewer startup, and hub startup retain URL-only stdout. Managed publication prints a saved-local and delivery receipt; its JSON reader URL is `viewer.url`. Exit 2 means durable pending, 3 durable blocked, and 130 cancellation after save when a saved result is present. Preserve that report and its intended target instead of publishing it again. In 0.3.0, viewer status/stop and service commands print readable text by default; add `--json` in scripts that previously parsed their default JSON. Published 0.2.x commands emit JSON without that flag; check help before adding it to an older executable. JSON never prompts; CLI deletion still requires `--force` and remote revocation `--yes`.
 
 ## Set up your agent
 
@@ -24,7 +24,7 @@ npx skills add deveshsangwan/html-inbox --skill html-inbox -g
 
 The skill installs agent instructions. The npm package supplies the executable. The installers are independent: adding a skill does not install a global CLI, and installing the CLI does not add a skill.
 
-On first use, the skill reuses a working, stable `html-inbox` 0.2.x, 0.3.x, 0.4.x, or 0.5.x executable or selects the tested fallback `npx --yes html-inbox@0.4.0`. That published fallback supports named libraries, hubs, and reader copying, but has no UI deletion. The [CLI resolution reference](skills/html-inbox/references/cli-resolution.md) defines the exact acceptance rules and fallback pin. It keeps that command prefix for the operation and preserves your inbox selection, catalog, port, saved viewer exposure, and Tailscale executable override. It checks actual command support before using newer features and reports unavailable capabilities without changing your destination or upgrading the pin. The HTML Inbox runtime requires Node.js 20 or newer. The fallback needs npm and registry access or a cached package.
+On first use, the skill reuses a working, stable `html-inbox` 0.2.x, 0.3.x, 0.4.x, 0.5.x, or 0.6.x executable or selects the tested fallback `npx --yes html-inbox@0.5.0`. That published fallback supports named libraries, hubs, reader copying and live-reader deletion, but no managed sync. The [CLI resolution reference](skills/html-inbox/references/cli-resolution.md) defines the exact acceptance rules and fallback pin. It keeps that command prefix for the operation and preserves your inbox selection, catalog, port, saved viewer exposure, and Tailscale executable override. It checks actual command support before using newer features and reports unavailable capabilities without changing your destination or upgrading the pin. The HTML Inbox runtime requires Node.js 20 or newer. The fallback needs npm and registry access or a cached package.
 
 `-g` installs the skill for your user across projects. Omit it to install in the current project. The installer lets you choose target agents; use `--agent codex` or `--agent claude-code` to choose explicitly:
 
@@ -44,7 +44,7 @@ Cloudflare Pages setup, snapshot publishing, recovery, and revocation use an opt
 npx skills add deveshsangwan/html-inbox --skill html-inbox-remote -g
 ```
 
-The main skill covers the live viewer, LAN, Tailscale, and boot services. The remote skill covers complete static snapshots with bearer URLs. Each skill can be installed independently. See [agent setup](https://deveshsangwan.github.io/html-inbox/docs/agent-setup.html) for first use and the [official skills CLI](https://github.com/vercel-labs/skills#readme) for installer options.
+The main skill covers the live viewer, LAN, Tailscale, and boot services. The remote skill covers static snapshots of eligible local originals with bearer URLs. Each skill can be installed independently. See [agent setup](https://deveshsangwan.github.io/html-inbox/docs/agent-setup.html) for first use and the [official skills CLI](https://github.com/vercel-labs/skills#readme) for installer options.
 
 ## Install the CLI for terminal use
 
@@ -79,7 +79,7 @@ Upgrading from 0.2.x, 0.3.x, or 0.4.x to 0.5.0 changes live reader permissions. 
 
 Before an authorized upgrade, review saved exposure and frozen hub membership because these determine who gains deletion authority. Stop each old viewer with the executable that started it and the same inbox binding, then confirm shutdown through status. Use Ctrl-C for foreground viewers and hubs. Keep the old executable until shutdown is verified, then upgrade and restart the intended viewers and hubs. Existing session authorization covers these steps when it includes the permission change.
 
-Versions 0.2.x through 0.5.x share private control protocol 3. Compatible running viewers keep their loaded code until restarted. The 0.5.0 update preserves stored documents and saved exposure. Existing static readers gain 0.4.0 copy controls only through owner-controlled snapshot regeneration and publishing.
+Versions 0.2.x through 0.6.x share private control protocol 3. Compatible running viewers keep their loaded code until restarted. The 0.5.0 update preserves stored documents and saved exposure. Existing static readers gain 0.4.0 copy controls only through owner-controlled snapshot regeneration and publishing.
 
 For the 0.3 upgrade, add `--json` to viewer status/stop and service commands used by automation. Once catalog entries exist, bind unbound jobs with `--inbox`, absolute `--home`, `HTML_INBOX_NAME` / `HTML_INBOX_HOME`, or a deliberate default. With no entries, legacy home selection remains. The [named-inbox migration guide](docs/named-inboxes.md#upgrade-from-02x) covers the change.
 
@@ -117,11 +117,11 @@ html-inbox publish ./examples/report.html \
   --type report
 ```
 
-The command stores the original HTML in the selected library, starts or reuses the background viewer, and prints a usable document URL. With no registered libraries, binding, or default, first use stores documents under `~/.html-inbox`. Set `HTML_INBOX_HOME` to choose another library or `HTML_INBOX_PORT` to select a port. Publishing preserves saved exposure and reuses an exposed viewer's network URL.
+Unenrolled publication stores the original HTML in the selected library, starts or reuses the background viewer, and prints its usable document URL. Managed publication saves durably before independent viewer/delivery work and reports those states separately, including a missing viewer. With no registered libraries, binding, or default, first use stores documents under `~/.html-inbox`. Set `HTML_INBOX_HOME` to choose another library or `HTML_INBOX_PORT` to select a port. Publishing preserves saved exposure and reuses an exposed viewer's network URL when that viewer is ready.
 
 On POSIX filesystems that enforce Unix permissions, ordinary library operations create and tighten managed directories to `0700` and files to `0600`. Catalog inspection, picker reads, and hub source reads do not repair source permissions. On Windows, privacy depends on the filesystem's existing and inherited access control lists. The CLI does not install or verify owner-only Windows ACLs. Keep `HTML_INBOX_HOME` in a protected local user directory and restrict access to its files and subdirectories, including `remote` state containing bearer capabilities. Follow the [Windows storage prerequisites](docs/threat-model.md#windows-storage-prerequisites) before storing sensitive reports or configuring remote publishing.
 
-HTML documents are limited to 10 MiB by default. Set `HTML_INBOX_MAX_BYTES` to a positive byte count when a deliberate workflow needs a different limit.
+HTML documents are limited to 10 MiB by default. `HTML_INBOX_MAX_BYTES` sets the ordinary publish/read input limit. It cannot raise managed storage's separate 10 MiB body cap; a lower input limit can still reject managed publication. Managed descriptors are bounded to 64 KiB, the ledger to 64 MiB, and canonical records including terminal history to 10,000. Enrollment can block on oversized, corrupt, unsupported-metadata or over-capacity legacy content; inspect the failure without discarding history or bypassing the barrier. See [managed limits](docs/named-inboxes.md#upgrade-to-060).
 
 Start or reuse the viewer in the background. The command returns after a verified readiness check, and the viewer keeps running when the terminal closes:
 
@@ -133,7 +133,7 @@ Use `html-inbox viewer --foreground` to keep it attached for debugging, containe
 
 Detachment does not escape an agent's systemd scope or provide automatic restart. If that scope is stopped, its viewer stops too. Use the explicit [boot service](docs/self-hosting.md#start-at-boot) for links that must survive agent cleanup, logout, or reboot.
 
-Versions 0.2.x, 0.3.x, 0.4.x, and 0.5.x share private control protocol 3. Stop a viewer started by 0.1.0 with its original executable before upgrading; newer CLIs refuse to signal incompatible or unverified process records. Restart an existing compatible viewer after updating to load the new code and reader controls.
+Versions 0.2.x, 0.3.x, 0.4.x, 0.5.x, and 0.6.x share private control protocol 3. Stop a viewer started by 0.1.0 with its original executable before upgrading; newer CLIs refuse to signal incompatible or unverified process records. Restart an existing compatible viewer after updating to load the new code and reader controls.
 
 Manage the local library and viewer:
 
@@ -219,7 +219,7 @@ Exports preserve the original document bytes, include a browser-side library sea
 
 ## Publish a remote inbox
 
-HTML Inbox can deploy the complete local library as an unlisted static snapshot to a Cloudflare Pages project you own. Authenticate Wrangler once:
+HTML Inbox can deploy eligible local originals as an unlisted static snapshot to a Cloudflare Pages project you own. Public static and cloud exports exclude every report with origin provenance, including synced imports, detached imports and originals inherited by a fork. Reading or relaying an authorized copy does not authorize public republication. Authenticate Wrangler once:
 
 ```sh
 npx --yes wrangler@4.86.0 login

@@ -2,6 +2,26 @@
 
 All notable changes to HTML Inbox will be documented here.
 
+## 0.6.0 - 2026-10-28
+
+- Add opt-in POSIX managed inbox enrollment with signed origin history, explicit authenticated HTTPS routes, intended-server custody receipts, push, pull and approved relay.
+- Run synchronization in an independently owned worker with durable obligations, bounded retries/backoff, explicit pause/retry, credential freshness and sanitized fatal-stop reporting. Viewer shutdown does not stop synchronization. Boot supervision remains a manual operator operation.
+- Distinguish durable local publication from delivery and viewer readiness. Managed human output is multiline; JSON has `local.durable`, `delivery`, `worker` and `viewer.url`. Exit 2 means durable pending, 3 durable blocked, and 130 cancellation after save when a saved result is present. Saved work and its intended target remain intact.
+- Sign terminal deletion for managed local originals and suppress imported copies only in their destination. Retain payload bodies with no disk-reclamation or secure-erasure guarantee. Preserve ordinary unenrolled purge behavior and existing static copies.
+- Restrict public static/cloud exports to eligible local originals, excluding synced imports, detached imports and fork-inherited originals. Reading or relaying a copy grants no public republication authority.
+- Bind managed writers to canonical home, filesystem identity and inbox UUID; publish ownership atomically, check stale ledger generations safely, drain admitted mutations/watchers before shutdown, and preserve unsafe/unknown authority failures.
+- Support explicit copied-home quarantine and fork while retaining provenance. Keep reader deletion, sandbox/CSP, named selection, Tailscale route ownership and ordinary Windows behavior.
+- Use bounded native HTTP for private viewer health, including rejected HTTP upgrades, and wait within the existing deadline for direct Windows portable-reaper read-open denial. Preserve other operational and compound cleanup errors.
+- Correct public output, export, deletion, migration and release guidance. Both skills accept installed stable 0.6.x and retain a published, verified 0.5.0 preparation fallback, which has no managed-sync commands.
+
+### Upgrade to 0.6.0
+
+Ordinary installation does not enroll a library. Read the [opt-in migration and rollback limits](docs/named-inboxes.md#upgrade-to-060) before `sync enroll`. Stop older writers/readers through their original executable and make a quiescent backup, including the independent worker and mounted hubs. Managed enrollment is POSIX-only. Ownership schema 2 and managed ledger schema 1 require coordinated CLI/writer/worker compatibility; viewer control protocol 3 alone is insufficient.
+
+There is no in-place downgrade or unenroll operation. An older runtime must not write an enrolled home. Keep an offline pre-enrollment backup for an explicit rollback. Copied or restored homes can require quarantine and a fresh fork; inherited reports remain detached imports. Trusted old-owner recovery, general orphan/body reclamation, indistinguishable restore detection and universal power-loss recovery are not provided. Explicit routes, credentials, TLS and manual supervision remain operator responsibilities.
+
+The final focused physical follow-up passed 257/257 application checks on the preceding exact e42f2f5 head. Its original observer-wrapper failures remain separately qualified; the full transport/crash/liveness matrix was not repeated. Earlier failed and interrupted receipts remain historical evidence. Final 0.6.0 source verification and independent documentation reviews are recorded in the release audit.
+
 ## 0.5.0 - 2026-10-25
 
 - Add permanent single-document deletion to live list-row menus and document options, with a confirmation naming the title, filename, and inbox and defaulting to Cancel. There is no Undo or bulk deletion.
