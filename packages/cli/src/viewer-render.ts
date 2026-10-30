@@ -81,7 +81,7 @@ function renderLibrary(
           <h2 id="empty-title">${hasUnavailableInboxes ? "No readable documents" : query ? "No matching documents" : "No documents yet"}</h2>
           <p>${
             query
-              ? "Try another title, type, or source file name."
+              ? `Nothing matches "${escapeHtml(query)}". Try another title, type, or source file name.`
               : hasUnavailableInboxes
                 ? "Retry when the selected inboxes are available."
                 : hub
@@ -89,9 +89,11 @@ function renderLibrary(
                   : "Publish an HTML file from the CLI. It will appear here with its title, type, and source file."
           }</p>
           ${
-            query || hasUnavailableInboxes
+            query
+              ? `<a class="empty-state__action" href="${hub?.inbox ? `/?inbox=${encodeURIComponent(hub.inbox)}` : homePath}">Clear search</a>`
+              : hasUnavailableInboxes
               ? ""
-              : `<code>html-inbox publish ./document.html${publishInbox ? ` --inbox ${escapeHtml(publishInbox.name)}` : ""} --title "My document" --type report</code>`
+              : `<code tabindex="0">html-inbox publish ./document.html${publishInbox ? ` --inbox ${escapeHtml(publishInbox.name)}` : ""} --title "My document" --type report</code>`
           }
         </section>`
       : `<ol class="document-list" aria-label="Published documents">${documents
@@ -103,9 +105,9 @@ function renderLibrary(
                   .toLowerCase(),
               )}">
                 <a class="doc__title" href="${escapeHtml(document.documentPath)}">${escapeHtml(document.metadata.title)}${document.inboxName ? ` <span class="inbox-badge">${escapeHtml(document.inboxName)}</span>` : ""}${renderOriginBadge(document.metadata)}</a>
-                <time class="document-date" datetime="${escapeHtml(document.metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(document.metadata.createdAt, options.timeZone))}</time>
                 <span class="doc__source" title="${escapeHtml(document.metadata.sourceFileName)}">${escapeHtml(document.metadata.sourceFileName)}</span>
                 <span class="document-type">${escapeHtml(document.metadata.type)}</span>
+                <time class="document-date" datetime="${escapeHtml(document.metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(document.metadata.createdAt, options.timeZone))}</time>
                 ${options.deletion ? renderDocumentActions(document.metadata, document.documentPath, document.inboxName ?? options.inboxName ?? "Inbox") : ""}
               </li>`,
           )
@@ -124,7 +126,7 @@ function renderLibrary(
         <form class="search" role="search" method="get" action="${homePath}" ${options.clientSearch ? "data-client-search" : ""}>
           <label class="visually-hidden" for="document-search">Search documents</label>
           <div class="search__control">
-            ${hub ? `${renderInboxFilter(hub.sources, hub.inbox)}\n            ` : ""}<input id="document-search" name="q" type="search" value="${escapeHtml(query)}" placeholder="Search title, type, or file" maxlength="200">
+            ${hub ? `${renderInboxFilter(hub.sources, hub.inbox)}\n            ` : ""}<input id="document-search" name="q" type="search" value="${escapeHtml(query)}" placeholder="Search title, type, or file" maxlength="200" aria-keyshortcuts="/" autocomplete="off">
             <button class="search__button" type="submit" data-search-submit>Search</button>
             ${
               options.clientSearch
@@ -139,10 +141,10 @@ function renderLibrary(
         </form>
         ${renderAppearanceMenu()}
       </header>
-      ${hub ? renderAvailability(hub.sources) : ""}${options.deletion ? '<p class="deletion-notice" role="status" data-deletion-notice hidden></p>' : ""}<p class="document-count" aria-live="polite" data-document-count>${countLabel}</p>
+      ${hub ? renderAvailability(hub.sources) : ""}${options.deletion ? '<p class="deletion-notice" role="status" data-deletion-notice hidden></p>' : ""}<p class="document-count" role="status" aria-live="polite" data-document-count>${countLabel}</p>
       ${
         options.clientSearch && allDocuments.length > 0
-          ? '<section class="empty-state" aria-labelledby="client-empty-title" data-client-empty hidden><h2 id="client-empty-title">No matching documents</h2><p>Try another title, type, or source file name.</p></section>'
+          ? '<section class="empty-state" aria-labelledby="client-empty-title" data-client-empty hidden><h2 id="client-empty-title">No matching documents</h2><p>Nothing matches "<span data-client-empty-query></span>". Try another title, type, or source file name.</p><button class="empty-state__action" type="button" data-empty-clear>Clear search</button></section>'
           : ""
       }
       ${documentContent}
@@ -172,7 +174,10 @@ export function renderDocumentShell(
     `<main class="document-view" id="main-content">
       <header class="reader__bar">
         <a class="back-link toolbar-control" href="${homePath}" aria-label="Back to inbox" title="Back to inbox"><span aria-hidden="true">&#8592;</span><span class="back-link__text">Back to inbox</span></a>
-        <h1 class="document-title" title="${escapeHtml(metadata.title)}">${escapeHtml(metadata.title)}${renderOriginBadge(metadata)}</h1>
+        <div class="reader__heading">
+          <h1 class="document-title" title="${escapeHtml(metadata.title)}">${escapeHtml(metadata.title)}${renderOriginBadge(metadata)}</h1>
+          <p class="reader__meta"><span class="document-type">${escapeHtml(metadata.type)}</span><time datetime="${escapeHtml(metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(metadata.createdAt, options.timeZone))}</time></p>
+        </div>
         <button class="toolbar-control hide-frame" type="button" data-hide-frame>Hide frame</button>
         <details class="viewer-menu" data-viewer-menu>
           <summary class="toolbar-control" aria-label="Viewer options" title="Viewer options"><span aria-hidden="true">&#8943;</span></summary>

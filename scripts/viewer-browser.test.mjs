@@ -270,6 +270,125 @@ test("generated static inbox searches title, type, and file without server queri
   assert.equal(await page.locator("[data-search-text]:visible").count(), 1);
 });
 
+for (const mode of ["local", "static"]) {
+  test(`${mode} inbox search is reachable and operable from the keyboard`, { timeout: 30_000 }, async (t) => {
+    const { page, inboxUrl } = await createBrowserFixture(t, mode, publishReports);
+    await page.goto(inboxUrl);
+    const search = page.getByRole("searchbox", { name: "Search documents" });
+
+    await page.keyboard.press("/");
+    assert.equal(await search.evaluate((element) => element === document.activeElement), true);
+    assert.equal(await search.inputValue(), "", "the shortcut key must not be typed into the field");
+
+    await search.press("/");
+    assert.equal(await search.inputValue(), "/", "typing in search must not trigger its shortcut");
+
+    await search.fill("missing");
+
+    if (mode === "local") {
+      await search.press("Enter");
+      await page.waitForURL((url) => url.searchParams.get("q") === "missing");
+    }
+
+    assert.match(await page.locator(".empty-state:visible").innerText(), /Nothing matches "missing"/);
+    await page.getByRole(mode === "local" ? "link" : "button", { name: "Clear search", exact: true }).click();
+    assert.equal(await search.inputValue(), "");
+    assert.equal(await page.locator("[data-search-text]:visible").count(), 2);
+
+    await search.fill("report");
+
+    if (mode === "local") {
+      await search.press("Enter");
+      await page.waitForURL((url) => url.searchParams.get("q") === "report");
+    }
+
+    await search.press("Escape");
+
+    if (mode === "local") {
+      await page.waitForURL((url) => !url.searchParams.get("q"));
+    }
+
+    assert.equal(await search.inputValue(), "");
+    assert.equal(await page.locator("[data-search-text]:visible").count(), 2);
+
+    await search.press("ArrowDown");
+    const links = page.locator(".doc:not([hidden]) > .doc__title");
+    assert.equal(await links.nth(0).evaluate((element) => element === document.activeElement), true);
+    await page.keyboard.press("ArrowDown");
+    assert.equal(await links.nth(1).evaluate((element) => element === document.activeElement), true);
+    await page.keyboard.press("ArrowUp");
+    await page.keyboard.press("ArrowUp");
+    assert.equal(await search.evaluate((element) => element === document.activeElement), true);
+  });
+}
+
+for (const mode of ["local", "static"]) {
+  test(`${mode} no-results state wraps an unbroken long query on a narrow screen`, { timeout: 30_000 }, async (t) => {
+    const { page, inboxUrl } = await createBrowserFixture(t, mode, publishReports);
+    const query = "x".repeat(200);
+    await page.setViewportSize({ width: 390, height: 700 });
+
+    if (mode === "local") {
+      await page.goto(`${inboxUrl}?q=${query}`);
+    } else {
+      await page.goto(inboxUrl);
+      await page.getByRole("searchbox", { name: "Search documents" }).fill(query);
+    }
+
+    const emptyState = page.locator(".empty-state:visible");
+    assert.match(await emptyState.innerText(), /Nothing matches/);
+
+    const dimensions = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      innerWidth,
+      emptyRight: document.querySelector(".empty-state:not([hidden])").getBoundingClientRect().right,
+    }));
+
+    assert.ok(dimensions.scrollWidth <= dimensions.innerWidth, `Horizontal overflow: ${JSON.stringify(dimensions)}`);
+    assert.ok(dimensions.emptyRight <= dimensions.innerWidth, `Empty state overflows: ${JSON.stringify(dimensions)}`);
+  });
+}
+
+test("sticky inbox controls stay above menus and keep keyboard focus visible", { timeout: 30_000 }, async (t) => {
+  const { page, inboxUrl } = await createBrowserFixture(t, "local", async (backend) => {
+    const documents = [];
+
+    for (let index = 0; index < 24; index += 1) {
+      documents.push(await publishBrowserDocument(backend, `Report ${index}`, `report-${index}.html`, isolationHtml));
+    }
+
+    return documents;
+  });
+
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 700 });
+    await page.goto(inboxUrl);
+    await page.locator(".doc__title").last().focus();
+
+    for (let index = 0; index < 23; index += 1) {
+      await page.keyboard.press("ArrowUp");
+      const hasVisibleFocus = await page.evaluate(() =>
+        document.activeElement.getBoundingClientRect().top >= document.querySelector(".library__bar").getBoundingClientRect().bottom,
+      );
+
+      assert.equal(hasVisibleFocus, true, `Sticky header covered keyboard focus at ${width}px`);
+    }
+
+    await page.locator(".doc__actions").nth(10).locator("summary").click();
+    await page.evaluate(() => {
+      const panel = document.querySelector(".doc__actions[open] .viewer-menu__panel").getBoundingClientRect();
+      scrollBy(0, panel.top - 20);
+    });
+    const hasUnobstructedHeader = await page.evaluate(() => {
+      const panel = document.querySelector(".doc__actions[open] .viewer-menu__panel").getBoundingClientRect();
+
+      return Boolean(document.elementFromPoint(panel.right - 10, 30)?.closest(".library__bar"));
+    });
+
+    assert.equal(hasUnobstructedHeader, true, `A row menu covered sticky controls at ${width}px`);
+  }
+});
+
 test("local inbox searches stored reports with server rendering", { timeout: 30_000 }, async (t) => {
   const { page, inboxUrl } = await createBrowserFixture(t, "local", publishReports);
   await page.goto(`${inboxUrl}?q=REPORT%20REPORT`);
