@@ -69,10 +69,11 @@ export async function createSyncHttpsCredentials(t: Pick<TestContext, "after">):
     try {
       await runFile("openssl", args, {
         cwd: directory, env: { ...fixtureEnvironment(directory), OPENSSL_CONF: opensslConfig },
-        timeout: 5000, killSignal: "SIGKILL", maxBuffer: 64 * 1024,
+        // Credential setup is not a latency assertion; allow cold executable startup on CI.
+        timeout: 15_000, killSignal: "SIGKILL", maxBuffer: 64 * 1024,
       });
-    } catch {
-      throw new Error("Synthetic TLS credential generation failed; local openssl is required");
+    } catch (cause) {
+      throw new Error("Synthetic TLS credential generation failed; local openssl is required", { cause });
     }
   }
 
