@@ -7,6 +7,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import type { TestContext } from "node:test";
+import { inspect } from "node:util";
 import { canonicalKey, parseBoolean, parseInteger, parseObject, parseString, parseUuid } from "./sync-model";
 import type { SyncRoute } from "./sync-model";
 import { parseReceipt } from "./sync-ledger";
@@ -132,8 +133,14 @@ export async function createWorkerFixture(t: TestContext, options: { observeView
         else await portScope.release();
       } catch (error) { failures.push(error); }
     }
+    if (failures.length) {
+      // TAP omits nested AggregateError causes, which would hide the failed cleanup operation.
+      for (const failure of failures) t.diagnostic(inspect(failure));
+
+      throw new AggregateError(failures, "Worker fixture cleanup failed");
+    }
+
     t.diagnostic(`${reapedCli} owned CLI children reaped; ${runtimePids.size} runtime PIDs absent; ${viewerPorts.size + workerPorts.size} ports rebound; synthetic root removed`);
-    if (failures.length) throw new AggregateError(failures, "Worker fixture cleanup failed");
   });
 
   portScope = await createFixturePortScope();

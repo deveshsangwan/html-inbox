@@ -124,7 +124,24 @@ if (catalog) {
       }
     }
 
-    const result = await reconcile(options);
+    const startedAt = Date.now();
+    const result = await reconcile(options).catch(async (error: unknown) => {
+      try {
+        const names = ["Error", "AggregateError", "TypeError", "RangeError", "AbortError"];
+        await appendFile(path.join(root, "credential-pass-results.jsonl"), `${JSON.stringify({ pid: process.pid, elapsedMs: Date.now() - startedAt,
+          routeIds: options.routeIds, outcome: "rejected", name: error instanceof Error && names.includes(error.name) ? error.name : "other",
+          messageSHA256: createHash("sha256").update(error instanceof Error ? error.message : typeof error).digest("hex") })}\n`, { mode: 0o600 });
+      } finally {
+        // A failed observation must not replace the real reconciliation rejection.
+        throw error;
+      }
+    });
+    try {
+      await appendFile(path.join(root, "credential-pass-results.jsonl"), `${JSON.stringify({ pid: process.pid, elapsedMs: Date.now() - startedAt,
+        routes: result.routes.map(({ routeId, direction, status, lastError }) => ({ routeId, direction, status, lastError })), counters: result.counters })}\n`, { mode: 0o600 });
+    } catch {
+      // Fixture observations must not alter the real reconciliation result.
+    }
     if (pin && options.routeIds[0] === pin.targetRouteId) {
       await appendFile(path.join(root, "credential-results.jsonl"), `${JSON.stringify(result.routes.map(({ routeId, status, lastError }) => ({ routeId, status, lastError })))}\n`, { mode: 0o600 });
     }

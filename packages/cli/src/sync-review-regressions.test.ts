@@ -11,7 +11,7 @@ import { SyncClient } from "./sync-client";
 import { createStorageCounters, DurableFiles } from "./sync-files";
 import { createSyncHttpsCredentials } from "./sync-https-fixtures";
 import { createSyncIngestionServer } from "./sync-http-server";
-import { canonicalKey, SYNC_HISTORY_UNAVAILABLE, type OriginGrant, type SyncRoute } from "./sync-model";
+import { canonicalKey, parseObject, SYNC_HISTORY_UNAVAILABLE, type OriginGrant, type SyncRoute } from "./sync-model";
 import { assertLoopbackClosed } from "./sync-protocol-fixture";
 import { reconcileSyncRoutes, routeAuthorization } from "./sync-reconciliation";
 import { defaultRuntimeConfig } from "./sync-runtime-config";
@@ -251,7 +251,7 @@ test("receiver worker waits for remote relay history and catches up autonomously
   assert.equal((await c.snapshot()).routes[bc.inbound.id].state, "active");
 });
 
-test("temporary session admission stays bounded and a one-second periodic worker recovers without retry reset", { timeout: 25_000 }, async (t) => {
+test("temporary session admission stays bounded and a one-second periodic worker recovers without retry reset", { timeout: 65_000 }, async (t) => {
   const f = await fixture(t);
   const a = await f.store("a");
   const b = await f.store("b");
@@ -265,6 +265,15 @@ test("temporary session admission stays bounded and a one-second periodic worker
 
   assert.equal(bs.server.status().sessions, WIRE_LIMITS.sessions);
   await a.publish(input, "admission");
+  const recordRouteRun = ManagedSyncStore.prototype.recordRouteRun;
+  let completedPasses = 0;
+  t.mock.method(ManagedSyncStore.prototype, "recordRouteRun", async function(this: ManagedSyncStore, ...args: Parameters<typeof recordRouteRun>) {
+    await recordRouteRun.apply(this, args);
+    if (args[1] === null && parseObject(args[0], "periodic route authorization").routeId === routes.outbound.id) {
+      completedPasses += 1;
+    }
+  });
+
   const worker = await f.worker(a);
   const pressure = await until(() => a.snapshot(), (ledger) => !!ledger.routeRetries[routes.outbound.id], "bounded admission retry");
   assert.equal(pressure.routeRetries[routes.outbound.id].lastError, "session-capacity");
@@ -272,12 +281,31 @@ test("temporary session admission stays bounded and a one-second periodic worker
   assert.equal(bs.server.status().sessions, WIRE_LIMITS.sessions);
   await client.json(routeAuthorization(routes.outbound), "manifest", { op: "complete", sessionId: sessions[0].sessionId }, (value) => value, WIRE_LIMITS.identity);
   await until(() => b.listDocuments(), (documents) => documents.length === 1, "admission pressure cleared");
-  const startRequests = bs.server.status().counters.requests;
-  await until(async () => bs.server.status(), (status) => status.counters.requests >= startRequests + 9 * 4 &&
-    status.sessions === WIRE_LIMITS.sessions - 1 && status.counters.activeRequests === 0, "nine completed healthy periodic sessions", 15_000);
+  await until(async () => completedPasses, (count) => count >= 1, "completed recovery pass");
+  const completedAfterRecovery = completedPasses;
+  const earliestHeldExpiry = Math.min(...sessions.slice(1).map((session) => session.expiresAt));
+  // The one-second interval starts after each pass finishes; allow real I/O without waiting for leaked leases to expire.
+  const observationMs = Math.min(45_000, earliestHeldExpiry - Date.now() - 1000);
+  assert.ok(observationMs > 0, "the retained session leases must outlive the periodic observation");
+  try {
+    await until(async () => bs.server.status(), (status) => completedPasses >= completedAfterRecovery + 9 &&
+      status.sessions === WIRE_LIMITS.sessions - 1 && status.counters.activeRequests === 0, "nine completed healthy periodic sessions", observationMs);
+  } catch (error) {
+    try {
+      const ledger = await a.snapshot();
+      t.diagnostic(JSON.stringify({ completedHealthyPasses: completedPasses - completedAfterRecovery, observationMs,
+        remainingHeldLeaseMs: earliestHeldExpiry - Date.now(), retry: ledger.routeRetries[routes.outbound.id], server: bs.server.status() }));
+    } finally {
+      throw error;
+    }
+  }
+
   await worker.close();
+  assert.ok(Date.now() < earliestHeldExpiry, "periodic completion must release capacity before the retained leases expire");
+  assert.ok(completedPasses >= completedAfterRecovery + 9);
   assert.equal(bs.server.status().sessions, WIRE_LIMITS.sessions - 1);
   assert.equal((await a.snapshot()).routeRetries[routes.outbound.id].blocked, false);
+  t.diagnostic(JSON.stringify({ completedHealthyPasses: completedPasses - completedAfterRecovery, remainingHeldLeaseMs: earliestHeldExpiry - Date.now() }));
 });
 
 test("concurrent pull identities reserve at most eight inventory leases before store reads complete", { timeout: 15_000 }, async (t) => {

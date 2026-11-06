@@ -1,10 +1,10 @@
 import path from "node:path";
 import { timingSafeEqual } from "node:crypto";
 import { type OwnerAnchor, type SyncLedger } from "./sync-ledger";
-import { acquireSyncOwnership, checkDirectory, hasCode, isDeadOwner, optionalStat, processStart, readSyncOwnership } from "./sync-files";
+import { acquireSyncOwnership, checkDirectory, isDeadOwner, optionalStat, processStart, readSyncOwnership } from "./sync-files";
 import { assertManagedLifecycle } from "./sync-lifecycle";
 import { assertExactKeys, parseInteger, parseObject, parseString, parseUuid } from "./sync-model";
-import { readRuntimeFile } from "./sync-runtime-config";
+import { readWorkerRecordBytes } from "./sync-worker-record-reader";
 
 export interface WorkerRecord {
   schemaVersion: 1;
@@ -59,25 +59,8 @@ export async function readWorkerRecordOffline(home: string): Promise<WorkerRecor
   }
 
   await checkDirectory(paths.directory);
-  for (let attempt = 0; attempt < 4; attempt += 1) {
-    try {
-      return parseWorkerRecord(JSON.parse((await readRuntimeFile(paths.record, 8192, true)).toString("utf8")));
-    } catch (error) {
-      if (hasCode(error, "ENOENT")) {
-        return null;
-      }
-
-      if (error instanceof Error && error.message === "Managed file must be a bounded regular file owned by the current account" && !await optionalStat(paths.record)) {
-        return null;
-      }
-
-      if (!(error instanceof Error) || error.message !== "Managed file changed during open" || attempt === 3) {
-        throw error;
-      }
-    }
-  }
-
-  throw new Error("Worker record changed repeatedly during read");
+  const bytes = await readWorkerRecordBytes(paths.record);
+  return bytes === null ? null : parseWorkerRecord(JSON.parse(bytes.toString("utf8")));
 }
 
 export async function inspectWorkerOwner(home: string, ledger?: SyncLedger): Promise<{ state: "stopped" | "owned"; record: WorkerRecord | null }> {

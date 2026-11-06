@@ -9,7 +9,7 @@ import platformTest, { mock, type TestContext } from "node:test";
 import { SyncClient } from "./sync-client";
 import { createSyncHttpsCredentials, type SyncHttpsCredentials } from "./sync-https-fixtures";
 import { outboxKey, parseLedger } from "./sync-ledger";
-import { canonicalKey, parseObject, signOriginState, stateFingerprint, type OriginGrant, type SyncRoute } from "./sync-model";
+import { canonicalKey, parseObject, signOriginState, stateFingerprint, SYNC_DEFAULTS, type OriginGrant, type SyncRoute } from "./sync-model";
 import { startProtocolFaultChild } from "./sync-protocol-fault-child";
 import { assertLoopbackClosed, startSyncApplication } from "./sync-protocol-fixture";
 import { reconcileSyncRoutes, routeAuthorization, type ReconcileOptions } from "./sync-reconciliation";
@@ -311,7 +311,8 @@ for (const fault of [
     assert.ok(f.proxy);
     await f.source.store.publish(input, "custody-proof");
     await f.proxy.command({ type: "arm", pathname: `/sync/v1/${fault.endpoint}`, method: fault.method, kind: fault.kind });
-    const result = await f.run();
+    // The injected response tests receipt validation, independently of a short request deadline.
+    const result = await f.run(f.source, f.outbound, { requestMs: SYNC_DEFAULTS.attemptMs });
     assert.notEqual(result.routes[0].status, "confirmed", JSON.stringify(result));
     assert.equal((await f.source.store.deliveryStatus(f.outbound.id, f.outbound.sourceInboxId, "custody-proof")).isCommitted, false);
     assert.equal(Object.keys((await f.source.store.snapshot()).receipts).length, 0);
@@ -320,7 +321,7 @@ for (const fault of [
     assert.equal(Object.keys(receiver.records).length, fault.hasRemoteCommit ? 1 : 0);
     await faultProof(f.proxy);
     await f.source.store.retry(routeAuthorization(f.outbound));
-    const recovered = await f.run();
+    const recovered = await f.run(f.source, f.outbound, { requestMs: SYNC_DEFAULTS.attemptMs });
     assert.equal(recovered.routes[0].status, "confirmed", JSON.stringify(recovered));
     assert.equal(recovered.routes[0].transferred, fault.hasRemoteCommit ? 0 : 1);
     const after = await f.receiver.store.snapshot();

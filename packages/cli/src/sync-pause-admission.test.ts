@@ -16,7 +16,8 @@ test("persisted pause during nested request admission preserves delivery and rem
   const authorization = routeAuthorization(route);
   const pauseWriter = new ManagedSyncStore(f.source.home);
   const remoteAttempt = await f.source.store.openRouteAttempt(authorization);
-  t.after(() => remoteAttempt.close());
+  // Fixture resources close before their homes are removed; a later test hook would leave this watcher running.
+  f.resources.push(() => remoteAttempt.close());
   const parent = new AbortController();
   let credentialCalls = 0;
   const credentials = { token: (await readFile(f.sourceConfig.credentials.token, "utf8")).trim(), ca: await readFile(f.tls.caPath) };
