@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { writeFile, realpath, lstat, rm } from "node:fs/promises";
+import { chmod, writeFile, realpath, lstat, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { test } from "node:test";
@@ -113,8 +113,16 @@ test("optional worker record removal between existence check and checked read is
     for (const boundary of ["realpath", "open", "fstat"]) {
       await rm(recordPath, { force: true });
       await writeFile(recordPath, "{}", { mode });
+      if (process.platform !== "win32") {
+        await chmod(recordPath, mode);
+      }
+
       // Windows does not expose private POSIX modes; observed unsafe metadata must reject before open.
       const hasPrivatePermissions = ((await lstat(recordPath)).mode & 0o077) === 0;
+      if (process.platform !== "win32") {
+        assert.equal(hasPrivatePermissions, mode === 0o600);
+      }
+
       const expected = boundary === "realpath" || hasPrivatePermissions ? "absent" : "unsafe";
       const result = await runNode(process.execPath, ["-e", script, path.join(__dirname, "sync-worker-records.js"), root, boundary, expected], { timeout: 5000 });
       assert.deepEqual(JSON.parse(result.stdout), expected === "absent" ? { hits: 1, absent: true } : { hits: 0, unsafe: true });

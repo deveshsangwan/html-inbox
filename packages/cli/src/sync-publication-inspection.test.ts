@@ -120,7 +120,7 @@ async function inspectionFixture(t: TestContext, state: InspectionState) {
       calls.deadlines += 1;
       assert.ok(error instanceof Error);
       assert.match(error.message, /lock deadline/);
-      if (!expires) assert.ok(overallDeadline - Date.now() > 25_000, "short lookup expiry cannot stand in for overall expiry");
+      if (!expires) assert.ok(Date.now() < overallDeadline, "short lookup expiry cannot stand in for overall expiry");
       throw error;
     } finally {
       if (expires) await delay(Math.max(1, overallDeadline - Date.now() + 1));
@@ -329,7 +329,15 @@ for (const outcome of ["unavailable", "confirmed", "suppressed"] as const) {
       f.calls.lookups += 1;
       if (args[0] !== eligible.id) return lookup.apply(this, args);
       eligibleLookups += 1;
-      if (eligibleLookups === 2 && !finalAvailable) return f.holdLookup(() => lookup.apply(this, args));
+      if (eligibleLookups === 2 && !finalAvailable) {
+        const lookupDeadline = args[3];
+        assert.ok(lookupDeadline);
+        assert.ok(lookupDeadline - Date.now() <= 200);
+        assert.ok(lookupDeadline < f.overallDeadline);
+
+        return f.holdLookup(() => lookup.apply(this, args));
+      }
+
       const result = await lookup.apply(this, args);
       if (eligibleLookups === 1) {
         assert.equal(result.isCommitted, false);

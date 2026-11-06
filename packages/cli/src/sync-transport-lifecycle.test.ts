@@ -330,7 +330,8 @@ for (const termination of ["disconnect", "quiesce", "server-close"] as const) {
     const createServer = https.createServer;
     t.mock.method(https, "createServer", (options: https.ServerOptions, listener: (request: import("node:http").IncomingMessage, response: ServerResponse) => void) =>
       createServer(options, (request, response) => { if (request.method === "GET") bodyResponse = response; listener(request, response); }));
-    const endpoint = await f.listen(source, { requestMs: 1000, leaseMs: 1400 });
+    const requestMs = termination === "disconnect" ? 5000 : 3000;
+    const endpoint = await f.listen(source, { requestMs: termination === "disconnect" ? requestMs : 1000, leaseMs: 1400 });
     const routes = await f.connect(source, receiver, endpoint.url, "https://127.0.0.1:1");
     await source.publish(input, "interrupted-body");
     const sourceHome = (await source.snapshot()).ownerAnchor.home;
@@ -378,7 +379,8 @@ for (const termination of ["disconnect", "quiesce", "server-close"] as const) {
       }
     });
     const disconnect = new AbortController();
-    const request = client.pullBody(auth, session.sessionId, state, { requestMs: 3000, signal: disconnect.signal });
+    const deadlineAt = Date.now() + requestMs;
+    const request = client.pullBody(auth, session.sessionId, state, { requestMs, deadlineAt, signal: disconnect.signal });
     const pulling = assert.rejects(request);
     void pulling.catch(() => {});
     const failures: unknown[] = [];
@@ -387,6 +389,11 @@ for (const termination of ["disconnect", "quiesce", "server-close"] as const) {
 
       if (termination === "disconnect") {
         // Trigger the disconnect at the held-lock boundary, after setup has completed.
+        assert.ok(bodyResponse);
+        assert.equal(bodyResponse.closed, false);
+        assert.equal(bodyResponse.destroyed, false);
+        assert.equal(bodyResponse.socket?.destroyed, false);
+        assert.ok(Date.now() < deadlineAt, "the request deadline must not trigger the disconnect");
         disconnect.abort();
       }
 

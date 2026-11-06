@@ -98,7 +98,14 @@ for (const unsafe of ["permissions", "hardlink", "oversize", "symlink", "directo
       await mkdir(f.target, { mode: 0o700 });
     }
 
-    await assert.rejects(readWorkerRecordOffline(f.home), /private|bounded|link|unsafe/);
+    const expectedErrors = {
+      permissions: /bounded regular owned file with private permissions/,
+      hardlink: /at most one link/,
+      oversize: /bounded regular owned file with private permissions/,
+      symlink: /cannot contain symbolic links/,
+      directory: /bounded regular owned file with private permissions/,
+    };
+    await assert.rejects(readWorkerRecordOffline(f.home), expectedErrors[unsafe]);
   });
 }
 
