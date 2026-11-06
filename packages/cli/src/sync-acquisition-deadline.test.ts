@@ -360,10 +360,11 @@ async function runWorkerScenario(root: string, t: TestContext) {
     await writeFile(tokenPath, token, { mode: 0o600 });
     // Allow release and final selection after queue expiry; the separate whole-pass negative keeps its 300 ms bound.
     const queuePassMs = 1000;
+    const queueRequestMs = 100;
     const config = defaultRuntimeConfig();
     config.credentials = { token: tokenPath };
     config.trust = { ca: tls.caPath };
-    config.timings.requestMs = 100;
+    config.timings.requestMs = queueRequestMs;
     config.timings.passMs = queuePassMs;
     await source.configureRuntime(config);
     await source.setWorkerEnabled(true);
@@ -394,7 +395,11 @@ async function runWorkerScenario(root: string, t: TestContext) {
       if (admissions % 2 !== 0) return originalOpen.call(this, ...args);
 
       queueHits += 1;
-      return holdQueue(sourceHome, 140, () => originalOpen.call(this, ...args));
+
+      // Inject at the queue boundary: holder setup must not turn the intended
+      // queue expiry into an unrelated pre-admission authorization timeout.
+      // The initial-client test separately exercises the full admission path.
+      return expireHeldQueue(sourceHome, queueRequestMs, args[1]);
     });
 
     async function startWorker() {
@@ -403,7 +408,7 @@ async function runWorkerScenario(root: string, t: TestContext) {
       return started;
     }
 
-    async function runTicket(current: Awaited<ReturnType<typeof startOwnedSyncWorker>>, requestMs = 100, passMs = queuePassMs) {
+    async function runTicket(current: Awaited<ReturnType<typeof startOwnedSyncWorker>>, requestMs = queueRequestMs, passMs = queuePassMs) {
       const ticketId = randomUUID();
       const observation: TicketObservation = { startedAt: performance.now(), recentAdmissions: [] };
       const idleOffsetAtEntryMs = offset;
@@ -463,7 +468,7 @@ async function runWorkerScenario(root: string, t: TestContext) {
     assert.deepEqual((await source.snapshot()).routeRetries[route.id], firstRetry);
     console.log(JSON.stringify({ realWakeAndRestartSuppressed: true, queueHits, firstRetry, remainingBackoffMs: firstRetry.nextAttemptAt - Date.now() }));
 
-    // Only idle scheduling time moves. Each queue attempt retains its real request and pass deadlines.
+    // Only idle scheduling time moves. Injected queue waits and ticket pass deadlines use real elapsed time.
     for (let attempts = 2; attempts <= 20; attempts += 1) {
       const previous = (await source.snapshot()).routeRetries[route.id];
       offset += Math.max(0, previous.nextAttemptAt - Date.now() + 1);
@@ -541,6 +546,27 @@ async function holdQueue<T>(home: string, milliseconds: number, operation: () =>
   try {
     return await operation();
   } finally {
+    await holder;
+  }
+}
+
+async function expireHeldQueue(home: string, requestMs: number, signal?: AbortSignal): Promise<never> {
+  let acquired = () => {};
+  const ready = new Promise<void>((resolve) => { acquired = resolve; });
+  let release = () => {};
+  const released = new Promise<void>((resolve) => { release = resolve; });
+  const directory = path.join(home, "sync");
+  const holder = withStoreLock(directory, 1000, async () => { acquired(); await released; });
+
+  try {
+    await Promise.race([ready, holder]);
+    return await withStoreLock(directory, requestMs,
+      () => assert.fail("The initial admission must expire while queued"), signal);
+  } catch (error) {
+    assert.ok(error instanceof StoreLockQueueDeadlineError, "the real queue deadline must supply the retryable failure");
+    throw error;
+  } finally {
+    release();
     await holder;
   }
 }
