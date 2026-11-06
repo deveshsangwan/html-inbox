@@ -54,38 +54,42 @@ function registerAcquisitionTests() {
     let admissionFailure: unknown;
     let requestRemainingMs: number | undefined;
     t.mock.method(store, "openRouteAttempt", async (...args: Parameters<typeof store.openRouteAttempt>) => {
-      let acquired = () => {};
-      const ready = new Promise<void>((resolve) => { acquired = resolve; });
-      const holder = withStoreLock(path.join(home, "sync"), 1000, async () => {
-        holdHits += 1;
-        acquired();
-        await delay(140);
-      });
-      // Observe holder failure even if acquisition fails before the ready notification.
-      await Promise.race([ready, holder]);
-
       try {
         return await openAttempt(...args);
       } catch (error) {
         admissionFailure = error;
         requestRemainingMs = args[2] === undefined ? undefined : args[2] - Date.now();
         throw error;
-      } finally {
-        await holder;
       }
     });
+
+    let release = () => {};
+    let acquired = () => {};
+    const ready = new Promise<void>((resolve) => { acquired = resolve; });
+    const held = new Promise<void>((resolve) => { release = resolve; });
+    const holder = withStoreLock(path.join(home, "sync"), 1000, async () => {
+      holdHits += 1;
+      acquired();
+      await held;
+    });
+    // Fixture acquisition must finish before the client starts its request deadline.
+    await Promise.race([ready, holder]);
 
     const startedAt = Date.now();
     const deadlineAt = startedAt + 300;
     let requestFailure: unknown;
+    let remainingPassMs = 0;
     try {
       await client.json(routeAuthorization(route), "identity", { nonce: opaqueToken() }, parseIdentityResponse, WIRE_LIMITS.identity,
         { requestMs: 100, deadlineAt });
     } catch (error) {
       requestFailure = error;
+    } finally {
+      remainingPassMs = deadlineAt - Date.now();
+      release();
+      await holder;
     }
 
-    const remainingPassMs = deadlineAt - Date.now();
     t.diagnostic(JSON.stringify({ holdHits, requestRemainingMs, remainingPassMs, credentialCalls, requests: client.counters.requests,
       admissionError: admissionFailure instanceof Error ? admissionFailure.message : null, failure: classifySyncFailure(requestFailure) }));
     assert.equal(holdHits, 1);
@@ -180,10 +184,6 @@ function registerAcquisitionTests() {
     let holdHits = 0;
     let cause: unknown;
     t.mock.method(store, "openRouteAttempt", async (...args: Parameters<typeof open>) => {
-      let acquired = () => {};
-      const ready = new Promise<void>((resolve) => { acquired = resolve; });
-      const holder = withStoreLock(path.join(home, "sync"), 1000, async () => { holdHits += 1; acquired(); await delay(140); });
-      await Promise.race([ready, holder]);
       const abort = setTimeout(() => controller.abort(reason), 20);
       try {
         return await open(...args);
@@ -192,16 +192,35 @@ function registerAcquisitionTests() {
         throw error;
       } finally {
         clearTimeout(abort);
-        await holder;
       }
     });
     const client = new SyncClient(store, identity.inboxId, () => { throw new Error("unexpected credentials"); });
+
+    let release = () => {};
+    let acquired = () => {};
+    const ready = new Promise<void>((resolve) => { acquired = resolve; });
+    const held = new Promise<void>((resolve) => { release = resolve; });
+    const holder = withStoreLock(path.join(home, "sync"), 1000, async () => {
+      holdHits += 1;
+      acquired();
+      await held;
+    });
+    await Promise.race([ready, holder]);
+
     const deadlineAt = Date.now() + 300;
-    await assert.rejects(client.json(routeAuthorization(route), "identity", {}, parseIdentityResponse, WIRE_LIMITS.identity,
-      { signal: controller.signal, requestMs: 100, deadlineAt }), (error: unknown) => error === reason);
+    let remainingPassMs = 0;
+    try {
+      await assert.rejects(client.json(routeAuthorization(route), "identity", {}, parseIdentityResponse, WIRE_LIMITS.identity,
+        { signal: controller.signal, requestMs: 100, deadlineAt }), (error: unknown) => error === reason);
+    } finally {
+      remainingPassMs = deadlineAt - Date.now();
+      release();
+      await holder;
+    }
+
     assert.ok(cause instanceof StoreLockQueueDeadlineError);
     assert.equal(holdHits, 1);
-    assert.ok(Date.now() < deadlineAt);
+    assert.ok(remainingPassMs > 0);
     assert.equal(client.counters.requests, 0);
   });
 

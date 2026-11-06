@@ -311,6 +311,22 @@ for (const mode of ["local", "static"]) {
     assert.equal(await search.inputValue(), "");
     assert.equal(await page.locator("[data-search-text]:visible").count(), 2);
 
+    if (mode === "static") {
+      for (const query of ["report", "operations.html"]) {
+        await search.fill(query);
+        assert.equal(await page.locator("[data-search-text]:visible").count(), 1);
+        const visibleLink = page.locator(".doc:not([hidden]) > .doc__title");
+
+        await search.press("ArrowDown");
+        assert.equal(await visibleLink.evaluate((element) => element === document.activeElement), true);
+        await page.keyboard.press("ArrowDown");
+        assert.equal(await visibleLink.evaluate((element) => element === document.activeElement), true);
+        await page.keyboard.press("ArrowUp");
+        assert.equal(await search.evaluate((element) => element === document.activeElement), true);
+        await search.press("Escape");
+      }
+    }
+
     await search.press("ArrowDown");
     const links = page.locator(".doc:not([hidden]) > .doc__title");
     assert.equal(await links.nth(0).evaluate((element) => element === document.activeElement), true);
