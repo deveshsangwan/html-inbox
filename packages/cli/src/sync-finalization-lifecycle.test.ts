@@ -246,6 +246,8 @@ for (const mode of ["calibration", "viewer", "status"] as const) {
     let starts = 0;
     let holds = 0;
     let responseClosed = false;
+    let responseClosedAt: number | undefined;
+    let signalAbortedAt: number | undefined;
     let releaseResponse = () => {};
     const json = SyncClient.prototype.json;
     t.mock.method(SyncClient.prototype, "json", function<T>(this: SyncClient, auth: RouteAuthorization, endpoint: "identity" | "manifest" | "holdings" | "offer",
@@ -253,6 +255,7 @@ for (const mode of ["calibration", "viewer", "status"] as const) {
       if (endpoint === "manifest" && parseObject(envelope, "manifest operation").op === "complete") {
         starts += 1;
         completion = options;
+        options.signal?.addEventListener("abort", () => { signalAbortedAt = Date.now(); }, { once: true });
       }
       return (json<T>).call(this, auth, endpoint, envelope, parse, maximum, options);
     });
@@ -262,7 +265,10 @@ for (const mode of ["calibration", "viewer", "status"] as const) {
       t.mock.method(response, "end", (...values: Parameters<typeof end>) => {
         if (request.url === "/sync/v1/manifest" && completion && holds === 0) {
           holds += 1;
-          response.once("close", () => { responseClosed = true; });
+          response.once("close", () => {
+            responseClosed = true;
+            responseClosedAt = Date.now();
+          });
           releaseResponse = () => { releaseResponse = () => {}; end(...values); };
           return response;
         }
@@ -297,18 +303,25 @@ for (const mode of ["calibration", "viewer", "status"] as const) {
     assert.equal(responseClosed, false);
     assert.ok(completion?.signal);
     assert.ok(completion.deadlineAt);
-    assert.equal(completion.signal.aborted, false);
+    const signal = completion.signal;
+    const deadlineAt = completion.deadlineAt;
+    assert.equal(signal.aborted, false);
 
     const observedAt = Date.now();
-    const remainingBeforeAction = completion.deadlineAt - observedAt;
+    const remainingBeforeAction = deadlineAt - observedAt;
 
-    assert.ok(remainingBeforeAction > 1000, `observe actual activity before ordinary request expiry: ${JSON.stringify({ mode, observedAt, deadlineAt: completion.deadlineAt, remainingBeforeAction, starts, holds, responseClosed, signalAborted: completion.signal.aborted })}`);
+    assert.ok(remainingBeforeAction > 0, `observe actual activity before ordinary request expiry: ${JSON.stringify({ mode, observedAt, deadlineAt, remainingBeforeAction, starts, holds, responseClosed, signalAborted: signal.aborted })}`);
     const control = parseWorkerControlStatus(await contactWorker(source.home, "status"));
     assert.equal(control.tickets.length, 1);
     assert.equal(control.tickets[0].state, "running");
-    t.diagnostic(JSON.stringify({ mode, starts, holds, responseClosed, signalAborted: completion.signal.aborted, remainingBeforeAction: completion.deadlineAt - Date.now() }));
+    assert.equal(responseClosed, false);
+    assert.equal(signal.aborted, false);
+    const actionAt = Date.now();
+    assert.ok(actionAt < deadlineAt, "cancellation must target an active request before its deadline");
+    t.diagnostic(JSON.stringify({ mode, starts, holds, responseClosed, signalAborted: signal.aborted, remainingBeforeAction: deadlineAt - actionAt }));
+
     if (mode === "calibration") {
-      const result = parseObject(await contactWorker(source.home, "cancel", control.tickets[0].ticketId, Math.min(completion.deadlineAt, Date.now() + 150)), "explicit cancellation control");
+      const result = parseObject(await contactWorker(source.home, "cancel", control.tickets[0].ticketId, Math.min(deadlineAt, Date.now() + 150)), "explicit cancellation control");
       assert.equal(result.cancelled, true);
     } else {
       assert.equal(cli.child.kill("SIGINT"), true);
@@ -318,10 +331,19 @@ for (const mode of ["calibration", "viewer", "status"] as const) {
     const viewer = await f.rememberViewer(source);
     assert.equal(viewer.state, "running");
     assert.equal(viewer.pid, preparedViewer.pid);
-    t.diagnostic(JSON.stringify({ mode, responseClosedAfterCli: responseClosed, signalAbortedAfterCli: completion.signal.aborted, remainingAfterCli: completion.deadlineAt - Date.now() }));
+    t.diagnostic(JSON.stringify({ mode, actionAt, responseClosedAt, signalAbortedAt, deadlineAt, remainingAfterCli: deadlineAt - Date.now() }));
     await waitUntil("held response closes from cancellation", async () => responseClosed, Boolean, 500);
-    assert.equal(completion.signal.aborted, true);
-    assert.ok(completion.deadlineAt - Date.now() > 500, "natural request expiry cannot satisfy cancellation");
+    assert.equal(signal.aborted, true);
+    assert.equal(starts, 1);
+    assert.ok(signalAbortedAt !== undefined);
+    assert.ok(responseClosedAt !== undefined);
+
+    // Use event times because CLI/viewer bookkeeping can outlast the request deadline.
+    for (const eventAt of [signalAbortedAt, responseClosedAt]) {
+      assert.ok(eventAt >= actionAt, "the request must remain active until the cancellation action");
+      assert.ok(eventAt < deadlineAt, "natural request expiry cannot satisfy cancellation");
+    }
+
     await assertCancellation(f.root, mode === "calibration" ? 0 : 1);
     assert.equal(completed.code, mode === "calibration" ? 0 : 130, completed.stderr);
     assert.equal(completed.signal, null);
