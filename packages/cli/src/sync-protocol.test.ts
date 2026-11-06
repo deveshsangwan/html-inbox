@@ -144,8 +144,10 @@ test("simultaneous push and independent pull install one row; lost final ACK res
     routes: [{ label: "body", pathname: "/sync/v1/body", method: "PUT" }], faults: [{ id: "lost-ack", route: "body", kind: "drop-response" }] });
   const routes = await connect(f.a, f.b, f.as?.url ?? "https://127.0.0.1:1", proxy.url, undefined, randomUUID());
   await f.a.store.publish(input, "raced");
-  const first = await f.run(f.a, routes.outbound, { requestMs: 1000 });
-  assert.equal(first.routes[0].status, "pending");
+  // The proxy closes the completed response; a shortened deadline can expire before ACK loss occurs.
+  const first = await f.run(f.a, routes.outbound);
+  assert.equal(first.routes[0].status, "pending", JSON.stringify(first));
+  assert.equal(first.routes[0].lastError, "verified-transport-failed", JSON.stringify(first));
   assert.equal((await proxy.stats()).faultHits["lost-ack"], 1);
   assert.equal((await f.b.store.listDocuments()).length, 1);
   await Promise.all([f.run(f.a, routes.outbound), f.run(f.b, f.inbound)]);
