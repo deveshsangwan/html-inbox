@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
-import { appendFile, readFile, writeFile } from "node:fs/promises";
+import { appendFile, lstat, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { mock } from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import * as reconciliation from "./sync-reconciliation";
+import * as files from "./sync-files";
 import { parseObject, parseUuid } from "./sync-model";
 import * as worker from "./sync-worker";
 import * as workerClient from "./sync-worker-client";
@@ -21,11 +22,51 @@ function reportStartupFailure(stage: "start" | "ensure", error: unknown) {
   }
 }
 
+async function reportPrivateFileFailure(root: string, filename: string, error: unknown) {
+  const checks = ["Managed file must be a bounded regular file owned by the current account", "Managed file changed during open"];
+  if (!(error instanceof Error) || !checks.includes(error.message)) {
+    return;
+  }
+
+  try {
+    const relative = path.relative(root, filename);
+    const location = path.isAbsolute(relative) || relative.split(path.sep).includes("..") ? "outside-fixture" : relative;
+    const info = await lstat(filename).catch(() => null);
+    process.stderr.write(`${JSON.stringify({ type: "credential-private-file-failure", pid: process.pid, location,
+      check: error.message === checks[0] ? "path" : "opened-handle",
+      observedAfterFailure: info && { isFile: info.isFile(), isSymbolicLink: info.isSymbolicLink(), nlink: info.nlink,
+        size: info.size, mode: info.mode & 0o777, owned: !process.getuid || info.uid === process.getuid() },
+    })}\n`);
+  } catch {
+    // Metadata is observed after rejection and must not replace the original failure.
+  }
+}
+
 // This preload holds a real reconciliation call, before either implementation
 // starts the later route. Credential resolution itself is never replaced.
 const catalog = process.env.HTML_INBOX_CATALOG_HOME;
 if (catalog) {
   const root = path.dirname(catalog);
+  const openPrivateFile = files.openPrivateFile;
+  mock.method(files, "openPrivateFile", async (...args: Parameters<typeof openPrivateFile>) => {
+    try {
+      return await openPrivateFile(...args);
+    } catch (error) {
+      await reportPrivateFileFailure(root, args[0], error);
+      throw error;
+    }
+  });
+
+  const readPrivateFile = files.readPrivateFile;
+  mock.method(files, "readPrivateFile", async (...args: Parameters<typeof readPrivateFile>) => {
+    try {
+      return await readPrivateFile(...args);
+    } catch (error) {
+      await reportPrivateFileFailure(root, args[0], error);
+      throw error;
+    }
+  });
+
   const start = worker.startOwnedSyncWorker;
   mock.method(worker, "startOwnedSyncWorker", async (...args: Parameters<typeof start>) => {
     try {
