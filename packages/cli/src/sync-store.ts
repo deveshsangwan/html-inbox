@@ -66,7 +66,7 @@ export interface InventoryReadiness {
   storageIncarnation: string;
 }
 
-const activeAttempts = new Map<string, Set<{ routeId: string; revision: number; controller: AbortController }>>();
+const activeAttempts = new Map<string, Set<{ routeId: string; revision: number; locallyInitiated: boolean; controller: AbortController }>>();
 
 /** One inbox, one mutation lock. HTTP push and pull must both use apply/applyStream. */
 export class ManagedSyncStore {
@@ -551,7 +551,16 @@ export class ManagedSyncStore {
     return this.mutate(async (ledger) => {
       const route = this.authorizeRoute(ledger, auth);
       if (locallyInitiated && ledger.worker.retryPaused) {
-        throw new Error("Locally initiated sync is persistently paused");
+        const reason = new Error("Locally initiated sync is persistently paused");
+        // Admission can observe a cross-process pause before the attempt watchers do.
+        // Cancel local attempts before the rejection can be recorded as a storage failure.
+        for (const attempt of activeAttempts.get(this.home) ?? []) {
+          if (attempt.locallyInitiated) {
+            attempt.controller.abort(reason);
+          }
+        }
+
+        throw reason;
       }
 
       await this.baseline();
@@ -571,7 +580,7 @@ export class ManagedSyncStore {
     const auth = parseAuthorization(authorization);
     const controller = new AbortController();
     const abort = () => controller.abort(new Error("Sync attempt aborted"));
-    const entry = { routeId: auth.routeId, revision: auth.revision, controller };
+    const entry = { routeId: auth.routeId, revision: auth.revision, locallyInitiated, controller };
     try {
       await this.startCommunication(auth, () => {
         parentSignal?.throwIfAborted();
