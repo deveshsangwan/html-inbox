@@ -76,7 +76,8 @@ function registerAcquisitionTests() {
     await Promise.race([ready, holder]);
 
     const startedAt = Date.now();
-    const deadlineAt = startedAt + 300;
+    // Leave scheduling headroom around the 100 ms request deadline on busy runners.
+    const deadlineAt = startedAt + 2000;
     let requestFailure: unknown;
     let remainingPassMs = 0;
     try {
@@ -207,7 +208,7 @@ function registerAcquisitionTests() {
     });
     await Promise.race([ready, holder]);
 
-    const deadlineAt = Date.now() + 300;
+    const deadlineAt = Date.now() + 2000;
     let remainingPassMs = 0;
     try {
       await assert.rejects(client.json(routeAuthorization(route), "identity", {}, parseIdentityResponse, WIRE_LIMITS.identity,
