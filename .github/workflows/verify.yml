@@ -9,8 +9,77 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: verify-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  verify:
+  source:
+    name: Source (${{ matrix.os }}, ${{ matrix.node }}, ${{ matrix.shard }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [20, 24]
+        shard: [1/2, 2/2]
+        exclude:
+          # Node 24 bundles the macOS fetch crash described in nodejs/undici#5544.
+          - os: macos-latest
+            node: 24
+        include:
+          - os: windows-latest
+            node: 24
+            shard: 1/1
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+
+      - name: Use a canonical macOS temporary directory
+        if: runner.os == 'macOS'
+        run: node -e "require('node:fs').appendFileSync(process.env.GITHUB_ENV, 'TMPDIR=' + require('node:fs').realpathSync(require('node:os').tmpdir()) + '\n')"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck with Rust compiler
+        if: matrix.shard != '2/2'
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+
+      - name: Select test runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Unit and integration tests
+        run: node scripts/run-unit-tests.mjs --test-shard=${{ matrix.shard }}
+
+      - name: Test harness checks
+        if: matrix.shard != '2/2'
+        run: node --test scripts/viewer-systemd-cleanup.test.mjs scripts/run-unit-tests.test.mjs
+
+      - name: Package smoke test
+        if: matrix.shard != '2/2'
+        run: node scripts/package-smoke.mjs
+
+      - name: Website integrity
+        if: matrix.shard != '2/2'
+        run: node scripts/verify-site.mjs && node --test scripts/site-theme.test.mjs
+
+  skills:
+    name: Skills (${{ matrix.os }}, ${{ matrix.node }})
     strategy:
       fail-fast: false
       matrix:
@@ -22,11 +91,40 @@ jobs:
           - os: windows-latest
             node: 24
           - os: macos-latest
-            # Node 24 bundles the macOS fetch crash described in nodejs/undici#5544.
             node: 20
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
+      - name: Select test runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Use a canonical macOS temporary directory
+        if: runner.os == 'macOS'
+        run: node -e "require('node:fs').appendFileSync(process.env.GITHUB_ENV, 'TMPDIR=' + require('node:fs').realpathSync(require('node:os').tmpdir()) + '\n')"
+
+      - name: Skill CLI resolution
+        run: node --test scripts/skill-cli-resolution.test.mjs scripts/skill-cli-windows.test.mjs
+
+      - name: Pinned npm skill fallback
+        run: node scripts/skill-cli-package-smoke.mjs
+
+  browser-linux:
+    name: Browser (ubuntu-latest, ${{ matrix.node }})
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 24]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      # Keep this version aligned with the pinned Playwright dependency.
+      image: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:bc6ab0d6d44ff4826e4cb8c1e6d801e185bfc42bb0753f8e2a30efc70db054c7
+      options: --ipc=host
     steps:
       - name: Check out repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -39,15 +137,11 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Use a canonical macOS temporary directory
-        if: runner.os == 'macOS'
-        run: node -e "require('node:fs').appendFileSync(process.env.GITHUB_ENV, 'TMPDIR=' + require('node:fs').realpathSync(require('node:os').tmpdir()) + '\n')"
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck with Rust compiler
-        run: pnpm typecheck
+      - name: Verify browser image version
+        run: node -e "require('node:assert/strict').equal(require('playwright/package.json').version, '1.63.0')"
 
       - name: Build
         run: pnpm build
@@ -57,26 +151,62 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Unit and integration tests
-        run: node scripts/run-unit-tests.mjs
+      - name: Browser tests
+        run: node scripts/run-browser-tests.mjs
 
-      - name: Systemd test harness cleanup
-        run: node --test scripts/viewer-systemd-cleanup.test.mjs
+  browser-native:
+    name: Browser (${{ matrix.os }}, ${{ matrix.node }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            node: 24
+          - os: macos-latest
+            node: 20
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - name: Skill CLI resolution
-        run: node --test scripts/skill-cli-resolution.test.mjs scripts/skill-cli-windows.test.mjs
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
 
-      - name: Pinned npm skill fallback
-        run: node scripts/skill-cli-package-smoke.mjs
+      - name: Use a canonical macOS temporary directory
+        if: runner.os == 'macOS'
+        run: node -e "require('node:fs').appendFileSync(process.env.GITHUB_ENV, 'TMPDIR=' + require('node:fs').realpathSync(require('node:os').tmpdir()) + '\n')"
 
-      - name: Install browser
-        run: node node_modules/playwright/cli.js install --with-deps chromium
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Select test runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install headless browser
+        run: node node_modules/playwright/cli.js install --only-shell chromium
 
       - name: Browser tests
         run: node scripts/run-browser-tests.mjs
 
-      - name: Package smoke test
-        run: node scripts/package-smoke.mjs
-
-      - name: Website integrity
-        run: node scripts/verify-site.mjs && node --test scripts/site-theme.test.mjs
+  verify:
+    name: Verify
+    if: always()
+    needs: [source, skills, browser-linux, browser-native]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Require every test group to pass
+        env:
+          RESULTS: ${{ join(needs.*.result, ',') }}
+        run: test "$RESULTS" = 'success,success,success,success'
