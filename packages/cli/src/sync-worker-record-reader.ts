@@ -6,6 +6,8 @@ import { parseCanonicalFilePath } from "./sync-runtime-config";
 
 const maximumBytes = 8192;
 
+export class WorkerRecordChangedError extends Error {}
+
 function assertSafeRecord(info: BigIntStats): void {
   if (!info.isFile() || info.isSymbolicLink() || (info.mode & 0o077n) !== 0n ||
       info.size < 0n || info.size > BigInt(maximumBytes) ||
@@ -92,5 +94,5 @@ export async function readWorkerRecordBytes(recordPath: string): Promise<Buffer 
     }
   }
 
-  throw new Error("Worker record changed repeatedly during read");
+  throw new WorkerRecordChangedError("Worker record changed repeatedly during read");
 }

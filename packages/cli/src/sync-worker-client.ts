@@ -8,6 +8,7 @@ import { assertManagedLifecycle } from "./sync-lifecycle";
 import { createStorageCounters, DurableFiles, optionalStat } from "./sync-files";
 import { assertExactKeys, parseArray, parseChoice, parseInteger, parseObject, parseString, parseUuid } from "./sync-model";
 import { acquireWorkerExclusion, inspectWorkerOwner, readWorkerRecordOffline, workerPaths, type WorkerRecord } from "./sync-worker-records";
+import { WorkerRecordChangedError } from "./sync-worker-record-reader";
 import { parseWorkerRun, type WorkerRunRequest } from "./sync-worker";
 
 export interface WorkerControlStatus {
@@ -242,7 +243,20 @@ async function stopWorkerUnderExclusion(home: string, deadlineAt: number) {
 
   await contactWorker(home, "stop", null, deadlineAt);
   while (Date.now() < deadlineAt) {
-    const remaining = await readWorkerRecordOffline(home);
+    let remaining: WorkerRecord | null;
+    try {
+      remaining = await readWorkerRecordOffline(home);
+    } catch (error) {
+      if (!(error instanceof WorkerRecordChangedError)) {
+        throw error;
+      }
+
+      // Snapshot churn during shutdown does not prove absence. Poll again within
+      // the caller's existing deadline, preserving unsafe-file and ownership errors.
+      await delay(20);
+      continue;
+    }
+
     if (!remaining) {
       return { stopped: true, alreadyStopped: false };
     }
