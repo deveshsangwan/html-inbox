@@ -18,12 +18,16 @@ function hasSameMetadata(first: BigIntStats, second: BigIntStats): boolean {
 
 async function hasSafeReplacement(ledgerPath: string, stale: BigIntStats): Promise<boolean> {
   const current = await lstat(ledgerPath, { bigint: true });
-  return isPrivateLedgerFile(current) && current.nlink === 1n && current.dev === stale.dev && current.ino !== stale.ino;
+  // A second commit can unlink the replacement before this lookup finishes.
+  // Its metadata authorizes another bounded read, never returning either inode's bytes.
+  return isPrivateLedgerFile(current) && (current.nlink === 0n || current.nlink === 1n) &&
+    current.dev === stale.dev && current.ino !== stale.ino;
 }
 
-async function matchesCanonicalLedger(ledgerPath: string, opened: BigIntStats): Promise<boolean> {
+async function hasSafeOpenedReplacement(ledgerPath: string, opened: BigIntStats): Promise<boolean> {
   const current = await lstat(ledgerPath, { bigint: true });
-  return isPrivateLedgerFile(current) && current.nlink === 1n && hasSameMetadata(current, opened);
+  return isPrivateLedgerFile(current) && (current.nlink === 0n || current.nlink === 1n) && current.dev === opened.dev &&
+    (!isSameInode(current, opened) || hasSameMetadata(current, opened));
 }
 
 /** Only immutable ledger replacement supplies retry evidence. Unsafe files supply no bytes. */
@@ -50,7 +54,7 @@ export async function readManagedLedgerBytes(ledgerPath: string): Promise<Buffer
       }
 
       if (!isSameInode(checked, opened)) {
-        if (opened.nlink === 1n && checked.dev === opened.dev && await matchesCanonicalLedger(ledgerPath, opened)) {
+        if ((opened.nlink === 0n || opened.nlink === 1n) && checked.dev === opened.dev && await hasSafeOpenedReplacement(ledgerPath, opened)) {
           continue;
         }
 

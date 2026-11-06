@@ -750,7 +750,8 @@ for (const direction of ["push", "pull"]) {
       faults: [{ id: "truncated", route: "body", kind: direction === "push" ? "truncate-request" : "truncate-response", afterBytes: 11 }] });
     const routes = await connect(f.a, f.b, direction === "pull" ? proxy.url : f.as.url, direction === "push" ? proxy.url : f.bs.url);
     await f.a.store.publish(input, "truncated");
-    const first = await f.run(direction === "push" ? f.a : f.b, direction === "push" ? routes.outbound : routes.inbound, { requestMs: 500 });
+    // The proxy terminates the stream; setup must reach that fault before a request deadline.
+    const first = await f.run(direction === "push" ? f.a : f.b, direction === "push" ? routes.outbound : routes.inbound);
     assert.notEqual(first.routes[0].status, "confirmed");
     assert.equal((await proxy.stats()).faultHits.truncated, 1);
     assert.equal(Object.keys((await f.b.store.snapshot()).receipts).length, 0);
@@ -805,8 +806,9 @@ test("lost readiness ACK requires a fresh challenge and never counts metadata re
     routes: [{ label: "manifest", pathname: "/sync/v1/manifest" }], faults: [{ id: "lost-ready", route: "manifest", kind: "drop-response" }] });
   const routes = await connect(f.a, f.b, "https://127.0.0.1:1", proxy.url);
   await f.a.store.publish(input, "ready-only");
-  const first = await f.run(f.a, routes.outbound, { requestMs: 500 });
+  const first = await f.run(f.a, routes.outbound);
   assert.notEqual(first.routes[0].status, "confirmed");
+  assert.equal(first.routes[0].lastError, "verified-transport-failed", JSON.stringify(first));
   assert.equal(first.routes[0].historyReady, false);
   assert.equal(Object.keys((await f.b.store.snapshot()).historyCheckpoints).length, 1);
   assert.equal(Object.keys((await f.b.store.snapshot()).receipts).length, 0);
