@@ -24,10 +24,16 @@ test("persisted pause during nested request admission preserves delivery and rem
     credentials: () => { credentialCalls += 1; return credentials; }, requestMs: 5000, deadlineMs: 15_000 });
   const openAttempt = f.source.store.openRouteAttempt.bind(f.source.store);
   let localAdmissions = 0;
+  let outerSignal: AbortSignal | undefined;
+  const rejectedAdmissions: Array<{ error: unknown; outerAborted: boolean }> = [];
   const intercepted = t.mock.method(f.source.store, "openRouteAttempt", async (...args: Parameters<typeof openAttempt>) => {
-    const attempt = await openAttempt(...args);
+    const attempt = await openAttempt(...args).catch((error: unknown) => {
+      rejectedAdmissions.push({ error, outerAborted: outerSignal?.aborted ?? false });
+      throw error;
+    });
     localAdmissions += 1;
     if (localAdmissions === 1) {
+      outerSignal = attempt.signal;
       // A separate store persists pause as another process would, after the outer pass was admitted.
       await pauseWriter.setRetryPaused(true);
     }
@@ -48,6 +54,13 @@ test("persisted pause during nested request admission preserves delivery and rem
   assert.equal(parent.signal.aborted, false);
   assert.equal(remoteAttempt.signal.aborted, false, "pause must preserve remotely initiated communication in the same home");
   assert.equal(localAdmissions, 1, "nested request admission must reject the persisted pause");
+
+  assert.equal(rejectedAdmissions.length, 1);
+  const [rejection] = rejectedAdmissions;
+  assert.ok(rejection.error instanceof Error);
+  assert.equal(rejection.error.message, "Locally initiated sync is persistently paused");
+  assert.equal(rejection.outerAborted, true, "pause must cancel the outer attempt before nested admission rejects");
+
   assert.equal(credentialCalls, 0);
   assert.equal(result.counters.requests, 0);
   assert.equal(result.routes[0].status, "aborted");
