@@ -229,7 +229,8 @@ async function readPrivateJson(
         throw new ViewerRecordChangedError(`Viewer record changed repeatedly during read; retry the command: ${filePath}`);
       }
 
-      return readPrivateJson(filePath, options, remainingAttempts - 1);
+      // Observe the retry's rejection before asynchronous descriptor cleanup delays this frame.
+      return await readPrivateJson(filePath, options, remainingAttempts - 1);
     }
 
     // Catalog inspection and administrator service commands must preserve source permissions.
