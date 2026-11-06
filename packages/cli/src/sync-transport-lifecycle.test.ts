@@ -377,15 +377,17 @@ for (const termination of ["disconnect", "quiesce", "server-close"] as const) {
         bodyResponse?.emit("close");
       }
     });
-    const request = client.pullBody(auth, session.sessionId, state, { requestMs: termination === "disconnect" ? 250 : 3000 });
+    const disconnect = new AbortController();
+    const request = client.pullBody(auth, session.sessionId, state, { requestMs: 3000, signal: disconnect.signal });
     const pulling = assert.rejects(request);
     void pulling.catch(() => {});
     const failures: unknown[] = [];
     try {
+      await Promise.race([reachedPin, pulling.then(() => { throw new Error("Body request settled before pin admission"); })]);
+
       if (termination === "disconnect") {
-        await Promise.race([reachedPin, pulling.then(() => { throw new Error("Body request settled before pin admission"); })]);
-      } else {
-        await reachedPin;
+        // Trigger the disconnect at the held-lock boundary, after setup has completed.
+        disconnect.abort();
       }
 
       if (termination === "quiesce") {
