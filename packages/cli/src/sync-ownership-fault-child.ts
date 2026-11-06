@@ -6,6 +6,7 @@ const fs: typeof import("node:fs/promises") = require("node:fs/promises");
 const [lockPath, stage = "created", action = "cut", errorCode = "EIO"] = process.argv.slice(2);
 const original = { open: fs.open, link: fs.link, unlink: fs.unlink };
 const abort = new AbortController();
+let acquisitionDeadlineAt = 0;
 const trace: string[] = [];
 let hits = 0;
 let callback = false;
@@ -39,7 +40,10 @@ async function event(current: string, name?: string, file?: FileHandle) {
     await new Promise(() => { setInterval(() => {}, 1000); });
   }
   if (action === "abort") { abort.abort(new Error("fixture cancellation")); return; }
-  if (action === "deadline") { await new Promise((resolve) => setTimeout(resolve, 600)); return; }
+  if (action === "deadline") {
+    await new Promise((resolve) => setTimeout(resolve, Math.max(1, acquisitionDeadlineAt - Date.now() + 25)));
+    return;
+  }
   throw Object.assign(new Error(`Injected ${errorCode} at ${current}`), { code: errorCode });
 }
 
@@ -108,7 +112,9 @@ fs.unlink = async (name) => {
 async function main() {
   const { acquireSyncOwnership } = await import("./sync-files.js");
   try {
-    const ownership = await acquireSyncOwnership(lockPath, Date.now() + 500, abort.signal);
+    // Real durability work must reach the selected fault before an unrelated setup deadline can win.
+    acquisitionDeadlineAt = Date.now() + 5000;
+    const ownership = await acquireSyncOwnership(lockPath, acquisitionDeadlineAt, abort.signal);
     callback = true;
     await event("held", lockPath);
     await ownership.release();
