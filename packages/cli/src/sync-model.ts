@@ -1,6 +1,10 @@
-import { createHash, createPublicKey, sign, verify } from "node:crypto";
+import { createHash, sign } from "node:crypto";
+import { OriginSignatureVerifier } from "./sync-signatures";
 import { isSafeDocumentId, parseDocumentMetadata, type OriginalDocumentMetadata } from "./documents";
 import { assertUuidV4, isRecord } from "./validation";
+
+// One bounded process lifetime spans short-lived readers and long-lived workers across inboxes.
+const originSignatures = new OriginSignatureVerifier();
 
 export const SYNC_PROTOCOL_VERSION = 1;
 export const SYNC_SCHEMA_VERSION = 1;
@@ -101,10 +105,7 @@ export function signOriginState(state: Omit<OriginState, "signature">, privateKe
 }
 
 export function verifyOriginState(state: OriginState, publicKey: string): void {
-  const key = createPublicKey(publicKey);
-  if (key.asymmetricKeyType !== "ed25519" || !verify(null, stateEncoding(state), key, Buffer.from(state.signature, "base64url"))) {
-    throw new Error("Origin signature verification failed");
-  }
+  originSignatures.verify(publicKey, state.signature, stateEncoding(state));
 }
 
 export function stateFingerprint(state: OriginState): string {
@@ -153,7 +154,7 @@ export function parseOriginGrant(value: unknown): OriginGrant {
   const record = parseObject(value, "origin grant");
   assertExactKeys(record, ["inboxId", "historyEpoch", "publicKey", "completeHistory", "redistribute"]);
   const publicKey = parseString(record.publicKey, "origin public key", 1024);
-  if (createPublicKey(publicKey).asymmetricKeyType !== "ed25519") {
+  if (originSignatures.parsePublicKey(publicKey).asymmetricKeyType !== "ed25519") {
     throw new Error("Origin key must be Ed25519");
   }
 
