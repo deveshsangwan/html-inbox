@@ -164,6 +164,88 @@ export function initializeViewer(): void {
         }
       });
 
+    const libraryBar = document.querySelector(".library__bar");
+
+    if (libraryBar) {
+      new ResizeObserver(() => {
+        root.style.setProperty("--library-bar-height", `${libraryBar.getBoundingClientRect().height + 8}px`);
+      }).observe(libraryBar);
+    }
+
+    const searchInput = document.querySelector<HTMLInputElement>("#document-search");
+    const getVisibleRowLinks = () =>
+      Array.from(
+        document.querySelectorAll<HTMLAnchorElement>(".doc:not([hidden]) > .doc__title"),
+      );
+
+    document.addEventListener("keydown", (event) => {
+      if (event.defaultPrevented || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) {
+        return;
+      }
+
+      const target = event.target;
+      const isTyping =
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target instanceof HTMLSelectElement);
+
+      if (
+        event.key === "/" &&
+        searchInput &&
+        !isTyping &&
+        !document.querySelector("dialog[open]")
+      ) {
+        event.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+
+        return;
+      }
+
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+        return;
+      }
+
+      const links = getVisibleRowLinks();
+      const index = target instanceof HTMLAnchorElement ? links.indexOf(target) : -1;
+      const isInSearch = target === searchInput;
+
+      if (isInSearch && event.key === "ArrowDown" && links.length > 0) {
+        event.preventDefault();
+        links[0].focus();
+
+        return;
+      }
+
+      if (index === -1) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (event.key === "ArrowDown") {
+        links[Math.min(index + 1, links.length - 1)].focus();
+      } else if (index === 0) {
+        searchInput?.focus();
+      } else {
+        links[index - 1].focus();
+      }
+    });
+
+    if (searchInput && !searchInput.form?.hasAttribute("data-client-search")) {
+      searchInput.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape" || event.isComposing || !searchInput.value) {
+          return;
+        }
+
+        event.preventDefault();
+        searchInput.value = "";
+        searchInput.form?.requestSubmit();
+      });
+    }
+
     const searchForm = document.querySelector("[data-client-search]");
     if (searchForm instanceof HTMLFormElement) {
       const input = searchForm.querySelector('input[name="q"]');
@@ -175,6 +257,8 @@ export function initializeViewer(): void {
       const clear = searchForm.querySelector<HTMLElement>(
         "[data-search-clear]",
       );
+      const emptyQuery = document.querySelector("[data-client-empty-query]");
+      const emptyClear = document.querySelector("[data-empty-clear]");
       const submit = searchForm.querySelector<HTMLElement>(
         "[data-search-submit]",
       );
@@ -196,6 +280,7 @@ export function initializeViewer(): void {
             : total + (total === 1 ? " document" : " documents");
         }
         if (empty) empty.hidden = !query || visible > 0;
+        if (emptyQuery) emptyQuery.textContent = value.trim().slice(0, 200);
         if (clear) clear.hidden = !query;
       };
 
@@ -219,6 +304,24 @@ export function initializeViewer(): void {
       });
       if (input instanceof HTMLInputElement) {
         input.addEventListener("input", () => commit(input.value));
+        input.addEventListener("keydown", (event) => {
+          if (event.key !== "Escape" || event.isComposing || !input.value) {
+            return;
+          }
+
+          event.preventDefault();
+          input.value = "";
+          commit("");
+        });
+      }
+      if (emptyClear) {
+        emptyClear.addEventListener("click", () => {
+          if (input instanceof HTMLInputElement) {
+            input.value = "";
+            input.focus();
+          }
+          commit("");
+        });
       }
       if (clear) {
         clear.addEventListener("click", (event) => {

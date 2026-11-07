@@ -18,6 +18,7 @@ import { outboxKey } from "./sync-ledger";
 import { canonicalKey, inventoryDigest, MANIFEST_DOMAIN, sha256, verifyOriginState, type RouteAuthorization, type SyncRoute } from "./sync-model";
 import { ManagedDeletionIdentityError, ManagedSyncStore, toOriginState, type ManagedDeletionIdentity } from "./sync-store";
 import { LIVE_SHELL_CSP } from "./viewer-assets";
+import * as viewerRecords from "./viewer-records";
 import { getInboxInstanceId, hasErrorCode, readViewerRecord } from "./viewer-records";
 import { startViewer } from "./viewer-server";
 
@@ -81,6 +82,7 @@ async function startOwnedViewer(t: TestContext, f: Awaited<ReturnType<typeof fix
   f.resources.push(async () => {
     server.closeAllConnections();
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+
     const recordPath = path.join(home, "viewer.json");
     const deadline = Date.now() + 5000;
 
@@ -237,6 +239,44 @@ async function capturedIdentity(home: string, inboxId: string): Promise<ManagedD
   const root = await fs.lstat(home);
   return { home, dev: root.dev, ino: root.ino, inboxId };
 }
+
+test("owned viewer cleanup waits for signal handlers after its record disappears", { timeout: 10_000 }, async (t) => {
+  const f = await fixture(t);
+  const home = path.join(f.root, "source");
+  const interruptListeners = process.listenerCount("SIGINT");
+  await startOwnedViewer(t, f, home);
+  const closeViewer = f.resources.pop();
+  assert(closeViewer);
+
+  const finishRemoval = deferred();
+  const removeRecord = viewerRecords.removeViewerRecord;
+  let isRecordRemoved = false;
+  const remove = t.mock.method(viewerRecords, "removeViewerRecord", async (recordHome: string, processId: string) => {
+    await removeRecord(recordHome, processId);
+    isRecordRemoved = true;
+    await finishRemoval.promise;
+  });
+
+  const listenerCount = process.listenerCount;
+  let hasObservedPendingHandler = false;
+  t.mock.method(process, "listenerCount", (...args: Parameters<typeof process.listenerCount>) => {
+    const count = listenerCount.call(process, ...args);
+    if (isRecordRemoved && args[0] === "SIGINT") {
+      hasObservedPendingHandler ||= count > interruptListeners;
+      finishRemoval.resolve();
+    }
+
+    return count;
+  });
+
+  try {
+    await closeViewer();
+    assert(hasObservedPendingHandler, "cleanup observes the installed handler after the record is gone");
+  } finally {
+    finishRemoval.resolve();
+    await remove.mock.calls[0]?.result;
+  }
+});
 
 test("enrolled live viewer starts and deletes through its captured managed writer", { timeout: 20_000 }, async (t) => {
   const f = await fixture(t);
