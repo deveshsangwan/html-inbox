@@ -1,6 +1,6 @@
 # HTML Inbox
 
-Version 0.6.1 fixes concurrent startup identity creation, sync pause/resume, and record-reading/shutdown races. Restart running viewers, hubs, and sync workers after an authorized CLI update to load the fixes. See the [0.6.1 upgrade notes](https://github.com/deveshsangwan/html-inbox/blob/main/CHANGELOG.md#upgrade-to-061).
+Version 0.6.1 fixes concurrent startup identity creation, sync pause/resume, and record-reading/shutdown races. Before updating the CLI, stop running viewers, hubs, and independent sync workers with the old executable. Update the CLI, then restart the components you use to load the fixes. See the [0.6.1 upgrade notes](https://github.com/deveshsangwan/html-inbox/blob/main/CHANGELOG.md#upgrade-to-061).
 
 Version 0.6.0 adds opt-in managed synchronization on POSIX systems, with independent workers and explicit route, credential and TLS configuration. Ordinary unenrolled libraries remain supported on Windows. Read the [0.6.0 migration and rollback limits](https://github.com/deveshsangwan/html-inbox/blob/main/docs/named-inboxes.md#upgrade-to-060) before enrollment. Version 0.5.0 introduced live-reader deletion, 0.4.0 reader copying, and 0.3.0 named libraries and local hubs. Check the executable's `--help` and the running reader for actual capabilities. Updating a skill does not update the CLI or a running viewer.
 

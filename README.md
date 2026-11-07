@@ -1,6 +1,6 @@
 # HTML Inbox
 
-Version 0.6.1 fixes concurrent startup identity creation, sync pause/resume, and record-reading/shutdown races. Restart running viewers, hubs, and sync workers after an authorized CLI update to load the fixes. See the [0.6.1 upgrade notes](CHANGELOG.md#upgrade-to-061).
+Version 0.6.1 fixes concurrent startup identity creation, sync pause/resume, and record-reading/shutdown races. Before updating the CLI, stop running viewers, hubs, and independent sync workers with the old executable. Update the CLI, then restart the components you use to load the fixes. See the [0.6.1 upgrade notes](CHANGELOG.md#upgrade-to-061).
 
 [Website](https://deveshsangwan.github.io/html-inbox/) | [Documentation](https://deveshsangwan.github.io/html-inbox/docs/) | [npm](https://www.npmjs.com/package/html-inbox)
 
