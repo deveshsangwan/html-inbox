@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
@@ -67,7 +67,7 @@ if (mode === "run") {
     for (const locale of ["en_US.UTF-8", "fr_FR.UTF-8", "ar_EG.UTF-8"]) {
       const env = { ...process.env, LANG: locale, LC_ALL: locale };
       const outputs = Object.fromEntries(Object.entries(builds).map(([label, dist]) => {
-        const result = spawnSync(node, [script, "equivalence", dist], { encoding: "utf8", env });
+        const result = spawnSync(node, [script, "equivalence", dist], { encoding: "utf8", maxBuffer: 32 * 1024 * 1024, env });
         assert.equal(result.status, 0, result.stderr);
         return [label, result.stdout];
       }));

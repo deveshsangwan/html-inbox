@@ -176,6 +176,24 @@ for (const mode of ["local", "static"]) {
     });
   }
 
+  test(`${mode} dates use the browser locale and timezone in index and document shells`, { timeout: 30_000 }, async (t) => {
+    const { context, inboxUrl, documents } = await createBrowserFixture(t, mode, publishReports);
+
+    for (const [locale, timezoneId] of [["en-US", "America/New_York"], ["fr-FR", "Asia/Kolkata"]]) {
+      const localizedContext = await context.browser().newContext({ locale, timezoneId });
+
+      try {
+        const page = await localizedContext.newPage();
+        await page.goto(inboxUrl);
+        await assertLocalizedDates(page, documents.length);
+        await page.getByRole("link", { name: documents[0].title, exact: true }).click();
+        await assertLocalizedDates(page, 1);
+      } finally {
+        await localizedContext.close();
+      }
+    }
+  });
+
   test(`${mode} setup appearance is the default until this browser overrides it`, { timeout: 30_000 }, async (t) => {
     const { page, inboxUrl, documents } = await createBrowserFixture(t, mode, publishAppearanceDocument, { appearance: "dark" });
     await page.emulateMedia({ colorScheme: null });
@@ -359,5 +377,21 @@ async function assertLibraryRendering(t, mode, useLiveCdn) {
     assert(cdn.requestedUrls.includes("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"));
     assert(cdn.requestedUrls.includes("https://cdn.jsdelivr.net/npm/mermaid@11/dist/chunks/fixture-render.mjs"));
     assert.deepEqual(cdn.unexpectedUrls, []);
+  }
+}
+
+async function assertLocalizedDates(page, count) {
+  const dates = await page.locator("time[data-local-date]").evaluateAll((elements) => {
+    const formatter = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
+
+    return elements.map((element) => ({
+      actual: element.textContent,
+      expected: formatter.format(new Date(element.dateTime)),
+    }));
+  });
+  assert.equal(dates.length, count);
+
+  for (const date of dates) {
+    assert.equal(date.actual, date.expected);
   }
 }
