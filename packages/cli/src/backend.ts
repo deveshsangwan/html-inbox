@@ -15,6 +15,30 @@ import {
 
 export const DEFAULT_PORT = 3217;
 
+const LISTING_READ_LIMIT = 8;
+let activeListingReads = 0;
+const waitingListingReads: Array<() => void> = [];
+
+async function acquireListingRead(): Promise<void> {
+  if (activeListingReads < LISTING_READ_LIMIT) {
+    activeListingReads += 1;
+    return;
+  }
+
+  await new Promise<void>((resolve) => waitingListingReads.push(resolve));
+}
+
+function releaseListingRead(): void {
+  const next = waitingListingReads.shift();
+
+  if (next) {
+    next();
+    return;
+  }
+
+  activeListingReads -= 1;
+}
+
 export function getInboxHome(env: NodeJS.ProcessEnv = process.env): string {
   return env.HTML_INBOX_HOME
     ? path.resolve(env.HTML_INBOX_HOME)
@@ -94,7 +118,43 @@ export class LocalDocumentBackend implements DocumentBackend {
       throw error;
     }
 
-    const documents = await Promise.all(entries.map((id) => this.readMetadata(id)));
+    const documents: Array<DocumentMetadata | null> = new Array(entries.length).fill(null);
+    let nextIndex = 0;
+    let hasFailed = false;
+    let firstError: unknown;
+    const readNext = async () => {
+      while (!hasFailed && nextIndex < entries.length) {
+        const index = nextIndex++;
+        await acquireListingRead();
+
+        try {
+          if (hasFailed) {
+            return;
+          }
+
+          documents[index] = await this.readMetadata(entries[index]);
+        } catch (error) {
+          if (!hasFailed) {
+            firstError = error;
+          }
+
+          hasFailed = true;
+        } finally {
+          releaseListingRead();
+        }
+      }
+    };
+
+    // Each request allocates only a fixed set of workers. The shared slots also
+    // cap metadata reads across backend instances serving simultaneous requests.
+    await Promise.all(Array.from(
+      { length: Math.min(LISTING_READ_LIMIT, entries.length) }, readNext,
+    ));
+
+    if (hasFailed) {
+      throw firstError;
+    }
+
     return documents
       .filter((metadata): metadata is DocumentMetadata => metadata !== null)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -220,10 +280,15 @@ export class LocalDocumentBackend implements DocumentBackend {
     }
 
     try {
-      await Promise.all([
+      const hardening = [
         hardenPrivateFile(path.join(documentDir, "index.html")),
         hardenPrivateFile(path.join(documentDir, "metadata.json")),
-      ]);
+      ];
+      await Promise.all(hardening).catch(async (error: unknown) => {
+        // A failed sibling must finish before its listing read slot is reused.
+        await Promise.allSettled(hardening);
+        throw error;
+      });
       return "complete";
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
