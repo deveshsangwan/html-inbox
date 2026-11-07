@@ -14,7 +14,7 @@ Measure `npm exec --offline -- html-inbox <args>` and `npx --offline html-inbox 
 
 Use a focused companion to the #89 Linux wait4 runner for paired installed artifacts, 20 alternating samples per variant/command/runtime/launcher, after two untimed warmups. Keep stdout, stderr and exit code, require exact equivalence for help/version/errors, and record per-sample elapsed/CPU/peak RSS plus min/median/max. Filesystem caches are uncontrolled and warm; no cold-cache claim. CPU includes waited descendants, while peak RSS is the largest process high-water mark, not aggregate tree RSS. Launcher overhead must remain separately labeled. Save raw results with a durable report reference before reviews.
 
-## Qualification still required
+## Qualification gates
 
 - Install frozen dependencies, typecheck and build under the repository's build runtime.
 - Inspect actual ncc output and all emitted assets; source imports do not prove improvement.
@@ -23,4 +23,8 @@ Use a focused companion to the #89 Linux wait4 runner for paired installed artif
 - Reject the production change if practical benefit does not exceed measurement noise.
 - Release the execution slot before fresh pinned Sol High and Claude Sonnet 5.5 Medium reviews with the full execution-contract rubric. Record findings and their disposition.
 
-No measurements or passing runtime checks are claimed yet.
+## Measurement outcome
+
+The installed-artifact experiment supports retaining this change. Full raw samples, environment/compiler/artifact fingerprints, reproducible commands, spreads, tradeoffs and the decision are committed under `scripts/bench/evidence/startup/`. The measured production source is `8ae19fd9c746d335b0fbf0c8ca6e21ada1dd9f80`; later qualification work changes tests, scripts and evidence only. No runtime, package or storage policy changed.
+
+Canonical help/version/noargs are deliberately the only parser bypass. Other argument forms retain the existing parser, including all validation/errors. Ordinary command handlers and helper bodies, and the full help text, match the pinned parent exactly. Installed subsystem guards and lifecycle qualification test the final emitted ncc chunks. Runtime and review receipts are recorded with the evidence.
