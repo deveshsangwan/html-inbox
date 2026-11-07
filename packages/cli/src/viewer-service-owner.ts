@@ -6,8 +6,9 @@ import { assertExactKeys, parseBoolean, parseObject, parseString, parseUuid } fr
 import { parseViewerNetworkConfig, type ViewerNetworkConfig } from "./viewer-network";
 import { readSavedViewerConfiguration } from "./viewer-records";
 import type { ViewerServiceUser } from "./viewer-service-runtime";
+import { VIEWER_OWNER_PREFLIGHT } from "./cli-entrypoints";
 
-export const VIEWER_OWNER_PREFLIGHT = "--internal-viewer-owner-preflight";
+export { VIEWER_OWNER_PREFLIGHT } from "./cli-entrypoints";
 
 export interface ViewerHomeInspection {
   home: string;

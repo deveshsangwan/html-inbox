@@ -97,6 +97,23 @@ try {
   assert.match(help, /viewer \[--foreground\]/);
   assert.match(help, /viewer service install/);
 
+  const startupGuard = path.join(temporaryRoot, "startup-guard.cjs");
+  await writeFile(startupGuard, `
+const Module = require("node:module");
+const load = Module._load;
+Module._load = function (request, ...args) {
+  if (/^(node:)?(http|https|http2|tls|net|crypto|child_process|readline(?:\\/promises)?)$/.test(request)) {
+    throw new Error("Unexpected subsystem during help/version: " + request);
+  }
+  return load.call(this, request, ...args);
+};
+`);
+  for (const args of [[], ["--help"], ["-h"], ["--version"], ["-v"]]) {
+    const result = await run(process.execPath, ["--require", startupGuard, executable, ...args], consumerRoot);
+    assert.equal(result.stdout, args[0] === "--version" || args[0] === "-v" ? `${installedPackage.version}\n` : help);
+    assert.equal(result.stderr, "");
+  }
+
   const isolatedHome = path.join(temporaryRoot, "home");
   const viewerPort = await findAvailablePort();
   const cliEnvironment = {

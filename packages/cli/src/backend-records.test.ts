@@ -5,7 +5,7 @@ import http from "node:http";
 import { mkdir, readFile, stat, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { LocalDocumentBackend } from "./backend";
-import { assertExportOutsideHome, formatDocumentList } from "./index";
+import { assertExportOutsideHome, formatDocumentList } from "./cli-commands";
 import { startViewer } from "./viewer-server";
 import { temporaryHome, availablePort } from "./test-fixtures";
 
