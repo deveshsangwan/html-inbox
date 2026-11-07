@@ -1,6 +1,6 @@
 # Issue 94 qualification plan and receipt
 
-Status: candidate awaiting qualification. No production performance claim. Root granted the exclusive install/build/correctness/measurement slot after issue 92 released it. No heavy work ran before that grant.
+Status: local qualification reports GO for the measured scope. Root has not independently verified that receipt. Full local gates passed on Node 20.20.2 and 24.19.0. The exclusive local slot was explicitly released to root and granted to queued issue 92. Independent reviews, current-head CI and root gates remain open; PR 119 stays draft.
 
 Issue: https://github.com/deveshsangwan/html-inbox/issues/94
 
@@ -41,9 +41,33 @@ Required proofs include repeated rejection of changed signatures, signed fields 
 
 These are syntax/whitespace checks. Lightweight assertions also checked the companion operation I/O parser and Python runner syntax. No compiled production test, install, build, full suite or benchmark ran during source activation. The companion corrects operation I/O matching only for its opt-in mode; inherited timed workloads retain their original behavior.
 
-## Remaining receipt
+## Qualification receipt
 
-Pending: exact baseline/candidate build commands and hashes; Node 20/24 environment and raw artifacts; paired results and go/no-go decision; executable correctness and full verification; slot release; fresh independent Sol High and Claude Code Sonnet 5.5 Medium reviews at one frozen pin, each with functionality/code-quality/performance-evidence verdicts; every finding's disposition; final PR checks and clean status. Keep the PR draft until these gates pass.
+Production parent `610c931b7b22920cce59cf03e49c0de15ebaf2a2`; production candidate `999c75d37e1f1d86c25e58b4d45db3f96a66df38`. Small/read/worker harness `b31d7a2eeec8ec302687b158bbdfeb0a2ec69335`; standalone-history harness `e6b8bbb6883b8f3de4fc974a43500b866bcda7c9`. Production source did not change between those pins. The measured candidate dist is `3abb4dc0362ed464eb2c96f28a91f13b06bb651104a2722bf1287e9b9294175c`; bundle is `d4e9c3de496308c8e1ff33d049c33d578efb068b2f1080c71f1b62e889e5591b`. Final verification rebuilt exactly those same hashes.
+
+All 90 small/read/worker and 30 standalone-history process cells exited 0. Each operation has five independent interleaved process samples per variant/runtime. See [measured results and tradeoffs](signatures-94-results.md) for CPU/elapsed spreads, paired deltas, cold/churn/startup/idle costs, actual retained/peak memory, scope and failure exclusions. Successful-verification retention provides practical gains beyond parsed-key-only reuse. There is no qualified initial-sync or 1,000-record worker result.
+
+Commands and exit status:
+
+- `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm build`, `pnpm --filter html-inbox bundle`: all 0. Dependencies were installed once at the candidate and reused for the parent with an identical lockfile. The original build receipts remain immutable; `build-execution-supplement.json` records actual per-pin commands and log hashes. The parent build ran in this checkout with an EXIT/INT/TERM restoration trap and copied immutable artifacts before switching back.
+- `node --test packages/cli/dist/sync-signatures.test.js packages/cli/dist/sync-signature-integrity.test.js`: 22 passed on Node 24. The focused seven-file Node 20 invocation passed 147 tests; exact command/log are archived.
+- `python3 artifacts/94/qualify.py --cells 0:10240,100:10240,100:1048576 --pairs 5 --prefix matrix-qualified-small`: 0, Node 20 and 24 separately. The driver alternates parent/key-only/full order across five process pairs and independently checks source and loaded-dist hashes.
+- `python3 artifacts/94/qualify.py --workload signature-history --cells 1000:10240 --pairs 5 --prefix matrix-history`: 0. Same pairing, 18 real re-signing rounds per process, independent read/memory/corruption checks.
+- `bash artifacts/94/verify-runtimes.sh`: 0. For each runtime this ran `node scripts/run-unit-tests.mjs --test-concurrency=4`, the named harness/skill/site tests, `node scripts/run-browser-tests.mjs`, `node scripts/package-smoke.mjs`, and `node scripts/skill-cli-package-smoke.mjs`. Node 20 unit/integration passed 1,346 with two skips; Node 24 passed 1,345 with three skips. Both browser suites passed 73 with the live-CDN check skipped. Every constituent command exited 0. Node 24's extra skip is the existing native IPv6 SAN case; other skips require an explicitly supplied old CLI or Windows.
+- `python3 -m unittest discover -s scripts/bench -p 'test_*.py'`: four tests passed under each runtime environment, including cleanup, numeric I/O and argument checks. The new ordinary-parser I/O check failed before repair, then passed. `node artifacts/94/check-io-equivalence.cjs`: 0; all five literal nonzero counters pass, the inherited declaration exactly matches parent, and signature parsing/timing code is unchanged. Primary timing-region SHA-256 is `d9f729235ca21db4be572bece8b35eb6985457ad9451e4e09e83bf89649d535b`.
+- Final `pnpm typecheck` and `git diff --check`: 0. Final dist/bundle equality with measured artifacts passed. All measurement cleanup receipts report removed fixture roots and reaped direct children; runtime/receiver exact ports are rebound by the workload. No heavy process remained at slot release.
+
+The [compressed raw archive](signatures-94-raw.jsonl.gz) contains 631 original UTF-8 files in gzip JSONL records with original-byte SHA-256, path and text. It is 839,044 bytes, SHA-256 `fcd2afb6dd0c627084fae869f12c2a773644c34cff9467e955e0a84750571185`. Every embedded original-byte hash was verified after compression. It includes commands, raw samples/stdout, environments/fingerprints, source/build receipts and execution supplement, failures/discards, cleanup, parser red/green/equivalence evidence and full local gate logs. Compiled build directories are excluded. Read a record with Python's `gzip`/`json`; each `text.encode('utf8')` must match its `sha256`. The same files remain under local `artifacts/94/` for direct inspection.
+
+## CI triage and remaining gates
+
+Original published head was `999c75d37e1f1d86c25e58b4d45db3f96a66df38`, run `42388445296`. Read current checks, all comments/reviews and both failed job logs before choosing a retry or fix. The only comment was the bot's draft-review notice; there were no review findings.
+
+- Ubuntu Node 20 shard 2 job `128450720113` failed `actual client rejects oversized identity response and leaves recoverable work`: receiver request count was 0 versus expected 1. The test uses a 500 ms request budget. Earlier safety assertions passed. Cause is unresolved; unchanged source and a green parent job do not establish a pre-existing failure. Narrow diagnosis remains with issue 94; no production or test patch has been made for this CI failure.
+- Windows browser job `128450720154` failed the legacy, non-managed changed-deletion fixture during `viewer.json` cleanup with EPERM. Root assigned issue 93 as the single read-only shared diagnostic lead; this cache PR leaves that surface unchanged pending coordination.
+- Verify job `128452400001` is the aggregate failed gate. Parent PR 114 at exact `610c931` has successful corresponding Ubuntu Node 20 and Windows browser jobs. Original job logs, current checks/comments and parent-check context are in the raw archive. No retry has been used to chase green. A new frozen head will receive normal CI; do not rerun a superseded head just for a green badge.
+
+Pending: fresh independent Sol High and claudeAgent Sonnet 5.5 Medium read-only reviews at the same frozen revision, all three verdicts from both, finding disposition, current-head CI and root verification. Each owner now babysits its own PR through the requested watch; delegated reviewers/helpers never watch. No merge, release, publication or modern forward-port is part of this work.
 
 ## Runner commands
 
