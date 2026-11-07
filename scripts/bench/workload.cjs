@@ -41,7 +41,7 @@ async function main() {
     const elapsed = performance.now() - start;
     const used = process.cpuUsage(cpu);
     const ioAfter = await fs.readFile('/proc/self/io', 'utf8');
-    const ioValue = (text, key) => Number(text.match(new RegExp(['signatures', 'signature-history'].includes(mode) ? `^${key}: ([0-9]+)$` : `^${key}: (\\\\d+)$`, 'm'))?.[1] ?? 0);
+    const ioValue = (text, key) => Number(text.match(new RegExp(`^${key}: (\\d+)$`, 'm'))?.[1] ?? 0);
     const io = Object.fromEntries(['rchar', 'wchar', 'read_bytes', 'write_bytes', 'cancelled_write_bytes'].map(key => [key, ioValue(ioAfter, key) - ioValue(ioBefore, key)]));
     const inspection = inspect ? await inspect() : {};
     console.log(JSON.stringify({ label: ['viewer', 'worker'].includes(mode) ? `${label}/${count}` : label, io, wall_ms: elapsed, cpu_ms: (used.user + used.system) / 1000,
