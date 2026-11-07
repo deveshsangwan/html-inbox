@@ -84,8 +84,12 @@ def main():
                             check(output)
                         return output
                     except BaseException as error:
+                        stdout.seek(0)
+                        stderr.seek(0)
                         with (args.out / 'failures.jsonl').open('a') as stream:
-                            stream.write(json.dumps(dict(label=label, command=command, error=repr(error))) + '\n')
+                            stream.write(json.dumps(dict(label=label, command=command, error=repr(error),
+                                                         stdout=stdout.read().decode(errors='replace'),
+                                                         stderr=stderr.read().decode(errors='replace'))) + '\n')
                         raise
                     finally:
                         # Kill the owned group even if its leader exited, so failed workloads cannot orphan helpers.
