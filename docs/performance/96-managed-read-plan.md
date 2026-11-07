@@ -390,3 +390,17 @@ independent native counts; no physical-I/O positive minimum is added. The
 reuses the verified compiled files/bundles and selects only the four parser
 controls plus the existing one-record smoke on each runtime. The source repair
 has syntax/diff checks only; it has not received runtime qualification.
+
+## I/O requalification stopped at an external audit assumption
+
+At the explicit084 grant, both version preflights, the four parser controls
+and Node20's18-child smoke exited0. The independent audit then stopped on a
+hardcoded1901-byte ledger size copied from the earlier fixture, while the new
+ledger was1909 bytes. Serialized owner-anchor homes make that size depend on
+the fresh fixture path. Node24 was not run, and neither source nor the auditor
+was corrected/retried under the grant. The [partial receipt and lossless
+archive](../../scripts/bench/evidence/issue-96/io-requalification-084b2b2-partial.md)
+preserve the failed assertion, exact source/logs/raw profiles, bounded passing
+facts and additive diagnostic. Full harness qualification remains withheld.
+The local slot is released; any audit correction or continuation needs root's
+next instruction.
