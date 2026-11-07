@@ -2,6 +2,11 @@
 
 Status: source-only. No performance result or retention decision yet.
 
+The plan was committed as `9ca71fd` before the production edits. Local execution
+is pending the orchestrator's exclusive slot. Source inspection and
+`git diff --check` are the only checks completed in this phase. No install,
+typecheck, build, test, or benchmark has run.
+
 ## Pins and scope
 
 Issue: https://github.com/deveshsangwan/html-inbox/issues/95
@@ -66,6 +71,11 @@ durable published reference before a PR can claim qualification. Record failed
 runs as well as successes. Expected initial local slot: one build/typecheck and
 focused scheduler/lifecycle tests, approximately 10 minutes. Request the sustained
 measurement slot separately after that result and harness inspection.
+
+In particular, measure whether long validated reads at 10,000 records themselves
+cause clock-gap catch-up work. The unchanged gap detector includes event-loop
+stalls. A reduced nominal refresh count cannot establish a CPU improvement if
+that catch-up work keeps the worker busy. This is an open qualification risk.
 
 ## Proposed scheduling bounds
 

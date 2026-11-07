@@ -10,6 +10,7 @@ import { reconcileSyncRoutes, routeAuthorization, type RouteReconciliation } fro
 import { assertExactKeys, parseArray, parseInteger, parseObject, parseUuid } from "./sync-model";
 import { defaultRuntimeConfig, readRuntimeFile, resolveRuntimeCredentials } from "./sync-runtime-config";
 import { ManagedSyncStore } from "./sync-store";
+import { nextWorkerRetryAt } from "./sync-worker-schedule";
 import { acquireWorkerExclusion, inspectWorkerOwner, matchesWorkerToken, readWorkerRecordOffline, workerPaths, type WorkerRecord } from "./sync-worker-records";
 
 export interface WorkerRunRequest {
@@ -107,7 +108,12 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
   let draining: Promise<void> | undefined;
   let closing: Promise<void> | undefined;
   let backgroundRequested = !options.temporary;
-  let lastPassAt = 0;
+  let refreshRequested = false;
+  let backgroundEnabled = !options.temporary;
+  let nextRetryAt = Infinity;
+  let nextRefreshAt = 0;
+  let nextReconcileAt = Infinity;
+  let reconcileMs = defaultRuntimeConfig().timings.reconcileMs;
   let controlOrigin = "";
   const wallNow = options.testHooks?.wallNow ?? Date.now;
   const monotonicNow = options.testHooks?.monotonicNow ?? (() => performance.now());
@@ -231,6 +237,10 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
   }
 
   function requestWake() {
+    if (closing) {
+      return { coalesced: true };
+    }
+
     backgroundRequested = true;
     kick();
     return { coalesced: true };
@@ -239,8 +249,8 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
   function kick() {
     if (!draining && !closing) {
       draining = drain().catch(async () => {
-        lastPassAt = Date.now();
         backgroundRequested = false;
+        refreshRequested = false;
         for (const ticket of tickets.values()) {
           if (ticket.state === "running" || ticket.state === "queued") {
             ticket.state = "complete";
@@ -249,14 +259,16 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
         }
 
         try {
-          await store.recordWorkerRun(lastPassAt, "worker-pass-failed");
+          await store.recordWorkerRun(Date.now(), "worker-pass-failed");
+          nextReconcileAt = monotonicNow() + reconcileMs;
+          await refreshSchedule();
         } catch {
           // Shutdown awaits this drain; initiating it here must not await it.
           fatalStop();
         }
       }).finally(() => {
         draining = undefined;
-        if (!closing && ([...tickets.values()].some((entry) => entry.state === "queued") || backgroundRequested)) {
+        if (!closing && ([...tickets.values()].some((entry) => entry.state === "queued") || backgroundRequested || refreshRequested)) {
           kick();
         }
       });
@@ -267,26 +279,48 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
     while (!closing) {
       const ticket = [...tickets.values()].find((entry) => entry.state === "queued");
       if (!ticket && !backgroundRequested) {
-        return;
+        if (!refreshRequested) {
+          return;
+        }
+
+        refreshRequested = false;
+        await refreshSchedule();
+
+        if (!closing && backgroundEnabled && (nextRetryAt <= wallNow() || monotonicNow() >= nextReconcileAt)) {
+          backgroundRequested = true;
+        }
+
+        continue;
+      }
+
+      // Consume before awaiting so wakes during this pass retain one follow-up.
+      if (!ticket) {
+        backgroundRequested = false;
       }
 
       const ledger = await assertManagedLifecycle(home);
+      if (closing || ticket?.state === "cancelled") {
+        continue;
+      }
+
       if (!ledger || ledger.storageIncarnation !== record?.storageIncarnation || (ledger.runtime?.revision ?? 0) !== record?.configRevision) {
         requestClose();
         return;
       }
 
-      const config = ledger.runtime?.config ?? defaultRuntimeConfig();
-      if (!ticket) {
-        backgroundRequested = false;
+      if (ticket && ticket.deadlineAt <= Date.now()) {
+        ticket.state = "complete";
+        continue;
       }
 
+      const config = ledger.runtime?.config ?? defaultRuntimeConfig();
       if (ledger.worker.retryPaused || !ticket && !ledger.worker.enabled) {
         if (ticket) {
           ticket.state = "complete";
           ticket.error = ledger.worker.retryPaused ? "retries-paused" : "worker-disabled";
         }
 
+        await refreshSchedule();
         continue;
       }
 
@@ -303,6 +337,10 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
         }
 
         const latest = await store.snapshot();
+        if (closing || ticket?.controller.signal.aborted || Date.now() >= deadlineAt) {
+          break;
+        }
+
         const route = latest.routes[routeId];
         if (!route || latest.worker.retryPaused || route.state !== "active" && route.state !== "reconnecting") {
           continue;
@@ -313,6 +351,10 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
         }
 
         const credentials = await resolveRuntimeCredentials(latest.runtime?.config ?? defaultRuntimeConfig(), [route]);
+        if (closing || ticket?.controller.signal.aborted || Date.now() >= deadlineAt) {
+          break;
+        }
+
         if (credentials.unavailableRouteIds.includes(routeId)) {
           await store.recordRouteRun(routeAuthorization(route), "runtime-credential-unavailable", true);
           if (ticket) {
@@ -354,8 +396,8 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
         }
       }
 
-      lastPassAt = Date.now();
-      await store.recordWorkerRun(lastPassAt, ticket?.error ?? null);
+      await store.recordWorkerRun(Date.now(), ticket?.error ?? null);
+      nextReconcileAt = monotonicNow() + config.timings.reconcileMs;
       if (ticket && ticket.state === "running") {
         ticket.state = "complete";
       }
@@ -365,12 +407,40 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
           tickets.delete(id);
         }
       }
+
+      if (!closing) {
+        refreshRequested = false;
+        await refreshSchedule();
+      }
     }
   }
 
-  async function tick() {
-    if (closing) {
+  async function refreshSchedule() {
+    const startedAt = monotonicNow();
+    const ledger = await store.snapshot().catch(() => {
+      // Unsafe observation failures must not rewrite the ledger to log them.
+      fatalStop();
+      return null;
+    });
+    if (closing || !ledger) {
       return;
+    }
+
+    if (ledger.storageIncarnation !== record?.storageIncarnation || (ledger.runtime?.revision ?? 0) !== record?.configRevision) {
+      requestClose();
+      return;
+    }
+
+    backgroundEnabled = !options.temporary && ledger.worker.enabled && !ledger.worker.retryPaused;
+    reconcileMs = ledger.runtime?.config.timings.reconcileMs ?? defaultRuntimeConfig().timings.reconcileMs;
+    nextRetryAt = backgroundEnabled ? nextWorkerRetryAt(ledger) : Infinity;
+    // Slow reads must not turn fallback refresh into a continuous catch-up loop.
+    nextRefreshAt = Math.max(startedAt + 5000, monotonicNow() + 250);
+  }
+
+  function tick() {
+    if (closing) {
+      return Promise.resolve();
     }
 
     const wall = wallNow();
@@ -378,24 +448,20 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
     const gap = wall - lastWall > 2000 || monotonic - lastMonotonic > 2000 || Math.abs(wall - lastWall - (monotonic - lastMonotonic)) > 1000;
     lastWall = wall;
     lastMonotonic = monotonic;
-    const ledger = await store.snapshot();
-    const now = Date.now();
-    const retryDue = Object.values(ledger.routes).some((route) => {
-      if (route.state !== "active" && route.state !== "reconnecting") {
-        return false;
-      }
-
-      return isRouteDue(ledger, route, now) && (!!ledger.routeRetries[route.id]?.nextAttemptAt ||
-        Object.values(ledger.outbox).some((entry) => entry.routeId === route.id && entry.revision === route.revision && entry.disposition === "pending" && entry.nextAttemptAt <= now));
-    });
-    if (!options.temporary && ledger.worker.enabled && !ledger.worker.retryPaused &&
-        (gap || retryDue || now - lastPassAt >= (ledger.runtime?.config.timings.reconcileMs ?? 30_000))) {
-      if (gap) {
-        options.testHooks?.onEvent?.({ type: "gap", processId: ownership.owner.token });
-      }
-
-      requestWake();
+    if (gap && !options.temporary) {
+      options.testHooks?.onEvent?.({ type: "gap", processId: ownership.owner.token });
+      backgroundRequested = true;
     }
+
+    if (!draining && (monotonic >= nextRefreshAt || backgroundEnabled && (wall >= nextRetryAt || monotonic >= nextReconcileAt))) {
+      refreshRequested = true;
+    }
+
+    if (backgroundRequested || refreshRequested) {
+      kick();
+    }
+
+    return draining ?? Promise.resolve();
   }
 
   async function quiesce(routeId?: string) {
