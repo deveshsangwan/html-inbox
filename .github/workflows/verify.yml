@@ -70,6 +70,10 @@ jobs:
         if: matrix.shard != '2/2'
         run: node --test scripts/viewer-systemd-cleanup.test.mjs scripts/run-unit-tests.test.mjs
 
+      - name: Resource runner cleanup checks
+        if: runner.os == 'Linux' && matrix.node == 24 && matrix.shard == '1/2'
+        run: python3 -m unittest discover -s scripts/bench -p 'test_*.py'
+
       - name: Package smoke test
         if: matrix.shard != '2/2'
         run: node scripts/package-smoke.mjs

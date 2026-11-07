@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Linux resource runner. No third party Python packages; build and bundle first."""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
 import shutil
 import signal
 import statistics
+import sys
 import subprocess
 import tempfile
 import time
@@ -25,8 +27,18 @@ def main():
     parser.add_argument('--candidate', help='CommonJS module exporting validateHtml for exact-result parser comparison')
     parser.add_argument('--timeout', type=int, default=600)
     args = parser.parse_args()
-    counts = [int(n) for n in args.counts.split(',')]
-    sizes = [int(n) for n in args.sizes.split(',')]
+    try:
+        counts = [int(n) for n in args.counts.split(',')]
+        sizes = [int(n) for n in args.sizes.split(',')]
+    except ValueError:
+        parser.error('counts and sizes must be comma-separated integers')
+
+    if not args.node:
+        parser.error('node was not found; supply --node with an executable path')
+    if args.candidate and args.workload not in ['baseline', 'parser']:
+        parser.error('--candidate requires the parser or baseline workload')
+    if len(set(counts)) != len(counts) or len(set(sizes)) != len(sizes):
+        parser.error('counts and sizes must not contain duplicates')
     if not counts or any(n not in [0, 100, 1000, 5000, 10000] for n in counts):
         parser.error('counts must be drawn from 0,100,1000,5000,10000')
     if any(n not in [10240, 1048576, 9437184] for n in sizes) or not 1 <= args.samples <= 100 or not 1 <= args.timeout <= 3600:
@@ -106,11 +118,21 @@ def main():
                         except ProcessLookupError:
                             pass
                         child.wait()
+                        # Only a successful wait clears the direct child from the cleanup receipt.
+                        assert child.returncode is not None
                         active = None
 
             node = [args.node]
             helper = node + [str(REPO / 'scripts/bench/workload.cjs')]
             cli = node + [str(REPO / 'packages/cli/bundle/index.js')]
+            dist_hash = hashlib.sha256()
+            for artifact in sorted((REPO / 'packages/cli/dist').rglob('*.js')):
+                dist_hash.update(str(artifact.relative_to(REPO)).encode() + b'\0')
+                dist_hash.update(artifact.read_bytes())
+
+            fingerprints = dict(bundle_sha256=hashlib.sha256((REPO / 'packages/cli/bundle/index.js').read_bytes()).hexdigest(),
+                                dist_js_sha256=dist_hash.hexdigest(),
+                                candidate_sha256=hashlib.sha256(Path(args.candidate).read_bytes()).hexdigest() if args.candidate else None)
             metadata = dict(commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO, text=True).strip(),
                             dirty=subprocess.check_output(['git', 'status', '--porcelain'], cwd=REPO, text=True),
                             node=subprocess.check_output(node + ['--version'], text=True).strip(),
@@ -121,7 +143,7 @@ def main():
                             cache='fresh isolated fixtures; filesystem cache uncontrolled/warm; no OS cache eviction',
                             bundle_bytes=(REPO / 'packages/cli/bundle/index.js').stat().st_size,
                             limits={'timeout_seconds': args.timeout, 'concurrency': 1}, fixture_root=directory,
-                            invocation=__import__('sys').argv)
+                            fingerprints=fingerprints, invocation=sys.argv)
             (args.out / 'environment.json').write_text(json.dumps(metadata, indent=2))
             success = False
             try:

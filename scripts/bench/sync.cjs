@@ -60,6 +60,7 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
         await source.enroll();
         return { source: storageCounters(source) };
       });
+      // Receiver enrollment is setup; only source enrollment is an operation sample.
       await destination.enroll();
       await record(`managed/publish/${count}`, async () => {
         const before = storageCounters(source);
