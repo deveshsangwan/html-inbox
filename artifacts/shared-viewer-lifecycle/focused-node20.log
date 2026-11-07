@@ -1,0 +1,366 @@
+$ fnm exec --using=20.20.2 node --test packages/cli/dist/viewer-owned-lifecycle.test.js packages/cli/dist/viewer-mutation-shutdown.test.js packages/cli/dist/viewer-shutdown.test.js packages/cli/dist/viewer-startup-races.test.js packages/cli/dist/viewer-tailscale-lifecycle.test.js scripts/viewer-fixture-browser.test.mjs scripts/document-deletion-browser.test.mjs
+TAP version 13
+# Subtest: startViewer preserves a draining viewer's record until its disconnected managed deletion settles
+ok 1 - startViewer preserves a draining viewer's record until its disconnected managed deletion settles
+  ---
+  duration_ms: 536.124934
+  ...
+# Subtest: ensureViewer preserves a draining viewer's record until its disconnected managed deletion settles
+ok 2 - ensureViewer preserves a draining viewer's record until its disconnected managed deletion settles
+  ---
+  duration_ms: 325.265639
+  ...
+# Subtest: startViewerLifecycle preserves a draining viewer's record until its disconnected managed deletion settles
+ok 3 - startViewerLifecycle preserves a draining viewer's record until its disconnected managed deletion settles
+  ---
+  duration_ms: 350.44824
+  ...
+# 2026-11-07T18:02:43.367Z html-inbox: Viewer 2441552 shutting down (reader-close)
+# 2026-11-07T18:02:43.379Z html-inbox: Viewer 2441552 stopped (reader-close)
+# Subtest: ordinary viewer replacement retains a live optional-owner record and inconclusive process evidence
+ok 4 - ordinary viewer replacement retains a live optional-owner record and inconclusive process evidence
+  ---
+  duration_ms: 42.779472
+  ...
+# 2026-11-07T18:02:43.482Z html-inbox: Viewer 2441552 shutting down (reader-close)
+# 2026-11-07T18:02:43.487Z html-inbox: Viewer 2441552 stopped (reader-close)
+# 2026-11-07T18:02:43.536Z html-inbox: Viewer 2441552 shutting down (reader-close)
+# 2026-11-07T18:02:43.537Z html-inbox: Viewer 2441552 stopped (reader-close)
+# Subtest: managed replacement accepts a conclusively dead old owner when the PID has a different start identity
+ok 5 - managed replacement accepts a conclusively dead old owner when the PID has a different start identity
+  ---
+  duration_ms: 153.492243
+  ...
+# 2026-11-07T18:02:43.566Z html-inbox: Viewer 2441552 shutting down (reader-close)
+# 2026-11-07T18:02:43.568Z html-inbox: Viewer 2441552 stopped (reader-close)
+# 2026-11-07T18:02:43.598Z html-inbox: Viewer 2441552 shutting down (reader-close)
+# 2026-11-07T18:02:43.599Z html-inbox: Viewer 2441552 stopped (reader-close)
+# Subtest: ordinary startup preserves recovery of malformed JSON and incomplete process records
+ok 6 - ordinary startup preserves recovery of malformed JSON and incomplete process records
+  ---
+  duration_ms: 61.494096
+  ...
+# Subtest: viewer format recovery never treats bounded-read or unsafe hardlink failures as malformed content
+ok 7 - viewer format recovery never treats bounded-read or unsafe hardlink failures as malformed content
+  ---
+  duration_ms: 9.770735
+  ...
+# Subtest: reader close joins an admitted disconnected managed deletion before reporting completion
+ok 8 - reader close joins an admitted disconnected managed deletion before reporting completion
+  ---
+  duration_ms: 175.761589
+  ...
+# Subtest: hub close joins a disconnected legacy deletion and its real helper child
+ok 9 - hub close joins a disconnected legacy deletion and its real helper child
+  ---
+  duration_ms: 205.540054
+  ...
+# Subtest: closing reader rejects a newly pipelined deletion before invoking storage
+ok 10 - closing reader rejects a newly pipelined deletion before invoking storage
+  ---
+  duration_ms: 40.278072
+  ...
+# 2026-11-07T18:02:42.218Z html-inbox: Viewer 2441553 shutting down (reader-close)
+# 2026-11-07T18:02:42.224Z html-inbox: Viewer 2441553 stopped (reader-close)
+# Subtest: owned close is memoized and preserves successor record false
+ok 11 - owned close is memoized and preserves successor record false
+  ---
+  duration_ms: 73.015517
+  ...
+# 2026-11-07T18:02:42.262Z html-inbox: Viewer 2441553 shutting down (reader-close)
+# 2026-11-07T18:02:42.267Z html-inbox: Viewer 2441553 stopped (reader-close)
+# Subtest: owned close is memoized and preserves successor record true
+ok 12 - owned close is memoized and preserves successor record true
+  ---
+  duration_ms: 37.841563
+  ...
+# Subtest: foreground shutdown records SIGTERM without private control data
+ok 13 - foreground shutdown records SIGTERM without private control data
+  ---
+  duration_ms: 238.634248
+  ...
+# Subtest: foreground shutdown records SIGINT without private control data
+ok 14 - foreground shutdown records SIGINT without private control data
+  ---
+  duration_ms: 216.649602
+  ...
+# Subtest: foreground shutdown records viewer stop without private control data
+ok 15 - foreground shutdown records viewer stop without private control data
+  ---
+  duration_ms: 227.397534
+  ...
+# Subtest: reader close records completion only after process record cleanup
+ok 16 - reader close records completion only after process record cleanup
+  ---
+  duration_ms: 25.631415
+  ...
+# Subtest: startup rollback records its reason without reporting a running viewer
+ok 17 - startup rollback records its reason without reporting a running viewer
+  ---
+  duration_ms: 16.324672
+  ...
+# Subtest: shutdown waits for an in-flight readiness commit and removes its completed record
+ok 18 - shutdown waits for an in-flight readiness commit and removes its completed record
+  ---
+  duration_ms: 121.413768
+  ...
+# 2026-11-07T18:02:42.571Z html-inbox: Viewer 2441592 shutting down (SIGTERM)
+# 2026-11-07T18:02:42.723Z html-inbox: Viewer 2441592 stopped (SIGTERM)
+# Subtest: loopback stop waits for the worker's completed record cleanup
+ok 19 - loopback stop waits for the worker's completed record cleanup
+  ---
+  duration_ms: 224.298995
+  ...
+# Subtest: detached Tailscale startup preserves executable and URLs, publish reuses it, and stop waits for cleanup
+ok 20 - detached Tailscale startup preserves executable and URLs, publish reuses it, and stop waits for cleanup
+  ---
+  duration_ms: 2445.58701
+  ...
+# Subtest: shutdown closes an incomplete private control request before scoped cleanup
+ok 21 - shutdown closes an incomplete private control request before scoped cleanup
+  ---
+  duration_ms: 826.742266
+  ...
+# Subtest: an explicit Tailscale executable overrides the previously saved detached executable
+ok 22 - an explicit Tailscale executable overrides the previously saved detached executable
+  ---
+  duration_ms: 1143.522084
+  ...
+# Subtest: SIGTERM during the pending Tailscale mutation waits for scoped startup rollback
+ok 23 - SIGTERM during the pending Tailscale mutation waits for scoped startup rollback
+  ---
+  duration_ms: 1376.348851
+  ...
+# 2026-11-07T18:02:49.127Z html-inbox: Viewer 2441629 shutting down (SIGTERM)
+# 2026-11-07T18:02:49.551Z html-inbox: Viewer 2441629 stopped (SIGTERM)
+# Subtest: SIGTERM during retained-route recovery waits for the scoped off command and releases its lock
+ok 24 - SIGTERM during retained-route recovery waits for the scoped off command and releases its lock
+  ---
+  duration_ms: 921.748067
+  ...
+# Subtest: Tailscale route drift is not healthy and failed cleanup retains its process record and journal
+ok 25 - Tailscale route drift is not healthy and failed cleanup retains its process record and journal
+  ---
+  duration_ms: 1632.94863
+  ...
+# Subtest: an explicit different stop port preserves the live Tailscale viewer and owned route
+ok 26 - an explicit different stop port preserves the live Tailscale viewer and owned route
+  ---
+  duration_ms: 1329.597657
+  ...
+# Subtest: stop waits for externally requested Tailscale shutdown before attempting journal recovery
+ok 27 - stop waits for externally requested Tailscale shutdown before attempting journal recovery
+  ---
+  duration_ms: 1693.824376
+  ...
+# Subtest: viewer stop recovers a pending Tailscale journal before any viewer process record exists
+ok 28 - viewer stop recovers a pending Tailscale journal before any viewer process record exists
+  ---
+  duration_ms: 572.881445
+  ...
+# Subtest: an explicit current Tailscale executable recovers ownership after the recorded executable moved
+ok 29 - an explicit current Tailscale executable recovers ownership after the recorded executable moved
+  ---
+  duration_ms: 739.076393
+  ...
+# 2026-11-07T18:02:56.209Z html-inbox: Viewer 2441629 shutting down (SIGTERM)
+# 2026-11-07T18:02:56.438Z html-inbox: Viewer 2441629 stopped (SIGTERM)
+# Subtest: status uses the explicit current Tailscale executable after its recorded path moved
+ok 30 - status uses the explicit current Tailscale executable after its recorded path moved
+  ---
+  duration_ms: 959.226384
+  ...
+# Subtest: a retained Tailscale route refuses a loopback startup when scoped cleanup cannot be verified
+ok 31 - a retained Tailscale route refuses a loopback startup when scoped cleanup cannot be verified
+  ---
+  duration_ms: 819.363649
+  ...
+# Subtest: failed detached child cleanup includes in-flight command descendants
+ok 32 - failed detached child cleanup includes in-flight command descendants
+  ---
+  duration_ms: 781.825341
+  ...
+# 2026-11-07T18:02:44.335Z html-inbox: Viewer 2441646 shutting down (reader-close)
+# 2026-11-07T18:02:44.338Z html-inbox: Viewer 2441646 stopped (reader-close)
+# Subtest: document options support keyboard access and dismiss without navigation at 390px
+ok 33 - document options support keyboard access and dismiss without navigation at 390px
+  ---
+  duration_ms: 799.936927
+  ...
+# 2026-11-07T18:02:45.702Z html-inbox: Viewer 2441646 shutting down (reader-close)
+# 2026-11-07T18:02:45.704Z html-inbox: Viewer 2441646 stopped (reader-close)
+# Subtest: live list deletion confirms the full document and preserves search at 390px
+ok 34 - live list deletion confirms the full document and preserves search at 390px
+  ---
+  duration_ms: 1363.499474
+  ...
+# 2026-11-07T18:02:46.821Z html-inbox: Viewer 2441646 shutting down (reader-close)
+# 2026-11-07T18:02:46.822Z html-inbox: Viewer 2441646 stopped (reader-close)
+# Subtest: reader cancellation preserves iframe state and restores menu focus at 390px
+ok 35 - reader cancellation preserves iframe state and restores menu focus at 390px
+  ---
+  duration_ms: 1118.769233
+  ...
+# 2026-11-07T18:02:47.290Z html-inbox: Viewer 2441646 shutting down (reader-close)
+# 2026-11-07T18:02:47.291Z html-inbox: Viewer 2441646 stopped (reader-close)
+# Subtest: document options support keyboard access and dismiss without navigation at 1280px
+ok 36 - document options support keyboard access and dismiss without navigation at 1280px
+  ---
+  duration_ms: 468.941311
+  ...
+# 2026-11-07T18:02:48.537Z html-inbox: Viewer 2441646 shutting down (reader-close)
+# 2026-11-07T18:02:48.538Z html-inbox: Viewer 2441646 stopped (reader-close)
+# Subtest: live list deletion confirms the full document and preserves search at 1280px
+ok 37 - live list deletion confirms the full document and preserves search at 1280px
+  ---
+  duration_ms: 1246.1104
+  ...
+# 2026-11-07T18:02:49.722Z html-inbox: Viewer 2441646 shutting down (reader-close)
+# 2026-11-07T18:02:49.722Z html-inbox: Viewer 2441646 stopped (reader-close)
+# Subtest: reader cancellation preserves iframe state and restores menu focus at 1280px
+ok 38 - reader cancellation preserves iframe state and restores menu focus at 1280px
+  ---
+  duration_ms: 1184.22899
+  ...
+# 2026-11-07T18:02:50.425Z html-inbox: Viewer 2441646 shutting down (reader-close)
+# 2026-11-07T18:02:50.426Z html-inbox: Viewer 2441646 stopped (reader-close)
+# Subtest: list removal waits for the response, blocks dismissal and submits only once
+ok 39 - list removal waits for the response, blocks dismissal and submits only once
+  ---
+  duration_ms: 703.710985
+  ...
+# 2026-11-07T18:02:51.182Z html-inbox: Viewer 2441646 shutting down (reader-close)
+# 2026-11-07T18:02:51.182Z html-inbox: Viewer 2441646 stopped (reader-close)
+# Subtest: list deletion restores the next document and scroll position after reloading
+ok 40 - list deletion restores the next document and scroll position after reloading
+  ---
+  duration_ms: 757.521621
+  ...
+# 2026-11-07T18:02:51.871Z html-inbox: Viewer 2441646 shutting down (reader-close)
+# 2026-11-07T18:02:51.873Z html-inbox: Viewer 2441646 stopped (reader-close)
+# Subtest: reader deletion reports absent without inventing the document state
+ok 41 - reader deletion reports absent without inventing the document state
+  ---
+  duration_ms: 689.194665
+  ...
+# 2026-11-07T18:02:52.519Z html-inbox: Viewer 2441646 shutting down (reader-close)
+# 2026-11-07T18:02:52.520Z html-inbox: Viewer 2441646 stopped (reader-close)
+# Subtest: reader deletion reports cleanup without inventing the document state
+ok 42 - reader deletion reports cleanup without inventing the document state
+  ---
+  duration_ms: 646.94404
+  ...
+# 2026-11-07T18:02:53.241Z html-inbox: Viewer 2441646 shutting down (reader-close)
+# 2026-11-07T18:02:53.242Z html-inbox: Viewer 2441646 stopped (reader-close)
+# Subtest: reader deletion reports expired without inventing the document state
+ok 43 - reader deletion reports expired without inventing the document state
+  ---
+  duration_ms: 721.956996
+  ...
+# 2026-11-07T18:02:53.951Z html-inbox: Viewer 2441646 shutting down (reader-close)
+# 2026-11-07T18:02:53.953Z html-inbox: Viewer 2441646 stopped (reader-close)
+# Subtest: reader deletion reports changed without inventing the document state
+ok 44 - reader deletion reports changed without inventing the document state
+  ---
+  duration_ms: 710.563924
+  ...
+# 2026-11-07T18:02:54.543Z html-inbox: Viewer 2441646 shutting down (reader-close)
+# 2026-11-07T18:02:54.544Z html-inbox: Viewer 2441646 stopped (reader-close)
+# Subtest: reader deletion reports unknown without inventing the document state
+ok 45 - reader deletion reports unknown without inventing the document state
+  ---
+  duration_ms: 591.225999
+  ...
+# 2026-11-07T18:02:55.275Z html-inbox: Viewer 2441646 shutting down (reader-close)
+# 2026-11-07T18:02:55.276Z html-inbox: Viewer 2441646 stopped (reader-close)
+# Subtest: reader deletion reports lost without inventing the document state
+ok 46 - reader deletion reports lost without inventing the document state
+  ---
+  duration_ms: 732.087566
+  ...
+# 2026-11-07T18:02:55.991Z html-inbox: Viewer 2441646 shutting down (reader-close)
+# 2026-11-07T18:02:55.992Z html-inbox: Viewer 2441646 stopped (reader-close)
+# Subtest: cleanup warnings stay visible when browser storage is blocked
+ok 47 - cleanup warnings stay visible when browser storage is blocked
+  ---
+  duration_ms: 716.054188
+  ...
+# Subtest: hub deletion keeps colliding IDs in their own inbox and preserves list filters
+ok 48 - hub deletion keeps colliding IDs in their own inbox and preserves list filters
+  ---
+  duration_ms: 1194.363367
+  ...
+# Subtest: reader deletion rejects an invalid return destination https://example.com/?q=report
+ok 49 - reader deletion rejects an invalid return destination https://example.com/?q=report
+  ---
+  duration_ms: 656.962073
+  ...
+# Subtest: reader deletion rejects an invalid return destination /documents/elsewhere
+ok 50 - reader deletion rejects an invalid return destination /documents/elsewhere
+  ---
+  duration_ms: 640.397331
+  ...
+# Subtest: reader deletion rejects an invalid return destination /?q=report&unexpected=1
+ok 51 - reader deletion rejects an invalid return destination /?q=report&unexpected=1
+  ---
+  duration_ms: 617.016366
+  ...
+# Subtest: reader deletion rejects an invalid return destination /?inbox=office
+ok 52 - reader deletion rejects an invalid return destination /?inbox=office
+  ---
+  duration_ms: 643.380211
+  ...
+# Subtest: hub list deletion uses the source-qualified URL at desktop size
+ok 53 - hub list deletion uses the source-qualified URL at desktop size
+  ---
+  duration_ms: 590.423927
+  ...
+# Subtest: static exports contain no deletion controls or credentials and remain immutable
+ok 54 - static exports contain no deletion controls or credentials and remain immutable
+  ---
+  duration_ms: 656.989736
+  ...
+# 2026-11-07T18:02:44.856Z html-inbox: Viewer 2441835 shutting down (reader-close)
+# 2026-11-07T18:02:44.860Z html-inbox: Viewer 2441835 stopped (reader-close)
+# Subtest: local fixture joins owned record cleanup before removing its root
+ok 55 - local fixture joins owned record cleanup before removing its root
+  ---
+  duration_ms: 72.496135
+  ...
+# 2026-11-07T18:02:44.885Z html-inbox: Viewer 2441835 shutting down (reader-close)
+# 2026-11-07T18:02:44.885Z html-inbox: Viewer 2441835 shutdown failed: owned record cleanup failed
+# Subtest: fixture retains shutdown evidence and propagates failures with browser failure false
+ok 56 - fixture retains shutdown evidence and propagates failures with browser failure false
+  ---
+  duration_ms: 23.975024
+  ...
+# 2026-11-07T18:02:44.909Z html-inbox: Viewer 2441835 shutting down (reader-close)
+# 2026-11-07T18:02:44.910Z html-inbox: Viewer 2441835 shutdown failed: owned record cleanup failed
+# Subtest: fixture retains shutdown evidence and propagates failures with browser failure true
+ok 57 - fixture retains shutdown evidence and propagates failures with browser failure true
+  ---
+  duration_ms: 25.096168
+  ...
+# 2026-11-07T18:02:44.925Z html-inbox: Viewer 2441835 shutting down (reader-close)
+# 2026-11-07T18:02:44.926Z html-inbox: Viewer 2441835 stopped (reader-close)
+# Subtest: local fixture still cleans up after browser close rejects
+ok 58 - local fixture still cleans up after browser close rejects
+  ---
+  duration_ms: 12.988821
+  ...
+# Subtest: static fixture still cleans up after browser close rejects
+ok 59 - static fixture still cleans up after browser close rejects
+  ---
+  duration_ms: 10.729363
+  ...
+1..59
+# tests 59
+# suites 0
+# pass 59
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 18991.898539
+
+EXIT 0
