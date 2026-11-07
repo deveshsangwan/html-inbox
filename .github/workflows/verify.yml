@@ -75,6 +75,11 @@ jobs:
         if: matrix.shard != '2/2'
         run: node scripts/package-smoke.mjs
 
+      # Package smoke builds the bundle that the runner fingerprints before its cleanup tests.
+      - name: Resource runner cleanup checks
+        if: runner.os == 'Linux' && matrix.node == 24 && matrix.shard == '1/2'
+        run: python3 -m unittest discover -s scripts/bench -p 'test_*.py'
+
       - name: Website integrity
         if: matrix.shard != '2/2'
         run: node scripts/verify-site.mjs && node --test scripts/site-theme.test.mjs
