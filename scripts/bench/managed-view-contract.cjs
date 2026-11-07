@@ -320,8 +320,9 @@ for (const sourceKind of ['backend', 'read-only source']) {
   test(`${sourceKind}: complete-byte changes refresh ID maps even with unchanged generation, inode and mtime`, async (t) => {
     const f = await fixture(t, sourceKind);
     await f.source.withReadView(async (view) => {
-      await view.listDocuments();
       const filename = path.join(f.home, 'sync', 'ledger.json');
+      await fs.utimes(filename, 1_700_000_000, 1_700_000_000);
+      await view.listDocuments();
       const before = await fs.stat(filename);
       const ledger = JSON.parse(await readFile(filename, 'utf8'));
       const record = ledger.records[canonicalKey(ledger.inboxId, 'original')];
@@ -331,6 +332,7 @@ for (const sourceKind of ['backend', 'read-only source']) {
       const after = await fs.stat(filename);
       assert.equal(after.ino, before.ino);
       assert.equal(after.size, before.size);
+      assert.equal(after.mtimeMs, before.mtimeMs);
       assert.equal(ledger.generation, f.ledger.generation);
       assert.equal(await view.getDocument('original'), null);
       const renamed = await view.getDocument('renamedx');
