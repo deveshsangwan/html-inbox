@@ -128,6 +128,21 @@ selection plus export, and N+1 for batch. Full serialized ledger bytes per
 body remain O(N); fewer parses do not establish zero-I/O reads or full #96
 completion. `/proc` and block counts do not prove physical device traffic.
 
+The preload retains exact raw before/after `/proc/self/io` text. The Python
+companion requires all seven named fields as decimal integers, rejects
+missing/malformed/duplicate/unknown fields or decreasing counters, and saves
+parsed before/after values and independently computed deltas alongside that
+text. Missing values never become zero. It also checks syscall-read bytes
+and counts against the separately observed native FileHandle activity.
+Physical read/write byte counters may legitimately be zero. Parent-side
+parsing occurs outside the count process metrics. Requalification evidence
+must independently recompute the saved raw deltas without using this parser.
+
+The initial 76b20f5 smoke exposed an invalid regex parser that wrote all-zero
+`/proc` dictionaries. Its [partial receipt](evidence/issue-96/ci-harness-76b20f5.md)
+preserves the original data and bounded passing facts. Those profiles do not
+qualify this source repair or support zero-I/O/performance claims.
+
 The new comparator unit cases use synthetic export files solely to test its
 accept/reject rules. Application workloads always use real enrollment and
 export. A smoke request should use `--counts 1 --samples 1`, exercise both

@@ -5,7 +5,47 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from managed_read import CAPABILITY, GENERATED_AT, MANIFEST_FILE, OWNER, OWNER_FILE, compare_exports, inspect_export
+from managed_read import CAPABILITY, GENERATED_AT, MANIFEST_FILE, OWNER, OWNER_FILE, PROC_IO_FIELDS, checked_proc_io, compare_exports, inspect_export, parse_proc_io
+
+
+class ProcIoTests(unittest.TestCase):
+    def snapshot(self, values):
+        return ''.join(f'{name}: {values[name]}\n' for name in PROC_IO_FIELDS)
+
+    def test_known_nonzero_values_and_deltas_preserve_raw_text(self):
+        before = dict(zip(PROC_IO_FIELDS, [100, 200, 3, 4, 500, 600, 7]))
+        after = dict(zip(PROC_IO_FIELDS, [1100, 2200, 30, 40, 5500, 6600, 77]))
+        raw_before, raw_after = self.snapshot(before), self.snapshot(after)
+        result = checked_proc_io(raw_before, raw_after)
+        self.assertEqual(result['raw_before'], raw_before)
+        self.assertEqual(result['raw_after'], raw_after)
+        self.assertEqual(result['before'], before)
+        self.assertEqual(result['after'], after)
+        self.assertEqual(result['delta'], dict(zip(PROC_IO_FIELDS, [1000, 2000, 27, 36, 5000, 6000, 70])))
+
+    def test_zero_physical_io_is_valid(self):
+        before = dict.fromkeys(PROC_IO_FIELDS, 0)
+        after = {**before, 'rchar': 10240, 'syscr': 2}
+        result = checked_proc_io(self.snapshot(before), self.snapshot(after))
+        self.assertEqual(result['delta'], after)
+
+    def test_every_named_field_is_required(self):
+        for missing in PROC_IO_FIELDS:
+            with self.subTest(missing=missing), self.assertRaisesRegex(ValueError, 'Missing'):
+                parse_proc_io(''.join(f'{name}: 1\n' for name in PROC_IO_FIELDS if name != missing))
+
+    def test_malformed_duplicate_unknown_and_decreasing_fields_reject(self):
+        valid = self.snapshot(dict.fromkeys(PROC_IO_FIELDS, 10))
+        for bad in ['', 'NaN', '-1', '+1', '1.5', '10x']:
+            with self.subTest(integer=bad), self.assertRaisesRegex(ValueError, 'Invalid integer'):
+                parse_proc_io(valid.replace('rchar: 10', f'rchar: {bad}'))
+        for extra in ['rchar: 1\n', 'unknown: 1\n']:
+            with self.subTest(extra=extra), self.assertRaisesRegex(ValueError, 'Unexpected or duplicate'):
+                parse_proc_io(valid + extra)
+        with self.assertRaisesRegex(ValueError, 'must be text'):
+            parse_proc_io(None)
+        with self.assertRaisesRegex(ValueError, 'decreased'):
+            checked_proc_io(valid, valid.replace('rchar: 10', 'rchar: 9'))
 
 
 class ExportEquivalenceTests(unittest.TestCase):

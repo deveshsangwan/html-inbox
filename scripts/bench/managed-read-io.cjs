@@ -29,9 +29,8 @@ promises.open = async (...args) => {
 
 process.once('exit', (code) => {
   const after = fs.readFileSync('/proc/self/io', 'utf8');
-  const value = (text, key) => Number(text.match(new RegExp(`^${key}: (\d+)$`, 'm'))?.[1] ?? 0);
-  const io = Object.fromEntries(['rchar', 'wchar', 'syscr', 'read_bytes', 'write_bytes', 'cancelled_write_bytes']
-    .map((key) => [key, value(after, key) - value(before, key)]));
-  fs.writeFileSync(destination, JSON.stringify({ exitCode: code, counts, io, rss_bytes: process.memoryUsage().rss,
-    scope: 'instrumented complete operation including startup; /proc probe overhead included; not primary timing' }, null, 2), { mode: 0o600 });
+  // The existing Python companion checks every field and saves parsed values/deltas after exit.
+  fs.writeFileSync(destination, JSON.stringify({ exitCode: code, counts,
+    proc_io: { raw_before: before, raw_after: after }, rss_bytes: process.memoryUsage().rss,
+    scope: 'instrumented complete operation including startup; raw /proc snapshots await companion validation; not primary timing' }, null, 2), { mode: 0o600 });
 });

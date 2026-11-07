@@ -14,10 +14,41 @@ OWNER = '11111111-1111-4111-8111-111111111111'
 GENERATED_AT = '2026-11-07T00:00:00.000Z'
 OWNER_FILE = '__html-inbox/ownership.json'
 MANIFEST_FILE = f'i/{CAPABILITY}/snapshot-manifest.json'
+PROC_IO_FIELDS = ('rchar', 'wchar', 'syscr', 'syscw', 'read_bytes', 'write_bytes', 'cancelled_write_bytes')
 
 
 def sha(data):
     return hashlib.sha256(data).hexdigest()
+
+
+def parse_proc_io(text):
+    if not isinstance(text, str):
+        raise ValueError('/proc I/O snapshot must be text')
+
+    values = {}
+    for line in text.splitlines():
+        name, separator, number = line.partition(':')
+        if separator != ':' or name not in PROC_IO_FIELDS or name in values:
+            raise ValueError(f'Unexpected or duplicate /proc I/O field: {name!r}')
+        if not re.fullmatch(r'[0-9]+', number.strip()):
+            raise ValueError(f'Invalid integer for /proc I/O field: {name}')
+
+        values[name] = int(number.strip())
+
+    if set(values) != set(PROC_IO_FIELDS):
+        raise ValueError(f'Missing /proc I/O fields: {sorted(set(PROC_IO_FIELDS) - set(values))}')
+
+    return values
+
+
+def checked_proc_io(raw_before, raw_after):
+    before = parse_proc_io(raw_before)
+    after = parse_proc_io(raw_after)
+    delta = {name: after[name] - before[name] for name in PROC_IO_FIELDS}
+    if any(value < 0 for value in delta.values()):
+        raise ValueError('/proc I/O counters decreased within one process')
+
+    return dict(raw_before=raw_before, raw_after=raw_after, before=before, after=after, delta=delta)
 
 
 def build_info(repo):
@@ -225,6 +256,10 @@ def run_count(args, repo, root, count, node, run, rows, builds):
             if operation == 'cli-export':
                 inspect_export(destination, spec, output)
             probe = json.loads(profile.read_text())
+            probe['proc_io'] = checked_proc_io(probe['proc_io']['raw_before'], probe['proc_io']['raw_after'])
+            probe['io'] = probe['proc_io']['delta']
+            probe['scope'] = 'instrumented complete operation including startup; raw /proc snapshots validated in parent; parent parsing excluded from process metrics; not primary timing'
+            profile.write_text(json.dumps(probe, indent=2) + '\n')
             assert probe['exitCode'] == 0
             assert probe['counts']['bodyOpens'] == count and probe['counts']['bodyBytes'] == count * size
             # CLI selection performs its independent managed-lifecycle snapshot before export.
@@ -232,6 +267,8 @@ def run_count(args, repo, root, count, node, run, rows, builds):
             assert probe['counts']['ledgerOpens'] == reads
             ledger = Path(spec['home']) / 'sync/ledger.json'
             assert probe['counts']['checkedLedgerBytes'] == reads * ledger.stat().st_size
+            assert probe['io']['rchar'] >= probe['counts']['checkedLedgerBytes'] + probe['counts']['bodyBytes']
+            assert probe['io']['syscr'] >= probe['counts']['ledgerOpens'] + probe['counts']['bodyOpens']
     assert sha((Path(spec['home']) / 'sync/ledger.json').read_bytes()) == spec['ledgerSha256']
     emit('paired-summary.jsonl', dict(count=count, n=len(pairs), metrics={
         key: dict(delta_min=min(pair['metrics'][key]['delta'] for pair in pairs),

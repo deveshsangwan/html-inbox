@@ -380,3 +380,13 @@ focused malformed/missing/nonzero parser controls and independent raw-data
 recomputation. New source requires a separate minimal requalification grant.
 No prior log validates that repair; no sustained measurement or reviewer gate
 has started.
+
+The narrow source follow-up moves parsing into the existing Python companion:
+the CJS preload records raw snapshots, the companion strictly validates all
+seven counters and saves raw/parsed maps plus deltas, and four pure parser
+controls exercise nonzero/zero/error inputs. Read/syscall activity checks use
+independent native counts; no physical-I/O positive minimum is added. The
+[minimal pending request](../../scripts/bench/evidence/issue-96/io-requalification-request.md)
+reuses the verified compiled files/bundles and selects only the four parser
+controls plus the existing one-record smoke on each runtime. The source repair
+has syntax/diff checks only; it has not received runtime qualification.
