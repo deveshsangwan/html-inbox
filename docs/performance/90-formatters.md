@@ -1,12 +1,12 @@
 # Per-render formatter reuse, issue #90
 
-Baseline: `1b2009132b8df184540c1990091fd1e9911dbb00` on `release/0.7`. Measured candidate: `76a6f4b95565c085759d8735bb68094cbdc6dc4c`. Both were independently archived from the actual Git refs and compiled with tsc-rs 0.7.0. Subsequent report commits do not change production code. The only production difference is a lazy formatter scoped to each render.
+Baseline: `1b2009132b8df184540c1990091fd1e9911dbb00` on `release/0.7`. Measured candidate: `76a6f4b95565c085759d8735bb68094cbdc6dc4c`. Both were independently archived from the actual Git refs and compiled with npm package tsc-rs 0.7.0, whose CLI reports `Version 7.1.0-dev`. The host CPU is Intel Core i5-7300HQ at 2.50 GHz; this model was read from `/proc/cpuinfo` after the run on the same host. Subsequent report commits do not change production code. The only production difference is a lazy formatter scoped to each render.
 
 ## Method
 
 Primary metric selected before implementation: full HTTP index-request CPU and elapsed time. Linux x86_64, same host, exclusive measurement slot, Node 20.20.2 and 24.19.0, concurrency one. Real LocalDocumentBackend storage with identical immutable 10- and 1,000-document fixtures, shared between baseline and candidate. Viewer and hub servers use their real routing, storage reads, rendering and HTTP response paths. No external network. Five independent process pairs per runtime/workload/route alternate AB/BA order. Each process records its first request separately and ten warm requests. Filesystem caches are warm; cold means a fresh application process, not cold physical storage. Server initialization and fixture publication are outside the request timer.
 
-CPU is process user + system CPU for the server and same-process fetch client, including storage worker threads. It excludes child processes; no request-serving child process is used. RSS is process memory, not heap size. maxRSS is the process peak including initialization; final RSS is sampled after request eleven. GC is left at runtime defaults. The benchmark counts constructor calls using a Proxy only in the benchmark worker. Production never patches Intl. Wall/CPU timing ends after the complete body is consumed, before hashing.
+CPU is process user + system CPU for the server and same-process fetch client, including storage worker threads. It excludes child processes; no request-serving child process is used. RSS is process memory, not heap size. maxRSS is the process peak including initialization; final RSS is sampled after request eleven. GC is left at runtime defaults. The benchmark counts constructor calls using a Proxy only in the benchmark worker. Production never patches Intl. The Proxy trap runs once per construction and therefore adds more instrumentation overhead to the baseline. No uninstrumented control was measured, so the exact instrumentation contribution is unknown. Wall/CPU timing ends after the complete body is consumed, before hashing.
 
 Each table value is the median of five process medians, with the minimum and maximum process medians in brackets. Cold requests have one sample per process. Warm requests total 50 per configuration, grouped by process to avoid treating them as independent runs. No p95 claim.
 
@@ -66,7 +66,9 @@ Raw results and exact per-check commands/exit codes are committed in [90-formatt
 
 The initial coordinator run completed all 80 request workers and paired response assertions, then exited 1 because the full HTML equivalence output exceeded the subprocess default 1 MiB buffer. The committed harness raises that limit to 32 MiB. The equivalence phase was rerun separately for both archived builds and all six runtime/locale combinations, exit 0 with exact 1,406,522-byte output equality each time; receipts are included in the committed JSON. No request timing or production code changed.
 
-Local suite skips: the historical b843e126 CLI fixture was not supplied, the real Windows taskkill process-tree test needs Windows, Node 24.19.0 native IPv6 SAN verification has a documented skip, and live upstream CDN checks are opt-in. Deterministic local CDN fixtures ran. None of these skips concern formatter behavior.
+Local harness/skills/policy suites on each runtime passed 161 tests and skipped two Windows-native PowerShell tests: "Windows PowerShell resolves native npm shims and ignores function/script shadowing" and "Windows PowerShell falls back for an unsupported installed shim without running it". These require Windows.
+
+Other local suite skips: the historical b843e126 CLI fixture was not supplied, the real Windows taskkill process-tree test needs Windows, Node 24.19.0 native IPv6 SAN verification has a documented skip, and live upstream CDN checks are opt-in. Deterministic local CDN fixtures ran. None of these skips concern formatter behavior.
 
 Full-suite totals: Node 20 unit/integration 1,326 passed, 2 skipped; Node 24 unit/integration 1,325 passed, 3 skipped. Browser suites on each runtime: 75 passed, 1 skipped. All check commands exited 0.
 
@@ -83,3 +85,18 @@ OUTPUT must not already contain baseline/candidate builds. The coordinator build
 External artifacts: `/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue-90-measurements`; coordinator log is adjacent at `issue-90-benchmark.log`. This report and committed JSON are sufficient to inspect the measurements without that host.
 
 This measures the compatibility branch on Linux and both supported runtime families, not a future 1.x code stack or macOS/Windows. Node20 and Node24 are compared independently; runtime differences are not attributed to this change. The full-request large workloads provide the go/no-go result; small workloads and first-request behavior are reported as checks on tradeoffs. Single-document shells retain one formatter construction and have no claimed speedup. Static output shares the optimized library path, but no static-export throughput claim is made. Release integration and forward-port qualification remain with root.
+
+
+## Independent reviews and finding dispositions
+
+Both fresh reviewers inspected the same frozen revision `b3d3eafe901059a0d7ebc47aebea8ede1946d1de` against base `1b2009132b8df184540c1990091fd1e9911dbb00`, confirmed reading the complete execution contract and issue, and inspected the whole diff and raw evidence with its full rubric. Codex gpt-6.1-sol High performed the functionality review; Claude Code claudeAgent, claude-sonnet-5-5 Medium performed the code-quality review. Each independently passed functionality, code quality and performance evidence. Neither found a Critical, High or Medium issue. These are delegated review verdicts, not submitted GitHub reviews.
+
+- Functionality Low, incomplete skip accounting: accepted. Added both Windows PowerShell skips and the 161-pass/2-skip harness totals for each runtime, also reflected in raw check metadata.
+- Quality Low-1, harness structure and paragraph density: retained the current one-off harness. Named-function extraction would expand a measured investigation script without changing the small production mechanism. Avoid changing measured request phases merely for cleanup; reconsider extraction if the harness is reused.
+- Quality Low-2, coordinator not run end to end after its buffer fix: accepted the limitation and retained the explicit failure/recovery disclosure. Both reviewers accepted the independently recorded request phase and complete equivalence rerun. No additional heavy run was started after releasing the slot.
+- Quality Low-3, compiler/CPU metadata: accepted. Distinguished npm package version from the compiler CLI version and recorded the CPU model with its post-run capture provenance. Original request/equivalence samples are unchanged.
+- Quality Low-4, dense test fixtures and inline expected hub dates: retained the small direct fixture/oracle assertions. Another helper would add indirection to a short test without improving behavior coverage. No test logic changed after review.
+- Quality Suggestion-1, raw JSON size: retained the inspectable request samples and RSS measurements so the report can be audited without host access. Full HTML and bulky build/fixture artifacts remain external.
+- Quality Suggestion-2, constructor Proxy overhead: accepted. Added the instrumentation limitation without guessing its contribution or attributing all measured difference to the formatter itself.
+
+Post-review changes are documentation and environment/check metadata only. Production, tests, harness, request samples and equivalence receipts remain identical to the reviewed revision. No material finding remains; no fresh code review or heavy rerun is needed for these reporting corrections. Forward-port qualification remains with root, and CI readiness is a separate integration gate.
