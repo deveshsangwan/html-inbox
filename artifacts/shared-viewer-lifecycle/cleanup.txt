@@ -1,0 +1,21 @@
+After all local heavy checks: worktree process scan, excluding this receipt command and its ancestors.
+Matching processes: []
+$ git diff --check 610c931 -- packages/cli/src scripts
+ EXIT 0
+$ git status --short
+ EXIT 0
+$ git rev-parse HEAD
+4b43e0062d4b6d1f4fb01fca83db3885a21141cc
+ EXIT 0
+$ git -C /home/agent/.t3/worktrees/html-inbox/perf-93-startup rev-parse HEAD
+f290211f440f65c11c877dd5baf50b88cda2d969
+ EXIT 0
+$ git diff --stat 610c931 -- packages/cli/src scripts
+ packages/cli/src/viewer-mutation-shutdown.test.ts |  16 +--
+ packages/cli/src/viewer-owned-lifecycle.test.ts   |  59 +++++++++++
+ packages/cli/src/viewer-server.ts                 |  44 +++++---
+ scripts/browser-fixtures.mjs                      |  32 ++++--
+ scripts/viewer-fixture-browser.test.mjs           | 117 ++++++++++++++++++++++
+ 5 files changed, 240 insertions(+), 28 deletions(-)
+ EXIT 0
+Browser fixture failure-case roots were inspected while retained, then explicitly removed by the test owner. Gated regression releases cleanup in finally. Test runner reports no unhandled late promises. Package smoke confirms scoped shutdown. No heavy command or fixture process remains in this worktree. Local heavy work FINISHED; slot releasable before reviews.
