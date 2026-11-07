@@ -11,9 +11,9 @@ outside this investigation's diff.
 
 NO-GO. The controlled adversarial comparison confirms that the mode-only
 shortcut violates the required behavior on Node 20.20.2 and Node 24.19.0.
-There is no production change or claimed performance improvement. Root granted
-the exclusive qualification slot after #93 released it. Performance experiments
-stopped at the failed correctness gate.
+There is no production change or claimed performance improvement. Performance
+experiments stopped at the failed correctness gate. This is a contract rejection,
+not a finding that chmod elision is fast or slow; its benefit remains unquantified.
 
 Both `hardenPrivateFile` and `hardenPrivateDirectory` currently inspect the path
 with `lstat`, reject unexpected types and symlinks, then call path-based `chmod`.
@@ -29,9 +29,10 @@ behavior at these controlled interleavings:
 
 `packages/cli/src/private-storage.test.ts` adds these cases for files and
 directories. All four cases pass on baseline and fail on the temporary shortcut
-under both runtimes. They describe specific observable interleavings, not a claim
-that path-based chmod is race-free.
-Another lstat moves the race. Descriptor-based identity and storage-ownership
+under both runtimes. They describe specific observable interleavings in the current path-based implementation, not a
+claim that path-based chmod is race-free. These are characterization tests; a
+descriptor-based design would require a deliberately reviewed contract change.
+Adding another lstat would move the interval in which replacement can occur. Descriptor-based identity and storage-ownership
 changes require separate review and are outside this compatibility optimization.
 Ownership and EPERM equivalence remain a separate unresolved concern; no
 foreign-user or privileged execution result has been established.
@@ -127,21 +128,52 @@ on Linux, using synthetic temporary homes and no real libraries.
 
 Existing skips include the optional old CLI fixture, Windows-only taskkill,
 live CDN opt-in and Node 24's generated IPv6 SAN behavior. No test was weakened
-or skipped for this investigation. An initial archival assertion was attempted
-before the final check finished; it stopped without copying logs and was retried
-after that process exited 0. This did not change tests or results.
+or skipped for this investigation.
 
 Final source and all 394 compiled artifact hashes still match baseline after all
-checks, and no owned CLI process remains. All heavy jobs have exited. No further
-heavy rerun is authorized after slot release without another grant. Linux
-qualification cannot establish macOS or Windows outcomes; those remain CI gates. There is no claim of race-free path-based chmod or foreign-owner
+checks, and no owned CLI process remains. Linux qualification cannot establish macOS or Windows outcomes; those remain
+CI gates. There is no claim of race-free path-based chmod or foreign-owner
 equivalence.
 
+## Acceptance and release disposition
 
-## Reviews and integration
+- Avoid redundant chmod on already-private POSIX storage: rejected for the tested
+  mode-only shortcut. No optimization ships.
+- Preserve missing, replacement, type/symlink and error behavior: the controlled
+  missing/replacement failures establish why the shortcut cannot ship. Existing
+  type/symlink and wider behavior remain unchanged and qualified.
+- Measure API calls and elapsed time before claiming a benefit: not measured,
+  since the correctness gate failed; no benefit is claimed.
 
-Fresh independent Sol High functionality and Claude Code Sonnet 5.5 Medium
-quality reviews will inspect the same pinned revision after slot release. Both
-must give functionality, code-quality and no-go evidence verdicts. Dispositions
-will be recorded here. PR #118 stays draft pending those reviews, root audit and
-final-head CI. No watch, merge or release is part of this investigation.
+No part of this rejected shortcut is deferred to 1.x, and no modern contract
+change is approved here. Descriptor/ownership design would be separate work.
+
+## Review dispositions
+
+Both fresh independent reviews inspected base
+`52cdb70cc4a504fa8b983e6cdbcb23432d295592` through frozen head
+`07a3b2b1dd6ff6f694f488488c6facbc19e38425`, including the full issue, execution
+contract and raw evidence. [Sol High](permission-92/review-sol-r1.txt) found no
+issues and passed functionality, quality and no-go evidence.
+[Claude Code Sonnet 5.5 Medium](permission-92/review-claude-r1.txt) passed
+functionality and no-go evidence, with a conditional quality pass requiring
+public-document cleanup and recorded dispositions. The following changes are
+prepared for focused requalification; they do not change production code.
+
+| Claude finding | Disposition |
+|---|---|
+| 1 Medium, SIGTERM bypasses finally | Accepted. SIGINT/SIGTERM now request a stop; the active bounded command drains before source restoration and rebuild. Signals during restoration do not interrupt it. SIGKILL and machine failure remain unhandleable, documented limits. |
+| 2 Low, asserts and hard-coded restoration booleans | Accepted. Explicit errors replace all runner asserts; receipt booleans come from actual comparisons. An earlier failure is chained if restoration also fails. |
+| 3 Low, missing preflight/state receipt | Accepted. Record porcelain status; reject tracked/staged source edits and unexpected source bytes before mutation. |
+| 4 Low, one-off and formatting-sensitive script | Accepted documentation change. Docstring pins the source from 52cdb70 and a source hash enforces the constraint. Retain the existing filename to preserve reproduction commands. A shebang, quote-style rewrite or new repo constant adds no useful behavior here. |
+| 5 Low, vacuous replacement assertion if mock stops firing | Accepted. Both cases now assert exactly one target interception. |
+| 6 Low, repeated setup/comment | Accepted characterization comment. Declined helper extraction: these two short explicit flows mutate differently, and an extra test abstraction would hide the controlled interleaving. |
+| 7 Low, implementation-specific oracle | Accepted. Test comment and report explicitly identify path-based characterization and separately reviewed descriptor semantics. |
+| 8 Low, scheduling chatter | Accepted. Removed scheduling and future orchestration instructions from this report. Receipts retain the operational history. |
+| 9 Low, missing dispositions | Accepted. Both original results are archived and every finding is recorded here. |
+| 10 Low, criteria/release mapping | Accepted. Added the acceptance disposition and explicit statement that no modern contract is approved or deferred here. |
+| 11 Low, evidence hygiene | Retain exact raw paths, PIDs and snapshots to support independent reproduction/hash audits. These are synthetic fixtures, not user libraries. Fifteen qualification rows were logged automatically by local command wrappers; the interrupted exit-143 receipt was appended manually because the wrapper was killed. The manifests intentionally distinguish executed experiment commands from wider qualification receipts. Each command can be rerun directly; no hidden workload generator is needed. |
+| 12 Suggestion, no-go could imply no benefit | Accepted. State explicitly that this is a contract rejection and the benefit remains unquantified. |
+| 13 Suggestion, prose noise | Accepted. Removed archival chatter from prose, expanded the replacement-interval explanation and removed the stray blank line. Original archival details remain in the raw receipt. |
+
+Post-review validation and fresh focused review verdicts remain pending.

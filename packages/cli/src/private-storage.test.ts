@@ -5,6 +5,8 @@ import test from "node:test";
 import { hardenPrivateDirectory, hardenPrivateFile } from "./private-storage";
 import { temporaryHome } from "./test-fixtures";
 
+// Characterize path-based chmod at a controlled lstat-to-chmod interleaving.
+// A descriptor-based design would need an explicitly reviewed contract change.
 for (const kind of ["file", "directory"] as const) {
   const privateMode = kind === "file" ? 0o600 : 0o700;
   const harden = kind === "file" ? hardenPrivateFile : hardenPrivateDirectory;
@@ -20,10 +22,12 @@ for (const kind of ["file", "directory"] as const) {
     }
 
     const lstat = fs.lstat;
+    let interceptions = 0;
     t.mock.method(fs, "lstat", async (...args: Parameters<typeof fs.lstat>) => {
       const checked = await lstat(...args);
 
       if (String(args[0]) === target) {
+        interceptions += 1;
         await fs.rm(target, { recursive: true });
       }
 
@@ -31,6 +35,7 @@ for (const kind of ["file", "directory"] as const) {
     });
 
     await assert.rejects(harden(target), { code: "ENOENT" });
+    assert.equal(interceptions, 1);
   });
 
   test(`private ${kind} replaced after inspection still repairs the replacement`, {
@@ -46,10 +51,12 @@ for (const kind of ["file", "directory"] as const) {
     }
 
     const lstat = fs.lstat;
+    let interceptions = 0;
     t.mock.method(fs, "lstat", async (...args: Parameters<typeof fs.lstat>) => {
       const checked = await lstat(...args);
 
       if (String(args[0]) === target) {
+        interceptions += 1;
         await fs.rm(target, { recursive: true });
 
         if (kind === "file") {
@@ -66,6 +73,7 @@ for (const kind of ["file", "directory"] as const) {
 
     await harden(target);
 
+    assert.equal(interceptions, 1);
     assert.equal((await fs.stat(target)).mode & 0o7777, privateMode);
   });
 }
