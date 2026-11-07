@@ -88,3 +88,7 @@ Existing skips include the optional old `b843e126` CLI not supplied, Windows-onl
 Resource CPU and high-water RSS are sampled in the child after the measured operation and result assertions, before output hashing/serialization and server close. They cover startup, warmup and the operation through that point, rather than exited-process wait4 accounting. Driver wall time includes the entire child lifecycle. No whole-process-tree, physical-I/O or cold-cache claim is made.
 
 Evidence packaging initially asserted 18 check rows, but the command manifest contains 17 successful checks. That archival assertion failed before copying logs, and was corrected to 17. No test or measurement failed, and no production code changed in this correction.
+
+## Reviews
+
+Both requested independent reviews completed on `427942f72a2f7187d6840d7d058357d32e0a51df` with no material blocker. See [verdicts, coverage limitations and every finding disposition](reviews.md). The follow-up changes only helper/test formatting and this documentation; production source is byte-identical to the measured/reviewed eight-reader build. Original fingerprints remain historical; [post-review fingerprints](post-review-fingerprints.json) identify the formatted companions. Root audit and final-head CI are pending; the PR stays draft.

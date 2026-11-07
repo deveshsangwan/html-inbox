@@ -13,12 +13,18 @@ async function seed(home: string, count: number) {
     const id = `document-${String(index).padStart(3, "0")}`;
     const directory = path.join(home, "documents", id);
     const record = {
-      schemaVersion: 1, id, title: id, type: "report", sourceFileName: "fixture.html",
+      schemaVersion: 1,
+      id,
+      title: id,
+      type: "report",
+      sourceFileName: "fixture.html",
       createdAt: index % 2 ? "2026-11-07T00:00:00.000Z" : "2026-11-06T00:00:00.000Z",
     };
+
     await fs.mkdir(directory, { recursive: true });
     await fs.writeFile(path.join(directory, "metadata.json"), JSON.stringify(record));
     await fs.writeFile(path.join(directory, "index.html"), "<html>fixture</html>");
+
     metadata.push(record);
   }
 

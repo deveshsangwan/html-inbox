@@ -10,12 +10,19 @@ async function main() {
   const load = name => require(path.join(dist, name));
   const warnings = [];
   const backends = Array.from({ length: 4 }, () => new (load('backend.js').LocalDocumentBackend)(home, message => warnings.push(message)));
-  const expected = Array.from({ length: count }, (_, index) => ({ schemaVersion: 1,
-    id: `bench-${String(index).padStart(5, '0')}`, title: `Benchmark ${index}`, type: 'report',
-    createdAt: '2026-11-07T00:00:00.000Z', sourceFileName: 'fixture.html' }));
+  const expected = Array.from({ length: count }, (_, index) => ({
+    schemaVersion: 1,
+    id: `bench-${String(index).padStart(5, '0')}`,
+    title: `Benchmark ${index}`,
+    type: 'report',
+    createdAt: '2026-11-07T00:00:00.000Z',
+    sourceFileName: 'fixture.html'
+  }));
+
   const hash = value => createHash('sha256').update(value).digest('hex');
   const warm = await backends[0].listDocuments();
   assert.deepEqual(warm, expected);
+
   let server;
   let expectedBody;
 
@@ -44,14 +51,26 @@ async function main() {
     for (const result of results) {
       assert.deepEqual(result, mode === 'http4' ? expectedBody : expected);
     }
+
     assert.deepEqual(warnings, []);
-    console.log(JSON.stringify({ node: process.version, count, mode, wall_ms: wall,
-      cpu_ms: (used.user + used.system) / 1000, peak_rss_kib: process.resourceUsage().maxRSS,
+
+    console.log(JSON.stringify({
+      node: process.version,
+      count,
+      mode,
+      wall_ms: wall,
+      cpu_ms: (used.user + used.system) / 1000,
+      peak_rss_kib: process.resourceUsage().maxRSS,
       process_cpu_ms: (process.resourceUsage().userCPUTime + process.resourceUsage().systemCPUTime) / 1000,
       output_hash: hash(mode === 'http4' ? expectedBody : JSON.stringify(expected)),
-      behavior: 'exact metadata/order or full HTTP body; zero warnings', cache: 'one direct warm listing, plus one HTTP warm request for http4' }));
+      behavior: 'exact metadata/order or full HTTP body; zero warnings',
+      cache: 'one direct warm listing, plus one HTTP warm request for http4'
+    }));
   } finally {
     if (server) await server.close();
   }
 }
-main().catch(error => { console.error(error); process.exitCode = 1; });
+main().catch(error => {
+  console.error(error);
+  process.exitCode = 1;
+});
