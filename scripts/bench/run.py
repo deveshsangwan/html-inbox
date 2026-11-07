@@ -154,7 +154,9 @@ def main():
                     signature_hash.update(artifact.read_bytes())
                 signature_implementation = dict(dist=str(signature_dist), asserted_source_ref=args.implementation_ref,
                                                 dist_js_sha256=signature_hash.hexdigest(), signature_mode=args.signature_mode,
-                                                source_pin_verified=False)
+                                                source_pin_verified=False,
+                                                companion_sha256={name: hashlib.sha256((REPO / 'scripts/bench' / name).read_bytes()).hexdigest()
+                                                                  for name in ['run.py', 'workload.cjs', 'signatures.cjs']})
             metadata = dict(commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO, text=True).strip(),
                             dirty=subprocess.check_output(['git', 'status', '--porcelain'], cwd=REPO, text=True),
                             node=subprocess.check_output(node + ['--version'], text=True).strip(),
