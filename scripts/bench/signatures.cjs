@@ -238,7 +238,7 @@ async function churnWorkload({ root, count, measure }) {
       assert.deepEqual(await store.snapshot(), ledger);
       return { round, rounds, records: count };
     });
-    await measure(`signatures/churn-hit/${count}`, async () => {
+    await measure(`signatures/churn-repeat/${count}`, async () => {
       assert.deepEqual(await store.snapshot(), ledger);
       return { round, rounds, records: count };
     });
@@ -311,7 +311,7 @@ async function runSignatures({ root, count, size, record, seed, html, setup, sig
     return { records: count, scope: 'first production snapshot in a fresh process; filesystem cache uncontrolled/warm' };
   });
   for (let iteration = 0; iteration < 5; iteration += 1) {
-    await measure(`signatures/snapshot-hit/${count}`, async () => {
+    await measure(`signatures/snapshot-warm/${count}`, async () => {
       assert.deepEqual(await source.snapshot(), expected);
       return { iteration, records: count };
     });
