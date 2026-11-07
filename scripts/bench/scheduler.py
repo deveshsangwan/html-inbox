@@ -159,7 +159,7 @@ def main():
                 metadata['builds'][label] = dict(revision=revision, dist=str(dist), dist_js_sha256=fingerprint(dist))
             (args.out / 'environment.json').write_text(json.dumps(metadata, indent=2) + '\n')
 
-            # Preserve the existing reader-race assertion that the original scheduler draft missed.
+            # Check actual fresh admission without weakening the reader-race assertions.
             for version, node in runtimes:
                 for label in ['parent', 'candidate']:
                     command = [str(node), '--test', '--test-name-pattern=an enabled owned worker keeps its process identity',

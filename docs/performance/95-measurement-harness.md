@@ -114,7 +114,7 @@ Request a maximum 1,800-second exclusive local slot for harness smoke only:
 
 1. Run `python3 -m unittest discover -s scripts/bench -p test_scheduler_cleanup.py`.
 2. Run the command below on the committed harness/candidate pin. It builds the
-   actual parent and candidate separately, runs the unchanged enabled-worker
+   actual parent and candidate separately, runs the enabled-worker
    ledger-replacement case on both builds and exact runtimes, then executes
    twelve zero-record cases, one parent/candidate pair for each of the three
    directions on each runtime. Each still observes 65 seconds of idle time and
@@ -135,9 +135,13 @@ python3 scripts/bench/scheduler.py \
 Expected duration is 20 to 30 minutes, with a strict 30-minute runner budget and
 240-second per-case outer bound. Exhausting either bound produces failed or
 unfinished coverage, not a rerun with a hidden longer timeout. The unchanged
-reader-race case is included because the original draft's cheap tick skipped its
-injection, beyond the nine suites in the first grant. The new metadata check is
-expected to reach it; this expectation still needs execution evidence.
+reader-race case is included because its injection was skipped beyond the nine
+suites in the first grant. CI at `698fd49` still reports zero injected reads.
+`lastRunAt` is persisted before the startup flight settles, so a clock-only tick
+can join a read admitted before the injection. The candidate test now explicitly
+wakes the worker to require a fresh admission. Its exact one-hit, stable process
+identity and no-shutdown assertions remain unchanged. The parent retains its
+original tick-based test. Both need execution evidence in this slot.
 
 Passing this smoke phase qualifies only the harness at zero records. A separate
 `--phase feasibility` request must run all required counts and directions on both
