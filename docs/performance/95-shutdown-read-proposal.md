@@ -1,10 +1,14 @@
 # Source-only shutdown read diagnosis
 
+This proposal was executed once under the separately granted diagnostic at
+`d320bb0`. [The receipt](95-shutdown-read-results.md) preserves both parent reds,
+all controls and cleanup. No continuation is authorized.
+
 Production remains frozen at tested `9fd509e`. The three measured harness files
 remain byte-identical to `a7f8719`. The original stopped attempt and its failure
 remain unqualified. The separate staged diagnostic
-`scripts/bench/scheduler-shutdown-read.regression.cjs` is unexecuted and outside
-normal test discovery. No local execution or correction is authorized now.
+`scripts/bench/scheduler-shutdown-read.regression.cjs` remains outside normal test
+discovery. The construction below records the plan selected before that run.
 
 ## What the failed trace establishes
 
@@ -150,5 +154,5 @@ ISSUE95_DIAG_REVISION=<exact-610-or-9fd-SHA> \
 The owned outer controller must share one absolute application-plus-cleanup
 deadline, replacing the previously identified accumulating grace pattern before
 reuse. Record PID/group/exit and join every child/read/listener before fixture
-removal. Node 24 static syntax checking passed. No probe or application command
-has run under this proposal.
+removal. Node 24 static syntax checking preceded the separately granted run;
+all executed commands and original outcomes are in the linked receipt.
