@@ -1,5 +1,7 @@
 # HTML Inbox
 
+The planned release lines are 0.7.x on Node >=20 and 1.x on Node >=24.19.0. Both are pending; the current CLI remains 0.6.1. See the [release policy and remaining activation gates](docs/release-policy.md).
+
 Version 0.6.1 fixes concurrent startup identity creation, sync pause/resume, and record-reading/shutdown races. Before updating the CLI, stop running viewers, hubs, and independent sync workers with the old executable. Update the CLI, then restart the components you use to load the fixes. See the [0.6.1 upgrade notes](CHANGELOG.md#upgrade-to-061).
 
 [Website](https://deveshsangwan.github.io/html-inbox/) | [Documentation](https://deveshsangwan.github.io/html-inbox/docs/) | [npm](https://www.npmjs.com/package/html-inbox)
