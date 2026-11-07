@@ -2,16 +2,19 @@
 
 Related to [issue #96](https://github.com/deveshsangwan/html-inbox/issues/96).
 This records the approved partial exact-complete-byte experiment and its
-baseline contracts. Production source and new controls are now prepared, with
-execution gated by the orchestrator. No performance improvement is claimed.
+baseline contracts. Candidate correctness passed at the frozen fc858 revision;
+broader qualification and performance remain gated by the orchestrator. No
+performance improvement is claimed.
 
 Source preparation passed `node --check scripts/bench/managed-read-contract.cjs`
 and `git diff --cached --check`, both exit 0. The original 18-case probe
 subsequently passed on the unchanged baseline under
 exact Node 20.20.2 and 24.19.0. The [durable receipt and lossless evidence](../../scripts/bench/evidence/issue-96/README.md)
-identify its tested revision. None of those results tests the new production
-source or new actual-view/lifetime controls. No new build, application check or
-measurement has run after the production edits.
+identify its tested revision. Candidate correctness was subsequently qualified
+at `fc858a56d874debb470d8e26bb91c3fac99b01e6` under the explicit twelve-check
+grant. The [candidate qualification receipt](../../scripts/bench/evidence/issue-96/correctness-fc858a5.md)
+records its separate logs, outputs, hashes and limitations. No performance
+measurement or independent review is credited to either correctness run.
 
 ## Starting point and affected work
 
@@ -202,7 +205,7 @@ request two fresh independent Sol functionality and Sonnet 5.5 Medium quality
 reviews with the full rubric and explicit functionality, quality and performance
 verdicts. Neither reviewer owns Actions watches.
 
-## Candidate correctness request
+## Qualified candidate correctness scope
 
 The frozen baseline probe remains byte-identical at
 `scripts/bench/managed-read-contract.cjs`. Run it again to qualify direct/fallback
@@ -223,7 +226,7 @@ GC controls hold escaped methods while observing release of parsed ledgers
 and buffers. GC is a retention check, not a memory benchmark. Legacy export
 and enrollment transitions have independent controls.
 
-Request the next slot for exact Node 24.19.0 typecheck/build, then sequential
+The fc858 correctness grant used exact Node 24.19.0 typecheck/build, then sequential
 Node 20.20.2 and 24.19.0 runs of the frozen baseline probe, new actual-view
 probe and `--expose-gc --test scripts/bench/managed-view-retention.cjs`, against
 the same compiled candidate bytes. Run the existing static-export and
@@ -254,11 +257,11 @@ A second scenario produces a real fork-inherited original after listing. It
 asserts that every fetched non-origin metadata field, local ID and body byte
 matches the listed original, while origin is present. Both routes must reject,
 so metadata, ID or body discrepancies cannot substitute for the origin guard.
-These repaired controls have not run, and source inspection alone is not a
-complete runtime causal proof for the original CI failure. The red 750baae logs
+These repaired controls passed at fc858 under the explicit correctness grant.
+They do not retroactively validate the bypassed injection in the old red run. The red 750baae logs
 and the unrelated historical 42232780 timeout failures remain separate evidence.
 
-Amend the queued correctness phase with one selected-case command per exact
+The approved correctness phase added one selected-case command per exact
 runtime, in addition to its ten checks:
 
 ```sh
@@ -277,3 +280,20 @@ framework. Keep the GC-specific retention invocation separate, explicitly
 passing `--expose-gc` on supported POSIX runtimes in an existing harness/source
 step. Final placement and any fixture factoring follow correctness qualification;
 no CI wiring or change to the frozen standalone controls is included now.
+
+## Correctness qualification completed at fc858
+
+The approved twelve checks and two exact-version preflights all passed on the
+frozen fc858 candidate. Both runtimes passed baseline18, actual-view44,
+retention1, containing18 and selected-origin4. Node 20 additionally reports
+12 name-filter skips; Node 24 reports only the selected four. The full containing
+HTTPS/viewer suite was not run. All 196 compiled JavaScript files remained
+unchanged across both runtimes; all 484 tracked input files stayed unchanged.
+
+The lossless receipt includes 180 removed fixture roots, 1,414 captured output
+files, 142 verified emitted manifests, absent process groups/PIDs and zero
+observer errors. These tests demonstrate the selected view/fallback and lifetime
+controls at fc858. They do not validate later code edits, provide a speedup,
+diagnose the old 422 timeouts or qualify permanent OS-close failure cleanup.
+Normal-CI integration, broader qualification, complete-operation performance
+measurements and both independent reviews remain later gates.
