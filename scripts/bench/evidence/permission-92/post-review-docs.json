@@ -1,0 +1,13 @@
+{
+  "reviewedHead": "6dd7d3aae557e1bdc508bb0aa83c71ea233cbd66",
+  "executedProcedureStatementsIdentical": true,
+  "productionTestAndRunnerBytesIdentical": true,
+  "all394BuildHashesIdentical": true,
+  "checks": [
+    "git diff --check",
+    "AST comparison excluding module docstring",
+    "source byte comparisons against reviewed pin",
+    "all compiled SHA-256 comparisons"
+  ],
+  "runtimeTestsOrBuildsRun": false
+}

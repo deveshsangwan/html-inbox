@@ -1,0 +1,1 @@
+Initial archival attempt asserted 16 manifest rows while skill-fallback was still running and only 15 rows existed. It stopped before copying logs. Retried after the final process exited 0. No test changed.
