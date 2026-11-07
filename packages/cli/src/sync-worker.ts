@@ -1,7 +1,8 @@
 import { isRouteDue } from "./sync-ledger-policy";
 import { randomBytes } from "node:crypto";
 import http from "node:http";
-import { rm } from "node:fs/promises";
+import { lstat, rm } from "node:fs/promises";
+import path from "node:path";
 import { performance } from "node:perf_hooks";
 import { createStorageCounters, DurableFiles, acquireSyncOwnership, readSyncOwnership, processStart } from "./sync-files";
 import { assertManagedLifecycle } from "./sync-lifecycle";
@@ -108,8 +109,9 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
   let draining: Promise<void> | undefined;
   let closing: Promise<void> | undefined;
   let backgroundRequested = !options.temporary;
-  let refreshRequested = false;
+  let observationRequested = false;
   let backgroundEnabled = !options.temporary;
+  let ledgerStamp = "";
   let nextRetryAt = Infinity;
   let nextRefreshAt = 0;
   let nextReconcileAt = Infinity;
@@ -250,7 +252,7 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
     if (!draining && !closing) {
       draining = drain().catch(async () => {
         backgroundRequested = false;
-        refreshRequested = false;
+        observationRequested = false;
         for (const ticket of tickets.values()) {
           if (ticket.state === "running" || ticket.state === "queued") {
             ticket.state = "complete";
@@ -268,7 +270,7 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
         }
       }).finally(() => {
         draining = undefined;
-        if (!closing && ([...tickets.values()].some((entry) => entry.state === "queued") || backgroundRequested || refreshRequested)) {
+        if (!closing && ([...tickets.values()].some((entry) => entry.state === "queued") || backgroundRequested || observationRequested)) {
           kick();
         }
       });
@@ -279,12 +281,12 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
     while (!closing) {
       const ticket = [...tickets.values()].find((entry) => entry.state === "queued");
       if (!ticket && !backgroundRequested) {
-        if (!refreshRequested) {
+        if (!observationRequested) {
           return;
         }
 
-        refreshRequested = false;
-        await refreshSchedule();
+        observationRequested = false;
+        await observeSchedule();
 
         if (!closing && backgroundEnabled && (nextRetryAt <= wallNow() || monotonicNow() >= nextReconcileAt)) {
           backgroundRequested = true;
@@ -409,28 +411,58 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
       }
 
       if (!closing) {
-        refreshRequested = false;
+        observationRequested = false;
         await refreshSchedule();
       }
     }
   }
 
+  async function readLedgerStamp() {
+    const info = await lstat(path.join(home, "sync", "ledger.json"), { bigint: true });
+    if (!info.isFile()) {
+      throw new Error("Worker ledger must be a regular file");
+    }
+
+    return [info.dev, info.ino, info.size, info.mtimeNs, info.ctimeNs, info.mode, info.uid, info.gid, info.nlink].join(":");
+  }
+
+  async function observeSchedule() {
+    try {
+      const stamp = await readLedgerStamp();
+      if (closing) {
+        return;
+      }
+
+      if (stamp !== ledgerStamp || monotonicNow() >= nextRefreshAt) {
+        await refreshSchedule();
+      }
+    } catch {
+      fatalStop();
+    }
+  }
+
   async function refreshSchedule() {
     const startedAt = monotonicNow();
-    const ledger = await store.snapshot().catch(() => {
+    // Capture before validation so a commit during the read remains observable.
+    const observation = await (async () => {
+      const stamp = await readLedgerStamp();
+      return { stamp, ledger: await store.snapshot() };
+    })().catch(() => {
       // Unsafe observation failures must not rewrite the ledger to log them.
       fatalStop();
       return null;
     });
-    if (closing || !ledger) {
+    if (closing || !observation) {
       return;
     }
 
+    const { stamp, ledger } = observation;
     if (ledger.storageIncarnation !== record?.storageIncarnation || (ledger.runtime?.revision ?? 0) !== record?.configRevision) {
       requestClose();
       return;
     }
 
+    ledgerStamp = stamp;
     backgroundEnabled = !options.temporary && ledger.worker.enabled && !ledger.worker.retryPaused;
     reconcileMs = ledger.runtime?.config.timings.reconcileMs ?? defaultRuntimeConfig().timings.reconcileMs;
     nextRetryAt = backgroundEnabled ? nextWorkerRetryAt(ledger) : Infinity;
@@ -453,11 +485,11 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
       backgroundRequested = true;
     }
 
-    if (!draining && (monotonic >= nextRefreshAt || backgroundEnabled && (wall >= nextRetryAt || monotonic >= nextReconcileAt))) {
-      refreshRequested = true;
+    if (!draining) {
+      observationRequested = true;
     }
 
-    if (backgroundRequested || refreshRequested) {
+    if (backgroundRequested || observationRequested) {
       kick();
     }
 

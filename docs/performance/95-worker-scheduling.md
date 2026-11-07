@@ -1,11 +1,12 @@
 # Worker scheduling experiment
 
-Status: source-only. No performance result or retention decision yet.
+Status: focused behavior qualification in progress. No performance result or
+retention decision yet.
 
-The plan was committed as `9ca71fd` before the production edits. Local execution
-is pending the orchestrator's exclusive slot. Source inspection and
-`git diff --check` are the only checks completed in this phase. No install,
-typecheck, build, test, or benchmark has run.
+The plan was committed as `9ca71fd` before the production edits. The first
+exclusive local slot permits frozen installation, typecheck/build and nine
+focused suites on exact Node 20.20.2/24.19.0. Full checks and sustained performance
+qualification require separate grants.
 
 ## Pins and scope
 
@@ -77,7 +78,15 @@ cause clock-gap catch-up work. The unchanged gap detector includes event-loop
 stalls. A reduced nominal refresh count cannot establish a CPU improvement if
 that catch-up work keeps the worker busy. This is an open qualification risk.
 
-## Proposed scheduling bounds
+## Scheduling bounds
+
+The first draft at `6b2d95c` used only deadline observation plus the five-second
+full-refresh fallback. That draft failed the existing three-second unsafe-ledger
+exit assertion in `sync-worker-fatal.test.ts`. A focused Node 20 reproduction
+failed in 3.68 seconds. Changing only the compiled fallback to 250 ms passed in
+1.17 seconds, then the original compiled bytes were restored. No timeout or
+safety assertion was changed. The corrected scheduler adds the metadata check
+below. The original preselected workload and metric remain unchanged.
 
 Keep a 250 ms cheap clock/deadline observation. Serialize all scheduler snapshot
 refreshes and outgoing passes through one promise. Explicit runs and wakes join
@@ -87,17 +96,29 @@ cached schedule as route authority. Shutdown stops admission, aborts attempts an
 joins the flight, including a pending state read, before releasing ownership.
 
 Keep only scalar scheduling state between observations, not a cached ledger.
-Refresh validated state after passes, on a known retry deadline or clock event,
-and at a five-second fallback for other-process changes. The fallback is measured
+Every idle tick makes a serialized `lstat` of the ledger. Compare device, inode,
+size, nanosecond modification/change times, mode, owner/group and link count.
+A non-regular ledger or metadata-read failure stops the worker. A changed stamp
+requests a full validated snapshot, never authority based on metadata alone.
+Capture the stamp before snapshot validation so a commit during validation is
+still visible on the next observation. This does not cache signature validation
+or ledger contents.
+
+Refresh validated state after passes, when metadata changes, and at a five-second
+fallback even when metadata appears unchanged. The fallback is measured
 with the monotonic clock from the beginning of each read. If a read itself takes
 longer than five seconds, allow one cheap observation interval after it settles
 before another fallback read. This avoids a catch-up loop of slow state reads.
 
 Absent a current flight, an explicit trigger schedules immediately. Known retry
-deadlines and periodic reconciliation become eligible within 250 ms. External
-commits without a wake are discovered within 5,250 ms plus state-read time; when
-the preceding read takes over five seconds, its completion plus 250 ms replaces
-that bound. A trigger arriving during a flight waits for that bounded pass/read
+deadlines and periodic reconciliation become eligible within 250 ms. Ordinary
+atomic external commits and ledger-file permission/type changes are discovered
+within 250 ms plus metadata and state-read time. Unchanged ledger metadata does
+not prove that every home/identity/body-directory invariant is still valid.
+Full validation of those invariants occurs within the five-second fallback plus
+250 ms and read time. When the preceding read takes over five seconds, its
+completion plus 250 ms replaces that fallback bound. A trigger arriving during a
+flight waits for that bounded pass/read
 and its required bookkeeping. Storage and event-loop stalls add their own delay;
 no scheduler can promise a wall-time bound on an arbitrarily stalled filesystem.
 Measure those costs at the required record counts and report actual bounds.
@@ -115,5 +136,7 @@ suspend, the elapsed gap detects it. No work runs during actual process suspensi
 Periodic reconciliation uses the configured interval after pass completion and
 checks eligible routes regardless of outbox contents. Blocked/backoff routes,
 route ownership/revision fencing, cancellation, listener lifetime and global
-ledger validation remain unchanged. The five-second external discovery fallback
-is an explicit latency tradeoff against the old full-read-every-250-ms approach.
+ledger validation remain unchanged. The fallback trades some idle invariant
+refresh latency against the old full-read-every-250-ms approach. Ledger metadata
+changes keep their cheap 250 ms observation. Neither mechanism replaces the
+independent configured reconciliation interval or empty-outbox custody repair.

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { lstat, realpath } from "node:fs/promises";
+import { lstat, mkdtemp, realpath, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import platformTest, { type TestContext } from "node:test";
 import { setImmediate as turn } from "node:timers/promises";
 import * as lifecycle from "./sync-lifecycle";
@@ -11,7 +13,6 @@ import { ManagedSyncStore } from "./sync-store";
 import { startOwnedSyncWorker } from "./sync-worker";
 import { readWorkerRecordOffline, workerPaths } from "./sync-worker-records";
 import { nextWorkerRetryAt } from "./sync-worker-schedule";
-import { temporaryHome } from "./test-fixtures";
 
 const test = process.platform === "win32" ? platformTest.skip : platformTest;
 
@@ -22,7 +23,14 @@ function gate() {
 }
 
 async function fixture(t: TestContext, temporary = false) {
-  const home = await realpath(await temporaryHome(t));
+  const home = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-scheduler-")));
+  const releases: (() => void)[] = [];
+  let close = async () => {};
+  t.after(async () => {
+    for (const release of releases) release();
+    await close();
+    await rm(home, { recursive: true, force: true });
+  });
   const store = new ManagedSyncStore(home);
   await store.enroll();
   await store.setWorkerEnabled(true);
@@ -30,16 +38,14 @@ async function fixture(t: TestContext, temporary = false) {
   t.mock.method(Date, "now", () => clock.wall);
   t.mock.timers.enable({ apis: ["setInterval"] });
   const events: string[] = [];
-  const releases: (() => void)[] = [];
   const worker = await startOwnedSyncWorker(home, { temporary, testHooks: {
     wallNow: () => clock.wall, monotonicNow: () => clock.monotonic, onEvent: (event) => { events.push(event.type); },
   } });
-  t.after(async () => {
-    for (const release of releases) release();
+  close = async () => {
     await worker.close();
     await assertLoopbackClosed(worker.record.controlOrigin);
     assert.equal(await readWorkerRecordOffline(home), null);
-  });
+  };
   await worker.tick();
 
   async function advance(milliseconds: number) {
@@ -216,14 +222,14 @@ test("cancellation and ticket expiry during pending admission cannot start a pas
   assert.equal(f.worker.status().tickets.find((ticket) => ticket.ticketId === expired)?.state, "complete");
 });
 
-test("external retry state is discovered at fallback and known retry deadlines wake sooner", async (t) => {
+test("external retry state is discovered by metadata observation and known deadlines wake without fallback", async (t) => {
   const f = await fixture(t);
   const route = await f.route();
   // Another store instance commits without using the worker wake/control path.
   const writer = new ManagedSyncStore(f.home);
   await writer.recordRouteRun(routeAuthorization(route), "temporary failure", false, 0);
   const before = f.passes();
-  await f.advance(4750);
+  await f.advance(250);
   assert.equal(f.passes(), before);
   await f.advance(250);
   assert.equal(f.passes(), before + 1);
@@ -285,6 +291,7 @@ test("retry hints preserve route backoff, blocked revisions and terminal history
   const ledger = await f.store.snapshot();
   const entry = Object.values(ledger.outbox)[0];
   assert.ok(entry);
+  entry.disposition = "pending";
   ledger.routeRetries[route.id] = { revision: route.revision, attempts: 1, nextAttemptAt: 4000, lastError: "temporary", blocked: false };
   entry.nextAttemptAt = 1000;
   assert.equal(nextWorkerRetryAt(ledger), 4000);
