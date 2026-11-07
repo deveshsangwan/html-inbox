@@ -404,3 +404,20 @@ preserve the failed assertion, exact source/logs/raw profiles, bounded passing
 facts and additive diagnostic. Full harness qualification remains withheld.
 The local slot is released; any audit correction or continuation needs root's
 next instruction.
+
+## Corrected one-record smoke accepted
+
+Root authorized an additive independent audit correction, preserving the
+original failed auditor and rejecting fixed ledger-size assumptions. Opens
+and body bytes are checked from the actual captured fixture specification;
+per-read ledger size is derived only for cross-profile consistency. The
+independent runtime size check remains the source-pinned smoke's live
+`ledger.stat()` assertions, not a retained stat or recovered ledger.
+The preserved Node20 audit passed; only the previously unrun Node24 step then
+ran once at docs-only0575 with executable084 unchanged. Root independently
+accepted both one-record smoke receipts. The [completion receipt and additive
+archive](../../scripts/bench/evidence/issue-96/io-requalification-completed-0575c1d.md)
+join the historical partial evidence without rewriting any failure.
+The local slot is released. No gain, large-count, generic interruption or full
+#96 qualification follows. Any shared-viewer dependency integration requires
+new combined build/runtime/output qualification against its actual parent.
