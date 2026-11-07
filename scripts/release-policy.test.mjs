@@ -41,3 +41,16 @@ test("reject invalid versions, refs, engines and premature tags before publicati
     assert.throws(() => verifyReleasePolicy({ ...compatibilityRelease, ...change }));
   }
 });
+
+
+test("latest cannot move backward across minor or patch versions", () => {
+  for (const [version, latestVersion] of [["0.6.2", "0.7.3"], ["0.7.2", "0.7.10"]]) {
+    assert.throws(() => verifyReleasePolicy({
+      ...compatibilityRelease, version, requestedVersion: version, latestVersion, ref: "refs/heads/main",
+    }), /must not move npm latest backward/);
+  }
+
+  assert.equal(verifyReleasePolicy({
+    ...compatibilityRelease, version: "0.7.10", requestedVersion: "0.7.10", latestVersion: "0.7.9",
+  }).tag, "latest");
+});

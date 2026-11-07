@@ -1,30 +1,48 @@
 import { appendFileSync, readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
+const stableVersionPattern = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/;
+
 export function verifyReleasePolicy({ version, engines, requestedVersion, ref, tag, latestVersion }) {
-  if (!/^\d+\.\d+\.\d+$/.test(version) || version !== requestedVersion) {
+  if (!stableVersionPattern.test(version) || version !== requestedVersion) {
     throw new Error("Requested version must match the package's stable semantic version");
   }
 
-  if (!/^\d+\.\d+\.\d+$/.test(latestVersion)) {
+  if (!stableVersionPattern.test(latestVersion)) {
     throw new Error("Read a stable npm latest version before choosing a release tag");
   }
 
-  const major = Number(version.split(".")[0]);
-  const minor = Number(version.split(".")[1]);
-  const hasModernLatest = Number(latestVersion.split(".")[0]) >= 1;
+  const versionParts = version.split(".").map(BigInt);
+  const latestParts = latestVersion.split(".").map(BigInt);
+  const [major, minor] = versionParts;
+  const hasModernLatest = latestParts[0] >= 1n;
+  const differingPart = versionParts.findIndex((part, index) => part !== latestParts[index]);
 
-  if (major === 0 && (minor === 6 || minor === 7)) {
-    const allowedRefs = minor === 7
+  if (tag === "latest" && differingPart !== -1 && versionParts[differingPart] < latestParts[differingPart]) {
+    throw new Error("A release must not move npm latest backward");
+  }
+
+  if (major === 0n && (minor === 6n || minor === 7n)) {
+    // Keep 0.6 patch releases possible until the unpublished 0.7 line is ready.
+    const allowedRefs = minor === 7n
       ? ["refs/heads/main", "refs/heads/release/0.7"]
       : ["refs/heads/main"];
     const expectedTag = hasModernLatest ? "node20" : "latest";
 
-    if (engines?.node !== ">=20" || !allowedRefs.includes(ref) || tag !== expectedTag) {
-      throw new Error(`Compatibility releases require Node >=20, an approved branch and tag ${expectedTag}`);
+    if (engines?.node !== ">=20") {
+      throw new Error('Compatibility package engines.node must be exactly ">=20"');
     }
 
-    if (hasModernLatest && (minor !== 7 || ref !== "refs/heads/release/0.7")) {
+    if (!allowedRefs.includes(ref)) {
+      throw new Error("Publish compatibility releases from main or the approved release/0.7 branch");
+    }
+
+    // Explicit tag selection is a maintainer-approved double check before publication.
+    if (tag !== expectedTag) {
+      throw new Error(`Compatibility releases require npm tag ${expectedTag}`);
+    }
+
+    if (hasModernLatest && (minor !== 7n || ref !== "refs/heads/release/0.7")) {
       throw new Error("After 1.0, compatibility maintenance publishes only from release/0.7");
     }
 
