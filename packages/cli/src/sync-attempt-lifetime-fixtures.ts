@@ -20,11 +20,11 @@ export function latch() {
   return { promise, release };
 }
 
-export async function reached<T>(promise: Promise<T>, label: string): Promise<T> {
+export async function reached<T>(promise: Promise<T>, label: string, timeoutMs = 3000): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([promise, new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new Error(`Missed attempt lifetime predicate: ${label}`)), 3000);
+      timer = setTimeout(() => reject(new Error(`Missed attempt lifetime predicate: ${label}`)), timeoutMs);
     })]);
   } finally {
     if (timer) clearTimeout(timer);

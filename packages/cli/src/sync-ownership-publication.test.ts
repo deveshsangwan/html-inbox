@@ -27,7 +27,8 @@ async function launch(t: TestContext, lockPath: string, stage: string, action = 
   const closed = once(child, "close");
   let stderr = "";
   child.stderr?.on("data", (chunk: Buffer) => { stderr += chunk.toString(); });
-  const timer = setTimeout(() => child.kill("SIGKILL"), 7000);
+  // Cover the child's five-second admission deadline plus startup and owned cleanup.
+  const timer = setTimeout(() => child.kill("SIGKILL"), 10_000);
   t.after(async () => {
     clearTimeout(timer);
     if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
@@ -130,6 +131,7 @@ for (const action of ["abort", "deadline"]) {
     test(`${action} at ${stage} prevents protected work and removes its known installation`, async (t) => {
       const { root, lockPath } = await fixture(t);
       const owned = await launch(t, lockPath, stage, action);
+      if (action === "deadline") assert.match(parseString(owned.receipt.error), /deadline/);
       assert.equal(owned.receipt.acquired, false);
       assert.equal(owned.receipt.callback, false);
       assert.deepEqual(await owned.closed, [0, null]);

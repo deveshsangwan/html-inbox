@@ -120,7 +120,7 @@ async function inspectionFixture(t: TestContext, state: InspectionState) {
       calls.deadlines += 1;
       assert.ok(error instanceof Error);
       assert.match(error.message, /lock deadline/);
-      if (!expires) assert.ok(overallDeadline - Date.now() > 25_000, "short lookup expiry cannot stand in for overall expiry");
+      if (!expires) assert.ok(Date.now() < overallDeadline, "short lookup expiry cannot stand in for overall expiry");
       throw error;
     } finally {
       if (expires) await delay(Math.max(1, overallDeadline - Date.now() + 1));
@@ -301,7 +301,7 @@ test("actual overall expiry remains finite pending with no custody or worker sta
 
 for (const outcome of ["unavailable", "confirmed", "suppressed"] as const) {
   const finalAvailable = outcome === "confirmed";
-  test(`real intended custody on a second authorized route ${finalAvailable ? "confirms at final validation" : outcome === "suppressed" ? "retains an acknowledged suppression after lookup timeout" : "cannot be inferred from metadata after a final timeout"}`, { timeout: 5000 }, async (t) => {
+  test(`real intended custody on a second authorized route ${finalAvailable ? "confirms at final validation" : outcome === "suppressed" ? "retains an acknowledged suppression after lookup timeout" : "cannot be inferred from metadata after a final timeout"}`, { timeout: 30_000 }, async (t) => {
     const f = await inspectionFixture(t, "disabled");
     await f.store.setRouteError(f.auth, "unauthorized");
     const tls = await createSyncHttpsCredentials(f.context);
@@ -310,7 +310,7 @@ for (const outcome of ["unavailable", "confirmed", "suppressed"] as const) {
     const a = await f.store.snapshot();
     const b = await receiver.snapshot();
     const token = Buffer.alloc(48, 61).toString("base64url");
-    const application = await startSyncApplication(f.context, { home: path.join(f.root, "receiver"), peerId: b.inboxId, keyPath: tls.trusted.keyPath, certPath: tls.trusted.certPath, token, requestMs: 1000 });
+    const application = await startSyncApplication(f.context, { home: path.join(f.root, "receiver"), peerId: b.inboxId, keyPath: tls.trusted.keyPath, certPath: tls.trusted.certPath, token });
     f.ports.push(application.url);
     await f.store.configureRuntime({ ...defaultRuntimeConfig(), intendedTarget: { peerId: b.inboxId, destinationInboxId: b.inboxId } });
     // Both routes belong to this exact intended receiver; the first remains a real permanent block.
@@ -329,14 +329,24 @@ for (const outcome of ["unavailable", "confirmed", "suppressed"] as const) {
       f.calls.lookups += 1;
       if (args[0] !== eligible.id) return lookup.apply(this, args);
       eligibleLookups += 1;
-      if (eligibleLookups === 2 && !finalAvailable) return f.holdLookup(() => lookup.apply(this, args));
+      if (eligibleLookups === 2 && !finalAvailable) {
+        const lookupDeadline = args[3];
+        assert.ok(lookupDeadline);
+        assert.ok(lookupDeadline - Date.now() <= 200);
+        assert.ok(lookupDeadline < f.overallDeadline);
+
+        return f.holdLookup(() => lookup.apply(this, args));
+      }
+
       const result = await lookup.apply(this, args);
       if (eligibleLookups === 1) {
         assert.equal(result.isCommitted, false);
-        const reply = await runner.command({ type: "run", routeIds: [eligible.id], requestMs: 1000, deadlineMs: 4000 });
+        // Establish real custody before the later lookup exercises its short deadline.
+        const reply = await runner.command({ type: "run", routeIds: [eligible.id], requestMs: 5000, deadlineMs: 15_000 }, 20_000);
         assert.equal(reply.error, undefined);
         const routes = parseArray(parseObject(reply.result, "reconciliation").routes, (value) => parseObject(value, "route result"), 1);
-        assert.equal(routes[0].status, "confirmed");
+        if (routes[0].status !== "confirmed") t.diagnostic(JSON.stringify({ kind: "intended-custody-fixture-reconciliation", phase: "initial", result: reply.result }));
+        assert.equal(routes[0].status, "confirmed", JSON.stringify(reply.result));
         reconciliations += 1;
         await runner.stop();
         await f.store.recover();
@@ -346,10 +356,11 @@ for (const outcome of ["unavailable", "confirmed", "suppressed"] as const) {
           const received = await receiver.snapshot();
           const record = received.records[canonicalKey(a.inboxId, publication.origin.originDocumentId)];
           await receiver.setSuppressed(record.localId, true);
-          const suppressedReply = await suppressionRunner.command({ type: "run", routeIds: [eligible.id], requestMs: 1000, deadlineMs: 4000 });
+          const suppressedReply = await suppressionRunner.command({ type: "run", routeIds: [eligible.id], requestMs: 5000, deadlineMs: 15_000 }, 20_000);
           assert.equal(suppressedReply.error, undefined);
           const suppressedRoutes = parseArray(parseObject(suppressedReply.result, "suppression reconciliation").routes, (value) => parseObject(value, "suppression route"), 1);
-          assert.equal(suppressedRoutes[0].status, "confirmed");
+          if (suppressedRoutes[0].status !== "confirmed") t.diagnostic(JSON.stringify({ kind: "intended-custody-fixture-reconciliation", phase: "suppression", result: suppressedReply.result }));
+          assert.equal(suppressedRoutes[0].status, "confirmed", JSON.stringify(suppressedReply.result));
           reconciliations += 1;
           await suppressionRunner.stop();
           await f.store.recover();

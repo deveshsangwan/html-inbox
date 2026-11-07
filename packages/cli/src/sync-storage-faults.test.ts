@@ -480,10 +480,13 @@ function registerStorageFaultTests() {
     assert.equal(await readFile(lockPath, "utf8"), locked);
     assert.deepEqual(await store.snapshot(), await rawLedger(home));
     await child.killAtFault("body-staged");
-    await contender.recover();
-    await contender.recover();
-    await contender.publish(input, "After-Dead-Owner");
-    assert.equal((await contender.listDocuments()).length, 1);
+
+    // The short refusal budget must not impose a speed requirement on durable recovery.
+    const recovered = new ManagedSyncStore(home);
+    await recovered.recover();
+    await recovered.recover();
+    await recovered.publish(input, "After-Dead-Owner");
+    assert.equal((await recovered.listDocuments()).length, 1);
     await assertNoLock(home);
   });
 

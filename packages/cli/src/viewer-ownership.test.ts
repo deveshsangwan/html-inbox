@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { readFile, realpath, rm, stat, writeFile } from "node:fs/promises";
+import { lstat, readFile, realpath, rm, stat, writeFile } from "node:fs/promises";
 import type { Server } from "node:http";
 import net from "node:net";
 import path from "node:path";
@@ -138,12 +138,22 @@ test("POSIX viewer ownership rejects copied homes, changed UUIDs and missing or 
 
 async function closeViewerFixture(server: Server, home: string) {
   await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  const recordPath = path.join(home, "viewer.json");
   const deadline = Date.now() + 1000;
-  while (await readViewerRecord(home) && Date.now() < deadline) {
+  // Teardown waits for the pathname to disappear; reading its contents races the shutdown unlink.
+  while (Date.now() < deadline) {
+    try {
+      await lstat(recordPath);
+    } catch (error) {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT") return;
+
+      throw error;
+    }
+
     await delay(10);
   }
 
-  assert.equal(await readViewerRecord(home), null);
+  assert.fail("Viewer fixture did not remove its process record after shutdown");
 }
 
 async function assertPortReleased(port: number) {

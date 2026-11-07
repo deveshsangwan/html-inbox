@@ -23,7 +23,7 @@ const input = { originalBytes, title: "Admitted mutation", type: "report", sourc
 
 for (const operation of ["terminal", "body", "history", "activation"] as const) {
   for (const timeout of [false, true]) {
-    test(`real HTTPS ${operation} ${timeout ? "times out with retained authority" : "settles before successful worker close"}`, { timeout: 10_000 }, async (t) => {
+    test(`real HTTPS ${operation} ${timeout ? "times out with retained authority" : "settles before successful worker close"}`, { timeout: operation === "terminal" ? 30_000 : 10_000 }, async (t) => {
       const f = await shutdownFixture(t);
       const tls = await createSyncHttpsCredentials(t);
       const remote = new ManagedSyncStore(path.join(f.root, "remote"));
@@ -51,9 +51,27 @@ for (const operation of ["terminal", "body", "history", "activation"] as const) 
       await receiver.configureRoute({ ...route, direction: "inbound", peerId: sourceId, peerUrl: isPull ? url : "https://127.0.0.1:1" });
       const defaults = defaultRuntimeConfig();
       const requestMs = timeout ? 400 : 2000;
-      await f.store.configureRuntime({ ...defaults, listener: { host: "127.0.0.1", port, tlsRef: "server" },
+      const runtimeConfig = { ...defaults, listener: { host: "127.0.0.1", port, tlsRef: "server" },
         timings: { ...defaults.timings, requestMs }, credentials: { token: tokenFile }, trust: { ca: tls.caPath },
-        tls: { server: { key: tls.trusted.keyPath, cert: tls.trusted.certPath } } });
+        tls: { server: { key: tls.trusted.keyPath, cert: tls.trusted.certPath } } };
+      const id = "admitted-mutation";
+      await source.publish(input, id);
+      if (operation === "terminal") {
+        // Establish real HTTPS custody before applying the short shutdown budget to the tested worker.
+        await f.store.configureRuntime({ ...runtimeConfig, timings: { ...runtimeConfig.timings, requestMs: defaults.timings.requestMs } });
+        const setupWorker = await f.worker();
+        try {
+          const delivered = await reconcileSyncRoutes({ store: source, peerId: sourceId, credentials: () => ({ token, ca }),
+            routeIds: [route.id], requestMs: defaults.timings.requestMs, deadlineMs: 15_000 });
+          assert.equal(delivered.routes[0].status, "confirmed", JSON.stringify(delivered));
+          assert.deepEqual((await receiver.getDocument((await receiver.listDocuments())[0].id))?.originalBytes, originalBytes);
+          await source.deleteDocument(id);
+        } finally {
+          await setupWorker.close();
+        }
+      }
+
+      await f.store.configureRuntime(runtimeConfig);
       let notifications = 0;
       const worker = await f.worker({ temporary: true, onFatalStop: () => { notifications += 1; } });
       const paths = workerPaths(f.home);
@@ -87,14 +105,6 @@ for (const operation of ["terminal", "body", "history", "activation"] as const) 
         const result = parseObject(reply.result, "source reconciliation");
         assert.ok(Array.isArray(result.routes));
         return { ...result, routes: result.routes.map((value) => parseObject(value, "source route result")) };
-      }
-
-      const id = "admitted-mutation";
-      await source.publish(input, id);
-      if (operation === "terminal") {
-        assert.equal((await run()).routes[0].status, "confirmed");
-        assert.deepEqual((await receiver.getDocument((await receiver.listDocuments())[0].id))?.originalBytes, originalBytes);
-        await source.deleteDocument(id);
       }
 
       let release = () => {};

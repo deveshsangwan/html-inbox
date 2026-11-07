@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { test } from "node:test";
+import { setImmediate } from "node:timers/promises";
 import vm from "node:vm";
 import { temporaryHome } from "./test-fixtures";
 import {
@@ -238,12 +239,17 @@ test("an atomically replaced viewer record is reread so shutdown failures remain
   assert.equal(replacedOpenedRecord, true);
 });
 
-test("repeated record replacement fails with a bounded actionable retry", async (t) => {
+test("repeated record replacement keeps its rejection handled while outer cleanup waits", { timeout: 5000 }, async (t) => {
   const home = await temporaryHome(t);
   const recordPath = path.join(home, "viewer-config.json");
   await fsPromises.writeFile(recordPath, JSON.stringify(configuration));
   const originalOpen = fsPromises.open;
   let replacements = 0;
+  let closedRetries = 0;
+  let releaseCleanup = () => {};
+  const retriesClosed = new Promise<void>((resolve) => { releaseCleanup = resolve; });
+  const handles: Awaited<ReturnType<typeof originalOpen>>[] = [];
+  t.after(releaseCleanup);
   t.mock.method(
     fsPromises,
     "open",
@@ -255,6 +261,20 @@ test("repeated record replacement fails with a bounded actionable retry", async 
       const file = await originalOpen(filePath, flags, mode);
       if (filePath === recordPath) {
         replacements += 1;
+        const attempt = replacements;
+        handles.push(file);
+        const close = file.close.bind(file);
+        t.mock.method(file, "close", async () => {
+          await close();
+          if (attempt === 1) {
+            // Let the nested retry reject before the outer async finally can finish.
+            await retriesClosed;
+            await setImmediate();
+          } else if (++closedRetries === 3) {
+            releaseCleanup();
+          }
+        });
+
         await fsPromises.rm(recordPath);
         await fsPromises.writeFile(recordPath, JSON.stringify(configuration));
       }
@@ -267,7 +287,8 @@ test("repeated record replacement fails with a bounded actionable retry", async 
     readSavedViewerConfiguration(home),
     /changed repeatedly.*retry/,
   );
-  assert(replacements > 1 && replacements < 10);
+  assert.equal(replacements, 4);
+  for (const file of handles) await assert.rejects(file.stat(), { code: "EBADF" });
 });
 
 test(

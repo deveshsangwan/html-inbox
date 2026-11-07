@@ -115,17 +115,45 @@ for (const shell of shells) {
   ]) {
     test(`${path.basename(shell)} falls back for ${version === null ? "an absent executable" : version}`, async (t) => {
       const fixture = await createExecutables(t, { version });
-      for (const args of [["publish", "report.html"], ["viewer", "status"], ["viewer", "stop"], ["remote", "status"], ["viewer", "service", "status"]]) {
+      const args = ["publish", "report&notes with spaces.html", "--title", 'R&D "results" %PATH% | $growth Résumé δ', "--type", "report", ""];
+      const result = await runResolvedCli(resolution, args, { ...fixture, shell });
+      assert.equal(result.code, 0, result.stderr);
+
+      const commands = await fixture.commands();
+      const npmCommands = commands.filter(({ executable }) => executable === "npx");
+      assert.deepEqual(npmCommands.map(({ args }) => args), [
+        ["--yes", "html-inbox@0.5.0", "--version"],
+        ["--yes", "html-inbox@0.5.0", ...args],
+      ]);
+      assert.equal(commands.filter(({ executable, args }) => executable === "html-inbox" && args[0] !== "--version").length, 0);
+      assertPreservedEnvironment(commands, fixture.env);
+    });
+  }
+
+  // Keep every version case, and exercise all operations for absent, too-old, and too-new installations.
+  for (const version of [null, "0.1.9", "0.7.0"]) {
+    test(`${path.basename(shell)} routes every operation through fallback for ${version ?? "an absent executable"}`, async (t) => {
+      const fixture = await createExecutables(t, { version });
+      const operations = [
+        ["publish", "report.html"],
+        ["viewer", "status"],
+        ["viewer", "stop"],
+        ["remote", "status"],
+        ["viewer", "service", "status"],
+      ];
+
+      for (const args of operations) {
         const result = await runResolvedCli(resolution, args, { ...fixture, shell });
         assert.equal(result.code, 0, result.stderr);
       }
 
       const commands = await fixture.commands();
       const npmCommands = commands.filter(({ executable }) => executable === "npx");
-      assert.equal(npmCommands.length, 10);
-      for (const command of npmCommands) {
-        assert.deepEqual(command.args.slice(0, 2), ["--yes", "html-inbox@0.5.0"]);
-      }
+      const expectedCommands = operations.flatMap((args) => [
+        ["npx", "--yes", "html-inbox@0.5.0", "--version"],
+        ["npx", "--yes", "html-inbox@0.5.0", ...args],
+      ]);
+      assert.deepEqual(npmCommands.map(({ executable, args }) => [executable, ...args]), expectedCommands);
       assert.equal(commands.filter(({ executable, args }) => executable === "html-inbox" && args[0] !== "--version").length, 0);
       assertPreservedEnvironment(commands, fixture.env);
     });

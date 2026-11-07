@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import platformTest, { type TestContext } from "node:test";
+import { inspect } from "node:util";
 import { LocalDocumentBackend } from "./backend";
 import { createDocumentDeleter, DocumentIdentityError } from "./document-deletion";
 import { startHub } from "./hub";
@@ -18,7 +19,7 @@ import { canonicalKey, inventoryDigest, MANIFEST_DOMAIN, sha256, verifyOriginSta
 import { ManagedDeletionIdentityError, ManagedSyncStore, toOriginState, type ManagedDeletionIdentity } from "./sync-store";
 import { LIVE_SHELL_CSP } from "./viewer-assets";
 import * as viewerRecords from "./viewer-records";
-import { getInboxInstanceId, readViewerRecord } from "./viewer-records";
+import { getInboxInstanceId, hasErrorCode, readViewerRecord } from "./viewer-records";
 import { startViewer } from "./viewer-server";
 
 const originalBytes = Buffer.from("\ufeff<!doctype html>\r\n<html><body>managed deletion π</body></html>\r\n");
@@ -38,6 +39,7 @@ async function fixture(t: TestContext) {
     }
 
     if (failures.length) {
+      t.diagnostic(inspect(failures, { depth: 5 }));
       throw new AggregateError(failures, "Owned managed-deletion resources did not close");
     }
 
@@ -81,12 +83,26 @@ async function startOwnedViewer(t: TestContext, f: Awaited<ReturnType<typeof fix
     server.closeAllConnections();
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
 
+    const recordPath = path.join(home, "viewer.json");
     const deadline = Date.now() + 5000;
-    // The record can disappear before shutdown finishes removing its signal handlers.
-    while (await readViewerRecord(home)
-      || process.listenerCount("SIGINT") !== signalListeners.interrupt
-      || process.listenerCount("SIGTERM") !== signalListeners.terminate) {
-      assert(Date.now() < deadline, "viewer cleanup removes its own record and signal handlers");
+
+    // Unlinking the record can finish before shutdown removes its signal listeners.
+    while (true) {
+      const hasRecord = await lstat(recordPath).then(() => true, (error: unknown) => {
+        if (hasErrorCode(error, "ENOENT")) {
+          return false;
+        }
+
+        throw error;
+      });
+      const hasRestoredSignalListeners = process.listenerCount("SIGINT") === signalListeners.interrupt &&
+        process.listenerCount("SIGTERM") === signalListeners.terminate;
+
+      if (!hasRecord && hasRestoredSignalListeners) {
+        break;
+      }
+
+      assert(Date.now() < deadline, "viewer cleanup removes its own record and signal listeners");
       await delay(10);
     }
 

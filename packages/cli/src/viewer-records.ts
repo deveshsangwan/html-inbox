@@ -5,7 +5,7 @@ import { lstat, open, readFile, rm } from "node:fs/promises";
 import { isIP } from "node:net";
 import path from "node:path";
 import { readBoundedFile } from "./bounded-file";
-import { ensurePrivateDirectory, hardenPrivateFile, ManagedStorageError, writeAtomicPrivateJson, writePrivateFile } from "./private-storage";
+import { ensurePrivateDirectory, hardenPrivateFile, ManagedStorageError, writeAtomicPrivateJson, writeAtomicPrivateFileIfAbsent } from "./private-storage";
 import { assertUuidV4, isRecord } from "./validation";
 import { parseViewerNetworkConfig, type ViewerNetworkConfig } from "./viewer-network";
 
@@ -33,18 +33,13 @@ export interface ViewerRecordReadOptions {
 }
 
 export class ViewerRecordFormatError extends Error {}
+export class ViewerRecordChangedError extends ManagedStorageError {}
 
 export async function getInboxInstanceId(home: string): Promise<string> {
   await ensurePrivateDirectory(home);
   const identityPath = path.join(home, "instance-id");
 
-  try {
-    await writePrivateFile(identityPath, randomUUID(), { flag: "wx" });
-  } catch (error) {
-    if (!hasErrorCode(error, "EEXIST")) {
-      throw error;
-    }
-  }
+  await writeAtomicPrivateFileIfAbsent(identityPath, randomUUID());
 
   await hardenPrivateFile(identityPath);
   const instanceId = (await readFile(identityPath, "utf8")).trim();
@@ -225,10 +220,11 @@ async function readPrivateJson(
       current !== undefined && current !== null && current.dev === info.dev && current.ino === info.ino);
     if (info.nlink === 0 || current === null || !hasSameFallbackFile) {
       if (remainingAttempts === 0) {
-        throw new ManagedStorageError(`Viewer record changed repeatedly during read; retry the command: ${filePath}`);
+        throw new ViewerRecordChangedError(`Viewer record changed repeatedly during read; retry the command: ${filePath}`);
       }
 
-      return readPrivateJson(filePath, options, remainingAttempts - 1);
+      // Observe the retry's rejection before asynchronous descriptor cleanup delays this frame.
+      return await readPrivateJson(filePath, options, remainingAttempts - 1);
     }
 
     // Catalog inspection and administrator service commands must preserve source permissions.

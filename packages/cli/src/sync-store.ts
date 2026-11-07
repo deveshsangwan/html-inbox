@@ -8,6 +8,7 @@ import { readBoundedFile } from "./bounded-file";
 import { parseDocumentMetadata, type DocumentMetadata, type PublishInput, type StoredDocument, type DeleteResult } from "./documents";
 import { validateHtml } from "./html-validation";
 import { readInboxIdentity } from "./inbox-home";
+import { writeAtomicPrivateFileIfAbsent } from "./private-storage";
 import { isOwnedDirectory } from "./local-storage-checks";
 import { DurableFiles, checkDirectory, createStorageCounters, hasCode, openPrivateFile, optionalStat, readPrivateFile, withStoreLock, type StorageTestHooks } from "./sync-files";
 import { type SyncLedger, type ManagedRecord, type DurableReceipt, type OwnerAnchor, parseLedger, parseReceipt, outboxKey, receiptKey } from "./sync-ledger";
@@ -66,7 +67,7 @@ export interface InventoryReadiness {
   storageIncarnation: string;
 }
 
-const activeAttempts = new Map<string, Set<{ routeId: string; revision: number; controller: AbortController }>>();
+const activeAttempts = new Map<string, Set<{ routeId: string; revision: number; locallyInitiated: boolean; controller: AbortController }>>();
 
 /** One inbox, one mutation lock. HTTP push and pull must both use apply/applyStream. */
 export class ManagedSyncStore {
@@ -117,12 +118,14 @@ export class ManagedSyncStore {
           throw new Error("Managed artifacts exist without their authoritative ledger; enrollment cannot invent replacement history");
         }
 
-        const inboxId = await readInboxIdentity(this.home) ?? randomUUID();
-        if (!await readInboxIdentity(this.home)) {
-          await this.files.exclusiveFile(path.join(this.home, "instance-id"), `${inboxId}\n`);
+        await writeAtomicPrivateFileIfAbsent(path.join(this.home, "instance-id"), `${randomUUID()}\n`);
+        const inboxId = await readInboxIdentity(this.home);
+        if (!inboxId) {
+          throw new Error("Inbox identity disappeared during enrollment");
         }
 
         await this.files.flushFile(path.join(this.home, "instance-id"), 128);
+        await this.files.flushDirectory(this.home);
 
         const historyEpoch = randomUUID();
         const owner = await this.createOwnerKey(inboxId, historyEpoch);
@@ -551,7 +554,16 @@ export class ManagedSyncStore {
     return this.mutate(async (ledger) => {
       const route = this.authorizeRoute(ledger, auth);
       if (locallyInitiated && ledger.worker.retryPaused) {
-        throw new Error("Locally initiated sync is persistently paused");
+        const reason = new Error("Locally initiated sync is persistently paused");
+        // Admission can observe a cross-process pause before the attempt watchers do.
+        // Cancel local attempts before the rejection can be recorded as a storage failure.
+        for (const attempt of activeAttempts.get(this.home) ?? []) {
+          if (attempt.locallyInitiated) {
+            attempt.controller.abort(reason);
+          }
+        }
+
+        throw reason;
       }
 
       await this.baseline();
@@ -571,7 +583,7 @@ export class ManagedSyncStore {
     const auth = parseAuthorization(authorization);
     const controller = new AbortController();
     const abort = () => controller.abort(new Error("Sync attempt aborted"));
-    const entry = { routeId: auth.routeId, revision: auth.revision, controller };
+    const entry = { routeId: auth.routeId, revision: auth.revision, locallyInitiated, controller };
     try {
       await this.startCommunication(auth, () => {
         parentSignal?.throwIfAborted();
