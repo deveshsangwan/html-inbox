@@ -91,6 +91,11 @@ instance without a worker wake. At capacity, deletion preserves 10,000 canonical
 records instead of failing a new publication or lowering the fixture count.
 At zero records, an external live publication also supplies an actual active
 body transfer and subsequent repair case.
+The second smoke attempt caught receiver state appearing before sender ACK and
+pass bookkeeping. It is retained as failed. The corrected external-custody gate
+requires a matching current-incarnation durable receipt and exact live bytes;
+outbound also requires the sender's confirmed obligation. Repair waits for the
+latest admitted pass to finish, preserving its empty-outbox precondition.
 
 Periodic repair removes one receiver body with no pending local outbox and sends
 no wake. It waits for the actual replacement body filename, then checks the

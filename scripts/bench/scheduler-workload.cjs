@@ -267,7 +267,39 @@ async function main() {
       for (const child of roles) await child.rpc('sample-start');
       if (count) await source.deleteDocument(documentId); else await source.publish(input, documentId);
       const expectedState = count ? 'deleted' : 'live';
-      await until('external-commit-custody', () => receiver.snapshot(), value => value.records[canonicalKey(sourceLedger.inboxId, documentId)]?.state === expectedState, 65_000);
+      await until('external-commit-custody', async () => {
+        const b = await receiver.snapshot();
+        const key = canonicalKey(sourceLedger.inboxId, documentId);
+        const record = b.records[key];
+        if (record?.state !== expectedState) return false;
+
+        const fingerprint = stateFingerprint(record);
+        const receipt = Object.values(b.receipts).find(value => value.routeId === route.id && value.revision === route.revision &&
+          value.storageIncarnation === b.storageIncarnation && value.fingerprint === fingerprint &&
+          value.disposition === (expectedState === 'live' ? 'committed' : 'deleted'));
+        if (!receipt) return false;
+
+        if (expectedState === 'live') assert.deepEqual(await fs.readFile(path.join(root, 'receiver', 'sync', 'bodies', record.bodyFile)), bytes);
+        if (direction === 'outbound') {
+          const a = await source.snapshot();
+          return Object.values(a.outbox).some(entry => entry.routeId === route.id && entry.canonicalKey === key &&
+            entry.fingerprint === fingerprint && entry.disposition === 'confirmed' && entry.receiverStorageIncarnation === b.storageIncarnation);
+        }
+
+        return true;
+      }, Boolean, 65_000);
+      // Receiver state can precede sender ACK/bookkeeping. Repair must start only
+      // after the latest admitted pass finishes, so it tests independent repair.
+      await until('external-pass-finished', async () => {
+        let admitted = -1;
+        let finished = -1;
+        for (const [index, event] of worker.events.entries()) {
+          if (event.type === 'worker-event' && event.event === 'pass') admitted = index;
+          if (event.type === 'pass-finished') finished = index;
+        }
+
+        return finished > admitted;
+      }, Boolean, Math.max(1, 65_000 - (performance.now() - externalAt)));
       const resources = [];
       for (const child of roles) resources.push(await child.rpc('sample-stop'));
       emit({ type: 'external-commit-custody', elapsedMs: performance.now() - externalAt, state: expectedState, resources });
