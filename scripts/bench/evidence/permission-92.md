@@ -3,7 +3,7 @@
 Issue: https://github.com/deveshsangwan/html-inbox/issues/92
 
 Immediate parent and inspected HEAD: `52cdb70cc4a504fa8b983e6cdbcb23432d295592`
-on `perf/92-chmod`, stacked on `perf/91-listing`. The proposed PR targets
+on `perf/92-chmod`, stacked on `perf/91-listing`. Draft PR #118 targets
 `perf/91-listing`. Inherited listing, storage-policy and runtime changes are
 outside this investigation's diff.
 
@@ -28,9 +28,9 @@ behavior at these controlled interleavings:
    leave the replacement loose.
 
 `packages/cli/src/private-storage.test.ts` adds these cases for files and
-directories. All four cases pass on baseline and fail on the temporary shortcut under both
-runtimes. They describe
-specific observable interleavings, not a claim that path-based chmod is race-free.
+directories. All four cases pass on baseline and fail on the temporary shortcut
+under both runtimes. They describe specific observable interleavings, not a claim
+that path-based chmod is race-free.
 Another lstat moves the race. Descriptor-based identity and storage-ownership
 changes require separate review and are outside this compatibility optimization.
 Ownership and EPERM equivalence remain a separate unresolved concern; no
@@ -56,7 +56,7 @@ pnpm install --frozen-lockfile
 python3 scripts/bench/permissions.py --out artifacts/permission-92/comparison --node20 /absolute/node20 --node24 /absolute/node24
 ```
 
-Choose a fresh output directory. The runner builds the unchanged source and runs
+Run the comparison on POSIX storage. Choose a fresh output directory. The runner builds the unchanged source and runs
 all four tests on both runtimes before changing production source. It records
 the temporary candidate source and diff, builds it, requires the expected exit 1
 and four failed assertions on each runtime, restores the original source in
@@ -91,7 +91,57 @@ against `610c931` is unnecessary for a rejected shortcut with no production diff
 
 ## Qualification
 
-Final restored-code checks and durable raw evidence will be recorded here before
-review. Linux qualification cannot establish macOS or Windows outcomes; those
-remain CI gates. There is no claim of race-free path-based chmod or foreign-owner
+The [comparison command manifest](permission-92/comparison/commands.jsonl)
+records the executed arguments, working directory and exit statuses. Compressed
+logs, source snapshots and build fingerprints are beside it; decompress `.gz`
+files with `gzip -dc` or Python's `gzip.decompress`. The baseline/restored
+production source SHA-256 is
+`000d77f9dbd585e3f10ea393f03a6e59049980d4d3aae34a219e2cbfd4413e62`;
+the temporary candidate is
+`0136220d91065ce8bb5782eeb809c7c776d5f8af36a3d2b2737876fadef0392a`.
+All 394 compiled files match between baseline and restored build.
+
+The first combined qualification runner returned exit 143 during the Node 24
+full suite. Its partial log has no completion summary and is not counted as a
+pass. The cause of the interruption was not established. Three remaining owned
+CLI processes were stopped with SIGTERM and verified absent; their synthetic
+fixture tree was removed. The interrupted log and cleanup receipt are retained.
+Node 24 full qualification was restarted in a separate job and passed;
+subsequent checks ran sequentially. The [qualification command manifest](permission-92/checks/commands.jsonl)
+contains 15 completed checks with exit 0 and the separately recorded interrupted
+attempt with exit 143. Raw logs, interruption cleanup and final restoration
+receipts are beside the manifest. Runtime source and test files remained
+unchanged from the pinned experiment through qualification; only this report
+and archived evidence changed. The runner was executed from the owned checkout
+on Linux, using synthetic temporary homes and no real libraries.
+
+- Frozen install, typecheck, baseline/candidate/restoration builds passed.
+- Both runtimes: all 218 targeted permission/storage/listing/read-only/managed
+  tests passed.
+- Node 20.20.2: full suite 1,332 passed, two skipped.
+- Node 24.19.0: completed full retry 1,331 passed, three skipped.
+- Both runtimes: harness/skills 161 passed, two skipped; browser 73 passed,
+  one skipped; installed-package smoke passed.
+- Benchmark harness cleanup, website integrity/theme and pinned published skill
+  fallback passed. The fallback smoke used Node 24.19.0.
+
+Existing skips include the optional old CLI fixture, Windows-only taskkill,
+live CDN opt-in and Node 24's generated IPv6 SAN behavior. No test was weakened
+or skipped for this investigation. An initial archival assertion was attempted
+before the final check finished; it stopped without copying logs and was retried
+after that process exited 0. This did not change tests or results.
+
+Final source and all 394 compiled artifact hashes still match baseline after all
+checks, and no owned CLI process remains. All heavy jobs have exited. No further
+heavy rerun is authorized after slot release without another grant. Linux
+qualification cannot establish macOS or Windows outcomes; those remain CI gates. There is no claim of race-free path-based chmod or foreign-owner
 equivalence.
+
+
+## Reviews and integration
+
+Fresh independent Sol High functionality and Claude Code Sonnet 5.5 Medium
+quality reviews will inspect the same pinned revision after slot release. Both
+must give functionality, code-quality and no-go evidence verdicts. Dispositions
+will be recorded here. PR #118 stays draft pending those reviews, root audit and
+final-head CI. No watch, merge or release is part of this investigation.

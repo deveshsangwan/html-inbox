@@ -1,0 +1,46 @@
+{
+  "runnerExit": 143,
+  "full24": "incomplete; no completion status",
+  "cleanupSigterm": [
+    {
+      "pid": 2252583,
+      "args": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/packages/cli/dist/index.js",
+        "viewer",
+        "--foreground",
+        "--home",
+        "/tmp/html-inbox-worker-fault-v7vO4c/destination"
+      ],
+      "absentAfterSigterm": true
+    },
+    {
+      "pid": 2252899,
+      "args": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/packages/cli/dist/index.js",
+        "sync",
+        "worker",
+        "start",
+        "--foreground",
+        "--home",
+        "/tmp/html-inbox-worker-fault-v7vO4c/source",
+        "--json"
+      ],
+      "absentAfterSigterm": true
+    },
+    {
+      "pid": 2253068,
+      "args": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/packages/cli/dist/index.js",
+        "viewer",
+        "--foreground",
+        "--home",
+        "/tmp/html-inbox-worker-fault-v7vO4c/source"
+      ],
+      "absentAfterSigterm": true
+    }
+  ],
+  "ownedInterruptedFixtureRemoved": true
+}
