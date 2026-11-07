@@ -466,6 +466,10 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?: 
     backgroundEnabled = !options.temporary && ledger.worker.enabled && !ledger.worker.retryPaused;
     reconcileMs = ledger.runtime?.config.timings.reconcileMs ?? defaultRuntimeConfig().timings.reconcileMs;
     nextRetryAt = backgroundEnabled ? nextWorkerRetryAt(ledger) : Infinity;
+    if (backgroundEnabled && nextReconcileAt === Infinity) {
+      nextReconcileAt = monotonicNow() + reconcileMs;
+    }
+
     // Slow reads must not turn fallback refresh into a continuous catch-up loop.
     nextRefreshAt = Math.max(startedAt + 5000, monotonicNow() + 250);
   }

@@ -17,8 +17,6 @@ import { startOwnedSyncWorker } from "./sync-worker";
 import { readWorkerRecordOffline } from "./sync-worker-records";
 import { opaqueToken } from "./sync-wire";
 
-// Staged for the separately granted red/green diagnosis. Promote to .test.ts
-// after execution proves the regression and its causal correction.
 const test = process.platform === "win32" ? platformTest.skip : platformTest;
 const reconcileMs = 6000;
 
