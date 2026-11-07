@@ -1,0 +1,78 @@
+[
+  {
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "pnpm",
+      "typecheck"
+    ],
+    "exit_code": 0,
+    "log": "typecheck.log.gz",
+    "raw_sha256": "7491e964fffdba7e79dcde458b279b9861608837987ef50fffd72318c94a2c65"
+  },
+  {
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "scripts/viewer-fixture-browser.test.mjs",
+      "packages/cli/dist/viewer-owned-lifecycle.test.js"
+    ],
+    "exit_code": 0,
+    "log": "failure-green24.log.gz",
+    "raw_sha256": "b4d8fad49e52cd2edc31f4f809ec3b6c6a35ec4ec757e3d7c26ddf5d785c8dd0"
+  },
+  {
+    "command": [
+      "fnm",
+      "exec",
+      "--using=20.20.2",
+      "node",
+      "--test",
+      "packages/cli/dist/viewer-owned-lifecycle.test.js",
+      "packages/cli/dist/viewer-mutation-shutdown.test.js",
+      "packages/cli/dist/viewer-shutdown.test.js",
+      "packages/cli/dist/viewer-startup-races.test.js",
+      "packages/cli/dist/viewer-tailscale-lifecycle.test.js",
+      "scripts/viewer-fixture-browser.test.mjs",
+      "scripts/document-deletion-browser.test.mjs"
+    ],
+    "exit_code": 0,
+    "log": "focused-node20.log.gz",
+    "raw_sha256": "52f2c423510e2518606ddd8db0ff7c09c9d10f131429ab9f1325c8363f59b4fc"
+  },
+  {
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "packages/cli/dist/viewer-owned-lifecycle.test.js",
+      "packages/cli/dist/viewer-mutation-shutdown.test.js",
+      "packages/cli/dist/viewer-shutdown.test.js",
+      "packages/cli/dist/viewer-startup-races.test.js",
+      "packages/cli/dist/viewer-tailscale-lifecycle.test.js",
+      "scripts/viewer-fixture-browser.test.mjs",
+      "scripts/document-deletion-browser.test.mjs"
+    ],
+    "exit_code": 0,
+    "log": "focused-node24.log.gz",
+    "raw_sha256": "e961d2f15262e2722cb4c227c36689bd0d623b217416e3b23ccba3dc232c2bc7"
+  },
+  {
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "pnpm",
+      "verify"
+    ],
+    "exit_code": 0,
+    "log": "verify-node24.log.gz",
+    "raw_sha256": "a129b1ca974e10b2c69e9bfd1d216bbc88f78b04d3fe79ecd656e4af5b4046db"
+  }
+]
