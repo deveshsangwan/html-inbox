@@ -65,11 +65,6 @@ for (const mode of ['timer-observation', 'foreground-lifecycle', 'external-obser
     let nextRead = 0;
     const started = performance.now();
     const stamp = () => ({ elapsedMs: performance.now() - started, wall: clock.wall, monotonic: clock.monotonic });
-    const observer = new ManagedSyncStore(home);
-    await observer.enroll();
-    await observer.setWorkerEnabled(true);
-    t.mock.timers.enable({ apis: ['setInterval'] });
-
     t.after(async () => {
       held.release();
       const failures = [];
@@ -84,6 +79,11 @@ for (const mode of ['timer-observation', 'foreground-lifecycle', 'external-obser
       if (failures.length || active.size) throw new AggregateError(failures, 'Diagnostic fixture retained after incomplete joining');
       await fs.rm(home, { recursive: true, force: true });
     });
+
+    const observer = new ManagedSyncStore(home);
+    await observer.enroll();
+    await observer.setWorkerEnabled(true);
+    t.mock.timers.enable({ apis: ['setInterval'] });
 
     const snapshot = ManagedSyncStore.prototype.snapshot;
     t.mock.method(ManagedSyncStore.prototype, 'snapshot', function(...args) {
