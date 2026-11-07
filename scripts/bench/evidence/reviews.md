@@ -28,3 +28,9 @@ The two full baseline commands documented in README.md exited 0 at clean `485273
 After review, only lightweight checks ran: `pnpm test:bench` and `python3 scripts/bench/run.py parser --sizes 10240 --samples 1 --out artifacts/bench-89/fingerprints`. Both exited 0; the latter checked both shapes, fingerprint shape, behavior and cleanup. No sustained benchmarks or full suites were rerun after release of the slot. CI results and final integration head are reported in the PR.
 
 `release/0.7` at `1b2009132b8df184540c1990091fd1e9911dbb00` is the immediate integration base requested by the root. Its inherited policy/docs/checks are already reviewed in PR #113 and do not change production CLI behavior. The focused PR targets that branch, retaining its release-policy test script alongside the new benchmark scripts. The measurements remain attributed to their actual earlier source revision, not the integration or review-receipt commits. No runtime speedup is claimed.
+
+## Root integration check
+
+Root inspected the final diff and both review results, and independently recomputed every summary group and cleanup receipt from the two committed raw archives. All matched. The code-quality cleanup concern is rejected on the blocking `child.wait()` evidence described above.
+
+Root found a CI ordering defect introduced after the frozen review. The cleanup tests read build fingerprints, but their new verification step ran before package smoke created the bundle. Running `python3 -m unittest discover -s scripts/bench -p 'test_*.py'` with the existing bundle temporarily absent reproduced two errors. Restoring that bundle made both tests pass, exit 0. Verification now runs these tests after package smoke, whose `npm pack` executes the build/bundle prepack hook. Timed workloads and measured evidence are unchanged. Final-head CI must pass before the PR leaves draft.
