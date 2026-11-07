@@ -74,6 +74,7 @@ function renderLibrary(
       )
     : allDocuments;
   const hasUnavailableInboxes = hub?.sources.some((source) => !source.available) ?? false;
+  const formatDate = createDateFormatter(options.timeZone);
   const publishInbox = hub?.sources.find((source) => source.name === hub.inbox) ?? hub?.sources[0];
   const documentContent =
     documents.length === 0
@@ -103,7 +104,7 @@ function renderLibrary(
                   .toLowerCase(),
               )}">
                 <a class="doc__title" href="${escapeHtml(document.documentPath)}">${escapeHtml(document.metadata.title)}${document.inboxName ? ` <span class="inbox-badge">${escapeHtml(document.inboxName)}</span>` : ""}${renderOriginBadge(document.metadata)}</a>
-                <time class="document-date" datetime="${escapeHtml(document.metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(document.metadata.createdAt, options.timeZone))}</time>
+                <time class="document-date" datetime="${escapeHtml(document.metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(document.metadata.createdAt))}</time>
                 <span class="doc__source" title="${escapeHtml(document.metadata.sourceFileName)}">${escapeHtml(document.metadata.sourceFileName)}</span>
                 <span class="document-type">${escapeHtml(document.metadata.type)}</span>
                 ${options.deletion ? renderDocumentActions(document.metadata, document.documentPath, document.inboxName ?? options.inboxName ?? "Inbox") : ""}
@@ -166,6 +167,7 @@ export function renderDocumentShell(
     ? `${documentBasePath}/documents/${escapeHtml(metadata.id)}/content${options.documentBasePath ? "" : "/"}`
     : `/documents/${escapeHtml(metadata.id)}/content`;
   const copyUrl = `${documentBasePath}/documents/${metadata.id}/copy.json`;
+  const formatDate = createDateFormatter(options.timeZone);
 
   return page(
     metadata.title,
@@ -186,7 +188,7 @@ export function renderDocumentShell(
                 ${metadata.origin ? `<dt>Origin</dt><dd>${escapeHtml(metadata.origin.inboxId)} / ${escapeHtml(metadata.origin.documentId)}${metadata.origin.detached ? " (detached)" : ""}</dd>` : ""}
                 <dt>File</dt><dd>${escapeHtml(metadata.sourceFileName)}</dd>
                 <dt>Type</dt><dd>${escapeHtml(metadata.type)}</dd>
-                <dt>Published</dt><dd><time datetime="${escapeHtml(metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(metadata.createdAt, options.timeZone))}</time></dd>
+                <dt>Published</dt><dd><time datetime="${escapeHtml(metadata.createdAt)}" data-local-date>${escapeHtml(formatDate(metadata.createdAt))}</time></dd>
               </dl>
             </section>
             ${options.deletion ? renderDeleteAction(metadata, documentPath, options.inboxName ?? "Inbox", "viewer-menu__delete") : ""}
@@ -347,18 +349,24 @@ function renderAppearanceOptions(): string {
   </fieldset>`;
 }
 
-function formatDate(value: string, timeZone?: string): string {
-  const date = new Date(value);
+function createDateFormatter(timeZone?: string): (value: string) => string {
+  let formatter: Intl.DateTimeFormat | undefined;
 
-  if (Number.isNaN(date.valueOf())) {
-    return value;
-  }
+  return (value) => {
+    const date = new Date(value);
 
-  return new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone,
-  }).format(date);
+    if (Number.isNaN(date.valueOf())) {
+      return value;
+    }
+
+    formatter ??= new Intl.DateTimeFormat("en", {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone,
+    });
+
+    return formatter.format(date);
+  };
 }
 
 function escapeHtml(value: string): string {
