@@ -1,9 +1,12 @@
-# Source-only startup scheduling regression proposal
+# Startup scheduling regression proposal
 
-Status: unexecuted regression source. No application execution or production fix
-is authorized in this phase. Root assigned the local slot to #96 after accepting
-the zero-record smoke release. This proposal requires a separate correctness
-grant before any high-count feasibility or performance qualification.
+This proposal was pinned before execution at `b19c769`. Root subsequently granted
+a 600-second application-command budget and separate bounded cleanup allowance.
+Both runtimes reproduced the intended starvation at `ee3783a`, whose production
+remained identical to `b19c769` / `fddde69`. The minimal finite-deadline correction
+is pinned at `9fd509e`. [The correctness receipt](95-startup-correctness.md) records
+red/green evidence, failures and cleanup. The original construction and ranked
+hypotheses below describe the plan selected before execution.
 
 ## Question and evidence
 
@@ -12,14 +15,14 @@ or disabled state skips its pass. `refreshSchedule()` can later observe an
 external enable/unpause and set `backgroundEnabled` true without initializing the
 periodic deadline. A genuinely healthy route with retry time zero and an empty
 outbox yields `nextRetryAt === Infinity`. Five-second full validation alone does
-not arm reconciliation. This source path is plausible, not yet reproduced.
+not arm reconciliation. Both persistent external-change cases reproduced this
+path on both exact runtimes before the correction.
 
-The staged file is
-`packages/cli/src/sync-worker-startup-schedule.regression.ts`. The explicit suffix
-keeps these new cases out of ordinary test discovery until the granted red/green
-diagnosis invokes the compiled file directly. After validation and correction,
-promote it to `.test.ts` so its coverage becomes permanent. Production files
-remain unchanged at this source-only pin. A subsequent separate
+The file was staged as
+`packages/cli/src/sync-worker-startup-schedule.regression.ts` to keep the initially
+unexecuted cases out of ordinary discovery. After the granted diagnosis, it was
+promoted to `sync-worker-startup-schedule.test.ts` for permanent coverage. The red
+pin's production files remained unchanged. A separate
 [CI fixture correction](95-ci-fatal-fixture.md) atomically publishes unsafe ledger
 entries while preserving their existing assertions and timing bounds.
 

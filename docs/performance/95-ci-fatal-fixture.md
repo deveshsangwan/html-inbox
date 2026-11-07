@@ -17,9 +17,10 @@ All three CLI unsafe-ledger fixtures now prepare a sibling symlink and atomicall
 rename it over the ledger. The foreground test still requires exactly one unsafe
 observation, zero subsequent ledger opens, exit 1, the unchanged sentinel and
 joined children/listeners within the original timing bounds. No production code
-or timeout changes accompany this correction. The existing focused fatal suite
-will verify this test-only pin during the granted correctness run; native macOS
-confirmation remains an Actions gate.
+or timeout changes accompany this correction. The subsequent focused fatal suite
+passed all 26 tests on both exact runtimes during the granted correctness run;
+native macOS confirmation remains an Actions gate. These local results do not
+establish the historical hosted failure's cause.
 
 The original sanitized log is retained as
 `issue95-focused-1/ci-2fda6c0-128494633405.log` under the orchestration artifacts.

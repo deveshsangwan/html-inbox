@@ -134,7 +134,11 @@ monotonic clock excludes suspend, wall divergence detects it; where it includes
 suspend, the elapsed gap detects it. No work runs during actual process suspension.
 
 Periodic reconciliation uses the configured interval after pass completion and
-checks eligible routes regardless of outbox contents. Blocked/backoff routes,
+checks eligible routes regardless of outbox contents. If startup skipped its pass
+while paused or disabled, the first validated background-eligible observation
+establishes a finite monotonic deadline. Later validation preserves that finite
+deadline, so the five-second fallback cannot postpone a longer reconciliation
+interval. Blocked/backoff routes,
 route ownership/revision fencing, cancellation, listener lifetime and global
 ledger validation remain unchanged. The fallback trades some idle invariant
 refresh latency against the old full-read-every-250-ms approach. Ledger metadata

@@ -61,5 +61,7 @@ for future performance qualification. Local heavy work stopped and the slot was
 explicitly released before this documentation and further source-only work.
 
 The subsequently identified paused-startup path is outside this smoke receipt.
-It is not yet reproduced. Production remains unchanged pending the separately
-granted red/green diagnosis in [the startup proposal](95-startup-scheduling-proposal.md).
+It was reproduced and corrected in the separately granted
+[startup diagnosis](95-startup-correctness.md). That correction creates a new
+scheduler candidate. This smoke remains historical harness evidence and does not
+qualify the corrected scheduler's performance.
