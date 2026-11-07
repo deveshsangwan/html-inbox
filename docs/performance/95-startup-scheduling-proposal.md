@@ -18,8 +18,10 @@ The staged file is
 `packages/cli/src/sync-worker-startup-schedule.regression.ts`. The explicit suffix
 keeps these new cases out of ordinary test discovery until the granted red/green
 diagnosis invokes the compiled file directly. After validation and correction,
-promote it to `.test.ts` so its coverage becomes permanent. Existing tests,
-assertions and production files remain unchanged at this source-only pin.
+promote it to `.test.ts` so its coverage becomes permanent. Production files
+remain unchanged at this source-only pin. A subsequent separate
+[CI fixture correction](95-ci-fatal-fixture.md) atomically publishes unsafe ledger
+entries while preserving their existing assertions and timing bounds.
 
 ## Regression construction
 

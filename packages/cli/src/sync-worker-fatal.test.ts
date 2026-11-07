@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import http from "node:http";
-import { lstat, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { lstat, mkdtemp, readFile, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import platformTest, { type TestContext } from "node:test";
@@ -456,8 +456,8 @@ test("actual detached worker captures the sanitized fatal diagnostic in its priv
     saved = await readFile(ledgerPath);
     const target = path.join(f.root, "detached-sentinel");
     await writeFile(target, "synthetic sentinel", { mode: 0o600 });
-    await rm(ledgerPath);
-    await symlink(target, ledgerPath);
+    await symlink(target, `${ledgerPath}.unsafe`);
+    await rename(`${ledgerPath}.unsafe`, ledgerPath);
     await waitUntil("retained detached child exits", async () => closed, Boolean, 3000);
     assert.deepEqual(await completion, { code: 1, signal: null });
     const log = await readFile(paths.log, "utf8");
@@ -496,8 +496,8 @@ test("disposable failure-sensitive supervisor restarts fatal exit 1 and leaves d
         saved = await readFile(ledgerPath);
         const target = path.join(f.root, "supervisor-sentinel");
         await writeFile(target, "supervisor synthetic sentinel", { mode: 0o600 });
-        await rm(ledgerPath);
-        await symlink(target, ledgerPath);
+        await symlink(target, `${ledgerPath}.unsafe`);
+        await rename(`${ledgerPath}.unsafe`, ledgerPath);
       } else {
         await contactWorker(f.home, "stop");
       }
@@ -569,8 +569,9 @@ test("actual ready foreground worker exits unsuccessfully on an unsafe ledger wi
     const target = path.join(f.root, "synthetic-unsafe-target");
     const sentinel = "synthetic target must remain unchanged";
     await writeFile(target, sentinel, { mode: 0o600 });
-    await rm(ledgerPath);
-    await symlink(target, ledgerPath);
+    // Publish the unsafe entry atomically so the observer cannot fail on a missing-file gap.
+    await symlink(target, `${ledgerPath}.unsafe`);
+    await rename(`${ledgerPath}.unsafe`, ledgerPath);
 
     await waitUntil("fatal child exit", async () => closed, Boolean, 3000);
     assert.deepEqual(await completion, { code: 1, signal: null });
