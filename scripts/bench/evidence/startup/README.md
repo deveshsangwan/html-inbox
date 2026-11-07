@@ -116,3 +116,9 @@ All commands in `verification.json` exited 0. Adjacent `.log.gz` files preserve 
 - Shared #89 resource-runner failure/timeout cleanup tests: 2 passed. Final `pnpm verify` rebuilt bundle hashes exactly match the measured installed candidate.
 
 No local checks failed. These Linux results do not replace final macOS/Windows CI or root readiness verification. Future forward-port qualification is separate. The PR remains draft.
+
+## Review clarifications
+
+Both independent reviewers passed functionality, code quality and performance evidence on `ac2b3b7993b893ac914a241d839c83331183679c`. Exact settings, findings dispositions and reviewer limits are in [reviews.md](reviews.md).
+
+The cleanup receipt's `children_reaped` is a success-path postcondition about waited direct children, not an independent process-tree census. The package smoke's identical three-line runtime logs rely on `verification.json` and the separate measured environments for runtime identity. Selected-owner preflight was exercised locally as uid 1001; the success case skips under root. The synthetic catalog isolates the new managed-worker fixture from real catalog state. A failed worker-disable cleanup can leave a detached process and erase its fixture evidence; both reviewers treat failure-path teardown hardening as optional follow-up, and the successful receipts verified worker cleanup. The timed error cell is invalid-option startup, while unknown-command handling is behavioral coverage only. Publish and detached-start latency were not measured.
