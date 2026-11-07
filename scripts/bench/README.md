@@ -52,6 +52,14 @@ Sync uses an equal-size plain `x` body and peer-specific metadata; CLI/parser/vi
 
 ## Managed complete reads for #96
 
+The610-parent mode below describes the historical isolated experiment. PR122
+now stacks on reviewed PR120b249; its current compiled/bundle bytes are stale
+for that source combination. The runner still intentionally requires610.
+Before qualifying the new combination, root must authorize explicit actual-
+parent selection and fresh build/smoke scope. See the [source-only integration
+receipt](../../docs/performance/96-integration-120.md). Do not treat the old
+610 comparison as isolated evidence against b249.
+
 `managed-read` compares the clean common parent
 `610c931b7b22920cce59cf03e49c0de15ebaf2a2` with the clean current checkout.
 Build and bundle both checkouts with the same Node 24 toolchain before running.

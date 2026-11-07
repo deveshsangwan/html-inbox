@@ -421,3 +421,14 @@ join the historical partial evidence without rewriting any failure.
 The local slot is released. No gain, large-count, generic interruption or full
 #96 qualification follows. Any shared-viewer dependency integration requires
 new combined build/runtime/output qualification against its actual parent.
+
+## Shared viewer dependency integrated in source only
+
+After publishing evidence pin04eeb14, root authorized a normal merge of exact
+reviewed PR120b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad. The immediate stacked
+parent is now b249 on `t3/shared-viewer-lifecycle-repair`; original610
+comparisons remain historical. Optimization/probes/harness were preserved
+byte-for-byte. Existing compiled/bundle bytes are stale for the combination.
+No runtime or review ran. The [integration receipt and next scoped request](96-integration-120.md)
+record the merge, missing new qualification and the unchanged runner's
+610-only identity gate that must be addressed before actual-parent measures.
