@@ -162,6 +162,7 @@ def main():
     signal.signal(signal.SIGINT, interrupt)
     signal.signal(signal.SIGTERM, interrupt)
     metadata = dict(parent=PARENT, candidate=head, phase=args.phase, counts=counts, samples=samples,
+                    started_monotonic=global_deadline - args.budget_seconds, started_wall_ns=time.time_ns(),
                     directions=['none', 'outbound', 'inbound'], idle_ms=65000, case_seconds=240,
                     budget_seconds=args.budget_seconds, runtimes=versions, machine=list(os.uname()),
                     clock_ticks=os.sysconf('SC_CLK_TCK'), observation_ms=100,

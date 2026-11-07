@@ -92,7 +92,7 @@ async function main() {
         case 'sample-start':
           assert.equal(sample, undefined);
           sample = { cpu: process.cpuUsage(), at: performance.now(), rss: process.memoryUsage().rss, completedPasses, requests };
-          result = { started: true };
+          result = { started: true, completedPasses, requests };
           break;
         case 'sample-stop': {
           assert.ok(sample);

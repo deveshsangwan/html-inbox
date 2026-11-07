@@ -156,6 +156,8 @@ async function main() {
     const worker = await launch({ role: 'worker', home: localHome });
     const ready = await worker.ready;
     ports.push(ready.record.controlOrigin);
+    // The parent tick observes state but does not join its startup pass.
+    await until('initial-pass-bookkeeping', () => worker.rpc('status'), value => value.completedPasses >= 1, 70_000);
     emit({ type: 'initial-catch-up-settled', ...(await worker.rpc('settle')) });
 
     async function assertCaughtUp() {

@@ -70,6 +70,12 @@ that retains every existing per-pass/session/request deadline. No resource claim
 for a caught-up high-count worker can be made until that precondition is real.
 
 Each idle observation lasts at least 65 seconds of actual measured process time.
+An explicit completed-bookkeeping barrier precedes sampling on both revisions.
+The parent's `tick()` does not join the startup pass, so relying on it alone can
+include startup work in an idle sample. The first smoke attempt exposed this
+with `completedPasses: 0`, was stopped, and is retained as invalid. A correction
+waits for the first actual completed pass within the existing 70-second command
+observation bound. Sample-start replies also record the starting pass counter.
 The workload requires two completed periodic passes during that window and
 checks custody afterward. If slow passes prevent that, the case is unqualified;
 the duration or criteria cannot be silently adjusted during execution. A longer
