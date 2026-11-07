@@ -67,6 +67,10 @@ jobs:
       - name: Unit and integration tests
         run: node scripts/run-unit-tests.mjs --test-shard=${{ matrix.shard }}
 
+      - name: Managed read-view GC retention
+        if: runner.os != 'Windows' && matrix.shard == '1/2'
+        run: node --test packages/cli/dist/managed-view-retention-check.js
+
       - name: Test harness checks
         if: matrix.shard != '2/2'
         run: node --test scripts/viewer-systemd-cleanup.test.mjs scripts/run-unit-tests.test.mjs scripts/release-policy.test.mjs

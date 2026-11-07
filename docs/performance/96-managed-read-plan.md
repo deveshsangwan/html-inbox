@@ -278,8 +278,8 @@ using existing owned-child harness conventions and a bounded deadline. This
 would run in the current Node 20/24 source matrix without a new workflow or
 framework. Keep the GC-specific retention invocation separate, explicitly
 passing `--expose-gc` on supported POSIX runtimes in an existing harness/source
-step. Final placement and any fixture factoring follow correctness qualification;
-no CI wiring or change to the frozen standalone controls is included now.
+step. The source follow-up below wires that route after correctness qualification.
+The frozen standalone controls remain unchanged.
 
 ## Correctness qualification completed at fc858
 
@@ -297,3 +297,66 @@ controls at fc858. They do not validate later code edits, provide a speedup,
 diagnose the old 422 timeouts or qualify permanent OS-close failure cleanup.
 Normal-CI integration, broader qualification, complete-operation performance
 measurements and both independent reviews remain later gates.
+
+
+## Source follow-up for normal CI and complete workloads
+
+This follow-up changes test routing, benchmark companions and documentation.
+It changes no production implementation, runtime contract, dependency or
+storage format. The fc858 evidence still qualifies only that frozen code and
+its original invocation. New wrappers and harness code have source checks only
+until the orchestrator grants their bounded smoke.
+
+`managed-view-regressions.test.ts` enters ordinary compiled unit discovery.
+One discovered file belongs to one shard of each runtime/OS combination, so
+its child runs the original 44 controls exactly once across that shard pair.
+The child uses `process.execPath`, an isolated HOME/TMPDIR/catalog, a 60-second
+deadline and a 1 MiB output bound. It checks exit status and all TAP totals,
+propagates failures, joins the owned process group before fixture removal and
+retains both probe and cleanup errors if both fail. No listener or worker is
+started. The test has a 75-second parent bound including cleanup.
+
+A separate `managed-view-retention-check.ts` entry invokes the original GC
+probe with `--expose-gc` in its owned child. It is deliberately not a discovered
+`.test.ts` file. One existing source step runs it on shard 1/2 for each current
+POSIX matrix entry, after selecting the test runtime. Thus ordinary unit
+execution receives no GC flag. Both routes skip Windows because managed
+enrollment requires POSIX directory fsync. They cover Linux 20/24 and macOS
+20 in the existing matrix; macOS 24 remains excluded by the existing workflow.
+The original 18-case baseline stays historical characterization and a manual
+qualification control, outside normal discovery.
+
+The existing #89 runner now accepts `managed-read`; it retains its original
+owned-child runner, environment sanitization, wait4 and cleanup. The companions
+add no subprocess runner, service or worker. The [workload instructions](../../scripts/bench/README.md#managed-complete-reads-for-96)
+define exact-parent builds, identical durable fixtures, complete release CLI
+exports, actual callback batch reads, output comparisons and separate I/O
+probes. Primary complete-export elapsed remains preselected. Neither this
+source addition nor smoke timing demonstrates practical benefit.
+
+The CLI generates owner/time values internally. We will preserve all raw
+output and permit only their two named files and dependent manifest values to
+differ, after validating each complete manifest and all remaining file bytes.
+A separate complete API export fixes those options and must match every file
+byte. This is a disclosed measurement constraint, not an approved behavior
+change. Existing mutation, origin, identity and lifetime controls remain
+independent gates.
+
+The next request is limited to CI-route and harness smoke on a frozen source
+pin. It requests exact-version preflight, candidate Node 24 typecheck/build/
+bundle, a recorded Node 24 build/bundle of the clean exact610 parent, both new
+CI routes on exact Node 20/24, six Python harness checks, and one managed-read
+pair at count1/10KiB per runtime. The six Python checks include the existing
+owned fake child with a transient loopback socket for cleanup, and four pure
+output-comparator cases. No application listener, full suite, browser, worker,
+install, 100-record timing or sustained measurement is requested. All commands
+must be sequential, own their process groups and fit a 900-second application
+budget plus a separate 120-second cleanup allowance. Stop on the first
+unqualified case, preserve original output and classify it before changing any
+oracle. Root must grant the scope after #95 explicitly releases its slot.
+
+A later measurement request will use at least seven interleaved pairs per exact
+runtime at 1/100 records, on the same source/compiled/release pins. Report
+absolute deltas, spread and regressions without pooling runtimes or claiming
+physical-drive I/O. Both fresh independent reviews still follow measured
+qualification. PR122 remains draft and #96 remains partial.
