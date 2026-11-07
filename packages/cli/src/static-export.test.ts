@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { LocalDocumentBackend } from "./backend";
-import { formatStaticExportResult } from "./index";
+import { formatStaticExportResult } from "./cli-commands";
 import { exportStaticSnapshot, hashManifestFiles } from "./static-export";
 import { DOCUMENT_CSP } from "./viewer-assets";
 import { temporaryHome } from "./test-fixtures";

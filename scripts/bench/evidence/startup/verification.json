@@ -1,0 +1,62 @@
+[
+  {
+    "command": "pnpm install --frozen-lockfile",
+    "exit_code": 0,
+    "log": "install.log.gz",
+    "log_sha256": "96ec36a11df570fdad57ffb1e64d78925552f0aea1f489295aede80ec1db7c0f"
+  },
+  {
+    "command": "pnpm typecheck",
+    "exit_code": 0,
+    "log": "typecheck.log.gz",
+    "log_sha256": "7491e964fffdba7e79dcde458b279b9861608837987ef50fffd72318c94a2c65"
+  },
+  {
+    "command": "pnpm build",
+    "exit_code": 0,
+    "log": "build.log.gz",
+    "log_sha256": "52aa23ae94ef591f86df0a1de48709f5620eaacea41124e19fa6f2c717b99e88"
+  },
+  {
+    "command": "pnpm --filter html-inbox bundle",
+    "exit_code": 0,
+    "log": "bundle.log.gz",
+    "log_sha256": "4584c36d1760b94acf8dbca829742a3a0557beb0ff7bca7dcd7b8a5182e2e5e6"
+  },
+  {
+    "command": "node --test packages/cli/dist/cli-startup.test.js",
+    "exit_code": 0,
+    "log": "startup.log.gz",
+    "log_sha256": "ba669ac331f18124873b6627aac188f1f73898690fe397274384a7c2adf40b98"
+  },
+  {
+    "command": "node scripts/package-smoke.mjs artifacts/93/candidate/html-inbox-0.6.1.tgz",
+    "exit_code": 0,
+    "log": "qualified-package24.log.gz",
+    "log_sha256": "46d0c53fa258b648fb3d200e7aa6b57b0ac0a5ae1978d7b3926dcdd6966f4e02"
+  },
+  {
+    "command": "PATH=/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin:/usr/bin:/bin /home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node scripts/package-smoke.mjs artifacts/93/candidate/html-inbox-0.6.1.tgz",
+    "exit_code": 0,
+    "log": "qualified-package20.log.gz",
+    "log_sha256": "46d0c53fa258b648fb3d200e7aa6b57b0ac0a5ae1978d7b3926dcdd6966f4e02"
+  },
+  {
+    "command": "pnpm verify",
+    "exit_code": 0,
+    "log": "verify24.log.gz",
+    "log_sha256": "95f0362d7f80a49e9e059ea364741eab879ec336ea4acfd834374e1d967da9ca"
+  },
+  {
+    "command": "PATH=/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin:/usr/bin:/bin /home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node scripts/run-unit-tests.mjs",
+    "exit_code": 0,
+    "log": "unit20.log.gz",
+    "log_sha256": "01d2e216ef3510a9fafad5b591dc55bca65119d5388e53f42ddbe5ab702dea5d"
+  },
+  {
+    "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/bench -p 'test_*.py'",
+    "exit_code": 0,
+    "log": "bench-tests.log.gz",
+    "log_sha256": "1f34a966396c1764e0342185cf568f9c6de263c6dc9dc296b7230291eaf5e925"
+  }
+]

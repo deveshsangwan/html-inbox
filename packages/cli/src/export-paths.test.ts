@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { mkdir, readFile, realpath, symlink } from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
-import { assertExportOutsideHome } from "./index";
+import { assertExportOutsideHome } from "./cli-commands";
 import { containsPath } from "./path-containment";
 import { temporaryHome } from "./test-fixtures";
 

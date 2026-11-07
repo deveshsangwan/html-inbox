@@ -16,7 +16,7 @@ import {
   CloudflareProjectSummary,
   CloudflareSnapshotRef,
 } from "./cloudflare-pages";
-import { formatRemoteState, formatRemoteStatus } from "./index";
+import { formatRemoteState, formatRemoteStatus } from "./cli-commands";
 import { parseRemoteState, RemoteDeploymentPort, RemoteWorkflow } from "./remote-workflow";
 import { SnapshotManifest } from "./static-export";
 import { temporaryHome } from "./test-fixtures";
