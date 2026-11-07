@@ -1,14 +1,17 @@
 # Checked managed reads within one operation
 
 Related to [issue #96](https://github.com/deveshsangwan/html-inbox/issues/96).
-This is a source-only policy and contract-probe prerequisite. It changes no
-production code and claims no performance improvement. Execution and the
-production candidate remain gated by the orchestrator.
+This records the approved partial exact-complete-byte experiment and its
+baseline contracts. Production source and new controls are now prepared, with
+execution gated by the orchestrator. No performance improvement is claimed.
 
 Source preparation passed `node --check scripts/bench/managed-read-contract.cjs`
-and `git diff --cached --check`, both exit 0. No dependency install, build,
-application test or measurement has run for this candidate. The 18 probe cases
-are proposed checks, not passing results.
+and `git diff --cached --check`, both exit 0. The original 18-case probe
+subsequently passed on the unchanged baseline under
+exact Node 20.20.2 and 24.19.0. The [durable receipt and lossless evidence](../../scripts/bench/evidence/issue-96/README.md)
+identify its tested revision. None of those results tests the new production
+source or new actual-view/lifetime controls. No new build, application check or
+measurement has run after the production edits.
 
 ## Starting point and affected work
 
@@ -60,7 +63,10 @@ the export has no final freshness check over previously emitted documents.
 | Identity replacement or unsafe current ledger | The next fresh read fails | Earlier checks cannot establish current safety |
 | Invalid later descriptor, even outside exported IDs | The next read validates the entire current ledger and fails | Earlier complete validation would miss newly visible corruption |
 
-These are source-derived expectations pending the focused execution gate.
+The 18 probe expectations passed the approved baseline characterization on both
+runtimes. The table also records source-derived cases, including root replacement
+and mid-read events, outside that probe. Candidate controls must independently
+establish their covered outcomes inside the actual callback view.
 `scripts/bench/managed-read-contract.cjs` exercises actual complete exports at
 this cut against either compiled revision, for both source adapters. It checks
 exact deterministic manifests, content digests, diagnostics, preserved existing
@@ -71,7 +77,7 @@ There is no cancellation API on the current export. The probe does not claim
 signal cancellation, forced process-death cleanup, peak descriptor counts or
 all body-read race positions. Those remain candidate qualification work.
 
-## Decision needed before production changes
+## Approved partial route
 
 A once-captured ledger cannot both ignore subsequent ledgers and reproduce
 the fresh-read deletion, fork, safety and corruption behavior above. Taking a
@@ -80,9 +86,9 @@ read-only consumer. Pinning all bodies would change disappearance behavior and
 can retain up to 10,000 handles or roughly 100 GiB of HTML. Neither is an
 acceptable silent compatibility fix.
 
-The orchestrator must choose the implementation route before a contract is
-relaxed. The compatibility-first experiment is to reuse parsing and signature
-validation only when a freshly checked, complete ledger byte buffer exactly
+Root approved the compatibility-first partial route after inspecting the
+baseline characterization. No frozen-cut or modern policy relaxation is
+approved. The experiment reuses parsing and signature validation only when a freshly checked, complete ledger byte buffer exactly
 equals the operation's last validated buffer. A changed buffer receives all
 existing validation before any of its records are used. Keep every existing
 anchor, barrier, reader and source identity check at the corresponding read
@@ -92,8 +98,7 @@ That experiment preserves fresh reads, but still reads the full serialized
 ledger for every body. It therefore addresses repeated reconstruction and
 verification, and does not satisfy a literal requirement to eliminate all
 per-document ledger I/O. It should be evaluated as a partial #96 candidate only
-if root accepts that scope. No full-issue completion claim would follow from
-its speedup alone.
+under the accepted scope. A speedup alone would not establish full completion.
 
 The alternative is a genuinely fixed metadata/visibility cut with incremental
 bounded body reads, explicit current identity checks and missing-body failures.
@@ -103,16 +108,20 @@ route it to the modern line with a documented policy. Do not change 0.7.x by
 calling the difference a speedup. A final fresh-ledger check also changes the
 current behavior when a deletion occurs after its body has already been read.
 
-## Small read interface and lifetime, once a route is approved
+## Candidate read interface and lifetime
 
-Prefer an optional `withReadView(operation)` on existing document sources.
-The callback receives only list, metadata and body read methods. A managed
+The candidate adds optional `withReadView(operation, signal?)` on existing
+document sources. The callback receives only list, metadata and body read methods. A managed
 implementation owns a validated ledger, a map from local ID to checked record,
 and fresh metadata projections. Legacy sources keep their existing operations.
 Keep source-specific root/UUID checks and selected byte limits in the adapter.
 
-The callback lifetime must close admission in `finally`, await admitted reads
-and clear the map and buffers on success, callback rejection and cancellation.
+The callback lifetime closes admission in `finally`, awaits its admitted read
+and clears the map and buffers on success, callback rejection and cancellation.
+At most one read is admitted; concurrent calls reject immediately with no
+queue. Abort stops admission and rejects the result of an admitted read after
+native I/O finishes. Scope completion still waits for the callback to settle.
+Distinct callback and pending-read errors survive together as an AggregateError.
 Escaped methods must reject after closure. Do not expose the ledger object,
 route authorization or mutation methods. Return copied metadata so caller
 mutation cannot alter the checked records. The future Library implementation
@@ -124,8 +133,8 @@ in-progress comparison buffer, each bounded by the current 64 MiB ledger cap,
 plus parsed ledger/map memory. Stream selected bodies serially, at most one
 10 MiB body buffer plus the existing renderer/copy working data. Avoid retaining
 buffers from prior bodies. Read handles remain open only for their current
-bounded operation and close in existing `finally` paths. Additional concurrent
-batch callers need an enforced admission bound, not an unbounded `Promise.all`.
+bounded operation and close in existing `finally` paths. Concurrent batch callers receive an admission error;
+the view has no waiting queue. Callers must consume their reads serially.
 Measure the real memory overhead; these bounds do not claim low RSS.
 
 Preserve immutable metadata, descriptor identity/signatures, body filename and
@@ -136,11 +145,12 @@ origin filtering, fetched-metadata equality and atomic replacement.
 
 ## Qualification gates
 
-First request only dependency preparation if needed, a Node 24 build/typecheck
-and this contract probe on independent installed Node 20 and Node 24 binaries.
-Use the same compiled JavaScript for the two probe runs. Capture exact versions,
-commands, exit codes and logs. This phase is baseline characterization, not a
-speed measurement. No production candidate or sustained matrix is authorized.
+The baseline gate requested dependency preparation, a Node 24 build/typecheck
+and the original contract probe on independent Node 20 and Node 24 binaries,
+using the same compiled JavaScript. That gate passed at 42232780. Its exact
+commands, logs and hashes are in the durable receipt. The historical command
+shape below describes characterization, not a speed measurement. New candidate
+execution and sustained measurements require separate grants.
 
 ```sh
 pnpm install --frozen-lockfile
@@ -191,3 +201,34 @@ artifacts with concise committed commands/results. After the measured pin,
 request two fresh independent Sol functionality and Sonnet 5.5 Medium quality
 reviews with the full rubric and explicit functionality, quality and performance
 verdicts. Neither reviewer owns Actions watches.
+
+## Candidate correctness request
+
+The frozen baseline probe remains byte-identical at
+`scripts/bench/managed-read-contract.cjs`. Run it again to qualify direct/fallback
+behavior independently. The new `managed-view-contract.cjs` derives the same
+18 expectations but supplies `withReadView` and throws if export tries its
+outer list/get fallback. Its mutation is injected after listing inside the real
+callback, and entry/cut counts must each be one. Its import exclusion wrapper
+also enters the actual callback. These controls must not be mistaken for the
+already-passing baseline run.
+
+Additional controls count actual byte reads, parsing and signature verification,
+check callback-local reuse and cross-operation isolation, mutate returned nested
+metadata and ordinary snapshots, change local IDs without a generation/inode
+change, reject invalid later ledgers, recheck the format barrier, and enforce
+selected byte limits. Open-handle gates exercise admission, callback close,
+failure and abort, requiring native-handle closure before completion. Separate
+GC controls hold escaped methods while observing release of parsed ledgers
+and buffers. GC is a retention check, not a memory benchmark. Legacy export
+and enrollment transitions have independent controls.
+
+Request the next slot for exact Node 24.19.0 typecheck/build, then sequential
+Node 20.20.2 and 24.19.0 runs of the frozen baseline probe, new actual-view
+probe and `--expose-gc --test scripts/bench/managed-view-retention.cjs`, against
+the same compiled candidate bytes. Run the existing static-export and
+local-document-source containing tests on each runtime as targeted regression
+checks. This request excludes installs, bundles, full suites, servers/workers
+and sustained measurements. Preserve all original failures and stop on a
+behavior or lifetime mismatch before changing the oracle. A later scoped
+request will address full-operation performance qualification.
