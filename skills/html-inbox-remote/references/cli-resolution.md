@@ -1,5 +1,7 @@
 # Resolve the CLI
 
+Release planning: 0.7.x will retain Node >=20; 1.x will require Node >=24.19.0 after qualification. Neither line is activated here. Keep the published/tested 0.5.0 fallback below. Runtime-and-format-aware modern resolution remains pending; stop on a modern prototype library instead of selecting a legacy writer. See the [release policy and open gates](https://github.com/deveshsangwan/html-inbox/blob/main/docs/release-policy.md).
+
 Resolve once before the first command in an operation. A global CLI installation is optional. Installing or updating this skill changes agent instructions and resources; npm installation changes the executable. Keep those installers independent and run either installer only when the user chooses it.
 
 Check `node --version` first. Use Node.js 20 or newer. The fallback also needs npm and access to its configured registry, or a cached copy of the pinned package. If a prerequisite is missing, report it and stop before publishing. These runtime requirements apply to an already-installed skill. Installing or updating it with the current `npx skills` installer requires Node.js 22.20.0 or newer.

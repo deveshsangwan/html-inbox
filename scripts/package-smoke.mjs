@@ -70,6 +70,7 @@ try {
     await readFile(path.join(repositoryRoot, "packages", "cli", "package.json"), "utf8"),
   );
   assert.equal(installedPackage.version, sourcePackage.version, "Archive must match the reviewed source version");
+  assert.deepEqual(installedPackage.engines, sourcePackage.engines, "Archive must preserve the reviewed runtime contract");
   assert.deepEqual(
     await readFile(path.join(installedRoot, "README.md")),
     await readFile(path.join(repositoryRoot, "packages", "cli", "README.md")),
