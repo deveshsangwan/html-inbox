@@ -200,6 +200,20 @@ export async function startViewer(
   input: number | ViewerNetworkOptions,
   inboxName?: string,
 ): Promise<http.Server> {
+  return (await startViewerLifecycle(backend, home, input, inboxName)).server;
+}
+
+export interface ViewerLifecycle {
+  server: http.Server;
+  close(): Promise<void>;
+}
+
+export async function startViewerLifecycle(
+  backend: DocumentBackend,
+  home: string,
+  input: number | ViewerNetworkOptions,
+  inboxName?: string,
+): Promise<ViewerLifecycle> {
   await assertManagedLifecycle(home);
   const inherited = await hasInheritedViewerStartLock(home);
   const lock = inherited ? null : await acquireViewerStartLock(home);
@@ -219,7 +233,8 @@ export async function startViewer(
     let prepared: PreparedTailscale | undefined;
     let startup: Promise<void> | undefined;
     let closing: Promise<void> | undefined;
-    let hasReportedShutdownFailure = false;
+    let shutdownFailure: Promise<void> | undefined;
+    let ownedClosing: Promise<void> | undefined;
     const close = (reason: "SIGTERM" | "SIGINT" | "reader-close" | "startup-failure") => closing ??= (async () => {
       console.error(`${new Date().toISOString()} html-inbox: Viewer ${process.pid} shutting down (${reason})`);
 
@@ -244,23 +259,19 @@ export async function startViewer(
         process.off("SIGINT", onSigint);
       }
     })();
-    const reportShutdownFailure = (error: unknown) => {
-      if (hasReportedShutdownFailure) {
-        return;
-      }
-
-      hasReportedShutdownFailure = true;
+    const reportShutdownFailure = (error: unknown) => shutdownFailure ??= (async () => {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`${new Date().toISOString()} html-inbox: Viewer ${process.pid} shutdown failed: ${message}`);
       process.exitCode = 1;
-      void readViewerRecord(home).then((record) => {
+      try {
+        const record = await readViewerRecord(home);
         if (record?.processId === processId) {
-          return writeViewerRecord(home, { ...record, shutdownError: message });
+          await writeViewerRecord(home, { ...record, shutdownError: message });
         }
-      }).catch((recordError: unknown) => {
+      } catch (recordError) {
         console.error(`html-inbox: Could not record shutdown failure: ${String(recordError)}`);
-      });
-    };
+      }
+    })();
     const onSigterm = () => { void close("SIGTERM").catch(reportShutdownFailure); };
     const onSigint = () => { void close("SIGINT").catch(reportShutdownFailure); };
 
@@ -330,7 +341,14 @@ export async function startViewer(
         throw new Error("Viewer startup finished without a reader");
       }
 
-      return reader.server;
+      return {
+        server: reader.server,
+        close: () => ownedClosing ??= close("reader-close").catch(async (error: unknown) => {
+          // Join failure journaling too, so callers can safely retain or inspect the fixture.
+          await reportShutdownFailure(error);
+          throw error;
+        }),
+      };
     } catch (error) {
       try {
         await close("startup-failure");

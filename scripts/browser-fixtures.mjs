@@ -6,7 +6,7 @@ import path from "node:path";
 import { chromium } from "playwright";
 import { LocalDocumentBackend } from "../packages/cli/dist/backend.js";
 import { exportStaticSnapshot } from "../packages/cli/dist/static-export.js";
-import { startViewer } from "../packages/cli/dist/viewer-server.js";
+import { startViewerLifecycle } from "../packages/cli/dist/viewer-server.js";
 import { validateHtml } from "../packages/cli/dist/html-validation.js";
 import { readPreferences, setAppearancePreference } from "../packages/cli/dist/preferences.js";
 
@@ -60,18 +60,30 @@ export async function publishLibraryFixtures(backend) {
 export async function createBrowserFixture(t, mode, publishDocuments, options = {}) {
   const root = await mkdtemp(path.join(tmpdir(), "html-inbox-browser-"));
   let server;
+  let closeViewer;
   let browser;
   t.after(async () => {
+    const failures = [];
     try {
       await browser?.close();
-    } finally {
-      try {
-        if (server) {
-          await closeServer(server);
-        }
-      } finally {
-        await rm(root, { recursive: true, force: true });
+    } catch (error) {
+      failures.push(error);
+    }
+
+    try {
+      if (closeViewer) {
+        await closeViewer();
+      } else if (server) {
+        await closeServer(server);
       }
+    } catch (error) {
+      failures.push(error);
+      throw new AggregateError(failures, `Browser fixture shutdown failed; evidence retained at ${root}`);
+    }
+
+    await rm(root, { recursive: true, force: true });
+    if (failures.length) {
+      throw failures[0];
     }
   });
 
@@ -95,7 +107,9 @@ export async function createBrowserFixture(t, mode, publishDocuments, options = 
     server = await startStaticServer(snapshot, requests);
   } else {
     assert.equal(mode, "local");
-    server = await startViewer(backend, home, 0);
+    const viewer = await startViewerLifecycle(backend, home, 0);
+    server = viewer.server;
+    closeViewer = viewer.close;
   }
 
   const address = server.address();
