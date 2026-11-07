@@ -3,7 +3,8 @@ import { lstat, readFile, readdir, realpath, rename, rm } from "node:fs/promises
 import { homedir } from "node:os";
 import path from "node:path";
 import { ManagedSyncStore } from "./sync-store";
-import { parseDocumentMetadata, DOCUMENT_SCHEMA_VERSION, DeleteResult, DocumentBackend, DocumentMetadata, isSafeDocumentId, PublishInput, StoredDocument } from "./documents";
+import { parseDocumentMetadata, DOCUMENT_SCHEMA_VERSION, DeleteResult, DocumentBackend, DocumentMetadata, isSafeDocumentId, PublishInput, StoredDocument, type DocumentReadView } from "./documents";
+import { withDocumentReadView } from "./document-read-view";
 import { deleteStoredDocument } from "./document-deletion";
 import {
   ensurePrivateDirectory,
@@ -76,9 +77,27 @@ export class LocalDocumentBackend implements DocumentBackend {
     return metadata;
   }
 
-  async listDocuments(): Promise<DocumentMetadata[]> {
+  async withReadView<T>(operation: (view: DocumentReadView) => Promise<T>, signal?: AbortSignal): Promise<T> {
+    const read = (managed?: DocumentReadView) => withDocumentReadView({
+      listDocuments: () => this.listCurrentDocuments(managed),
+      getDocumentMetadata: (id) => this.readCurrentMetadata(id, managed),
+      getDocument: (id) => this.readCurrentDocument(id, managed),
+    }, operation, signal);
+
     if (await ManagedSyncStore.isEnrolled(this.home)) {
-      return new ManagedSyncStore(this.home).listDocuments();
+      return new ManagedSyncStore(this.home).withReadView(read, signal);
+    }
+
+    return read();
+  }
+
+  async listDocuments(): Promise<DocumentMetadata[]> {
+    return this.listCurrentDocuments();
+  }
+
+  private async listCurrentDocuments(managed?: DocumentReadView): Promise<DocumentMetadata[]> {
+    if (await ManagedSyncStore.isEnrolled(this.home)) {
+      return managed ? managed.listDocuments() : new ManagedSyncStore(this.home).listDocuments();
     }
 
     await this.prepareStorage();
@@ -101,8 +120,12 @@ export class LocalDocumentBackend implements DocumentBackend {
   }
 
   async getDocument(id: string): Promise<StoredDocument | null> {
+    return this.readCurrentDocument(id);
+  }
+
+  private async readCurrentDocument(id: string, managed?: DocumentReadView): Promise<StoredDocument | null> {
     if (await ManagedSyncStore.isEnrolled(this.home)) {
-      return isSafeDocumentId(id) ? new ManagedSyncStore(this.home).getDocument(id) : null;
+      return isSafeDocumentId(id) ? (managed ? managed.getDocument(id) : new ManagedSyncStore(this.home).getDocument(id)) : null;
     }
 
     const metadata = await this.getDocumentMetadata(id);
@@ -123,12 +146,16 @@ export class LocalDocumentBackend implements DocumentBackend {
   }
 
   async getDocumentMetadata(id: string): Promise<DocumentMetadata | null> {
+    return this.readCurrentMetadata(id);
+  }
+
+  private async readCurrentMetadata(id: string, managed?: DocumentReadView): Promise<DocumentMetadata | null> {
     if (!isSafeDocumentId(id)) {
       return null;
     }
 
     if (await ManagedSyncStore.isEnrolled(this.home)) {
-      return new ManagedSyncStore(this.home).getDocumentMetadata(id);
+      return managed ? managed.getDocumentMetadata(id) : new ManagedSyncStore(this.home).getDocumentMetadata(id);
     }
 
     await this.prepareStorage();
