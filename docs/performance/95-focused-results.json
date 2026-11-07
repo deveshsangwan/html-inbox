@@ -1,0 +1,398 @@
+{
+  "base": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+  "tested_source": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+  "totals": {
+    "20.20.2": 105,
+    "24.19.0": 105
+  },
+  "source_sha256": {
+    "sync-worker.ts": "6fdf35c16ac449d91470ee2b8bd8148bfcd792d1f38180110b7e95e4886e82c6",
+    "sync-worker-schedule.ts": "03677f2064508c316e4538de0cb30a2bc0b96bda99fbeaa5d5bbe706230db1a7",
+    "sync-worker-schedule.test.ts": "4ecd8df49e25b27d1a91e16ae98b1504e58e4342d6572483aa25c9e42af19a25",
+    "sync-worker-fatal.test.ts": "53265c5274431005509bb4432d2bb46e04571cd55505d079b583b660f294f6c0"
+  },
+  "commands": [
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "pnpm",
+        "typecheck"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.4684114570263773,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-0.log",
+      "log_sha256": "7491e964fffdba7e79dcde458b279b9861608837987ef50fffd72318c94a2c65"
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "pnpm",
+        "build"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.9670323530444875,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-1.log",
+      "log_sha256": "52aa23ae94ef591f86df0a1de48709f5620eaacea41124e19fa6f2c717b99e88"
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-schedule.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.216642901999876,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-2.log",
+      "log_sha256": "96c621ae00f044cd62bce0b0d6370c67072b7514f420e6f1e00b29ad3b0ecd28",
+      "counts": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-runtime.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 0.31494071800261736,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-3.log",
+      "log_sha256": "bb9ed698fb3a7604e4a2a09f6d2f227944efc4fd714cfe07a33da05b0ed928fd",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-fatal.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 8.747981457039714,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-4.log",
+      "log_sha256": "9589bab719174581594017f9ac936232a8d5c64ff93fd9ca2e9bb7ba0c5db03d",
+      "counts": {
+        "tests": 26,
+        "pass": 26,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-credentials.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 28.556253026006743,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-5.log",
+      "log_sha256": "7575657ea0d49c3f15834993f597415fd312129e464c3984f3606ac718cd1bc9",
+      "counts": {
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-pause-admission.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 3.631204180070199,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-6.log",
+      "log_sha256": "fad3ecf7a082d2e1be4182cc6a7ab04adb8e3953caa14e4c272d63e425aee85b",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-revocation-order.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 2.0685503089334816,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-7.log",
+      "log_sha256": "7dbefbc0f8738a3e53739f41ce9329c7588b113478eba168d7342b0e4da8b4d5",
+      "counts": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-shutdown-ownership.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 2.0704946611076593,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-8.log",
+      "log_sha256": "ff8cc396ebcedf1dc8648dd6c7aa19627a38bac42f47188d3bc75e0504ab08f4",
+      "counts": {
+        "tests": 21,
+        "pass": 21,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-shutdown-ingestion.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 9.809533106978051,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-9.log",
+      "log_sha256": "70a9755b7bd44143ef589109e8c6d6bb4a1e71a0e36363c2d35bad6a37803fa6",
+      "counts": {
+        "tests": 11,
+        "pass": 11,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-attempt-lifetime.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 7.130922356969677,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-10.log",
+      "log_sha256": "325f9c5e5d914d15941808d018a2644ab5c4fd2136e95ff17d9ee234002c0150",
+      "counts": {
+        "tests": 25,
+        "pass": 25,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-schedule.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.066187642980367,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-11.log",
+      "log_sha256": "182d4480646e51ad0fc77dc7c17d222682bfff87d0020b5f460860ee128b099c",
+      "counts": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-runtime.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 0.3655767700402066,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-12.log",
+      "log_sha256": "818026c9561ea959e137af921578138dd5d7bc75ecc70da8bdf311c7c3d38f3e",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-fatal.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 8.592856929986738,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-13.log",
+      "log_sha256": "da56a6ff481ee5b2023ac0f575e76e96f10970f0efb96a690293c851944e1917",
+      "counts": {
+        "tests": 26,
+        "pass": 26,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-credentials.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 24.965873589972034,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-14.log",
+      "log_sha256": "97573815230e189669ffcda4fa8300cd193a8208162ddc4096718440084c0fd2",
+      "counts": {
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-pause-admission.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 3.070560742984526,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-15.log",
+      "log_sha256": "f7db1aede1fccfce8c6d47da7d44545d1c5469e1129dfb41caeeb1f5a0eea56d",
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-revocation-order.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.7674210069235414,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-16.log",
+      "log_sha256": "0b274cfaf6f14ae672db378639ecfad29019790e2c5f1035b13cb401473fc45f",
+      "counts": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-shutdown-ownership.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 1.9729208539938554,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-17.log",
+      "log_sha256": "3a8e8f6212aa35fadb9cb146b700eeb3d7968a8595c195819ce3e5e69c66bb17",
+      "counts": {
+        "tests": 21,
+        "pass": 21,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-shutdown-ingestion.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 8.9392736350419,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-18.log",
+      "log_sha256": "e32408c1de58612360f83504fdc5751b78c9644167ae3c9e386c2442b397248b",
+      "counts": {
+        "tests": 11,
+        "pass": 11,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "head": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-attempt-lifetime.test.js"
+      ],
+      "exit": 0,
+      "elapsed_s": 5.6778078159550205,
+      "log": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-focused-1/final-19.log",
+      "log_sha256": "084e77971c9f3e1d71c84ee3a0126980403b67d469f6e144d60f42639dde2dfa",
+      "counts": {
+        "tests": 25,
+        "pass": 25,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    }
+  ]
+}
