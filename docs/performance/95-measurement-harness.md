@@ -4,7 +4,9 @@ The historical zero-record smoke passed at `c00f614`; its stopped attempts remai
 preserved. The subsequent startup correctness fix at `9fd509e` creates a new
 production candidate. The next source-only
 [bounded feasibility request](95-feasibility-request.md) includes fresh controls
-and all required counts. No new execution grant or performance qualification
+and all required counts. Its single granted attempt stopped at a parent shutdown
+assertion after ten passing zero-record cases; [the receipt](95-feasibility-1.md)
+lists all 25 unrun cases. No continuation grant or performance qualification
 exists. This harness extends the workload selected in `9ca71fd` before production
 edits; the small smoke never replaces 0/1,000/10,000 qualification.
 

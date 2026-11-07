@@ -1,6 +1,8 @@
 # Bounded scheduler feasibility request
 
-Status: source-only preparation; no new local execution grant. Tested production
+This request was granted for one attempt at `a7f8719`. It stopped after ten passing
+cases and a parent shutdown-ownership failure; 25 cases remain unrun. See the
+[attempt receipt](95-feasibility-1.md). No continuation grant exists. Tested production
 is `9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f`; the request uses the subsequent
 clean harness/receipt HEAD, whose application source must match that pin exactly.
 The correctness receipt is separately pinned at `ee8eead`. The earlier `c00f614`
