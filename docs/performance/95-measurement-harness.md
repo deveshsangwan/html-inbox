@@ -105,7 +105,14 @@ evidence while that read is pending, then join it before releasing authority.
 Every retained child is reaped and every exact listener port rebound. Python is
 a child subreaper and kills/reaps the owned process group on errors or its outer
 bound. Separate cleanup tests exercise an uncooperative group and an exited
-leader that leaves a descendant holding a port. No real inbox path is accepted;
+leader that leaves a descendant holding a port. Root's pre-smoke review also
+required preliminary builds and reader checks to own and join process groups.
+Their direct bounded-command helper records PID/command/exit/timeout and joins
+the group in `finally`, before removing fixture directories. Cleanup receipts
+include preliminary and timed groups. If a group remains, fixtures are retained.
+Additional tests cover a real preliminary-command timeout, interruption and
+combined nonzero exit plus cleanup failure, with retained descendants/ports and
+both original and cleanup causes preserved. No real inbox path is accepted;
 the workload requires the supervisor-created disposable marker.
 
 ## Next narrowly scoped request

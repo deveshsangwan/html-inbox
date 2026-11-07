@@ -73,6 +73,44 @@ def terminate(child):
         raise RuntimeError(f'Owned process group did not fully reap: {remaining}')
 
 
+def bounded_command(command, *, label, cwd, env, log, timeout, groups, receipts):
+    child = None
+    failure = None
+    cleanup_failure = None
+    started = time.monotonic()
+    row = dict(label=label, command=command, timeout_seconds=timeout, exit=None)
+    try:
+        with log.open('wb') as output:
+            child = subprocess.Popen(command, cwd=cwd, env=env, stdout=output, stderr=subprocess.STDOUT, start_new_session=True)
+            groups.append(child.pid)
+            row['pid'] = child.pid
+            row['exit'] = child.wait(timeout=timeout)
+            if child.returncode:
+                raise subprocess.CalledProcessError(child.returncode, command)
+    except BaseException as error:
+        failure = error
+        row.update(error=repr(error), timed_out=isinstance(error, subprocess.TimeoutExpired),
+                   interrupted=isinstance(error, (InterruptedError, KeyboardInterrupt)))
+    finally:
+        if child:
+            try:
+                terminate(child)
+            except BaseException as error:
+                cleanup_failure = error
+                row['cleanup_error'] = repr(error)
+            row.update(terminated_exit=child.returncode, group_reaped=not processes(child.pid))
+        row['elapsed_seconds'] = time.monotonic() - started
+        emit(receipts, row)
+
+    if failure and cleanup_failure:
+        raise BaseExceptionGroup('Command and owned-group cleanup failed', [failure, cleanup_failure])
+    if failure:
+        raise failure
+    if cleanup_failure:
+        raise cleanup_failure
+    return row
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--candidate', required=True, help='Full committed candidate SHA')
@@ -132,29 +170,34 @@ def main():
                              for file in ['scheduler.py', 'scheduler-workload.cjs', 'scheduler-process.cjs']})
     (args.out / 'environment.json').write_text(json.dumps(metadata, indent=2) + '\n')
     try:
-        with tempfile.TemporaryDirectory(prefix='html-inbox-scheduler-') as directory:
+        directory = tempfile.mkdtemp(prefix='html-inbox-scheduler-')
+        try:
             fixture_root = Path(directory)
             environment = dict(PATH=f'{args.node24.resolve().parent}:{os.environ.get("PATH", "")}',
                                HOME=directory, USERPROFILE=directory, TMPDIR=directory, TMP=directory, TEMP=directory,
                                XDG_CONFIG_HOME=directory, XDG_STATE_HOME=directory, XDG_DATA_HOME=directory,
                                XDG_CACHE_HOME=directory, ZDOTDIR=directory, HTML_INBOX_CATALOG_HOME=str(fixture_root / 'catalog'))
             metadata['fixture_root'] = directory
-            metadata['filesystem'] = subprocess.check_output(['stat', '-f', '-c', '%T', directory], text=True).strip()
+            filesystem_log = args.out / 'filesystem.log'
+            bounded_command(['stat', '-f', '-c', '%T', directory], label='filesystem', cwd=REPO, env=environment,
+                            log=filesystem_log, timeout=5, groups=groups, receipts=commands)
+            metadata['filesystem'] = filesystem_log.read_text().strip()
             metadata['builds'] = {}
             for label, revision in [('parent', PARENT), ('candidate', head)]:
                 export = fixture_root / f'build-{label}'
                 export.mkdir()
-                archive = subprocess.check_output(['git', 'archive', revision, 'packages/cli/src', 'packages/cli/tsconfig.json', 'tsconfig.base.json'], cwd=REPO)
+                archive_log = args.out / f'archive-{label}.tar'
+                bounded_command(['git', 'archive', revision, 'packages/cli/src', 'packages/cli/tsconfig.json', 'tsconfig.base.json'],
+                                label=f'archive-{label}', cwd=REPO, env=environment, log=archive_log,
+                                timeout=max(1, min(15, global_deadline - time.monotonic())), groups=groups, receipts=commands)
+                archive = archive_log.read_bytes()
                 with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
                     tar.extractall(export, filter='data')
                 (export / 'node_modules').symlink_to(REPO / 'node_modules', target_is_directory=True)
                 build_command = [str(REPO / 'node_modules/.bin/tsc-rs'), '-p', str(export / 'packages/cli/tsconfig.json')]
-                with (args.out / f'build-{label}.log').open('w') as log:
-                    completed = subprocess.run(build_command, cwd=export, env=environment, stdout=log, stderr=subprocess.STDOUT,
-                                               timeout=max(1, min(60, global_deadline - time.monotonic())))
-                emit(commands, dict(label=f'build-{label}', command=build_command, exit=completed.returncode))
-                if completed.returncode:
-                    raise RuntimeError(f'{label} build failed')
+                bounded_command(build_command, label=f'build-{label}', cwd=export, env=environment,
+                                log=args.out / f'build-{label}.log', timeout=max(1, min(60, global_deadline - time.monotonic())),
+                                groups=groups, receipts=commands)
                 dist = export / 'packages/cli/dist'
                 metadata['builds'][label] = dict(revision=revision, dist=str(dist), dist_js_sha256=fingerprint(dist))
             (args.out / 'environment.json').write_text(json.dumps(metadata, indent=2) + '\n')
@@ -164,12 +207,9 @@ def main():
                 for label in ['parent', 'candidate']:
                     command = [str(node), '--test', '--test-name-pattern=an enabled owned worker keeps its process identity',
                                str(Path(metadata['builds'][label]['dist']) / 'sync-ledger-read-race.test.js')]
-                    with (args.out / f'reader-race-{version}-{label}.log').open('w') as log:
-                        completed = subprocess.run(command, cwd=REPO, env=environment, stdout=log, stderr=subprocess.STDOUT,
-                                                   timeout=max(1, min(15, global_deadline - time.monotonic())))
-                    emit(commands, dict(label=f'reader-race-{version}-{label}', command=command, exit=completed.returncode))
-                    if completed.returncode:
-                        raise RuntimeError('The unchanged enabled-worker reader-race check failed')
+                    bounded_command(command, label=f'reader-race-{version}-{label}', cwd=REPO, env=environment,
+                                    log=args.out / f'reader-race-{version}-{label}.log', timeout=max(1, min(15, global_deadline - time.monotonic())),
+                                    groups=groups, receipts=commands)
 
             for version, node in runtimes:
                 for count in counts:
@@ -232,9 +272,13 @@ def main():
                                 rows.append(row)
                                 emit(commands, row)
                                 print(json.dumps({key: row[key] for key in ['name', 'qualified_case']}), flush=True)
+        finally:
+            # Keep fixture evidence if any owned preliminary or timed group remains.
+            if not any(processes(group) for group in groups):
+                shutil.rmtree(directory)
     finally:
         remaining = [dict(group=group, processes=processes(group)) for group in groups if processes(group)]
-        (args.out / 'cleanup.json').write_text(json.dumps(dict(process_groups_reaped=not remaining, remaining=remaining,
+        (args.out / 'cleanup.json').write_text(json.dumps(dict(process_groups_reaped=not remaining, remaining=remaining, owned_groups=groups,
                                                            fixture_root_removed=fixture_root is None or not fixture_root.exists()), indent=2) + '\n')
         pairs = []
         for index in range(0, len(rows) - 1, 2):
