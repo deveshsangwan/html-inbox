@@ -1,4 +1,8 @@
-"""Linux-only synthetic qualification of the #92 review fixes, after a slot grant."""
+"""Linux-only synthetic qualification of the #92 review fixes.
+
+Run permissions.py first with uncompressed output at <parent>/comparison, then
+use --out <parent>/safety here; comparison/fingerprints.json is required input.
+"""
 
 import argparse
 import hashlib

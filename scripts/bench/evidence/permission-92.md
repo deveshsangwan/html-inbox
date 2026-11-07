@@ -222,4 +222,42 @@ path was not needed. No general descendant-cleanup guarantee is inferred for
 unexercised timeout or interruption paths. The normal no-go remains solely a
 contract rejection of this shortcut; performance benefit stays unquantified.
 
-Fresh focused second-round review verdicts remain pending.
+The updated baseline differs from the original qualification baseline in exactly
+one artifact, `packages/cli/dist/private-storage.test.js`, because of the new
+interception-count assertions. The new normal comparison independently
+re-establishes the four intended candidate failures against those updated tests.
+
+To reproduce safety qualification, first run `permissions.py` with a fresh
+`<parent>/comparison` output directory. Then run
+`python3 scripts/bench/evidence/permission-92/requalify.py --out <parent>/safety --node20 <node20> --node24 <node24>`.
+The safety procedure requires the uncompressed `comparison/fingerprints.json`
+produced by that normal run; it does not consume the committed gzip copy directly.
+
+## Focused second-round reviews
+
+Both fresh reviewers inspected the complete diff through the same frozen pin
+`6dd7d3aae557e1bdc508bb0aa83c71ea233cbd66`, including the original rubric/spec,
+prior findings/dispositions and new raw evidence. Both were read-only.
+
+| Reviewer | Functionality | Code quality | Performance/no-go evidence |
+|---|---|---|---|
+| [GPT-6.1 Sol High](permission-92/review-sol-r2.txt) | PASS, investigation scope | PASS, no findings | PASS |
+| [Claude Code Sonnet 5.5 Medium](permission-92/review-claude-r2.txt) | PASS | PASS, only optional items below | PASS |
+
+All original review conditions are satisfied. The final follow-up changes only
+review records, report prose and the safety procedure's module docstring. Its
+executed statements, tests, production source and compiled files remain unchanged
+from the requalified and reviewed pins. No additional runtime execution or third
+review round was needed for these documentation-only updates.
+
+| Second-round Claude item | Disposition |
+|---|---|
+| Low 1, scheduling phrase in safety docstring | Accepted; removed the phrase. |
+| Low 2, hidden normal-run input dependency | Accepted; documented the required uncompressed sibling comparison output in both docstring and reproduction instructions. |
+| Low 3, wait deadline anchored at checkpoint-search start | Optional change declined for this completed one-off. The existing bound can shorten the post-signal window after a late checkpoint. Its deadline-expiry path is written to invoke emergency/outer cleanup, but that path was not exercised. The successful receipt covers an early checkpoint only. Retain the qualified executable procedure; do not claim a fresh fixed restoration window or unexercised timeout behavior. |
+| Suggestion 1, evidence volume | Retain original and new raw evidence for the requested independent audit. No new workload or artifact mechanism added. |
+| Suggestion 2, changed test hash | Accepted; explicitly identify the sole baseline artifact difference and renewed candidate-failure proof above. |
+| Suggestion 3, timing-dependent checkpoint | Accepted limitation. The 5 ms process scan observed one successful candidate-build interleaving; it is not proof that every future execution will hit that window. |
+
+The final documentation receipt remains subject to final-head CI and the
+maintainer's integration audit. The optimization itself remains rejected.
