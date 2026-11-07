@@ -1,5 +1,7 @@
 # HTML Inbox
 
+Version 0.6.1 fixes concurrent startup identity creation, sync pause/resume, and record-reading/shutdown races. Before updating the CLI, stop running viewers, hubs, and independent sync workers with the old executable. Update the CLI, then restart the components you use to load the fixes. See the [0.6.1 upgrade notes](CHANGELOG.md#upgrade-to-061).
+
 [Website](https://deveshsangwan.github.io/html-inbox/) | [Documentation](https://deveshsangwan.github.io/html-inbox/docs/) | [npm](https://www.npmjs.com/package/html-inbox)
 
 HTML Inbox is a local library for generated HTML reports, notes, and dashboards. The CLI validates and stores each document, then opens it through a viewer with an isolated document frame and a restrictive Content Security Policy. The viewer listens on loopback by default, with explicit LAN and Tailscale reader modes for self-hosting.
