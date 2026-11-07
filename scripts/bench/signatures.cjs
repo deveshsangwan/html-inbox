@@ -107,7 +107,9 @@ async function assertReceiver(store, expected, bytes) {
     assert.ok(source);
     assert.deepEqual(load('sync-store.js').toOriginState(record), load('sync-store.js').toOriginState(source));
     assert.equal(typeof record.bodyFile, 'string');
-    assert.deepEqual(await fs.readFile(path.join(ledger.ownerAnchor.home, 'sync', 'bodies', record.bodyFile)), bytes);
+    const document = await store.getDocument(record.localId);
+    assert.ok(document);
+    assert.deepEqual(document.originalBytes, bytes);
   }
 }
 
@@ -147,16 +149,28 @@ async function workerWorkload({ root, source, expected, bytes, count, measure })
       credentials: { synthetic_token: tokenPath }, trust: { synthetic_ca: tls.caPath } });
     await source.setWorkerEnabled(true);
 
-    // Large histories measure an already-synchronized worker. The production worker's
-    // 60-second pass ceiling stays unchanged; setup reconciliation has its existing 300-second bound.
-    if (count > 100) {
-      const result = await load('sync-reconciliation.js').reconcileSyncRoutes({ store: source, peerId: sourceLedger.inboxId,
-        credentials, routeIds: [route.id], deadlineMs: 300_000, requestMs: 30_000 });
-      assert.equal(result.routes.length, 1);
-      assert.equal(result.routes[0].status, 'confirmed', JSON.stringify(result));
-      assert.equal(result.routes[0].transferred, count);
-      await assertReceiver(receiver, expected, bytes);
+    // Populate custody through public validating operations. These are actual receiver
+    // receipts, not evidence of an initial TLS transfer. Timing covers a later confirmed no-op.
+    const { routeAuthorization, reconcileSyncRoutes } = load('sync-reconciliation.js');
+    const outbound = routeAuthorization(route);
+    const inbound = { ...outbound, peerId: sourceLedger.inboxId };
+    const cut = await source.inventory(outbound);
+    const nonce = crypto.randomUUID();
+    const evidence = load('sync-wire.js').createEvidence(route, sourceLedger.inboxId, nonce, cut);
+    await receiver.completeInventory(inbound, evidence, cut.states, nonce);
+    for (const state of cut.states) {
+      const applied = await receiver.apply(inbound, state, bytes);
+      assert.equal(applied.status, 'committed');
+      await source.acknowledge(outbound, applied.receipt);
     }
+
+    await assertReceiver(receiver, expected, bytes);
+    const preparation = await reconcileSyncRoutes({ store: source, peerId: sourceLedger.inboxId,
+      credentials, routeIds: [route.id], deadlineMs: 300_000, requestMs: 30_000 });
+    assert.equal(preparation.routes.length, 1);
+    assert.equal(preparation.routes[0].status, 'confirmed', JSON.stringify(preparation));
+    assert.equal(preparation.routes[0].transferred, 0);
+    await assertReceiver(receiver, expected, bytes);
 
     await measure(`signatures/worker-startup/${count}`, async () => {
       worker = await load('sync-worker.js').startOwnedSyncWorker(sourceLedger.ownerAnchor.home, { temporary: true });
@@ -177,13 +191,13 @@ async function workerWorkload({ root, source, expected, bytes, count, measure })
         assert.equal(ticket.routes[0].transferred, expectedTransfers, JSON.stringify(ticket));
 
         return { wire: difference(server.status().counters, before), transferred: expectedTransfers,
-          scope: 'sender worker plus authenticated TLS receiver in the same process' };
+          scope: 'sender worker plus authenticated TLS receiver in the same process',
+          preparation: 'public completeInventory/apply/acknowledge created actual custody, then confirmed real TLS reconciliation with zero transfers' };
       });
     }
 
-    if (count <= 100) await runPass('worker-initial', count);
     await assertReceiver(receiver, expected, bytes);
-    await runPass('worker-noop', 0);
+    await runPass('worker-noop-validated-custody', 0);
     await assertReceiver(receiver, expected, bytes);
     await measure(`signatures/worker-idle/${count}`, async () => {
       await delay(1000);
@@ -266,7 +280,7 @@ async function churnWorkload({ root, count, measure }) {
   });
 }
 
-async function runSignatures({ root, count, size, record, seed, html, setup, signatureMode = 'full', implementationDist }) {
+async function runSignatures({ root, count, size, record, seed, html, setup, historyOnly = false, signatureMode = 'full', implementationDist }) {
   if (implementationDist) dist = path.resolve(implementationDist);
 
   assert.ok(['full', 'keys'].includes(signatureMode), 'signature mode must be full or keys');
@@ -333,7 +347,9 @@ async function runSignatures({ root, count, size, record, seed, html, setup, sig
     });
   }
 
-  await workerWorkload({ root, source, expected: expectedRecords, bytes, count, measure });
+  if (!historyOnly) {
+    await workerWorkload({ root, source, expected: expectedRecords, bytes, count, measure });
+  }
   await churnWorkload({ root, count, measure });
 }
 

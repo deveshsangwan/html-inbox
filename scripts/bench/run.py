@@ -18,7 +18,7 @@ REPO = Path(__file__).resolve().parents[2]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('workload', choices=['baseline', 'cli', 'viewer', 'worker', 'parser', 'managed', 'sync', 'signatures'])
+    parser.add_argument('workload', choices=['baseline', 'cli', 'viewer', 'worker', 'parser', 'managed', 'sync', 'signatures', 'signature-history'])
     parser.add_argument('--counts', default='0,100')
     parser.add_argument('--sizes', default='10240,1048576,9437184')
     parser.add_argument('--samples', type=int, default=3)
@@ -41,9 +41,9 @@ def main():
         parser.error('node was not found; supply --node with an executable path')
     if args.candidate and args.workload not in ['baseline', 'parser']:
         parser.error('--candidate requires the parser or baseline workload')
-    if args.signature_mode != 'full' and args.workload != 'signatures':
+    if args.signature_mode != 'full' and args.workload not in ['signatures', 'signature-history']:
         parser.error('--signature-mode requires the signatures workload')
-    if (args.implementation_dist or args.implementation_ref) and args.workload != 'signatures':
+    if (args.implementation_dist or args.implementation_ref) and args.workload not in ['signatures', 'signature-history']:
         parser.error('--implementation-dist and --implementation-ref require the signatures workload')
     if bool(args.implementation_dist) != bool(args.implementation_ref):
         parser.error('--implementation-dist and --implementation-ref must be supplied together')
@@ -144,7 +144,7 @@ def main():
                                 dist_js_sha256=dist_hash.hexdigest(),
                                 candidate_sha256=hashlib.sha256(Path(args.candidate).read_bytes()).hexdigest() if args.candidate else None)
             signature_implementation = None
-            if args.workload == 'signatures':
+            if args.workload in ['signatures', 'signature-history']:
                 signature_dist = (args.implementation_dist or REPO / 'packages/cli/dist').resolve()
                 if not (signature_dist / 'sync-store.js').is_file():
                     parser.error('signature implementation dist must contain sync-store.js')
@@ -174,13 +174,13 @@ def main():
                         run('cli/version', cli + ['--version'])
                 for count in counts:
                     home = root / f'library-{count}'
-                    if args.workload == 'signatures':
+                    if args.workload in ['signatures', 'signature-history']:
                         signature_helper = node + ['--expose-gc', str(REPO / 'scripts/bench/workload.cjs')]
                         for sample in range(args.samples):
                             signature_root = root / f'signatures-{count}-{sample}'
                             fixture_args = [str(signature_root), str(count), str(sizes[0]), '1', args.signature_mode, '-', str(signature_dist)]
                             run(f'signatures/setup/{count}', signature_helper + ['signature-setup'] + fixture_args)
-                            run(f'signatures/process/{count}', signature_helper + ['signatures'] + fixture_args)
+                            run(f'signatures/process/{count}', signature_helper + [args.workload] + fixture_args)
                             shutil.rmtree(signature_root)
                     if args.workload in ['baseline', 'cli', 'viewer']:
                         run(f'setup/{count}', helper + ['seed', str(home), str(count), str(sizes[0]), '1'])
