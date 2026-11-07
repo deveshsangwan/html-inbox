@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { writeFile, realpath } from "node:fs/promises";
+import { chmod, writeFile, realpath, lstat, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { test } from "node:test";
@@ -73,7 +73,7 @@ test("optional worker record removal between existence check and checked read is
     const assert = require("node:assert/strict");
     const fs = require("node:fs/promises");
     const path = require("node:path");
-    const [modulePath, home, boundary] = process.argv.slice(1);
+    const [modulePath, home, boundary, expected] = process.argv.slice(1);
     const target = path.join(home, "sync", "worker", "runtime.json");
     let hits = 0;
     const operation = boundary === "fstat" ? "open" : boundary;
@@ -92,6 +92,14 @@ test("optional worker record removal between existence check and checked read is
       return perform(...args);
     };
     (async () => {
+      if (expected === "unsafe") {
+        await assert.rejects(require(modulePath).readWorkerRecordOffline(home), /private permissions/);
+        assert.equal(hits, 0);
+        assert.equal(await fs.readFile(target, "utf8"), "{}");
+        process.stdout.write(JSON.stringify({ hits, unsafe: true }));
+        return;
+      }
+
       const value = await require(modulePath).readWorkerRecordOffline(home);
       assert.equal(value, null);
       assert.equal(hits, 1);
@@ -100,10 +108,25 @@ test("optional worker record removal between existence check and checked read is
   `;
   const { mkdir } = await import("node:fs/promises");
   await mkdir(path.join(root, "sync", "worker"), { recursive: true, mode: 0o700 });
-  for (const boundary of ["realpath", "open", "fstat"]) {
-    await writeFile(path.join(root, "sync", "worker", "runtime.json"), "{}", { mode: 0o600 });
-    const result = await runNode(process.execPath, ["-e", script, path.join(__dirname, "sync-worker-records.js"), root, boundary], { timeout: 5000 });
-    assert.deepEqual(JSON.parse(result.stdout), { hits: 1, absent: true });
+  const recordPath = path.join(root, "sync", "worker", "runtime.json");
+  for (const mode of [0o600, 0o644]) {
+    for (const boundary of ["realpath", "open", "fstat"]) {
+      await rm(recordPath, { force: true });
+      await writeFile(recordPath, "{}", { mode });
+      if (process.platform !== "win32") {
+        await chmod(recordPath, mode);
+      }
+
+      // Windows does not expose private POSIX modes; observed unsafe metadata must reject before open.
+      const hasPrivatePermissions = ((await lstat(recordPath)).mode & 0o077) === 0;
+      if (process.platform !== "win32") {
+        assert.equal(hasPrivatePermissions, mode === 0o600);
+      }
+
+      const expected = boundary === "realpath" || hasPrivatePermissions ? "absent" : "unsafe";
+      const result = await runNode(process.execPath, ["-e", script, path.join(__dirname, "sync-worker-records.js"), root, boundary, expected], { timeout: 5000 });
+      assert.deepEqual(JSON.parse(result.stdout), expected === "absent" ? { hits: 1, absent: true } : { hits: 0, unsafe: true });
+    }
   }
 
   await writeFile(path.join(root, "sync", "worker", "runtime.json"), "{}", { mode: 0o600 });

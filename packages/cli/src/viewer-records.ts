@@ -33,6 +33,7 @@ export interface ViewerRecordReadOptions {
 }
 
 export class ViewerRecordFormatError extends Error {}
+export class ViewerRecordChangedError extends ManagedStorageError {}
 
 export async function getInboxInstanceId(home: string): Promise<string> {
   await ensurePrivateDirectory(home);
@@ -225,10 +226,11 @@ async function readPrivateJson(
       current !== undefined && current !== null && current.dev === info.dev && current.ino === info.ino);
     if (info.nlink === 0 || current === null || !hasSameFallbackFile) {
       if (remainingAttempts === 0) {
-        throw new ManagedStorageError(`Viewer record changed repeatedly during read; retry the command: ${filePath}`);
+        throw new ViewerRecordChangedError(`Viewer record changed repeatedly during read; retry the command: ${filePath}`);
       }
 
-      return readPrivateJson(filePath, options, remainingAttempts - 1);
+      // Observe the retry's rejection before asynchronous descriptor cleanup delays this frame.
+      return await readPrivateJson(filePath, options, remainingAttempts - 1);
     }
 
     // Catalog inspection and administrator service commands must preserve source permissions.

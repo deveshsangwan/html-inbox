@@ -140,6 +140,9 @@ test("an already-fired native interval delivered after close cannot admit anothe
 
 for (const owner of ["client", "pass", "pass-cancel", "final-snapshot-cancel"] as const) {
   test(`${owner} owns its actual watcher until the finalizer joins`, { timeout: 10_000 }, async (t) => {
+    const passMs = 5000;
+    // The owner can use its full pass budget before close begins; the fixture must keep its watcher held until then.
+    const finalizerWaitMs = passMs + 1000;
     const f = await lifetimeFixture(t);
     const requestGate = latch();
     const nativeServer = https.createServer;
@@ -161,7 +164,7 @@ for (const owner of ["client", "pass", "pass-cancel", "final-snapshot-cancel"] a
 
       selected = check;
       entered.release();
-      await reached(release.promise, "owner's pre-enqueue watcher released");
+      await reached(release.promise, "owner's pre-enqueue watcher released", finalizerWaitMs);
     };
     observer.hooks.closing = (id, _store, result) => {
       if (id !== selected?.attempt) return;
@@ -186,14 +189,14 @@ for (const owner of ["client", "pass", "pass-cancel", "final-snapshot-cancel"] a
     const running = owner === "client"
       ? client.json(routeAuthorization(route), "identity", { nonce: opaqueToken() }, parseIdentityResponse, WIRE_LIMITS.identity, { requestMs: 1000 })
       : reconcileSyncRoutes({ store: f.source, peerId: f.a.inboxId, routeIds: [route.id], credentials: () => ({ token: f.token, ca: endpoint.ca }),
-        signal: controller.signal, requestMs: 1000, deadlineMs: 5000 });
+        signal: controller.signal, requestMs: 1000, deadlineMs: passMs });
     let returned = false;
     const observed = running.then((value) => { returned = true; return value; });
     void observed.catch(() => {});
     f.cleanup.push(async () => { requestGate.release(); release.release(); await Promise.allSettled([observed]); });
     await reached(entered.promise, "owning source watcher's actual callback");
     requestGate.release();
-    await reached(closing.promise, "real owner's close finalizer");
+    await reached(closing.promise, "real owner's close finalizer", finalizerWaitMs);
     assert.equal(returned, false, "the owner cannot finish while its admitted producer is held");
     if (owner === "pass-cancel") controller.abort(new Error("cancel during actual close drain"));
     release.release();

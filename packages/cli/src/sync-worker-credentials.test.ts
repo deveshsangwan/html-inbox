@@ -40,8 +40,23 @@ test("explicit retry resolves a rotated route after an unrelated reconciliation 
 
   await f.json(["sync", "mapping", "add", "--inbox", f.destination.name, "--config", await mapping(inbound, 0)]);
   await f.json(["sync", "mapping", "add", "--inbox", f.source.name, "--config", await mapping(target, 0)]);
-  await f.json(["sync", "run", "--route", target.id, "--inbox", f.source.name]);
-  await waitUntil("first target revision custody", () => f.source.store.deliveryStatus(target.id, f.sourceId, "credential-freshness"), (value) => value.isCommitted);
+  const firstRun = await f.json(["sync", "run", "--route", target.id, "--inbox", f.source.name]);
+  try {
+    await waitUntil("first target revision custody", () => f.source.store.deliveryStatus(target.id, f.sourceId, "credential-freshness"), (value) => value.isCommitted);
+  } catch (error) {
+    try {
+      const ledger = await f.source.store.snapshot();
+      const received = await f.destination.store.snapshot();
+      t.diagnostic(JSON.stringify({ phase: "first-target-custody", firstRun, route: ledger.routes[target.id], retry: ledger.routeRetries[target.id],
+        pending: Object.values(ledger.outbox).filter((entry) => entry.routeId === target.id).map(({ disposition, attempts, lastError }) => ({ disposition, attempts, lastError })),
+        receiverRoute: received.routes[target.id], receiverRetry: received.routeRetries[target.id],
+        receiverReceipts: Object.values(received.receipts).filter((receipt) => receipt.routeId === target.id && receipt.revision === 1).length,
+        passes: (await readFile(path.join(f.root, "credential-pass-results.jsonl"), "utf8").catch(() => "")).trim().split("\n").slice(-16) }));
+    } finally {
+      // Failure observations must preserve the original custody timeout.
+      throw error;
+    }
+  }
   await f.json(["sync", "mapping", "reconnect", target.id, "--revision", "1", "--config", await mapping({ ...inbound, credentialRef: "next" }, 1), "--inbox", f.destination.name]);
   await f.json(["sync", "mapping", "reconnect", target.id, "--revision", "1", "--config", await mapping(target, 1), "--inbox", f.source.name]);
   await f.json(["sync", "run", "--route", target.id, "--inbox", f.source.name]);

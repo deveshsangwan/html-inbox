@@ -36,7 +36,7 @@ async function fixture(t: TestContext) {
   return { home, store, cleanup, ledgerPath: path.join(home, "sync", "ledger.json") };
 }
 
-async function holdReplacement(t: TestContext, ledgerPath: string, replace: () => Promise<void>, phase: "lstat-result" | "opened-handle", limit = 1, validReplacement = true) {
+async function holdReplacement(t: TestContext, ledgerPath: string, replace: () => Promise<void>, phase: "lstat-result" | "opened-handle" | "completed-handle", limit = 1, validReplacement = true) {
   const originalLstat = fs.lstat;
   const originalOpen = fs.open;
   let hits = 0;
@@ -93,8 +93,10 @@ async function holdReplacement(t: TestContext, ledgerPath: string, replace: () =
       const file = await originalOpen(...args);
       if (args[0] === ledgerPath && !hits) {
         const originalStat = file.stat.bind(file);
+        let observations = 0;
         t.mock.method(file, "stat", async (options?: { bigint?: boolean }) => {
-          if (hits) {
+          observations += 1;
+          if (hits || phase === "completed-handle" && observations === 1) {
             return originalStat(options);
           }
 
@@ -108,7 +110,133 @@ async function holdReplacement(t: TestContext, ledgerPath: string, replace: () =
     });
   }
 
-  return { hits: () => hits };
+  return { hits: () => hits, isReplacing: () => replacing };
+}
+
+for (const phase of ["lstat-result", "opened-handle", "completed-handle"] as const) {
+  test(`ledger snapshot retries when the ${phase} replacement is itself replaced during validation`, async (t) => {
+    const { store, ledgerPath } = await fixture(t);
+    const originalOpen = fs.open;
+    const race = await holdReplacement(t, ledgerPath, () => store.setWorkerEnabled(true), phase);
+    const interceptedLstat = fs.lstat;
+    let validationReplacements = 0;
+
+    t.mock.method(fs, "lstat", async (...args: Parameters<typeof fs.lstat>) => {
+      if (args[0] !== ledgerPath || race.hits() !== 1 || race.isReplacing() || validationReplacements) {
+        return interceptedLstat(...args);
+      }
+
+      validationReplacements += 1;
+      const retained = await originalOpen(ledgerPath, "r");
+      try {
+        await store.recordWorkerRun(123, null);
+        // Deliver real old-inode metadata, as in the controlled path-lookup race above.
+        const replaced = await retained.stat({ bigint: args[1]?.bigint });
+        assert.equal(Number(replaced.nlink), 0);
+        return replaced;
+      } finally {
+        await retained.close();
+      }
+    });
+
+    const current = await store.snapshot();
+    assert.equal(current.worker.enabled, true);
+    assert.equal(current.worker.lastRunAt, 123);
+    assert.equal(validationReplacements, 1);
+  });
+}
+
+for (const phase of ["opened-inode", "canonical-inode", "canonical-unlinked-inode"] as const) {
+  test(`ledger snapshot retries when a different ${phase} is replaced again`, async (t) => {
+    const { store, ledgerPath } = await fixture(t);
+    const originalOpen = fs.open;
+    const originalLstat = fs.lstat;
+    let replacements = 0;
+    let replacing = false;
+
+    async function replace() {
+      replacements += 1;
+      replacing = true;
+      try {
+        await store.recordWorkerRun(replacements, null);
+      } finally {
+        replacing = false;
+      }
+    }
+
+    t.mock.method(fs, "open", async (...args: Parameters<typeof fs.open>) => {
+      const selected = args[0] === ledgerPath && replacements === 0;
+      if (selected) await replace();
+
+      const file = await originalOpen(...args);
+      if (selected && phase === "opened-inode") await replace();
+
+      return file;
+    });
+    t.mock.method(fs, "lstat", async (...args: Parameters<typeof fs.lstat>) => {
+      if (args[0] === ledgerPath && phase !== "opened-inode" && replacements === 1 && !replacing) {
+        const retained = await originalOpen(ledgerPath, "r");
+        try {
+          await replace();
+          if (phase === "canonical-unlinked-inode") {
+            const replaced = await retained.stat({ bigint: args[1]?.bigint });
+            assert.equal(Number(replaced.nlink), 0);
+            return replaced;
+          }
+        } finally {
+          await retained.close();
+        }
+      }
+
+      return originalLstat(...args);
+    });
+
+    assert.equal((await store.snapshot()).worker.lastRunAt, 2);
+    assert.equal(replacements, 2);
+  });
+}
+
+for (const condition of ["symlink", "hardlink", "public-mode"] as const) {
+  test(`replacement validation rejects an observed ${condition} even after a safe commit replaces it`, async (t) => {
+    const { home, store, ledgerPath } = await fixture(t);
+    const originalLstat = fs.lstat;
+    const race = await holdReplacement(t, ledgerPath, () => store.setWorkerEnabled(true), "completed-handle");
+    const interceptedLstat = fs.lstat;
+    const savedPath = path.join(home, "saved-ledger");
+    let observations = 0;
+
+    t.mock.method(fs, "lstat", async (...args: Parameters<typeof fs.lstat>) => {
+      if (args[0] !== ledgerPath || race.hits() !== 1 || race.isReplacing() || observations) {
+        return interceptedLstat(...args);
+      }
+
+      observations += 1;
+      if (condition === "symlink") {
+        await fs.rename(ledgerPath, savedPath);
+        await symlink(savedPath, ledgerPath);
+      } else if (condition === "hardlink") {
+        await link(ledgerPath, savedPath);
+      } else {
+        await chmod(ledgerPath, 0o644);
+      }
+
+      const unsafe = await originalLstat(...args);
+      if (condition === "symlink") {
+        await rm(ledgerPath);
+        await fs.rename(savedPath, ledgerPath);
+      } else if (condition === "hardlink") {
+        await rm(savedPath);
+      } else {
+        await chmod(ledgerPath, 0o600);
+      }
+
+      await store.recordWorkerRun(123, null);
+      return unsafe;
+    });
+
+    await assert.rejects(store.snapshot(), /unsafe during read/);
+    assert.equal(observations, 1, "an unsafe observed inode cannot authorize a retry");
+  });
 }
 
 test("ledger snapshot accepts a new valid commit after the checked inode was replaced", async (t) => {

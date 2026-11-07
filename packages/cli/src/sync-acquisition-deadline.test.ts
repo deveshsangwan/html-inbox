@@ -311,17 +311,28 @@ async function runWorkerScenario(root: string, t: TestContext) {
     const ca = await readFile(tls.caPath);
 
     let laterHits = 0;
+    let laterQueueFailure: unknown;
     const communicate = source.startCommunication.bind(source);
     const later = mock.method(source, "startCommunication", async (...args: Parameters<typeof communicate>) => {
       laterHits += 1;
-      if (laterHits !== 2) return communicate(...args);
 
-      return holdQueue(sourceHome, 140, () => communicate(...args));
+      if (laterHits !== 2) {
+        return communicate(...args);
+      }
+
+      // Start the queue deadline at this boundary so earlier setup cannot expire it.
+      try {
+        return await expireHeldQueue(sourceHome, 100);
+      } catch (error) {
+        laterQueueFailure = error;
+        throw error;
+      }
     });
     const client = new SyncClient(source, sourceIdentity.inboxId, () => { throw new Error("later queue expiry resolved credentials"); });
     try {
-      await assert.rejects(client.json(authorization, "identity", {}, parseIdentityResponse, WIRE_LIMITS.identity,
-        { requestMs: 100, deadlineAt: Date.now() + 300 }), (error: unknown) => {
+      await assert.rejects(client.json(authorization, "identity", {}, parseIdentityResponse, WIRE_LIMITS.identity),
+        (error: unknown) => {
+          assert.equal(error, laterQueueFailure, "later communication preserves the queue error identity");
           assert.ok(error instanceof StoreLockQueueDeadlineError);
           assert.equal(classifySyncFailure(error).kind, "blocked");
           return true;
@@ -561,9 +572,9 @@ async function expireHeldQueue(home: string, requestMs: number, signal?: AbortSi
   try {
     await Promise.race([ready, holder]);
     return await withStoreLock(directory, requestMs,
-      () => assert.fail("The initial admission must expire while queued"), signal);
+      () => assert.fail("The held store queue must expire before protected work"), signal);
   } catch (error) {
-    assert.ok(error instanceof StoreLockQueueDeadlineError, "the real queue deadline must supply the retryable failure");
+    assert.ok(error instanceof StoreLockQueueDeadlineError, "the real queue deadline must supply the failure");
     throw error;
   } finally {
     release();

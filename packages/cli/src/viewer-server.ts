@@ -11,7 +11,7 @@ import { ManagedStorageError } from "./private-storage";
 import { startViewerHttpServer, type ViewerHttpServer } from "./viewer-http-server";
 import { resolveViewerNetworkConfig, type ViewerNetworkOptions } from "./viewer-network";
 import { cleanupTailscale, prepareTailscale, startTailscale, type PreparedTailscale } from "./viewer-tailscale";
-import { getInboxInstanceId, hasErrorCode, readSavedViewerConfiguration, readViewerRecord, removeViewerRecord, saveViewerConfiguration, ViewerRecordFormatError, writeViewerRecord, type ViewerRecord } from "./viewer-records";
+import { getInboxInstanceId, hasErrorCode, readSavedViewerConfiguration, readViewerRecord, removeViewerRecord, saveViewerConfiguration, ViewerRecordChangedError, ViewerRecordFormatError, writeViewerRecord, type ViewerRecord } from "./viewer-records";
 import { acquireViewerStartLock, hasInheritedViewerStartLock, isProcessAlive } from "./viewer-start-lock";
 import { spawnDetachedViewer } from "./viewer-process";
 import { getControlHealth, getViewerStatus, isPortListening, resolveViewerConfiguration, VIEWER_PROTOCOL_VERSION, type ViewerStatus } from "./viewer-status";
@@ -351,7 +351,20 @@ function shutdownDeadline(record: ViewerRecord): number {
 
 async function waitForViewerRecordCleanup(home: string, record: ViewerRecord, deadline: number): Promise<ViewerRecord | null> {
   while (Date.now() < deadline) {
-    const remaining = await readViewerRecord(home);
+    let remaining: ViewerRecord | null;
+    try {
+      remaining = await readViewerRecord(home);
+    } catch (error) {
+      if (!(error instanceof ViewerRecordChangedError)) {
+        throw error;
+      }
+
+      // A bounded snapshot read can race shutdown's record removal. Keep polling
+      // within the existing shutdown deadline; instability is not proof of absence.
+      await delay(50);
+      continue;
+    }
+
     if (!remaining) {
       return null;
     }
