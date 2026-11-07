@@ -9,7 +9,7 @@ Commands and results:
 | Command | Exit | Result |
 | --- | --- | --- |
 | `corepack pnpm install --frozen-lockfile` | 0 | Frozen dependencies installed; no lockfile change |
-| `node --test scripts/release-policy.test.mjs` | 0 | 3 passed; branch, engine, version, premature tag and modern activation rejection |
+| `node --test scripts/release-policy.test.mjs` | 0 | First candidate: 3 passed; final candidate: 4 passed, including latest rollback protection |
 | `node --test scripts/skill-cli-resolution.test.mjs scripts/skill-cli-windows.test.mjs` | 0 | 148 total, 146 passed, 2 skipped on Linux |
 | `node scripts/verify-site.mjs` | 0 | 15 pages passed |
 | `node --test scripts/site-theme.test.mjs` | 0 | 9 passed |
@@ -49,3 +49,18 @@ Pinned revision: `157722a9649eb409852c4ed14936c983ff70afc9`. Codex gpt-6.1-sol H
 - Quality suggestion 7: retain the existing direct-node CI test pattern because pnpm 11 requires the build runtime and these steps execute on Node 20 as well. No unrelated CI refactor.
 
 Second candidate validation: `node --test scripts/release-policy.test.mjs` passed 4 tests; site integrity and 9 theme tests passed; `git diff --check` passed. No production runtime or package change was added by review fixes. Both fresh final review verdicts will be recorded in the PR.
+
+
+## Final independent reviews
+
+Both fresh reviewers inspected base `099dcbd6378e3b6f73216966cfe9ea7f91ed5d8e` through `8b9fbb4d1267a2157057966f29fa2ee52fd20494` and confirmed reading the entire execution contract. Codex gpt-6.1-sol High and Claude Code claude-sonnet-5-5 Medium each passed functionality, code quality and prerequisite performance evidence. No material findings remain.
+
+Final dispositions:
+
+- Accepted quality Low 1–3: rejection tables now match expected diagnostic messages, use one row per line and single blank lines; the validation table labels first versus final policy-test counts. These are test/reporting polish only, with no production change after the reviewed revision.
+- Quality suggestion 4: retain existing diagnostic order; a 0.6 release after modern latest is rejected either way. Guard-specific tests now make the rejection clear.
+- Quality suggestion 5: keep draft pending package CI. Source/package/browser/runtime matrix execution has not run locally.
+- Quality suggestion 6: retain intentional self-contained skill copies and coordinated activation documentation.
+- Functionality suggestion: maintenance-tag rollback protection remains an explicit activation gate. Before enabling modern publication, read the current `node20` tag as well as `latest` and reject a lower maintenance version, including numeric patch ordering regression tests. The current prerequisite only guards `latest`; no modern release is enabled here.
+
+Final lightweight rerun: 4 policy tests passed and `git diff --check` passed. GitHub Verify was in progress when inspected on the reviewed revision; that is not a package-pass claim. The PR remains draft until required CI finishes successfully.
