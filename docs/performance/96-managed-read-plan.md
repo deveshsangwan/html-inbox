@@ -232,3 +232,48 @@ checks. This request excludes installs, bundles, full suites, servers/workers
 and sustained measurements. Preserve all original failures and stop on a
 behavior or lifetime mismatch before changing the oracle. A later scoped
 request will address full-operation performance qualification.
+
+## Scoped-reader decoration and normal CI follow-up
+
+For a source advertising `withReadView`, that capability supplies the scoped
+reader for consumers opting into it. Decorating the ordinary public getter on
+an internal concrete adapter does not decorate its scoped reader. A decorator
+must wrap `withReadView` too, or omit it and provide a list/get-only facade.
+This does not change structural fallback dispatch or export origin exclusion.
+
+The hosted red at 750baae was `Missing expected rejection` in the existing
+reader-race test on Ubuntu Node 20/24 and macOS Node 20. Source inspection found
+that its replacement of `fixture.source.getDocument` was outside the selected
+scoped-reader path. The production post-fetch origin/metadata/buffer checks
+remain unchanged. The new source-only repair retains the real returned import,
+exact rejection/fetch count, unchanged previous output and no staging assertions
+for independent actual-view and list/get-only fallback routes. The view wrapper
+throws on outer fallback and requires exactly one callback entry.
+
+A second scenario produces a real fork-inherited original after listing. It
+asserts that every fetched non-origin metadata field, local ID and body byte
+matches the listed original, while origin is present. Both routes must reject,
+so metadata, ID or body discrepancies cannot substitute for the origin guard.
+These repaired controls have not run, and source inspection alone is not a
+complete runtime causal proof for the original CI failure. The red 750baae logs
+and the unrelated historical 42232780 timeout failures remain separate evidence.
+
+Amend the queued correctness phase with one selected-case command per exact
+runtime, in addition to its ten checks:
+
+```sh
+/absolute/node --test --test-name-pattern='^export fetched-origin guard rejects (imported|origin-only) return through (view|fallback)$' packages/cli/dist/sync-reader-compatibility.test.js
+```
+
+This selects four export-origin cases. Their fixture setup starts no listener
+or worker. Do not run the whole containing HTTPS/viewer suite in this phase.
+
+For eventual normal CI integration, the smallest proposed route is a compiled
+POSIX-only `.test.ts` entry in the existing unit discovery that invokes the
+retained non-GC actual-view controls once under the current `process.execPath`,
+using existing owned-child harness conventions and a bounded deadline. This
+would run in the current Node 20/24 source matrix without a new workflow or
+framework. Keep the GC-specific retention invocation separate, explicitly
+passing `--expose-gc` on supported POSIX runtimes in an existing harness/source
+step. Final placement and any fixture factoring follow correctness qualification;
+no CI wiring or change to the frozen standalone controls is included now.
