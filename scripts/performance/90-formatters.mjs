@@ -64,6 +64,8 @@ if (mode === "run") {
 
   // Exact bytes, including shell markup, under changed locale and runtime timezone defaults.
   for (const node of nodes) {
+    const nodeVersion = execFileSync(node, ["--version"], { encoding: "utf8" }).trim();
+
     for (const locale of ["en_US.UTF-8", "fr_FR.UTF-8", "ar_EG.UTF-8"]) {
       const env = { ...process.env, LANG: locale, LC_ALL: locale };
       const outputs = Object.fromEntries(Object.entries(builds).map(([label, dist]) => {
@@ -72,7 +74,7 @@ if (mode === "run") {
         return [label, result.stdout];
       }));
       assert.equal(outputs.candidate, outputs.baseline);
-      writeFileSync(path.join(output, `equivalence-${path.basename(path.dirname(path.dirname(node)))}-${locale}.json`), outputs.candidate);
+      writeFileSync(path.join(output, `equivalence-${nodeVersion}-${locale}.json`), outputs.candidate);
     }
   }
 } else if (mode === "fixture") {
