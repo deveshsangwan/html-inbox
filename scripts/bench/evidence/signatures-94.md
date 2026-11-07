@@ -1,6 +1,6 @@
 # Issue 94 qualification plan and receipt
 
-Status: local qualification reports GO for the measured scope. Root has not independently verified that receipt. Full local gates passed on Node 20.20.2 and 24.19.0. The exclusive local slot was explicitly released to root and granted to queued issue 92. Independent reviews, current-head CI and root gates remain open; PR 119 stays draft.
+Status: local qualification reports GO for the measured scope. Root has not independently verified that receipt. Full local gates passed on Node 20.20.2 and 24.19.0. The exclusive local slot was explicitly released to root and granted to queued issue 92. Both independent reviews pass functionality, code quality and scoped performance evidence at frozen `821a19e`. CI at that reviewed pin is green. The post-review documentation follow-up still needs its normal CI and root gates; PR 119 stays draft.
 
 Issue: https://github.com/deveshsangwan/html-inbox/issues/94
 
@@ -14,7 +14,9 @@ The process owns one cache shared across inboxes, short-lived readers and the wo
 
 Limits are 128 parsed Ed25519 keys with a 256 KiB budget and 16,384 successful verification tuples with a 16 MiB budget. A verification tuple over 128 KiB bypasses retention. Budgets charge two bytes per retained code unit plus 512 bytes per parsed key or 256 bytes per verification entry. Detached text prevents backing-string retention. Counts also bound Map entries and fixed-size Ed25519 KeyObjects. These are retained-input budgets with allowances, not an exact measurement of V8/native allocations. Qualification must report actual heap, external memory and RSS too. Cache lifetime ends with the process. There is no persistent cache, trust decision, storage policy or wire change.
 
-## Preselected measurements
+## Original preselected plan, historical
+
+This section preserves the pre-experiment plan. The failed pilots and accepted scope adjustment below supersede the initial-transfer, large-worker and 10,000-record ambitions. The qualified matrix is 0/100-record warm worker/read cells plus standalone 1,000-record read/churn cells. No 10,000-record or over-capacity repeating-scan result was measured. Use the final reproduction commands below.
 
 The primary benefit metric is process CPU per full managed list/get read and per configured owned-worker confirmed no-op pass over authenticated loopback TLS. Elapsed time is supporting evidence. Snapshot timing is a secondary explanation. Record wall time and process CPU for all operations, crypto key-parse and verification counts, exact output checks, retained heap/external/RSS after explicit GC when available, and process peak RSS. Both in-process peers count toward CPU and memory. OS filesystem caches are uncontrolled and usually warm. A fresh process means a cold application cache only.
 
@@ -39,7 +41,7 @@ Required proofs include repeated rejection of changed signatures, signed fields 
 - `node --check packages/cli/src/sync-signature-integrity.test.ts`, exit 0.
 - `git diff --check`, exit 0.
 
-These are syntax/whitespace checks. Lightweight assertions also checked the companion operation I/O parser and Python runner syntax. No compiled production test, install, build, full suite or benchmark ran during source activation. The companion corrects operation I/O matching only for its opt-in mode; inherited timed workloads retain their original behavior.
+These are syntax/whitespace checks. Lightweight assertions also checked the companion operation I/O parser and Python runner syntax. No compiled production test, install, build, full suite or benchmark ran during source activation. The final shared I/O parser is exactly the parent expression. The intermediate escaping regression, red/green check and unchanged signature-path evidence are documented below.
 
 ## Qualification receipt
 
@@ -65,20 +67,30 @@ Original published head was `999c75d37e1f1d86c25e58b4d45db3f96a66df38`, run `423
 
 - Ubuntu Node 20 shard 2 job `128450720113` failed `actual client rejects oversized identity response and leaves recoverable work`: receiver request count was 0 versus expected 1. The test uses a 500 ms request budget. Earlier safety assertions passed. Cause is unresolved; unchanged source and a green parent job do not establish a pre-existing failure. Narrow diagnosis remains with issue 94; no production or test patch has been made for this CI failure.
 - Windows browser job `128450720154` failed the legacy, non-managed changed-deletion fixture during `viewer.json` cleanup with EPERM. Root assigned issue 93 as the single read-only shared diagnostic lead; this cache PR leaves that surface unchanged pending coordination.
-- Verify job `128452400001` is the aggregate failed gate. Parent PR 114 at exact `610c931` has successful corresponding Ubuntu Node 20 and Windows browser jobs. Original job logs, current checks/comments and parent-check context are in the raw archive. No retry has been used to chase green. A new frozen head will receive normal CI; do not rerun a superseded head just for a green badge.
+- Verify job `128452400001` is the aggregate failed gate. Parent PR 114 at exact `610c931` has successful corresponding Ubuntu Node 20 and Windows browser jobs. Original job logs, current checks/comments and parent-check context are in the raw archive. No retry has been used to chase green. The new frozen review head received normal CI and passed; the obsolete head was not rerun for a green badge.
 
-Pending: fresh independent Sol High and claudeAgent Sonnet 5.5 Medium read-only reviews at the same frozen revision, all three verdicts from both, finding disposition, current-head CI and root verification. Each owner now babysits its own PR through the requested watch; delegated reviewers/helpers never watch. No merge, release, publication or modern forward-port is part of this work.
+Completed: fresh independent Sol High and claudeAgent Sonnet 5.5 Medium read-only reviews of the same frozen `821a19e`, with PASS verdicts from both on functionality, code quality and scoped performance evidence. See [all findings and dispositions](signatures-94-reviews.md). The reviewed pin has 16 successful Verify Actions checks, a successful CodeRabbit status and one skipped Macroscope check, 18 nonblocking rollup entries. Pending: normal CI for the doc-only follow-up and root audit/approval. The original failures remain unresolved observations; later green jobs do not establish their causes. Each owner now babysits its own PR through the requested watch; delegated reviewers/helpers never watch. No merge, release, publication or modern forward-port is part of this work.
 
-## Runner commands
+## Final reproduction commands
 
-After independently building and preserving exact source pins, select the measured runtime explicitly. Run each command with `--samples 1`, alternate parent/candidate order for five pairs, and use a fresh output directory per process sample. This provides five independent process pairs rather than five adjacent candidate processes.
+Build and preserve the actual parent and candidate source pins first; independently verify their source/dist manifests and keep the restoration trap. Select Node 20.20.2 and Node 24.19.0 separately through `NODE`. For each runtime and matrix cell, run five pairs with `PAIR=0..4`, using order parent, keys, full on even pairs and full, keys, parent on odd pairs. Every invocation uses `--samples 1` and a new output directory. The archived `qualify.py` and command JSONL files record the exact executed order and absolute runtime/build paths.
+
+Set `DIST` and `SOURCE_SHA` to the preserved parent dist and `610c931b7b22920cce59cf03e49c0de15ebaf2a2` for `VARIANT=parent`, `MODE=full`. For `VARIANT=keys` or `full`, select candidate dist and `999c75d37e1f1d86c25e58b4d45db3f96a66df38`; use `MODE=keys` or `full` respectively. Key-only is a benchmark adapter. Full selects the actual implementation in the chosen dist, which is uncached for the parent.
+
+Run each of these cells for both runtimes and every variant/pair. For the first command use `COUNT=0`, then a separate cell with `COUNT=100`. These are the qualified warm worker/read cells; they are not initial-sync measurements.
 
 ```sh
-python3 scripts/bench/run.py signatures --node /absolute/path/to/node20.20.2 --counts 0,100,1000 --sizes 10240 --samples 1 --timeout 1200 --implementation-dist /absolute/path/to/pinned-dist --implementation-ref SOURCE_SHA --out artifacts/94/RUNTIME-VARIANT-PAIR
-python3 scripts/bench/run.py signatures --node /absolute/path/to/node24.19.0 --counts 100 --sizes 1048576 --samples 1 --timeout 1200 --implementation-dist /absolute/path/to/pinned-dist --implementation-ref SOURCE_SHA --out artifacts/94/RUNTIME-VARIANT-LARGEBODY-PAIR
+python3 scripts/bench/run.py signatures --node "$NODE" --counts "$COUNT" --sizes 10240 --samples 1 --timeout 1200 --signature-mode "$MODE" --implementation-dist "$DIST" --implementation-ref "$SOURCE_SHA" --out "artifacts/94/reproduce-$RUNTIME-$COUNT-10240-$PAIR-$VARIANT"
+python3 scripts/bench/run.py signatures --node "$NODE" --counts 100 --sizes 1048576 --samples 1 --timeout 1200 --signature-mode "$MODE" --implementation-dist "$DIST" --implementation-ref "$SOURCE_SHA" --out "artifacts/94/reproduce-$RUNTIME-100-1048576-$PAIR-$VARIANT"
 ```
 
-Use `--signature-mode keys` only with the candidate dist for the benchmark-only parsed-key comparison. `full` means the selected dist's actual implementation, which is uncached for the parent. The runner fingerprints selected JavaScript but deliberately records the supplied source ref as unverified. An independent build receipt must tie each dist graph to its source checkout, compiler, dependencies and commands before interpreting results.
+The separate qualified 1,000-record cells omit worker setup. Run this command for both runtimes and every variant/pair; do not substitute `signatures --counts 1000` or claim a large-worker result.
+
+```sh
+python3 scripts/bench/run.py signature-history --node "$NODE" --counts 1000 --sizes 10240 --samples 1 --timeout 1200 --signature-mode "$MODE" --implementation-dist "$DIST" --implementation-ref "$SOURCE_SHA" --out "artifacts/94/reproduce-history-$RUNTIME-1000-10240-$PAIR-$VARIANT"
+```
+
+The runner fingerprints selected JavaScript and companion source but deliberately records the supplied source ref as unverified. Independently tie each dist to its clean source/compiler/dependency build receipt before interpreting results. These final instructions correct the historical plan prose only; executable workloads and the measured archive are unchanged.
 
 ## Qualification scope adjustment
 
@@ -93,3 +105,13 @@ Successful large-history `signature-history` cells measure cold/warm global snap
 Worker startup is a warm in-process owned-runtime start after the full read and custody preparation sequence. Sender and TLS receiver run in one Node process and share the signature singleton. Their combined CPU and resident memory are measured together. This is not cold subprocess/daemon launch or a separate-host measurement. Process-level CPU includes setup and forced GC; operation timing excludes explicit GC before/after the operation and still includes any natural GC during it. Linux wait4 peak RSS is the largest process high-water mark, not a sum of process-tree high-water marks.
 
 The root identified a shared I/O parser escaping regression in harness b31d7a2. Its signature/history numeric branch was correct, so the recorded signature matrix remains valid. After the matrix ended, a new public-runner regression test reproduced zero `rchar` in the inherited parser workload. Restoring the exact parent expression fixed it. The primary operation/timing region is byte-identical and the corrected parser produces the same signature-path results. Preserve both harness pins/hashes, red/green logs and the equivalence receipt. Cleanup and opt-in argument checks run on Node 20 and 24.
+
+## Post-review scope and migration limits
+
+The cache can benefit repeated managed reads within a viewer/hub process using `LocalDocumentBackend` or `LocalDocumentSource`, and worker snapshots/passes using the long-lived store in `sync-worker.ts`. New store objects in the same process reuse the module singleton. These call paths explain the intended lifetime; this issue did not benchmark viewer/hub HTTP latency. A command that reads each signed state only once has no verification-cache hit and pays retention cost versus key-only reuse. Multistep commands can reuse within one process; separate CLI launches cannot share this cache.
+
+Every current global ledger scan and canonical encoding still runs. The optimization changes a constant factor, not the worker's repeated global-validation growth. No 1,000-record worker speedup or general scaling claim follows from the 100-record no-op result.
+
+FIFO hits do not refresh insertion order. Several inboxes or larger canonical metadata can exhaust the byte budget even below the ledger record-count limit. A repeating scan whose working set exceeds capacity can have zero verification-cache hits and pay allocation/insertion/eviction cost on every record. The 18-round churn result proves bounded growth under changing history, not performance for an over-capacity repeating scan. Ten-thousand-record and multi-inbox over-capacity performance remain unqualified; the measured miss costs and this limitation are accepted scope limits, not an unmeasured speedup claim. Tuple size follows public-key/descriptor metadata, not retained HTML contents.
+
+Measurements used Linux tmpfs synthetic roots with warm/uncontrolled filesystem caches. Do not generalize the elapsed or RSS values to persistent media or separate hosts. The unexplained Node 20 empty startup/one-second idle regression remains open and disclosed. A future ESM migration must revalidate crypto-call observability and mocks; current call counts depend on CommonJS crypto-property interception. No modern forward-port was performed.
