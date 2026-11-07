@@ -360,3 +360,23 @@ runtime at 1/100 records, on the same source/compiled/release pins. Report
 absolute deltas, spread and regressions without pooling runtimes or claiming
 physical-drive I/O. Both fresh independent reviews still follow measured
 qualification. PR122 remains draft and #96 remains partial.
+
+## Partial CI-route and harness run at 76b20f5
+
+The explicitly granted twelve commands and two runtime preflights exited 0.
+Both new CI wrapper routes passed on exact Node 20.20.2 and 24.19.0, as did
+the six Python controls and both one-record smoke commands. This does not
+qualify the full harness: final evidence inspection found that the preload's
+`/proc` parser silently substituted zero for unmatched decimal fields.
+All eight dictionaries are invalid; no raw snapshots remain to recover them.
+The independent native FileHandle counts, exact export/batch output facts and
+cleanup receipts are retained separately. The [partial receipt and lossless
+archive](../../scripts/bench/evidence/issue-96/ci-harness-76b20f5.md) preserve
+all original results and the subsequent failure classification.
+
+The local slot is released. Root authorized a narrow source-only repair with
+strict named-field parsing, raw/parsed before/after snapshots and deltas,
+focused malformed/missing/nonzero parser controls and independent raw-data
+recomputation. New source requires a separate minimal requalification grant.
+No prior log validates that repair; no sustained measurement or reviewer gate
+has started.
