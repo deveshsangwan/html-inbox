@@ -432,3 +432,17 @@ byte-for-byte. Existing compiled/bundle bytes are stale for the combination.
 No runtime or review ran. The [integration receipt and next scoped request](96-integration-120.md)
 record the merge, missing new qualification and the unchanged runner's
 610-only identity gate that must be addressed before actual-parent measures.
+
+## Actual-parent selection prepared in source
+
+Root authorized narrow expected-parent plumbing after the b249 integration.
+The new `--expected-baseline-commit` accepts a full40-hex SHA, rejects other
+workloads/malformed/ref-name input, normalizes case, and requires the actual
+clean baseline HEAD. The610 constant remains the explicit legacy default;
+all new integrated commands supply full b249. Resolved expected and actual
+build identities are recorded together. Six focused identity controls are
+source-only and unexecuted; parser/workload/process-runner behavior is
+unchanged. The [actual-parent request](../../scripts/bench/evidence/issue-96/parent-b249-smoke-request.md)
+amends that later phase separately from queued combined correctness. No
+parent output mutation or application execution is authorized yet, and
+compiled artifacts remain stale for the current integrated source.

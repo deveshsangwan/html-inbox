@@ -25,9 +25,17 @@ def main():
     parser.add_argument('--node', default=shutil.which('node'))
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--candidate', help='CommonJS module exporting validateHtml for exact-result parser comparison')
-    parser.add_argument('--baseline-repo', type=Path, help='Clean app-managed 610c931 checkout with built release bundle, for managed-read only')
+    parser.add_argument('--baseline-repo', type=Path, help='Clean app-managed baseline checkout with built release bundle, for managed-read only')
+    parser.add_argument('--expected-baseline-commit', help='Full 40-hex baseline SHA for managed-read; legacy default is 610c931b7b22920cce59cf03e49c0de15ebaf2a2')
     parser.add_argument('--timeout', type=int, default=600)
     args = parser.parse_args()
+    if args.workload == 'managed-read' or args.expected_baseline_commit is not None:
+        from managed_read import resolve_expected_baseline_commit
+        try:
+            args.expected_baseline_commit = resolve_expected_baseline_commit(args.workload, args.expected_baseline_commit)
+        except ValueError as error:
+            parser.error(str(error))
+
     args.counts = args.counts if args.counts is not None else ('1,100' if args.workload == 'managed-read' else '0,100')
     args.sizes = args.sizes if args.sizes is not None else ('10240' if args.workload == 'managed-read' else '10240,1048576,9437184')
     args.samples = args.samples if args.samples is not None else (7 if args.workload == 'managed-read' else 3)
@@ -157,11 +165,10 @@ def main():
                             fingerprints=fingerprints, invocation=sys.argv)
             builds = None
             if args.workload == 'managed-read':
-                from managed_read import build_info, PARENT
-                builds = {'baseline': build_info(args.baseline_repo), 'candidate': build_info(REPO)}
-                if builds['baseline']['commit'] != PARENT:
-                    parser.error(f'managed-read baseline must be exactly {PARENT}')
+                from managed_read import build_info
+                builds = {'baseline': build_info(args.baseline_repo, args.expected_baseline_commit), 'candidate': build_info(REPO)}
                 metadata['compared_builds'] = builds
+                metadata['expected_baseline_commit'] = args.expected_baseline_commit
                 metadata['managed_read_policy'] = 'complete release CLI export primary; complete batch supporting; AB/BA pairs; separate instrumented I/O; fixed-option API output control'
                 args.managed_first_count = counts[0]
             (args.out / 'environment.json').write_text(json.dumps(metadata, indent=2))

@@ -4,8 +4,84 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
-from managed_read import CAPABILITY, GENERATED_AT, MANIFEST_FILE, OWNER, OWNER_FILE, PROC_IO_FIELDS, checked_proc_io, compare_exports, inspect_export, parse_proc_io
+from managed_read import (
+    CAPABILITY,
+    GENERATED_AT,
+    MANIFEST_FILE,
+    OWNER,
+    OWNER_FILE,
+    PROC_IO_FIELDS,
+    build_info,
+    checked_proc_io,
+    compare_exports,
+    inspect_export,
+    parse_proc_io,
+    resolve_expected_baseline_commit,
+)
+
+
+class ParentIdentityTests(unittest.TestCase):
+    legacy = '610c931b7b22920cce59cf03e49c0de15ebaf2a2'
+    parent = 'b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad'
+
+    def test_full_sha_boundary(self):
+        self.assertEqual(resolve_expected_baseline_commit('managed-read', self.parent.upper()), self.parent)
+        for value in ['', self.parent[:7], self.parent[:39], self.parent+'0', 'g'*40, 'HEAD',
+                      'refs/heads/t3/shared-viewer-lifecycle-repair', ' '+self.parent, self.parent+'\n']:
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, 'exactly 40 hexadecimal'):
+                resolve_expected_baseline_commit('managed-read', value)
+
+    def test_legacy_default_explicit_parent_and_unrelated_workloads(self):
+        self.assertEqual(resolve_expected_baseline_commit('managed-read', None), self.legacy)
+        self.assertEqual(resolve_expected_baseline_commit('managed-read', self.parent), self.parent)
+        for workload in ['baseline', 'cli', 'viewer', 'worker', 'parser', 'managed', 'sync']:
+            with self.subTest(workload=workload):
+                self.assertIsNone(resolve_expected_baseline_commit(workload, None))
+                with self.assertRaisesRegex(ValueError, 'only supported by managed-read'):
+                    resolve_expected_baseline_commit(workload, self.parent)
+
+    def test_clean_matching_baseline_keeps_build_hashes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            bundle = repo / 'packages/cli/bundle/index.js'
+            module = repo / 'packages/cli/dist/index.js'
+            for filename, data in [(bundle, b'synthetic bundle'), (module, b'synthetic compiled module')]:
+                filename.parent.mkdir(parents=True)
+                filename.write_bytes(data)
+            with patch('managed_read.subprocess.check_output', side_effect=[self.parent+'\n', '']):
+                result = build_info(repo, self.parent)
+
+            self.assertEqual(result['commit'], self.parent)
+            self.assertEqual(result['bundle_sha256'], hashlib.sha256(bundle.read_bytes()).hexdigest())
+            self.assertEqual(result['dist_js'], {'packages/cli/dist/index.js': hashlib.sha256(module.read_bytes()).hexdigest()})
+
+    def test_mismatched_baseline_is_refused_including_implicit_legacy(self):
+        for actual, requested in [(self.legacy, self.parent), (self.parent, None)]:
+            expected = resolve_expected_baseline_commit('managed-read', requested)
+            with self.subTest(actual=actual, expected=expected):
+                with patch('managed_read.subprocess.check_output', side_effect=[actual+'\n', '']):
+                    with self.assertRaisesRegex(ValueError, 'baseline must be exactly'):
+                        build_info(Path('unused-baseline'), expected)
+
+    def test_dirty_baseline_is_refused(self):
+        with patch('managed_read.subprocess.check_output', side_effect=[self.parent+'\n', ' M source.ts\n']):
+            with self.assertRaisesRegex(ValueError, 'checkout is dirty'):
+                build_info(Path('unused-baseline'), self.parent)
+
+    def test_missing_build_files_still_refused(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            with patch('managed_read.subprocess.check_output', side_effect=[self.parent+'\n', '']):
+                with self.assertRaisesRegex(ValueError, 'Build the measured checkout first'):
+                    build_info(repo, self.parent)
+            module = repo / 'packages/cli/dist/index.js'
+            module.parent.mkdir(parents=True)
+            module.write_text('synthetic compiled module')
+            with patch('managed_read.subprocess.check_output', side_effect=[self.parent+'\n', '']):
+                with self.assertRaises(FileNotFoundError):
+                    build_info(repo, self.parent)
 
 
 class ProcIoTests(unittest.TestCase):

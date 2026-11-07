@@ -61,12 +61,14 @@ requested in that phase. Stop first mismatch; preserve outputs, provenance
 and adopted-child cleanup; release before packaging. Await root's explicit
 scope rather than starting from this document or green CI.
 
-Before any later complete-export measurement, a separate narrow source
-change is needed: the current unchanged runner enforces `PARENT=610c931`.
-It cannot currently accept b249 as the isolated comparison parent. Propose an
-explicit full-SHA expected-parent argument, checked against the clean actual
-baseline checkout, retaining610 for historical reproduction. Do not silently
-replace the old baseline or bypass its identity check. Root must authorize
-that harness change and its smoke scope before execution. Actual-parent
-build/bundle mutation, seven-pair1/100 runtime matrices, package/integration
-qualification and independent reviews remain separate later gates.
+The separately authorized source-only parent parameter is now prepared:
+`--expected-baseline-commit` strictly accepts a full40-hex SHA and checks the
+actual clean baseline HEAD. Omission retains610 only for historical command
+reproduction. New integrated commands explicitly require
+`b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad`. No branch inference or identity
+bypass was added. Its six focused controls have not run. The [separate
+actual-parent build/bundle/smoke request](../../scripts/bench/evidence/issue-96/parent-b249-smoke-request.md)
+requires another grant and permission for parent output mutation; it is not
+part of the fourteen-command correctness request above. Seven-pair1/100
+matrices, package/integration qualification and fresh independent reviews
+remain later gates. No old evidence qualifies this new parameter or stack.

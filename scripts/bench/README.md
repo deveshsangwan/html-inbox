@@ -52,28 +52,44 @@ Sync uses an equal-size plain `x` body and peer-specific metadata; CLI/parser/vi
 
 ## Managed complete reads for #96
 
-The610-parent mode below describes the historical isolated experiment. PR122
-now stacks on reviewed PR120b249; its current compiled/bundle bytes are stale
-for that source combination. The runner still intentionally requires610.
-Before qualifying the new combination, root must authorize explicit actual-
-parent selection and fresh build/smoke scope. See the [source-only integration
-receipt](../../docs/performance/96-integration-120.md). Do not treat the old
-610 comparison as isolated evidence against b249.
+PR122 now stacks on reviewed PR120b249; its existing compiled/bundle bytes
+are stale for that combination. Build/qualification requires a new root grant.
+See the [source-only integration receipt](../../docs/performance/96-integration-120.md).
+The new parent-selection plumbing has source checks only and no runtime proof.
 
-`managed-read` compares the clean common parent
-`610c931b7b22920cce59cf03e49c0de15ebaf2a2` with the clean current checkout.
-Build and bundle both checkouts with the same Node 24 toolchain before running.
-Supply an existing app-managed parent checkout; this mode creates no checkout.
-`environment.json` records both revisions, every compiled JS hash and both
-release-bundle hashes. Build provenance still requires the recorded build
-commands. All prior workloads retain their defaults.
+`managed-read` requires a clean app-managed baseline checkout with built
+release artifacts. `--expected-baseline-commit` accepts exactly40 hexadecimal
+SHA characters, resolves case to lowercase and must equal that checkout's
+actual clean HEAD. Abbreviations, ref names and malformed values reject; the
+flag is invalid on other workloads. It does not infer a parent from branches.
+`environment.json` records the resolved expected SHA next to both actual
+commits, compiled JS maps and bundle hashes. Build provenance still requires
+recorded build commands.
+
+The explicit legacy default is `610c931b7b22920cce59cf03e49c0de15ebaf2a2`.
+Omission preserves historical command reproduction; it does not make an old
+610 comparison isolated evidence against the new b249 parent. All new
+integrated measurements and smoke commands must explicitly select b249:
 
 ```sh
 python3 scripts/bench/run.py managed-read \
-  --baseline-repo /absolute/path/to/clean-parent-checkout \
+  --baseline-repo /home/agent/.t3/worktrees/html-inbox/t3-26d1cd47 \
+  --expected-baseline-commit b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad \
+  --node /absolute/path/to/node20 \
+  --counts 1 --sizes 10240 --samples 1 --timeout 30 \
+  --out /absolute/fresh/managed-read-b249-node20
+```
+
+This is a proposed one-record smoke invocation, not execution authorization.
+Later sustained1/100-record seven-pair runs require their own grant and the
+same explicit b249 argument. The old historical command shape remains valid:
+
+```sh
+python3 scripts/bench/run.py managed-read \
+  --baseline-repo /absolute/path/to/clean-610-checkout \
   --node /absolute/path/to/node20 \
   --counts 1,100 --sizes 10240 --samples 7 --timeout 60 \
-  --out artifacts/bench/managed-read-node20
+  --out artifacts/bench/managed-read-legacy-node20
 ```
 
 Repeat separately with the exact Node 24 binary and a new output directory.

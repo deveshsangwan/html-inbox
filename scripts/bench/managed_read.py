@@ -51,12 +51,30 @@ def checked_proc_io(raw_before, raw_after):
     return dict(raw_before=raw_before, raw_after=raw_after, before=before, after=after, delta=delta)
 
 
-def build_info(repo):
+def resolve_expected_baseline_commit(workload, requested):
+    if workload != 'managed-read':
+        if requested is not None:
+            raise ValueError('--expected-baseline-commit is only supported by managed-read')
+
+        return None
+
+    selected = PARENT if requested is None else requested
+    if not isinstance(selected, str) or not re.fullmatch(r'[0-9a-fA-F]{40}', selected):
+        raise ValueError('--expected-baseline-commit requires exactly 40 hexadecimal SHA characters')
+
+    return selected.lower()
+
+
+def build_info(repo, expected_commit=None):
     repo = Path(repo).resolve()
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=repo, text=True).strip()
     dirty = subprocess.check_output(['git', 'status', '--porcelain'], cwd=repo, text=True)
     if dirty:
         raise ValueError(f'Measured checkout is dirty: {repo}')
+
+    if expected_commit is not None and commit != expected_commit:
+        raise ValueError(f'managed-read baseline must be exactly {expected_commit}; actual HEAD is {commit}')
+
     bundle = repo / 'packages/cli/bundle/index.js'
     modules = {str(p.relative_to(repo)): sha(p.read_bytes()) for p in sorted((repo / 'packages/cli/dist').rglob('*.js'))}
     if not modules:
