@@ -90,7 +90,7 @@ required behavior gate. The historical 15,004 chmod API calls are not current
 evidence and are not syscall counts. Combined-stack performance qualification
 against `610c931` is unnecessary for a rejected shortcut with no production diff.
 
-## Qualification
+## Original qualification
 
 The [comparison command manifest](permission-92/comparison/commands.jsonl)
 records the executed arguments, working directory and exit statuses. Compressed
@@ -157,8 +157,9 @@ contract and raw evidence. [Sol High](permission-92/review-sol-r1.txt) found no
 issues and passed functionality, quality and no-go evidence.
 [Claude Code Sonnet 5.5 Medium](permission-92/review-claude-r1.txt) passed
 functionality and no-go evidence, with a conditional quality pass requiring
-public-document cleanup and recorded dispositions. The following changes are
-prepared for focused requalification; they do not change production code.
+public-document cleanup and recorded dispositions. The changes below were subsequently requalified without changing production
+code. Original verdicts apply to the original reviewed pin, not automatically to
+these changes.
 
 | Claude finding | Disposition |
 |---|---|
@@ -176,4 +177,49 @@ prepared for focused requalification; they do not change production code.
 | 12 Suggestion, no-go could imply no benefit | Accepted. State explicitly that this is a contract rejection and the benefit remains unquantified. |
 | 13 Suggestion, prose noise | Accepted. Removed archival chatter from prose, expanded the replacement-interval explanation and removed the stray blank line. Original archival details remain in the raw receipt. |
 
-Post-review validation and fresh focused review verdicts remain pending.
+## Post-review qualification
+
+Runtime/test/runner fixes were pinned at
+`9c266b409bfc1c5cdf921564cfe7fb5eb67d408b`. The synthetic safety qualification
+procedure was pinned at `e22a9d6e8b1270e513c5e3f131fe1287a5c5eec5`.
+[Outer commands](permission-92/requalification/commands.json) exited 0;
+[inner safety commands](permission-92/requalification/safety/commands.jsonl)
+retain expected exit-1 refusals, and [safety receipts](permission-92/requalification/safety/receipts.json)
+retain the actual signal outcome and byte/index restoration results. New logs,
+source snapshots and fingerprints are under `permission-92/requalification/`.
+Original fingerprints, failed candidate assertions and the interrupted original
+qualification remain unchanged in their original directories.
+
+- Typecheck/build and Python syntax/diff checks passed.
+- Updated normal comparison: both runtimes passed four baseline cases and failed
+  all four shortcut cases as expected. The actual restoration receipt is true.
+- Unstaged and staged source edits were tested separately. Each runner invocation
+  exited 1 at the clean-source preflight, before any build. Edited fixture bytes
+  and staged index entry stayed unchanged; an outer finally restored the exact
+  original source bytes and complete index bytes after each case and at exit.
+- SIGTERM targeted runner PID `2427181` only, in its own session/group. At the
+  signal checkpoint, the source matched the candidate hash and child PID
+  `2427331` was observed running `pnpm build`. The runner deferred the signal
+  until that command finished, restored/rebuilt, wrote its computed successful
+  restoration receipt and exited 1 with `InterruptedError: Received signal 15`.
+  The Linux `/proc` receipt records observed children and grandchildren, including
+  compiler and restored-build processes. After waiting for the runner, a group
+  scan found no remaining members. This verifies descendant cleanup for this
+  exercised interleaving, beyond the direct wait alone.
+- Both runtimes then passed all four updated regressions and 218 focused
+  permission/storage/listing/read-only/managed tests. There was no new failure
+  justifying repetition of the broad full suites or any performance search.
+- Final source and all 394 build hashes match both the updated normal baseline
+  and the interrupted comparison's baseline/restored hashes. No owned CLI
+  process remained. The raw index hash in the receipt is from before subsequent
+  intentional evidence commits, not a promise that future commits preserve the
+  index file bytes.
+
+Only runner-only SIGTERM was exercised. SIGINT, process-group interruption,
+command timeouts, SIGKILL and machine failure were not exercised. SIGKILL and
+machine failure remain unhandleable. The procedure's emergency SIGKILL cleanup
+path was not needed. No general descendant-cleanup guarantee is inferred for
+unexercised timeout or interruption paths. The normal no-go remains solely a
+contract rejection of this shortcut; performance benefit stays unquantified.
+
+Fresh focused second-round review verdicts remain pending.
