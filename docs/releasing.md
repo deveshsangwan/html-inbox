@@ -2,6 +2,12 @@
 
 The source workspace uses Node.js 24, Corepack, and the pinned pnpm lockfile. The published `html-inbox` CLI supports Node.js 20 or newer and contains one self-contained ncc executable with no runtime package dependencies. Publish `packages/cli`, never the private workspace root.
 
+## Prepare 0.6.1
+
+This patch release contains the runtime fixes and CI improvements from PRs #82 through #85. It retains the 0.6.0 CLI and managed-format contracts, viewer protocol 3, managed ledger schema 1, and ownership schema 2. Keep both skill fallbacks pinned to published 0.5.0; stable installed 0.6.x versions are already accepted.
+
+Follow the general preparation, main-only publishing, and public-release verification steps below with version `0.6.1`. Verify that npm has not accepted that version before dispatch. Include the [0.6.1 restart guidance](../CHANGELOG.md#upgrade-to-061) and existing [0.6.0 migration and rollback limits](named-inboxes.md#upgrade-to-060) in release notes. Publication itself does not update running viewers, hubs, workers, or services.
+
 ## Prepare 0.6.0
 
 This is a stable minor release, not a prerelease. Check that exact `html-inbox@0.6.0` is unused before publication and again immediately before dispatch. Keep both independently installed skills pinned to the already-published, verified 0.5.0 fallback. It supports copying, named inboxes and live-reader deletion but has no managed sync. Explicitly accept and test installed stable 0.6.x separately; an unavailable sync capability must preserve the intended inbox and stop the dependent operation. Preparation must never select unpublished 0.6.0 as its fallback.

@@ -2,6 +2,20 @@
 
 All notable changes to HTML Inbox will be documented here.
 
+## 0.6.1 - 2026-11-07
+
+- Prevent a sync pause during request admission from permanently blocking delivery. Preserve queued work and allow delivery after resume.
+- Retry valid concurrent ledger and worker-record replacements without returning unlinked snapshots or relaxing ownership, permission, size, or hardlink checks.
+- Keep worker and viewer shutdown within their existing deadlines while retrying verified record changes. Await recursive viewer reads before asynchronous descriptor cleanup to avoid unhandled rejections.
+- Publish the initial inbox identity atomically across concurrent viewer startup and managed enrollment, so readers cannot observe a partially written UUID and creators retain one identity.
+- Speed up CI with parallel test groups, source sharding, fewer redundant resolver launches, and pinned browser setup. Add deterministic race regressions and correct fixture timing and cleanup assumptions.
+
+### Upgrade to 0.6.1
+
+No additional CLI, permission, viewer-protocol, or managed-format migration is required from 0.6.0. Stop existing viewers, hubs, and independent sync workers through their verified lifecycle using the old executable before updating, then restart the components you use. Updating the package does not reload running processes; viewer shutdown does not stop the sync worker. Stored documents, routes, credentials, and saved exposure remain unchanged.
+
+The [0.6.0 enrollment and rollback limits](docs/named-inboxes.md#upgrade-to-060) still apply. Initial identity creation uses the existing conservative ownership protocol: a process killed before its creation-lock record is complete can require manual recovery after confirming no initializer is running. Unknown lock owners are never automatically removed.
+
 ## 0.6.0 - 2026-10-28
 
 - Add opt-in POSIX managed inbox enrollment with signed origin history, explicit authenticated HTTPS routes, intended-server custody receipts, push, pull and approved relay.
