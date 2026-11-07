@@ -1,0 +1,9 @@
+{
+  "candidate_pin": "5829aa42741a16c1099efb71f41dab1d94660529",
+  "source_and_compiled_files_verified": 395,
+  "all_hashes_match_tested_candidate": true,
+  "owned_worktree_process_matches": [],
+  "scan_scope": "/proc args rooted in exact repair checkout or cwd equal repair checkout; excludes inspection ancestors",
+  "heavy_work_finished": true,
+  "restored_candidate_source_and_dist": true
+}

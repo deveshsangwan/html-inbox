@@ -1,0 +1,37 @@
+[
+  {
+    "label": "reviewed-overlay-build",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "pnpm",
+      "build"
+    ],
+    "exit_code": 0
+  },
+  {
+    "label": "reviewed-red",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "--test-name-pattern=failed viewer startup|preserves browser and root-removal",
+      "scripts/viewer-fixture-browser.test.mjs"
+    ],
+    "exit_code": 1
+  },
+  {
+    "label": "candidate-restoration-build",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "pnpm",
+      "build"
+    ],
+    "exit_code": 0
+  }
+]

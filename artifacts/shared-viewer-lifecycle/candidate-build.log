@@ -1,5 +1,0 @@
-$ fnm exec --using=24.19.0 pnpm build
-$ node -e "require('node:fs').rmSync('packages/cli/dist', { recursive: true, force: true })" && pnpm --filter html-inbox build
-$ tsc-rs -p tsconfig.json
-
-EXIT 0
