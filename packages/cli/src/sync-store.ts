@@ -8,6 +8,7 @@ import { readBoundedFile } from "./bounded-file";
 import { parseDocumentMetadata, type DocumentMetadata, type PublishInput, type StoredDocument, type DeleteResult } from "./documents";
 import { validateHtml } from "./html-validation";
 import { readInboxIdentity } from "./inbox-home";
+import { writeAtomicPrivateFileIfAbsent } from "./private-storage";
 import { isOwnedDirectory } from "./local-storage-checks";
 import { DurableFiles, checkDirectory, createStorageCounters, hasCode, openPrivateFile, optionalStat, readPrivateFile, withStoreLock, type StorageTestHooks } from "./sync-files";
 import { type SyncLedger, type ManagedRecord, type DurableReceipt, type OwnerAnchor, parseLedger, parseReceipt, outboxKey, receiptKey } from "./sync-ledger";
@@ -117,12 +118,14 @@ export class ManagedSyncStore {
           throw new Error("Managed artifacts exist without their authoritative ledger; enrollment cannot invent replacement history");
         }
 
-        const inboxId = await readInboxIdentity(this.home) ?? randomUUID();
-        if (!await readInboxIdentity(this.home)) {
-          await this.files.exclusiveFile(path.join(this.home, "instance-id"), `${inboxId}\n`);
+        await writeAtomicPrivateFileIfAbsent(path.join(this.home, "instance-id"), `${randomUUID()}\n`);
+        const inboxId = await readInboxIdentity(this.home);
+        if (!inboxId) {
+          throw new Error("Inbox identity disappeared during enrollment");
         }
 
         await this.files.flushFile(path.join(this.home, "instance-id"), 128);
+        await this.files.flushDirectory(this.home);
 
         const historyEpoch = randomUUID();
         const owner = await this.createOwnerKey(inboxId, historyEpoch);
