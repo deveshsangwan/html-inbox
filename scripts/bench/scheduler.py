@@ -164,6 +164,7 @@ def main():
     metadata = dict(parent=PARENT, candidate=head, phase=args.phase, counts=counts, samples=samples,
                     started_monotonic=global_deadline - args.budget_seconds, started_wall_ns=time.time_ns(),
                     directions=['none', 'outbound', 'inbound'], idle_ms=65000, case_seconds=240,
+                    setup_seconds=90 if args.phase == 'feasibility' else None,
                     budget_seconds=args.budget_seconds, runtimes=versions, machine=list(os.uname()),
                     clock_ticks=os.sysconf('SC_CLK_TCK'), observation_ms=100,
                     cache='fresh disposable fixtures; uncontrolled warm OS caches; no cache eviction',
@@ -212,8 +213,8 @@ def main():
                                     log=args.out / f'reader-race-{version}-{label}.log', timeout=max(1, min(15, global_deadline - time.monotonic())),
                                     groups=groups, receipts=commands)
 
-            for version, node in runtimes:
-                for count in counts:
+            for count in counts:
+                for version, node in runtimes:
                     for direction in ['none', 'outbound', 'inbound']:
                         for sample in range(samples):
                             order = ['parent', 'candidate'] if sample % 2 == 0 else ['candidate', 'parent']
@@ -228,6 +229,7 @@ def main():
                                            metadata['builds'][label]['dist'], str(unit), str(count), direction, '65000']
                                 child = None
                                 started = time.monotonic()
+                                setup_elapsed = None
                                 try:
                                     with (args.out / f'{name}.jsonl').open('w') as stdout, (args.out / f'{name}.stderr').open('w') as stderr:
                                         child = subprocess.Popen(command, cwd=REPO, env=environment, stdout=stdout, stderr=stderr, start_new_session=True)
@@ -238,12 +240,20 @@ def main():
                                             if pid:
                                                 child.returncode = os.waitstatus_to_exitcode(status)
                                                 break
+
+                                            if setup_elapsed is None:
+                                                elapsed = time.monotonic() - started
+                                                if args.phase == 'feasibility' and elapsed >= 90:
+                                                    raise TimeoutError('Real fixture setup/custody did not complete within the preselected 90-second feasibility bound')
+                                                if (unit / 'setup-complete.json').exists():
+                                                    setup_elapsed = elapsed
+
                                             if time.monotonic() - started > 240 or time.monotonic() >= global_deadline:
                                                 raise TimeoutError('Preselected case or granted total bound exceeded')
                                             time.sleep(.1)
                                     elapsed = time.monotonic() - started
                                     row = dict(name=name, runtime=version, count=count, direction=direction, sample=sample, revision=label,
-                                               command=command, exit=child.returncode, elapsed_seconds=elapsed,
+                                               command=command, exit=child.returncode, elapsed_seconds=elapsed, setup_seconds=setup_elapsed,
                                                waited_cpu_seconds=usage.ru_utime + usage.ru_stime, waited_peak_rss_kib=usage.ru_maxrss)
                                     traces = [json.loads(line) for line in (args.out / f'{name}.jsonl').read_text().splitlines()]
                                     idle = [entry for entry in traces if entry.get('type') == 'idle-stop']
@@ -257,7 +267,8 @@ def main():
                                     raise
                                 except Exception as error:
                                     row = dict(name=name, runtime=version, count=count, direction=direction, sample=sample, revision=label,
-                                               command=command, qualified_case=False, error=repr(error))
+                                               command=command, qualified_case=False, error=repr(error), setup_seconds=setup_elapsed,
+                                               elapsed_seconds=time.monotonic() - started)
                                 finally:
                                     if child:
                                         try:
@@ -268,11 +279,17 @@ def main():
                                             rows.append(row)
                                             emit(commands, row)
                                             raise
+                                        row.update(pid=child.pid, terminated_exit=child.returncode)
                                     # Only disposable homes are removed. Artifacts retain every failed run.
                                     shutil.rmtree(unit)
                                 rows.append(row)
                                 emit(commands, row)
                                 print(json.dumps({key: row[key] for key in ['name', 'qualified_case']}), flush=True)
+
+                                if args.phase == 'feasibility' and not row['qualified_case']:
+                                    (args.out / 'checkpoint.json').write_text(json.dumps(dict(failed_case=name,
+                                        reason='Stop at first infeasible cell; remaining cells require a new disposition/grant'), indent=2) + '\n')
+                                    raise RuntimeError(f'Feasibility stopped at unqualified case {name}')
         finally:
             # Keep fixture evidence if any owned preliminary or timed group remains.
             if not any(processes(group) for group in groups):
@@ -292,6 +309,11 @@ def main():
                        required_cases=len(runtimes) * len(counts) * 3 * samples * 2,
                        complete=len(rows) == len(runtimes) * len(counts) * 3 * samples * 2 and all(row.get('qualified_case') for row in rows),
                        pairs=pairs, performance_retention_decision='pending all required gates and independent reviews')
+        attempted = {row['name'] for row in rows}
+        summary['unrun_cases'] = [f'{version}-{count}-{direction}-{sample}-{label}'
+                                 for count in counts for version, _ in runtimes for direction in ['none', 'outbound', 'inbound']
+                                 for sample in range(samples) for label in (['parent', 'candidate'] if sample % 2 == 0 else ['candidate', 'parent'])
+                                 if f'{version}-{count}-{direction}-{sample}-{label}' not in attempted]
         summary['groups'] = []
         keys = sorted({(pair['runtime'], pair['count'], pair['direction']) for pair in pairs})
         for runtime, count, direction in keys:

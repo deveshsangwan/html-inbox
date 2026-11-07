@@ -185,6 +185,8 @@ async function main() {
     // A large fixture that cannot really catch up within existing pass/lease limits fails here.
     await assertCaughtUp();
     emit({ type: 'caught-up', count, direction });
+    await fs.writeFile(path.join(root, 'setup-complete.json'), JSON.stringify({ count, direction }));
+
     const roles = [worker, ...(peer ? [peer] : [])];
     for (const child of roles) await child.rpc('sample-start');
     emit({ type: 'idle-start', count, direction, duration });

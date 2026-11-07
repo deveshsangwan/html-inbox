@@ -1,9 +1,12 @@
 # Scheduler measurement harness and next slot
 
-Status: source prepared, syntax checked, unexecuted. No further local heavy slot
-has been granted. This harness extends the workload selected in `9ca71fd` before
-production edits. It does not replace the required 0/1,000/10,000 qualification
-with the small smoke phase below.
+The historical zero-record smoke passed at `c00f614`; its stopped attempts remain
+preserved. The subsequent startup correctness fix at `9fd509e` creates a new
+production candidate. The next source-only
+[bounded feasibility request](95-feasibility-request.md) includes fresh controls
+and all required counts. No new execution grant or performance qualification
+exists. This harness extends the workload selected in `9ca71fd` before production
+edits; the small smoke never replaces 0/1,000/10,000 qualification.
 
 ## Comparators and collection
 
@@ -126,7 +129,7 @@ combined nonzero exit plus cleanup failure, with retained descendants/ports and
 both original and cleanup causes preserved. No real inbox path is accepted;
 the workload requires the supervisor-created disposable marker.
 
-## Next narrowly scoped request
+## Historical smoke request
 
 Request a maximum 1,800-second exclusive local slot for harness smoke only:
 
