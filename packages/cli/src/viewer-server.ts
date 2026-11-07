@@ -353,6 +353,7 @@ export async function startViewerLifecycle(
       try {
         await close("startup-failure");
       } catch (cleanupError) {
+        await reportShutdownFailure(cleanupError);
         throw new AggregateError([error, cleanupError], "Viewer startup failed and Tailscale cleanup failed; private ownership journal retained");
       }
 

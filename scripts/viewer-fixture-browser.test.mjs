@@ -115,3 +115,111 @@ for (const mode of ["local", "static"]) {
     await assert.rejects(fs.stat(path.dirname(fixture.home)), { code: "ENOENT" });
   });
 }
+
+test("failed viewer startup joins rollback reporting and retains fixture evidence", { timeout: 5000 }, async (t) => {
+  let teardown;
+  let home;
+  let hasFailedRollback = false;
+  let hasSettledStartup = false;
+  let hasFinishedReporting = false;
+  const startupError = new Error("viewer configuration failed");
+  const rollbackError = new Error("startup record rollback failed");
+  const reportingEntered = gate();
+  const releaseReporting = gate();
+  const reportingFinished = gate();
+  const readRecord = records.readViewerRecord;
+  const previousExitCode = process.exitCode;
+  t.mock.method(records, "saveViewerConfiguration", async (selectedHome) => {
+    home = selectedHome;
+    throw startupError;
+  });
+  t.mock.method(records, "removeViewerRecord", async () => {
+    hasFailedRollback = true;
+    throw rollbackError;
+  });
+  const reporting = t.mock.method(records, "readViewerRecord", async (...args) => {
+    if (hasFailedRollback) {
+      reportingEntered.release();
+      await releaseReporting.promise;
+    }
+
+    try {
+      return await readRecord(...args);
+    } finally {
+      if (hasFailedRollback) {
+        hasFinishedReporting = true;
+        reportingFinished.release();
+      }
+    }
+  });
+  const startup = createBrowserFixture({ after: (callback) => { teardown = callback; } }, "local", async () => [], { browserType })
+    .then(() => {
+      hasSettledStartup = true;
+      return undefined;
+    }, (error) => {
+      hasSettledStartup = true;
+      return error;
+    });
+
+  try {
+    await reportingEntered.promise;
+    await setImmediate();
+    assert.equal(hasSettledStartup, false, "startup rejection escaped before rollback reporting settled");
+    const root = path.dirname(home);
+    assert((await fs.stat(root)).isDirectory());
+    releaseReporting.release();
+    const failure = await startup;
+    assert(failure instanceof AggregateError);
+    assert.deepEqual(failure.errors, [startupError, rollbackError]);
+    assert.equal(hasFinishedReporting, true);
+    const reportingCalls = reporting.mock.callCount();
+    await assert.rejects(teardown(), (error) => {
+      assert(error instanceof AggregateError);
+      assert(error.message.includes(root));
+      assert.deepEqual(error.errors, [failure]);
+      return true;
+    });
+    assert((await fs.stat(root)).isDirectory());
+    await setImmediate();
+    assert.equal(reporting.mock.callCount(), reportingCalls);
+  } finally {
+    releaseReporting.release();
+    await startup;
+    await reportingFinished.promise;
+    process.exitCode = previousExitCode;
+    t.mock.restoreAll();
+    if (home) await fs.rm(path.dirname(home), { recursive: true, force: true });
+  }
+});
+
+for (const mode of ["local", "static"]) {
+  test(`${mode} fixture preserves browser and root-removal failures`, async (t) => {
+    let teardown;
+    const browserError = new Error("browser close failed");
+    const removalError = new Error("fixture root removal failed");
+    const fixture = await createBrowserFixture({ after: (callback) => { teardown = callback; } }, mode, async () => [], {
+      browserType: { launch: async () => ({ ...await browserType.launch(), close: async () => { throw browserError; } }) },
+    });
+    const root = path.dirname(fixture.home);
+    const rm = fs.rm;
+    t.mock.method(fs, "rm", async (target, options) => {
+      if (target === root) throw removalError;
+      return rm(target, options);
+    });
+    syncBuiltinESMExports();
+
+    try {
+      await assert.rejects(teardown(), (error) => {
+        assert(error instanceof AggregateError);
+        assert(error.message.includes(root));
+        assert.deepEqual(error.errors, [browserError, removalError]);
+        return true;
+      });
+      assert((await fs.stat(root)).isDirectory());
+    } finally {
+      t.mock.restoreAll();
+      syncBuiltinESMExports();
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+}

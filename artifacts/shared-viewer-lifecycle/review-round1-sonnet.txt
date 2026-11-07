@@ -1,0 +1,61 @@
+I found no material blockers in PR 120. Nothing was run, built or edited, per instructions.
+
+**Pins:** Base `610c931b…`, frozen head `6546267e…` and tested implementation `4b43e006…` all resolve. Head adds only evidence over the tested commit. The five source/test files are byte-identical between `4b43e00` and `6546267`. Their blob SHA-256s match `identity.txt`, and the lockfile hash matches too. I couldn't verify the `dist` hashes, because `dist` isn't committed. The target is `perf/89-bench`, and the PR117 pin `f290211` is untouched per `cleanup.txt`. The issue 87 and PR 120 body links are recorded in `backlinks.txt` as present, with no closing keyword. I did not re-query GitHub to confirm.
+
+## Findings
+
+No Critical or High findings. All are Low or Suggestion and optional.
+
+1. **Low, `scripts/document-isolation-browser.test.mjs:32-33,41`.** This fixture still has the unjoined pattern: `startViewer`, then `closeServer(viewer)` on the raw HTTP close, then `rm(home)` in separate `t.after` hooks.
+   - **Evidence:** I read the diff and the file's hook registrations.
+   - **Impact:** The same B1 race can exist outside `createBrowserFixture`. The brief scopes the repair to the local browser fixtures, so this isn't a miss.
+   - **Fix:** Note it as a follow-up in the PR body, or migrate it to `startViewerLifecycle` if root wants it in scope.
+2. **Low, `packages/cli/src/viewer-server.ts` (close wiring).** Three memo layers now coexist: `closing`, `ownedClosing` and `shutdownFailure`.
+   - **Naming:** `shutdownFailure` holds a journaling promise, and `ownedClosing` is easy to confuse with `closing`. Names like `failureJournaling` and `ownerClose` say more.
+   - **Log reason:** Owner-initiated close reuses reason `"reader-close"`, so the shutdown log misattributes the trigger. A distinct reason string such as `"owner-close"` would fix that.
+   - **Non-issue:** Behaviour is correct. The failure-journaling `catch` is memoized, so there's no double write. `process.exitCode = 1` is still set synchronously, as before. Signal and listener paths still attach `.catch`, so no late unhandled rejection arises.
+3. **Low, `scripts/browser-fixtures.mjs` (the `t.after` hook).** If `rm(root)` itself throws after a browser-close failure, the `rm` error propagates and `failures` is dropped.
+   - **Impact:** This is the same masking as the old `try/finally`, so it's not a regression. It does mildly weaken the "browser-close errors preserved" requirement in that corner.
+   - **Fix:** Wrap the `rm` in a `try`/`catch` and aggregate it into `failures` as well.
+4. **Low, `viewer-fixture-browser.test.mjs:~43-47`.** The "still gated" negative check uses a single `setImmediate` drain.
+   - **Impact:** It's a bounded negative, not a proof. It's sound here, because the red log shows it reliably catches the parent, but it can't assert an absence for all time.
+   - **Related:** The test mutates global `fs.rm` through `syncBuiltinESMExports`. It's restored in `finally` and the tests run sequentially, so it's acceptable.
+5. **Low, `viewer-owned-lifecycle.test.ts`.** The API-level test covers memoization (`close()` returns the identical promise), successor-record preservation, listener rebind and a single removal call. It doesn't cover rejection of `close()` or a repeat `close()` after rejection.
+   - **Evidence:** Rejection is exercised only via the fixture test, which asserts `shutdownError` journaling, the `AggregateError` and retained root.
+   - **Fix:** Add a small rejected-twice assertion.
+   - **Style:** The `let release = () => {}` init pattern and the boolean-in-title test name are minor.
+6. **Suggestion, evidence hygiene.** About 3,000 lines of raw logs plus `run.py` are committed under `artifacts/shared-viewer-lifecycle/`. `verify-node24.log` alone is 2,620 lines.
+   - **Contract:** The execution contract says to keep bulky raw artifacts out of source and provide a reliable reference.
+   - **Fix:** Trim to a summary plus the red/green logs, or reference the full logs externally.
+   - **Limit:** The logs carry no claim beyond their own contents. I found no `✖`, `unhandled` or `not ok` lines.
+
+## Brief checks
+
+- `startViewer` still returns `http.Server`. It is now a thin wrapper over the new `startViewerLifecycle`. The new API is small: `{ server, close(): Promise<void> }`.
+- Fixture teardown order is browser close, then owned close (or static `closeServer`), then `rm(root)`. A shutdown failure throws an `AggregateError` that names the retained root.
+- `close()` joins the existing memoized shutdown, which already covers startup, both listeners, pending mutations, Tailscale and `removeViewerRecord(home, processId)` with its `processId` scoping. Journaling is joined before the rejection surfaces.
+- There are no rm retries, sleeps, rename-lock changes or runtime/wire/storage/permission changes. `git diff 610c931...6546267 -- .github package.json` is empty.
+- The Windows EPERM is not claimed fixed. The qualification text explicitly disclaims it.
+- The user's code standards hold: paragraph spacing, guard isolation, no `any`, no non-null assertions, no suppressions, and a comment only where the reason is non-obvious.
+- I found no AGENTS.md or CLAUDE.md in the repo.
+
+## Red/green method
+
+- **Red:** `parent-red.log` shows exit 1 on the exact-parent build, with `fixture root removal started while owned cleanup was gated` (`actual: true, expected: false`).
+  - **Match:** That message is unique to the main-flow assertion in the first test, not the rm-mock assertion. The failure is therefore the ordering one, not an incidental error.
+  - **Parent build:** `parent-build.log` shows exit 0.
+  - **Green:** The same test is green at head in the focused runs.
+- **What it proves:** The ordering defect at the fixture/lifecycle seam only: root removal can start before gated record cleanup. It does not prove the historical native EPERM actor.
+- **Green logs:** Node 20.20.2 and Node 24.19.0 each show 59/59 passing, exit 0. `pnpm verify` is exit 0 on Node 24.19.0. The summary figures (1326 source tests, 78 browser) are in `qualification.md` and I did not recount them from the log.
+
+## Verdicts
+
+- **FUNCTIONALITY: Pass.** The seam fix is correct and the brief's behaviours are covered. The only edge gap is Finding 3, a narrow corner.
+- **CODE QUALITY: Pass.** It follows the user's standards and the API is minimal. Findings 2, 3, 5 and 6 are optional polish.
+- **VALIDATION EVIDENCE: Pass, with limits.** The pins, source hashes, red/green ordering and clean exits are consistent.
+  - **Platform:** No Windows or macOS claim follows. That needs real remote CI.
+  - **Rename and EPERM:** The separate rename hypothesis (R1/R2) and any historical EPERM attribution remain unproven, as the brief states.
+  - **Not verifiable:** The `dist` hashes, and the claims about the 1326 and 78 test counts, since I didn't rerun anything.
+  - **Gaps:** There's no hosted-CI result in this evidence, and the "no unhandled late promises" claim rests on the runner output.
+
+**Unmet brief or acceptance criteria:** None. PR 120 correctly relates to tracker 87 and does not close issue 93.

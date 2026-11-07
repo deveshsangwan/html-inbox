@@ -61,6 +61,7 @@ export async function createBrowserFixture(t, mode, publishDocuments, options = 
   const root = await mkdtemp(path.join(tmpdir(), "html-inbox-browser-"));
   let server;
   let closeViewer;
+  let failedViewerStartup;
   let browser;
   t.after(async () => {
     const failures = [];
@@ -81,7 +82,21 @@ export async function createBrowserFixture(t, mode, publishDocuments, options = 
       throw new AggregateError(failures, `Browser fixture shutdown failed; evidence retained at ${root}`);
     }
 
-    await rm(root, { recursive: true, force: true });
+    if (failedViewerStartup) {
+      failures.push(failedViewerStartup.error);
+      throw new AggregateError(failures, `Browser fixture startup failed; evidence retained at ${root}`);
+    }
+
+    try {
+      await rm(root, { recursive: true, force: true });
+    } catch (error) {
+      failures.push(error);
+    }
+
+    if (failures.length > 1) {
+      throw new AggregateError(failures, `Browser fixture cleanup failed at ${root}`);
+    }
+
     if (failures.length) {
       throw failures[0];
     }
@@ -107,9 +122,15 @@ export async function createBrowserFixture(t, mode, publishDocuments, options = 
     server = await startStaticServer(snapshot, requests);
   } else {
     assert.equal(mode, "local");
-    const viewer = await startViewerLifecycle(backend, home, 0);
-    server = viewer.server;
-    closeViewer = viewer.close;
+    try {
+      const viewer = await startViewerLifecycle(backend, home, 0);
+      server = viewer.server;
+      closeViewer = viewer.close;
+    } catch (error) {
+      // A failed initializer cannot hand us its close handle; keep its diagnostics.
+      failedViewerStartup = { error };
+      throw error;
+    }
   }
 
   const address = server.address();

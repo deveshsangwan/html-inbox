@@ -49,6 +49,31 @@ for (const hasSuccessor of [false, true]) {
   });
 }
 
+test("owned close memoizes rejection and completes failure journaling once", async (t) => {
+  const home = await temporaryHome(t);
+  const viewer = await startViewerLifecycle(new LocalDocumentBackend(home), home, 0);
+  const record = await records.readViewerRecord(home);
+  assert(record);
+  const cleanupError = new Error("owned record removal failed");
+  const previousExitCode = process.exitCode;
+  const removal = t.mock.method(records, "removeViewerRecord", async () => { throw cleanupError; });
+  const closing = viewer.close();
+
+  try {
+    assert.equal(viewer.close(), closing);
+    await assert.rejects(closing, (error) => error === cleanupError);
+    assert.equal(viewer.close(), closing);
+    await assert.rejects(viewer.close(), (error) => error === cleanupError);
+    assert.equal(removal.mock.callCount(), 1);
+    assert.equal((await records.readViewerRecord(home))?.shutdownError, cleanupError.message);
+    await rebind(record.config.port);
+    await rebind(Number(new URL(record.controlUrl).port));
+  } finally {
+    await closing.catch(() => undefined);
+    process.exitCode = previousExitCode;
+  }
+});
+
 async function rebind(port: number) {
   const server = http.createServer();
   await new Promise<void>((resolve, reject) => {
