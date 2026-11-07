@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { chmod, lstat, mkdir, writeFile, rename, rm } from "node:fs/promises";
+import { acquireSyncOwnership, optionalStat } from "./sync-files";
 
 export class ManagedStorageError extends Error {}
 
@@ -55,6 +56,36 @@ export async function writePrivateFile(
     mode: PRIVATE_FILE_MODE,
   });
   await hardenPrivateFile(filePath);
+}
+
+export async function writeAtomicPrivateFileIfAbsent(
+  filePath: string,
+  contents: string | Uint8Array,
+): Promise<void> {
+  await ensurePrivateDirectory(path.dirname(filePath));
+  if (await optionalStat(filePath)) {
+    return;
+  }
+
+  const ownership = await acquireSyncOwnership(`${filePath}.creation.lock`, Date.now() + 10_000, undefined, { mode: "portable" });
+  const temporaryPath = `${filePath}.tmp-${randomUUID()}`;
+
+  try {
+    if (await optionalStat(filePath)) {
+      return;
+    }
+
+    // Exclusive creation alone exposes an empty file. Serialize creators so a
+    // completed rename publishes one identity without replacing another winner.
+    await writePrivateFile(temporaryPath, contents, { flag: "wx" });
+    await rename(temporaryPath, filePath);
+  } finally {
+    try {
+      await rm(temporaryPath, { force: true });
+    } finally {
+      await ownership.release();
+    }
+  }
 }
 
 export async function writeAtomicPrivateJson(

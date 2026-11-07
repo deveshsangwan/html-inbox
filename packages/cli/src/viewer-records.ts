@@ -5,7 +5,7 @@ import { lstat, open, readFile, rm } from "node:fs/promises";
 import { isIP } from "node:net";
 import path from "node:path";
 import { readBoundedFile } from "./bounded-file";
-import { ensurePrivateDirectory, hardenPrivateFile, ManagedStorageError, writeAtomicPrivateJson, writePrivateFile } from "./private-storage";
+import { ensurePrivateDirectory, hardenPrivateFile, ManagedStorageError, writeAtomicPrivateJson, writeAtomicPrivateFileIfAbsent } from "./private-storage";
 import { assertUuidV4, isRecord } from "./validation";
 import { parseViewerNetworkConfig, type ViewerNetworkConfig } from "./viewer-network";
 
@@ -39,13 +39,7 @@ export async function getInboxInstanceId(home: string): Promise<string> {
   await ensurePrivateDirectory(home);
   const identityPath = path.join(home, "instance-id");
 
-  try {
-    await writePrivateFile(identityPath, randomUUID(), { flag: "wx" });
-  } catch (error) {
-    if (!hasErrorCode(error, "EEXIST")) {
-      throw error;
-    }
-  }
+  await writeAtomicPrivateFileIfAbsent(identityPath, randomUUID());
 
   await hardenPrivateFile(identityPath);
   const instanceId = (await readFile(identityPath, "utf8")).trim();
