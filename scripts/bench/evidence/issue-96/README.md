@@ -1,5 +1,9 @@
 # Baseline contract characterization
 
+Later evidence is separate: the [integrated44ef partial stop](integrated-correctness-44ef6c0-stop.md)
+records successful typecheck and a tooling-cache controller stop before build
+or application tests. It adds no runtime qualification to this frozen baseline.
+
 The [lossless archive](baseline-42232780.tar.gz) records the approved baseline
 characterization for [issue #96](https://github.com/deveshsangwan/html-inbox/issues/96).
 Its SHA-256 is

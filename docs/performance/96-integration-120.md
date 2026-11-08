@@ -66,9 +66,20 @@ The separately authorized source-only parent parameter is now prepared:
 actual clean baseline HEAD. Omission retains610 only for historical command
 reproduction. New integrated commands explicitly require
 `b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad`. No branch inference or identity
-bypass was added. Its six focused controls have not run. The [separate
+bypass was added. Its six focused controls passed hosted44ef CI; local
+actual-parent qualification has not run. The [separate
 actual-parent build/bundle/smoke request](../../scripts/bench/evidence/issue-96/parent-b249-smoke-request.md)
 requires another grant and permission for parent output mutation; it is not
 part of the fourteen-command correctness request above. Seven-pair1/100
 matrices, package/integration qualification and fresh independent reviews
 remain later gates. No old evidence qualifies this new parameter or stack.
+
+## Partial integrated execution at44ef
+
+The first granted integrated attempt passed exact runtime preflights and
+typecheck, then stopped at the controller's mistaken treatment of Corepack's
+Node compile cache as fixture residue. Build and all twelve runtime test
+commands remain unrun. The slot was released, originals retained and owned
+roots removed. See the [partial stop receipt](../../scripts/bench/evidence/issue-96/integrated-correctness-44ef6c0-stop.md).
+Compiled files and bundle remain old and stale. Hosted44ef CI passed the six
+Python parent-identity controls; local actual-parent qualification remains open.
