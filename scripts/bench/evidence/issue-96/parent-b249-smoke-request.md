@@ -1,4 +1,11 @@
-# Pending actual-parent bundle and one-record smoke request
+# Actual-parent bundle and one-record smoke scope
+
+Executed once under explicit grant `root-96-actual-parent-caf-20261108-r1`
+at clean caf. See the [smoke receipt](actual-parent-smoke-caf2d6f.md).
+The five commands and two preflights passed. This source/request text is retained
+as the reviewed scope; it grants no repeat or subsequent measurement phase.
+
+## Original reviewed source/request
 
 Related to [#96](https://github.com/deveshsangwan/html-inbox/issues/96) and
 [draft PR122](https://github.com/deveshsangwan/html-inbox/pull/122).

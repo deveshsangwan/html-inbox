@@ -121,3 +121,13 @@ on each exact runtime, plus versions. Candidate400 compiled files and typecheck
 are reused; hosted six identity controls are not repeated. Owner93 reserved parent
 outputs, but mutation/execution still requires a new root grant after #95.
 The prepared controller/auditor have not run. Bundle remains stale until then.
+
+## Granted actual-parent one-record smoke at caf
+
+The explicit actual-parent grant completed candidate bundle, reserved exactb249
+parent build/bundle and one-record smoke on each exact20/24 runtime, plus version
+preflights. Both independent saved-raw I/O/native/output audits passed. Candidate
+400 compiled files were reused; parent392 files were freshly built. Both bundles
+now have this limited smoke evidence. See the [receipt](../../scripts/bench/evidence/issue-96/actual-parent-smoke-caf2d6f.md).
+The slot was explicitly released before packaging. No practical-benefit, full
+package, historical CI-cause or review gate follows, and no next phase is granted.
