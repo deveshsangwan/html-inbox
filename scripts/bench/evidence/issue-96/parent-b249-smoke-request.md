@@ -4,7 +4,8 @@ Related to [#96](https://github.com/deveshsangwan/html-inbox/issues/96) and
 [draft PR122](https://github.com/deveshsangwan/html-inbox/pull/122).
 **Source/request preparation only. No execution grant.** Root accepted the
 [integrated scoped correctness](integrated-correctness-ecffd7c.md) and released
-its slot. #95 owns the next diagnostic slot. This replaces the former8+2
+its slot. #95 has released its diagnostic slot; availability is not an execution grant.
+This replaces the former8+2
 actual-parent request with five commands plus two version preflights.
 
 ## Reuse and reserved parent
@@ -77,15 +78,15 @@ parent, both clean source trees, immutable accepted build/correctness receipts,
 400 candidate outputs, recorded tools and reservation fingerprints must match.
 No automatic parent inference or baseline identity bypass exists.
 
-The [lossless source archive](parent-b249-smoke-source.tar.gz) is32071bytes,
+The [lossless source archive](parent-b249-smoke-source.tar.gz) is32684bytes,
 seven byte-verified members, SHA256
-`dd4a57ef37006439e61a73e802c5f66d23e4c0e460ecd1f204f2e05ca1345c53`.
+`38067e8e500be1b7d6ec8a6c69ce5e9f69aa22c8cebf3ed4db83a2496f02aed1`.
 Controller SHA256:
-`729c814da19fbc268d857e1da4ac3f499f7132bbb8cb65805873e72f96fc4ccf`.
+`a4e12a4612ff52dbb553519563b2f40232be4caa1a1c23bc3f0df5f365d8bb8c`.
 Independent auditor SHA256:
 `97cd899e54b69707c136b0dff88ac5d2af3da7c2802d9f4d4a95bc2b15064329`.
 Controller diff SHA256:
-`6d39cf4bf85477e38aa9a862ba2be2c4e837b9e3ba2c61d7226f34c65e27787d`.
+`96a9c81346aed54f3553a19584a377c07c448b180e0813278ade25cfcfb3a45a`.
 It includes the exact owner reservation receipt and both complete source diffs.
 
 Request the original one900s absolute application deadline plus separate fixed
@@ -95,14 +96,20 @@ setup, parser, output or audit mismatch. Preserve original logs/unrun list; no
 fix/retry, oracle change or budget extension.
 
 Owned process groups, sampled PID/start/descendant/adoption tracking and
-per-command private HOME/TMPDIR/catalog isolation are reused. Proposed tooling
-housekeeping is limited to the sole `node-compile-cache` subtree of the three
-exact toolchain commands/cwds, after observed groups and children join. It checks
-owned0700 enclosing TMPDIR, current UID/GID, real0775 cache directories and0600
-single-link files, inventories/hashes first, then descriptor-safe removal.
-Every other entry/command/type/link/mode still stops. This is a proposed private
-**tooling-only** containment rule for root review, not a general permission
-exception or application storage rule. No chmod or cache/runtime env workaround.
+per-command private HOME/TMPDIR/catalog isolation are reused. Root explicitly
+corrected the tooling classification in source: only the three exact tool
+commands/cwds may leave compiler/Corepack output in their private TMPDIR.
+After observed groups and children join, verify the creator's enclosing root
+dev/inode/UID identity and owned0700 mode, inventory all entries without
+following symlinks, hash regular files using no-follow opens, then remove that
+exact directory using descriptor-safe cleanup. Do not apply an application
+empty-directory oracle or reject0775 children within that tool directory.
+Any changed root/command identity or failed join retains it and stops. No chmod,
+general permission exception, application storage rule or cache/env workaround.
+Smoke fixture/output/cleanup assertions and their strict empty TMPDIR checks
+are unchanged. The retired seven cache-helper controls need not be revived.
+The earlier unexecuted strict-child proposal remains pinned at8fb9041; both
+executed stops and their original evidence remain unchanged.
 
 Candidate compiled bytes stay fixed. Parent source/ref stay clean/fixed;
 parent build/bundle changes only their generated outputs under the forthcoming
