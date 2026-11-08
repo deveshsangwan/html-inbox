@@ -1,5 +1,12 @@
 # First paired performance qualification request
 
+Executed once under explicit grant `root-96-paired-c491-20261108-r1` at clean
+c491. All fixed samples and audits completed, then the slot was released.
+See the [descriptive results](paired-performance-c491419.md). This request is
+retained as the preselected reviewed scope; it grants no repeat or next phase.
+
+## Original reviewed request
+
 Related to [#96](https://github.com/deveshsangwan/html-inbox/issues/96) and
 [draft PR122](https://github.com/deveshsangwan/html-inbox/pull/122).
 **Source-reviewed request only. No execution grant.** Scoped integrated

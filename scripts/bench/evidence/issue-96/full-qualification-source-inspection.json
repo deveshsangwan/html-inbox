@@ -1,0 +1,215 @@
+{
+  "inspection_only": true,
+  "created_at": "2026-11-08T18:43:58.076873+00:00",
+  "measured_candidate": "c4914196d275b0dac2a60e9dc09353a29da49f01",
+  "actual_parent": "b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad",
+  "measured_receipt_sha256": "5fa247034e96d9ec4e97621ed4ade010541c617252d102cc0be5ed8e2e3940ef",
+  "identity_checks": {
+    "reusable_inputs": {
+      "files": 335,
+      "all_match": true,
+      "sha256_only_map_aggregate": "0ebe75150067815b31919365205cc8ea26a75d7b9da5d72b6c06b372c287539d",
+      "recorded_map_aggregate": "0ebe75150067815b31919365205cc8ea26a75d7b9da5d72b6c06b372c287539d"
+    },
+    "candidate_full_compiled": {
+      "files": 400,
+      "all_match": true,
+      "sha256_only_map_aggregate": "60498fdc65936653e1bd59ba0b9c70f5d1d629f9b11e296124386f9c44402634",
+      "recorded_map_aggregate": "caf0bebd71a784a521077005f08a9a9d6afe7e17047e6e531ef2c2e681f4f64d"
+    },
+    "parent_full_compiled": {
+      "files": 392,
+      "all_match": true,
+      "sha256_only_map_aggregate": "91a92f994dc2f4157a209e092bda928c62c0bc9b67268b112be674b5f2173ac6",
+      "recorded_map_aggregate": "f4748e823bc39e1f21eb262f46ee03c95a723f535efdfb5c2c7d1b514786d1b6"
+    },
+    "candidate_bundle": {
+      "files": 1,
+      "all_match": true,
+      "sha256_only_map_aggregate": "677c3b5490c1441f5beba08928fd765e6f0ebfe0275bb97af985febd3e00a2da",
+      "recorded_map_aggregate": "3291b1eef2ae96e6ba862d5c2be8a18dc8196915b8b201635b427342c4e30851"
+    },
+    "parent_bundle": {
+      "files": 1,
+      "all_match": true,
+      "sha256_only_map_aggregate": "3dd12ec8e4f24b183fcff95d77ae66d205223614a2c851e35ac98a7ae4ce634c",
+      "recorded_map_aggregate": "a1ab127a31a8c61bcbaf0fc5d3827bb6ab61c05e0a7f50600124edf9027e9097"
+    },
+    "runtimes": {
+      "files": 2,
+      "all_match": true,
+      "sha256_only_map_aggregate": "78b642cfe2b9e88d2a3039ae5153b084eeeff401b71d65d085f818d92d8d1eb8",
+      "recorded_map_aggregate": "78b642cfe2b9e88d2a3039ae5153b084eeeff401b71d65d085f818d92d8d1eb8"
+    },
+    "recorded_tools": {
+      "files": 8,
+      "all_match": true,
+      "sha256_only_map_aggregate": "044a0db60a54e13b59a91299eba8a6b5609f4bc89f34c228d2de49084e6f930f",
+      "recorded_map_aggregate": "20fe766a049992a767cc5c5f92ffce0bf8f438d2bd9a0c1a1be56a04bc943f7e"
+    },
+    "recorded_extra_tools": {
+      "files": 13,
+      "all_match": true,
+      "sha256_only_map_aggregate": "86da7dc342903620504004ba7e70cf57ea8733fafce2cf448c3e88fce3be1819",
+      "recorded_map_aggregate": "6fc865a56913857e9be0256d234f38708b823d39ba6cfde57958abaa871e7603"
+    }
+  },
+  "source_phase_changes": "Only documentation/reports/evidence. No application, test, build, install, browser or review execution.",
+  "normal_gate_sources": {
+    "package.json": "078082715a1c29bab6d9d0e11a8fc8f2c16ed01d17b3ecb1a1a3d26495bc7944",
+    "packages/cli/package.json": "31b211048bc9423a778cb3c6ddb6fe3c9ae70c28c03cd9ce6f790c02e4de3d77",
+    ".github/workflows/verify.yml": "babd99b00d3cec505ad4a145e9783250d1c91129b4e6e877ddf5c960e511a1a2",
+    ".github/workflows/package.yml": "7a41719d7f54f1e9f131674b9062f884e677fe5775ee86a247ea7934a9593483",
+    "scripts/run-unit-tests.mjs": "f79cedeade6036cb65d654b01ed90dd4df3ead21ad9fdb9bb16ca4771e8dbfdb",
+    "scripts/run-browser-tests.mjs": "d4111df56c6f5ee17e89938ad6998de67415f1c576992cd256f7e25dd00f599d",
+    "scripts/package-smoke.mjs": "acfe8575765bfc4c088c36c63838f8cecd81412eeed70e72c52469174083880b",
+    "scripts/skill-cli-package-smoke.mjs": "ebc3a8dfbedc01cd5160a5b1f7df7bd3240a19c471fd82cf0a0d0bc674f9e225",
+    "scripts/verify-site.mjs": "7d7e7b1ec5ce6474911cd3839f24dcddc10a018459955f3b8f561cb74ff8a904",
+    "node_modules/.pnpm/playwright-core@1.63.0/node_modules/playwright-core/browsers.json": "545d52f8382c391e605562c330e9c1c534a16045898203037a49bb8bd769a946"
+  },
+  "shared_receipts_and_root_audit": {
+    "/home/agent/.t3/worktrees/html-inbox/perf-93-startup/artifacts/93/windows-hub-legacy-dc28-receipt.md": {
+      "bytes": 20954,
+      "sha256": "f908ee2ee9d29d31f985d8901b5abb78f978c7a58ff62e2033fda263f8a9d14e"
+    },
+    "/home/agent/.t3/worktrees/html-inbox/perf-94-sigcache/artifacts/94/shared-protocol-length-triage-2026-11-08.md": {
+      "bytes": 29610,
+      "sha256": "2e255528947267c281885987eb9ce1ae10aa388b4641920b0822025ae6fe2c67"
+    },
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue96-paired-c491-root-audit.json": {
+      "bytes": 109176,
+      "sha256": "869f37aa137191e59e9939e8968b3c4e996fe8e47a9e0ac1cddee72d3f490370"
+    }
+  },
+  "shared_receipts_read_completely": true,
+  "compiled_test_files": [
+    "packages/cli/dist/backend-records.test.js",
+    "packages/cli/dist/cli-args.test.js",
+    "packages/cli/dist/cli-contracts.test.js",
+    "packages/cli/dist/cli-display.test.js",
+    "packages/cli/dist/cloudflare-api.test.js",
+    "packages/cli/dist/cloudflare-upload.test.js",
+    "packages/cli/dist/command-runner.test.js",
+    "packages/cli/dist/document-copy.test.js",
+    "packages/cli/dist/document-deletion-worker.test.js",
+    "packages/cli/dist/document-deletion.test.js",
+    "packages/cli/dist/export-paths.test.js",
+    "packages/cli/dist/fixture-port-leases.test.js",
+    "packages/cli/dist/html-validation.test.js",
+    "packages/cli/dist/hub-config.test.js",
+    "packages/cli/dist/hub-http.test.js",
+    "packages/cli/dist/inbox-catalog.test.js",
+    "packages/cli/dist/inbox-cli.test.js",
+    "packages/cli/dist/inbox-identity-publication.test.js",
+    "packages/cli/dist/inbox-picker.test.js",
+    "packages/cli/dist/inbox-selection.test.js",
+    "packages/cli/dist/inbox-service-selection.test.js",
+    "packages/cli/dist/inbox-ux.test.js",
+    "packages/cli/dist/local-document-source.test.js",
+    "packages/cli/dist/managed-view-regressions.test.js",
+    "packages/cli/dist/preferences.test.js",
+    "packages/cli/dist/private-json.test.js",
+    "packages/cli/dist/publish-input.test.js",
+    "packages/cli/dist/remote-integrity.test.js",
+    "packages/cli/dist/remote-recovery.test.js",
+    "packages/cli/dist/static-export.test.js",
+    "packages/cli/dist/storage-cleanup.test.js",
+    "packages/cli/dist/sync-acquisition-deadline.test.js",
+    "packages/cli/dist/sync-attempt-lifetime.test.js",
+    "packages/cli/dist/sync-clock-skew.test.js",
+    "packages/cli/dist/sync-enrollment.test.js",
+    "packages/cli/dist/sync-finalization-lifecycle.test.js",
+    "packages/cli/dist/sync-https-fixtures.test.js",
+    "packages/cli/dist/sync-identity-faults.test.js",
+    "packages/cli/dist/sync-ledger-read-race.test.js",
+    "packages/cli/dist/sync-managed-deletion.test.js",
+    "packages/cli/dist/sync-ownership-publication.test.js",
+    "packages/cli/dist/sync-ownership-worker.test.js",
+    "packages/cli/dist/sync-pause-admission.test.js",
+    "packages/cli/dist/sync-platform.test.js",
+    "packages/cli/dist/sync-portable-acquisition.test.js",
+    "packages/cli/dist/sync-preaborted-reconciliation.test.js",
+    "packages/cli/dist/sync-protocol-faults.test.js",
+    "packages/cli/dist/sync-protocol.test.js",
+    "packages/cli/dist/sync-publication-inspection.test.js",
+    "packages/cli/dist/sync-publication.test.js",
+    "packages/cli/dist/sync-reader-compatibility.test.js",
+    "packages/cli/dist/sync-review-regressions.test.js",
+    "packages/cli/dist/sync-revocation-order.test.js",
+    "packages/cli/dist/sync-runtime-config.test.js",
+    "packages/cli/dist/sync-shutdown-ingestion.test.js",
+    "packages/cli/dist/sync-shutdown-ownership.test.js",
+    "packages/cli/dist/sync-storage-faults.test.js",
+    "packages/cli/dist/sync-store.test.js",
+    "packages/cli/dist/sync-supervisor.test.js",
+    "packages/cli/dist/sync-transport-lifecycle.test.js",
+    "packages/cli/dist/sync-worker-credentials.test.js",
+    "packages/cli/dist/sync-worker-fatal.test.js",
+    "packages/cli/dist/sync-worker-faults.test.js",
+    "packages/cli/dist/sync-worker-integration.test.js",
+    "packages/cli/dist/sync-worker-record-read-race.test.js",
+    "packages/cli/dist/sync-worker-runtime.test.js",
+    "packages/cli/dist/sync-worker-stop-record-race.test.js",
+    "packages/cli/dist/tailscale-records.test.js",
+    "packages/cli/dist/viewer-background.test.js",
+    "packages/cli/dist/viewer-control-health.test.js",
+    "packages/cli/dist/viewer-document-deletion.test.js",
+    "packages/cli/dist/viewer-http.test.js",
+    "packages/cli/dist/viewer-lan-http.test.js",
+    "packages/cli/dist/viewer-lifecycle.test.js",
+    "packages/cli/dist/viewer-mutation-shutdown.test.js",
+    "packages/cli/dist/viewer-network.test.js",
+    "packages/cli/dist/viewer-owned-lifecycle.test.js",
+    "packages/cli/dist/viewer-ownership.test.js",
+    "packages/cli/dist/viewer-process.test.js",
+    "packages/cli/dist/viewer-readiness.test.js",
+    "packages/cli/dist/viewer-record-observation.test.js",
+    "packages/cli/dist/viewer-record-shutdown-race.test.js",
+    "packages/cli/dist/viewer-records.test.js",
+    "packages/cli/dist/viewer-service-log.test.js",
+    "packages/cli/dist/viewer-service-owner.test.js",
+    "packages/cli/dist/viewer-service-status.test.js",
+    "packages/cli/dist/viewer-service.test.js",
+    "packages/cli/dist/viewer-shutdown.test.js",
+    "packages/cli/dist/viewer-startup-races.test.js",
+    "packages/cli/dist/viewer-status-readonly.test.js",
+    "packages/cli/dist/viewer-status.test.js",
+    "packages/cli/dist/viewer-tailscale-lifecycle.test.js",
+    "packages/cli/dist/viewer-tailscale.test.js"
+  ],
+  "browser_test_files": [
+    "scripts/content-copy-browser.test.mjs",
+    "scripts/deletion-isolation-browser.test.mjs",
+    "scripts/document-deletion-browser.test.mjs",
+    "scripts/document-isolation-browser.test.mjs",
+    "scripts/hub-browser.test.mjs",
+    "scripts/sync-reader-browser.test.mjs",
+    "scripts/viewer-browser.test.mjs",
+    "scripts/viewer-fixture-browser.test.mjs"
+  ],
+  "browser_presence_only": {
+    "playwright": "1.63.0",
+    "expected_chromium_revision": "1243",
+    "headless_executable_present": true,
+    "chromium_executable_present": true,
+    "launch_or_dependencies_qualified": false
+  },
+  "application_grant": null,
+  "reviews_started": false,
+  "typecheck_reuse_limit": "All tracked non-documentation/evidence inputs, every tracked TS file, and original recorded compiler/tool hashes must match. Installed declaration dependency hashes were not retained at the earlier typecheck; they cannot be independently reconstructed retrospectively.",
+  "inspection_setup_note": "Initial direct playwright-core/browsers.json lookup was absent under pnpm layout; exact installed .pnpm path was read instead. No Node/application launch.",
+  "csv_publication_format": {
+    "paired-statistics-c491419.csv": {
+      "archive_original": "all-descriptive-statistics.csv",
+      "original_sha256": "e5a89ae3acfa14ab28731774953c52d5dc72c1cd3fab595f4e430b4cbd838358",
+      "published_lf_sha256": "b4dfb20b48740a2dbbfbbac0e145ea44d3f1b6e6bb72fb9cd1a24b85cb5ced11",
+      "change": "Only CRLF-to-LF line endings in standalone publication copy; original/archive unchanged."
+    },
+    "paired-values-c491419.csv": {
+      "archive_original": "paired-values.csv",
+      "original_sha256": "e1f4744ed8ed29e6ec1791d0a8e661975f49ca48002c611d6d2c9f13cee6ce5e",
+      "published_lf_sha256": "135694d8c6b27de93181035a0b8499a81815421977c4efbeafb508a2b1f1735e",
+      "change": "Only CRLF-to-LF line endings in standalone publication copy; original/archive unchanged."
+    }
+  }
+}

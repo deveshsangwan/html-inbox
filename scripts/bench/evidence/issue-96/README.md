@@ -1,4 +1,15 @@
-# Baseline contract characterization
+# Issue96 evidence
+
+Current: root accepted scoped integrated correctness, actual-b249 one-record
+smoke and [100-record practical benefit](paired-performance-c491419.md) on this
+host independently on exact20/24. One-record gain is unproven. Full per-body
+ledger I/O remains. Shared dc28 correctness observations, normal full/package
+qualification, combined-stack/original610 criterion and two fresh same-pin
+reviews remain open. Draft/no merge/release. Everything below retains its
+historical checkpoint scope. The [normal full-qualification request](full-qualification-request.md)
+is source-only and awaits a separate grant.
+
+## Historical baseline characterization
 
 Later evidence is separate: the [integrated44ef partial stop](integrated-correctness-44ef6c0-stop.md)
 records successful typecheck and a tooling-cache controller stop before build
@@ -14,7 +25,10 @@ The [actual-b249 one-record smoke](actual-parent-smoke-caf2d6f.md) subsequently
 built both bundles and passed the exact20/24 smoke/audits. Practical benefit and
 full package/review gates remain open.
 The [first paired request](paired-performance-request.md) is source-only,
-counts1/100 with seven pairs per exact runtime. Its controller/auditor are unrun.
+counts1/100 with seven pairs per exact runtime. Its controller/auditor were unrun at that source checkpoint.
+That request was subsequently granted once at c491. The [measured report](paired-performance-c491419.md)
+retains all pairs, statistics and tradeoffs. Root accepted scoped large-export
+benefit; full checks/reviews remain gates; no automatic next phase or full issue closure.
 
 The [lossless archive](baseline-42232780.tar.gz) records the approved baseline
 characterization for [issue #96](https://github.com/deveshsangwan/html-inbox/issues/96).

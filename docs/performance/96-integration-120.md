@@ -1,4 +1,17 @@
-# Source-only stack on reviewed shared viewer lifecycle
+# Issue96 stack on reviewed shared viewer lifecycle
+
+Current: root accepted scoped integrated correctness and actual-b249 smoke, then
+accepted practical benefit for complete100-record/10KiB managed exports on this
+host independently on exact20/24. See the [measured report](../../scripts/bench/evidence/issue-96/paired-performance-c491419.md).
+The400 candidate/392 parent compiled files and both bundles are qualified only
+within those recorded scopes. One-record benefit is unproven; full per-body
+ledger I/O remains. Shared dc28 correctness observations, normal full/package
+qualification, original610 combined-stack criterion and fresh same-pin reviews
+remain gates. The [normal full-qualification request](../../scripts/bench/evidence/issue-96/full-qualification-request.md)
+is source-only. No new runtime grant follows.
+
+The sections below are chronological historical receipts. Stale-build and
+pending-grant statements describe their checkpoint, not the current artifacts.
 
 Related to [#96](https://github.com/deveshsangwan/html-inbox/issues/96) and
 [PR122](https://github.com/deveshsangwan/html-inbox/pull/122).
@@ -139,3 +152,15 @@ on each exact runtime, using the accepted built artifacts without rebuild.
 Its multi-sample auditor keys every row/export by full count/pair/output identity,
 recomputes summaries and preserves all samples. Controller/auditor remain
 unexecuted; source preparation grants no measurement, fullsuite or review run.
+
+## Granted first paired matrix at c491
+
+The fixed count1/100,10KiB,seven-pair matrix completed once on exact20/24 using
+accepted artifacts against actual b249. Both runtime audits and all158 rows,
+76 export trees/11452 files passed; source/build/tool maps stayed unchanged.
+Slot explicitly released before packaging. The [descriptive report](../../scripts/bench/evidence/issue-96/paired-performance-c491419.md)
+shows all raw pairs/spread, count1 costs, memory/bundle tradeoffs and unchanged
+per-body checked-byte I/O. Root independently accepted the scoped100-record
+benefit. Unresolved historical CI gates, normal full/package qualification, the
+separate original610 combined-stack criterion and both fresh same-pin reviews
+remain open.
