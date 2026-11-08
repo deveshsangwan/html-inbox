@@ -1,17 +1,33 @@
 const assert = require("node:assert/strict");
 const { randomUUID } = require("node:crypto");
-const { readFile, rm } = require("node:fs/promises");
+const { readFile, rm, stat } = require("node:fs/promises");
 const path = require("node:path");
 const { createSyncHttpsCredentials } = require("../../packages/cli/dist/sync-https-fixtures.js");
 const { createSyncIngestionServer } = require("../../packages/cli/dist/sync-http-server.js");
 const { reconcileSyncRoutes } = require("../../packages/cli/dist/sync-reconciliation.js");
 const { ManagedSyncStore } = require("../../packages/cli/dist/sync-store.js");
+const { outboxKey, receiptKey } = require("../../packages/cli/dist/sync-ledger.js");
+const { stateFingerprint, canonicalKey } = require("../../packages/cli/dist/sync-model.js");
 const { opaqueToken } = require("../../packages/cli/dist/sync-wire.js");
+
+const ledgerWrites = new WeakMap();
+
+function observedStore(home) {
+  const writes = { bytes: 0 };
+  const store = new ManagedSyncStore(home, { testHooks: { async onEvent(event) {
+    if (event === "ledger-renamed") {
+      writes.bytes += (await stat(path.join(home, "sync", "ledger.json"))).size;
+    }
+  } } });
+  ledgerWrites.set(store, writes);
+  return store;
+}
 
 function storageCounters(store) {
   const counters = store.counters;
   return {
     commits: counters.events["ledger-renamed"] ?? 0,
+    ledgerReplacementBytes: ledgerWrites.get(store).bytes,
     htmlOpens: counters.htmlOpens,
     htmlBytesRead: counters.htmlBytes,
     hashPasses: counters.hashPasses,
@@ -53,9 +69,9 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
     const input = { originalBytes: bytes, title: "Peer benchmark", type: "report", sourceFileName: "fixture.html" };
 
     for (let sample = 0; sample < samples; sample += 1) {
-      const source = new ManagedSyncStore(path.join(root, `source-${sample}`));
+      const source = observedStore(path.join(root, `source-${sample}`));
       const destinationHome = path.join(root, `receiver-${sample}`);
-      const destination = new ManagedSyncStore(destinationHome);
+      const destination = observedStore(destinationHome);
       await record(`managed/enroll/${count}`, async () => {
         await source.enroll();
         return { source: storageCounters(source) };
@@ -107,6 +123,29 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
           assert.equal(result.routes[0].status, "confirmed", JSON.stringify(result));
           assert.equal(result.routes[0].transferred, expectedTransfers, label);
           const afterWire = server.status().counters;
+          const sourceLedger = await source.snapshot();
+          const receiverLedger = await destination.snapshot();
+          assert.equal(Object.keys(sourceLedger.records).length, count);
+          assert.equal(Object.keys(receiverLedger.records).length, count);
+          assert.equal(Object.keys(sourceLedger.receipts).length, count);
+          const receiverReceipts = new Map(Object.values(receiverLedger.receipts).map(receipt => [receipt.fingerprint, receipt]));
+          for (const record of Object.values(sourceLedger.records)) {
+            const key = canonicalKey(record.originInboxId, record.originDocumentId);
+            const received = receiverLedger.records[key];
+            assert.ok(received);
+            assert.deepEqual(received.metadata, record.metadata);
+            assert.equal(received.signature, record.signature);
+            assert.equal(stateFingerprint(received), stateFingerprint(record));
+            const receipt = receiverReceipts.get(stateFingerprint(record));
+            assert.ok(receipt);
+            assert.deepEqual(sourceLedger.receipts[receiptKey(receipt)], receipt);
+            const obligation = sourceLedger.outbox[outboxKey(route.id, route.revision, key)];
+            assert.ok(obligation);
+            assert.equal(obligation.disposition, "confirmed");
+            assert.equal(obligation.fingerprint, receipt.fingerprint);
+            assert.equal(obligation.receiverStorageIncarnation, receipt.storageIncarnation);
+            assert.equal(obligation.receiptDisposition, receipt.disposition);
+          }
 
           return {
             transferred: result.routes[0].transferred,

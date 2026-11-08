@@ -29,6 +29,7 @@ interface ChildConfiguration {
   authorization?: RouteAuthorization;
   descriptor?: OriginState;
   receipt?: DurableReceipt;
+  receipts?: DurableReceipt[];
 }
 
 if (process.argv[2] === "--storage-fault-child") {
@@ -315,26 +316,44 @@ function registerStorageFaultTests() {
     }
   });
 
-  test("receipt persistence interrupted before retirement stays recoverable without claiming onward success", { timeout: 10_000 }, async (t) => {
-    const fixture = await relayFixture(t);
-    const sourceLedger = await fixture.origin.snapshot();
-    const outbound = outboundRoute(sourceLedger.inboxId, ownerGrant(sourceLedger), fixture.inbound.destinationInboxId, fixture.inbound.id);
-    await configureReadyRoute(fixture.origin, outbound);
-    const applied = await fixture.store.apply(authorization(fixture.inbound), fixture.state, body);
-    assert("receipt" in applied);
-    const child = storageChild(t, { home: fixture.originHome, operation: "acknowledge", event: "receipt-before-retirement",
-      authorization: authorization(outbound), receipt: applied.receipt });
-    await child.killAtFault("receipt-before-retirement");
-    const recovered = new ManagedSyncStore(fixture.originHome);
-    await recovered.recover();
-    const ledger = await recovered.snapshot();
-    assert.equal(Object.keys(ledger.receipts).length, 1);
-    assertPending(ledger, outbound, fixture.state);
-    await recovered.acknowledge(authorization(outbound), applied.receipt);
-    const final = await recovered.snapshot();
-    assert.equal(Object.keys(final.receipts).length, 1);
-    assert.equal(final.outbox[outboxKey(outbound.id, 1, canonicalKey(fixture.state.originInboxId, fixture.state.originDocumentId))]?.disposition, "confirmed");
-    assertPending(await fixture.store.snapshot(), fixture.onward, fixture.state);
+  test("killed acknowledgement batches expose pending work or atomic receipt-backed confirmation", { timeout: 25_000 }, async (t) => {
+    for (const event of [...commitEvents, "acknowledgements-committed"] satisfies StorageEvent[]) {
+      await t.test(event, async (t) => {
+        const fixture = await relayFixture(t);
+        const sourceLedger = await fixture.origin.snapshot();
+        const outbound = outboundRoute(sourceLedger.inboxId, ownerGrant(sourceLedger), fixture.inbound.destinationInboxId, fixture.inbound.id);
+        await configureReadyRoute(fixture.origin, outbound);
+        await fixture.origin.publish(input, "Second-Acknowledgement");
+        const states = Object.values((await fixture.origin.snapshot()).records).map(toOriginState);
+        const receipts: DurableReceipt[] = [];
+        for (const state of states) {
+          const applied = await fixture.store.apply(authorization(fixture.inbound), state, body);
+          assert("receipt" in applied);
+          receipts.push(applied.receipt);
+        }
+
+        assert.equal(receipts.length, 2);
+        const child = storageChild(t, { home: fixture.originHome, operation: "acknowledge", event,
+          authorization: authorization(outbound), receipts });
+        await child.killAtFault(event);
+        const recovered = new ManagedSyncStore(fixture.originHome);
+        await recovered.recover();
+        const ledger = await recovered.snapshot();
+        const isCommitted = ["ledger-renamed", "ledger-dir-fsynced", "acknowledgements-committed"].includes(event);
+        assert.equal(Object.keys(ledger.receipts).length, isCommitted ? 2 : 0);
+        for (const state of states) {
+          const status = await recovered.deliveryStatus(outbound.id, state.originInboxId, state.originDocumentId);
+          assert.equal(status.status, isCommitted ? "committed" : "pending");
+          assert.equal(status.isCommitted, isCommitted);
+          assertPending(await fixture.store.snapshot(), fixture.onward, state);
+        }
+
+        const before = recovered.counters.events["ledger-renamed"] ?? 0;
+        await recovered.acknowledgeBatch(authorization(outbound), receipts);
+        assert.equal((recovered.counters.events["ledger-renamed"] ?? 0) - before, isCommitted ? 0 : 1);
+        assert.equal(Object.keys((await recovered.snapshot()).receipts).length, 2);
+      });
+    }
   });
 
   test("one-shot EIO and ENOSPC faults fail exactly once and fence uncertain mutations until recovery", { timeout: 30_000 }, async (t) => {
@@ -921,7 +940,13 @@ async function runStorageChild() {
     const state = parseOriginState(configuration.descriptor);
     await store.apply(parseAuthorization(configuration.authorization), state, state.state === "live" ? body : undefined);
   }
-  if (operation === "acknowledge") await store.acknowledge(configuration.authorization, configuration.receipt);
+  if (operation === "acknowledge") {
+    if (configuration.receipts !== undefined) {
+      await store.acknowledgeBatch(configuration.authorization, configuration.receipts);
+    } else {
+      await store.acknowledge(configuration.authorization, configuration.receipt);
+    }
+  }
   if (operation === "metadata") {
     const auth = parseAuthorization(configuration.authorization);
     const ledger = await store.snapshot();
@@ -967,7 +992,7 @@ async function runStorageChild() {
 
 function parseStorageEvent(value: string): StorageEvent {
   const events: StorageEvent[] = [...bodyEvents, ...commitEvents, "migration-intent", "migration-evacuated", "migration-barrier", "migration-enumeration",
-    "committed-before-receipt", "receipt-before-retirement"];
+    "committed-before-receipt", "acknowledgements-committed"];
   const event = events.find((event) => event === value);
   assert(event, "unknown storage event");
   return event;

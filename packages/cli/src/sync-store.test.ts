@@ -11,7 +11,7 @@ import { inspectInboxHome } from "./inbox-home";
 import { LocalDocumentSource } from "./local-document-source";
 import { exportStaticSnapshot } from "./static-export";
 import { createOneShotStorageFault, type StorageEvent } from "./sync-files";
-import { outboxKey } from "./sync-ledger";
+import { outboxKey, type DurableReceipt } from "./sync-ledger";
 import { MANIFEST_DOMAIN, SYNC_LIMITS, canonicalKey, inventoryDigest, metadataEncoding, parseOriginState, parseRoute, sha256, signOriginState, stateEncoding, stateFingerprint, verifyOriginState,
   type CompleteInventory, type OriginState, type RouteAuthorization, type SyncRoute } from "./sync-model";
 import { MANAGED_FORMAT_BARRIER, ManagedSyncStore, toOriginState } from "./sync-store";
@@ -332,7 +332,7 @@ test("stream installation verifies actual bounded chunks and retries never rerea
   assert.equal(b.store.counters.htmlOpens, 0);
 });
 
-test("historical receipt persistence precedes sender retirement and repair recreates confirmed obligation", async (t) => {
+test("receipt persistence and sender retirement are atomic and repair recreates confirmed obligation", async (t) => {
   const a = await enrolled(t);
   const b = await enrolled(t);
   await a.store.publish(input, "ack");
@@ -342,20 +342,160 @@ test("historical receipt persistence precedes sender retirement and repair recre
   const received = await b.store.apply(ab.auth, state, input.originalBytes);
   assert.notEqual(received.status, "needs-body");
   if (received.status === "needs-body") return;
-  const fault = createOneShotStorageFault("receipt-before-retirement");
+  const fault = createOneShotStorageFault("acknowledgements-committed");
   const sender = new ManagedSyncStore(a.home, { testHooks: fault.hooks });
   await assert.rejects(sender.acknowledge(ab.auth, received.receipt), /Injected/);
   const key = canonicalKey(state.originInboxId, "ack");
   let ledger = await a.store.snapshot();
   assert.equal(Object.values(ledger.receipts).length, 1);
-  assert.equal(ledger.outbox[outboxKey(ab.route.id, 1, key)].disposition, "pending");
+  assert.equal(ledger.outbox[outboxKey(ab.route.id, 1, key)].disposition, "confirmed");
   await sender.acknowledge(ab.auth, received.receipt);
   ledger = await a.store.snapshot();
   assert.equal(ledger.outbox[outboxKey(ab.route.id, 1, key)].disposition, "confirmed");
   await sender.reconcileHoldings(ab.auth, [{ originInboxId: state.originInboxId, originDocumentId: "ack", fingerprint: stateFingerprint(state), available: false, storageIncarnation: received.receipt.storageIncarnation }]);
   assert.equal((await sender.snapshot()).outbox[outboxKey(ab.route.id, 1, key)].disposition, "pending");
-  assert.deepEqual(fault.proof(), { event: "receipt-before-retirement", armed: false, hits: 1 });
+  assert.deepEqual(fault.proof(), { event: "acknowledgements-committed", armed: false, hits: 1 });
 });
+
+async function acknowledgementFixture(t: TestContext, count = 2) {
+  const source = await enrolled(t);
+  const receiver = await enrolled(t);
+  for (let index = 0; index < count; index += 1) {
+    await source.store.publish(input, `ack-${index}`);
+  }
+
+  const link = await routeBetween(source.store, receiver.store);
+  await configureReadyOutbound(source.store, { ...link.route, direction: "outbound" });
+  const states = Object.values((await source.store.snapshot()).records).map(toOriginState);
+  const receipts: DurableReceipt[] = [];
+  for (const state of states) {
+    const applied = await receiver.store.apply(link.auth, state, input.originalBytes);
+    assert.ok("receipt" in applied);
+    receipts.push(applied.receipt);
+  }
+
+  return { source, receiver, ...link, states, receipts };
+}
+
+test("acknowledgement batches replace once and exact retries preserve ledger bytes after restart", async (t) => {
+  const f = await acknowledgementFixture(t);
+  const before = f.source.store.counters.events["ledger-renamed"] ?? 0;
+  await f.source.store.acknowledgeBatch(f.auth, [...f.receipts, f.receipts[0]]);
+  assert.equal((f.source.store.counters.events["ledger-renamed"] ?? 0) - before, 1);
+  for (const state of f.states) {
+    const status = await f.source.store.deliveryStatus(f.route.id, state.originInboxId, state.originDocumentId);
+    assert.equal(status.status, "committed");
+    assert.equal(status.isCommitted, true);
+  }
+
+  const ledgerPath = path.join(f.source.home, "sync", "ledger.json");
+  const bytes = await readFile(ledgerPath);
+  const restarted = new ManagedSyncStore(f.source.home);
+  await restarted.acknowledgeBatch(f.auth, f.receipts);
+  await restarted.acknowledge(f.auth, f.receipts[0]);
+  await restarted.acknowledgeBatch(f.auth, Array(SYNC_LIMITS.manifestPage).fill(f.receipts[0]));
+  assert.equal(restarted.counters.events["ledger-renamed"] ?? 0, 0);
+  assert.deepEqual(await readFile(ledgerPath), bytes);
+
+  const state = f.states[1];
+  await restarted.reconcileHoldings(f.auth, [{ originInboxId: state.originInboxId, originDocumentId: state.originDocumentId,
+    fingerprint: stateFingerprint(state), available: false, storageIncarnation: f.receipts[1].storageIncarnation }]);
+  const repairsBefore = restarted.counters.events["ledger-renamed"] ?? 0;
+  await restarted.acknowledgeBatch(f.auth, f.receipts);
+  assert.equal((restarted.counters.events["ledger-renamed"] ?? 0) - repairsBefore, 1);
+});
+
+test("acknowledgement batches reject invalid bindings without partially retiring valid siblings", async (t) => {
+  const f = await acknowledgementFixture(t);
+  const receipt = f.receipts[1];
+  const invalid = [
+    { ...receipt, routeId: randomUUID() },
+    { ...receipt, revision: receipt.revision + 1 },
+    { ...receipt, receiverInboxId: randomUUID() },
+    { ...receipt, destinationInboxId: randomUUID() },
+    { ...receipt, fingerprint: "0".repeat(64) },
+    { ...receipt, disposition: "deleted" },
+    { ...receipt, disposition: "superseded" },
+    { ...receipt, disposition: "unknown" },
+    { ...receipt, originState: { ...receipt.originState, signature: Buffer.alloc(64).toString("base64url") } },
+  ];
+  const ledgerPath = path.join(f.source.home, "sync", "ledger.json");
+  const bytes = await readFile(ledgerPath);
+  for (const value of invalid) {
+    await assert.rejects(f.source.store.acknowledgeBatch(f.auth, [f.receipts[0], value]));
+    assert.deepEqual(await readFile(ledgerPath), bytes);
+  }
+
+  for (const auth of [{ ...f.auth, routeId: randomUUID() }, { ...f.auth, revision: 2 }, { ...f.auth, peerId: randomUUID() },
+    { ...f.auth, sourceInboxId: randomUUID() }, { ...f.auth, destinationInboxId: randomUUID() }]) {
+    await assert.rejects(f.source.store.acknowledgeBatch(auth, f.receipts), /authorization/);
+    assert.deepEqual(await readFile(ledgerPath), bytes);
+  }
+
+  for (const values of [null, [], Array(SYNC_LIMITS.manifestPage + 1).fill(receipt)]) {
+    await assert.rejects(f.source.store.acknowledgeBatch(f.auth, values), /batch requires/);
+    assert.deepEqual(await readFile(ledgerPath), bytes);
+  }
+
+  await assert.rejects(f.source.store.acknowledgeBatch(f.auth, [receipt, { ...receipt, storageIncarnation: randomUUID() }]), /replaced receiver/);
+  await assert.rejects(f.source.store.acknowledgeBatch(f.auth, [receipt, { ...receipt, disposition: "suppressed" }]), /Conflicting receipts/);
+  assert.deepEqual(await readFile(ledgerPath), bytes);
+});
+
+test("already-applied acknowledgements still reject stale authority, fingerprints and receiver incarnations", async (t) => {
+  const f = await acknowledgementFixture(t);
+  await f.source.store.acknowledgeBatch(f.auth, f.receipts);
+  await f.source.store.deleteDocument(f.states[0].originDocumentId);
+  await assert.rejects(f.source.store.acknowledge(f.auth, f.receipts[0]), /current queued state/);
+  await f.source.store.reconcileHoldings(f.auth, [{ originInboxId: f.states[1].originInboxId, originDocumentId: f.states[1].originDocumentId,
+    fingerprint: stateFingerprint(f.states[1]), available: false, storageIncarnation: randomUUID() }]);
+  await assert.rejects(f.source.store.acknowledge(f.auth, f.receipts[1]), /replaced receiver/);
+  await f.source.store.revokeRoute(f.route.id, 1);
+  await assert.rejects(f.source.store.acknowledgeBatch(f.auth, f.receipts), /authorization/);
+});
+
+test("a retired obligation cannot be revived by a receipt even with current route authority", async (t) => {
+  const f = await acknowledgementFixture(t, 1);
+  const ledger = await f.source.store.snapshot();
+  const key = outboxKey(f.route.id, 1, canonicalKey(f.states[0].originInboxId, f.states[0].originDocumentId));
+  ledger.outbox[key].disposition = "retired";
+  const ledgerPath = path.join(f.source.home, "sync", "ledger.json");
+  await writeFile(ledgerPath, JSON.stringify(ledger));
+  const bytes = await readFile(ledgerPath);
+  await assert.rejects(f.source.store.acknowledge(f.auth, f.receipts[0]), /current queued state/);
+  assert.deepEqual(await readFile(ledgerPath), bytes);
+});
+
+for (const event of ["ledger-temp-written", "ledger-temp-fsynced", "ledger-renamed", "ledger-dir-fsynced"] satisfies StorageEvent[]) {
+  for (const code of ["EIO", "ENOSPC"]) {
+    test(`acknowledgement batch ${code} at ${event} retains pending work or receipt-backed confirmation`, async (t) => {
+      const f = await acknowledgementFixture(t);
+      const injected = Object.assign(new Error(`Synthetic acknowledgement ${code}`), { code });
+      const fault = createOneShotStorageFault(event, () => { throw injected; });
+      const writer = new ManagedSyncStore(f.source.home, { testHooks: fault.hooks });
+      await writer.recover();
+      await assert.rejects(writer.acknowledgeBatch(f.auth, f.receipts), (error: unknown) => error === injected);
+      assert.deepEqual(fault.proof(), { event, armed: false, hits: 1 });
+      const isCommitted = event === "ledger-renamed" || event === "ledger-dir-fsynced";
+      if (isCommitted) {
+        await assert.rejects(f.source.store.acknowledgeBatch(f.auth, f.receipts), /uncertain/);
+      }
+
+      await writer.recover();
+      const ledger = await writer.snapshot();
+      assert.equal(Object.keys(ledger.receipts).length, isCommitted ? 2 : 0);
+      for (const state of f.states) {
+        const status = await writer.deliveryStatus(f.route.id, state.originInboxId, state.originDocumentId);
+        assert.equal(status.status, isCommitted ? "committed" : "pending");
+        assert.equal(status.isCommitted, isCommitted);
+      }
+
+      const before = writer.counters.events["ledger-renamed"] ?? 0;
+      await writer.acknowledgeBatch(f.auth, f.receipts);
+      assert.equal((writer.counters.events["ledger-renamed"] ?? 0) - before, isCommitted ? 0 : 1);
+    });
+  }
+}
 
 for (const event of ["migration-intent", "migration-evacuated", "migration-barrier"] satisfies StorageEvent[]) {
   test(`migration fault at ${event} recovers repeatedly without enumerating a writable old path`, async (t) => {

@@ -715,36 +715,70 @@ export class ManagedSyncStore {
   }
 
   async acknowledge(authorization: unknown, value: unknown): Promise<void> {
+    return this.acknowledgeBatch(authorization, [value]);
+  }
+
+  async acknowledgeBatch(authorization: unknown, values: unknown): Promise<void> {
     const auth = parseAuthorization(authorization);
-    const receipt = parseReceipt(value);
+    if (!Array.isArray(values) || values.length < 1 || values.length > SYNC_LIMITS.manifestPage) {
+      throw new Error("Acknowledgement batch requires 1 to 128 receipts");
+    }
+
+    const receipts = values.map(parseReceipt);
     await this.mutate(async (ledger) => {
-      const route = this.authorize(ledger, auth, receipt.originState, "outbound");
-      if (receipt.receiverInboxId !== route.destinationInboxId || receipt.destinationInboxId !== route.destinationInboxId || receipt.routeId !== route.id || receipt.revision !== route.revision) {
-        throw new Error("Receipt receiver or route binding conflict");
+      this.authorizeRoute(ledger, auth, "outbound");
+      const bindings = new Map<string, string>();
+      let changed = false;
+      for (const receipt of receipts) {
+        const route = this.authorize(ledger, auth, receipt.originState, "outbound");
+        if (receipt.receiverInboxId !== route.destinationInboxId || receipt.destinationInboxId !== route.destinationInboxId || receipt.routeId !== route.id || receipt.revision !== route.revision) {
+          throw new Error("Receipt receiver or route binding conflict");
+        }
+
+        if (receipt.disposition === "superseded" && receipt.originState.state !== "deleted") {
+          throw new Error("Superseded live state does not prove custody");
+        }
+
+        const key = canonicalKey(receipt.originState.originInboxId, receipt.originState.originDocumentId);
+        const entryKey = outboxKey(route.id, route.revision, key);
+        const entry = ledger.outbox[entryKey];
+        const record = ledger.records[key];
+        if (!entry || entry.disposition === "retired" || entry.fingerprint !== receipt.fingerprint || !record || stateFingerprint(record) !== receipt.fingerprint) {
+          throw new Error("Receipt does not acknowledge the current queued state");
+        }
+
+        if (entry.receiverStorageIncarnation !== null && entry.receiverStorageIncarnation !== receipt.storageIncarnation) {
+          throw new Error("Historical receipt belongs to a replaced receiver storage incarnation");
+        }
+
+        const id = receiptKey(receipt);
+        const previous = bindings.get(entryKey);
+        if (previous !== undefined && previous !== id) {
+          throw new Error("Conflicting receipts for one queued obligation");
+        }
+
+        bindings.set(entryKey, id);
+        if (entry.disposition === "confirmed" && entry.receiptDisposition === receipt.disposition && entry.lastError === null &&
+            entry.receiverStorageIncarnation === receipt.storageIncarnation && JSON.stringify(ledger.receipts[id]) === JSON.stringify(receipt)) {
+          continue;
+        }
+
+        entry.receiverStorageIncarnation = receipt.storageIncarnation;
+        ledger.receipts[id] = receipt;
+        entry.disposition = "confirmed";
+        entry.receiptDisposition = receipt.disposition;
+        entry.lastError = null;
+        changed = true;
       }
 
-      if (receipt.disposition === "superseded" && receipt.originState.state !== "deleted") {
-        throw new Error("Superseded live state does not prove custody");
+      if (!changed) {
+        return;
       }
 
-      const key = canonicalKey(receipt.originState.originInboxId, receipt.originState.originDocumentId);
-      const entry = ledger.outbox[outboxKey(route.id, route.revision, key)];
-      if (!entry || entry.fingerprint !== receipt.fingerprint) {
-        throw new Error("Receipt does not acknowledge the current queued state");
-      }
-
-      if (entry.receiverStorageIncarnation !== null && entry.receiverStorageIncarnation !== receipt.storageIncarnation) {
-        throw new Error("Historical receipt belongs to a replaced receiver storage incarnation");
-      }
-
-      entry.receiverStorageIncarnation = receipt.storageIncarnation;
-      ledger.receipts[receiptKey(receipt)] = receipt;
+      // One durable replacement makes receipt evidence and retirement visible together.
+      // A pre-rename failure leaves pending work; post-rename uncertainty requires recovery.
       await this.commit(ledger);
-      await this.files.event("receipt-before-retirement");
-      entry.disposition = "confirmed";
-      entry.receiptDisposition = receipt.disposition;
-      entry.lastError = null;
-      await this.commit(ledger);
+      await this.files.event("acknowledgements-committed");
     });
   }
 
