@@ -1,5 +1,9 @@
 # Next scheduler feasibility proposal
 
+Status: root accepted this policy for source-only preparation. See the
+[unexecuted implementation and separate request](95-feasibility-source-preparation.md).
+The original decision proposal follows; no execution grant is implied.
+
 This is a source-only decision proposal after root accepted the routed diagnostic
 receipt at `c102ab822a73e05a873b3ff4ef706711a8e10aee`. It authorizes no execution or
 runner change. Production remains `9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f`;
