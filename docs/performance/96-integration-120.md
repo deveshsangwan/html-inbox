@@ -83,3 +83,11 @@ commands remain unrun. The slot was released, originals retained and owned
 roots removed. See the [partial stop receipt](../../scripts/bench/evidence/issue-96/integrated-correctness-44ef6c0-stop.md).
 Compiled files and bundle remain old and stale. Hosted44ef CI passed the six
 Python parent-identity controls; local actual-parent qualification remains open.
+
+Root accepted that stop and authorized only source preparation of a narrow
+joined-tool-cache correction. The [continuation request](../../scripts/bench/evidence/issue-96/integrated-correctness-continuation-request.md)
+covers only the still-unrun build and twelve runtime commands, with exact
+version preflights. Its new ignored controller and seven helper controls are
+unexecuted. No application code or test expectation changed; a new execution
+grant is required. The earlier typecheck's retained input proof and its limits
+are explicit in that request.
