@@ -1,14 +1,8 @@
 # Issue96 stack on reviewed shared viewer lifecycle
 
-Current: root accepted scoped integrated correctness and actual-b249 smoke, then
-accepted practical benefit for complete100-record/10KiB managed exports on this
-host independently on exact20/24. See the [measured report](../../scripts/bench/evidence/issue-96/paired-performance-c491419.md).
-The400 candidate/392 parent compiled files and both bundles are qualified only
-within those recorded scopes. One-record benefit is unproven; full per-body
-ledger I/O remains. Shared dc28 correctness observations, normal full/package
-qualification, original610 combined-stack criterion and fresh same-pin reviews
-remain gates. The [normal full-qualification request](../../scripts/bench/evidence/issue-96/full-qualification-request.md)
-is source-only. No new runtime grant follows.
+Current: root accepted normal source qualification from c77 hosted20.20.2/24.22.2 plus existing exact20.20.2/24.19.0 affected controls, and accepted measured-package behavior on BOTH exact runtimes. A's original Node24 disposal stop remains immutable, with its retained compile-cache root untouched. Root also accepted the [combined original610100-record complete-export benefit](../../scripts/bench/evidence/issue-96/combined-610-c77.md) independently on exact20/24; the bounded combined performance criterion is satisfied. The earlier [c491/b249 result](../../scripts/bench/evidence/issue-96/paired-performance-c491419.md) remains a separate immediate-parent comparison.
+
+One-record gain is unproven. Full per-body ledger I/O and the partial reload-elimination scope remain. Five retained roots remain, no all-roots-clean claim. Full broad24.19 invocations and original local300s unit -15/incomplete/20 subsequent unrun remain historical facts, without redundant reruns. Both dc28 legacy-lock/LENGTH observations and other shared CI limitations remain open. Two fresh same-pin reviews and root/current-head CI readiness decisions remain; draft/no merge/release/full96 closure. Everything below is a historical checkpoint, not current execution authority.
 
 The sections below are chronological historical receipts. Stale-build and
 pending-grant statements describe their checkpoint, not the current artifacts.

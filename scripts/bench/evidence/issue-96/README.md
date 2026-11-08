@@ -1,17 +1,8 @@
 # Issue96 evidence
 
-Current: root accepted scoped integrated correctness, actual-b249 one-record
-smoke and [100-record practical benefit](paired-performance-c491419.md) on this
-host independently on exact20/24. One-record gain is unproven. Full per-body
-ledger I/O remains. Shared dc28 correctness observations, normal full/package
-qualification, combined-stack/original610 criterion and two fresh same-pin
-reviews remain open. Draft/no merge/release. Everything below retains its
-historical checkpoint scope. The latest [tests-only stop](full-tests-3be43b8-stop.md) records the first Node20
-shard interrupted at its300s command cap;20 later gates remain unrun. Root accepted
-release, not qualification. The earlier [853 pack stop](full-qualification-85314e7-stop.md)
-retains bounded pack-artifact reuse acceptance. [V3 source binding](full-qualification-controller-v3.md)
-remains its historical prepared checkpoint. No runtime continuation, source change,
-housekeeping or reviewer is granted.
+Current: root accepted normal source qualification from c77 hosted20.20.2/24.22.2 plus existing exact20.20.2/24.19.0 affected controls, and accepted measured-package behavior on BOTH exact runtimes. A's original Node24 disposal stop remains immutable, with its retained compile-cache root untouched. Root also accepted the [combined original610100-record complete-export benefit](combined-610-c77.md) independently on exact20/24; the bounded combined performance criterion is satisfied. The earlier [c491/b249 result](paired-performance-c491419.md) remains a separate immediate-parent comparison.
+
+One-record gain is unproven. Full per-body ledger I/O and the partial reload-elimination scope remain. Five retained roots remain, no all-roots-clean claim. Full broad24.19 invocations and original local300s unit -15/incomplete/20 subsequent unrun remain historical facts, without redundant reruns. Both dc28 legacy-lock/LENGTH observations and other shared CI limitations remain open. Two fresh same-pin reviews and root/current-head CI readiness decisions remain; draft/no merge/release/full96 closure. Everything below is a historical checkpoint, not current execution authority.
 
 ## Historical baseline characterization
 

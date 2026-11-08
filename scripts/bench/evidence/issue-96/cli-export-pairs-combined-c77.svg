@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="760" viewBox="0 0 1040 760">
+<rect width="1040" height="760" fill="white"/>
+<style>text{font-family:Arial,sans-serif;fill:#172033}.small{font-size:12px}.title{font-size:17px;font-weight:bold}</style>
+<text x="34" y="30" class="title">Complete CLI export: original610 versus integrated c77</text>
+<text x="34" y="51" class="small">All seven pairs. Lines join matched observations; bars mark marginal medians. Independent scales labelled in ms.</text>
+<text x="70" y="84" class="title">node20, 1 records</text>
+<line x1="70" y1="326.0" x2="470" y2="326.0" stroke="#e1e5ec"/>
+<text x="62" y="330.0" text-anchor="end" class="small">0</text>
+<line x1="70" y1="271.0" x2="470" y2="271.0" stroke="#e1e5ec"/>
+<text x="62" y="275.0" text-anchor="end" class="small">50</text>
+<line x1="70" y1="216.0" x2="470" y2="216.0" stroke="#e1e5ec"/>
+<text x="62" y="220.0" text-anchor="end" class="small">100</text>
+<line x1="70" y1="161.0" x2="470" y2="161.0" stroke="#e1e5ec"/>
+<text x="62" y="165.0" text-anchor="end" class="small">150</text>
+<line x1="70" y1="106.0" x2="470" y2="106.0" stroke="#e1e5ec"/>
+<text x="62" y="110.0" text-anchor="end" class="small">200</text>
+<line x1="150" y1="154.60783401411027" x2="355" y2="144.62443971913308" stroke="#a8b0bf"/>
+<circle cx="150" cy="154.60783401411027" r="4" fill="#2563a6"/>
+<circle cx="355" cy="144.62443971913308" r="4" fill="#b54b38"/>
+<line x1="155" y1="154.44840771285817" x2="360" y2="157.1809483799152" stroke="#a8b0bf"/>
+<circle cx="155" cy="154.44840771285817" r="4" fill="#2563a6"/>
+<circle cx="360" cy="157.1809483799152" r="4" fill="#b54b38"/>
+<line x1="160" y1="156.02372650662437" x2="365" y2="151.7156490930356" stroke="#a8b0bf"/>
+<circle cx="160" cy="156.02372650662437" r="4" fill="#2563a6"/>
+<circle cx="365" cy="151.7156490930356" r="4" fill="#b54b38"/>
+<line x1="165" y1="157.2300392310135" x2="370" y2="157.3411679933779" stroke="#a8b0bf"/>
+<circle cx="165" cy="157.2300392310135" r="4" fill="#2563a6"/>
+<circle cx="370" cy="157.3411679933779" r="4" fill="#b54b38"/>
+<line x1="170" y1="155.82275318354368" x2="375" y2="151.52595181623474" stroke="#a8b0bf"/>
+<circle cx="170" cy="155.82275318354368" r="4" fill="#2563a6"/>
+<circle cx="375" cy="151.52595181623474" r="4" fill="#b54b38"/>
+<line x1="175" y1="154.77062731422484" x2="380" y2="162.85811017639935" stroke="#a8b0bf"/>
+<circle cx="175" cy="154.77062731422484" r="4" fill="#2563a6"/>
+<circle cx="380" cy="162.85811017639935" r="4" fill="#b54b38"/>
+<line x1="180" y1="151.1839607488364" x2="385" y2="159.72941525885835" stroke="#a8b0bf"/>
+<circle cx="180" cy="151.1839607488364" r="4" fill="#2563a6"/>
+<circle cx="385" cy="159.72941525885835" r="4" fill="#b54b38"/>
+<line x1="142" y1="154.77062731422484" x2="188" y2="154.77062731422484" stroke="#2563a6" stroke-width="4"/>
+<text x="165" y="349" text-anchor="middle" class="small">baseline</text>
+<line x1="347" y1="157.1809483799152" x2="393" y2="157.1809483799152" stroke="#b54b38" stroke-width="4"/>
+<text x="370" y="349" text-anchor="middle" class="small">candidate</text>
+<text x="580" y="84" class="title">node20, 100 records</text>
+<line x1="580" y1="326.0" x2="980" y2="326.0" stroke="#e1e5ec"/>
+<text x="572" y="330.0" text-anchor="end" class="small">0</text>
+<line x1="580" y1="271.0" x2="980" y2="271.0" stroke="#e1e5ec"/>
+<text x="572" y="275.0" text-anchor="end" class="small">1250</text>
+<line x1="580" y1="216.0" x2="980" y2="216.0" stroke="#e1e5ec"/>
+<text x="572" y="220.0" text-anchor="end" class="small">2500</text>
+<line x1="580" y1="161.0" x2="980" y2="161.0" stroke="#e1e5ec"/>
+<text x="572" y="165.0" text-anchor="end" class="small">3750</text>
+<line x1="580" y1="106.0" x2="980" y2="106.0" stroke="#e1e5ec"/>
+<text x="572" y="110.0" text-anchor="end" class="small">5000</text>
+<line x1="660" y1="154.1131235207431" x2="865" y2="297.52290647290647" stroke="#a8b0bf"/>
+<circle cx="660" cy="154.1131235207431" r="4" fill="#2563a6"/>
+<circle cx="865" cy="297.52290647290647" r="4" fill="#b54b38"/>
+<line x1="665" y1="153.8110417816788" x2="870" y2="298.93033654335886" stroke="#a8b0bf"/>
+<circle cx="665" cy="153.8110417816788" r="4" fill="#2563a6"/>
+<circle cx="870" cy="298.93033654335886" r="4" fill="#b54b38"/>
+<line x1="670" y1="145.32783646136522" x2="875" y2="298.0893453187309" stroke="#a8b0bf"/>
+<circle cx="670" cy="145.32783646136522" r="4" fill="#2563a6"/>
+<circle cx="875" cy="298.0893453187309" r="4" fill="#b54b38"/>
+<line x1="675" y1="147.57571602985263" x2="880" y2="298.1702003753744" stroke="#a8b0bf"/>
+<circle cx="675" cy="147.57571602985263" r="4" fill="#2563a6"/>
+<circle cx="880" cy="298.1702003753744" r="4" fill="#b54b38"/>
+<line x1="680" y1="147.92919517494738" x2="885" y2="299.5096181444824" stroke="#a8b0bf"/>
+<circle cx="680" cy="147.92919517494738" r="4" fill="#2563a6"/>
+<circle cx="885" cy="299.5096181444824" r="4" fill="#b54b38"/>
+<line x1="685" y1="146.60972467344254" x2="890" y2="299.7859824099578" stroke="#a8b0bf"/>
+<circle cx="685" cy="146.60972467344254" r="4" fill="#2563a6"/>
+<circle cx="890" cy="299.7859824099578" r="4" fill="#b54b38"/>
+<line x1="690" y1="148.10355846304446" x2="895" y2="297.96480929572135" stroke="#a8b0bf"/>
+<circle cx="690" cy="148.10355846304446" r="4" fill="#2563a6"/>
+<circle cx="895" cy="297.96480929572135" r="4" fill="#b54b38"/>
+<line x1="652" y1="147.92919517494738" x2="698" y2="147.92919517494738" stroke="#2563a6" stroke-width="4"/>
+<text x="675" y="349" text-anchor="middle" class="small">baseline</text>
+<line x1="857" y1="298.1702003753744" x2="903" y2="298.1702003753744" stroke="#b54b38" stroke-width="4"/>
+<text x="880" y="349" text-anchor="middle" class="small">candidate</text>
+<text x="70" y="414" class="title">node24, 1 records</text>
+<line x1="70" y1="656.0" x2="470" y2="656.0" stroke="#e1e5ec"/>
+<text x="62" y="660.0" text-anchor="end" class="small">0</text>
+<line x1="70" y1="601.0" x2="470" y2="601.0" stroke="#e1e5ec"/>
+<text x="62" y="605.0" text-anchor="end" class="small">50</text>
+<line x1="70" y1="546.0" x2="470" y2="546.0" stroke="#e1e5ec"/>
+<text x="62" y="550.0" text-anchor="end" class="small">100</text>
+<line x1="70" y1="491.0" x2="470" y2="491.0" stroke="#e1e5ec"/>
+<text x="62" y="495.0" text-anchor="end" class="small">150</text>
+<line x1="70" y1="436.0" x2="470" y2="436.0" stroke="#e1e5ec"/>
+<text x="62" y="440.0" text-anchor="end" class="small">200</text>
+<line x1="150" y1="492.7248659953475" x2="355" y2="503.58719336241484" stroke="#a8b0bf"/>
+<circle cx="150" cy="492.7248659953475" r="4" fill="#2563a6"/>
+<circle cx="355" cy="503.58719336241484" r="4" fill="#b54b38"/>
+<line x1="155" y1="502.98272582609206" x2="360" y2="503.9922858532518" stroke="#a8b0bf"/>
+<circle cx="155" cy="502.98272582609206" r="4" fill="#2563a6"/>
+<circle cx="360" cy="503.9922858532518" r="4" fill="#b54b38"/>
+<line x1="160" y1="498.56829258520156" x2="365" y2="504.11551675666124" stroke="#a8b0bf"/>
+<circle cx="160" cy="498.56829258520156" r="4" fill="#2563a6"/>
+<circle cx="365" cy="504.11551675666124" r="4" fill="#b54b38"/>
+<line x1="165" y1="498.24497182294726" x2="370" y2="497.69140125159174" stroke="#a8b0bf"/>
+<circle cx="165" cy="498.24497182294726" r="4" fill="#2563a6"/>
+<circle cx="370" cy="497.69140125159174" r="4" fill="#b54b38"/>
+<line x1="170" y1="504.0435536708683" x2="375" y2="503.8590638260357" stroke="#a8b0bf"/>
+<circle cx="170" cy="504.0435536708683" r="4" fill="#2563a6"/>
+<circle cx="375" cy="503.8590638260357" r="4" fill="#b54b38"/>
+<line x1="175" y1="509.57629627687857" x2="380" y2="503.72106771124527" stroke="#a8b0bf"/>
+<circle cx="175" cy="509.57629627687857" r="4" fill="#2563a6"/>
+<circle cx="380" cy="503.72106771124527" r="4" fill="#b54b38"/>
+<line x1="180" y1="504.1190631631762" x2="385" y2="492.0294800135307" stroke="#a8b0bf"/>
+<circle cx="180" cy="504.1190631631762" r="4" fill="#2563a6"/>
+<circle cx="385" cy="492.0294800135307" r="4" fill="#b54b38"/>
+<line x1="142" y1="502.98272582609206" x2="188" y2="502.98272582609206" stroke="#2563a6" stroke-width="4"/>
+<text x="165" y="679" text-anchor="middle" class="small">baseline</text>
+<line x1="347" y1="503.72106771124527" x2="393" y2="503.72106771124527" stroke="#b54b38" stroke-width="4"/>
+<text x="370" y="679" text-anchor="middle" class="small">candidate</text>
+<text x="580" y="414" class="title">node24, 100 records</text>
+<line x1="580" y1="656.0" x2="980" y2="656.0" stroke="#e1e5ec"/>
+<text x="572" y="660.0" text-anchor="end" class="small">0</text>
+<line x1="580" y1="601.0" x2="980" y2="601.0" stroke="#e1e5ec"/>
+<text x="572" y="605.0" text-anchor="end" class="small">750</text>
+<line x1="580" y1="546.0" x2="980" y2="546.0" stroke="#e1e5ec"/>
+<text x="572" y="550.0" text-anchor="end" class="small">1500</text>
+<line x1="580" y1="491.0" x2="980" y2="491.0" stroke="#e1e5ec"/>
+<text x="572" y="495.0" text-anchor="end" class="small">2250</text>
+<line x1="580" y1="436.0" x2="980" y2="436.0" stroke="#e1e5ec"/>
+<text x="572" y="440.0" text-anchor="end" class="small">3000</text>
+<line x1="660" y1="476.96592551330104" x2="865" y2="615.1857282576772" stroke="#a8b0bf"/>
+<circle cx="660" cy="476.96592551330104" r="4" fill="#2563a6"/>
+<circle cx="865" cy="615.1857282576772" r="4" fill="#b54b38"/>
+<line x1="665" y1="473.63327501636616" x2="870" y2="614.1703911589769" stroke="#a8b0bf"/>
+<circle cx="665" cy="473.63327501636616" r="4" fill="#2563a6"/>
+<circle cx="870" cy="614.1703911589769" r="4" fill="#b54b38"/>
+<line x1="670" y1="470.3655367009342" x2="875" y2="613.7077139937319" stroke="#a8b0bf"/>
+<circle cx="670" cy="470.3655367009342" r="4" fill="#2563a6"/>
+<circle cx="875" cy="613.7077139937319" r="4" fill="#b54b38"/>
+<line x1="675" y1="477.37507807230577" x2="880" y2="614.8792643789202" stroke="#a8b0bf"/>
+<circle cx="675" cy="477.37507807230577" r="4" fill="#2563a6"/>
+<circle cx="880" cy="614.8792643789202" r="4" fill="#b54b38"/>
+<line x1="680" y1="478.11913889118784" x2="885" y2="613.4654137700176" stroke="#a8b0bf"/>
+<circle cx="680" cy="478.11913889118784" r="4" fill="#2563a6"/>
+<circle cx="885" cy="613.4654137700176" r="4" fill="#b54b38"/>
+<line x1="685" y1="473.453588336551" x2="890" y2="614.1139024890339" stroke="#a8b0bf"/>
+<circle cx="685" cy="473.453588336551" r="4" fill="#2563a6"/>
+<circle cx="890" cy="614.1139024890339" r="4" fill="#b54b38"/>
+<line x1="690" y1="474.9914444306245" x2="895" y2="615.6106112523315" stroke="#a8b0bf"/>
+<circle cx="690" cy="474.9914444306245" r="4" fill="#2563a6"/>
+<circle cx="895" cy="615.6106112523315" r="4" fill="#b54b38"/>
+<line x1="652" y1="474.9914444306245" x2="698" y2="474.9914444306245" stroke="#2563a6" stroke-width="4"/>
+<text x="675" y="679" text-anchor="middle" class="small">baseline</text>
+<line x1="857" y1="614.1703911589769" x2="903" y2="614.1703911589769" stroke="#b54b38" stroke-width="4"/>
+<text x="880" y="679" text-anchor="middle" class="small">candidate</text>
+<text x="34" y="742" class="small">Seven AB/BA pairs per runtime/count;10KiB bodies; concurrency1. No pooling, p95 or cache-cold claim.</text>
+</svg>
