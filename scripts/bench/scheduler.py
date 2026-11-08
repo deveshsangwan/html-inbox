@@ -153,9 +153,22 @@ def classify_case(events, row, provenance, cleanup):
         serialized = (frame('refreshSchedule', 'sync-worker.js', sites['refresh']) and
                       frame('drain', 'sync-worker.js', sites['drain']))
         direct_drain = frame('drain', 'sync-worker.js', sites['drain_snapshot'])
-        check(timer or lifecycle or serialized or direct_drain, 'Unknown actual archived worker-owned caller')
+        reconciliation = any(re.fullmatch(
+            r'Error: issue95-routed-held-read\n    at ManagedSyncStore\.snapshot \(' +
+            re.escape(provenance['observer_path']) + ':' + str(provenance['observer_line']) +
+            r':\d+\)\n    at reconcileSyncRoutes \(' + re.escape(str(dist / 'sync-reconciliation.js')) +
+            ':' + str(read_line) + r':\d+\)\n    at async drain \(' + re.escape(str(dist / 'sync-worker.js')) +
+            ':' + str(await_line) + r':\d+\)\n?', caller)
+            for read_line in sites['reconciliation'] for await_line in sites['drain_reconciliation'])
+
+        # A reconciliation trace must not fall through to a different known caller.
+        if re.search(r'\n    at (?:async )?reconcileSyncRoutes \(', caller):
+            check(reconciliation, 'Unknown actual archived worker-owned caller')
+
+        check(timer or lifecycle or serialized or direct_drain or reconciliation, 'Unknown actual archived worker-owned caller')
         result.update(caller=caller, caller_kind='native-timer' if timer else 'lifecycle' if lifecycle else
-                      'serialized-observation' if serialized else 'drain', worker_pid=worker_pid, read_id=read_id, store_id=store_id)
+                      'serialized-observation' if serialized else 'reconciliation' if reconciliation else 'drain',
+                      worker_pid=worker_pid, read_id=read_id, store_id=store_id)
 
         releases = [event for event in events if event.get('type') == 'read-released']
         finishes = [event for event in events if event.get('type') == 'read-finished']
@@ -248,6 +261,10 @@ def build_provenance(export, dist, revision, manifest, role):
 def archived_callsites(dist):
     worker = (dist / 'sync-worker.js').read_text().splitlines()
     lifecycle = (dist / 'sync-lifecycle.js').read_text().splitlines()
+    reconciliation = (dist / 'sync-reconciliation.js').read_text().splitlines()
+    # Nested push/pull/error helpers need their own ancestry proof; do not collect their reads.
+    reconciliation_end = next((index for index, line in enumerate(reconciliation)
+                               if re.match(r'    (?:async )?function ', line)), len(reconciliation))
 
     def function_lines(name):
         start = next((index for index, line in enumerate(worker) if re.match(r'    (?:async )?function ' + name + r'\(', line)), None)
@@ -262,6 +279,9 @@ def archived_callsites(dist):
                 timer=[index + 1 for index, line in enumerate(worker) if 'timer = setInterval(() => { void tick().catch(fatalStop); }, 250)' in line],
                 drain=function_lines('drain'),
                 drain_snapshot=[line for line in function_lines('drain') if 'await store.snapshot()' in worker[line - 1]],
+                drain_reconciliation=[line for line in function_lines('drain') if worker[line - 1].strip() == 'await done;'],
+                reconciliation=[index + 1 for index, line in enumerate(reconciliation[:reconciliation_end])
+                                if 'await options.store.snapshot()' in line],
                 refresh=function_lines('refreshSchedule'), observe=function_lines('observeSchedule'),
                 lifecycle=[index + 1 for index, line in enumerate(lifecycle) if 'ManagedSyncStore(home).snapshot()' in line])
 

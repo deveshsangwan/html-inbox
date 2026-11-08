@@ -132,7 +132,8 @@ class SchedulerClassificationTests(unittest.TestCase):
         provenance = dict(actual=identity, expected=copy.deepcopy(identity), candidate='c' * 40, dist='/fixture/dist',
                           workload='/repo/scheduler-workload.cjs', home='/fixture/home', observer_path='/repo/scheduler-process.cjs',
                           observer_line=79, ownership_assertions={'lifetime.lock': 339, 'runtime.json': 340}, callsites=dict(
-                              tick=[380], timer=[143], lifecycle=[27], drain=[246], drain_snapshot=[277], refresh=[396], observe=[385]))
+                              tick=[380], timer=[143], lifecycle=[27], drain=[246], drain_snapshot=[277], refresh=[396], observe=[385],
+                              reconciliation=[37, 79, 99], drain_reconciliation=[307 if role == 'parent' else 343]))
         selected = dict(readId=1, storeId=2, scriptStore=False)
         timer = ('Error: issue95-routed-held-read\n    at ManagedSyncStore.snapshot (/repo/scheduler-process.cjs:79:5)\n'
                  '    at tick (/fixture/dist/sync-worker.js:380:10)\n'
@@ -347,7 +348,40 @@ class SchedulerClassificationTests(unittest.TestCase):
                 '    at ManagedSyncStore.snapshot (/repo/scheduler-process.cjs:79:5)\n' + tail)
             self.assertTrue(self.verdict(data)['continue_case'])
 
-    def test_positive_native_callsite_and_ancestry_are_required(self):
+        for role, await_line in [('parent', 307), ('candidate', 343)]:
+            for read_line in [37, 79, 99]:
+                with self.subTest(role=role, read_line=read_line):
+                    data = self.fixture(passed=True, role=role)
+                    self.event(data, 'read-held')['caller'] = (
+                        'Error: issue95-routed-held-read\n'
+                        '    at ManagedSyncStore.snapshot (/repo/scheduler-process.cjs:79:5)\n'
+                        f'    at reconcileSyncRoutes (/fixture/dist/sync-reconciliation.js:{read_line}:49)\n'
+                        f'    at async drain (/fixture/dist/sync-worker.js:{await_line}:21)')
+                    result = self.verdict(data)
+                    self.assertTrue(result['continue_case'], result)
+                    self.assertTrue(result['qualified_case'])
+                    self.assertTrue(result['passing_cell'])
+                    self.assertTrue(result['read_joined'])
+                    self.assertEqual(result['caller_kind'], 'reconciliation')
+                    self.assertEqual(result['shutdown_correctness'], 'passed')
+                    self.assertFalse(result['resource_gain_eligible'])
+
+        sources = {
+            'sync-worker.js': '    async function drain() {\n        const latest = await store.snapshot();\n'
+                              '        const done = reconcileSyncRoutes();\n        await done;\n    }\n'
+                              '    async function tick() {\n        await store.snapshot();\n    }\n',
+            'sync-lifecycle.js': 'return new ManagedSyncStore(home).snapshot();\n',
+            'sync-reconciliation.js': 'async function reconcileSyncRoutes(options) {\n'
+                                      '    const ledger = await options.store.snapshot();\n'
+                                      '    const current = await options.store.snapshot();\n'
+                                      '    async function push() {\n        await options.store.snapshot();\n    }\n}\n',
+        }
+        with mock.patch.object(runner.Path, 'read_text', autospec=True, side_effect=lambda file: sources[file.name]):
+            sites = runner.archived_callsites(Path('/fixture/dist'))
+        self.assertEqual(sites['reconciliation'], [2, 3], 'Nested helper reads are not top-level reconciliation reads')
+        self.assertEqual(sites['drain_reconciliation'], [4], 'Only the actual done await owns this reconciliation chain')
+
+    def test_positive_archived_callsites_and_ancestry_are_required(self):
         original = self.event(self.fixture(), 'read-held')['caller']
         for old, new in [('tick (', 'manualTick ('), ('sync-worker.js:380:', 'sync-worker.js:381:'),
                          ('Timeout._onTimeout', 'rpcClock'), ('sync-worker.js:143:', 'sync-worker.js:144:'),
@@ -361,6 +395,36 @@ class SchedulerClassificationTests(unittest.TestCase):
             data = self.fixture()
             self.event(data, 'read-held')['caller'] = caller
             self.assert_rejected(data)
+
+        for role, await_line in [('parent', 307), ('candidate', 343)]:
+            original = ('Error: issue95-routed-held-read\n'
+                        '    at ManagedSyncStore.snapshot (/repo/scheduler-process.cjs:79:5)\n'
+                        '    at reconcileSyncRoutes (/fixture/dist/sync-reconciliation.js:99:49)\n'
+                        f'    at async drain (/fixture/dist/sync-worker.js:{await_line}:21)')
+            changes = [('reconcileSyncRoutes (', 'externalReconcileSyncRoutes ('),
+                       ('sync-reconciliation.js:99:', 'sync-reconciliation.js:100:'),
+                       ('sync-reconciliation.js:99:', 'sync-reconciliation.js:159:'),
+                       ('sync-reconciliation.js', 'foreign-reconciliation.js'),
+                       ('/fixture/dist/sync-reconciliation.js', '/foreign/dist/sync-reconciliation.js'),
+                       (f'sync-worker.js:{await_line}:', f'sync-worker.js:{await_line + 1}:'),
+                       (f'sync-worker.js:{await_line}:', 'sync-worker.js:277:'),
+                       (f'sync-worker.js:{await_line}:', f'sync-worker.js:{343 if role == "parent" else 307}:'),
+                       ('/fixture/dist/sync-worker.js', '/foreign/dist/sync-worker.js'),
+                       ('at async drain', 'at drain'), ('at async drain', 'at async externalDrain'),
+                       ('scheduler-process.cjs:79:', 'scheduler-process.cjs:80:')]
+            callers = [original.replace(old, new) for old, new in changes]
+            callers.extend([original.rsplit('\n', 1)[0], original + '\n    at externalObserver (/foreign/observer.js:1:1)',
+                            original.replace('    at reconcileSyncRoutes', '    at externalObserver (/foreign/observer.js:1:1)\n    at reconcileSyncRoutes')])
+            for caller in callers:
+                with self.subTest(role=role, caller=caller):
+                    data = self.fixture(passed=True, role=role)
+                    self.event(data, 'read-held')['caller'] = caller
+                    self.assert_rejected(data)
+            for missing in ['reconciliation', 'drain_reconciliation']:
+                data = self.fixture(passed=True, role=role)
+                self.event(data, 'read-held')['caller'] = original
+                del data['provenance']['callsites'][missing]
+                self.assert_rejected(data)
 
     def test_release_before_close_or_foreign_completion_cannot_be_parent_exception(self):
         for field, value in [('pid', 999), ('readId', 2), ('storeId', 3), ('scriptStore', True), ('monotonic', 13)]:
@@ -416,6 +480,15 @@ class SchedulerClassificationTests(unittest.TestCase):
             data['events'].append(copy.deepcopy(self.event(data, kind)))
             self.assert_rejected(data)
 
+        for role, await_line in [('parent', 307), ('candidate', 343)]:
+            data = self.fixture(role=role)
+            self.event(data, 'read-held')['caller'] = (
+                'Error: issue95-routed-held-read\n'
+                '    at ManagedSyncStore.snapshot (/repo/scheduler-process.cjs:79:5)\n'
+                '    at reconcileSyncRoutes (/fixture/dist/sync-reconciliation.js:99:49)\n'
+                f'    at async drain (/fixture/dist/sync-worker.js:{await_line}:21)')
+            self.assert_rejected(data)
+
     def test_success_requires_fulfilled_rpc_read_before_close(self):
         for kind, field, value in [('read-released', 'reason', 'disconnect'), ('read-finished', 'outcome', 'rejected'),
                                  ('read-finished', 'monotonic', 15), ('read-released', 'monotonic', 14),
@@ -428,6 +501,35 @@ class SchedulerClassificationTests(unittest.TestCase):
             data = self.fixture(passed=True)
             data['events'].remove(self.event(data, kind))
             self.assert_rejected(data)
+
+        for role, await_line in [('parent', 307), ('candidate', 343)]:
+            changes = [('read-released', 'reason', 'disconnect'), ('read-finished', 'outcome', 'rejected'),
+                       ('read-released', 'monotonic', 10), ('read-finished', 'monotonic', 11),
+                       ('read-finished', 'monotonic', 15), ('read-finished', 'storeId', 9)]
+            for kind, field, value in changes + [(kind, None, None) for kind in ['read-released', 'read-finished']]:
+                with self.subTest(role=role, kind=kind, field=field):
+                    data = self.fixture(passed=True, role=role)
+                    self.event(data, 'read-held')['caller'] = (
+                        'Error: issue95-routed-held-read\n'
+                        '    at ManagedSyncStore.snapshot (/repo/scheduler-process.cjs:79:5)\n'
+                        '    at reconcileSyncRoutes (/fixture/dist/sync-reconciliation.js:99:49)\n'
+                        f'    at async drain (/fixture/dist/sync-worker.js:{await_line}:21)')
+                    if field is None:
+                        data['events'].remove(self.event(data, kind))
+                    else:
+                        self.event(data, kind)[field] = value
+                    self.assert_rejected(data)
+
+            for earlier, later in [('read-released', 'read-finished'), ('read-finished', 'worker-event')]:
+                data = self.fixture(passed=True, role=role)
+                self.event(data, 'read-held')['caller'] = (
+                    'Error: issue95-routed-held-read\n'
+                    '    at ManagedSyncStore.snapshot (/repo/scheduler-process.cjs:79:5)\n'
+                    '    at reconcileSyncRoutes (/fixture/dist/sync-reconciliation.js:99:49)\n'
+                    f'    at async drain (/fixture/dist/sync-worker.js:{await_line}:21)')
+                first, second = data['events'].index(self.event(data, earlier)), data['events'].index(self.event(data, later))
+                data['events'][first], data['events'][second] = data['events'][second], data['events'][first]
+                self.assert_rejected(data)
 
     def test_late_completion_is_observed_but_never_joined_before_parent_close(self):
         data = self.fixture()
