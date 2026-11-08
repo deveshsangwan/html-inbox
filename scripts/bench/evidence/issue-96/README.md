@@ -13,6 +13,8 @@ and the separate unresolved hosted browser failure. It makes no gain claim.
 The [actual-b249 one-record smoke](actual-parent-smoke-caf2d6f.md) subsequently
 built both bundles and passed the exact20/24 smoke/audits. Practical benefit and
 full package/review gates remain open.
+The [first paired request](paired-performance-request.md) is source-only,
+counts1/100 with seven pairs per exact runtime. Its controller/auditor are unrun.
 
 The [lossless archive](baseline-42232780.tar.gz) records the approved baseline
 characterization for [issue #96](https://github.com/deveshsangwan/html-inbox/issues/96).

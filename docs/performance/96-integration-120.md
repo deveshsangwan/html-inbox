@@ -131,3 +131,11 @@ preflights. Both independent saved-raw I/O/native/output audits passed. Candidat
 now have this limited smoke evidence. See the [receipt](../../scripts/bench/evidence/issue-96/actual-parent-smoke-caf2d6f.md).
 The slot was explicitly released before packaging. No practical-benefit, full
 package, historical CI-cause or review gate follows, and no next phase is granted.
+
+Root accepted that limited smoke and released slot. The [first paired performance
+request](../../scripts/bench/evidence/issue-96/paired-performance-request.md) now
+proposes existing-runner counts1/100,10KiB and seven alternating pairs per count
+on each exact runtime, using the accepted built artifacts without rebuild.
+Its multi-sample auditor keys every row/export by full count/pair/output identity,
+recomputes summaries and preserves all samples. Controller/auditor remain
+unexecuted; source preparation grants no measurement, fullsuite or review run.
