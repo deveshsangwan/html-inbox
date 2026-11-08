@@ -12,7 +12,10 @@ exited0; pack process0 reproduced measured artifacts, then a dependency-cache
 identity guard stopped the controller before all21 suites. Root accepted release
 and bounded pack-artifact reuse, not full qualification. The [v2 binding request](full-qualification-controller-v2.md)
 and [v1 package](full-qualification-controller-v1.md) retain their source checkpoints.
-No runtime continuation or housekeeping is granted.
+No runtime continuation or housekeeping is granted. A separate [v3 tests-only
+source binding](full-qualification-controller-v3.md) now proposes only the21 unrun
+gates plus two versions, reusing the accepted immutable pack. It is unexecuted
+and requires a new explicit launch decision.
 
 ## Historical baseline characterization
 
