@@ -7,9 +7,10 @@ ledger I/O remains. Shared dc28 correctness observations, normal full/package
 qualification, combined-stack/original610 criterion and two fresh same-pin
 reviews remain open. Draft/no merge/release. Everything below retains its
 historical checkpoint scope. The [normal full-qualification request](full-qualification-request.md)
-is source-only and awaits a separate grant. The [versioned controller/manifest](full-qualification-controller-v1.md)
-is now prepared under root source authorization; it has not executed. Issue95
-retains the local slot.
+is source-only and awaits a separate grant. The [v2 binding request](full-qualification-controller-v2.md)
+now binds root's exact C1–C5 corrections with the unchanged manifest. It remains
+unexecuted; local-slot availability grants no launch. The [v1 package](full-qualification-controller-v1.md)
+is preserved as an unexecuted historical source checkpoint.
 
 ## Historical baseline characterization
 
