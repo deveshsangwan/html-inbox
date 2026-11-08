@@ -1,5 +1,9 @@
 # Tests-only full-qualification v3 source binding
 
+Historical source-binding checkpoint. The subsequent [granted stop receipt](full-tests-3be43b8-stop.md)
+records the interrupted first Node20 shard and release;20 later gates are unrun.
+Exact source/manifest/package bytes below remain unchanged. No resume is granted.
+
 Related to [#96](https://github.com/deveshsangwan/html-inbox/issues/96) and
 [draft PR122](https://github.com/deveshsangwan/html-inbox/pull/122).
 Root supplied this exact five-file continuation package after accepting

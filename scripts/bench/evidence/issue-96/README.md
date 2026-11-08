@@ -6,16 +6,12 @@ host independently on exact20/24. One-record gain is unproven. Full per-body
 ledger I/O remains. Shared dc28 correctness observations, normal full/package
 qualification, combined-stack/original610 criterion and two fresh same-pin
 reviews remain open. Draft/no merge/release. Everything below retains its
-historical checkpoint scope. The [normal full-qualification request](full-qualification-request.md)
-now has a [granted stop receipt](full-qualification-85314e7-stop.md). Both versions
-exited0; pack process0 reproduced measured artifacts, then a dependency-cache
-identity guard stopped the controller before all21 suites. Root accepted release
-and bounded pack-artifact reuse, not full qualification. The [v2 binding request](full-qualification-controller-v2.md)
-and [v1 package](full-qualification-controller-v1.md) retain their source checkpoints.
-No runtime continuation or housekeeping is granted. A separate [v3 tests-only
-source binding](full-qualification-controller-v3.md) now proposes only the21 unrun
-gates plus two versions, reusing the accepted immutable pack. It is unexecuted
-and requires a new explicit launch decision.
+historical checkpoint scope. The latest [tests-only stop](full-tests-3be43b8-stop.md) records the first Node20
+shard interrupted at its300s command cap;20 later gates remain unrun. Root accepted
+release, not qualification. The earlier [853 pack stop](full-qualification-85314e7-stop.md)
+retains bounded pack-artifact reuse acceptance. [V3 source binding](full-qualification-controller-v3.md)
+remains its historical prepared checkpoint. No runtime continuation, source change,
+housekeeping or reviewer is granted.
 
 ## Historical baseline characterization
 
