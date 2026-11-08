@@ -728,7 +728,8 @@ def main():
         summary.update(resource_observations_complete=sum(bool(row.get('resource_observation_complete')) for row in rows),
                        resource_feasibility_complete=cleanup_ok and len(rows) == summary['required_cases'] and all(
                            row.get('resource_observation_complete') and row.get('continue_case') for row in rows),
-                       behavior_qualification_complete=summary['complete'], resource_gain_eligible=False, global_cleanup_passed=cleanup_ok,
+                       shutdown_controls_complete=summary['complete'], behavior_qualification_complete=False,
+                       resource_gain_eligible=False, global_cleanup_passed=cleanup_ok,
                        failed_shutdown_controls=[dict(name=row['name'], exit=row.get('exit'), correctness=row.get('shutdown_correctness'))
                            for row in rows if row.get('shutdown_correctness') != 'passed'])
         attempted = {row['name'] for row in rows}

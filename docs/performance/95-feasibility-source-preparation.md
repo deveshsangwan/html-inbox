@@ -43,6 +43,8 @@ can be complete while behavior qualification remains incomplete. The runner stil
 exits 1 if any correctness cell failed. The controller may recognize that fully
 evidenced resource completion; its receipt preserves the runner's exit and every
 failed control. Partial or unknown results stop and remain partial.
+Even if all fresh shutdown controls pass, full behavior qualification remains
+false; the separate case-control status describes only this matrix.
 
 The default CJS path is unchanged. The diagnostic flag stays unset; tracing still
 installs only at the original post-resource arm, without a startup wrapper or
