@@ -42,8 +42,8 @@ def main():
         parser.error('--candidate requires the parser or baseline workload')
     if len(set(counts)) != len(counts) or len(set(sizes)) != len(sizes):
         parser.error('counts and sizes must not contain duplicates')
-    if not counts or any(n not in [0, 100, 1000, 5000, 10000] for n in counts):
-        parser.error('counts must be drawn from 0,100,1000,5000,10000')
+    if not counts or any(n not in [0, 100, 1000, 5000, 10000] and not (args.workload == 'sync' and n == 129) for n in counts):
+        parser.error('counts must be drawn from 0,100,1000,5000,10000; sync also permits129' if args.workload == 'sync' else 'counts must be drawn from 0,100,1000,5000,10000')
     if any(n not in [10240, 1048576, 9437184] for n in sizes) or not 1 <= args.samples <= 100 or not 1 <= args.timeout <= 3600:
         parser.error('invalid sizes, samples or timeout')
     if not Path('/proc/self/io').exists() or not hasattr(os, 'wait4'):

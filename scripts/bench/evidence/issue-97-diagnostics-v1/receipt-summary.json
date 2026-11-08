@@ -1,0 +1,230 @@
+{
+  "scope": "Root-accepted ONE traced sample per role on exact Node20 only. Timings gain-ineligible; no repeat/cross-runtime/multi-page/final-readiness acceptance.",
+  "source_pin": "a3e087c3fc8bafdf3d604a1737bc9677ee5a0d2a",
+  "baseline": "b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad",
+  "trace_harness_pin": "b11f4ec2b512c541fca5b5ed1a6cd4fea48e2a3a",
+  "immutable_original_references": [
+    {
+      "label": "traced parent120",
+      "artifact_directory": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-parent-phase-b11f4ec-attempt1",
+      "original_receipt_sha256": "ffb33c81d58fbf7f809806865e138193755a63a01749f2625ef2da35c6138a2a",
+      "root_audit_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-parent-phase-b11f4ec-root-audit.json",
+      "root_audit_sha256": "ec57eba2917213b9b13732612c666010c0e4929f2217fcea62bc9868ab255688",
+      "command_exits": {
+        "node20-version": 0,
+        "node24-version": 0,
+        "baseline-overlay": 0,
+        "baseline-build": 0,
+        "baseline-bundle": 0,
+        "baseline-node20": 1
+      },
+      "elapsed_seconds_diagnostic_only": 126.14387858309783,
+      "restored_or_invariant_source_semantic_index_and393_outputs": true,
+      "timing_gain_eligible": false
+    },
+    {
+      "label": "traced parent360",
+      "artifact_directory": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-parent-envelope-b11f4ec-attempt1",
+      "original_receipt_sha256": "cad5b0c8499d8c4d42df3ce58937cb3dfde0ef2e358ccf43cacc9caaf9187a14",
+      "root_audit_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-parent-envelope-b11f4ec-root-audit.json",
+      "root_audit_sha256": "573e642b768b38df982d348e66bf0ac02cd0d4e372b5841e87b02eb4fef7c4b2",
+      "command_exits": {
+        "node20-version": 0,
+        "node24-version": 0,
+        "baseline-overlay": 0,
+        "baseline-build": 0,
+        "baseline-bundle": 0,
+        "baseline-node20": 0
+      },
+      "elapsed_seconds_diagnostic_only": 181.4159777640598,
+      "restored_or_invariant_source_semantic_index_and393_outputs": true,
+      "timing_gain_eligible": false
+    },
+    {
+      "label": "traced candidate360",
+      "artifact_directory": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-candidate-phase-b11f4ec-attempt1",
+      "original_receipt_sha256": "0a5d67e7e0a43d30cac5dfbc26115accf9d3f9c704eb9faa52da2258f8539a62",
+      "root_audit_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-candidate-phase-b11f4ec-root-audit.json",
+      "root_audit_sha256": "3fc6b8020c4c308356dadc1115bffa272004166689f11dfd501583deae7d06ff",
+      "command_exits": {
+        "node20-version": 0,
+        "node24-version": 0,
+        "candidate-node20": 0
+      },
+      "elapsed_seconds_diagnostic_only": 153.59149424300995,
+      "restored_or_invariant_source_semantic_index_and393_outputs": true,
+      "timing_gain_eligible": false
+    }
+  ],
+  "selected_original_bytes": {
+    "parent120.failures.jsonl": {
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-parent-phase-b11f4ec-attempt1/baseline-node20/failures.jsonl",
+      "sha256": "e4030b43d1dd2c1a4371c192c4a379f4da89cd09bf698b2859bb4f01cf55c436",
+      "bytes": 9093
+    },
+    "parent120.runner.stderr": {
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-parent-phase-b11f4ec-attempt1/baseline-node20.stderr",
+      "sha256": "be9263ed66dd0c68431e9a4546fa3e9bf659de2929ce03df13a66a10d875eb3e",
+      "bytes": 481
+    },
+    "parent360.samples.jsonl": {
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-parent-envelope-b11f4ec-attempt1/baseline-node20/samples.jsonl",
+      "sha256": "31659f9d1448cbdba234804bbc44cc4a001d5771c30916d97d79430f0d821ad6",
+      "bytes": 19950
+    },
+    "candidate360.samples.jsonl": {
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-candidate-phase-b11f4ec-attempt1/candidate-node20/samples.jsonl",
+      "sha256": "ff9710dfed855409ab630314a7f9a3653e4d683bbd577feccf762fc65f0722ad",
+      "bytes": 19944
+    }
+  },
+  "root_accepted_logical_comparison": [
+    {
+      "phase": "initial",
+      "parent_source": {
+        "commits": 203,
+        "ledgerReplacementBytes": 41048541,
+        "htmlOpens": 100,
+        "htmlBytesRead": 1024000,
+        "hashPasses": 0,
+        "bodyTransfers": 0
+      },
+      "candidate_source": {
+        "commits": 103,
+        "ledgerReplacementBytes": 20794922,
+        "htmlOpens": 100,
+        "htmlBytesRead": 1024000,
+        "hashPasses": 0,
+        "bodyTransfers": 0
+      },
+      "absolute_source_logical_byte_reduction": 20253619,
+      "relative_source_logical_byte_reduction_percent": 49.340655006471486,
+      "parent_receiver": {
+        "commits": 101,
+        "ledgerReplacementBytes": 11823687,
+        "htmlOpens": 0,
+        "htmlBytesRead": 0,
+        "hashPasses": 100,
+        "bodyTransfers": 100
+      },
+      "candidate_receiver": {
+        "commits": 101,
+        "ledgerReplacementBytes": 11823788,
+        "htmlOpens": 0,
+        "htmlBytesRead": 0,
+        "hashPasses": 100,
+        "bodyTransfers": 100
+      },
+      "transferred": 100,
+      "wire_counters_equal": true,
+      "wire": {
+        "requests": 203,
+        "rejected": 0,
+        "requestBytes": 1157809,
+        "responseBytes": 121236,
+        "activeRequests": 0,
+        "activeTransfers": 0
+      },
+      "timing_comparison_permitted": false
+    },
+    {
+      "phase": "noop",
+      "parent_source": {
+        "commits": 203,
+        "ledgerReplacementBytes": 53627119,
+        "htmlOpens": 0,
+        "htmlBytesRead": 0,
+        "hashPasses": 0,
+        "bodyTransfers": 0
+      },
+      "candidate_source": {
+        "commits": 3,
+        "ledgerReplacementBytes": 792522,
+        "htmlOpens": 0,
+        "htmlBytesRead": 0,
+        "hashPasses": 0,
+        "bodyTransfers": 0
+      },
+      "absolute_source_logical_byte_reduction": 52834597,
+      "relative_source_logical_byte_reduction_percent": 98.52216189350018,
+      "parent_receiver": {
+        "commits": 1,
+        "ledgerReplacementBytes": 231515,
+        "htmlOpens": 0,
+        "htmlBytesRead": 0,
+        "hashPasses": 0,
+        "bodyTransfers": 0
+      },
+      "candidate_receiver": {
+        "commits": 1,
+        "ledgerReplacementBytes": 231516,
+        "htmlOpens": 0,
+        "htmlBytesRead": 0,
+        "hashPasses": 0,
+        "bodyTransfers": 0
+      },
+      "transferred": 0,
+      "wire_counters_equal": true,
+      "wire": {
+        "requests": 4,
+        "rejected": 0,
+        "requestBytes": 71112,
+        "responseBytes": 167927,
+        "activeRequests": 0,
+        "activeTransfers": 0
+      },
+      "timing_comparison_permitted": false
+    },
+    {
+      "phase": "repair",
+      "parent_source": {
+        "commits": 203,
+        "ledgerReplacementBytes": 53626719,
+        "htmlOpens": 1,
+        "htmlBytesRead": 10240,
+        "hashPasses": 0,
+        "bodyTransfers": 0
+      },
+      "candidate_source": {
+        "commits": 4,
+        "ledgerReplacementBytes": 1056694,
+        "htmlOpens": 1,
+        "htmlBytesRead": 10240,
+        "hashPasses": 0,
+        "bodyTransfers": 0
+      },
+      "absolute_source_logical_byte_reduction": 52570025,
+      "relative_source_logical_byte_reduction_percent": 98.02953822328753,
+      "parent_receiver": {
+        "commits": 2,
+        "ledgerReplacementBytes": 463030,
+        "htmlOpens": 0,
+        "htmlBytesRead": 0,
+        "hashPasses": 1,
+        "bodyTransfers": 1
+      },
+      "candidate_receiver": {
+        "commits": 2,
+        "ledgerReplacementBytes": 463032,
+        "htmlOpens": 0,
+        "htmlBytesRead": 0,
+        "hashPasses": 1,
+        "bodyTransfers": 1
+      },
+      "transferred": 1,
+      "wire_counters_equal": true,
+      "wire": {
+        "requests": 6,
+        "rejected": 0,
+        "requestBytes": 81977,
+        "responseBytes": 169059,
+        "activeRequests": 0,
+        "activeTransfers": 0
+      },
+      "timing_comparison_permitted": false
+    }
+  ],
+  "raw_index_limit": "Semantic staged modes/objects/paths/tree restored. Parent raw index bytes differed; no cause or general byte-identity claim. Original owner/root audits remain untouched.",
+  "prior_histories": "R1 pre-runtime adapter failure, successful exact20/24 R2 correctness and untraced620 child120 failure remain separate immutable histories; no retroactive localization.",
+  "next_execution_authorized": false
+}
