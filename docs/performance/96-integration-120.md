@@ -101,3 +101,23 @@ not runtime-qualified; the old bundle stays stale. Build HOME/TMPDIR were
 retained after all observed processes/groups joined, and the slot was explicitly
 released. See the [additive second-stop receipt](../../scripts/bench/evidence/issue-96/integrated-correctness-79a2912-cache-mode-stop.md).
 No correction, retry or automatic twelve-check continuation is authorized.
+
+## Granted tests-only completion at ecffd
+
+Root's unchanged tests-only controller reused the successful79a build and44ef
+typecheck. All twelve scoped runtime commands and two version/hash preflights
+passed on exact20.20.2/24.19.0 with the same400 compiled files throughout.
+The slot was released before packaging. See the [integrated correctness receipt](../../scripts/bench/evidence/issue-96/integrated-correctness-ecffd7c.md).
+The two historical tooling roots remain untouched; the bundle stays stale.
+The separate real-browser CI navigation failure is unresolved. No actual-parent
+workload, performance, full package or review gate is satisfied by these checks.
+
+Root accepted this scoped correctness receipt. A separate exact filesystem
+housekeeping instruction then removed the two disposed tooling roots after
+archive/hash/identity checks; the [additive cleanup receipt](../../scripts/bench/evidence/issue-96/tooling-cleanup-after-r3.json)
+preserves the historical checkpoints. The updated [actual-parent request](../../scripts/bench/evidence/issue-96/parent-b249-smoke-request.md)
+now asks only candidate bundle, exactb249 parent build/bundle and one-record smoke
+on each exact runtime, plus versions. Candidate400 compiled files and typecheck
+are reused; hosted six identity controls are not repeated. Owner93 reserved parent
+outputs, but mutation/execution still requires a new root grant after #95.
+The prepared controller/auditor have not run. Bundle remains stale until then.

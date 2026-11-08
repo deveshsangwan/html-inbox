@@ -1,53 +1,52 @@
-# Pending actual-parent identity and smoke request
+# Pending actual-parent bundle and one-record smoke request
 
 Related to [#96](https://github.com/deveshsangwan/html-inbox/issues/96) and
 [draft PR122](https://github.com/deveshsangwan/html-inbox/pull/122).
-This amends the future actual-parent phase only. The fourteen-command combined
-correctness request remains separately queued and ungranted. No new Python
-unit test, application, build or smoke has run for the parent parameter.
+**Source/request preparation only. No execution grant.** Root accepted the
+[integrated scoped correctness](integrated-correctness-ecffd7c.md) and released
+its slot. #95 owns the next diagnostic slot. This replaces the former8+2
+actual-parent request with five commands plus two version preflights.
 
-## Source-only identity boundary
+## Reuse and reserved parent
 
-`--expected-baseline-commit` accepts exactly40 hexadecimal characters for
-managed-read, normalizes case and checks the actual clean baseline HEAD.
-The full610 SHA remains the documented legacy default; every new integrated
-command explicitly supplies full b249. Invalid, shortened and ref-name input
-rejects, as does flag use on unrelated workloads. There is no parent inference
-or silent constant replacement. Existing build-file/fingerprint and clean
-checkout checks remain. Environment metadata records resolved expected SHA
-beside actual baseline/candidate build identities.
+Reuse the accepted400 candidate compiled files from the successful79a build,
+verified by the ecffd12-check/two-version run. Do not rebuild/typecheck candidate
+or repeat the six unchanged ParentIdentityTests solely for local coverage;
+those passed hosted44ef CI. Preserve the missing retrospective transitive
+declaration/tool-library hash proof for the reused44ef typecheck. Bundle is
+still old/stale until explicitly rebuilt.
 
-Six pure ParentIdentityTests cover fullSHA boundary, default/explicit and
-unrelated workloads, clean matching build fingerprints, mismatch including
-implicit610 against b249, dirty refusal and missing build files. They use
-mocked Git reads and synthetic filesystem files, not a new runner or accepted
-managed state. Workload, timing/process ownership, corrected I/O parser and
-combined correctness wrappers remain unchanged. Source checks only until a
-new explicit grant.
+The actual parent is the existing app-owned checkout
+`/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47`, exact clean
+`b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad`. Owner93 reserved its generated
+outputs read-only, with no conflicting pending use or matched owned process.
+Root verified reservation receipt
+`/home/agent/.t3/worktrees/html-inbox/perf-93-startup/artifacts/93/parent-output-reservation/receipt.json`,
+SHA256 `f21101e2a32ead8cd1805585a4b29ba7945f274d773b8a76c73551f4394b2143`.
+An exact copy is in the source archive. Its392 dist files and old bundle hash
+are **presence fingerprints, not fresh-build/runtime proof**. Dependencies are
+present. No source/ref change, checkout creation or install is requested.
+Reservation is not authority to mutate outputs or start from elapsed time.
 
-## Separate requested execution
+## Exact proposed execution
 
-After root accepts source and schedules a slot, request eight sequential
-commands plus exact absolute20.20.2/24.19.0 version/binary preflight. Use the
-Node24.19.0/corepack-pnpm prefix already recorded in prior requests.
+After a separate explicit root grant at the published clean docs/evidence pin:
 
-1. In `scripts/bench`, `python3 -m unittest test_managed_read.ParentIdentityTests`, maximum30s, selects the six new identity controls.
-2. Candidate exact24 `typecheck`, maximum120s.
-3. Candidate exact24 `build`, maximum120s.
-4. Candidate exact24 `--filter html-inbox bundle`, maximum180s.
-5. Exact b249 parent `build`, maximum120s.
-6. Exact b249 parent `--filter html-inbox bundle`, maximum180s.
-7. Exact20 actual-parent smoke below, maximum180s.
-8. Exact24 equivalent smoke in another fresh directory, maximum180s.
+1. Both exact absolute20.20.2/24.19.0 `--version` and binary/hash preflights,15s each.
+2. Candidate exact24/Corepack pnpm11.7.0 `--filter html-inbox bundle`,180s.
+3. Reserved exactb249 parent `build` with the same exact24/Corepack entry,120s.
+4. Reserved parent `--filter html-inbox bundle`,180s.
+5. Exact20 one-record smoke below,180s.
+6. Exact24 equivalent smoke in a different fresh absolute output directory,180s.
 
-The parent is the existing app-owned checkout
-`/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47` at exact
-`b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad`. Its source/ref must remain clean
-and fixed. This request seeks explicit authority for generated build/bundle
-mutation there; no such authority exists now. Root must coordinate with the
-PR120 owner and preserve its qualified output identities before any mutation.
-No checkout creation or install is requested. Any reuse of a later accepted
-candidate build must be explicitly scoped with matching source/build hashes.
+The two versions are preflights, so this is **five application commands plus two
+versions**. Node24 prefix for all three toolchain commands is:
+
+```sh
+/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node /home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/corepack/dist/pnpm.js
+```
+
+Each smoke uses the existing #89 runner and unchanged complete workloads:
 
 ```sh
 python3 scripts/bench/run.py managed-read \
@@ -58,20 +57,82 @@ python3 scripts/bench/run.py managed-read \
   --out /absolute/fresh/actual-b249-evidence
 ```
 
-Budget900s aggregate application plus separate120s cleanup, with both15s
-version preflights and each command capped to its remaining absolute deadline.
-Each smoke retains eighteen owned sequential children. No full suite, actual browser, application listener, worker, high count or
-sustained timing is requested; bundle work is limited to the two listed
-commands. Stop first
-failure; preserve original output/errors and classify before any correction.
-No fix/retry or assumption replacement is authorized by this request.
+Absolute runtime paths remain
+`/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node` and
+`/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node`.
+Each smoke has18 sequential owned children and concurrency1, complete release
+CLI export and supported complete batch work, fixed-option API comparisons,
+imports/suppression/tombstone controls and distinct body bytes. One AB/BA sample
+pair is harness qualification only. No100-record or sustained measurements.
 
-Record exact expected/actual baseline SHA and clean status, before/after
-source/runtime/compiled/bundle hashes and command exits. Independently audit
-raw seven-field I/O snapshots/maps/deltas, fixture-derived native opens/body
-bounds and complete exports/manifests/nonce distinctions. Derived ledger size
-is only cross-profile consistency; cite live stat assertions, never a retained
-stat that was not captured. Reap/drain all owned/adopted processes, verify
-ports/roots if any, release explicitly before packaging. Preserve every older
-artifact and its original610 comparison. This one-record phase supplies no
-practical-gain claim or permission for a measurement matrix/reviewer launch.
+## Prepared controller and boundaries
+
+The new ignored source is
+`artifacts/issue-96/actual-parent-b249-prepared/execute.py`. It adapts the
+accepted owned controller; it does not replace the workload process runner.
+Controller, adjacent independent auditor and reservation copy are **unexecuted**.
+Only AST syntax/function-diff and read-only hashes ran. It requires an explicit
+full40-hex `--expected-head` and root's new `--grant` identifier; exact expected
+parent, both clean source trees, immutable accepted build/correctness receipts,
+400 candidate outputs, recorded tools and reservation fingerprints must match.
+No automatic parent inference or baseline identity bypass exists.
+
+The [lossless source archive](parent-b249-smoke-source.tar.gz) is32071bytes,
+seven byte-verified members, SHA256
+`dd4a57ef37006439e61a73e802c5f66d23e4c0e460ecd1f204f2e05ca1345c53`.
+Controller SHA256:
+`729c814da19fbc268d857e1da4ac3f499f7132bbb8cb65805873e72f96fc4ccf`.
+Independent auditor SHA256:
+`97cd899e54b69707c136b0dff88ac5d2af3da7c2802d9f4d4a95bc2b15064329`.
+Controller diff SHA256:
+`6d39cf4bf85477e38aa9a862ba2be2c4e837b9e3ba2c61d7226f34c65e27787d`.
+It includes the exact owner reservation receipt and both complete source diffs.
+
+Request the original one900s absolute application deadline plus separate fixed
+120s cleanup allowance. Each full individual scope must fit remaining time;
+cap every command/wait/reap to remaining deadlines. Stop at the first application,
+setup, parser, output or audit mismatch. Preserve original logs/unrun list; no
+fix/retry, oracle change or budget extension.
+
+Owned process groups, sampled PID/start/descendant/adoption tracking and
+per-command private HOME/TMPDIR/catalog isolation are reused. Proposed tooling
+housekeeping is limited to the sole `node-compile-cache` subtree of the three
+exact toolchain commands/cwds, after observed groups and children join. It checks
+owned0700 enclosing TMPDIR, current UID/GID, real0775 cache directories and0600
+single-link files, inventories/hashes first, then descriptor-safe removal.
+Every other entry/command/type/link/mode still stops. This is a proposed private
+**tooling-only** containment rule for root review, not a general permission
+exception or application storage rule. No chmod or cache/runtime env workaround.
+
+Candidate compiled bytes stay fixed. Parent source/ref stay clean/fixed;
+parent build/bundle changes only their generated outputs under the forthcoming
+explicit mutation grant. Preserve reservation/pre-build outputs before mutation
+and record fresh parent maps after build, both bundles after packaging and all
+identities after each smoke/finally. No further parent mutation during smokes.
+Release after owned work/fixtures settle and before evidence packaging.
+
+## Independent evidence and limits
+
+Reuse the already corrected independent raw-I/O/output auditor, with only actual
+b249/clean candidate commit admission and accurate source-pin attribution added.
+It imports neither tested parser nor application modules. Reparse exact raw
+before/after seven-field `/proc/self/io`, compare maps/deltas and applicable
+native rchar/syscr bounds, allowing legitimate physical-I/O zeros. Derive opens,
+body size/count from this run's fixture specification. Derived ledger size is
+only cross-profile consistency; cite successful source-pinned live ledger.stat
+assertions, not an independently retained stat or recovered ledger.
+
+Retain all16 complete output trees/manifests across both runtimes, exact API
+pairs, CLI/count-probe stable-byte pairs allowing only named ownership/manifest
+nonce differences, original outputDir/owner/time values, diagnostics, process
+and fixture cleanup. Check resolved expected SHA beside actual baseline/build
+identity. Preserve source/runtime/compiler/lock/compiled/bundle hashes and exact
+commands/env/cwd/exits. Disclose instrumentation separately from elapsed samples.
+No physical-device I/O, generic interruption, cross-runtime whole-output equality
+or practical-gain claim follows from this smoke.
+
+No install, candidate build/typecheck, Python/helper tests, actual browser,
+application listener/worker, full suite, reviewer, runtime/storage policy change
+or measurement expansion is requested. Full per-body serialized ledger I/O
+remains. Package qualification, practical1/100-record benefit and both fresh
+measured-pin reviews stay later gates.

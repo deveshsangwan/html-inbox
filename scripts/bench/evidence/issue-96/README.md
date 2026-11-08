@@ -7,6 +7,9 @@ The [source-only continuation request](integrated-correctness-continuation-reque
 retains that failure and proposes only the still-unrun build/runtime checks.
 The [79a continuation stop](integrated-correctness-79a2912-cache-mode-stop.md)
 records build exit0, a cache-mode guard rejection and all runtime checks unrun.
+The subsequent [ecffd tests-only receipt](integrated-correctness-ecffd7c.md)
+records the granted integrated scope passing on exact20/24, preserving both stops
+and the separate unresolved hosted browser failure. It makes no gain claim.
 
 The [lossless archive](baseline-42232780.tar.gz) records the approved baseline
 characterization for [issue #96](https://github.com/deveshsangwan/html-inbox/issues/96).
