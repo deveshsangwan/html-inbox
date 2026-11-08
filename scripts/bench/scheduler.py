@@ -156,13 +156,12 @@ def classify_case(events, row, provenance, cleanup):
         reconciliation = any(re.fullmatch(
             r'Error: issue95-routed-held-read\n    at ManagedSyncStore\.snapshot \(' +
             re.escape(provenance['observer_path']) + ':' + str(provenance['observer_line']) +
-            r':\d+\)\n    at reconcileSyncRoutes \(' + re.escape(str(dist / 'sync-reconciliation.js')) +
-            ':' + str(read_line) + r':\d+\)\n    at async drain \(' + re.escape(str(dist / 'sync-worker.js')) +
-            ':' + str(await_line) + r':\d+\)\n?', caller)
-            for read_line in sites['reconciliation'] for await_line in sites['drain_reconciliation'])
+            r':\d+\)' + ''.join(r'\n    at ' + re.escape(name) + r' \(' + re.escape(str(dist / filename)) +
+                                ':' + str(line) + r':\d+\)' for name, filename, line in chain) + r'\n?', caller)
+            for chain in sites['reconciliation_chains'])
 
         # A reconciliation trace must not fall through to a different known caller.
-        if re.search(r'\n    at (?:async )?reconcileSyncRoutes \(', caller):
+        if re.search(r'\n    at (?:async )?(?:reconcileSyncRoutes|push|pull|recordFailure) \(', caller):
             check(reconciliation, 'Unknown actual archived worker-owned caller')
 
         check(timer or lifecycle or serialized or direct_drain or reconciliation, 'Unknown actual archived worker-owned caller')
@@ -262,26 +261,56 @@ def archived_callsites(dist):
     worker = (dist / 'sync-worker.js').read_text().splitlines()
     lifecycle = (dist / 'sync-lifecycle.js').read_text().splitlines()
     reconciliation = (dist / 'sync-reconciliation.js').read_text().splitlines()
-    # Nested push/pull/error helpers need their own ancestry proof; do not collect their reads.
     reconciliation_end = next((index for index, line in enumerate(reconciliation)
                                if re.match(r'    (?:async )?function ', line)), len(reconciliation))
 
-    def function_lines(name):
-        start = next((index for index, line in enumerate(worker) if re.match(r'    (?:async )?function ' + name + r'\(', line)), None)
+    def function_lines(name, source=worker):
+        start = next((index for index, line in enumerate(source) if re.match(r'    (?:async )?function ' + name + r'\(', line)), None)
 
         if start is None:
             return []
 
-        end = next((index for index in range(start + 1, len(worker)) if re.match(r'    (?:async )?function ', worker[index])), len(worker))
+        end = next((index for index in range(start + 1, len(source)) if re.match(r'    (?:async )?function ', source[index])), len(source))
         return list(range(start + 1, end + 1))
+
+    top_level = list(range(1, reconciliation_end + 1))
+    snapshots = {name: [line for line in lines if 'await options.store.snapshot()' in reconciliation[line - 1]]
+                 for name, lines in [('reconcileSyncRoutes', top_level),
+                                     *((name, function_lines(name, reconciliation)) for name in ['push', 'pull', 'recordFailure'])]}
+    calls = {(caller, callee): [line for line in lines if reconciliation[line - 1].strip().startswith('await ' + callee + '(')]
+             for caller, lines in [('reconcileSyncRoutes', top_level), ('push', function_lines('push', reconciliation))]
+             for callee in ['push', 'pull', 'recordFailure']}
+    drain_awaits = [line for line in function_lines('drain') if worker[line - 1].strip() == 'await done;']
+    drain_calls = [line for line in function_lines('drain') if 'const done = ' in worker[line - 1] and
+                   '.reconcileSyncRoutes)(' in worker[line - 1]]
+
+    # Explicit frame chains only. Synchronous helper entry differs from its async await ancestry.
+    chains = []
+    for await_line in drain_awaits:
+        owner = [('async drain', 'sync-worker.js', await_line)]
+        chains.extend([[('reconcileSyncRoutes', 'sync-reconciliation.js', line), *owner]
+                       for line in snapshots['reconcileSyncRoutes']])
+        for helper in ['push', 'pull']:
+            for call_line in calls['reconcileSyncRoutes', helper]:
+                ancestry = [('async reconcileSyncRoutes', 'sync-reconciliation.js', call_line), *owner]
+                chains.extend([[(helper, 'sync-reconciliation.js', line), *ancestry] for line in snapshots[helper]])
+                if helper == 'push':
+                    chains.extend([[('recordFailure', 'sync-reconciliation.js', read_line),
+                                    ('push', 'sync-reconciliation.js', failure_line), *ancestry]
+                                   for read_line in snapshots['recordFailure'] for failure_line in calls['push', 'recordFailure']])
+        chains.extend([[('recordFailure', 'sync-reconciliation.js', read_line),
+                        ('reconcileSyncRoutes', 'sync-reconciliation.js', failure_line), *owner]
+                       for read_line in snapshots['recordFailure'] for failure_line in calls['reconcileSyncRoutes', 'recordFailure']])
+
+    # Initial entry is synchronous, but its promise is the same done that drain awaits and close joins.
+    chains.extend([[('reconcileSyncRoutes', 'sync-reconciliation.js', snapshots['reconcileSyncRoutes'][0]),
+                    ('drain', 'sync-worker.js', call_line)] for call_line in drain_calls if drain_awaits and snapshots['reconcileSyncRoutes']])
 
     return dict(tick=[line for line in function_lines('tick') if 'await store.snapshot()' in worker[line - 1]],
                 timer=[index + 1 for index, line in enumerate(worker) if 'timer = setInterval(() => { void tick().catch(fatalStop); }, 250)' in line],
                 drain=function_lines('drain'),
                 drain_snapshot=[line for line in function_lines('drain') if 'await store.snapshot()' in worker[line - 1]],
-                drain_reconciliation=[line for line in function_lines('drain') if worker[line - 1].strip() == 'await done;'],
-                reconciliation=[index + 1 for index, line in enumerate(reconciliation[:reconciliation_end])
-                                if 'await options.store.snapshot()' in line],
+                drain_reconciliation=drain_awaits, reconciliation=snapshots['reconcileSyncRoutes'], reconciliation_chains=chains,
                 refresh=function_lines('refreshSchedule'), observe=function_lines('observeSchedule'),
                 lifecycle=[index + 1 for index, line in enumerate(lifecycle) if 'ManagedSyncStore(home).snapshot()' in line])
 

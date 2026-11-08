@@ -14,8 +14,11 @@ The original untagged failure and all 25 historical unrun cells remain unchanged
 Production and TypeScript remain at the previously tested pins; there is no
 browser change or retry.
 
-Root reactivated source-only work at clean `14017c7a96424bb09de87ac3d0817e064c79e6ae`
-to cover the awaited reconciliation caller. The narrow Python correction below
+Root reactivated source-only work at clean `14017c7a96424bb09de87ac3d0817e064c79e6ae`.
+The first correction at 65023b3 covered only top-level async reconciliation. Root
+accepted that source branch but withheld a matrix grant while known nested reads
+were unsupported. This follow-up adds the finite exact nested and initial-entry
+forms listed below. The Python correction
 has not been imported or executed. New controls extend existing test methods;
 there are still 17 classifier methods and five unchanged cleanup methods, so the
 executed corrected R2 controller can be reused byte-for-byte. Previous passes
@@ -30,8 +33,8 @@ source. Callsite lines come from those verified emitted files. Parent timer
 classification requires the actual tick snapshot line, actual interval callback
 line and positive native timer ancestry. Other accepted worker-owned paths are
 the archived lifecycle read, direct drain snapshot and serialized refresh under
-drain. The new branch requires a complete exact hook/reconciliation/async-drain
-stack at archive-derived snapshot and `await done` lines. A reconciliation frame
+drain. The new branch requires one complete ordered hook/helper/reconciliation/worker
+frame chain derived from exact archived snapshot, invocation and await lines. A reconciliation frame
 cannot fall through to another known-caller branch. An unknown caller stops,
 even after an exit-0 workload.
 
@@ -141,7 +144,7 @@ release. The controller creates each owned fixture before spawn and assigns a
 catalog path under it; it does not create that catalog directory itself.
 Successful normal cleanup cannot qualify unused timeout/interruption paths.
 
-That bounded R2 grant has ended. No further attempt or correction is granted.
+That bounded R2 grant has ended. No further execution is granted.
 Policy acceptance, slot release or hosted CI green cannot start one. PR #121 remains draft;
 all high-count, practical-benefit/noise, full-check, public-artifact and independent
 review gates remain open.
@@ -163,35 +166,61 @@ No compilation was used to inspect them.
 | Per-route worker snapshot | Worker JS272 / JS302 | Existing direct drain caller, unchanged |
 | Interval tick snapshot | Parent worker JS341, interval JS135 and native timer ancestry | Existing exact timer branch; sole failed-parent exception, unchanged |
 | Serialized clock observation | Candidate `observeSchedule` -> `refreshSchedule`, snapshot JS398 | Existing serialized branch, unchanged; clock hook itself performs no snapshot |
-| Top-level reconciliation snapshots | Reconciliation JS37, JS79, JS99 / same bytes | New exact branch only with adjacent `at async drain` at worker JS307 / JS343, the actual `await done` |
-| Nested `push` snapshots | Reconciliation JS159, JS212, awaited from JS64 | Genuinely possible owned reads, still unrecognized; not collected as top-level calls |
-| Nested `pull` snapshot | Reconciliation JS289, awaited from JS67 | Genuinely possible owned read, still unrecognized |
-| Nested `recordFailure` snapshot | Reconciliation JS316, invoked from JS85 or `push` JS160/JS250 | Genuinely possible owned read, still unrecognized; would need the corresponding complete helper chain |
+| Top-level async reconciliation snapshots | Reconciliation JS37, JS79, JS99 / same bytes | Exact `reconcileSyncRoutes` frame then `async drain` at worker JS307 / JS343 |
+| Initial synchronous reconciliation snapshot | Reconciliation JS37 -> worker invocation JS296 / JS332 | Only this exact direct `drain` invocation; the same `done` promise is awaited by drain and joined by close |
+| Nested `push` snapshots | Reconciliation JS159, JS212, awaited from JS64 | Exact `push` -> `async reconcileSyncRoutes` at JS64 -> owning async drain |
+| Nested `pull` snapshot | Reconciliation JS289, awaited from JS67 | Exact `pull` -> `async reconcileSyncRoutes` at JS67 -> owning async drain |
+| Direct `recordFailure` snapshot | Reconciliation JS316, invoked from JS85 | Exact `recordFailure` -> synchronous `reconcileSyncRoutes` at JS85 -> owning async drain |
+| `recordFailure` through `push` | Reconciliation JS316, invoked from `push` JS160/JS250 | Exact `recordFailure` -> synchronous `push` at JS160/250 -> `async reconcileSyncRoutes` at JS64 -> owning async drain |
 | Control HTTP lifecycle check | Worker `handleControl` awaits lifecycle snapshot | Has no drain ancestry; not admitted by the new branch |
 | Store reader APIs | `listDocuments`, `getDocumentMetadata`, `getDocument`, `fork` call `this.snapshot` | Not called by worker route reconciliation; script-store reads remain explicitly rejected |
 
-There is a further deliberate boundary at the initial reconciliation snapshot
-JS37. On initial synchronous entry its stack can show the `drain` invocation at
-`const done = reconcileSyncRoutes(...).then(...)`, rather than async `await done`.
-That form remains unrecognized. JS37 is in the derived top-level callsite list,
-but a list entry alone never authorizes it. Only the exact async-drain form can
-pass. Both this initial form and the four nested helper callsites are known
-possible stops in a fresh natural run. They are disclosed before execution;
-there is no generic fallback or automatic subsequent matrix to discover them.
-This bounded request requires root's decision with these limitations visible.
+There are ten prepared chain forms per revision: three top-level async forms,
+one initial synchronous form, two push forms, one pull form, one direct
+recordFailure form and two recordFailure-through-push forms. These are explicit
+source-derived application stacks, not newly observed runtime stacks. Every
+nested async form must end at parent worker JS307 or candidate JS343. Frame
+names include the required synchronous/async spelling; positions and lines are
+not interchangeable. No function-name substring or arbitrary source range is an
+accepted frame chain. The matcher requires the complete exact stack with no
+additional frame before, between or after its application frames.
 
-`reconcileSyncRoutes` is assigned to `done`; `current.done` tracks it and the
-worker awaits it before clearing `current`. `close` aborts and awaits the whole
-drain before ownership release. The new parser extracts top-level snapshot lines
-only before the reconciliation module's first nested function. It separately
-extracts the exact `await done;` line from the archived worker's drain. A full
-three-frame match requires the actual hook path/line, reconciliation path/line,
-and async worker await path/line, in that order with no extra observer frame.
-Changed/foreign paths, names or lines, mere drain presence, and synchronous drain
-frames reject. The common provenance, process/read identity, control order,
-release/fulfilled-before-close and fresh teardown predicates are untouched.
-`SyncClient` and the ingestion server have no public snapshot calls; their store
-transactions use ledger reads internally rather than this snapshot hook.
+Initial JS37 calls snapshot before the first reconciliation await. The verified
+parent emitted worker calls reconciliation at JS296, retains it as `done`, awaits
+it at JS307 and awaits `draining` during close at JS403. Candidate counterparts
+are JS332, JS343 and JS488. Parent/candidate kick assign `draining = drain()` at
+JS216/227; drain has already crossed earlier awaits before invoking reconciliation,
+so the held initial read belongs to that pending drain even before `current` is
+assigned. The selected read yields; the returned reconciliation promise is chained
+into `done`, saved in `current`, and awaited before `current` is cleared. Close
+aborts and joins that same drain before releasing ownership. These exact sources
+support only the direct `reconcileSyncRoutes` JS37 -> `drain` JS296/332 form in
+addition to the async forms. Other top-level snapshots cannot use this direct
+invocation ancestry. The parent emitted bytes were inspected read-only from the
+existing root checkout and matched reviewed parent SHA256
+`370aa97548dd2aa2c3710e75f5b39c3a1d6697e9add02399de3b3568416d094a`;
+candidate matched `7645ddb8a64fb20b070532bb4b2573dfc3f3cb1d5cc506605fd72c34ab8dad87`.
+Copies are retained as ignored data-only preparation evidence. No build ran.
+
+The initial direct stack and all nested stacks remain unobserved in this source
+phase. No claim is made that every V8 stack shape is covered. Extra native or
+async frames, omitted frames or other shapes still stop. For example, an added
+`processTicksAndRejections` tail is not swallowed. This is not a reason to rerun
+a stopped matrix automatically. Root must review the finite source forms before
+any grant; the historical R2 caller remains exactly the observed top-level JS99
+form and the older failure remains untagged.
+
+The extractor records exact snapshot lines within each named source function,
+exact awaits from reconcile to push/pull/recordFailure and push to recordFailure,
+and the worker's reconciliation invocation plus `await done;`. It constructs only
+the enumerated frame chains. A complete match still requires the exact held-read
+hook path/line and selected revision's archived module/worker paths/lines. Any
+reconciliation-family frame must match one whole chain instead of falling through
+to another known-caller branch. All common provenance, PID/start/group/read/store,
+pre-hold controls, natural arm, RPC release, fulfilled read before closed, and
+fresh process/group/root/port cleanup checks are unchanged. `SyncClient` and the
+ingestion server have no public snapshot calls; their store transactions use
+internal ledger reads rather than this snapshot hook.
 
 The new recognition only reaches the existing successful-case checks. Any
 exit-1 reconciliation case still fails the unchanged exact-native-timer gate.
@@ -199,33 +228,36 @@ Neither the recorded R2 third row nor its exit/default fields are replaced or
 reclassified. This source change is not execution of the new classifier on that
 row. All original 33 fresh unrun names, older 25 unrun names and R1 evidence remain.
 
-Unexecuted pure controls cover parent and candidate exact reconciliation stacks,
-all three derived top-level lines, exclusion of nested helper lines, exact async
-worker await, foreign/changed hook/module/worker paths and lines, extra observer
-frames, missing ancestry, wrong-role await lines, failed non-timer rejection,
-missing/rejected completion, foreign store identity, release clocks and reordered
-release/finish/close events. These are additions inside the existing 17 methods;
-their count does not imply that they have run. The five cleanup methods are
-unchanged. No saved workload is executed or original verdict overwritten.
+Unexecuted pure controls cover all ten parent and candidate frame chains, each
+frame's path/line/name/async spelling, missing/reordered helper ancestry,
+wrong-role worker callsites, foreign observer/native tails, and a later snapshot
+masquerading as initial synchronous entry. Extraction has explicit expected
+chains and rejects initial entry without a worker `await done` relationship.
+Every chain also has failed-non-timer, external-store/foreign PID, missing/rejected
+completion and release/finish/closed clock and order controls. These remain
+subtests inside the existing 17 methods. The five cleanup methods and controller
+are unchanged. No new tests or classifier/callsite functions have been imported
+or executed; original 02fc passes do not qualify the new controls.
 
 ## Prepared next bounded request, not granted
 
 Request one fresh attempt using the unchanged executed
 `artifacts/issue95-shutdown-diagnosis/controller-feasibility2-r2.py`, SHA256
 `66f43e6bb44b668a3088ba1304383d1318dfd3336010af475bbab6343d851c4e`.
-The separate ignored `manifest-feasibility3.json` binds the final clean source
+The 650 preparation and `manifest-feasibility3.json` remain unchanged.
+The separate ignored `manifest-feasibility4.json` binds the final clean source
 commit, updated Python/scope hashes and candidate archive metadata. The command
 and exact manifest diff are retained beside it. No controller copy is rewritten.
 
 ```sh
 /usr/bin/python3.13 /home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/controller-feasibility2-r2.py \
-  --manifest /home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/manifest-feasibility3.json \
+  --manifest /home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/manifest-feasibility4.json \
   --grant-id <separately-issued-root-grant>
 ```
 
 Proposed fresh outer output is
-`/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility3-grant-1`;
-runner output is adjacent `issue95-feasibility-3`. Both must remain absent before
+`/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility4-grant-1`;
+runner output is adjacent `issue95-feasibility-4`. Both must remain absent before
 admission. The preserved R2 outputs, 54-file index and earlier controllers/manifests
 are inputs to the preparation audit, never reused as fresh output.
 
