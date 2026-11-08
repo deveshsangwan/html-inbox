@@ -1,10 +1,12 @@
 # Source-only routed held-read diagnostic plan
 
-Status: unexecuted source. Root accepted the minimized timer-read defect on both
-exact runtimes. The original routed caller remains untagged, its row remains
-failed, and all 25 unrun feasibility cells remain required. This plan authorizes
-no local execution while #92 owns the slot. No production code, timer parameter,
-request/pass/lease/repair bound, dependency, version or wire policy changes.
+Status: executed once at source da21 under a later explicit grant; see
+[the results](95-routed-read-results.md). Both controlled routed cases selected
+joined lifecycle reads and passed. The original routed caller remains untagged,
+its row remains failed, and all 25 unrun feasibility cells remain required.
+The proposal below records the preselected scope; it grants no continuation.
+No production code, timer parameter, request/pass/lease/repair bound, dependency,
+version or wire policy changes accompanied execution.
 
 ## Small tracing change at the original hook
 
@@ -67,8 +69,8 @@ must permit close, exactly one closed event, no new pass/gap and no active read.
 The test joins its held read in finally before fixture teardown rebinds the exact
 control port. Its 15-second test envelope is selected before execution; existing
 tests and production timings are untouched. This file is already discovered by
-the normal compiled `.test.js` runner. No new helper is introduced. Neither the
-new test nor these CJS changes has been built or executed locally.
+the normal compiled `.test.js` runner. No new helper is introduced. The later
+bounded run built this source and passed only the new test on both exact runtimes.
 
 ## Requested bounded execution scope
 
