@@ -1,5 +1,9 @@
 # Full-qualification v2 binding request, source only
 
+Historical source-binding checkpoint. The subsequent [granted stop receipt](full-qualification-85314e7-stop.md)
+records pack reproduction, a cache-identity guard stop and release. All21 suites
+remain unrun; no resume grant follows. Source/package bytes below are unchanged.
+
 Related to [#96](https://github.com/deveshsangwan/html-inbox/issues/96) and
 [draft PR122](https://github.com/deveshsangwan/html-inbox/pull/122).
 Root reviewed v1 at62bc and supplied these exact corrections. This package is

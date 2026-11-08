@@ -7,10 +7,12 @@ ledger I/O remains. Shared dc28 correctness observations, normal full/package
 qualification, combined-stack/original610 criterion and two fresh same-pin
 reviews remain open. Draft/no merge/release. Everything below retains its
 historical checkpoint scope. The [normal full-qualification request](full-qualification-request.md)
-is source-only and awaits a separate grant. The [v2 binding request](full-qualification-controller-v2.md)
-now binds root's exact C1–C5 corrections with the unchanged manifest. It remains
-unexecuted; local-slot availability grants no launch. The [v1 package](full-qualification-controller-v1.md)
-is preserved as an unexecuted historical source checkpoint.
+now has a [granted stop receipt](full-qualification-85314e7-stop.md). Both versions
+exited0; pack process0 reproduced measured artifacts, then a dependency-cache
+identity guard stopped the controller before all21 suites. Root accepted release
+and bounded pack-artifact reuse, not full qualification. The [v2 binding request](full-qualification-controller-v2.md)
+and [v1 package](full-qualification-controller-v1.md) retain their source checkpoints.
+No runtime continuation or housekeeping is granted.
 
 ## Historical baseline characterization
 
