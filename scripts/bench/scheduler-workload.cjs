@@ -12,6 +12,7 @@ const dist = path.resolve(distValue);
 const root = path.resolve(rootValue);
 const count = Number(countValue);
 const duration = Number(durationValue);
+const diagnoseHeldRead = process.env.ISSUE95_ROUTED_READ_DIAGNOSTIC === '1';
 const load = name => require(path.join(dist, name));
 const emit = value => console.log(JSON.stringify({ wall: Date.now(), monotonic: performance.now(), ...value }));
 const bytes = Buffer.from('<!doctype html><html><title>Scheduler fixture</title><body>' + 'x'.repeat(10_240) + '</body></html>');
@@ -315,8 +316,22 @@ async function main() {
       emit({ type: 'stale-route-rejected' });
     }
 
-    await worker.rpc('hold-next-read');
     const holdIndex = worker.events.length;
+    if (diagnoseHeldRead) {
+      const ticketId = randomUUID();
+      const requestsBeforeBarrier = (await worker.rpc('status')).requests;
+      await worker.rpc('run', { ticketId, ...(route ? { routeIds: [route.id] } : {}),
+        deadlineAt: Date.now() + 30_000, requestMs: 5000 });
+      await until('completed-ticket-and-no-active-read', () => worker.rpc('read-state'), value => {
+        assert.ok(value.traceReadsFromStartup && value.readTracingInstalled);
+        return value.status.tickets.some(ticket => ticket.ticketId === ticketId && ticket.state === 'complete') && value.activeReads.length === 0;
+      });
+      const barrier = await worker.rpc('hold-next-read', { ticketId });
+      assert.equal(barrier.requests, requestsBeforeBarrier, 'the revoked-route barrier must not admit a request');
+      emit({ type: 'controlled-read-hold-barrier', ...barrier });
+    } else {
+      await worker.rpc('hold-next-read');
+    }
     await worker.rpc('wake');
     await until('pending-read-entry', async () => worker.events.slice(holdIndex), events => events.some(event => event.type === 'read-held'));
     const stopping = worker.rpc('stop');

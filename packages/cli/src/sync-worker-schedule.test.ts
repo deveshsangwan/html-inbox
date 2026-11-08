@@ -3,8 +3,9 @@ import { randomUUID } from "node:crypto";
 import { lstat, mkdtemp, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { performance } from "node:perf_hooks";
 import platformTest, { type TestContext } from "node:test";
-import { setImmediate as turn } from "node:timers/promises";
+import { setImmediate as turn, setTimeout as delay } from "node:timers/promises";
 import * as lifecycle from "./sync-lifecycle";
 import { SYNC_HISTORY_UNAVAILABLE, type SyncRoute } from "./sync-model";
 import { assertLoopbackClosed } from "./sync-protocol-fixture";
@@ -195,6 +196,90 @@ test("shutdown joins a pending observation and refuses all later admission", asy
   assert.equal(f.passes(), passes);
   assert.equal(reads, 1);
   assert.equal(f.events.filter((event) => event === "closed").length, 1);
+});
+
+test("an actual interval callback retains lifetime ownership until its read joins shutdown", { timeout: 15_000 }, async (t) => {
+  const f = await fixture(t);
+  const entered = gate();
+  const finished = gate();
+  const held = f.hold();
+  const snapshot = ManagedSyncStore.prototype.snapshot;
+  let active = 0;
+  let shouldHold = false;
+  let hasHeldRead = false;
+  let isHeldReadActive = false;
+  t.mock.method(ManagedSyncStore.prototype, "snapshot", async function(this: ManagedSyncStore) {
+    active += 1;
+    const isSelected = shouldHold;
+    if (isSelected) shouldHold = false;
+    try {
+      if (isSelected) {
+        hasHeldRead = true;
+        isHeldReadActive = true;
+        entered.release();
+        await held.promise;
+      }
+
+      return await snapshot.call(this);
+    } finally {
+      active -= 1;
+      if (isSelected) {
+        isHeldReadActive = false;
+        finished.release();
+      }
+    }
+  });
+
+  try {
+    const ticketId = randomUUID();
+    f.worker.requestRun({ ticketId, deadlineAt: Date.now() + 10_000, requestMs: 5000 });
+    const deadline = performance.now() + 5000;
+    while (!f.worker.status().tickets.some(ticket => ticket.ticketId === ticketId && ticket.state === "complete") || active !== 0) {
+      assert.ok(performance.now() < deadline, "completed-ticket and no-active-read barrier must settle");
+      await turn();
+    }
+    assert.equal(f.worker.status().tickets.find(ticket => ticket.ticketId === ticketId)?.error, null);
+    await turn();
+
+    for (let elapsed = 0; elapsed < 4750; elapsed += 250) {
+      f.clock.wall += 250;
+      f.clock.monotonic += 250;
+      t.mock.timers.tick(250);
+      await f.worker.tick();
+      assert.equal(active, 0);
+    }
+
+    const passes = f.passes();
+    shouldHold = true;
+    f.clock.wall += 250;
+    f.clock.monotonic += 250;
+    t.mock.timers.tick(250);
+    await entered.promise;
+
+    const closing = f.worker.close();
+    const observationWindow = new AbortController();
+    try {
+      assert.equal(await Promise.race([closing.then(() => true), delay(1000, false, { signal: observationWindow.signal })]), false,
+        "worker-owned timer read must keep shutdown pending until release");
+    } finally {
+      observationWindow.abort();
+    }
+    assert.equal(isHeldReadActive, true);
+    assert.ok(await lstat(workerPaths(f.home).lifetime));
+    assert.ok(await readWorkerRecordOffline(f.home));
+    assert.equal(f.events.includes("closed"), false);
+    held.release();
+    await Promise.all([finished.promise, closing]);
+    assert.equal(isHeldReadActive, false);
+    assert.equal(active, 0);
+    assert.equal(f.passes(), passes);
+    assert.equal(f.events.includes("gap"), false);
+    assert.equal(f.events.filter(event => event === "closed").length, 1);
+  } finally {
+    held.release();
+    if (hasHeldRead) await finished.promise;
+    await f.worker.close();
+  }
 });
 
 test("cancellation and ticket expiry during pending admission cannot start a pass", async (t) => {

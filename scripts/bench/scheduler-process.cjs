@@ -5,7 +5,9 @@ const path = require('node:path');
 const { performance } = require('node:perf_hooks');
 const [dist, settingsPath] = process.argv.slice(2);
 const load = name => require(path.join(dist, name));
-const send = value => process.send?.({ pid: process.pid, wall: Date.now(), monotonic: performance.now(), ...value });
+const send = value => {
+  if (process.connected) process.send?.({ pid: process.pid, wall: Date.now(), monotonic: performance.now(), ...value });
+};
 function totalResources() {
   const cpu = process.cpuUsage();
   return { cpuMs: (cpu.user + cpu.system) / 1000, elapsedMs: performance.now(), rss: process.memoryUsage().rss, lifetimePeakRssKiB: process.resourceUsage().maxRSS };
@@ -26,6 +28,12 @@ async function main() {
   let releaseRead;
   let shouldHoldRead = false;
   let isStopped = false;
+  let readTracingInstalled = false;
+  let nextReadId = 0;
+  let nextStoreId = 0;
+  const storeIds = new WeakMap();
+  const activeReads = new Map();
+  const traceReadsFromStartup = process.env.ISSUE95_ROUTED_READ_DIAGNOSTIC === '1';
 
   const recordRun = ManagedSyncStore.prototype.recordWorkerRun;
   ManagedSyncStore.prototype.recordWorkerRun = async function(...args) {
@@ -41,18 +49,45 @@ async function main() {
     return json.apply(this, args);
   };
 
-  // Read holding is enabled only after the resource observation has ended.
+  // Only the controlled routed diagnostic tracks reads from startup. Ordinary
+  // measurements install this wrapper after resource observation has ended.
   function installReadHold() {
+    if (readTracingInstalled) return;
+
+    readTracingInstalled = true;
     const snapshot = ManagedSyncStore.prototype.snapshot;
     ManagedSyncStore.prototype.snapshot = async function(...args) {
-      if (shouldHoldRead) {
-        shouldHoldRead = false;
-        const held = new Promise(resolve => { releaseRead = resolve; });
-        send({ type: 'read-held' });
-        await held;
-      }
+      const storeId = storeIds.get(this) ?? ++nextStoreId;
+      storeIds.set(this, storeId);
+      const read = { readId: ++nextReadId, storeId, scriptStore: this === store };
+      activeReads.set(read.readId, read);
+      const selected = shouldHoldRead;
+      if (selected) shouldHoldRead = false;
+      let outcome = 'rejected';
+      try {
+        if (selected) {
+          let released = false;
+          const held = new Promise(resolve => {
+            releaseRead = reason => {
+              if (released) return;
 
-      return snapshot.apply(this, args);
+              released = true;
+              resolve();
+              send({ type: 'read-released', ...read, reason });
+            };
+          });
+          send({ type: 'read-held', ...read, caller: new Error('issue95-routed-held-read').stack,
+            activeReads: [...activeReads.values()] });
+          await held;
+        }
+
+        const ledger = await snapshot.apply(this, args);
+        outcome = 'fulfilled';
+        return ledger;
+      } finally {
+        activeReads.delete(read.readId);
+        if (selected) send({ type: 'read-finished', ...read, outcome, activeReads: [...activeReads.values()] });
+      }
     };
   }
 
@@ -64,9 +99,12 @@ async function main() {
     const { url } = await server.start();
     send({ type: 'ready', url, resources: totalResources() });
   } else {
+    if (traceReadsFromStartup) installReadHold();
+
     worker = await load('sync-worker.js').startOwnedSyncWorker(settings.home, { testHooks: {
       wallNow: () => Date.now() + wallOffset, monotonicNow: () => performance.now() + monotonicOffset,
-      onEvent: event => send({ type: 'worker-event', event: event.type }),
+      onEvent: event => send({ type: 'worker-event', event: event.type,
+        ...(event.type === 'closed' ? { activeReads: [...activeReads.values()] } : {}) }),
     } });
     send({ type: 'ready', resources: totalResources(), record: { processId: worker.record.processId, controlOrigin: worker.record.controlOrigin } });
   }
@@ -83,6 +121,10 @@ async function main() {
         case 'run': result = worker.requestRun(message.argument); break;
         case 'cancel': result = worker.cancel(message.argument); break;
         case 'status': result = worker ? { completedPasses, requests, status: worker.status() } : server.status(); break;
+        case 'read-state':
+          result = { traceReadsFromStartup, readTracingInstalled, activeReads: [...activeReads.values()],
+            requests, status: worker.status() };
+          break;
         case 'clock':
           wallOffset += message.argument.wall;
           monotonicOffset += message.argument.monotonic;
@@ -106,12 +148,20 @@ async function main() {
         }
         case 'hold-next-read':
           installReadHold();
+          if (message.argument?.ticketId) {
+            assert.ok(traceReadsFromStartup, 'the controlled barrier requires tracking from startup');
+            const ticket = worker.status().tickets.find(ticket => ticket.ticketId === message.argument.ticketId);
+            assert.equal(ticket?.state, 'complete');
+            assert.equal(ticket.error, null, 'the controlled barrier ticket must complete without an error');
+            assert.equal(activeReads.size, 0, 'controlled barrier must still have no active read when arming');
+          }
           shouldHoldRead = true;
-          result = { armed: true };
+          result = { armed: true, ticketId: message.argument?.ticketId, traceReadsFromStartup, readTracingInstalled,
+            activeReads: [...activeReads.values()], requests, status: worker.status() };
           break;
-        case 'release-read': releaseRead?.(); result = { released: true }; break;
+        case 'release-read': releaseRead?.('rpc'); result = { released: true }; break;
         case 'stop':
-          send({ type: 'stopping' });
+          send({ type: 'stopping', activeReads: [...activeReads.values()] });
           const started = performance.now();
           const used = process.cpuUsage();
           if (worker) await worker.close();
@@ -131,7 +181,7 @@ async function main() {
     if (isStopped) return;
 
     // Unexpected supervisor loss must not leave fixture listeners or ownership.
-    releaseRead?.();
+    releaseRead?.('disconnect');
     void Promise.allSettled([worker?.close(), server?.close()]).then(() => { process.exitCode = 1; });
   });
 }
