@@ -1,11 +1,15 @@
 # Feasibility continuation source preparation
 
-Root accepted the policy in [the decision proposal](95-feasibility-next-proposal.md)
-for source-only implementation. A later granted controller attempt at a2d stopped
-at command admission after five pin/runtime checks; see
-[the preserved stop receipt](95-feasibility2-prelude-failure.md). Classifier tests,
-cleanup tests, the runner and every fresh case remain unexecuted. The preparation
-below and root's separate dispatch correction imply no new execution grant.
+Root accepted the policy in [the decision proposal](95-feasibility-next-proposal.md).
+R1 at a2d stopped at command admission after five pin/runtime checks; see
+[the preserved stop receipt](95-feasibility2-prelude-failure.md). A separately
+granted R2 at 02fc passed 17 classifier methods, five cleanup methods and nine
+runner preliminaries. It stopped after two qualified zero-route cases and an
+exit-0 parent outbound case whose awaited reconciliation caller was unrecognized.
+[The R2 receipt](95-feasibility2-r2-results.md) preserves the formal stop and raw
+release/completion-before-close trace without relabeling it. Thirty-three fresh
+cases remain unrun. LOCAL was released and root accepted release. The preparation
+below records that bounded scope; it grants no correction or further execution.
 The original untagged failure and all 25 historical unrun cells remain unchanged.
 Production and TypeScript remain at the previously tested pins; there is no
 browser change or retry.
@@ -55,7 +59,7 @@ ticket barrier. Primary worker idle CPU/elapsed and peer observations retain
 their existing boundaries. Whole-case and late diagnostic resources are explicitly
 ineligible for gains. One-pair feasibility cannot establish a retention decision.
 
-`test_scheduler_cleanup.py` gains seventeen unexecuted pure classifier/guard test
+`test_scheduler_cleanup.py` adds seventeen pure classifier/guard test
 methods. Their synthetic timer trace is parser input, not a claim that a natural
 timer case has executed. Missing/altered provenance, native ancestry/callsites,
 PID/start/group/read/store identity, ordering, original controls/errors and fresh
@@ -65,11 +69,12 @@ unknown callers are covered. Mocked cleanup guards check refusal to signal a
 reused PID or start another grace after the deadline. The five existing real
 owned-group cleanup tests remain, with their original assertions and timeouts.
 
-## Separate bounded execution request
+## Granted R2 execution scope
 
-Request one attempt only after root reviews the exact clean source, ignored
-versioned controller and manifest. The new `controller-feasibility2.py` preserves
-the executed d320 and da21 controller/manifest files. It has one 5,400-second
+The separate R2 grant followed root review of exact clean 02fc source, ignored
+versioned controller and manifest. Root's dispatch-only correction in
+`controller-feasibility2-r2.py` preserves the executed R1, d320 and da21 operational
+files. It has one 5,400-second
 application deadline and one fixed start-plus-5,460 final deadline. No command or
 cleanup grace resets these clocks. All preliminary, test and matrix time shares
 that application budget; final cleanup has at most the remaining fixed 60 seconds.
@@ -124,7 +129,7 @@ release. The controller creates each owned fixture before spawn and assigns a
 catalog path under it; it does not create that catalog directory itself.
 Successful normal cleanup cannot qualify unused timeout/interruption paths.
 
-The request remains pending. #96 owns the current LOCAL slot. Policy acceptance,
-slot release or hosted CI green cannot start this attempt. PR #121 remains draft;
+That bounded R2 grant has ended. No further attempt or correction is granted.
+Policy acceptance, slot release or hosted CI green cannot start one. PR #121 remains draft;
 all high-count, practical-benefit/noise, full-check, public-artifact and independent
 review gates remain open.
