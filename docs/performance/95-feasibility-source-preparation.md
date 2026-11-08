@@ -1,11 +1,14 @@
 # Feasibility continuation source preparation
 
 Root accepted the policy in [the decision proposal](95-feasibility-next-proposal.md)
-for source-only implementation. This source, the new pure tests and the new
-operational controller have not been executed. No Node, compiler, test, controller
-or application command ran during preparation. The original untagged failure and
-all 25 historical unrun cells remain unchanged. Production and TypeScript remain
-at the previously tested pins; there is no browser change or retry.
+for source-only implementation. A later granted controller attempt at a2d stopped
+at command admission after five pin/runtime checks; see
+[the preserved stop receipt](95-feasibility2-prelude-failure.md). Classifier tests,
+cleanup tests, the runner and every fresh case remain unexecuted. The preparation
+below and root's separate dispatch correction imply no new execution grant.
+The original untagged failure and all 25 historical unrun cells remain unchanged.
+Production and TypeScript remain at the previously tested pins; there is no
+browser change or retry.
 
 The existing `scheduler.py` now parses each natural held-read case after child
 exit and fresh teardown, before another case can start. It compares reviewed
