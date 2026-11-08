@@ -91,3 +91,13 @@ version preflights. Its new ignored controller and seven helper controls are
 unexecuted. No application code or test expectation changed; a new execution
 grant is required. The earlier typecheck's retained input proof and its limits
 are explicit in that request.
+
+## Second partial execution at79a
+
+The granted continuation passed exact versions and candidate build, then stopped
+at the controller's cache-directory0775 permission guard. All twelve runtime
+checks remain unrun. Fresh400 compiled files, including200JS, now exist but are
+not runtime-qualified; the old bundle stays stale. Build HOME/TMPDIR were
+retained after all observed processes/groups joined, and the slot was explicitly
+released. See the [additive second-stop receipt](../../scripts/bench/evidence/issue-96/integrated-correctness-79a2912-cache-mode-stop.md).
+No correction, retry or automatic twelve-check continuation is authorized.
