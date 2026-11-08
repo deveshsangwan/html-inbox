@@ -50,6 +50,9 @@ export interface StoredDocument {
 }
 
 export interface DocumentBackend {
+  // A scoped reader is authoritative for consumers selecting this capability.
+  // Decorators must wrap it too, or omit it for ordinary list/get dispatch.
+  withReadView?<T>(operation: (view: DocumentReadView) => Promise<T>, signal?: AbortSignal): Promise<T>;
   publish(input: PublishInput): Promise<DocumentMetadata>;
   listDocuments(): Promise<DocumentMetadata[]>;
   getDocumentMetadata(id: string): Promise<DocumentMetadata | null>;
@@ -59,8 +62,10 @@ export interface DocumentBackend {
 
 export type DocumentSource = Pick<
   DocumentBackend,
-  "listDocuments" | "getDocumentMetadata" | "getDocument"
+  "listDocuments" | "getDocumentMetadata" | "getDocument" | "withReadView"
 >;
+
+export type DocumentReadView = Pick<DocumentBackend, "listDocuments" | "getDocumentMetadata" | "getDocument">;
 
 export function parseDocumentMetadata(value: unknown): DocumentMetadata {
   if (!value || typeof value !== "object" || Array.isArray(value)) {

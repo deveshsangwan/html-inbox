@@ -49,3 +49,127 @@ The cheap cleanup tests also run in Linux Node 24 verification CI. The manual me
 Commit concise evidence under `scripts/bench/evidence/`; CI uploads full raw results. Performance PRs should include exact commands, revisions, spread, behavior and cleanup outcomes. Keep runtime-upgrade effects separate from source changes. This suite's acceptance is reproducibility and cleanup, not a runtime gain.
 
 Sync uses an equal-size plain `x` body and peer-specific metadata; CLI/parser/viewer fixtures use the text/dense generators. Compare each workload against itself across revisions. Sync documents currently share their content and metadata, so byte/count checks do not qualify identity-preserving optimizations without additional identity assertions.
+
+## Managed complete reads for #96
+
+PR122 now stacks on reviewed PR120b249; its existing compiled/bundle bytes
+are stale for that combination. Build/qualification requires a new root grant.
+See the [source-only integration receipt](../../docs/performance/96-integration-120.md).
+The new parent-selection plumbing has source checks only and no runtime proof.
+
+`managed-read` requires a clean app-managed baseline checkout with built
+release artifacts. `--expected-baseline-commit` accepts exactly40 hexadecimal
+SHA characters, resolves case to lowercase and must equal that checkout's
+actual clean HEAD. Abbreviations, ref names and malformed values reject; the
+flag is invalid on other workloads. It does not infer a parent from branches.
+`environment.json` records the resolved expected SHA next to both actual
+commits, compiled JS maps and bundle hashes. Build provenance still requires
+recorded build commands.
+
+The explicit legacy default is `610c931b7b22920cce59cf03e49c0de15ebaf2a2`.
+Omission preserves historical command reproduction; it does not make an old
+610 comparison isolated evidence against the new b249 parent. All new
+integrated measurements and smoke commands must explicitly select b249:
+
+```sh
+python3 scripts/bench/run.py managed-read \
+  --baseline-repo /home/agent/.t3/worktrees/html-inbox/t3-26d1cd47 \
+  --expected-baseline-commit b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad \
+  --node /absolute/path/to/node20 \
+  --counts 1 --sizes 10240 --samples 1 --timeout 30 \
+  --out /absolute/fresh/managed-read-b249-node20
+```
+
+This is a proposed one-record smoke invocation, not execution authorization.
+Later sustained1/100-record seven-pair runs require their own grant and the
+same explicit b249 argument. The old historical command shape remains valid:
+
+```sh
+python3 scripts/bench/run.py managed-read \
+  --baseline-repo /absolute/path/to/clean-610-checkout \
+  --node /absolute/path/to/node20 \
+  --counts 1,100 --sizes 10240 --samples 7 --timeout 60 \
+  --out artifacts/bench/managed-read-legacy-node20
+```
+
+Repeat separately with the exact Node 24 binary and a new output directory.
+Defaults for this mode are 1/100 owned records, 10 KiB bodies, concurrency one
+and seven baseline/candidate pairs. Each pair reverses the preceding pair's
+order. Setup enrolls real legacy records through `ManagedSyncStore.enroll`,
+including its validation, signatures, identity anchor and durable commits.
+Both revisions read the same enrolled home and body files. Body bytes differ
+by record ID. No ledger is edited or accepted state fabricated. Setup, output
+comparison and evidence copying occur outside primary process timings.
+
+The primary metric is complete release CLI `export --json` elapsed time from
+process launch through exit. The command includes real selection, validation,
+body/copy rendering, manifest generation and output publication. It uses a
+fixed capability and a fresh destination. Process CPU, peak RSS and kernel
+block counts support that metric. The existing runner polls exit every 5 ms;
+small elapsed deltas need to exceed that resolution and observed spread.
+
+The companion's complete batch consumes the actual `LocalDocumentBackend`
+interface. The parent lists then serially fetches every visible body; the
+candidate enters its real `withReadView` callback and does the same work before
+draining. There is no CLI batch command. Both consumers check metadata and
+digest every complete body, releasing each buffer before the next read. Batch
+operation elapsed/CPU and resident memory after drain exclude module/input
+setup; separate process measurements include them. These are supporting
+complete-read measurements, not parser or signature microbenchmarks.
+
+Untimed controls export through the actual API with fixed capability, owner,
+timestamp and appearance options. They compare every emitted path and byte,
+complete metadata/body results, manifest entries and snapshot hashes. A second
+real enrolled fixture includes colliding imported IDs with distinct bytes, an
+owned tombstone and a suppressed import. Export must omit all imports; batch
+must return exactly the visible owned and imported records. The frozen
+mutation/lifetime probes qualify concurrent changes separately from timings.
+
+The release CLI exposes no owner or generation-time flags. Primary CLI output
+therefore retains those generated values. The comparator checks their exact
+schemas and serialization, every manifest entry and derived hash, while
+requiring equal bytes for every other file. It records the two precise nonce
+files, owners and timestamps. `outputDir` also differs in the exact captured
+stdout. This is explicit CLI nondeterminism, not whole-output byte equality.
+The fixed-option API control supplies that stronger comparison. No broad
+normalization or validation suppression is used. Unexpected stderr fails.
+
+`pairs.jsonl` retains every metric, absolute/relative candidate-minus-parent
+delta, order and output comparison. `paired-summary.jsonl` reports paired
+delta min/median/max and median relative change without pooling runtimes.
+`behavior.jsonl` records the untimed controls. `outputs/` preserves complete
+generated export trees, including partial staging/backup trees on failures.
+Libraries, ledgers, donor keys and catalog material remain only in the owned
+temporary root and are removed after child cleanup. Raw stdout/stderr,
+commands, exits and owned PIDs/groups stay in the existing runner receipts.
+
+Separate count probes repeat complete CLI/batch operations with an explicit
+preload. They count actual bounded ledger/body reads and `/proc/self/io`
+deltas without skipping any native read or validation. Their elapsed/CPU/RSS
+include instrumentation and startup and are excluded from primary timing
+labels. Unchanged N-record fixtures should read N+2 complete ledgers for CLI
+selection plus export, and N+1 for batch. Full serialized ledger bytes per
+body remain O(N); fewer parses do not establish zero-I/O reads or full #96
+completion. `/proc` and block counts do not prove physical device traffic.
+
+The preload retains exact raw before/after `/proc/self/io` text. The Python
+companion requires all seven named fields as decimal integers, rejects
+missing/malformed/duplicate/unknown fields or decreasing counters, and saves
+parsed before/after values and independently computed deltas alongside that
+text. Missing values never become zero. It also checks syscall-read bytes
+and counts against the separately observed native FileHandle activity.
+Physical read/write byte counters may legitimately be zero. Parent-side
+parsing occurs outside the count process metrics. Requalification evidence
+must independently recompute the saved raw deltas without using this parser.
+
+The initial 76b20f5 smoke exposed an invalid regex parser that wrote all-zero
+`/proc` dictionaries. Its [partial receipt](evidence/issue-96/ci-harness-76b20f5.md)
+preserves the original data and bounded passing facts. Those profiles do not
+qualify this source repair or support zero-I/O/performance claims.
+
+The new comparator unit cases use synthetic export files solely to test its
+accept/reject rules. Application workloads always use real enrollment and
+export. A smoke request should use `--counts 1 --samples 1`, exercise both
+exact runtimes sequentially, and make no benefit claim. Sustained seven-pair
+1/100 runs, 1,000 records and larger bodies need their separately scoped
+execution grants in this coordinated investigation.

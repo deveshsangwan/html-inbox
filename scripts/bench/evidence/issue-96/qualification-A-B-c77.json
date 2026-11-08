@@ -1,0 +1,51 @@
+{
+  "tested_head": "c77ace3c207f302249ba98216caafeab8719dd7b",
+  "immediate_parent": "b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad",
+  "comparison_baseline": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+  "archive": {
+    "file": "qualification-A-B-c77.tar.gz",
+    "bytes": 7129330,
+    "sha256": "79fc5071573e0f22c7110c6c128dc3aa6b0b324677efa2203ed20adee912886f",
+    "regular_members": 11606,
+    "indexed_evidence_files": 11605,
+    "prefix": "qualification-c77-A-B/",
+    "every_member_compared_to_disk": true
+  },
+  "source_only_publication": true,
+  "A": {
+    "raw_result": "stopped/incomplete Node24 disposal",
+    "raw_receipt_sha256": "cbed227c79adba53517f8b83185ca4646568caafce2a4395fbeda7e81b6522b9",
+    "root_additive_acceptance": "Measured-package behavior on BOTH exact runtimes",
+    "root_audit_sha256": "d54fbf974ff239d13cfc272f6e9f70b1ec6037b57cae7fde10ec2b59621889cb",
+    "retained_cache_files": 541,
+    "cache_bytes": 1413228,
+    "cache_bodies_archived": false
+  },
+  "B": {
+    "raw_result": "completed with independent audits",
+    "raw_receipt_sha256": "6f7a78995081f87eda90071012e7f42836506abae63b321e290375eb8aec4a76",
+    "root_acceptance": "Scoped100-record complete-export benefit on both exact runtimes versus610; bounded combined performance criterion satisfied",
+    "release_audit_sha256": "bbba1b80ee4b37be76194aafdda8c9ffe64fafccd25ceddb3c2c6c7ff55886b7",
+    "performance_audit_sha256": "c421f29794e65cb71635d8eea69365b124a69e78831f459ebbbfed50492e1954",
+    "rows": 158,
+    "trees": 76,
+    "files": 11452,
+    "pairs": 28,
+    "profiles": 16,
+    "external_reader_error_preserved": true
+  },
+  "limits": [
+    "Count1 benefit unproven",
+    "Full per-body serialized ledger I/O remains",
+    "Node24 batch END and PEAK RSS tradeoffs distinct",
+    "Historical typecheck/transitive/declaration limitations retained",
+    "Five retained roots untouched, no all-roots-clean claim",
+    "Full broad24.19 and old local unit later20 remain unrun",
+    "dc28 and other shared observations unresolved",
+    "Two fresh same-pin reviews/root readiness/current-head CI decision remain"
+  ],
+  "csv_rows": {
+    "statistics": 44,
+    "paired_metrics": 308
+  }
+}

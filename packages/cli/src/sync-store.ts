@@ -5,7 +5,8 @@ import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { TextDecoder } from "node:util";
 import { readBoundedFile } from "./bounded-file";
-import { parseDocumentMetadata, type DocumentMetadata, type PublishInput, type StoredDocument, type DeleteResult } from "./documents";
+import { parseDocumentMetadata, type DocumentMetadata, type PublishInput, type StoredDocument, type DeleteResult, type DocumentReadView } from "./documents";
+import { withDocumentReadView } from "./document-read-view";
 import { validateHtml } from "./html-validation";
 import { readInboxIdentity } from "./inbox-home";
 import { writeAtomicPrivateFileIfAbsent } from "./private-storage";
@@ -147,13 +148,53 @@ export class ManagedSyncStore {
   }
 
   async snapshot(): Promise<SyncLedger> {
+    return this.readSnapshot(() => this.readLedger());
+  }
+
+  async withReadView<T>(operation: (view: DocumentReadView) => Promise<T>, signal?: AbortSignal,
+    maximumDocumentBytes = SYNC_LIMITS.htmlBytes): Promise<T> {
+    let checked: { bytes: Buffer; ledger: SyncLedger; recordsByLocalId: Map<string, ManagedRecord> } | undefined;
+
+    const snapshot = () => this.readSnapshot(async () => {
+      const bytes = await readManagedLedgerBytes(this.ledgerPath());
+      if (checked?.bytes.equals(bytes)) {
+        return checked.ledger;
+      }
+
+      // Failed validation must not leave the previous cut available as a fallback.
+      checked = undefined;
+      const ledger = this.parseVerifiedLedger(bytes);
+      checked = { bytes, ledger, recordsByLocalId: new Map(Object.values(ledger.records).map((record) => [record.localId, record])) };
+      return ledger;
+    });
+    const recordFor = (localId: string) => checked?.recordsByLocalId.get(localId);
+    const reader: DocumentReadView = {
+      listDocuments: async () => this.listCheckedDocuments(await snapshot(), maximumDocumentBytes),
+      getDocumentMetadata: async (localId) => {
+        parseSafeId(localId);
+        const ledger = await snapshot();
+
+        return this.readCheckedMetadata(ledger, recordFor(localId), maximumDocumentBytes);
+      },
+      getDocument: async (localId) => {
+        parseSafeId(localId);
+        const ledger = await snapshot();
+
+        return this.readCheckedDocument(ledger, recordFor(localId), maximumDocumentBytes);
+      },
+    };
+
+    return withDocumentReadView(reader, operation, signal, () => { checked = undefined; });
+  }
+
+  private async readSnapshot(readLedger: () => Promise<SyncLedger>): Promise<SyncLedger> {
     await checkDirectory(this.home);
     const directory = await checkDirectory(this.directory);
     if ((directory.mode & 0o077) !== 0) {
       throw new Error("Managed store directory must be private; mutable recovery can harden it");
     }
 
-    const ledger = await this.readLedger();
+    const ledger = await readLedger();
     await this.assertAnchor(ledger);
     await this.assertBarrier(ledger);
     await this.assertReaderIdentity(ledger);
@@ -1036,7 +1077,10 @@ export class ManagedSyncStore {
   }
 
   async listDocuments(maximumDocumentBytes = SYNC_LIMITS.htmlBytes): Promise<DocumentMetadata[]> {
-    const ledger = await this.snapshot();
+    return this.listCheckedDocuments(await this.snapshot(), maximumDocumentBytes);
+  }
+
+  private async listCheckedDocuments(ledger: SyncLedger, maximumDocumentBytes: number): Promise<DocumentMetadata[]> {
     const documents: DocumentMetadata[] = [];
     for (const record of Object.values(ledger.records)) {
       if (isVisible(record)) {
@@ -1055,6 +1099,10 @@ export class ManagedSyncStore {
     parseSafeId(localId);
     const ledger = await this.snapshot();
     const record = Object.values(ledger.records).find((record) => record.localId === localId);
+    return this.readCheckedMetadata(ledger, record, maximumDocumentBytes);
+  }
+
+  private async readCheckedMetadata(ledger: SyncLedger, record: ManagedRecord | undefined, maximumDocumentBytes: number): Promise<DocumentMetadata | null> {
     if (record && isVisible(record)) {
       this.assertReadLimit(record, maximumDocumentBytes);
     }
@@ -1066,6 +1114,10 @@ export class ManagedSyncStore {
     parseSafeId(localId);
     const ledger = await this.snapshot();
     const record = Object.values(ledger.records).find((record) => record.localId === localId);
+    return this.readCheckedDocument(ledger, record, maximumDocumentBytes);
+  }
+
+  private async readCheckedDocument(ledger: SyncLedger, record: ManagedRecord | undefined, maximumDocumentBytes: number): Promise<StoredDocument | null> {
     if (!record || !isVisible(record)) {
       return null;
     }
@@ -1518,7 +1570,10 @@ export class ManagedSyncStore {
   }
 
   private async readLedger(): Promise<SyncLedger> {
-    const bytes = await readManagedLedgerBytes(this.ledgerPath());
+    return this.parseVerifiedLedger(await readManagedLedgerBytes(this.ledgerPath()));
+  }
+
+  private parseVerifiedLedger(bytes: Buffer): SyncLedger {
     const ledger = parseLedger(JSON.parse(bytes.toString("utf8")));
     for (const record of Object.values(ledger.records)) {
       const grant = ledger.originKeys.find((grant) => grant.inboxId === record.originInboxId && grant.historyEpoch === record.historyEpoch);

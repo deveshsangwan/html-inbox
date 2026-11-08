@@ -2,9 +2,10 @@ import { constants } from "node:fs";
 import { open, readdir } from "node:fs/promises";
 import path from "node:path";
 import { readBoundedFile } from "./bounded-file";
-import { type DocumentMetadata, type DocumentSource, type StoredDocument, isSafeDocumentId, parseDocumentMetadata } from "./documents";
+import { type DocumentMetadata, type DocumentSource, type DocumentReadView, type StoredDocument, isSafeDocumentId, parseDocumentMetadata } from "./documents";
 import { checkCanonicalDirectory as checkDirectory, checkRegularFile, isOwnedRegularFile } from "./local-storage-checks";
 import { assertUuidV4 } from "./validation";
+import { withDocumentReadView } from "./document-read-view";
 import { ManagedSyncStore } from "./sync-store";
 
 export interface LocalDocumentLocation {
@@ -40,10 +41,28 @@ export class LocalDocumentSource implements DocumentSource {
     }
   }
 
+  async withReadView<T>(operation: (view: DocumentReadView) => Promise<T>, signal?: AbortSignal): Promise<T> {
+    const read = (managed?: DocumentReadView) => withDocumentReadView({
+      listDocuments: () => this.listCurrentDocuments(managed),
+      getDocumentMetadata: (id) => this.readCurrentMetadata(id, managed),
+      getDocument: (id) => this.readCurrentDocument(id, managed),
+    }, operation, signal);
+
+    if (await ManagedSyncStore.isEnrolled(this.location.home)) {
+      return new ManagedSyncStore(this.location.home).withReadView(read, signal, this.maximumDocumentBytes);
+    }
+
+    return read();
+  }
+
   async listDocuments(): Promise<DocumentMetadata[]> {
+    return this.listCurrentDocuments();
+  }
+
+  private async listCurrentDocuments(managed?: DocumentReadView): Promise<DocumentMetadata[]> {
     await this.checkIdentity();
     if (await ManagedSyncStore.isEnrolled(this.location.home)) {
-      const documents = await new ManagedSyncStore(this.location.home).listDocuments(this.maximumDocumentBytes);
+      const documents = await (managed ? managed.listDocuments() : new ManagedSyncStore(this.location.home).listDocuments(this.maximumDocumentBytes));
       await this.checkIdentity();
       return documents;
     }
@@ -73,13 +92,17 @@ export class LocalDocumentSource implements DocumentSource {
   }
 
   async getDocumentMetadata(id: string): Promise<DocumentMetadata | null> {
+    return this.readCurrentMetadata(id);
+  }
+
+  private async readCurrentMetadata(id: string, managed?: DocumentReadView): Promise<DocumentMetadata | null> {
     if (!isSafeDocumentId(id)) {
       return null;
     }
 
     await this.checkIdentity();
     if (await ManagedSyncStore.isEnrolled(this.location.home)) {
-      const metadata = await new ManagedSyncStore(this.location.home).getDocumentMetadata(id, this.maximumDocumentBytes);
+      const metadata = await (managed ? managed.getDocumentMetadata(id) : new ManagedSyncStore(this.location.home).getDocumentMetadata(id, this.maximumDocumentBytes));
       await this.checkIdentity();
       return metadata;
     }
@@ -92,13 +115,17 @@ export class LocalDocumentSource implements DocumentSource {
   }
 
   async getDocument(id: string): Promise<StoredDocument | null> {
+    return this.readCurrentDocument(id);
+  }
+
+  private async readCurrentDocument(id: string, managed?: DocumentReadView): Promise<StoredDocument | null> {
     if (!isSafeDocumentId(id)) {
       return null;
     }
 
     await this.checkIdentity();
     if (await ManagedSyncStore.isEnrolled(this.location.home)) {
-      const document = await new ManagedSyncStore(this.location.home).getDocument(id, this.maximumDocumentBytes);
+      const document = await (managed ? managed.getDocument(id) : new ManagedSyncStore(this.location.home).getDocument(id, this.maximumDocumentBytes));
       await this.checkIdentity();
       return document;
     }
