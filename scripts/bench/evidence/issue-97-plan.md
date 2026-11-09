@@ -1,10 +1,16 @@
 # Issue 97 qualification plan v1
 
-Related to [issue 97](https://github.com/deveshsangwan/html-inbox/issues/97) and [draft PR 124](https://github.com/deveshsangwan/html-inbox/pull/124). This is source preparation, not an execution grant.
+Related to [issue 97](https://github.com/deveshsangwan/html-inbox/issues/97) and [draft PR 124](https://github.com/deveshsangwan/html-inbox/pull/124). This is an unlaunched measurement design, not an execution grant.
+
+## Current status
+
+The [identity diagnostic publication](issue-97-identity-diagnostic-v1/README.md) carries the exact reviewed failure-only test diagnostic into NORMAL default-concurrency CI. Its local exact20 serial observation passed9 selected cases with22 filter skips and ZERO mismatch tags. The hosted headers failure at887 remains unresolved; its cause and injection are unproven. The new publication's normal CI is pending, not a retry or clearance of887. Mismatch/cap/IPC-error paths remain unqualified. The separate V1 operational mode stop and its1.876329s late-shorter-boundary release limit remain immutable.
+
+Measurement-v1 is still pinned to `887e0c5daa0812097ee8028b177244827f8420df`, manifest SHA256 `819d510ea4822126a93cd4a765633c71fc0162ffbed09f14515cd03e599c7268`, and is UNGRANTED. It cannot run against this diagnostic publication. A1 requires complete owned src entry preservation before recursive replacement; A2 requires an explicitly reviewed enumerated ncc data-cache policy with retained before/after evidence. Neither is resolved here. No adapter, input map, output target or grant was rebound. The schedule below preserves the preselected design only; root owns any later source binding and execution decision.
 
 ## Pins, primary metric and accepted evidence
 
-Immediate parent is reviewed PR120, `b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad`. Application/test source remains `a3e087c3fc8bafdf3d604a1737bc9677ee5a0d2a` on the Node20-compatible0.7 line. Engines, wire/storage schemas, validation/durability/cancellation and5s request/300s pass/60s lease/10s lock bounds remain unchanged. No issue95/96 source is imported.
+Immediate parent is reviewed PR120, `b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad`. Production source remains `a3e087c3fc8bafdf3d604a1737bc9677ee5a0d2a` on the Node20-compatible0.7 line. The sole later test-source difference is the exact identity-response diagnostic, target SHA256 `d30101e59453829dcb51024ac6746b8d421e5d8033b900dc9626c66a159ca95f`. Engines, wire/storage schemas, validation/durability/cancellation and5s request/300s pass/60s lease/10s lock bounds remain unchanged. No issue95/96 source is imported.
 
 Source-peer logical ledger replacement bytes during unchanged reconciliation is PRIMARY, selected before production edits. Supporting/tradeoff observations are commits, initial/repair behavior, wall/CPU/RSS/I/O, receiver and wire counters. Logical file bytes do not establish physical-device traffic. Fixture stat/counter overhead exists on both roles; no zero-overhead claim. Compare within each exact runtime, never pool Node20/24 or infer a runtime-upgrade benefit.
 
@@ -12,7 +18,7 @@ The [consolidated immutable diagnostic report](issue-97-diagnostics-v1/README.md
 
 ## Untraced schedule
 
-Use this publication's single frozen harness pin on both roles; the prepared manifest will contain its exact SHA. Baseline production is the full b249 `packages/cli/src` prefix; candidate production is the frozen HEAD prefix, byte-equal to a3e. All other tracked files, tools, lock/config and harness are identical. Build/bundle parent ONCE with exact24/Corepack pnpm11.7.0, verify its full map against the accepted actual b249 map, retain immutable source/output backups, and reuse the qualified393 candidate files without rebuilding. Switch only owned source/dist/bundle maps, after joining all owned processes. Verify complete role source/generated maps before every run.
+The original prepared v1 uses exact887 on both roles. Baseline production is the full b249 `packages/cli/src` prefix; candidate production there is byte-equal to a3e. All other v1 tracked files, tools, lock/config and harness are identical. Its proposed sequence builds/bundles parent ONCE with exact24/Corepack pnpm11.7.0, verifies the full actual b249 map, retains immutable source/output backups, and reuses qualified393 candidate files without rebuilding. Any later approved binding must settle source/test/generated equivalence explicitly. This publication does not update or execute v1.
 
 Every invocation uses existing `scripts/bench/run.py sync`, size10240, samples1, timeout360 and an absolute runtime binary, WITHOUT `--sync-trace`. Main invocations use counts0,100. Each row below has a unique output directory encoding runtime, pair, counts and role.
 
@@ -35,7 +41,7 @@ Expected per invocation: counts0,100 yield2 outer process rows and11 nested oper
 
 ## Bounded preparation and execution contract
 
-Versioned preparation artifacts will be in `/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-qualification-v1-prepared`; the future output root is `issue97-untraced-qualification-v1-attempt1` in the same parent. The manifest binds exact frozen HEAD, runtime/tool hashes, complete candidate/actual-parent source and generated maps, argv/environment/cwd/caps, labels, output targets and expected rows. The adapter is an adaptation of the already executed sequence, with the same byte-identical ownership/execution engine. No new controller/framework/helper or checkout is introduced. Exact adapter/engine/manifest/diff hashes are returned to root after this publication's SHA exists, avoiding a circular self-pin.
+Existing preparation artifacts remain in `/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-qualification-v1-prepared`; its uncreated output root is `issue97-untraced-qualification-v1-attempt1` in the same parent. The unchanged manifest binds887, runtime/tool hashes, complete candidate/actual-parent source and generated maps, argv/environment/cwd/caps, labels, output targets and expected rows. Its existing adapter uses the byte-identical ownership/execution engine. No new controller/framework/helper, checkout or matrix adaptation is introduced here. The root source-review decision remains authoritative: A1/A2 block a later launch, and no matrix grant exists.
 
 Proposed application4200s, separate cleanup/restoration120s, fixed final start+4320s, set ONCE before the first command. All preflights, hashes, copies, switches, audits and restoration share these absolute deadlines and remaining-time caps. Version commands15s each; source switch/metadata steps15s; parent build60s/bundle120s; each outer runner390s with unchanged360s child bound. Sum of individual caps exceeding the aggregate permits only partial/unrun steps, never an extension. Native filesystem calls can outlast a check; an observed overrun is a failure, not certified timely execution.
 
@@ -45,4 +51,4 @@ First behavior/provenance/cleanup/deadline failure stops. No retry, bound change
 
 ## Remaining gates
 
-Untraced repeated exact20/24 evidence and completed129 qualification remain unrun. Normal CI and two fresh same-pin SolHigh/Sonnet5.5Medium reviews occur after measured freeze. Both reviewers receive the FULL rubric and each return functionality, code-quality and validation verdicts. Original610 combined comparison remains a separate later gate. No final practical-benefit or readiness claim.
+Untraced repeated exact20/24 evidence and completed129 qualification remain unrun. This diagnostic publication's normal CI is pending, and final-pin CI remains required after measured freeze. Two fresh same-pin SolHigh/Sonnet5.5Medium reviews have not launched; both receive the FULL rubric and each return functionality, code-quality and validation verdicts. Original610 combined comparison remains a separate later gate. No final practical-benefit or readiness claim.

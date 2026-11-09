@@ -1,0 +1,379 @@
+{
+  "kind": "Compact extract of original receipt; full original remains unchanged at its hashed reference",
+  "original_references": {
+    "receipt.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/receipt.json",
+      "sha256": "9e8c2f3cdf94025a40e93ccc059c68cd8fe98f540ab03c5b55fea29faf086736",
+      "bytes": 1646999
+    },
+    "manifest.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/manifest.json",
+      "sha256": "d1f7d47a4baea379b59183afd06fd6cef282b0d10723fcece1be435f79660dc5",
+      "bytes": 697817
+    },
+    "execute-granted-sequence.py": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/execute-granted-sequence.py",
+      "sha256": "c7edb4bbecbaf1c1a4209960b21abf9861799365e19b2725113f97500c02c456",
+      "bytes": 23598
+    },
+    "reused-execution.py": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/reused-execution.py",
+      "sha256": "87d98accb4a6f69308bd27221e8e53bfe65014fd155229fb02d0e04fbe4aee68",
+      "bytes": 33589
+    },
+    "expanded-commands.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/expanded-commands.json",
+      "sha256": "750e5be6bf2f0ee062a47a0afe6c6859cbd9dce60f30b3af5ab867023d93a66b",
+      "bytes": 16778
+    }
+  },
+  "grant_id": "root-97-identity-diagnostic-887e0c5-v1",
+  "manifest_head": "887e0c5daa0812097ee8028b177244827f8420df",
+  "production_source": "a3e087c3fc8bafdf3d604a1737bc9677ee5a0d2a",
+  "base": "b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad",
+  "target_source_sha256": "d30101e59453829dcb51024ac6746b8d421e5d8033b900dc9626c66a159ca95f",
+  "target_required_mode_octal": "0664",
+  "command_umask_recorded": "not recorded by v1 adapter; launcher-added0077 documented separately",
+  "application_deadline": 901979.089898221,
+  "cleanup_restoration_deadline": 901686.708670026,
+  "fixed_final_deadline": 902099.089898221,
+  "completed": null,
+  "first_unexpected": {
+    "kind": "sequence",
+    "detail": "AssertionError('Owned entry set/type/mode drift')",
+    "monotonic": 901566.708654888
+  },
+  "issues": [
+    {
+      "kind": "sequence",
+      "detail": "AssertionError('Owned entry set/type/mode drift')",
+      "monotonic": 901566.708654888
+    }
+  ],
+  "unrun_commands": [
+    "diagnostic-build",
+    "identity-response-cases-node20"
+  ],
+  "commands": [
+    {
+      "label": "node20-version",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--version"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "PATH": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin:/usr/local/bin:/usr/bin:/bin",
+        "LANG": "C.UTF-8",
+        "HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node20-version",
+        "USERPROFILE": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node20-version",
+        "TMPDIR": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node20-version",
+        "TMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node20-version",
+        "TEMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node20-version",
+        "XDG_CONFIG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node20-version",
+        "XDG_STATE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node20-version",
+        "XDG_DATA_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node20-version",
+        "XDG_CACHE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node20-version",
+        "HTML_INBOX_CATALOG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node20-version/catalog",
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      },
+      "fixture": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node20-version",
+      "started_monotonic": 901561.745010732,
+      "command_deadline": 901576.745010732,
+      "bound_seconds": 15,
+      "setup_seconds": null,
+      "exit": 0,
+      "identity": {
+        "pid": 3016115,
+        "start_ticks": 90156174,
+        "ppid": 3016101,
+        "group": 3016115,
+        "session": 3016115,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.056543012033216655,
+      "tap_original_sha256": "fa2f297fd185bb1c8acba036117f05240eaa1f42eeb8902e870982523ae06edf",
+      "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fixture_removed": true
+    },
+    {
+      "label": "node24-version",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--version"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "PATH": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin:/usr/local/bin:/usr/bin:/bin",
+        "LANG": "C.UTF-8",
+        "HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node24-version",
+        "USERPROFILE": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node24-version",
+        "TMPDIR": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node24-version",
+        "TMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node24-version",
+        "TEMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node24-version",
+        "XDG_CONFIG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node24-version",
+        "XDG_STATE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node24-version",
+        "XDG_DATA_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node24-version",
+        "XDG_CACHE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node24-version",
+        "HTML_INBOX_CATALOG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node24-version/catalog",
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      },
+      "fixture": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node24-version",
+      "started_monotonic": 901564.162867696,
+      "command_deadline": 901579.162867696,
+      "bound_seconds": 15,
+      "setup_seconds": null,
+      "exit": 0,
+      "identity": {
+        "pid": 3016148,
+        "start_ticks": 90156416,
+        "ppid": 3016101,
+        "group": 3016148,
+        "session": 3016148,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.054457242018543184,
+      "tap_original_sha256": "b7677d3ec37ee1897ba07dc2cfe8292fe421c9ac93396cca5bbece486d1a2a41",
+      "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fixture_removed": true
+    },
+    {
+      "label": "apply-reviewed-test-patch",
+      "command": [
+        "/usr/bin/git",
+        "apply",
+        "--whitespace=error",
+        "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-prepared-v1/identity-response-diagnostic.patch"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "PATH": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin:/usr/local/bin:/usr/bin:/bin",
+        "LANG": "C.UTF-8",
+        "HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "USERPROFILE": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "TMPDIR": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "TMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "TEMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "XDG_CONFIG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "XDG_STATE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "XDG_DATA_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "XDG_CACHE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "HTML_INBOX_CATALOG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-apply-reviewed-test-patch/catalog",
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      },
+      "fixture": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-apply-reviewed-test-patch",
+      "started_monotonic": 901566.580256146,
+      "command_deadline": 901581.580256146,
+      "bound_seconds": 15,
+      "setup_seconds": null,
+      "exit": 0,
+      "identity": {
+        "pid": 3016159,
+        "start_ticks": 90156658,
+        "ppid": 3016101,
+        "group": 3016159,
+        "session": 3016159,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.05570895201526582,
+      "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fixture_removed": true
+    }
+  ],
+  "focused_observation": null,
+  "original_target_restored": true,
+  "qualified393_restored": true,
+  "semantic_index_restored": true,
+  "recorded_child_identities": [
+    {
+      "pid": 3016115,
+      "start_ticks": 90156174,
+      "ppid": 3016101,
+      "group": 3016115,
+      "session": 3016115,
+      "state": "R",
+      "discovery": "node20-version",
+      "groups_seen": [
+        {
+          "group": 3016115,
+          "session": 3016115
+        }
+      ],
+      "latest_ppid": 3016101,
+      "latest_state": "Z"
+    },
+    {
+      "pid": 3016148,
+      "start_ticks": 90156416,
+      "ppid": 3016101,
+      "group": 3016148,
+      "session": 3016148,
+      "state": "R",
+      "discovery": "node24-version",
+      "groups_seen": [
+        {
+          "group": 3016148,
+          "session": 3016148
+        }
+      ],
+      "latest_ppid": 3016101,
+      "latest_state": "Z"
+    },
+    {
+      "pid": 3016159,
+      "start_ticks": 90156658,
+      "ppid": 3016101,
+      "group": 3016159,
+      "session": 3016159,
+      "state": "R",
+      "discovery": "apply-reviewed-test-patch",
+      "groups_seen": [
+        {
+          "group": 3016159,
+          "session": 3016159
+        }
+      ],
+      "latest_ppid": 3016101,
+      "latest_state": "Z"
+    }
+  ],
+  "controller_identity": {
+    "pid": 3016101,
+    "start_ticks": 90155904,
+    "ppid": 3016096,
+    "group": 3016101,
+    "session": 3016101,
+    "state": "R"
+  },
+  "raw_index_sha256": {
+    "raw-index-before.bin": "aedd24c7b448c23b3034b66cd2e05fc7a21e29ab2a96787ee0a28d12d378c618",
+    "raw-index-after.bin": "aedd24c7b448c23b3034b66cd2e05fc7a21e29ab2a96787ee0a28d12d378c618"
+  },
+  "raw_index_limit": "Only observed hashes; no general byte restoration/equality or cause claim",
+  "planned_command_specs": {
+    "node20-version": {
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--version"
+      ],
+      "bound_seconds": 15,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      }
+    },
+    "node24-version": {
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--version"
+      ],
+      "bound_seconds": 15,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      }
+    },
+    "apply-reviewed-test-patch": {
+      "command": [
+        "/usr/bin/git",
+        "apply",
+        "--whitespace=error",
+        "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-prepared-v1/identity-response-diagnostic.patch"
+      ],
+      "bound_seconds": 15,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      }
+    },
+    "diagnostic-build": {
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/corepack/dist/pnpm.js",
+        "build"
+      ],
+      "bound_seconds": 60,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      }
+    },
+    "identity-response-cases-node20": {
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter=tap",
+        "--test-name-pattern=^actual client rejects (accepted|redirect|compressed|json|utf8|extra|oversized|headers|length) identity response and leaves recoverable work$",
+        "packages/cli/dist/sync-protocol-faults.test.js"
+      ],
+      "bound_seconds": 210,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      }
+    }
+  },
+  "baseline_generated_sha256_anchor": {
+    "receipt": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-correctness-ddc9f62-attempt2/receipt.json",
+    "sha256": "97ab80a0364c85ba45a65e081ecb4b058cdf2e5697785e49ac2026a0508ca95a"
+  },
+  "diagnostic_generated_only_difference": "packages/cli/dist/sync-protocol-faults.test.js",
+  "diagnostic_testJS_sha256": null,
+  "excluded_field": "commands.fixture_entries_before_removal omitted; no fixture content/listing is published in this extract."
+}

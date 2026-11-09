@@ -1,0 +1,93 @@
+{
+  "state": "POST_EXIT_SAFETY_RESTORATION_AUDIT_BEFORE_RELEASE",
+  "grant": "root-97-identity-diagnostic-887e0c5-v1",
+  "adapter_exit_code": 1,
+  "adapter_terminal_monotonic": 901568.588582757,
+  "audit_started_monotonic": 901656.393661389,
+  "checks": {
+    "head_clean": true,
+    "all525_source_bytes_equal": true,
+    "all593_entry_signature_equal": true,
+    "original_target_current_and_saved_equal": true,
+    "all393_current_equal_R2": true,
+    "all393_saved_equal_R2": true,
+    "semantic525_index_equal": true,
+    "all1784_tools_equal": true,
+    "both_runtime_hashes_equal": true,
+    "all_recorded_pid_start_absent": true,
+    "all_recorded_groups_absent": true,
+    "all_command_roots_absent": true,
+    "all_original_command_log_hashes_equal": true,
+    "copied_preparation_bytes_unchanged": true,
+    "outer_live_identity_matches_preexec": true
+  },
+  "head": "887e0c5daa0812097ee8028b177244827f8420df",
+  "git_status": "",
+  "tracked_count": 525,
+  "owned_signature_count": 593,
+  "current_generated_count": 393,
+  "saved_generated_count": 393,
+  "observed_process_entries": 3,
+  "unique_owner_pid_start_including_adapter_and_launcher": 5,
+  "recorded_groups_count": 5,
+  "remaining_identities": [],
+  "remaining_groups": [],
+  "roots": {
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots": false,
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node20-version": false,
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-node24-version": false,
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1/owned-command-roots/fixture-apply-reviewed-test-patch": false
+  },
+  "command_log_checks": {
+    "node20-version": {
+      "tap": {
+        "sha256": "fa2f297fd185bb1c8acba036117f05240eaa1f42eeb8902e870982523ae06edf",
+        "receipt_sha256": "fa2f297fd185bb1c8acba036117f05240eaa1f42eeb8902e870982523ae06edf",
+        "matches": true
+      },
+      "stderr": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "receipt_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "matches": true
+      }
+    },
+    "node24-version": {
+      "tap": {
+        "sha256": "b7677d3ec37ee1897ba07dc2cfe8292fe421c9ac93396cca5bbece486d1a2a41",
+        "receipt_sha256": "b7677d3ec37ee1897ba07dc2cfe8292fe421c9ac93396cca5bbece486d1a2a41",
+        "matches": true
+      },
+      "stderr": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "receipt_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "matches": true
+      }
+    },
+    "apply-reviewed-test-patch": {
+      "tap": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "receipt_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "matches": true
+      },
+      "stderr": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "receipt_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "matches": true
+      }
+    }
+  },
+  "runtime_hashes": {
+    "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node": "6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd",
+    "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node": "bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12"
+  },
+  "tool_drift": [],
+  "original_receipt_sha256": "9e8c2f3cdf94025a40e93ccc059c68cd8fe98f540ab03c5b55fea29faf086736",
+  "original_raw_index_snapshots": {
+    "raw-index-before.bin": "aedd24c7b448c23b3034b66cd2e05fc7a21e29ab2a96787ee0a28d12d378c618",
+    "raw-index-after.bin": "aedd24c7b448c23b3034b66cd2e05fc7a21e29ab2a96787ee0a28d12d378c618"
+  },
+  "owner_raw_index_sha256": "aedd24c7b448c23b3034b66cd2e05fc7a21e29ab2a96787ee0a28d12d378c618",
+  "raw_index_byte_equality_or_cause_claim": false,
+  "within_fixed_final_deadline": true,
+  "audit_finished_monotonic": 901657.465236174
+}

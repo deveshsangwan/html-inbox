@@ -1,0 +1,10 @@
+{
+  "state": "LOCAL_RELEASED",
+  "grant": "root-97-identity-diagnostic-887e0c5-v1",
+  "released_monotonic": 901688.584999218,
+  "safety_audit_sha256": "dd6f6c91dfd32b8e1352f7fe0183a217d7f6c865d8aa770afdec6765c25c7ccb",
+  "all_safety_checks_passed": true,
+  "within_fixed_final_deadline": true,
+  "classification_not_started": true,
+  "no_retry_or_follow_on": true
+}
