@@ -276,12 +276,128 @@ async function main() {
           return invokeAdmission(originalCommunication, this, arguments, call);
         };
 
+        let selectedMutationPhase = null;
+        let mutationPhaseFaults = 0;
+        let mutationPhaseMisses = 0;
+
+        function phaseRow() {
+          return [null, null, null, null, null, null, 'unobserved'];
+        }
+
+        function stampMutationPhase(row, offset, outcome) {
+          try {
+            if (!row || observedClassification) return;
+
+            row[offset] = Date.now();
+            row[offset + 1] = performance.now();
+            row[6] = outcome;
+          } catch {
+            mutationPhaseFaults = Math.min(65535, mutationPhaseFaults + 1);
+          }
+        }
+
+        function observeMutationReturn(row, result) {
+          if (!row || observedClassification) return;
+
+          stampMutationPhase(row, 2, 'pending');
+          try {
+            Reflect.apply(promiseThen, result, [() => { stampMutationPhase(row, 4, 'fulfilled'); },
+              () => { stampMutationPhase(row, 4, 'rejected'); }]);
+          } catch {
+            mutationPhaseFaults = Math.min(65535, mutationPhaseFaults + 1);
+          }
+        }
+
+        const originalMutate = ManagedSyncStore.prototype.mutate;
+        ManagedSyncStore.prototype.mutate = function mutate(operation) {
+          'use strict';
+          let forwardedArgs = arguments;
+          let phase;
+          try {
+            const communication = activeAdmission;
+            if (!observedClassification && !selectedMutationPhase && communication?.kind === 'communication' &&
+                communication.caller === 'attempt-registration' && communication.requestId === 1 &&
+                communication.storeId !== null && admissionStores.get(this) === communication.storeId) {
+              const attempt = admissionCalls.find(call => call.callId === communication.parentId);
+              const request = admissionCalls.find(call => call.callId === attempt?.parentId);
+              if (attempt?.kind === 'attempt' && attempt.caller === 'client-attempt' && attempt.requestId === 1 &&
+                  attempt.storeId === communication.storeId && request?.kind === 'request' &&
+                  request.caller === 'identity-json' && request.requestId === 1 &&
+                  request.storeId === communication.storeId && request.callId === firstRequestCallId) {
+                const holder = {};
+                Error.captureStackTrace(holder, mutate);
+                const frame = typeof holder.stack === 'string' ? holder.stack.slice(0, 8192).split('\n', 2)[1] : undefined;
+                const prefix = `    at ManagedSyncStore.startCommunication (${path.join(dist, 'sync-store.js')}:453:`;
+                if (typeof operation === 'function' && typeof frame === 'string' && frame.startsWith(prefix) &&
+                    /^[1-9][0-9]{0,3}\)$/.test(frame.slice(prefix.length))) {
+                  const selected = { callId: communication.callId, callbackEntriesObserved: 0,
+                    mutation: phaseRow(), callback: phaseRow() };
+                  const args = [...arguments];
+                  args[0] = function observeProtectedOperation(ledger) {
+                    'use strict';
+                    let row;
+                    try {
+                      if (!observedClassification) {
+                        selected.callbackEntriesObserved = Math.min(2, selected.callbackEntriesObserved + 1);
+                        if (selected.callbackEntriesObserved === 1) row = selected.callback;
+                      }
+                    } catch {
+                      mutationPhaseFaults = Math.min(65535, mutationPhaseFaults + 1);
+                    }
+
+                    stampMutationPhase(row, 0, 'entered');
+                    let result;
+                    try {
+                      result = Reflect.apply(operation, this, arguments);
+                    } catch (error) {
+                      stampMutationPhase(row, 4, 'threw');
+                      throw error;
+                    }
+
+                    observeMutationReturn(row, result);
+                    return result;
+                  };
+                  phase = selected;
+                  selectedMutationPhase = selected;
+                  forwardedArgs = args;
+                  stampMutationPhase(selected.mutation, 0, 'entered');
+                } else {
+                  mutationPhaseMisses = Math.min(65535, mutationPhaseMisses + 1);
+                }
+              }
+            }
+          } catch {
+            mutationPhaseFaults = Math.min(65535, mutationPhaseFaults + 1);
+          }
+
+          let result;
+          try {
+            result = Reflect.apply(originalMutate, this, forwardedArgs);
+          } catch (error) {
+            stampMutationPhase(phase?.mutation, 4, 'threw');
+            throw error;
+          }
+
+          observeMutationReturn(phase?.mutation, result);
+          return result;
+        };
+
+        function mutationPhaseObservation() {
+          return { schema: 1, selection: selectedMutationPhase ? 'selected' : 'unobserved',
+            callId: selectedMutationPhase?.callId ?? null,
+            callbackEntriesObserved: selectedMutationPhase?.callbackEntriesObserved ?? null,
+            selectionMisses: mutationPhaseMisses, observationFaults: mutationPhaseFaults,
+            mutation: selectedMutationPhase ? [...selectedMutationPhase.mutation] : phaseRow(),
+            callback: selectedMutationPhase ? [...selectedMutationPhase.callback] : phaseRow() };
+        }
+
         function admissionCorrelation(error) {
           const matches = error !== null && (typeof error === 'object' || typeof error === 'function')
             ? rejectedCalls.get(error) ?? [] : [];
           return { schema: 1, firstIdentity: firstIdentitySeen ? firstIdentityCaller : 'unobserved',
             firstRequestCallId, errorCallIds: [...matches], historyOmitted: omittedAdmissions,
             outputOmitted: 0, observationFaults: admissionFaults,
+            phases: mutationPhaseObservation(),
             calls: admissionCalls.map(call => [call.callId, call.storeId, call.kind, call.caller,
               call.requestId, call.parentId, call.deadlineAt, call.requestMs,
               call.entryWall, call.entryMono, call.returnWall, call.returnMono,

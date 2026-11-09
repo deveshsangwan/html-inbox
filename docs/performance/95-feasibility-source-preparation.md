@@ -436,14 +436,46 @@ finish-plus60 deadline. Terminal sidecar was added later without rewriting relea
 All original bytes/history remain. cc6's18-green watcher notification is CI-only;
 root did not audit logs or resolve historical causes. No performance/behavior gain.
 
-Only an ignored unapplied/unexecuted observer proposal may now examine one exact
-source-proved mutate invocation in selected request/client-attempt/registration
-ancestry. A per-invocation closure may carry that established token into a callback
-observer; no global active context crosses await and clocks do not make identity.
-Any proposed callback substitution must preserve once-only invocation, original
-this/arguments and promise/value/error identities. Pre-callback, callback and
-post-callback reaction intervals remain broad observations, never lock-wait,
-CPU/I/O or native cleanup measurements. Missing/omitted phases stay explicit;
-one4,096-byte failure event and all timing ineligibility remain. Existing observer67a0,
-controller62a16b, manifest0ba2c783/private390, production/tests/oracles/deadlines
-stay frozen. No operational binding, runtime, reviewer or automatic follow-on.
+Root accepted the ignored phase proposal after reviewing the full source, inverse
+diff, eleven compiled anchors, four complete ownership spans and both original
+payloads. The exact approved observer has now been copied to its existing path,
+without byte edits or a mode change. Its SHA256 is
+`aed35cf595e65ef1c4ca496f8088b7d6ac4acf6626e5693f7a67562483c81635`.
+The original ignored proposal and prior observer67a0 remain preserved. This is
+source approval and application only; the added phases remain unexecuted.
+
+One exact immediate source frame and the existing same-store selected identity
+request/client-attempt/registration ancestry select at most one mutation. A
+per-invocation callback closure carries that established token. No context crosses
+await and clocks do not establish identity. Original methods and callback calls
+retain actual this, full arguments, original promises/results and thrown objects.
+The selected callback is substituted; callback/prototype identity, handlers,
+stacks, clocks, IPC and V8 scheduling can change observations. Source proof shows
+zero or one callback invocation on the pinned path; an unexpected repeat remains
+visible and is forwarded rather than suppressed.
+
+The existing single failure event retains its 4,096-byte framed cap. Mutation and
+callback rows distinguish pre-original samples, synchronous returns and observed
+settlement reactions. Missing, trimmed, pending, repeated and faulted phases stay
+partial. A later generic failure is not automatically caused by the selected
+admission. Retained request ancestry and applicable original-error links are
+required to connect that rejection. No link into later durable count state is
+added. The intervals do not directly measure lock wait, CPU, I/O or native cleanup;
+all instrumented timings/resources remain ineligible, even without an event.
+
+Only an ignored metadata binding may now be prepared using unchanged controller 62a16b
+and manifest 0ba2c783 as origin. Three Git 5s, exact Node20 version 5s and one actual parent610
+parent/count1000/outbound65000 workload 240s/setup 90s remain proposed. Admission 30s,
+application 270s, fixed START+330s and at most 60s cleanup never reset. All original
+request/pass/reconcile/idle/reaction/custody assertions, curated environment,
+private 390-file inputs and natural flag unset remain. Fresh admission-phases output,
+scratch and inert-runner targets must stay absent. A separate root binding review
+and once-only execution grant are required; LOCAL remains free.
+
+Hosted36a Source Ubuntu24 failed in the prerequisite worker-bookkeeping snapshot
+read with "Managed ledger must have exactly one link", before explicit worker
+close, body corruption, audit and fencing assertions. Actual link count and
+inode/replacement evidence are absent. The hosted exception and all historical CI
+remain separate unresolved readiness gates. No reader, assertion, lifecycle,
+deadline or policy change, workflow retry, runtime/test/build/import, reviewer or
+performance/readiness approval follows this source publication.
