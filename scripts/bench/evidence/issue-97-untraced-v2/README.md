@@ -18,6 +18,8 @@ All21 commands exited0;16 invocations produced28 outer samples/156 operation row
 
 All values below are min/median/max across three within-runtime pairs. Paired changes are candidate minus its matched parent, not differences between unpaired medians. Negative changes reduce time. No p95/significance or pooled runtime result is inferred.
 
+Operation wall and CPU measurements include the source and receiver snapshots and the per-record equivalence assertions inside the timed reconciliation wrapper. Both roles use the same harness, but these values measure reconciliation plus validation, rather than production reconciliation alone. The effect of that observation overhead on paired changes was not isolated; it is not assumed to dilute gains in every case. Logical replacement-byte and commit counters retain their separately defined scope.
+
 | Exact Node | Operation | Parent ms | Candidate ms | Paired change ms | Paired change % |
 | --- | --- | ---: | ---: | ---: | ---: |
 | 20.20.2 | peer/initial/100 | 127,782.623/131,930.734/132,082.048 | 129,111.293/129,346.934/130,805.383 | -2,970.755/-1,125.351/1,564.312 | -2.249/-0.853/1.224 |
