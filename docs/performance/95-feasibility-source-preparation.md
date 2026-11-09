@@ -381,15 +381,36 @@ Original evidence and every prior failed/unrun cell remain immutable. Current85d
 Browser initial navigation ERR_NO_BUFFER_SPACE/Verify and historicaleaff EPERM
 remain separate unresolved readiness gates. No gain/full-feasibility/behavior.
 
-Root now authorizes only an ignored, unapplied, unexecuted worker-observer
-proposal. It may record bounded numeric call/store/request ordinals and original
-error-object identity, entry/return/rejection clocks and submitted deadline margin.
-Chronological proximity, shared authorization or a matching deadline alone cannot
-prove a caller. Original functions must run once with exact this/arguments;
-original promises/results/throws/rejections and callback arguments remain intact.
-Only one failure-only safe bounded event is proposed; every timing stays
-ineligible. No awaited operation/timer/read/RPC/request/retry/pass is added.
-Actual610 initial attempt versus later authorization and outer/unknown overlap
-must be source-supported, and incomplete/ambiguous histories remain explicit.
-No tracked observer, controller, manifest, launcher, fixture, runtime or reviewer
-work is authorized. LOCAL remains free pending a separate root decision.
+Root statically accepted the exact admission-correlation observer prepared at32d
+and authorized its byte-for-byte copy to the existing tracked observer. Its SHA256
+is `67a0a21b015f7a459ea8c9b375625c6fda950b5e87a6744f496659bb9237ff54`.
+The original ignored proposal/diff/schema/proof remain immutable. This source has
+not been parsed by Node, imported or executed; source review is not full-PR review
+or runtime qualification.
+
+Eight earliest numeric call rows, weak store ordinals and original rejection-object
+links remain bounded. Synchronous context ends when the original returns; later
+request association uses exact error identity, never chronological proximity,
+shared authorization or matching deadlines. Original this/arguments, promises,
+results, throws/rejections and callback arguments are retained. Additional promise
+reactions, stack/prototype/clock/descriptor/IPC effects remain explicit limitations.
+The sole failure event keeps fixed enums/numbers/null and a4,096-byte framed cap;
+omitted/unknown/overlapping/reused-error histories remain partial. Entry samples
+follow caller preparation, and settlement samples observe reactions. No interval
+identifies internal queue, CPU, I/O, native owner or expiry cause. All resources
+and timings remain ineligible, even with no event. Original assertions and all
+request/pass/clock/retry/repair/cleanup policies stay unchanged.
+
+Only a new ignored manifest is prepared for possible separate review using exact
+unchanged controller62a16b and the existing actual610/private390 inputs. Five
+commands remain three Git5s, exact20 version5s and one parent1000/outbound65000
+workload240/setup90. Admission30/application270/fixedSTART330/at-most60 cleanup,
+curated environment, natural flag unset and every original inner control remain.
+The fresh admission-correlation output/scratch/inert-runner targets are absent.
+No grant, launcher, runtime, build/test/install/import, candidate/Node24 command,
+reviewer or LOCAL acquisition follows this source application/binding.
+
+The32d17-check notification is hosted watcher evidence only; root did not audit
+its job logs, and it gives no credit to this previously ignored observer. Failed
+85dc/eaff/older observations retain their separate histories and unknown causes.
+Exact binding review and a later once-only execution decision remain required.

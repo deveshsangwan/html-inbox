@@ -104,6 +104,190 @@ async function main() {
         const failure = load('sync-failure.js');
         const classify = failure.classifySyncFailure;
         let observedClassification = false;
+
+        const admissionCalls = [];
+        const admissionStores = new WeakMap();
+        const rejectedCalls = new WeakMap();
+        const promiseThen = Promise.prototype.then;
+        let nextAdmissionStore = 0;
+        let omittedAdmissions = 0;
+        let admissionFaults = 0;
+        let firstIdentitySeen = false;
+        let firstIdentityCaller = 'unobserved';
+        let firstRequestCallId = null;
+        let activeAdmission = null;
+
+        function finiteNumber(value) {
+          return Number.isFinite(value) ? value : null;
+        }
+
+        function ownNumber(value, name) {
+          return value !== null && typeof value === 'object'
+            ? finiteNumber(Object.getOwnPropertyDescriptor(value, name)?.value) : null;
+        }
+
+        function admissionCaller(exclude) {
+          const holder = {};
+          Error.captureStackTrace(holder, exclude);
+          const frame = typeof holder.stack === 'string' ? holder.stack.slice(0, 8192).split('\n', 2)[1] : undefined;
+          const sites = [
+            ['identity-json', 'SyncClient.json', 'sync-client.js', 25],
+            ['client-attempt', 'SyncClient.request', 'sync-client.js', 80],
+            ['request-authorization', 'SyncClient.request', 'sync-client.js', 96],
+            ['attempt-registration', 'ManagedSyncStore.openRouteAttempt', 'sync-store.js', 483],
+            ['outer-attempt', 'reconcileSyncRoutes', 'sync-reconciliation.js', 60]
+          ];
+          for (const [kind, name, module, line] of sites) {
+            const prefix = `    at ${name} (${path.join(dist, module)}:${line}:`;
+            if (typeof frame === 'string' && frame.startsWith(prefix) && /^[1-9][0-9]{0,3}\)$/.test(frame.slice(prefix.length))) return kind;
+          }
+
+          return 'unknown';
+        }
+
+        function beginAdmission(kind, receiver, deadlineAt, requestMs, exclude) {
+          if (observedClassification) return;
+
+          if (admissionCalls.length === 8) {
+            omittedAdmissions = Math.min(65535, omittedAdmissions + 1);
+            return;
+          }
+
+          const frameCaller = admissionCaller(exclude);
+          const caller = kind === 'request' && frameCaller !== 'identity-json' ? 'unknown' : frameCaller;
+          let storeId = null;
+          if (receiver !== null && typeof receiver === 'object') {
+            storeId = admissionStores.get(receiver);
+            if (storeId === undefined) {
+              storeId = ++nextAdmissionStore;
+              admissionStores.set(receiver, storeId);
+            }
+          }
+
+          const parent = activeAdmission;
+          const isChild = parent && storeId !== null && parent.storeId === storeId &&
+            (kind === 'attempt' && caller === 'client-attempt' && parent.kind === 'request' ||
+             kind === 'communication' && caller === 'attempt-registration' && parent.kind === 'attempt');
+          const entryWall = Date.now();
+          const call = { callId: admissionCalls.length + 1, storeId, kind, caller,
+            requestId: kind === 'request' ? 1 : isChild ? parent.requestId : null,
+            parentId: isChild ? parent.callId : null, deadlineAt: finiteNumber(deadlineAt), requestMs,
+            entryWall, entryMono: performance.now(), returnWall: null, returnMono: null,
+            settledWall: null, settledMono: null,
+            entryRemaining: deadlineAt === null ? null : finiteNumber(deadlineAt - entryWall),
+            returnRemaining: null, settledRemaining: null, outcome: 'entered',
+            otherUnsettled: storeId === null ? null : admissionCalls.filter(value => value.storeId === storeId && value.settledMono === null).length };
+          admissionCalls.push(call);
+          return call;
+        }
+
+        function settleAdmission(call, outcome, error) {
+          try {
+            if (!call || observedClassification) return;
+
+            call.settledWall = Date.now();
+            call.settledMono = performance.now();
+            call.settledRemaining = call.deadlineAt === null ? null : finiteNumber(call.deadlineAt - call.settledWall);
+            call.outcome = outcome;
+            if ((outcome === 'rejected' || outcome === 'threw') && error !== null &&
+                (typeof error === 'object' || typeof error === 'function')) {
+              const matches = rejectedCalls.get(error) ?? [];
+              if (matches.length < 8 && !matches.includes(call.callId)) matches.push(call.callId);
+              rejectedCalls.set(error, matches);
+            }
+          } catch {
+            admissionFaults = Math.min(65535, admissionFaults + 1);
+          }
+        }
+
+        function invokeAdmission(original, receiver, args, call) {
+          const previous = activeAdmission;
+          activeAdmission = call ?? null;
+          let result;
+          try {
+            result = Reflect.apply(original, receiver, args);
+          } catch (error) {
+            settleAdmission(call, 'threw', error);
+            throw error;
+          } finally {
+            activeAdmission = previous;
+          }
+
+          try {
+            if (call && !observedClassification) {
+              call.returnWall = Date.now();
+              call.returnMono = performance.now();
+              call.returnRemaining = call.deadlineAt === null ? null : finiteNumber(call.deadlineAt - call.returnWall);
+              call.outcome = 'pending';
+              // Side observers return normally; callers retain the original promise.
+              Reflect.apply(promiseThen, result, [() => { settleAdmission(call, 'fulfilled'); },
+                error => { settleAdmission(call, 'rejected', error); }]);
+            }
+          } catch {
+            admissionFaults = Math.min(65535, admissionFaults + 1);
+          }
+
+          return result;
+        }
+
+        const originalRequest = SyncClient.prototype.request;
+        SyncClient.prototype.request = function request(authorization, method, requestPath, bytes, contentType, consume, options, expectedState) {
+          'use strict';
+          let call;
+          try {
+            if (!observedClassification && !firstIdentitySeen && method === 'POST' && requestPath === '/sync/v1/identity') {
+              firstIdentitySeen = true;
+              firstIdentityCaller = 'unknown';
+              const receiver = Object.getOwnPropertyDescriptor(this, 'store')?.value;
+              call = beginAdmission('request', receiver, ownNumber(options, 'deadlineAt'), ownNumber(options, 'requestMs'), request);
+              firstIdentityCaller = call?.caller ?? 'unknown';
+              firstRequestCallId = call?.callId ?? null;
+            }
+          } catch {
+            admissionFaults = Math.min(65535, admissionFaults + 1);
+          }
+
+          return invokeAdmission(originalRequest, this, arguments, call);
+        };
+
+        const originalAttempt = ManagedSyncStore.prototype.openRouteAttempt;
+        ManagedSyncStore.prototype.openRouteAttempt = function openRouteAttempt(authorization, parentSignal, deadlineAt) {
+          'use strict';
+          let call;
+          try {
+            if (!observedClassification) call = beginAdmission('attempt', this, finiteNumber(deadlineAt), null, openRouteAttempt);
+          } catch {
+            admissionFaults = Math.min(65535, admissionFaults + 1);
+          }
+
+          return invokeAdmission(originalAttempt, this, arguments, call);
+        };
+
+        const originalCommunication = ManagedSyncStore.prototype.startCommunication;
+        ManagedSyncStore.prototype.startCommunication = function startCommunication(authorization, start, expectedState, deadlineAt) {
+          'use strict';
+          let call;
+          try {
+            if (!observedClassification) call = beginAdmission('communication', this, finiteNumber(deadlineAt), null, startCommunication);
+          } catch {
+            admissionFaults = Math.min(65535, admissionFaults + 1);
+          }
+
+          return invokeAdmission(originalCommunication, this, arguments, call);
+        };
+
+        function admissionCorrelation(error) {
+          const matches = error !== null && (typeof error === 'object' || typeof error === 'function')
+            ? rejectedCalls.get(error) ?? [] : [];
+          return { schema: 1, firstIdentity: firstIdentitySeen ? firstIdentityCaller : 'unobserved',
+            firstRequestCallId, errorCallIds: [...matches], historyOmitted: omittedAdmissions,
+            outputOmitted: 0, observationFaults: admissionFaults,
+            calls: admissionCalls.map(call => [call.callId, call.storeId, call.kind, call.caller,
+              call.requestId, call.parentId, call.deadlineAt, call.requestMs,
+              call.entryWall, call.entryMono, call.returnWall, call.returnMono,
+              call.settledWall, call.settledMono, call.entryRemaining, call.returnRemaining,
+              call.settledRemaining, call.outcome, call.otherUnsettled]) };
+        }
         failure.classifySyncFailure = function classifySyncFailure(error) {
           'use strict';
           const result = Reflect.apply(classify, this, arguments);
@@ -157,7 +341,13 @@ async function main() {
                 type: 'issue95-first-generic-blocked', ordinal: 1, timingEligibility: 'ineligible',
                 errorKind: isObject ? errorKinds.get(Object.getPrototypeOf(error)) ?? 'unknown' : 'non-object',
                 messageKind: messageKinds.get(message) ?? 'unknown', codeKind: codeKinds.get(code) ?? 'unknown', frameKind };
-              const framed = JSON.stringify({ wall: observation.wall, monotonic: observation.monotonic, role: 'worker', ...observation });
+              observation.admission = admissionCorrelation(error);
+              let framed = JSON.stringify({ wall: observation.wall, monotonic: observation.monotonic, role: 'worker', ...observation });
+              while (Buffer.byteLength(framed, 'utf8') + 1 > 4096 && observation.admission.calls.length) {
+                observation.admission.calls.pop();
+                observation.admission.outputOmitted += 1;
+                framed = JSON.stringify({ wall: observation.wall, monotonic: observation.monotonic, role: 'worker', ...observation });
+              }
               if (process.connected && Buffer.byteLength(framed, 'utf8') + 1 <= 4096) process.send?.(observation, () => {});
             }
           } catch {
