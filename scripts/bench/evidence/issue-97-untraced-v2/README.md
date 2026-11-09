@@ -20,6 +20,8 @@ All values below are min/median/max across three within-runtime pairs. Paired ch
 
 Operation wall and CPU measurements include the source and receiver snapshots and the per-record equivalence assertions inside the timed reconciliation wrapper. Both roles use the same harness, but these values measure reconciliation plus validation, rather than production reconciliation alone. The effect of that observation overhead on paired changes was not isolated; it is not assumed to dilute gains in every case. Logical replacement-byte and commit counters retain their separately defined scope.
 
+The ledger observer awaits a stat between each rename and directory fsync. Noop100 has 203 parent versus 3 candidate source commits, so the candidate also performs 200 fewer awaited source stats. The shared per-commit hook does not give equal total overhead. Neither the size nor the net contribution of this difference to the measured timing change was isolated.
+
 | Exact Node | Operation | Parent ms | Candidate ms | Paired change ms | Paired change % |
 | --- | --- | ---: | ---: | ---: | ---: |
 | 20.20.2 | peer/initial/100 | 127,782.623/131,930.734/132,082.048 | 129,111.293/129,346.934/130,805.383 | -2,970.755/-1,125.351/1,564.312 | -2.249/-0.853/1.224 |
@@ -34,6 +36,12 @@ Operation wall and CPU measurements include the source and receiver snapshots an
 Source noop100 logical bytes and commit counts have identical min/median/max in all three pairs for each runtime. Initial100 source replacement bytes also drop41,054,022 to20,797,909 and commits203 to103, but initial latency/CPU have mixed paired signs and overlapping ranges. The entire sync100 command includes setup and all passes; its paired wall changes span -14.978% to -12.509% on20 and -13.916% to -13.062% on24. Those supporting measurements are separate from the primary noop metric. Every CPU, RSS, I/O, source, receiver and wire sample is in the raw files and complete pair/spread tables.
 
 All36 counterpart peer controls match wire/body-work/transfer counts. Initial/noop/repair transfer100/0/1, with exact identity/metadata/signature/fingerprint/receipt and receipt-backed confirmed-obligation comparisons. Noop has zero HTML open/read/hash/transfer work. One missing body repairs exactly once. Both roles on both exact runtimes also complete129-document controls with unchanged assertions. Existing128-page path plus noop6 requests versus4 at100 supports actual two-page behavior. There is no per-page event trace,129 repeated spread or129 gain claim.
+
+### What produces the observed commit reduction
+
+The following account comes from the fixture and production source and agrees with the raw commit counts. It is not a per-call execution trace. Initial transfer starts with no receiver receipts, so offers still acknowledge each document separately. Persisting receipt and confirmation together uses one commit instead of two per acknowledgement, consistent with 203 ->103 source commits. Noop receipts already match confirmed obligations; skipping those exact replays is consistent with 203 ->3 commits. Repair skips the available receipts, then acknowledges the one repaired body atomically, consistent with 203 ->4 commits. The 129 controls follow the same pattern across two pages, with 262 parent commits versus 133 initial, 4 noop and 5 repair candidate commits.
+
+These measurements do not isolate the throughput benefit of committing multiple newly applied receipts in one batch. Bounded page batching is implemented and direct tests cover its atomic mutation, replay and rejection behavior. The 129 runs supply page-boundary behavior evidence. The preselected noop logical-byte result chiefly demonstrates avoiding already-applied receipt writes; no simpler alternative implementation was measured.
 
 Costs and limitations from the accepted root decision:
 
@@ -68,8 +76,8 @@ The [e017 hosted24.22.2 failure](https://github.com/deveshsangwan/html-inbox/act
 
 Source-only publication retains all393 measured R2 outputs. Protocol diagnostic testJS was already stale; fatal diagnostic testJS is now also stale versus its new TS, other391 production/helper/bundle bytes unchanged. New normal CI rebuilds the tests. No further local compiler/build/test/application, reviewer or CI retry ran for publication.
 
-## Remaining gates and preserved history
+## Remaining gates at original publication and preserved history
 
-Original610 combined comparison, current/final normal CI diagnosis/disposition and two fresh same-pin full-rubric SolHigh/Sonnet5.5Medium reviews remain open. Each reviewer returns functionality, code-quality and validation verdicts. No review has launched and draft stays draft. [Current plan](../issue-97-plan.md) describes the minimal source-only610 assessment; it grants no execution. No readiness/merge/release conversion.
+At this report's original publication, the original610 comparison, final normal CI and two full-rubric reviews were still open. The later [original610 report](../issue-97-combined610-v1/README.md) records that separate comparison. The current [PR124 status](https://github.com/deveshsangwan/html-inbox/pull/124) records subsequent CI, review and readiness decisions. Those later decisions do not rewrite the failed runs or qualify unused diagnostic branches. No merge or release follows from these measurements.
 
 [R2 correctness](../issue-97-correctness.md), [original untraced120 stop](../issue-97-peer-feasibility.md), [traced120/parent360/candidate360 history](../issue-97-diagnostics-v1/README.md), and [identity V1 mode stop/V2 serial pass](../issue-97-identity-diagnostic-v1/README.md) remain immutable historical reports. Earlier pending/ungranted language describes those frozen publications; this report and root decision supply the later scoped acceptance. Traced timings remain gain-ineligible, original1.9GB remains a source-derived estimate, and no610 execution is backfilled.
