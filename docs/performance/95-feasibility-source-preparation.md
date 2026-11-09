@@ -332,7 +332,9 @@ classification. Output has fixed error/message/code/frame enums and a 4,096-byte
 framed cap. Unknown or absent output remains inconclusive; an enum is not native
 cause proof. The first observed error need not match a later persisted error.
 
-This source has not been imported, parsed by Node or executed. There is no new
+At source publication this observer was unexecuted. Its separately granted85dc
+diagnostic is recorded below; static approval itself gave no runtime credit.
+There is no new
 await/RPC/snapshot/request/timer/poll/ticket/barrier/retry/pass. Production,
 TypeScript, tests, workload, classifier and controller stay unchanged. Every
 instrumented timing/resource observation is gain-ineligible, even without output.
@@ -345,8 +347,8 @@ Its five commands, curated environment, admission30/application270/fixed-start33
 clocks, setup90/case240/idle65 and original request/pass/reaction/custody assertions
 remain. There is no candidate, Node24 command, test, compiler or matrix follow-on.
 All failures stop. Fresh output/scratch/unused-runner targets remain absent; no
-grant or launch exists. Exact publication/binding review and a separate explicit
-execution decision are required before any runtime work.
+new grant or launch follows publication. The separately granted85dc attempt below
+has ended; no subsequent runtime work is authorized.
 
 The7f Ubuntu24 outer post-child EADDRINUSE36379 and aggregate Verify remain
 separate red readiness gates; child0 does not establish parent cleanup. The prior
@@ -356,3 +358,38 @@ high-count, repeated-pair, full-behavior and independent-review gates remain ope
 The eaff Windows Browser file-level failure after viewer-record unlink EPERM is
 retained separately. No individual failing assertion or native owner was printed;
 the underlying cause and readiness gate remain unresolved.
+
+
+## Accepted first-classification diagnostic and next ignored proposal
+
+The one-parent exact20/count1000/outbound attempt at tested85dc has ended.
+All5 commands ran with exits0/0/0/0/1. The original strict receiver assertion
+failed0versus1000 before setup/idle; no setup/case/application timeout occurred.
+One293-byte first event reported error/communication-authorization-deadline/
+unknown-code/communication-deadline enums. One551-byte later count payload showed
+source1000/receiver0, null route errors, absent retry and1000 blocked outbox entries.
+These are separate observations; the first error has no object/route association
+with later durable state. Why its budget expired remains unknown. See the
+[immutable first-classification receipt](95-first-classification-results.md).
+
+All11 recorded identities,6 groups/6 session pairs and11 owned paths were absent;
+both recorded ports rebound.869 hashes/private390 input/parent198 source-config
+entries/390 outputs/index remained unchanged. Explicit release preceded result
+classification and root accepted it. The59.172186-second audit delay is inside
+same fixedSTART330 with214.733269 seconds left, not a finish-plus60 reset.
+Original evidence and every prior failed/unrun cell remain immutable. Current85dc
+Browser initial navigation ERR_NO_BUFFER_SPACE/Verify and historicaleaff EPERM
+remain separate unresolved readiness gates. No gain/full-feasibility/behavior.
+
+Root now authorizes only an ignored, unapplied, unexecuted worker-observer
+proposal. It may record bounded numeric call/store/request ordinals and original
+error-object identity, entry/return/rejection clocks and submitted deadline margin.
+Chronological proximity, shared authorization or a matching deadline alone cannot
+prove a caller. Original functions must run once with exact this/arguments;
+original promises/results/throws/rejections and callback arguments remain intact.
+Only one failure-only safe bounded event is proposed; every timing stays
+ineligible. No awaited operation/timer/read/RPC/request/retry/pass is added.
+Actual610 initial attempt versus later authorization and outer/unknown overlap
+must be source-supported, and incomplete/ambiguous histories remain explicit.
+No tracked observer, controller, manifest, launcher, fixture, runtime or reviewer
+work is authorized. LOCAL remains free pending a separate root decision.

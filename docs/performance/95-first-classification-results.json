@@ -1,0 +1,368 @@
+{
+  "outcome": "FAILED_DIAGNOSTIC_EVIDENCE_ONLY",
+  "tested_head": "85dc034eede0dada7c2b1628a9c7fb84c958d3c3",
+  "actual_parent": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+  "production_equivalent_to": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+  "publication": "Documentation-only descendant; tested source and publication head remain separate.",
+  "grant_id": "root-95-first-classification-85dc034-20261109-r1",
+  "execution": {
+    "command_exits": [
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    "controller_exit": 1,
+    "controller_elapsed_seconds": 56.09454490093049,
+    "workload_elapsed_seconds": 54.99743973999284,
+    "first_issue": "command-result: actual workload exit1",
+    "command_error": null,
+    "group_joined": true,
+    "fixture_removed": true,
+    "setup_seconds": null,
+    "no_observed_setup_case_application_timeout": true,
+    "unrun_commands": []
+  },
+  "commands": [
+    {
+      "label": "pin",
+      "exit": 0,
+      "elapsed_seconds": 0.054064882919192314,
+      "bound_seconds": 5,
+      "setup_seconds": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "status",
+      "exit": 0,
+      "elapsed_seconds": 0.055809661047533154,
+      "bound_seconds": 5,
+      "setup_seconds": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "production-frozen",
+      "exit": 0,
+      "elapsed_seconds": 0.07827692991122603,
+      "bound_seconds": 5,
+      "setup_seconds": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "node-20.20.2",
+      "exit": 0,
+      "elapsed_seconds": 0.05587920197285712,
+      "bound_seconds": 5,
+      "setup_seconds": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "workload",
+      "exit": 1,
+      "elapsed_seconds": 54.99743973999284,
+      "bound_seconds": 240,
+      "setup_seconds": null,
+      "group_joined": true,
+      "fixture_removed": true
+    }
+  ],
+  "deadlines_seconds": {
+    "admission": 30,
+    "application": 270,
+    "fixed_final_from_start": 330,
+    "cleanup_at_most": 60,
+    "setup": 90,
+    "case": 240,
+    "idle": 65,
+    "request": 5,
+    "pass": 60,
+    "reconcile": 30,
+    "reaction": 30,
+    "custody_repair": 65
+  },
+  "first_observer": {
+    "raw_row_zero_based": 58,
+    "bytes_including_LF": 293,
+    "sha256": "4a05b9b3bbdf670801fe21bd7d216be73e44b47eeddb8c2f154dc6d040540ba0",
+    "payload": {
+      "wall": 1794196414151,
+      "monotonic": 19889.058637,
+      "role": "worker",
+      "pid": 3050234,
+      "type": "issue95-first-generic-blocked",
+      "ordinal": 1,
+      "timingEligibility": "ineligible",
+      "errorKind": "error",
+      "messageKind": "communication-authorization-deadline",
+      "codeKind": "unknown",
+      "frameKind": "communication-deadline"
+    }
+  },
+  "later_mismatch": {
+    "raw_row_zero_based": 130,
+    "bytes_including_LF": 551,
+    "sha256": "86e5d71e6e0abac1030c6e8ebc5e41539b4109e3d150065edf2c8bd91e213683",
+    "payload": {
+      "type": "caught-up-count-mismatch",
+      "expectedCount": 1000,
+      "sourceCount": 1000,
+      "receiverCount": 0,
+      "sourceRoute": {
+        "present": true,
+        "state": "reconnecting",
+        "lastError": null
+      },
+      "receiverRoute": {
+        "present": true,
+        "state": "reconnecting",
+        "lastError": null
+      },
+      "localWorker": {
+        "enabled": true,
+        "retryPaused": false,
+        "ownerQuarantined": false,
+        "bootSupervised": false,
+        "lastError": null
+      },
+      "localRetry": {
+        "present": false,
+        "attempts": null,
+        "blocked": null,
+        "hasDeadline": null,
+        "lastError": null
+      },
+      "localOutbox": {
+        "pending": 0,
+        "confirmed": 0,
+        "blocked": 1000,
+        "retired": 0
+      },
+      "receiverCommittedReceipts": 0
+    }
+  },
+  "raw_assertion": {
+    "code": "ERR_ASSERTION",
+    "actual": 0,
+    "expected": 1000,
+    "location": "scheduler-workload.cjs:229:16",
+    "caller": "main:247:5"
+  },
+  "event_order": [
+    {
+      "row": 58,
+      "type": "issue95-first-generic-blocked",
+      "role": "worker",
+      "pid": 3050234
+    },
+    {
+      "row": 125,
+      "type": "pass-finished",
+      "role": "worker",
+      "pid": 3050234,
+      "completedPasses": 1
+    },
+    {
+      "row": 127,
+      "type": "worker-event",
+      "role": "worker",
+      "pid": 3050234,
+      "event": "pass"
+    },
+    {
+      "row": 129,
+      "type": "initial-catch-up-settled",
+      "completedPasses": 1,
+      "requests": 1
+    },
+    {
+      "row": 130,
+      "type": "caught-up-count-mismatch"
+    },
+    {
+      "row": 131,
+      "type": "stopping",
+      "role": "worker",
+      "pid": 3050234
+    },
+    {
+      "row": 132,
+      "type": "pass-finished",
+      "role": "worker",
+      "pid": 3050234,
+      "completedPasses": 2
+    },
+    {
+      "row": 133,
+      "type": "worker-event",
+      "role": "worker",
+      "pid": 3050234,
+      "event": "closed"
+    },
+    {
+      "row": 135,
+      "type": "stopping",
+      "role": "peer",
+      "pid": 3050223
+    },
+    {
+      "row": 137,
+      "type": "cleanup"
+    },
+    {
+      "row": 138,
+      "type": "workload-failed"
+    }
+  ],
+  "reached": [
+    "four admission commands passed",
+    "actual parent610 on exactNode20.20.2/count1000/outbound worker and peer started",
+    "first matching original generic-blocked classification observed through the accepted wrapper",
+    "initial-catch-up-settled bookkeeping observation",
+    "two existing assertCaughtUp snapshots and original strict receiver-count failure",
+    "ordinary stopping/worker closed with empty activeReads and fixture cleanup"
+  ],
+  "unreached": [
+    "caught-up assertion completion and exact setup marker",
+    "65s idle resource interval and two-periodic-pass qualification",
+    "clock/wake/retry reaction controls",
+    "external-commit custody and lost-body repair",
+    "stale-route fencing",
+    "selected held-read shutdown joining"
+  ],
+  "cause": "First matching classification has exact communication authorization deadline message/frame enums. Which admission caller produced it, why its budget expired and its identity relationship to later durable state/count failure are unknown.",
+  "source_context": {
+    "actual_parent_files": [
+      {
+        "path": "/home/agent/.t3/worktrees/html-inbox/perf-89-bench/packages/cli/src/sync-store.ts",
+        "sha256": "99d218b8c5230a532139868738f09bb4e60ef3d2806c9eac0aa0497c2612d48f"
+      },
+      {
+        "path": "/home/agent/.t3/worktrees/html-inbox/perf-89-bench/packages/cli/src/sync-client.ts",
+        "sha256": "1d3ec68f1ed2701a06cd6db7538a3984cb9a2069626c2f49a96fa8c8a57dc460"
+      },
+      {
+        "path": "/home/agent/.t3/worktrees/html-inbox/perf-89-bench/packages/cli/src/sync-failure.ts",
+        "sha256": "0f4967ed3b7007ca38e977d9bb288a771e53f6b393eded1d23d8c50211d11d89"
+      },
+      {
+        "path": "/home/agent/.t3/worktrees/html-inbox/perf-89-bench/packages/cli/src/sync-reconciliation.ts",
+        "sha256": "388b9775d794076234e41201166b4b4f74afbaddf97f36de8b98e2b65830179f"
+      },
+      {
+        "path": "/home/agent/.t3/worktrees/html-inbox/perf-89-bench/packages/cli/src/sync-acquisition-deadline.test.ts",
+        "sha256": "ac181c7d993088f7d2bb81fbc819245ea30387eb606bc2fb9f7b089f01d7565c"
+      },
+      {
+        "path": "/home/agent/.t3/worktrees/html-inbox/perf-89-bench/docs/phase2-sync/qa-ci-cea-acquisition-deadline-design.txt",
+        "sha256": "f81ab9b3417cce8fee392d2af5582d8ad31a5a9d079055708938f3383ead61eb"
+      }
+    ],
+    "findings": [
+      "sync-store.ts547-551 checks the supplied absolute deadline before mutate and throws the observed plain Error when remainingMs<=0. The emitted enum matches this reviewed guard; it does not identify why the budget expired.",
+      "sync-client.ts101 initially awaits openRouteAttempt; openRouteAttempt calls startCommunication at store588. The same request later calls startCommunication at client118 with its original deadline. Outer reconciliation also calls openRouteAttempt. Current payload does not identify the caller or error object across boundaries.",
+      "sync-failure.ts30-39 maps non-SyncProtocolError values to blocked/local-validation-or-storage-failed. This explains the category for a plain guard error, not the cause of expiry or attribution to later durable entries.",
+      "Current acquisition test315-346 explicitly preserves later communication queue errors as blocked with zero requests. The historical design intentionally excludes raw precheck and later admission from its narrow initial typed-queue translation. Its old close-lifetime commentary is not current runtime evidence. No global retry change is authorized."
+    ]
+  },
+  "counter_limits": [
+    "recordWorkerRun fulfillment counts bookkeeping, not successful reconciliation.",
+    "Intercepted SyncClient.json increments before the original invocation; it proves neither native dispatch nor receiver admission.",
+    "Status/settle does not join all background reconciliation; a second pass event precedes settled.",
+    "Parent and worker performance.now origins differ and must not be subtracted."
+  ],
+  "release": {
+    "root": {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-first-classification-85dc034-root-release.json",
+      "sha256": "032847338237e31e57541996200544d40fdb217ec11ceb4e4c78f0f146ac89b2"
+    },
+    "owner": {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-first-classification-probe-1/independent-cleanup.json",
+      "bytes": 3387,
+      "sha256": "9feea6b164c2997aa3c895a1980efacb50e47acc65f617e058eb9337debe44ca"
+    },
+    "identities_absent": 11,
+    "groups_absent": 6,
+    "session_pairs_absent": 6,
+    "owned_paths_absent": 11,
+    "recorded_port_binds_succeeded": 2,
+    "unreadable_proc_entries": 0,
+    "frozen_hashes_verified": 869,
+    "prepared_regular_input_files": 390,
+    "owner_audit_seconds_after_controller_finish": 59.17218563705683,
+    "inside_same_fixed_final": true,
+    "seconds_remaining_fixed_final": 214.7332694620127,
+    "no_finish_plus60_reset": true,
+    "root_repeated_bind_signal_delete": false,
+    "limits": "Audit only actually recorded identities/group/session/ports. Unseen short-lived descendants or ports have no invented identity; no generic unused interruption/native-call guarantee. All frozen input retained."
+  },
+  "evidence": [
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-first-classification-probe-1/receipt.json",
+      "bytes": 286764,
+      "sha256": "0219a95ba03ad960e38fe4dd40f5ce47970c77e5344f9325ffac6d5f059bdcb0"
+    },
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-first-classification-probe-1/workload.jsonl",
+      "bytes": 59014,
+      "sha256": "03d6d9f65a8e63bc3a685f301cbfb6f732b4d65252ebadaaa956cb0650d3265b"
+    },
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-first-classification-probe-1/workload.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-first-classification-probe-1/independent-cleanup.json",
+      "bytes": 3387,
+      "sha256": "9feea6b164c2997aa3c895a1980efacb50e47acc65f617e058eb9337debe44ca"
+    }
+  ],
+  "executed_input_index": {
+    "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/first-classification-v1-executed-inputs/index-with-launch.json",
+    "sha256": "85969e98d675d3ec3f9c63eb7a0e8f7443e3dae7afda95974d94fc32b68d7b00",
+    "copy_and_source_hashes_verified": 20
+  },
+  "terminal": {
+    "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/first-classification-v1-terminal.json",
+    "sha256": "a194ade51c54555ef876a9ac65701d7d318a2f6114ca42eb30bc0911d585b15c"
+  },
+  "root_result": {
+    "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-first-classification-85dc034-root-result.json",
+    "sha256": "8a4b08af79338bd54a5c59c7c4c6708640ff4aa00f6f4bd10104ac52cca20dc3"
+  },
+  "root_next_decision": {
+    "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-first-classification-85dc034-next-decision.json",
+    "sha256": "ead8e508952402f44551b381aeb6f24b5cce39f06881144241f5acd62bb68892"
+  },
+  "limits": [
+    "No route/obligation identity or exception identity link to the later mismatch; no attribution to old7f or feasibility5 rows.",
+    "Fulfilled recordWorkerRun bookkeeping is not reconciliation success; intercepted SyncClient.json is not native dispatch or receiver admission.",
+    "Settle is not a drain barrier; do not subtract parent/worker monotonic origins.",
+    "No instrumented resource/timing gain credit, full feasibility/behavior/readiness or cause acceptance.",
+    "Diagnostic unknown/oversize/throw/send/install and unused timeout/interruption/native paths remain unqualified.",
+    "Current85dc Browser ERR_NO_BUFFER_SPACE/Verify and historicaleaff EPERM remain separate unresolved CI failures."
+  ],
+  "history": [
+    "Original85dc raw receipt/log/payloads/exit1 remain unchanged.",
+    "Prior7f failed count diagnostic and feasibility5 timer failure/count stop remain separate; no current enum assigned retrospectively.",
+    "All feasibility4/R2/R1/original untagged failed rows and historical25/33/21 unrun sets retain their original receipts.",
+    "No failed diagnostic is substituted for an older cell or counted as a qualified resource observation."
+  ],
+  "CI": {
+    "85dc": "Windows Browser initial page.goto ERR_NO_BUFFER_SPACE and aggregate Verify remain red/unresolved.",
+    "eaff": "Viewer-record unlink EPERM and aggregate Verify remain separately unresolved.",
+    "older": "All earlier shared CI histories remain unchanged; no common cause, baseline or scheduler attribution/exoneration.",
+    "retry": false
+  },
+  "next_scope": "Only an ignored unapplied/unexecuted observer proposal for bounded call/error identity and same-process admission timing. No application, binding or runtime grant.",
+  "qualification": false,
+  "resource_gain_eligible": false,
+  "full_feasibility": false,
+  "full_behavior": false,
+  "readiness": false
+}
