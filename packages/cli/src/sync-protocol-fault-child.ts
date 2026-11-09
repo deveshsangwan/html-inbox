@@ -155,7 +155,7 @@ async function runReconciler(config: Record<string, unknown>, home: string) {
     return originalOpen(...args);
   });
   const store = new ManagedSyncStore(home, { testHooks: { async onEvent(event) {
-    if (event !== "receipt-before-retirement" || !armed) {
+    if (event !== "acknowledgements-committed" || !armed) {
       return;
     }
 

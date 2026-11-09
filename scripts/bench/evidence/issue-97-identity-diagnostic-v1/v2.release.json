@@ -1,0 +1,12 @@
+{
+  "state": "LOCAL_RELEASED",
+  "grant": "root-97-identity-diagnostic-887e0c5-v2",
+  "released_monotonic": 902525.504247208,
+  "release_seconds_after_launch": 103.33475780696608,
+  "before_shorter_cleanup_deadline": true,
+  "before_fixed_final_deadline": true,
+  "classification_not_started": true,
+  "safety_audit_sha256": "d069d86a0f1de72b9c70b76ebe56ae512c12bfb2ed5b1ff1d8e0c417909c4e42",
+  "original_receipt_sha256": "21f8f09b1732bfb5fdf306788310280ef25c41366f298cd06d41d818338cf280",
+  "no_retry_or_follow_on": true
+}

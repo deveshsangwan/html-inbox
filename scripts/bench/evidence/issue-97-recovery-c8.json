@@ -1,0 +1,212 @@
+{
+  "state": "LOCAL_NONREPRODUCTION_FOCUSED_AND_ORIGINAL_DEFAULT_CONCURRENCY_SHARD_PASS",
+  "grant_id": "root-97-recovery-c8baba7-20261110-r1",
+  "head": "c8baba7cfeaabe200deca00e4bcdcbb701476ba7",
+  "base": "b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad",
+  "test_runtime": "20.20.2",
+  "local_build_runtime": "24.19.0",
+  "hosted_build_runtime": "24.22.2",
+  "local_observations": {
+    "focused-length-recovery-node20": {
+      "tap": {
+        "tests": 31,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 30
+      },
+      "target": {
+        "verdict": "ok",
+        "ordinal": 12,
+        "duration_ms": 1560.305708
+      },
+      "mismatch_tags": 0,
+      "startup_lstat_tags": 0,
+      "not_ok_lines": []
+    },
+    "original-default-concurrency-source-shard-node20": {
+      "tap": {
+        "tests": 893,
+        "pass": 891,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 2
+      },
+      "target": {
+        "verdict": "ok",
+        "ordinal": 524,
+        "duration_ms": 1891.134513
+      },
+      "mismatch_tags": 0,
+      "startup_lstat_tags": 0,
+      "not_ok_lines": []
+    }
+  },
+  "result_scope": "Original strict recovery confirmed assertion and final receiver document count1 passed in BOTH local contexts. Full recovery objects/counters/lastError were not emitted. No mismatch/startup diagnostic failure path qualified from zero tags.",
+  "native_terminal": {
+    "exit_code": 0,
+    "native_child_wait_captured": true,
+    "elapsed_seconds": 276.8519088550238,
+    "finished_monotonic": 968303.612763714,
+    "within_fixed_final_deadline": true,
+    "launcher_pid": 3209559
+  },
+  "run_receipt_sha256": "abaee853885e62942c85927804f92a88416a3b9196be2356fec1aada79dc5669",
+  "safety_audit_sha256": "a8c66d0d12431c3e1e8c9e0a058176ee6aef67694c22f195ce25cfac13f792d4",
+  "release": {
+    "state": "LOCAL_RELEASED",
+    "grant_id": "root-97-recovery-c8baba7-20261110-r1",
+    "released_monotonic": 968305.068593107,
+    "cleanup_restoration_deadline": 968421.430470573,
+    "fixed_final_deadline": 968746.760854859,
+    "before_shorter_cleanup_deadline": true,
+    "before_fixed_final_deadline": true,
+    "receipt_sha256": "abaee853885e62942c85927804f92a88416a3b9196be2356fec1aada79dc5669",
+    "owner_safety_audit_sha256": "a8c66d0d12431c3e1e8c9e0a058176ee6aef67694c22f195ce25cfac13f792d4",
+    "interpretation_started": false
+  },
+  "known_identity_cleanup": {
+    "PID_start": 1600,
+    "groups": 87,
+    "observer_PID_only": 3209870,
+    "remaining": [],
+    "remaining_groups": {},
+    "proc_read_errors": [],
+    "limits": "Known saved identities/groups only. No universal short-lived coverage or independent port-rebind claim."
+  },
+  "first_unexpected": null,
+  "unrun_commands": [],
+  "limitations": [
+    "One focused run and one original default-file-concurrency shard invocation, no repetitions or rate estimate.",
+    "Matching test20.20.2 with local build24.19 versus hostedbuild24.22; hosted emitted-byte identity unverified, no runtime cause inferred.",
+    "Local passes are nonreproduction only, not hostedCI clearance, flake/base/candidate exoneration or causal proof.",
+    "Both reviewed source reports and prior errors remain immutable. No source change, CI retry/refetch, metadata race, new reviewer/helper or automatic follow-on."
+  ],
+  "extraction": "Safe selected fields from original receipts; full environments and fixture entries omitted. Original raw evidence remains private and immutable.",
+  "commands": [
+    {
+      "label": "node20-version",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--version"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "bound_seconds": 15,
+      "exit": 0,
+      "terminated_exit": 0,
+      "elapsed_seconds": 0.054914586013183,
+      "group_joined": true,
+      "fixture_removed": true,
+      "tap_original_sha256": "fa2f297fd185bb1c8acba036117f05240eaa1f42eeb8902e870982523ae06edf",
+      "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "node24-version",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--version"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "bound_seconds": 15,
+      "exit": 0,
+      "terminated_exit": 0,
+      "elapsed_seconds": 0.055430678999982774,
+      "group_joined": true,
+      "fixture_removed": true,
+      "tap_original_sha256": "b7677d3ec37ee1897ba07dc2cfe8292fe421c9ac93396cca5bbece486d1a2a41",
+      "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "build-current-source-with-pinned-Node24-Corepack-pnpm",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/corepack/dist/pnpm.js",
+        "build"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "bound_seconds": 60,
+      "exit": 0,
+      "terminated_exit": 0,
+      "elapsed_seconds": 1.9413704079343006,
+      "group_joined": true,
+      "fixture_removed": true,
+      "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_original_sha256": "52aa23ae94ef591f86df0a1de48709f5620eaacea41124e19fa6f2c717b99e88"
+    },
+    {
+      "label": "focused-length-recovery-node20",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter=tap",
+        "--test-name-pattern=^actual client rejects length identity response and leaves recoverable work$",
+        "packages/cli/dist/sync-protocol-faults.test.js"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "bound_seconds": 90,
+      "exit": 0,
+      "terminated_exit": 0,
+      "elapsed_seconds": 1.7568121439544484,
+      "group_joined": true,
+      "fixture_removed": true,
+      "tap_original_sha256": "b80a1ef3bab2d63cdaeaf33d31dd7b827e96cd85902a8a4d2c432c70e7c6adb5",
+      "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "original-default-concurrency-source-shard-node20",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "scripts/run-unit-tests.mjs",
+        "--test-reporter=tap",
+        "--test-shard=2/2"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "bound_seconds": 300,
+      "exit": 0,
+      "terminated_exit": 0,
+      "elapsed_seconds": 257.0038651539944,
+      "group_joined": true,
+      "fixture_removed": true,
+      "tap_original_sha256": "0bdb0bde4ccbb81048496b56d2c781b7278ea0515af71e96fdde4084af888cbb",
+      "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "original_classification_sha256": "f5ad528522559f2562a838b41d3244aef3a1c1226316ff21747f4522fa731da1",
+  "root_release_audit_sha256": "5da869908ed311c14187014a7fa0b24df72f4f3249ffe88995f2b422408b1103",
+  "hosted_failure": {
+    "run": 42674717480,
+    "source_job": 129352829725,
+    "verify_job": 129355374398,
+    "observed": "Recovery pending versus confirmed; full returned recovery classification unprinted; final receiver count unreached.",
+    "receipt_sha256": "7cb363bec17971d66334fe7c073e5a0bf46d66603b439584b3295940ea9fa7eb",
+    "decoded_log_sha256": "1922f9343bc686c7695510036bfd9078846ab0f7e625e642e0e8324470a9814e"
+  },
+  "diagnostic_followup": {
+    "target": "packages/cli/src/sync-protocol-faults.test.ts",
+    "source_sha256": "299e71c7f3672fed316b39c4e8dea8560b242cb10f18bcd211cc550a82a5540d",
+    "tag": "issue97-recovery-result-v1",
+    "compiler_check": {
+      "argv": [
+        "/home/agent/.t3/worktrees/html-inbox/perf-97-acks/node_modules/.pnpm/@tsc-rs+linux-x64@0.7.0/node_modules/@tsc-rs/linux-x64/lib/tsc",
+        "-p",
+        "packages/cli/tsconfig.json",
+        "--noEmit"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "cap_seconds": 30,
+      "elapsed_seconds": 0.3192022140137851,
+      "native_exit": 0,
+      "compiler_sha256": "fb9223ad1f59392ca225dc4c1a76664e07f146bc5f22c91a13ade6b2f7c217cc",
+      "environment": "inherited, no overrides",
+      "source_sha256": "299e71c7f3672fed316b39c4e8dea8560b242cb10f18bcd211cc550a82a5540d",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "scope": "compiler only, no application or test import/execution, noEmit"
+    },
+    "application_or_test_run_after_edit": false,
+    "failure_branches_qualified": false,
+    "measured_generated_files_changed": false,
+    "production_changed": false
+  }
+}

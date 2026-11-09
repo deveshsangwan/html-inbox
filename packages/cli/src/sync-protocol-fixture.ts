@@ -157,7 +157,7 @@ async function runApplicationFixture() {
     const message = parseObject(value, "fixture command");
     void (async () => {
       if (message.type === "arm") {
-        armed = parseChoice<StorageEvent>(message.event, ["directory-created", "directory-flushed", "migration-intent", "migration-evacuated", "migration-barrier", "migration-enumeration", "body-staged", "body-flushed", "body-installed", "body-directory-flushed", "ledger-temp-written", "ledger-temp-fsynced", "ledger-renamed", "ledger-dir-fsynced", "committed-before-receipt", "receipt-before-retirement"]);
+        armed = parseChoice<StorageEvent>(message.event, ["directory-created", "directory-flushed", "migration-intent", "migration-evacuated", "migration-barrier", "migration-enumeration", "body-staged", "body-flushed", "body-installed", "body-directory-flushed", "ledger-temp-written", "ledger-temp-fsynced", "ledger-renamed", "ledger-dir-fsynced", "committed-before-receipt", "acknowledgements-committed"]);
         stageLeaseGap = false;
       }
 

@@ -9,7 +9,7 @@ import platformTest, { mock, type TestContext } from "node:test";
 import { SyncClient } from "./sync-client";
 import { createSyncHttpsCredentials, type SyncHttpsCredentials } from "./sync-https-fixtures";
 import { outboxKey, parseLedger } from "./sync-ledger";
-import { canonicalKey, parseObject, signOriginState, stateFingerprint, SYNC_DEFAULTS, type OriginGrant, type SyncRoute } from "./sync-model";
+import { canonicalKey, parseInteger, parseObject, signOriginState, stateFingerprint, SYNC_DEFAULTS, type OriginGrant, type SyncRoute } from "./sync-model";
 import { startProtocolFaultChild } from "./sync-protocol-fault-child";
 import { assertLoopbackClosed, startSyncApplication } from "./sync-protocol-fixture";
 import { reconcileSyncRoutes, routeAuthorization, type ReconcileOptions } from "./sync-reconciliation";
@@ -292,10 +292,94 @@ for (const kind of ["accepted", "redirect", "compressed", "json", "utf8", "extra
     assert.equal(Object.values(ledger.outbox).filter((entry) => entry.disposition !== "retired").length, 1);
     assert.equal(Object.keys(ledger.receipts).length, 0);
     assert.equal(Object.keys((await f.receiver.store.snapshot()).records).length, 0);
-    assert.equal((await serverStatus(f.receiverServer)).network.requests, 1, "redirects must not be followed");
+    const receiverStatus = await serverStatus(f.receiverServer);
+    const receiverRequests = receiverStatus.network.requests;
+
+    try {
+      if (receiverRequests !== 1) {
+        const proxy = f.proxy;
+        const route = result.routes[0];
+        const counter = (value: unknown) => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : null;
+        const counters = (values: Record<string, unknown>, names: string[]) => Object.fromEntries(names.map((name) => [name, counter(values[name])]));
+        const allowedErrors = new Set(["local-acquisition-deadline", "request-deadline", "request-aborted", "pass-deadline", "verified-transport-failed",
+          "tls-verification-failed", "response-truncated", "response-limit", "invalid-response-envelope", "invalid-response-bytes", "unauthorized",
+          "peer-identity-conflict", "local-validation-or-storage-failed", "session-expired", "trusted-history-unavailable"]);
+        const messageCounts = { ready: 0, reply: 0, fault: 0, fatal: 0, paused: 0, other: 0, selectedForCase: 0 };
+        for (const message of proxy.messages) {
+          const type = message.type;
+          if (type === "ready" || type === "reply" || type === "fault" || type === "fatal" || type === "paused") {
+            messageCounts[type] += 1;
+          } else {
+            messageCounts.other += 1;
+          }
+
+          if (type === "fault" && message.kind === kind) {
+            messageCounts.selectedForCase += 1;
+          }
+        }
+
+        const proxyStatus = await (async () => {
+          let received = false;
+          try {
+            const reply = await proxy.command({ type: "status" });
+            received = true;
+            const starts = parseObject(reply.starts, "diagnostic proxy starts");
+            if (typeof reply.armed !== "boolean") {
+              throw new Error("Invalid diagnostic proxy armed flag");
+            }
+
+            return { state: "returned", starts: parseInteger(Object.values(starts).map((value) => parseInteger(value)).reduce((sum, value) => sum + value, 0)),
+              identityStarts: parseInteger(starts["POST /sync/v1/identity"] ?? 0), hits: parseInteger(reply.hits), armed: reply.armed, sockets: parseInteger(reply.sockets) };
+          } catch (error) {
+            const code = error instanceof Error && "code" in error && typeof error.code === "string" &&
+              ["EPIPE", "ERR_IPC_CHANNEL_CLOSED", "ERR_IPC_DISCONNECTED"].includes(error.code) ? error.code : "unclassified";
+            return { state: received ? "invalid-status" : "ipc-unavailable", code };
+          }
+        })();
+        const diagnostic = "issue97-identity-response-mismatch-v1 " + JSON.stringify({ case: kind,
+          route: { status: route.status, historyReady: route.historyReady, fullyReconciled: route.fullyReconciled,
+            transferred: counter(route.transferred), confirmed: counter(route.confirmed), pending: counter(route.pending), blocked: counter(route.blocked),
+            lastError: route.lastError === null || allowedErrors.has(route.lastError) ? route.lastError : "other" },
+          client: counters(result.counters, ["requests", "requestBytes", "responseBytes"]),
+          receiverSample: { network: counters(receiverStatus.network, ["requests", "rejected", "requestBytes", "responseBytes", "activeRequests", "activeTransfers"]),
+            storage: counters(receiverStatus.storage, ["htmlOpens", "htmlBytes", "hashPasses", "bodyTransfers"]) },
+          proxyMessagesBeforeStatus: messageCounts, proxyStatusLater: proxyStatus });
+
+        // One line per mismatched case, at most 4096 bytes including the tag; nine cases cap tagged output at 36 KiB.
+        t.diagnostic(Buffer.byteLength(diagnostic) <= 4096 ? diagnostic : 'issue97-identity-response-mismatch-v1 {"truncated":true}');
+      }
+    } finally {
+      // The original sample stays authoritative even if diagnostic IPC or emission fails.
+      assert.equal(receiverRequests, 1, "redirects must not be followed");
+    }
     await faultProof(f.proxy);
     await f.source.store.retry(routeAuthorization(f.outbound));
-    assert.equal((await f.run()).routes[0].status, "confirmed");
+    const recovery = await f.run();
+    const recoveryStatus = recovery.routes[0].status;
+
+    try {
+      if (kind === "length" && recoveryStatus !== "confirmed") {
+        const route = recovery.routes[0];
+        const counter = (value: number) => Number.isSafeInteger(value) && value >= 0 ? value : null;
+        const allowedErrors = new Set(["local-acquisition-deadline", "request-deadline", "request-aborted", "pass-deadline", "verified-transport-failed",
+          "tls-verification-failed", "response-truncated", "response-limit", "invalid-response-envelope", "invalid-response-bytes", "unauthorized",
+          "peer-identity-conflict", "origin-scope-conflict", "local-validation-or-storage-failed", "session-expired", "trusted-history-unavailable"]);
+        const diagnostic = "issue97-recovery-result-v1 " + JSON.stringify({ case: "length", phase: "recovery-result-at-original-confirmation-assertion",
+          route: { status: ["pending", "blocked", "detached", "aborted"].includes(recoveryStatus) ? recoveryStatus : "other",
+            historyReady: route.historyReady, fullyReconciled: route.fullyReconciled,
+            transferred: counter(route.transferred), confirmed: counter(route.confirmed), pending: counter(route.pending), blocked: counter(route.blocked),
+            lastError: route.lastError === null || allowedErrors.has(route.lastError) ? route.lastError : "other" },
+          client: { requests: counter(recovery.counters.requests), requestBytes: counter(recovery.counters.requestBytes),
+            responseBytes: counter(recovery.counters.responseBytes) } });
+
+        // Reserve space for the TAP comment prefix and newline; reporter indentation is separate.
+        t.diagnostic(Buffer.byteLength(diagnostic) + 3 <= 4096 ? diagnostic : 'issue97-recovery-result-v1 {"truncated":true}');
+      }
+    } finally {
+      // Preserve the original recovery assertion even if diagnostic formatting or emission throws.
+      assert.equal(recoveryStatus, "confirmed");
+    }
+
     assert.equal((await f.receiver.store.listDocuments()).length, 1);
   });
 }
@@ -517,7 +601,7 @@ test("repeated actual holdings polls preserve blocked repair attempts and errors
   assert.equal((await f.run()).routes[0].status, "confirmed");
 });
 
-test("actual sender process killed after receipt persistence recovers retirement without retransmitting bytes", { timeout: 20_000 }, async (t) => {
+test("actual sender process killed after atomic acknowledgement recovers confirmation without retransmitting bytes", { timeout: 20_000 }, async (t) => {
   const f = await pair(t);
   await f.source.store.publish(input, "sender-crash");
   const original = await stateFor(f.source, "sender-crash");
@@ -526,12 +610,12 @@ test("actual sender process killed after receipt persistence recovers retirement
   const sending = runner.command({ type: "run", routeIds: [f.outbound.id] });
   const observed = Promise.allSettled([sending]);
   const fault = await runner.waitFor("fault");
-  assert.equal(fault.event, "receipt-before-retirement");
+  assert.equal(fault.event, "acknowledgements-committed");
   assert.equal(fault.hits, 1);
   assert.equal(runner.messages.filter((message) => message.type === "fault").length, 1);
   const durable = await diskLedger(f.source);
   const obligation = durable.outbox[outboxKey(f.outbound.id, 1, canonicalKey(original.originInboxId, original.originDocumentId))];
-  assert.equal(obligation.disposition, "pending");
+  assert.equal(obligation.disposition, "confirmed");
   assert.equal(Object.keys(durable.receipts).length, 1);
   const receiver = await f.receiver.store.snapshot();
   assert.equal(Object.keys(receiver.records).length, 1);

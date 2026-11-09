@@ -26,6 +26,7 @@ def main():
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--candidate', help='CommonJS module exporting validateHtml for exact-result parser comparison')
     parser.add_argument('--timeout', type=int, default=600)
+    parser.add_argument('--sync-trace', action='store_true', help='Bounded issue97 sync diagnostics; traced samples are performance-ineligible')
     args = parser.parse_args()
     try:
         counts = [int(n) for n in args.counts.split(',')]
@@ -35,12 +36,14 @@ def main():
 
     if not args.node:
         parser.error('node was not found; supply --node with an executable path')
+    if args.sync_trace and args.workload != 'sync':
+        parser.error('--sync-trace requires the sync workload')
     if args.candidate and args.workload not in ['baseline', 'parser']:
         parser.error('--candidate requires the parser or baseline workload')
     if len(set(counts)) != len(counts) or len(set(sizes)) != len(sizes):
         parser.error('counts and sizes must not contain duplicates')
-    if not counts or any(n not in [0, 100, 1000, 5000, 10000] for n in counts):
-        parser.error('counts must be drawn from 0,100,1000,5000,10000')
+    if not counts or any(n not in [0, 100, 1000, 5000, 10000] and not (args.workload == 'sync' and n == 129) for n in counts):
+        parser.error('counts must be drawn from 0,100,1000,5000,10000; sync also permits129' if args.workload == 'sync' else 'counts must be drawn from 0,100,1000,5000,10000')
     if any(n not in [10240, 1048576, 9437184] for n in sizes) or not 1 <= args.samples <= 100 or not 1 <= args.timeout <= 3600:
         parser.error('invalid sizes, samples or timeout')
     if not Path('/proc/self/io').exists() or not hasattr(os, 'wait4'):
@@ -87,6 +90,8 @@ def main():
                                    cpu_ms=(usage.ru_utime + usage.ru_stime) * 1000, peak_rss_kib=usage.ru_maxrss,
                                    input_blocks=usage.ru_inblock, output_blocks=usage.ru_oublock,
                                    stdout=output, stderr=errors)
+                        if args.sync_trace:
+                            row['performance_eligible'] = False
                         rows.append(row)
                         with (args.out / 'samples.jsonl').open('a') as stream:
                             stream.write(json.dumps(row) + '\n')
@@ -144,6 +149,8 @@ def main():
                             bundle_bytes=(REPO / 'packages/cli/bundle/index.js').stat().st_size,
                             limits={'timeout_seconds': args.timeout, 'concurrency': 1}, fixture_root=directory,
                             fingerprints=fingerprints, invocation=sys.argv)
+            if args.sync_trace:
+                metadata['diagnostics'] = {'prefix': 'issue97-sync-trace-v1', 'performance_eligible': False, 'max_lines_per_child': 256, 'max_bytes_per_child': 65536}
             (args.out / 'environment.json').write_text(json.dumps(metadata, indent=2))
             success = False
             try:
@@ -176,7 +183,10 @@ def main():
                             shutil.rmtree(destination)
                     for mode in ['viewer', 'worker', 'managed', 'sync']:
                         if args.workload in ['baseline', mode]:
-                            run(f'{mode}/{count}', helper + [mode, str(home if mode == 'viewer' else root / f'{mode}-{count}'), str(count), str(sizes[0]), str(args.samples)])
+                            command = helper + [mode, str(home if mode == 'viewer' else root / f'{mode}-{count}'), str(count), str(sizes[0]), str(args.samples)]
+                            if args.sync_trace:
+                                command.append('--sync-trace')
+                            run(f'{mode}/{count}', command)
                 if args.workload in ['baseline', 'parser']:
                     for size in sizes:
                         for shape in ['text', 'dense']:
@@ -198,7 +208,10 @@ def main():
                         except (ValueError, KeyError):
                             pass
                 summary = {label: dict(n=len(values), min_ms=min(values), median_ms=statistics.median(values), max_ms=max(values)) for label, values in groups.items()}
-                (args.out / 'summary.json').write_text(json.dumps(dict(success=success, groups=summary), indent=2))
+                result = dict(success=success, groups=summary)
+                if args.sync_trace:
+                    result['performance_eligible'] = False
+                (args.out / 'summary.json').write_text(json.dumps(result, indent=2))
     finally:
         (args.out / 'cleanup.json').write_text(json.dumps(dict(fixture_root_removed=root is None or not root.exists(), children_reaped=active is None)))
 

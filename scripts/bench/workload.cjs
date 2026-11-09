@@ -2,9 +2,70 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { performance } = require('node:perf_hooks');
+const { writeSync } = require('node:fs');
 const { setTimeout: delay } = require('node:timers/promises');
 const dist = path.resolve(__dirname, '../../packages/cli/dist');
 const load = name => require(path.join(dist, name));
+
+function createSyncTrace() {
+  const maxLines = 256;
+  const maxBytes = 64 * 1024;
+  const codes = new Set(['ERR_ASSERTION', 'EIO', 'ENOSPC', 'ENOENT', 'request-deadline', 'request-aborted',
+    'local-acquisition-deadline', 'pass-deadline', 'session-expired', 'transfer-expired', 'unauthorized',
+    'verified-transport-failed', 'tls-verification-failed', 'storage-unavailable', 'body-unavailable',
+    'local-validation-or-storage-failed', 'trusted-history-unavailable', 'peer-identity-conflict',
+    'receipt-binding-conflict', 'origin-scope-conflict', 'incomplete-history', 'challenge-conflict',
+    'session-capacity', 'request-capacity', 'transfer-capacity', 'invalid-response-envelope', 'response-truncated']);
+  let lines = 0;
+  let bytes = 0;
+  let stopped = false;
+  const code = value => value === null ? null : codes.has(value) ? value : 'unclassified-error';
+  const errorCode = error => {
+    try {
+      return code(Object.getOwnPropertyDescriptor(Object(error), 'code')?.value);
+    } catch {
+      return 'unclassified-error';
+    }
+  };
+  const number = value => Number.isFinite(value) ? value : null;
+  const emit = (phase, event, details = {}) => {
+    if (stopped) return;
+
+    try {
+      let line = JSON.stringify({ prefix: 'issue97-sync-trace-v1', monotonic_ms: performance.now(), phase, event, ...details }) + '\n';
+      if (lines >= maxLines - 1 || bytes + Buffer.byteLength(line) > maxBytes - 512) {
+        line = JSON.stringify({ prefix: 'issue97-sync-trace-v1', monotonic_ms: performance.now(), event: 'truncated', maxLines, maxBytes }) + '\n';
+        stopped = true;
+      }
+
+      const written = writeSync(2, line);
+      lines += 1;
+      bytes += written;
+      if (written !== Buffer.byteLength(line)) stopped = true;
+    } catch {
+      // Diagnostic output must never replace the operation's result or error.
+      stopped = true;
+    }
+  };
+  const phase = (name, operation, details = {}) => {
+    emit(name, 'start', details);
+    try {
+      const result = operation();
+      return Promise.resolve(result).then(value => {
+        emit(name, 'return', details);
+        return value;
+      }, error => {
+        emit(name, 'failure', { ...details, code: errorCode(error) });
+        throw error;
+      });
+    } catch (error) {
+      emit(name, 'failure', { ...details, code: errorCode(error) });
+      throw error;
+    }
+  };
+
+  return { emit, phase, code, errorCode, number };
+}
 
 function html(size, shape = 'text') {
   const head = '<!doctype html><html><head><title>Benchmark</title></head><body>';
@@ -32,24 +93,35 @@ async function seed(root, count, size) {
 
 async function main() {
   const [mode, root, countValue, sizeValue, samplesValue, shape = 'text', candidate] = process.argv.slice(2);
+  if (shape === '--sync-trace' && mode !== 'sync') throw new Error('--sync-trace requires sync mode');
+
+  const trace = mode === 'sync' && shape === '--sync-trace' ? createSyncTrace() : undefined;
+  const phase = trace ? trace.phase : (_name, operation) => operation();
   const count = Number(countValue), size = Number(sizeValue), samples = Number(samplesValue);
   const record = async (label, operation) => {
-    const ioBefore = await fs.readFile('/proc/self/io', 'utf8');
+    const ioBefore = await phase('record-io-before', () => fs.readFile('/proc/self/io', 'utf8'), { label });
     const cpu = process.cpuUsage();
     const start = performance.now();
-    const result = await operation();
+    const result = await phase('record-operation', operation, { label });
     const elapsed = performance.now() - start;
     const used = process.cpuUsage(cpu);
-    const ioAfter = await fs.readFile('/proc/self/io', 'utf8');
+    const ioAfter = await phase('record-io-after', () => fs.readFile('/proc/self/io', 'utf8'), { label });
     const ioValue = (text, key) => Number(text.match(new RegExp(`^${key}: (\\d+)$`, 'm'))?.[1] ?? 0);
     const io = Object.fromEntries(['rchar', 'wchar', 'read_bytes', 'write_bytes', 'cancelled_write_bytes'].map(key => [key, ioValue(ioAfter, key) - ioValue(ioBefore, key)]));
-    console.log(JSON.stringify({ label: ['viewer', 'worker'].includes(mode) ? `${label}/${count}` : label, io, wall_ms: elapsed, cpu_ms: (used.user + used.system) / 1000,
-      rss_bytes: process.memoryUsage().rss, ...result }));
+    trace?.emit('record-emission', 'start', { label });
+    try {
+      console.log(JSON.stringify({ label: ['viewer', 'worker'].includes(mode) ? `${label}/${count}` : label, io, wall_ms: elapsed, cpu_ms: (used.user + used.system) / 1000,
+        rss_bytes: process.memoryUsage().rss, ...result, ...(trace ? { diagnostic: 'issue97-sync-trace-v1', performanceEligible: false } : {}) }));
+      trace?.emit('record-emission', 'return', { label });
+    } catch (error) {
+      trace?.emit('record-emission', 'failure', { label, code: trace.errorCode(error) });
+      throw error;
+    }
   };
 
   if (mode === 'seed') return seed(root, count, size);
   if (mode === 'sync' || mode === 'managed') {
-    return require('./sync.cjs').runSync({ root, count, size, samples, record, mode });
+    return require('./sync.cjs').runSync({ root, count, size, samples, record, mode, trace });
   }
   if (mode === 'parser') {
     const baseline = load('html-validation.js').validateHtml;

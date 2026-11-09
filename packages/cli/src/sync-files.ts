@@ -8,7 +8,7 @@ import { parseObject, assertExactKeys, parseInteger, parseString } from "./sync-
 
 export type StorageEvent = "directory-created" | "directory-flushed" | "migration-intent" | "migration-evacuated" | "migration-barrier" | "migration-enumeration" |
   "body-staged" | "body-flushed" | "body-installed" | "body-directory-flushed" | "ledger-temp-written" | "ledger-temp-fsynced" | "ledger-renamed" | "ledger-dir-fsynced" |
-  "committed-before-receipt" | "receipt-before-retirement";
+  "committed-before-receipt" | "acknowledgements-committed";
 
 export interface StorageTestHooks {
   onEvent?: (event: StorageEvent) => void | Promise<void>;

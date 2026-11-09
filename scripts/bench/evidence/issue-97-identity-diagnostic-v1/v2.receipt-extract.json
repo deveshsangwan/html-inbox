@@ -1,0 +1,1114 @@
+{
+  "kind": "Compact extract of original receipt; full original remains unchanged at its hashed reference",
+  "original_references": {
+    "receipt.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/receipt.json",
+      "sha256": "21f8f09b1732bfb5fdf306788310280ef25c41366f298cd06d41d818338cf280",
+      "bytes": 1888858
+    },
+    "manifest.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/manifest.json",
+      "sha256": "c5d7eebe84a6d7b775a8c5d6233a165f4fd31a4aa8186edd4fe609e38a88069d",
+      "bytes": 698471
+    },
+    "execute-granted-sequence.py": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/execute-granted-sequence.py",
+      "sha256": "962b6db0c6a966ebc1f4d14a6c87f8e9746ac3c84449cc517255558617ba0217",
+      "bytes": 23843
+    },
+    "reused-execution.py": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/reused-execution.py",
+      "sha256": "87d98accb4a6f69308bd27221e8e53bfe65014fd155229fb02d0e04fbe4aee68",
+      "bytes": 33589
+    },
+    "expanded-commands.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/expanded-commands.json",
+      "sha256": "d00bdc36981ea6062d2a6ef175555a16abd0a7cd38cd5fadbb48663035f09aee",
+      "bytes": 16778
+    }
+  },
+  "grant_id": "root-97-identity-diagnostic-887e0c5-v2",
+  "manifest_head": "887e0c5daa0812097ee8028b177244827f8420df",
+  "production_source": "a3e087c3fc8bafdf3d604a1737bc9677ee5a0d2a",
+  "base": "b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad",
+  "target_source_sha256": "d30101e59453829dcb51024ac6746b8d421e5d8033b900dc9626c66a159ca95f",
+  "target_required_mode_octal": "0664",
+  "command_umask_recorded": "0002",
+  "application_deadline": 902842.207602679,
+  "cleanup_restoration_deadline": 902571.639957162,
+  "fixed_final_deadline": 902962.207602679,
+  "completed": true,
+  "first_unexpected": null,
+  "issues": [],
+  "unrun_commands": [],
+  "commands": [
+    {
+      "label": "node20-version",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--version"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "PATH": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin:/usr/local/bin:/usr/bin:/bin",
+        "LANG": "C.UTF-8",
+        "HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node20-version",
+        "USERPROFILE": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node20-version",
+        "TMPDIR": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node20-version",
+        "TMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node20-version",
+        "TEMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node20-version",
+        "XDG_CONFIG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node20-version",
+        "XDG_STATE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node20-version",
+        "XDG_DATA_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node20-version",
+        "XDG_CACHE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node20-version",
+        "HTML_INBOX_CATALOG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node20-version/catalog",
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      },
+      "fixture": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node20-version",
+      "started_monotonic": 902424.887791459,
+      "command_deadline": 902439.887791459,
+      "bound_seconds": 15,
+      "setup_seconds": null,
+      "exit": 0,
+      "identity": {
+        "pid": 3018307,
+        "start_ticks": 90242488,
+        "ppid": 3018295,
+        "group": 3018307,
+        "session": 3018307,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.0556379200424999,
+      "tap_original_sha256": "fa2f297fd185bb1c8acba036117f05240eaa1f42eeb8902e870982523ae06edf",
+      "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fixture_removed": true
+    },
+    {
+      "label": "node24-version",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--version"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "PATH": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin:/usr/local/bin:/usr/bin:/bin",
+        "LANG": "C.UTF-8",
+        "HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node24-version",
+        "USERPROFILE": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node24-version",
+        "TMPDIR": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node24-version",
+        "TMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node24-version",
+        "TEMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node24-version",
+        "XDG_CONFIG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node24-version",
+        "XDG_STATE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node24-version",
+        "XDG_DATA_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node24-version",
+        "XDG_CACHE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node24-version",
+        "HTML_INBOX_CATALOG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node24-version/catalog",
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      },
+      "fixture": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node24-version",
+      "started_monotonic": 902427.289557904,
+      "command_deadline": 902442.289557904,
+      "bound_seconds": 15,
+      "setup_seconds": null,
+      "exit": 0,
+      "identity": {
+        "pid": 3018319,
+        "start_ticks": 90242728,
+        "ppid": 3018295,
+        "group": 3018319,
+        "session": 3018319,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.07414160296320915,
+      "tap_original_sha256": "b7677d3ec37ee1897ba07dc2cfe8292fe421c9ac93396cca5bbece486d1a2a41",
+      "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fixture_removed": true
+    },
+    {
+      "label": "apply-reviewed-test-patch",
+      "command": [
+        "/usr/bin/git",
+        "apply",
+        "--whitespace=error",
+        "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-prepared-v1/identity-response-diagnostic.patch"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "PATH": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin:/usr/local/bin:/usr/bin:/bin",
+        "LANG": "C.UTF-8",
+        "HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "USERPROFILE": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "TMPDIR": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "TMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "TEMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "XDG_CONFIG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "XDG_STATE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "XDG_DATA_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "XDG_CACHE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-apply-reviewed-test-patch",
+        "HTML_INBOX_CATALOG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-apply-reviewed-test-patch/catalog",
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      },
+      "fixture": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-apply-reviewed-test-patch",
+      "started_monotonic": 902429.723582155,
+      "command_deadline": 902444.723582155,
+      "bound_seconds": 15,
+      "setup_seconds": null,
+      "exit": 0,
+      "identity": {
+        "pid": 3018330,
+        "start_ticks": 90242972,
+        "ppid": 3018295,
+        "group": 3018330,
+        "session": 3018330,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.054794002091512084,
+      "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fixture_removed": true
+    },
+    {
+      "label": "diagnostic-build",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/corepack/dist/pnpm.js",
+        "build"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "PATH": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin:/usr/local/bin:/usr/bin:/bin",
+        "LANG": "C.UTF-8",
+        "HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-diagnostic-build",
+        "USERPROFILE": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-diagnostic-build",
+        "TMPDIR": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-diagnostic-build",
+        "TMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-diagnostic-build",
+        "TEMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-diagnostic-build",
+        "XDG_CONFIG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-diagnostic-build",
+        "XDG_STATE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-diagnostic-build",
+        "XDG_DATA_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-diagnostic-build",
+        "XDG_CACHE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-diagnostic-build",
+        "HTML_INBOX_CATALOG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-diagnostic-build/catalog",
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      },
+      "fixture": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-diagnostic-build",
+      "started_monotonic": 902432.136724823,
+      "command_deadline": 902492.136724823,
+      "bound_seconds": 60,
+      "setup_seconds": null,
+      "exit": 0,
+      "identity": {
+        "pid": 3018341,
+        "start_ticks": 90243213,
+        "ppid": 3018295,
+        "group": 3018341,
+        "session": 3018341,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 1.919718976947479,
+      "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_original_sha256": "52aa23ae94ef591f86df0a1de48709f5620eaacea41124e19fa6f2c717b99e88",
+      "fixture_removed": true
+    },
+    {
+      "label": "identity-response-cases-node20",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter=tap",
+        "--test-name-pattern=^actual client rejects (accepted|redirect|compressed|json|utf8|extra|oversized|headers|length) identity response and leaves recoverable work$",
+        "packages/cli/dist/sync-protocol-faults.test.js"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "PATH": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin:/usr/local/bin:/usr/bin:/bin",
+        "LANG": "C.UTF-8",
+        "HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-identity-response-cases-node20",
+        "USERPROFILE": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-identity-response-cases-node20",
+        "TMPDIR": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-identity-response-cases-node20",
+        "TMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-identity-response-cases-node20",
+        "TEMP": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-identity-response-cases-node20",
+        "XDG_CONFIG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-identity-response-cases-node20",
+        "XDG_STATE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-identity-response-cases-node20",
+        "XDG_DATA_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-identity-response-cases-node20",
+        "XDG_CACHE_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-identity-response-cases-node20",
+        "HTML_INBOX_CATALOG_HOME": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-identity-response-cases-node20/catalog",
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      },
+      "fixture": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-identity-response-cases-node20",
+      "started_monotonic": 902436.707631241,
+      "command_deadline": 902646.707631241,
+      "bound_seconds": 210,
+      "setup_seconds": null,
+      "exit": 0,
+      "identity": {
+        "pid": 3018438,
+        "start_ticks": 90243670,
+        "ppid": 3018295,
+        "group": 3018438,
+        "session": 3018438,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 13.712775301071815,
+      "tap_original_sha256": "96f43491940a252aa69692b52d93594cab920cf07260e108a8eb30fbd1acdbc7",
+      "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "fixture_removed": true
+    }
+  ],
+  "focused_observation": {
+    "selected": [
+      {
+        "verdict": "ok",
+        "name": "actual client rejects accepted identity response and leaves recoverable work"
+      },
+      {
+        "verdict": "ok",
+        "name": "actual client rejects redirect identity response and leaves recoverable work"
+      },
+      {
+        "verdict": "ok",
+        "name": "actual client rejects compressed identity response and leaves recoverable work"
+      },
+      {
+        "verdict": "ok",
+        "name": "actual client rejects json identity response and leaves recoverable work"
+      },
+      {
+        "verdict": "ok",
+        "name": "actual client rejects utf8 identity response and leaves recoverable work"
+      },
+      {
+        "verdict": "ok",
+        "name": "actual client rejects extra identity response and leaves recoverable work"
+      },
+      {
+        "verdict": "ok",
+        "name": "actual client rejects oversized identity response and leaves recoverable work"
+      },
+      {
+        "verdict": "ok",
+        "name": "actual client rejects headers identity response and leaves recoverable work"
+      },
+      {
+        "verdict": "ok",
+        "name": "actual client rejects length identity response and leaves recoverable work"
+      }
+    ],
+    "tap_statistics": {
+      "tests": 31,
+      "pass": 9,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 22
+    },
+    "tagged_payload_count": 0,
+    "tagged_payload_bytes": [],
+    "diagnostic_failure_path_qualified": false,
+    "hosted_default_concurrency_failure_cleared": false
+  },
+  "original_target_restored": true,
+  "qualified393_restored": true,
+  "semantic_index_restored": true,
+  "recorded_child_identities": [
+    {
+      "pid": 3018307,
+      "start_ticks": 90242488,
+      "ppid": 3018295,
+      "group": 3018307,
+      "session": 3018307,
+      "state": "R",
+      "discovery": "node20-version",
+      "groups_seen": [
+        {
+          "group": 3018307,
+          "session": 3018307
+        }
+      ],
+      "latest_ppid": 3018295,
+      "latest_state": "Z"
+    },
+    {
+      "pid": 3018319,
+      "start_ticks": 90242728,
+      "ppid": 3018295,
+      "group": 3018319,
+      "session": 3018319,
+      "state": "R",
+      "discovery": "node24-version",
+      "groups_seen": [
+        {
+          "group": 3018319,
+          "session": 3018319
+        }
+      ],
+      "latest_ppid": 3018295,
+      "latest_state": "Z"
+    },
+    {
+      "pid": 3018330,
+      "start_ticks": 90242972,
+      "ppid": 3018295,
+      "group": 3018330,
+      "session": 3018330,
+      "state": "R",
+      "discovery": "apply-reviewed-test-patch",
+      "groups_seen": [
+        {
+          "group": 3018330,
+          "session": 3018330
+        }
+      ],
+      "latest_ppid": 3018295,
+      "latest_state": "Z"
+    },
+    {
+      "pid": 3018341,
+      "start_ticks": 90243213,
+      "ppid": 3018295,
+      "group": 3018341,
+      "session": 3018341,
+      "state": "R",
+      "discovery": "diagnostic-build",
+      "groups_seen": [
+        {
+          "group": 3018341,
+          "session": 3018341
+        }
+      ],
+      "latest_ppid": 3018295,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018353,
+      "start_ticks": 90243283,
+      "ppid": 3018341,
+      "group": 3018341,
+      "session": 3018341,
+      "state": "S",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018341,
+          "session": 3018341
+        }
+      ],
+      "latest_ppid": 3018341,
+      "latest_state": "S"
+    },
+    {
+      "pid": 3018354,
+      "start_ticks": 90243283,
+      "ppid": 3018353,
+      "group": 3018341,
+      "session": 3018341,
+      "state": "Z",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018341,
+          "session": 3018341
+        }
+      ],
+      "latest_ppid": 3018353,
+      "latest_state": "Z"
+    },
+    {
+      "pid": 3018361,
+      "start_ticks": 90243287,
+      "ppid": 3018353,
+      "group": 3018341,
+      "session": 3018341,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018341,
+          "session": 3018341
+        }
+      ],
+      "latest_ppid": 3018353,
+      "latest_state": "S"
+    },
+    {
+      "pid": 3018373,
+      "start_ticks": 90243337,
+      "ppid": 3018361,
+      "group": 3018341,
+      "session": 3018341,
+      "state": "S",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018341,
+          "session": 3018341
+        }
+      ],
+      "latest_ppid": 3018361,
+      "latest_state": "S"
+    },
+    {
+      "pid": 3018374,
+      "start_ticks": 90243337,
+      "ppid": 3018373,
+      "group": 3018341,
+      "session": 3018341,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018341,
+          "session": 3018341
+        }
+      ],
+      "latest_ppid": 3018373,
+      "latest_state": "S"
+    },
+    {
+      "pid": 3018438,
+      "start_ticks": 90243670,
+      "ppid": 3018295,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "identity-response-cases-node20",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018295,
+      "latest_state": "Z"
+    },
+    {
+      "pid": 3018444,
+      "start_ticks": 90243675,
+      "ppid": 3018438,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018438,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018465,
+      "start_ticks": 90243709,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "S"
+    },
+    {
+      "pid": 3018476,
+      "start_ticks": 90243725,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "S"
+    },
+    {
+      "pid": 3018497,
+      "start_ticks": 90243842,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018504,
+      "start_ticks": 90243862,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "S"
+    },
+    {
+      "pid": 3018515,
+      "start_ticks": 90243877,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018536,
+      "start_ticks": 90244008,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "S"
+    },
+    {
+      "pid": 3018547,
+      "start_ticks": 90244023,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "S"
+    },
+    {
+      "pid": 3018563,
+      "start_ticks": 90244126,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018565,
+      "start_ticks": 90244129,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018568,
+      "start_ticks": 90244141,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "Z"
+    },
+    {
+      "pid": 3018579,
+      "start_ticks": 90244156,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "S"
+    },
+    {
+      "pid": 3018598,
+      "start_ticks": 90244267,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018601,
+      "start_ticks": 90244279,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "S"
+    },
+    {
+      "pid": 3018612,
+      "start_ticks": 90244295,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "S"
+    },
+    {
+      "pid": 3018633,
+      "start_ticks": 90244414,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018644,
+      "start_ticks": 90244430,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "S"
+    },
+    {
+      "pid": 3018660,
+      "start_ticks": 90244557,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018662,
+      "start_ticks": 90244560,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018665,
+      "start_ticks": 90244574,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018676,
+      "start_ticks": 90244590,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "S"
+    },
+    {
+      "pid": 3018695,
+      "start_ticks": 90244711,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018698,
+      "start_ticks": 90244725,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018709,
+      "start_ticks": 90244741,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "S"
+    },
+    {
+      "pid": 3018725,
+      "start_ticks": 90244865,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018727,
+      "start_ticks": 90244868,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018730,
+      "start_ticks": 90244882,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "R"
+    },
+    {
+      "pid": 3018741,
+      "start_ticks": 90244905,
+      "ppid": 3018444,
+      "group": 3018438,
+      "session": 3018438,
+      "state": "R",
+      "discovery": "controller-descendant",
+      "groups_seen": [
+        {
+          "group": 3018438,
+          "session": 3018438
+        }
+      ],
+      "latest_ppid": 3018444,
+      "latest_state": "S"
+    }
+  ],
+  "controller_identity": {
+    "pid": 3018295,
+    "start_ticks": 90242216,
+    "ppid": 3018290,
+    "group": 3018295,
+    "session": 3018295,
+    "state": "R"
+  },
+  "raw_index_sha256": {
+    "raw-index-before.bin": "233b200d49adfcd5c3d5339fc3c6bd41dd2a3fe42e21209688aabc320bb669b6",
+    "raw-index-after.bin": "233b200d49adfcd5c3d5339fc3c6bd41dd2a3fe42e21209688aabc320bb669b6"
+  },
+  "raw_index_limit": "Only observed hashes; no general byte restoration/equality or cause claim",
+  "planned_command_specs": {
+    "node20-version": {
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--version"
+      ],
+      "bound_seconds": 15,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      }
+    },
+    "node24-version": {
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--version"
+      ],
+      "bound_seconds": 15,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      }
+    },
+    "apply-reviewed-test-patch": {
+      "command": [
+        "/usr/bin/git",
+        "apply",
+        "--whitespace=error",
+        "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-prepared-v1/identity-response-diagnostic.patch"
+      ],
+      "bound_seconds": 15,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      }
+    },
+    "diagnostic-build": {
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/corepack/dist/pnpm.js",
+        "build"
+      ],
+      "bound_seconds": 60,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      }
+    },
+    "identity-response-cases-node20": {
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter=tap",
+        "--test-name-pattern=^actual client rejects (accepted|redirect|compressed|json|utf8|extra|oversized|headers|length) identity response and leaves recoverable work$",
+        "packages/cli/dist/sync-protocol-faults.test.js"
+      ],
+      "bound_seconds": 210,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "environment": {
+        "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+        "COREPACK_ENABLE_NETWORK": "0",
+        "COREPACK_ENABLE_AUTO_PIN": "0",
+        "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+        "npm_config_registry": "https://registry.npmjs.org",
+        "npm_config_update_notifier": "false",
+        "TZ": "UTC"
+      }
+    }
+  },
+  "baseline_generated_sha256_anchor": {
+    "receipt": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-correctness-ddc9f62-attempt2/receipt.json",
+    "sha256": "97ab80a0364c85ba45a65e081ecb4b058cdf2e5697785e49ac2026a0508ca95a"
+  },
+  "diagnostic_generated_only_difference": "packages/cli/dist/sync-protocol-faults.test.js",
+  "diagnostic_testJS_sha256": "0810789ae611b87a2b7571947a483539313dcc0868ea1b568d66f8bdcaa7409e",
+  "excluded_field": "commands.fixture_entries_before_removal omitted; no fixture content/listing is published in this extract."
+}
