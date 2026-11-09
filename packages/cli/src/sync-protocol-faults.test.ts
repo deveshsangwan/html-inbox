@@ -354,7 +354,32 @@ for (const kind of ["accepted", "redirect", "compressed", "json", "utf8", "extra
     }
     await faultProof(f.proxy);
     await f.source.store.retry(routeAuthorization(f.outbound));
-    assert.equal((await f.run()).routes[0].status, "confirmed");
+    const recovery = await f.run();
+    const recoveryStatus = recovery.routes[0].status;
+
+    try {
+      if (kind === "length" && recoveryStatus !== "confirmed") {
+        const route = recovery.routes[0];
+        const counter = (value: number) => Number.isSafeInteger(value) && value >= 0 ? value : null;
+        const allowedErrors = new Set(["local-acquisition-deadline", "request-deadline", "request-aborted", "pass-deadline", "verified-transport-failed",
+          "tls-verification-failed", "response-truncated", "response-limit", "invalid-response-envelope", "invalid-response-bytes", "unauthorized",
+          "peer-identity-conflict", "origin-scope-conflict", "local-validation-or-storage-failed", "session-expired", "trusted-history-unavailable"]);
+        const diagnostic = "issue97-recovery-result-v1 " + JSON.stringify({ case: "length", phase: "recovery-result-at-original-confirmation-assertion",
+          route: { status: ["pending", "blocked", "detached", "aborted"].includes(recoveryStatus) ? recoveryStatus : "other",
+            historyReady: route.historyReady, fullyReconciled: route.fullyReconciled,
+            transferred: counter(route.transferred), confirmed: counter(route.confirmed), pending: counter(route.pending), blocked: counter(route.blocked),
+            lastError: route.lastError === null || allowedErrors.has(route.lastError) ? route.lastError : "other" },
+          client: { requests: counter(recovery.counters.requests), requestBytes: counter(recovery.counters.requestBytes),
+            responseBytes: counter(recovery.counters.responseBytes) } });
+
+        // Reserve space for the TAP comment prefix and newline; reporter indentation is separate.
+        t.diagnostic(Buffer.byteLength(diagnostic) + 3 <= 4096 ? diagnostic : 'issue97-recovery-result-v1 {"truncated":true}');
+      }
+    } finally {
+      // Preserve the original recovery assertion even if diagnostic formatting or emission throws.
+      assert.equal(recoveryStatus, "confirmed");
+    }
+
     assert.equal((await f.receiver.store.listDocuments()).length, 1);
   });
 }

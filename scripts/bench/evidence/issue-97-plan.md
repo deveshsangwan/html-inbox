@@ -4,6 +4,25 @@ Related to [issue97](https://github.com/deveshsangwan/html-inbox/issues/97) and 
 
 ## Current status
 
+Both renewed independent reviews are complete and root-accepted for their documented scopes at 7c427ce, including the explicit Sonnet historical-body reading exception. Sol High and Sonnet Medium each passed functionality, code quality and scoped validation/performance. The earlier incomplete reports remain historical; no additional review round is pending.
+
+The b249 repeated measurements, original610 comparison and 129 controls remain accepted with their reported costs and limits. The later c8 documentation clarifies event-count-asymmetric stat observations and timed verification overhead; neither timing direction nor the separate benefit of mutating multi-receipt batches was isolated.
+
+Current readiness is held by the [c8 recovery CI failure](issue-97-recovery-c8.md). One unchanged-source local focused case and one full default-concurrency shard passed, which is nonreproduction only. The new failure-only recovery diagnostic observes the already-returned value without changing assertions, deadlines or production. Its compiler-only noEmit check passed; new-head normal CI is pending. Both original hosted failure and historical 887/e017 causes remain unresolved.
+
+The new protocol diagnostic source hash is 299e71c7f3672fed316b39c4e8dea8560b242cb10f18bcd211cc550a82a5540d. Fatal diagnostic source remains 1fa6bb902f7d32ac0edf4f15ebd6f3286ae34fff92a1324e85d5718fc629ad99; production remains a3e. All 393 qualified outputs are restored and unchanged. The two diagnostic test JS files remain stale against current TS; the other 391 files retain their accepted bytes. Original rebuilt reproduction bytes are retained separately. The new recovery diagnostic has no local test-run or failure-branch qualification.
+
+Remaining work is to inspect normal CI events, resolve any evidenced failure without weakening its oracle, and make the final scoped readiness decision. Keep draft and the existing watch. LOCAL is free; previous grants are consumed. No merge, release or issue closure is authorized by these results.
+
+<details>
+<summary>Historical plan before the recovery diagnostic publication, retained verbatim</summary>
+
+# Issue97 qualification status and remaining plan
+
+Related to [issue97](https://github.com/deveshsangwan/html-inbox/issues/97) and [draft PR124](https://github.com/deveshsangwan/html-inbox/pull/124).
+
+## Current status
+
 Root accepts [untraced v2 immediate-b249 practical benefit and controls](issue-97-untraced-v2/README.md) at measured e0171fc548d449eb1de1e76975155fb699449d79, production a3e087c3fc8bafdf3d604a1737bc9677ee5a0d2a. Three paired samples per exact20.20.2/24.19.0 reduce source noop100 logical ledger replacements53,632,600 to792,609 bytes and203 to3 commits, with repeatable noop/repair latency gains. All16 invocations/28 outer/156 operation rows and36 peer pair controls completed. Both-role/both-runtime129 controls completed; one pair each, behavior/control only. Initial/empty-library latency gains remain unproven. All raw pairs/spreads, costs and original operational limits are preserved in the linked report/archive/root decision.
 
 Root also accepts the bounded [actual original610 comparison](issue-97-combined610-v1/README.md) at tested clean a5d99a0fb587db4bbaae12d874ed14a615b25390. One actual610/candidate pair per exact runtime completed all six commands, four invocations,8 outer rows,44 operations and10 matched wire/body/transfer controls. Source noop100 replacement bytes53,634,224 ->792,624 and203 ->3 commits on both runtimes. All422 operation and20 outer metric pairs agree exactly between owner and root. Actual610 n1 remains separate from b249 n3; no repeated610 spread or pooled claim.
@@ -33,3 +52,5 @@ Root accepts completed logical/control comparison and the scoped original610 gat
 3. Root's final scoped readiness/integration decision after CI and review dispositions. No merge or release authority.
 
 Keep draft. The exact read-only review dispatch above is authorized separately from LOCAL; no further local compiler/build/test/application/benchmark follows. Existing R1/R2, both120 failures, traced samples, raw-index metadata distinctions, V1/V2 identity histories and root data-reader corrections remain immutable in their historical reports.
+
+</details>
