@@ -1,0 +1,37 @@
+{
+  "state": "EXACT_SOURCE_APPROVED_FOR_COHERENT_EVIDENCE_AND_DIAGNOSTIC_PUBLICATION",
+  "timestamp_utc": "2026-11-09T12:41:31.582510+00:00",
+  "tested_head": "e0171fc548d449eb1de1e76975155fb699449d79",
+  "target": "packages/cli/src/sync-worker-fatal.test.ts",
+  "target_original_sha256": "66990e0ed5a2f9e1459085cf7f40250da162d6c23db1f758d897789a24f6fd2f",
+  "candidate_sha256": "1fa6bb902f7d32ac0edf4f15ebd6f3286ae34fff92a1324e85d5718fc629ad99",
+  "patch_sha256": "a35fe4d074364b0ab4296b7c78a379922060bc976500bf284d816bb43c519fbb",
+  "owner_source_receipt_sha256": "792a2b74a64ee86c0384691c46bdc779f00dee0ea88f2f694f002bf0672012cb",
+  "owner_source_audit_sha256": "7e16f28264a6732dd5342db1c7f8c6b6dab0580228fab5c5dc912997e62b7119",
+  "root_typecheck_result": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks/artifacts/issue97-startup-lstat-root-typecheck-v1/result.json",
+  "root_typecheck_sha256": "1be0392459b5e9751d2e3c998fb2ca60c2448a8e96703c00faf475a7e5d10d3b",
+  "reviewed_source_basis": [
+    "Read complete patch/owner review and complete modified test region against existing original source; only default fs import and selected fatal startup block change.",
+    "Pinned readManagedLedgerBytes pre-open checked nlink guard and replacement-lstat branches inspected; existing reader observes shared native fs.promises property. No callsite/native cause is inferred from returned metadata alone.",
+    "Node fs/promises lstat overloads and current module node16/ES2022 strict config inspected. Proposed source passed pinned Rust compiler noEmit on full197 source inputs.",
+    "Strict compiled ordinary nonasync wrapper invokes original lstat once before its observation try with same this/arguments; returns same Promise/value and original synchronous throws. Last8 fulfilled metadata records only; no extra filesystem lookup, await/retry/poll/timer.",
+    "Own saved descriptor restored after original await and before diagnostic/later assertions. Original startup rejection is rethrown unchanged through new synchronous restore/format/write exceptions; successful startup with failed restore remains instrumentation failure. Existing outer cleanup retains its original possibility of throwing.",
+    "Observation branch is contained; rejection-handledness/microtask scheduling and synchronous metadata work change. No performance claims or generic transparency."
+  ],
+  "limits": [
+    "No actual mismatch/error/cap/restoration/observer-failure branch runtime qualification; no confirmed reproduction at hosted24.22.2.",
+    "Data records are completion order, no internal reader callsite labels; last8 may omit older records and early disabling may omit late reactions. Zero/absent samples do not exonerate reader or identify guard sample.",
+    "Synchronous stderr write exceptions are contained; asynchronous stream/native failures or failure to flush are not thereby qualified or guaranteed. No output means inconclusive.",
+    "Native file metadata is bounded decimal strings, not contents/paths/credentials. No relaxed nlink/permissions/identity/size guard or changed10s test/readiness limit.",
+    "Current diagnostic protocol testJS was stale already; after this new source-only publication fatal testJS is also stale locally. The other391 production/helper/bundle outputs remain invariant. Normal CI rebuild must qualify new test source.",
+    "Current e017 failure and earlier histories stay immutable and unresolved; normal diagnostic-source CI is new-head evidence, never retrospective cause/flake/base/retry clearance."
+  ],
+  "authorized_next_action": {
+    "publication": "Existing owner may now apply exact approved candidate bytes/mode0664 to the one test and publish ONE coherent commit with staged accepted measurements/report/plan and selected safe raw data/root decisions. Update PR/issue CURRENT STATUS; retain unabridged historical records and backlinks, draft, immediate next-tool PR124 link after push. Keep measured e017 separate from new publication head.",
+    "validation": "Root compiler-only check passed; owner static hash/Git/diff/packaging validations permitted. No further local build/test/version/application/benchmark/reviewer authorized by this publication decision.",
+    "measurement_invariance": "All production/harness/controller/engine and measured393 bytes remain unchanged. Verify exact197source diff limited this one diagnostic TS plus approved docs/evidence; old consumed manifests/grants unchanged.",
+    "610": "Continue previously authorized read-only minimal610 assessment; no runtime or fresh adapter from this source approval.",
+    "monitoring": "Existing owner CI watch, no duplicate registration or retry; current CI gate stays unresolved pending actual new-head evidence.",
+    "reviews": "No new reviewer until final measured/source freeze and610/CI scope is settled. No merge/release/readiness conversion."
+  }
+}

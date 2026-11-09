@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import http from "node:http";
-import { lstat, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import fs, { lstat, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import platformTest, { type TestContext } from "node:test";
@@ -438,8 +438,69 @@ test("actual detached worker captures the sanitized fatal diagnostic in its priv
   const ledgerPath = path.join(f.home, "sync", "ledger.json");
   let saved: Buffer | undefined;
   let closed = false;
+  const originalLstat = fs.lstat;
+  const lstatDescriptor = Object.getOwnPropertyDescriptors(fs).lstat;
+  const samples: ReturnType<typeof metadata>[] = [];
+  let returned = 0;
+  let observerFailed = false;
+  let observingStartup = true;
+
+  function decimal(value: bigint | number) {
+    return typeof value === "bigint" && value >= 0n && value <= 18_446_744_073_709_551_615n ? value.toString() : null;
+  }
+
+  function metadata(info: Awaited<ReturnType<typeof originalLstat>>) {
+    return { sequence: returned, nlink: decimal(info.nlink), mode: decimal(info.mode), uid: decimal(info.uid),
+      dev: decimal(info.dev), ino: decimal(info.ino), size: decimal(info.size), isFile: info.isFile() };
+  }
+
+  function observeLstat(this: typeof fs, ...args: Parameters<typeof originalLstat>) {
+    const result = originalLstat.apply(this, args);
+    try {
+      if (observingStartup && args[0] === ledgerPath && args[1]?.bigint === true) {
+        void result.then((info) => {
+          if (!observingStartup) return;
+
+          try {
+            returned = Math.min(returned + 1, Number.MAX_SAFE_INTEGER);
+            samples.push(metadata(info));
+            if (samples.length > 8) samples.shift();
+          } catch { observerFailed = true; }
+        }, () => { if (observingStartup) observerFailed = true; });
+      }
+    } catch { observerFailed = true; }
+
+    return result;
+  }
+
   try {
-    await ensureOwnedSyncWorker(f.home, { entryPath: path.join(__dirname, "index.js") });
+    Object.defineProperty(fs, "lstat", { ...lstatDescriptor, value: observeLstat });
+    let startupThrew = false;
+    try {
+      await ensureOwnedSyncWorker(f.home, { entryPath: path.join(__dirname, "index.js") });
+    } catch (error) {
+      startupThrew = true;
+      throw error;
+    } finally {
+      observingStartup = false;
+      let restored = false;
+      try {
+        Object.defineProperty(fs, "lstat", lstatDescriptor);
+        restored = true;
+      } catch (error) {
+        if (!startupThrew) throw error;
+      }
+
+      if (startupThrew) {
+        try {
+          const prefix = "issue97-startup-lstat-v1 ";
+          const payload = { event: "startup-threw", capture: observerFailed ? "incomplete" : "observed",
+            restoration: restored ? "restored" : "failed", returned, samples };
+          const line = `${prefix}${JSON.stringify(payload)}\n`;
+          process.stderr.write(Buffer.byteLength(line) <= 4096 ? line : `${prefix}{"event":"startup-threw","capture":"truncated"}\n`);
+        } catch { /* Diagnostic failure must not replace the original startup error. */ }
+      }
+    }
     assert.ok(retained && completion);
     void completion.then(() => { closed = true; });
     const record = await readWorkerRecordOffline(f.home);
