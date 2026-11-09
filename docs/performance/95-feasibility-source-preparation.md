@@ -298,28 +298,42 @@ preparation rechecks that read-only parent and copies exactly those 390 files to
 a private ignored prepared input directory. There is no parent source, output,
 ref or index mutation, build, install or dependency copy.
 
-A versioned adaptation of controller66f may bind one actual610 parent case on
-exact Node20.20.2, count1000/outbound/65000. Only main/bootstrap orchestration and
-the exact setup-marker predicate change; process tracking, command admission,
-curated environment, subreaping, remaining-budget signals and joining retain the
-existing code. The marker must equal count1000/outbound, with setup90 unchanged.
-Three existing Git admission commands and exact Node20 --version each have a
-five-second cap, followed by one 240-second workload. Admission30/application270
-and fixed start-plus-330 final include bootstrap/hash/setup/audit time; no clock
-or grace resets. Original request5/pass60/reconcile30, idle65/two passes,
-reaction30/custody-repair65 and all strict workload controls remain.
+The separately granted one-parent diagnostic ran once at tested
+`7f7eed075d703d25e02403534455642601a2d546`. Four Git/runtime admissions exited0;
+the actual610/Node20/count1000/outbound case exited1 at the original strict
+receiver-count assertion before setup/idle. Exactly one611-byte safe payload
+captured source1000/receiver0, blocked local retry and1000 blocked outbox entries
+with local-validation-or-storage-failed. That code is a category; the underlying
+exception remains unknown. No setup/case/application timeout occurred. See the
+[immutable diagnostic receipt](95-caught-up-count-results.md).
 
-Prepared hashes, full diff, expanded argv/environment/cwd and input maps remain
-ignored review inputs. No executable grant or launch is created. A future launch
-must match the reviewed clean source, controller, manifest, input and environment
-pins plus a separately supplied matching grant ID and fresh absent output roots.
-There is no Node24 command, compiler/test/reader/matrix invocation, classifier
-bypass, parent resource continuation, candidate or follow-on case. Runtime and
-replay require a separate root decision; LOCAL stays released.
+The exact setup marker's successful admission remains unexercised. Idle,
+reactions, custody/repair, fencing and held-read controls were unreached. Second
+worker bookkeeping completion followed stopping; settle/counters prove neither
+native request admission nor successful synchronization. All timings/resources
+from this diagnostic remain gain-ineligible. Its fields do not retrospectively
+classify the older feasibility5 stop.
 
-The c4b Ubuntu20 history admission-seam failure remains separate: its four-second
-wait failed before explicit close or retained-authority assertions. The original
-client counters1/55/0 are not observer counters or receiver/native-cause proof.
-Verify adds only the aggregate gate. No shared cause, baseline or scheduler
-exoneration is inferred. Current and prior CI failures, public raw-artifact,
+LOCAL was released and root accepted independent identity/group/path checks and
+owner port evidence. Prepared390 bytes/types and867 frozen hashes remained
+unchanged. The recorded115.029470-second owner audit delay is inside the fixed
+start-plus330 final, not physical cleanup duration or a finish-plus60 deadline.
+All executed controller/manifest/source copies and raw records remain immutable.
+No matrix continuation, source fix, replay or runtime grant follows publication.
+
+Root now authorizes only one ignored observer source proposal confined to
+`scheduler-process.cjs`. It may observe the first original worker classification
+returning blocked/local-validation-or-storage-failed through the existing pinned
+sync-failure export. The wrapper must call the original exactly once with the
+same this/arguments, return the identical result and preserve throws. Any bounded,
+redacted diagnostic failure must not change classification. No production,
+assertion, workload, controller, manifest, fixture or timing change is authorized.
+No extra await/RPC/snapshot/request/timer/poll/ticket/barrier/retry/pass is allowed.
+A possible future single actual610/Node20/count1000/outbound request is data-only;
+source application, binding and execution require separate root decisions.
+
+The7f Ubuntu24 outer post-child EADDRINUSE36379 and aggregate Verify remain
+separate red readiness gates; child0 does not establish parent cleanup. The prior
+c4b history admission-seam failure and other CI histories remain unchanged. No
+shared cause, baseline, scheduler exoneration or retry is inferred. Public raw,
 high-count, repeated-pair, full-behavior and independent-review gates remain open.

@@ -1,0 +1,323 @@
+{
+  "outcome": "FAILED_DIAGNOSTIC_ONLY",
+  "tested_head": "7f7eed075d703d25e02403534455642601a2d546",
+  "publication": "Documentation-only descendant; tested7f remains separate.",
+  "actual_parent": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+  "production_equivalent_to": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+  "grant_id": "root-95-caught-up-count-7f7eed0-20261109-r1",
+  "controller_sha256": "62a16b74b266ed965160266c0685cbc555ffac2e5e848ecf85d61a1c88e69d1e",
+  "manifest_sha256": "6ca926dd8cb751c686dae3dceb11ec6f2c924db96f0ca6710927c0b840da6b65",
+  "command_argv": [
+    "/usr/bin/python3.13",
+    "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/controller-caught-up-count-v1.py",
+    "--manifest",
+    "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/manifest-caught-up-count-v1.json",
+    "--manifest-sha256",
+    "6ca926dd8cb751c686dae3dceb11ec6f2c924db96f0ca6710927c0b840da6b65",
+    "--grant-id",
+    "root-95-caught-up-count-7f7eed0-20261109-r1"
+  ],
+  "commands": [
+    {
+      "label": "pin",
+      "exit": 0,
+      "terminated_exit": 0,
+      "bound_seconds": 5,
+      "elapsed_seconds": 0.05403677001595497,
+      "setup_seconds": null,
+      "error": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "status",
+      "exit": 0,
+      "terminated_exit": 0,
+      "bound_seconds": 5,
+      "elapsed_seconds": 0.057920344988815486,
+      "setup_seconds": null,
+      "error": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "production-frozen",
+      "exit": 0,
+      "terminated_exit": 0,
+      "bound_seconds": 5,
+      "elapsed_seconds": 0.07773842790629715,
+      "setup_seconds": null,
+      "error": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "node-20.20.2",
+      "exit": 0,
+      "terminated_exit": 0,
+      "bound_seconds": 5,
+      "elapsed_seconds": 0.05642969801556319,
+      "setup_seconds": null,
+      "error": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "workload",
+      "exit": 1,
+      "terminated_exit": 1,
+      "bound_seconds": 240,
+      "elapsed_seconds": 68.47926236700732,
+      "setup_seconds": null,
+      "error": null,
+      "group_joined": true,
+      "fixture_removed": true
+    }
+  ],
+  "controller_exit": 1,
+  "controller_elapsed_seconds": 69.56388032797258,
+  "budgets_seconds": {
+    "admission": 30,
+    "application": 270,
+    "fixed_final_from_start": 330,
+    "workload": 240,
+    "setup": 90,
+    "idle": 65,
+    "request": 5,
+    "pass": 60,
+    "reconcile": 30,
+    "reaction": 30,
+    "custody_repair": 65
+  },
+  "first_failure": {
+    "type": "AssertionError",
+    "code": "ERR_ASSERTION",
+    "actual": 0,
+    "expected": 1000,
+    "assertion": "original strict receiverCount equality in finally",
+    "source": "scripts/bench/scheduler-workload.cjs:229:16",
+    "caller": "scripts/bench/scheduler-workload.cjs:247:5",
+    "setup_case_application_timeout_observed": false
+  },
+  "safe_mismatch_payload": {
+    "type": "caught-up-count-mismatch",
+    "expectedCount": 1000,
+    "sourceCount": 1000,
+    "receiverCount": 0,
+    "sourceRoute": {
+      "present": true,
+      "state": "reconnecting",
+      "lastError": "local-validation-or-storage-failed"
+    },
+    "receiverRoute": {
+      "present": true,
+      "state": "reconnecting",
+      "lastError": null
+    },
+    "localWorker": {
+      "enabled": true,
+      "retryPaused": false,
+      "ownerQuarantined": false,
+      "bootSupervised": false,
+      "lastError": null
+    },
+    "localRetry": {
+      "present": true,
+      "attempts": 1,
+      "blocked": true,
+      "hasDeadline": true,
+      "lastError": "local-validation-or-storage-failed"
+    },
+    "localOutbox": {
+      "pending": 0,
+      "confirmed": 0,
+      "blocked": 1000,
+      "retired": 0
+    },
+    "receiverCommittedReceipts": 0
+  },
+  "safe_mismatch_line": "{\"type\":\"caught-up-count-mismatch\",\"expectedCount\":1000,\"sourceCount\":1000,\"receiverCount\":0,\"sourceRoute\":{\"present\":true,\"state\":\"reconnecting\",\"lastError\":\"local-validation-or-storage-failed\"},\"receiverRoute\":{\"present\":true,\"state\":\"reconnecting\",\"lastError\":null},\"localWorker\":{\"enabled\":true,\"retryPaused\":false,\"ownerQuarantined\":false,\"bootSupervised\":false,\"lastError\":null},\"localRetry\":{\"present\":true,\"attempts\":1,\"blocked\":true,\"hasDeadline\":true,\"lastError\":\"local-validation-or-storage-failed\"},\"localOutbox\":{\"pending\":0,\"confirmed\":0,\"blocked\":1000,\"retired\":0},\"receiverCommittedReceipts\":0}\n",
+  "safe_mismatch_line_bytes_including_lf": 611,
+  "safe_mismatch_line_sha256": "437d97b3b6fb81b395917eb2faab8fb5653dc847073677683e7aebc5f424f540",
+  "safe_mismatch_count": 1,
+  "reached": [
+    "source1000 and receiver snapshots",
+    "peer/worker readiness",
+    "initial worker bookkeeping and existing settle observation",
+    "one safe mismatch event and strict original receiver-count assertion",
+    "original teardown"
+  ],
+  "event_order": [
+    {
+      "index": 146,
+      "type": "pass-finished",
+      "event": null,
+      "completedPasses": 1
+    },
+    {
+      "index": 148,
+      "type": "worker-event",
+      "event": "pass",
+      "completedPasses": null
+    },
+    {
+      "index": 150,
+      "type": "initial-catch-up-settled",
+      "event": null,
+      "completedPasses": 1
+    },
+    {
+      "index": 151,
+      "type": "caught-up-count-mismatch",
+      "event": null,
+      "completedPasses": null
+    },
+    {
+      "index": 152,
+      "type": "stopping",
+      "event": null,
+      "completedPasses": null
+    },
+    {
+      "index": 153,
+      "type": "pass-finished",
+      "event": null,
+      "completedPasses": 2
+    },
+    {
+      "index": 154,
+      "type": "worker-event",
+      "event": "closed",
+      "completedPasses": null
+    },
+    {
+      "index": 156,
+      "type": "stopping",
+      "event": null,
+      "completedPasses": null
+    },
+    {
+      "index": 158,
+      "type": "cleanup",
+      "event": null,
+      "completedPasses": null
+    },
+    {
+      "index": 159,
+      "type": "workload-failed",
+      "event": null,
+      "completedPasses": null
+    }
+  ],
+  "unreached": [
+    "caught-up assertion completion and setup-complete marker",
+    "idle start/stop and 65-second/two-periodic-pass qualification",
+    "explicit wake, clock and retry reaction controls",
+    "external-commit custody",
+    "lost-body repair",
+    "stale-route fencing",
+    "held-read admission and shutdown join control"
+  ],
+  "counter_limits": [
+    "completedPasses follows fulfilled recordWorkerRun bookkeeping, not successful reconciliation.",
+    "requests increments before original SyncClient.json; identity invocation does not prove native HTTP dispatch or receiver admission.",
+    "Second worker pass event precedes settle; second bookkeeping completion follows stopping.",
+    "Parent/worker monotonic origins differ."
+  ],
+  "cause": "unknown; persisted blocked/local-validation-or-storage-failed is a category, not the original exception",
+  "release": {
+    "root": {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-caught-up-count-7f7eed0-root-release.json",
+      "sha256": "6bd0e24f8f2884b73bff4ca5fa25a5684b53a2e5017da7af06d9ddf21c041b4d",
+      "already_accepted": true,
+      "no_new_binds_signals_deletions": true
+    },
+    "owner": {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-caught-up-count-probe-1/independent-cleanup.json",
+      "sha256": "73fd1b059d786c883a0ed4a6752850019ff42fae2b95726e9a8fb309341475b7"
+    },
+    "recorded_identities": 9,
+    "groups": 6,
+    "observed_group_session_pairs": 6,
+    "owned_paths": 11,
+    "recorded_timed_ports_rebound": 2,
+    "unreadable_proc_entries": 0,
+    "frozen_hash_checks": 867,
+    "prepared_flat_regular_single_link_mode0400_files": 390,
+    "input_root_mode": "0700",
+    "dist_mode": "0500",
+    "parent_source_index_ref_output_unchanged": true,
+    "owner_audit_after_controller_seconds": 115.0294696240453,
+    "fixed_final_from_start_seconds": 330,
+    "no_finish_plus60_reset": true,
+    "release_preceded_classification": true,
+    "root_did_not_repeat_binds_signals_or_deletions": true,
+    "sampling_limit": "Only recorded identities/groups/ports checked; unseen short-lived processes have no invented PID/start/session. No generic unused-path guarantee."
+  },
+  "evidence": [
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-caught-up-count-probe-1/receipt.json",
+      "sha256": "30254ad7d517739dcc0114d2121c172becdbb734f246e85ac8737c2da5313c60",
+      "bytes": 283930
+    },
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-caught-up-count-probe-1/workload.jsonl",
+      "sha256": "792876a036d78aeb4d61e9302fc9d8765ebf922a503fea4ff2298fb66730346a",
+      "bytes": 68881
+    },
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-caught-up-count-probe-1/workload.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-caught-up-count-probe-1/independent-cleanup.json",
+      "sha256": "73fd1b059d786c883a0ed4a6752850019ff42fae2b95726e9a8fb309341475b7",
+      "bytes": 3243
+    }
+  ],
+  "executed_input_index": {
+    "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/caught-up-count-v1-executed-inputs/index-with-launch.json",
+    "sha256": "cbadf9bda4910a512a68a3ae9a1979a1671725fc65638b6c77d346418726b77e",
+    "copies_and_sources_verified": 20
+  },
+  "root_result": {
+    "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-caught-up-count-7f7eed0-root-result.json",
+    "sha256": "9fee7d2a1ee3da8e6b24e87c10a5b05ab77fb74cf5894d1cfea59178210951ff"
+  },
+  "root_decision": {
+    "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-caught-up-count-result-next-source-decision.json",
+    "sha256": "fa1a3aa3ea1bd66ed740303721f42dc9567772705c3ecc7e8abad88b48f9aaae"
+  },
+  "limits": [
+    "Underlying exception/native actor/request phase/cause remain unknown.",
+    "Diagnostic construction failure and oversize paths unexercised.",
+    "Positive 1000/outbound setup-marker admission unexercised.",
+    "Second pass completed after stopping; do not interpret the settle observation as successful reconciliation.",
+    "Parent/worker monotonic clocks have different origins.",
+    "No new fields assigned retrospectively to feasibility5 or older failures.",
+    "Current 159 runtime dependency pins do not supply retrospective original feasibility dependency-byte proof.",
+    "Owner audit115.029470s after finish is timing within fixed START+330, not cleanup duration or a finish+60 deadline.",
+    "No timing/resource/performance/full-behavior/readiness qualification."
+  ],
+  "history": "Original feasibility5 failed rows/21 unrun, feasibility4/25, R2/33, original untagged failure/25 and R1 remain immutable. No new payload fields assigned retrospectively.",
+  "CI": {
+    "head": "7f7eed075d703d25e02403534455642601a2d546",
+    "Source": "Ubuntu24.22.2 post-child rebind EADDRINUSE36379 remains an outer test failure, child0 separate; native port owner/cause unknown.",
+    "Verify": "Aggregate-only failure; no dependency mapping from RESULTS.",
+    "source_receipt": {
+      "path": "artifacts/issue95-shutdown-diagnosis/ci-7f7eed0-ubuntu24-source-receipt.json",
+      "sha256": "95a9cd1a6630e175221e46da8ef1c5c3bebd39bed7e70900b3dcdf2b4973df56"
+    },
+    "verify_receipt": {
+      "path": "artifacts/issue95-shutdown-diagnosis/ci-7f7eed0-verify-receipt.json",
+      "sha256": "5e44ca2545879e40ef400be255240a9c3ae6ec02a4c8746be3a71509fba4e8a0"
+    },
+    "prior_histories": "Separate and unchanged; no retry/shared repair."
+  },
+  "next_scope": "One ignored/unapplied/unexecuted scheduler-process.cjs proposal at original worker classification boundary; no controller/manifest/launch preparation.",
+  "qualification": false,
+  "resource_gain_eligible": false,
+  "full_feasibility": false,
+  "readiness": false
+}
