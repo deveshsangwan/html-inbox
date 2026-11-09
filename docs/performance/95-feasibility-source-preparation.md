@@ -21,12 +21,16 @@ and the Node24 inbound parent stopped on one interposed native task-queue frame.
 All 25 fresh unrun names and the original formal row remain. See the
 [immutable feasibility4 receipt](95-feasibility4-results.md).
 
-This publication copies root's exact two-file task-queue source correction.
-It and its expanded controls are UNEXECUTED. There are still 17 classifier methods
-and five unchanged cleanup methods, so controller66f remains byte-identical.
-The ten application-chain forms stay unchanged; only one exact Node24 context
-frame may be handled as described below. Tested 8f results do not qualify the new
-controls. No runtime slot is granted; root decides any next execution.
+Root's exact two-file task-queue correction was executed once at tested
+`fad2da58d91d5608e8e89f4f0ab1657c1280cd11` in feasibility5. Its seventeen
+classifier methods, five cleanup methods and nine preliminaries passed. Thirteen
+cases formally qualified; fourteen resource observations completed. A new exact
+parent timer ownership failure remained failed and nonpassing. The first
+unexpected stop was the Node20 parent 1,000-record outbound receiver-count
+assertion before idle, leaving 21 cases unrun. See the
+[immutable feasibility5 receipt](95-feasibility5-results.md). LOCAL is released.
+Controller66f and the ten application chains remain unchanged; no execution or
+matrix continuation follows from publication.
 
 The existing `scheduler.py` now parses each natural held-read case after child
 exit and fresh teardown, before another case can start. It compares reviewed
@@ -242,7 +246,7 @@ Neither the recorded R2 third row nor its exit/default fields are replaced or
 reclassified. This source change is not execution of the new classifier on that
 row. All original 33 fresh unrun names, older 25 unrun names and R1 evidence remain.
 
-Unexecuted pure controls cover all ten parent and candidate frame chains, each
+The pure controls executed at fad cover all ten parent and candidate frame chains, each
 frame's path/line/name/async spelling, missing/reordered helper ancestry,
 wrong-role worker callsites, foreign observer/native frames, and a later snapshot
 masquerading as initial synchronous entry. Extraction has explicit expected
@@ -250,56 +254,41 @@ chains and rejects initial entry without a worker `await done` relationship.
 Every chain also has failed-non-timer, external-store/foreign PID, missing/rejected
 completion and release/finish/closed clock and order controls. These remain
 subtests inside the existing 17 methods. The five cleanup methods and controller
-are unchanged. The expanded root task-queue controls have not run. The 17+5 passes
-at exact 8f in feasibility4 do not qualify them. No new classifier import or execution
-was used to rewrite an original row.
+are unchanged. The expanded root task-queue controls passed only in the separately
+granted fad attempt. Earlier 8f results remain distinct. No original row was
+rewritten or retrospectively reclassified.
 
-## Prepared next bounded request, not granted
+## Accepted feasibility5 disposition and source-only proposal
 
-Request one fresh attempt using the unchanged executed
-`artifacts/issue95-shutdown-diagnosis/controller-feasibility2-r2.py`, SHA256
-`66f43e6bb44b668a3088ba1304383d1318dfd3336010af475bbab6343d851c4e`.
-The 650 and 8f preparations, manifest3 and executed manifest4 remain unchanged.
-The separate ignored `manifest-feasibility5.json` binds the final clean source
-commit, updated Python/scope hashes and candidate archive metadata. The command
-and exact manifest diff are retained beside it. No controller copy is rewritten.
+The exact manifest5 attempt has ended. Its original eight commands, nine
+preliminaries, twelve zero controls and three attempted high-count cases remain
+under the tested fad pin. Twenty-one cases were not run, including every
+10,000-record case. The formal receiver-count stop retains its broad setup/case
+error alongside the raw zero-versus-1,000 assertion. It was not an observed
+90/240-second timeout. No failed row becomes a pass.
 
-```sh
-/usr/bin/python3.13 /home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/controller-feasibility2-r2.py \
-  --manifest /home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/manifest-feasibility5.json \
-  --grant-id <separately-issued-root-grant>
-```
+`completedPasses` counts fulfilled worker bookkeeping. The intercepted request
+counter increments before the original client operation, without proving native
+HTTP dispatch or receiver admission. Status/settle is not a background-drain
+barrier; a second worker pass event preceded the initial settled observation.
+Parent and worker monotonic origins differ. These observations support no
+scheduler, protocol, custody or host-load cause and no production correction.
 
-Proposed fresh outer output is
-`/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility5-grant-1`;
-runner output is adjacent `issue95-feasibility-5`. Both must remain absent before
-admission. The preserved R2 outputs, 54-file index and earlier controllers/manifests
-are inputs to the preparation audit, never reused as fresh output.
+Root authorizes only an ignored mismatch-diagnostic source proposal after this
+evidence publication. It must use the two snapshots already acquired by
+`assertCaughtUp`, capture the original receiver count once and execute the strict
+original count assertion in `finally` even if diagnostics fail. Only one
+mismatch-only fixed-tag payload, at most 4,096 bytes of numeric counts, controlled
+states/booleans and reviewed error codes or unknown sentinels, may precede that
+failure. Missing/null is distinct from zero. No identity, path, URL, credential,
+body, ledger or raw error leaves those captured snapshots.
 
-The same eight outer commands have five pin/version caps of five seconds each,
-17 pure classifier methods capped at 30 seconds, five cleanup methods capped at
-45 seconds, then the existing feasibility entry on the remaining absolute budget.
-No matrix follows a prelude failure. Nine runner preliminaries retain filesystem
-5 seconds, two archives at 15 each, two builds at 60 each and four reader-race
-checks at 15 each. Use exact existing Node20.20.2/24.19.0 binaries and the frozen
-680-file compiler closure, no compiler-local node, install or app-owned build.
-
-Retain one fixed 5,400-second application deadline and start-plus-5,460 final
-deadline for everything. Then at most 36 fresh cases, all 12 zero controls first
-and all 24 cases at 1,000/10,000 records, none/outbound/inbound, both runtimes and
-actual parent/candidate, one adjacent pair each. Setup 90/case 240/idle 65 seconds,
-two completed passes, reaction 30/custody-repair 65 and original request/pass/lease
-bounds are unchanged. Sum-of-caps exhaustion remains partial, never an extension.
-Natural flag stays unset with no startup tracking, ticket barrier or rephasing.
-Primary idle resources remain separate from late diagnostics and peer resources.
-
-Fresh per-case classification/identity/group/port/fixture evidence must precede
-another invocation. Unknown callers, candidate failures, unrelated errors or
-cleanup failure stop. Only the original fully evidenced parent native timer red
-may continue resource feasibility, preserving actual exit1, failed correctness,
-unqualified/nonpassing/unjoined status and unobserved missing completion. All
-failed and unrun cases remain explicit; the runner exits1 if any shutdown control
-fails. Full behavior qualification and gain eligibility remain false even after
-complete resource coverage. No retry, resume, high-count extrapolation, independent
-review, production correction or additional local work follows automatically.
-Root controls scheduling; free LOCAL time and hosted CI cannot admit this request.
+No tracked workload change or executable manifest/controller is authorized.
+The data-only future request is one actual610 parent, exact Node20.20.2,
+1,000-record outbound case at unchanged setup90/case240/idle65 and production
+request5/pass60/reconcile30 bounds. It adds no read, await, request, reconciliation,
+poll, timer, pass, ticket, barrier, priming or retry. There is no candidate,
+Node24 or matrix follow-on. Runtime, replay and new review require separate root
+decisions. Current Browser/Verify and prior shared CI histories remain separate
+readiness gates; public raw-artifact, high-count, repeated-pair, full-behavior and
+independent-review gates remain open.
