@@ -167,7 +167,67 @@ async function main() {
       assert.equal(Object.keys(a.records).length, count);
       if (!route) return;
 
-      assert.equal(Object.keys(b.records).length, count);
+      const receiverCount = Object.keys(b.records).length;
+      try {
+        if (receiverCount !== count) {
+          const routeStates = ['active', 'reconnecting', 'detached', 'blocked'];
+          const errorCodes = ['local-acquisition-deadline', 'request-aborted', 'request-deadline', 'verified-transport-failed',
+            'tls-verification-failed', 'unauthorized', 'peer-identity-conflict', 'origin-scope-conflict',
+            'local-validation-or-storage-failed', 'trusted-history-unavailable', 'session-expired',
+            'worker-pass-failed', 'runtime-credential-unavailable'];
+          const sourceRoute = a.routes[route.id];
+          const receiverRoute = b.routes[route.id];
+          const localSnapshot = direction === 'inbound' ? b : a;
+          const retry = localSnapshot.routeRetries[route.id];
+          const outbox = Object.values(localSnapshot.outbox).filter(entry => entry.routeId === route.id && entry.revision === route.revision);
+          const diagnostic = JSON.stringify({
+            type: 'caught-up-count-mismatch',
+            expectedCount: count,
+            sourceCount: Object.keys(a.records).length,
+            receiverCount,
+            sourceRoute: {
+              present: sourceRoute !== undefined,
+              state: sourceRoute === undefined ? null : routeStates.includes(sourceRoute.state) ? sourceRoute.state : 'unknown',
+              lastError: sourceRoute === undefined || sourceRoute.lastError === null ? null :
+                errorCodes.includes(sourceRoute.lastError) ? sourceRoute.lastError : 'unknown'
+            },
+            receiverRoute: {
+              present: receiverRoute !== undefined,
+              state: receiverRoute === undefined ? null : routeStates.includes(receiverRoute.state) ? receiverRoute.state : 'unknown',
+              lastError: receiverRoute === undefined || receiverRoute.lastError === null ? null :
+                errorCodes.includes(receiverRoute.lastError) ? receiverRoute.lastError : 'unknown'
+            },
+            localWorker: {
+              enabled: localSnapshot.worker.enabled,
+              retryPaused: localSnapshot.worker.retryPaused,
+              ownerQuarantined: localSnapshot.worker.ownerQuarantined,
+              bootSupervised: localSnapshot.worker.bootSupervised,
+              lastError: localSnapshot.worker.lastError === null ? null :
+                errorCodes.includes(localSnapshot.worker.lastError) ? localSnapshot.worker.lastError : 'unknown'
+            },
+            localRetry: {
+              present: retry !== undefined,
+              attempts: retry === undefined ? null : retry.attempts,
+              blocked: retry === undefined ? null : retry.blocked,
+              hasDeadline: retry === undefined ? null : retry.nextAttemptAt > 0,
+              lastError: retry === undefined || retry.lastError === null ? null : errorCodes.includes(retry.lastError) ? retry.lastError : 'unknown'
+            },
+            localOutbox: {
+              pending: outbox.filter(entry => entry.disposition === 'pending').length,
+              confirmed: outbox.filter(entry => entry.disposition === 'confirmed').length,
+              blocked: outbox.filter(entry => entry.disposition === 'blocked').length,
+              retired: outbox.filter(entry => entry.disposition === 'retired').length
+            },
+            receiverCommittedReceipts: Object.values(b.receipts).filter(receipt => receipt.routeId === route.id &&
+              receipt.revision === route.revision && receipt.storageIncarnation === b.storageIncarnation && receipt.disposition === 'committed').length
+          });
+
+          if (Buffer.byteLength(diagnostic, 'utf8') + 1 <= 4096) console.log(diagnostic);
+        }
+      } finally {
+        // Diagnostic construction or output must not replace the original count failure.
+        assert.equal(receiverCount, count);
+      }
       assert.equal(a.routes[route.id].state, 'active');
       assert.equal(b.routes[route.id].state, 'active');
       const measured = direction === 'inbound' ? b : a;

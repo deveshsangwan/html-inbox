@@ -258,7 +258,7 @@ are unchanged. The expanded root task-queue controls passed only in the separate
 granted fad attempt. Earlier 8f results remain distinct. No original row was
 rewritten or retrospectively reclassified.
 
-## Accepted feasibility5 disposition and source-only proposal
+## Accepted feasibility5 disposition and source-only diagnostic binding
 
 The exact manifest5 attempt has ended. Its original eight commands, nine
 preliminaries, twelve zero controls and three attempted high-count cases remain
@@ -274,21 +274,52 @@ barrier; a second worker pass event preceded the initial settled observation.
 Parent and worker monotonic origins differ. These observations support no
 scheduler, protocol, custody or host-load cause and no production correction.
 
-Root authorizes only an ignored mismatch-diagnostic source proposal after this
-evidence publication. It must use the two snapshots already acquired by
-`assertCaughtUp`, capture the original receiver count once and execute the strict
-original count assertion in `finally` even if diagnostics fail. Only one
-mismatch-only fixed-tag payload, at most 4,096 bytes of numeric counts, controlled
-states/booleans and reviewed error codes or unknown sentinels, may precede that
-failure. Missing/null is distinct from zero. No identity, path, URL, credential,
-body, ledger or raw error leaves those captured snapshots.
+Root source review accepted the ignored mismatch-only proposal at c4b and now
+authorizes its exact copy to the original tracked workload path. The diagnostic
+uses only the two snapshots already acquired by `assertCaughtUp`, captures the
+original receiver count once and executes the strict count assertion in `finally`
+even if diagnostic construction, serialization or output fails. At most one
+fixed-tag payload of 4,096 UTF-8 bytes including newline may precede that failure.
+Only numeric counts, controlled states/booleans and thirteen source-reviewed error
+codes or unknown/null values are emitted. Missing optional data stays distinct
+from zero. No new read, await, request, reconciliation, poll, timer, pass, ticket,
+barrier, priming, retry or success logging is added. Production, TypeScript,
+observer, classifier, normal regression and every other test remain unchanged.
+This exact source copy is unexecuted and has no runtime qualification.
 
-No tracked workload change or executable manifest/controller is authorized.
-The data-only future request is one actual610 parent, exact Node20.20.2,
-1,000-record outbound case at unchanged setup90/case240/idle65 and production
-request5/pass60/reconcile30 bounds. It adds no read, await, request, reconciliation,
-poll, timer, pass, ticket, barrier, priming or retry. There is no candidate,
-Node24 or matrix follow-on. Runtime, replay and new review require separate root
-decisions. Current Browser/Verify and prior shared CI histories remain separate
-readiness gates; public raw-artifact, high-count, repeated-pair, full-behavior and
-independent-review gates remain open.
+The report also copies root's exact one-sentence correction distinguishing archive
+builds from workloads run on Node20/24. Tested fad, documentation-only c4b and this
+source publication stay separate. Every original formal row, raw record, release
+receipt, 21 unrun names and earlier failure/history remains immutable.
+
+Root independently verified actual610's 198 source blobs, 195 matching emitted
+JavaScript files and full 390 regular dist files. Source-only operational
+preparation rechecks that read-only parent and copies exactly those 390 files to
+a private ignored prepared input directory. There is no parent source, output,
+ref or index mutation, build, install or dependency copy.
+
+A versioned adaptation of controller66f may bind one actual610 parent case on
+exact Node20.20.2, count1000/outbound/65000. Only main/bootstrap orchestration and
+the exact setup-marker predicate change; process tracking, command admission,
+curated environment, subreaping, remaining-budget signals and joining retain the
+existing code. The marker must equal count1000/outbound, with setup90 unchanged.
+Three existing Git admission commands and exact Node20 --version each have a
+five-second cap, followed by one 240-second workload. Admission30/application270
+and fixed start-plus-330 final include bootstrap/hash/setup/audit time; no clock
+or grace resets. Original request5/pass60/reconcile30, idle65/two passes,
+reaction30/custody-repair65 and all strict workload controls remain.
+
+Prepared hashes, full diff, expanded argv/environment/cwd and input maps remain
+ignored review inputs. No executable grant or launch is created. A future launch
+must match the reviewed clean source, controller, manifest, input and environment
+pins plus a separately supplied matching grant ID and fresh absent output roots.
+There is no Node24 command, compiler/test/reader/matrix invocation, classifier
+bypass, parent resource continuation, candidate or follow-on case. Runtime and
+replay require a separate root decision; LOCAL stays released.
+
+The c4b Ubuntu20 history admission-seam failure remains separate: its four-second
+wait failed before explicit close or retained-authority assertions. The original
+client counters1/55/0 are not observer counters or receiver/native-cause proof.
+Verify adds only the aggregate gate. No shared cause, baseline or scheduler
+exoneration is inferred. Current and prior CI failures, public raw-artifact,
+high-count, repeated-pair, full-behavior and independent-review gates remain open.

@@ -13,7 +13,7 @@ feasibility, full behavior qualification and gain eligibility remain false.
 
 Actual parent was `610c931b7b22920cce59cf03e49c0de15ebaf2a2`; candidate production
 remained tested `9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f`. This report is a
-documentation-only descendant of tested fad. Separate archive builds used exact
+documentation-only descendant of tested fad. Separate archive builds supplied the workloads run on exact
 Node20.20.2/24.19.0. Source/emitted counts were 198/195 for parent and 201/198 for
 candidate, with the previously tested da21 schedule regression as the inherited
 candidate test difference. Full archive, runtime and emitted identities remain
