@@ -1,0 +1,1014 @@
+{
+  "grant_id": "root-95-routed-read-da21-20261108-r1",
+  "diagnostic_source_pin": "da21f4ee0f3a37a52f1692ef32b9fb83840f0fa8",
+  "production_pin": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+  "parent": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+  "original_measured_harness_pin": "a7f87190129a353689ee8759756292164ec8ff87",
+  "controller_sha256": "87d98accb4a6f69308bd27221e8e53bfe65014fd155229fb02d0e04fbe4aee68",
+  "manifest_sha256": "ffbdbe881a6375333e1abaa078cf29c0c2932f87e55b23470c88858087889b97",
+  "accepted_source_sha256": {
+    "scripts/bench/scheduler.py": "ea6854b1d96277cdfdae16a808f115c81d8f2153c638e3268194804bfec997d8",
+    "scripts/bench/scheduler-process.cjs": "8a3ae1dae1d580ac5609719fc5ee041d292d2b2661b3f8be9d340a9095668912",
+    "scripts/bench/scheduler-workload.cjs": "d8a24571f29576d56ce5285f83bd520e409ac9f295c248fc0216775f9e9116db",
+    "packages/cli/src/sync-worker-schedule.test.ts": "0909c76e335219cc706c8e9c528c5076690801254edaa60b03002c29aac79d50",
+    "docs/performance/95-routed-read-plan.md": "5f032fe010daa0545130585f935a9e736fcfed60f9f1d5b834669bfa2f542944"
+  },
+  "runtime_binary_pins": {
+    "24.19.0": {
+      "path": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+      "sha256": "bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12"
+    },
+    "20.20.2": {
+      "path": "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+      "sha256": "6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd"
+    }
+  },
+  "compiler": {
+    "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/node_modules/.bin/tsc-rs",
+    "dependency_closure_files": 680,
+    "complete_hash_map_in": "operational-manifest.json",
+    "local_node_absent_at_launch": true,
+    "environment_policy": "Pinned Node24 PATH with controlled HOME/TMPDIR and catalog path; no inherited Node compile-cache variables or Corepack invocation."
+  },
+  "identities": {
+    "parent": {
+      "revision": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+      "archive_sha256": "86188674797c578bb250d72de44319a89b283326d33006b91fbeb203c5f47424",
+      "source_files": 198,
+      "source_aggregate": "c5dc0efe8975079c7c9a02ab499899b326b867d496d1c0bcf1e30d48dec835ce",
+      "compiled_files": 195,
+      "compiled_aggregate": "41663c8ae9c916f5613ae86def13123a29f24749da88ea14b09eeb4fb7822ebc",
+      "full_identity_file": "identities-parent.json",
+      "full_identity_file_sha256": "3738d38253ab09567c7143fa821fd96d7eeec86365abeb8b5b8561b2eb5a9ab2"
+    },
+    "candidate": {
+      "revision": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+      "archive_sha256": "80c6a47f288425b6a2cd25e5600fa1e96e13faaeb47d758ef9f91dcdd368e00e",
+      "source_files": 201,
+      "source_aggregate": "74cafa8d13145a365984b0a4a8babc6814c2aca9c99d1d5a9da52b31b4bb6110",
+      "compiled_files": 198,
+      "compiled_aggregate": "742950a62a3e02494700e45d917ec271d887da5fd6c6738ef81473f085d4671e",
+      "full_identity_file": "identities-candidate.json",
+      "full_identity_file_sha256": "dc551a0553c350a1c740e950d7dc6bb4b4d2f7a65f81ca0a19f6e99e73866355"
+    },
+    "regression": {
+      "revision": "da21f4ee0f3a37a52f1692ef32b9fb83840f0fa8",
+      "archive_sha256": "7137d68d7bb21c760914a183f572b0d9bb472e446297ba7b2616c51ac78aaa37",
+      "source_files": 201,
+      "source_aggregate": "37e0078c57de2dea2777e6cc26b0e626dbaad9277f1fad3b41933ac7d0e2d8a9",
+      "compiled_files": 198,
+      "compiled_aggregate": "cc1dc274e01b9869d407e3f53c5889c38197627d21d53ada9e0304d3ce2b042a",
+      "full_identity_file": "identities-regression.json",
+      "full_identity_file_sha256": "01cfdf34237d934be317f48737d3baf6eb2b9a0fdb4b04ab07828000c8b3a5a8"
+    }
+  },
+  "regression_isolation": {
+    "source_changed": [
+      "packages/cli/src/sync-worker-schedule.test.ts"
+    ],
+    "compiled_changed": [
+      "sync-worker-schedule.test.js"
+    ]
+  },
+  "commands": [
+    {
+      "label": "pin",
+      "command": [
+        "/usr/bin/git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 5,
+      "command_deadline": 876268.983369457,
+      "exit": 0,
+      "identity": {
+        "pid": 2890506,
+        "start_ticks": 87626398,
+        "ppid": 2890503,
+        "group": 2890506,
+        "session": 2890506,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.053260309039615095,
+      "setup_seconds": null,
+      "fixture_removed": true,
+      "explicit_environment": {},
+      "full_environment_sha256": "fc30d75a72821205d04542b48481c570301bfa4254ff210be899bafa74ea967d",
+      "original_output_digests": {
+        "tap_original_sha256": "7063b594adeeae0c8564f4e4de46205259d05f2bdc8926f9a3272af39171fb7d",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "status",
+      "command": [
+        "/usr/bin/git",
+        "status",
+        "--porcelain"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 5,
+      "command_deadline": 876269.037861957,
+      "exit": 0,
+      "identity": {
+        "pid": 2890507,
+        "start_ticks": 87626403,
+        "ppid": 2890503,
+        "group": 2890507,
+        "session": 2890507,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.05500256398227066,
+      "setup_seconds": null,
+      "fixture_removed": true,
+      "explicit_environment": {},
+      "full_environment_sha256": "a28c397163bf2aca2aeca8a90eb45c3fd58cac9b7d2c9065f5b92dda4661bd3a",
+      "original_output_digests": {
+        "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "production-frozen",
+      "command": [
+        "/usr/bin/git",
+        "diff",
+        "--exit-code",
+        "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+        "--",
+        "packages/cli/src",
+        ":!packages/cli/src/sync-worker-schedule.test.ts"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 5,
+      "command_deadline": 876269.094307063,
+      "exit": 0,
+      "identity": {
+        "pid": 2890508,
+        "start_ticks": 87626409,
+        "ppid": 2890503,
+        "group": 2890508,
+        "session": 2890508,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.056048076949082315,
+      "setup_seconds": null,
+      "fixture_removed": true,
+      "explicit_environment": {},
+      "full_environment_sha256": "c8540bf8b6990170eab3c12935c7193bd9146be1c3e8b406525c8dd2f186a6a4",
+      "original_output_digests": {
+        "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "node-24.19.0",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--version"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 5,
+      "command_deadline": 876269.462784088,
+      "exit": 0,
+      "identity": {
+        "pid": 2890509,
+        "start_ticks": 87626446,
+        "ppid": 2890503,
+        "group": 2890509,
+        "session": 2890509,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.0540520460344851,
+      "setup_seconds": null,
+      "fixture_removed": true,
+      "explicit_environment": {},
+      "full_environment_sha256": "0733dcb56d51563911ce90e59e84e85e5270a681261ba1dd59c12fd716ca002c",
+      "original_output_digests": {
+        "tap_original_sha256": "b7677d3ec37ee1897ba07dc2cfe8292fe421c9ac93396cca5bbece486d1a2a41",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "node-20.20.2",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--version"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 5,
+      "command_deadline": 876269.760172652,
+      "exit": 0,
+      "identity": {
+        "pid": 2890510,
+        "start_ticks": 87626476,
+        "ppid": 2890503,
+        "group": 2890510,
+        "session": 2890510,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.07840114005375654,
+      "setup_seconds": null,
+      "fixture_removed": true,
+      "explicit_environment": {},
+      "full_environment_sha256": "4406847f7d737506946160772fc8e41076053515ba3e8cb84c734afe9d9f16eb",
+      "original_output_digests": {
+        "tap_original_sha256": "fa2f297fd185bb1c8acba036117f05240eaa1f42eeb8902e870982523ae06edf",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "archive-parent",
+      "command": [
+        "/usr/bin/git",
+        "archive",
+        "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+        "packages/cli/src",
+        "packages/cli/tsconfig.json",
+        "tsconfig.base.json"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 15,
+      "command_deadline": 876279.840066195,
+      "exit": 0,
+      "identity": {
+        "pid": 2890511,
+        "start_ticks": 87626484,
+        "ppid": 2890503,
+        "group": 2890511,
+        "session": 2890511,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.0737923689885065,
+      "setup_seconds": null,
+      "fixture_removed": true,
+      "explicit_environment": {},
+      "full_environment_sha256": "4e7602996353f8ff13486e18c950517047bdc00099b10f4bfc1670346e92d869",
+      "original_output_digests": {
+        "tar_original_sha256": "86188674797c578bb250d72de44319a89b283326d33006b91fbeb203c5f47424",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "build-parent",
+      "command": [
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/node_modules/.bin/tsc-rs",
+        "-p",
+        "/tmp/html-inbox-issue95-routed-zydrfcim/build-parent/packages/cli/tsconfig.json"
+      ],
+      "cwd": "/tmp/html-inbox-issue95-routed-zydrfcim/build-parent",
+      "bound_seconds": 60,
+      "command_deadline": 876324.988267229,
+      "exit": 0,
+      "identity": {
+        "pid": 2890517,
+        "start_ticks": 87626498,
+        "ppid": 2890503,
+        "group": 2890517,
+        "session": 2890517,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.5723501379834488,
+      "setup_seconds": null,
+      "fixture_removed": true,
+      "explicit_environment": {},
+      "full_environment_sha256": "56c9766565d4031566217bbaaeef984e645167ba54fb9582e28c342c731be723",
+      "original_output_digests": {
+        "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "archive-candidate",
+      "command": [
+        "/usr/bin/git",
+        "archive",
+        "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+        "packages/cli/src",
+        "packages/cli/tsconfig.json",
+        "tsconfig.base.json"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 15,
+      "command_deadline": 876280.591496542,
+      "exit": 0,
+      "identity": {
+        "pid": 2890550,
+        "start_ticks": 87626559,
+        "ppid": 2890503,
+        "group": 2890550,
+        "session": 2890550,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.05521892197430134,
+      "setup_seconds": null,
+      "fixture_removed": true,
+      "explicit_environment": {},
+      "full_environment_sha256": "f531d665a8caad0ce3467bc45e66fb393c2f435fb0b6c4cf16214ea724192ea2",
+      "original_output_digests": {
+        "tar_original_sha256": "80c6a47f288425b6a2cd25e5600fa1e96e13faaeb47d758ef9f91dcdd368e00e",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "build-candidate",
+      "command": [
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/node_modules/.bin/tsc-rs",
+        "-p",
+        "/tmp/html-inbox-issue95-routed-zydrfcim/build-candidate/packages/cli/tsconfig.json"
+      ],
+      "cwd": "/tmp/html-inbox-issue95-routed-zydrfcim/build-candidate",
+      "bound_seconds": 60,
+      "command_deadline": 876325.718262269,
+      "exit": 0,
+      "identity": {
+        "pid": 2890551,
+        "start_ticks": 87626571,
+        "ppid": 2890503,
+        "group": 2890551,
+        "session": 2890551,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.5964304599910975,
+      "setup_seconds": null,
+      "fixture_removed": true,
+      "explicit_environment": {},
+      "full_environment_sha256": "328e8960f3a4975024476bfe44a9363df12764a824801439abee51210d4a783f",
+      "original_output_digests": {
+        "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "archive-regression",
+      "command": [
+        "/usr/bin/git",
+        "archive",
+        "da21f4ee0f3a37a52f1692ef32b9fb83840f0fa8",
+        "packages/cli/src",
+        "packages/cli/tsconfig.json",
+        "tsconfig.base.json"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 15,
+      "command_deadline": 876281.347028616,
+      "exit": 0,
+      "identity": {
+        "pid": 2890583,
+        "start_ticks": 87626634,
+        "ppid": 2890503,
+        "group": 2890583,
+        "session": 2890583,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.059257411980070174,
+      "setup_seconds": null,
+      "fixture_removed": true,
+      "explicit_environment": {},
+      "full_environment_sha256": "18709845483b166e21e9d8500c1e69720a0eb063d1856df35531f739b915d94f",
+      "original_output_digests": {
+        "tar_original_sha256": "7137d68d7bb21c760914a183f572b0d9bb472e446297ba7b2616c51ac78aaa37",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "typecheck-regression",
+      "command": [
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/node_modules/.bin/tsc-rs",
+        "-p",
+        "/tmp/html-inbox-issue95-routed-zydrfcim/build-regression/packages/cli/tsconfig.json",
+        "--noEmit"
+      ],
+      "cwd": "/tmp/html-inbox-issue95-routed-zydrfcim/build-regression",
+      "bound_seconds": 30,
+      "command_deadline": 876296.482374653,
+      "exit": 0,
+      "identity": {
+        "pid": 2890584,
+        "start_ticks": 87626648,
+        "ppid": 2890503,
+        "group": 2890584,
+        "session": 2890584,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.40278959495481104,
+      "setup_seconds": null,
+      "fixture_removed": true,
+      "explicit_environment": {},
+      "full_environment_sha256": "2df156dd2383c5864ec2b241b2a4b46740e1ed694ba2424cfce79b021068fe88",
+      "original_output_digests": {
+        "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "build-regression",
+      "command": [
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/node_modules/.bin/tsc-rs",
+        "-p",
+        "/tmp/html-inbox-issue95-routed-zydrfcim/build-regression/packages/cli/tsconfig.json"
+      ],
+      "cwd": "/tmp/html-inbox-issue95-routed-zydrfcim/build-regression",
+      "bound_seconds": 60,
+      "command_deadline": 876326.888207033,
+      "exit": 0,
+      "identity": {
+        "pid": 2890617,
+        "start_ticks": 87626688,
+        "ppid": 2890503,
+        "group": 2890617,
+        "session": 2890617,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.5962876859121025,
+      "setup_seconds": null,
+      "fixture_removed": true,
+      "explicit_environment": {},
+      "full_environment_sha256": "78a7625483b06a7082156b0c35f72ea5c75af0a1a240eb6b56641e0d6aa74caa",
+      "original_output_digests": {
+        "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "regression-24.19.0",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter=tap",
+        "--test-name-pattern=an actual interval callback retains lifetime ownership",
+        "/tmp/html-inbox-issue95-routed-zydrfcim/build-regression/packages/cli/dist/sync-worker-schedule.test.js"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 30,
+      "command_deadline": 876297.515805542,
+      "exit": 0,
+      "identity": {
+        "pid": 2890649,
+        "start_ticks": 87626751,
+        "ppid": 2890503,
+        "group": 2890649,
+        "session": 2890649,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 1.3571134080411866,
+      "setup_seconds": null,
+      "fixture_removed": true,
+      "explicit_environment": {},
+      "full_environment_sha256": "e7c154fc216bf05efa97b6ba7d4c13d22e46d5c84022b8a0fe7ad7699c7a61f4",
+      "original_output_digests": {
+        "tap_original_sha256": "8d2255fcac58b19c51051939af5b09f81239d64420c89b1e4c9dbcddde907334",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "regression-20.20.2",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter=tap",
+        "--test-name-pattern=an actual interval callback retains lifetime ownership",
+        "/tmp/html-inbox-issue95-routed-zydrfcim/build-regression/packages/cli/dist/sync-worker-schedule.test.js"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 30,
+      "command_deadline": 876298.877274576,
+      "exit": 0,
+      "identity": {
+        "pid": 2890670,
+        "start_ticks": 87626887,
+        "ppid": 2890503,
+        "group": 2890670,
+        "session": 2890670,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 1.3290651249699295,
+      "setup_seconds": null,
+      "fixture_removed": true,
+      "explicit_environment": {},
+      "full_environment_sha256": "798c6ea2457cd139d1a3e8c46470875f9df16a3ac9479ac6fc220e1959f51cd9",
+      "original_output_digests": {
+        "tap_original_sha256": "f7cbaef24b314fb79389f47a88d4f4a9997813d60bf4c1ecd04fc3ecb043dcae",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "routed-parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-issue95-routed-zydrfcim/build-parent/packages/cli/dist",
+        "/tmp/html-inbox-issue95-routed-zydrfcim/fixture-routed-parent",
+        "0",
+        "inbound",
+        "65000"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 240,
+      "command_deadline": 876510.210379553,
+      "exit": 0,
+      "identity": {
+        "pid": 2890792,
+        "start_ticks": 87627021,
+        "ppid": 2890503,
+        "group": 2890792,
+        "session": 2890792,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 129.18181021802593,
+      "setup_seconds": 0.832818379974924,
+      "fixture_removed": true,
+      "explicit_environment": {
+        "ISSUE95_ROUTED_READ_DIAGNOSTIC": "1"
+      },
+      "full_environment_sha256": "ba1642cbb935e51f091c1953d79f575130337c7b56cd1219cbc3f42ab7ad21e8",
+      "original_output_digests": {
+        "jsonl_original_sha256": "04105c6267a05c10f1039858b74e0c30ba2b6a6feb2bb0baecb1a45d4d0063f3",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "routed-candidate",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-issue95-routed-zydrfcim/build-candidate/packages/cli/dist",
+        "/tmp/html-inbox-issue95-routed-zydrfcim/fixture-routed-candidate",
+        "0",
+        "inbound",
+        "65000"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 240,
+      "command_deadline": 876639.398676321,
+      "exit": 0,
+      "identity": {
+        "pid": 2891804,
+        "start_ticks": 87639939,
+        "ppid": 2890503,
+        "group": 2891804,
+        "session": 2891804,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 128.1554524989333,
+      "setup_seconds": 0.8049875519936904,
+      "fixture_removed": true,
+      "explicit_environment": {
+        "ISSUE95_ROUTED_READ_DIAGNOSTIC": "1"
+      },
+      "full_environment_sha256": "ce1b81ab2258d3d25041295d7019c0414c710cfad991a44c6131cdc77ba7138d",
+      "original_output_digests": {
+        "jsonl_original_sha256": "49626cfd564d3734f24162e8636613cc1ed110d47d5e65513d600f60bc31e7b0",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "regression_results": [
+    {
+      "label": "regression-24.19.0",
+      "command_exit": 0,
+      "target_verdicts": [
+        "ok"
+      ],
+      "tap_stats": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "qualification": false,
+      "raw_output": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-routed-read-1/regression-24.19.0.tap"
+    },
+    {
+      "label": "regression-20.20.2",
+      "command_exit": 0,
+      "target_verdicts": [
+        "ok"
+      ],
+      "tap_stats": {
+        "tests": 13,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 12
+      },
+      "qualification": false,
+      "raw_output": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-routed-read-1/regression-20.20.2.tap"
+    }
+  ],
+  "routed_cases": [
+    {
+      "label": "routed-parent",
+      "revision": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+      "command_exit": 0,
+      "classification": "routed-strict-control-passed",
+      "control_passed": true,
+      "passing_cell": false,
+      "qualification": false,
+      "resource_gain_eligible": false,
+      "original_routed_caller": "still-untagged",
+      "original_feasibility_unrun": 25,
+      "worker_pid": 2890867,
+      "read_id": 590,
+      "store_id": 19,
+      "caller": "Error: issue95-routed-held-read\n    at ManagedSyncStore.snapshot (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-process.cjs:79:54)\n    at assertManagedLifecycle (/tmp/html-inbox-issue95-routed-zydrfcim/build-parent/packages/cli/dist/sync-lifecycle.js:27:52)\n    at async drain (/tmp/html-inbox-issue95-routed-zydrfcim/build-parent/packages/cli/dist/sync-worker.js:246:28)",
+      "caller_kind": "archived-worker-drain-lifecycle",
+      "active_at_close": false,
+      "release_observation": "observed",
+      "completion_observation": "observed",
+      "read_joined_before_close": true,
+      "errors": [],
+      "idle_elapsed_ms": 65003.117946,
+      "idle_completed_passes": 3,
+      "reaction_elapsed_ms": {
+        "explicit-wake": 203.85964799999783,
+        "wall-forward": 371.8355060000031,
+        "wall-backward": 503.78586099999666,
+        "monotonic-gap": 218.29653099999996,
+        "suspend-both": 402.18601099999796,
+        "retry-deadline": 668.6046999999962
+      },
+      "retry_reaction": {
+        "wall": 1794158436798,
+        "monotonic": 68242.753462,
+        "type": "retry-reaction",
+        "deadlineAt": 1794158436641,
+        "requestAt": 1794158436773,
+        "latenessMs": 132
+      },
+      "external_custody_elapsed_ms": 30511.350181999995,
+      "repair_elapsed_ms": 30182.04840900001,
+      "barrier": {
+        "ticketId": "3185efb0-57fe-441f-89b5-2f9cb81229ae",
+        "armed": true,
+        "traceReadsFromStartup": true,
+        "readTracingInstalled": true,
+        "activeReads": [],
+        "requests": 48,
+        "completed_ticket": {
+          "ticketId": "3185efb0-57fe-441f-89b5-2f9cb81229ae",
+          "state": "complete",
+          "routes": [],
+          "error": null
+        }
+      },
+      "selected_read_events": {
+        "held": {
+          "wall": 1794158497584,
+          "monotonic": 128590.923051,
+          "role": "worker",
+          "pid": 2890867,
+          "type": "read-held",
+          "readId": 590,
+          "storeId": 19,
+          "scriptStore": false,
+          "caller": "Error: issue95-routed-held-read\n    at ManagedSyncStore.snapshot (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-process.cjs:79:54)\n    at assertManagedLifecycle (/tmp/html-inbox-issue95-routed-zydrfcim/build-parent/packages/cli/dist/sync-lifecycle.js:27:52)\n    at async drain (/tmp/html-inbox-issue95-routed-zydrfcim/build-parent/packages/cli/dist/sync-worker.js:246:28)",
+          "activeReads": [
+            {
+              "readId": 590,
+              "storeId": 19,
+              "scriptStore": false
+            }
+          ]
+        },
+        "stop_events": [
+          {
+            "wall": 1794158497609,
+            "monotonic": 128615.605951,
+            "role": "worker",
+            "pid": 2890867,
+            "type": "stopping",
+            "activeReads": [
+              {
+                "readId": 590,
+                "storeId": 19,
+                "scriptStore": false
+              }
+            ]
+          }
+        ],
+        "release_events": [
+          {
+            "wall": 1794158497635,
+            "monotonic": 128641.511587,
+            "role": "worker",
+            "pid": 2890867,
+            "type": "read-released",
+            "readId": 590,
+            "storeId": 19,
+            "scriptStore": false,
+            "reason": "rpc"
+          }
+        ],
+        "finish_events": [
+          {
+            "wall": 1794158497643,
+            "monotonic": 128649.104187,
+            "role": "worker",
+            "pid": 2890867,
+            "type": "read-finished",
+            "readId": 590,
+            "storeId": 19,
+            "scriptStore": false,
+            "outcome": "fulfilled",
+            "activeReads": []
+          }
+        ],
+        "closed": {
+          "wall": 1794158497658,
+          "monotonic": 128664.330574,
+          "role": "worker",
+          "pid": 2890867,
+          "type": "worker-event",
+          "event": "closed",
+          "activeReads": []
+        }
+      },
+      "workload_cleanup": {
+        "wall": 1794158497680,
+        "monotonic": 129124.323582,
+        "type": "cleanup",
+        "exactPorts": [
+          "https://127.0.0.1:45041",
+          "http://127.0.0.1:36295"
+        ],
+        "childrenReaped": 2,
+        "failures": []
+      }
+    },
+    {
+      "label": "routed-candidate",
+      "revision": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+      "command_exit": 0,
+      "classification": "routed-strict-control-passed",
+      "control_passed": true,
+      "passing_cell": false,
+      "qualification": false,
+      "resource_gain_eligible": false,
+      "original_routed_caller": "still-untagged",
+      "original_feasibility_unrun": 25,
+      "worker_pid": 2891843,
+      "read_id": 101,
+      "store_id": 17,
+      "caller": "Error: issue95-routed-held-read\n    at ManagedSyncStore.snapshot (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-process.cjs:79:54)\n    at assertManagedLifecycle (/tmp/html-inbox-issue95-routed-zydrfcim/build-candidate/packages/cli/dist/sync-lifecycle.js:27:52)\n    at async drain (/tmp/html-inbox-issue95-routed-zydrfcim/build-candidate/packages/cli/dist/sync-worker.js:271:28)",
+      "caller_kind": "archived-worker-drain-lifecycle",
+      "active_at_close": false,
+      "release_observation": "observed",
+      "completion_observation": "observed",
+      "read_joined_before_close": true,
+      "errors": [],
+      "idle_elapsed_ms": 65002.147242,
+      "idle_completed_passes": 2,
+      "reaction_elapsed_ms": {
+        "explicit-wake": 152.97263000000385,
+        "wall-forward": 143.54237999999896,
+        "wall-backward": 137.49149999998917,
+        "monotonic-gap": 137.37604600000486,
+        "suspend-both": 136.9171720000013,
+        "retry-deadline": 669.7627300000022
+      },
+      "retry_reaction": {
+        "wall": 1794158564909,
+        "monotonic": 67165.297695,
+        "type": "retry-reaction",
+        "deadlineAt": 1794158564747,
+        "requestAt": 1794158564888,
+        "latenessMs": 141
+      },
+      "external_custody_elapsed_ms": 30516.16549500001,
+      "repair_elapsed_ms": 30233.29722600001,
+      "barrier": {
+        "ticketId": "61642dcd-fe1d-4d1d-accf-7b2db87fc314",
+        "armed": true,
+        "traceReadsFromStartup": true,
+        "readTracingInstalled": true,
+        "activeReads": [],
+        "requests": 44,
+        "completed_ticket": {
+          "ticketId": "61642dcd-fe1d-4d1d-accf-7b2db87fc314",
+          "state": "complete",
+          "routes": [],
+          "error": null
+        }
+      },
+      "selected_read_events": {
+        "held": {
+          "wall": 1794158625738,
+          "monotonic": 127608.980682,
+          "role": "worker",
+          "pid": 2891843,
+          "type": "read-held",
+          "readId": 101,
+          "storeId": 17,
+          "scriptStore": false,
+          "caller": "Error: issue95-routed-held-read\n    at ManagedSyncStore.snapshot (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-process.cjs:79:54)\n    at assertManagedLifecycle (/tmp/html-inbox-issue95-routed-zydrfcim/build-candidate/packages/cli/dist/sync-lifecycle.js:27:52)\n    at async drain (/tmp/html-inbox-issue95-routed-zydrfcim/build-candidate/packages/cli/dist/sync-worker.js:271:28)",
+          "activeReads": [
+            {
+              "readId": 101,
+              "storeId": 17,
+              "scriptStore": false
+            }
+          ]
+        },
+        "stop_events": [
+          {
+            "wall": 1794158625764,
+            "monotonic": 127634.826435,
+            "role": "worker",
+            "pid": 2891843,
+            "type": "stopping",
+            "activeReads": [
+              {
+                "readId": 101,
+                "storeId": 17,
+                "scriptStore": false
+              }
+            ]
+          }
+        ],
+        "release_events": [
+          {
+            "wall": 1794158625791,
+            "monotonic": 127661.924423,
+            "role": "worker",
+            "pid": 2891843,
+            "type": "read-released",
+            "readId": 101,
+            "storeId": 17,
+            "scriptStore": false,
+            "reason": "rpc"
+          }
+        ],
+        "finish_events": [
+          {
+            "wall": 1794158625796,
+            "monotonic": 127666.865649,
+            "role": "worker",
+            "pid": 2891843,
+            "type": "read-finished",
+            "readId": 101,
+            "storeId": 17,
+            "scriptStore": false,
+            "outcome": "fulfilled",
+            "activeReads": []
+          }
+        ],
+        "closed": {
+          "wall": 1794158625800,
+          "monotonic": 127671.370066,
+          "role": "worker",
+          "pid": 2891843,
+          "type": "worker-event",
+          "event": "closed",
+          "activeReads": []
+        }
+      },
+      "workload_cleanup": {
+        "wall": 1794158625847,
+        "monotonic": 128103.281768,
+        "type": "cleanup",
+        "exactPorts": [
+          "https://127.0.0.1:44161",
+          "http://127.0.0.1:40883"
+        ],
+        "childrenReaped": 2,
+        "failures": []
+      }
+    }
+  ],
+  "outer": {
+    "command": [
+      "python3",
+      "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/controller-routed-da21.py",
+      "--manifest",
+      "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/manifest-routed-da21.json",
+      "--grant-id",
+      "root-95-routed-read-da21-20261108-r1"
+    ],
+    "identity": {
+      "pid": 2890503,
+      "start_ticks": 87626371,
+      "ppid": 2880094,
+      "group": 2890503,
+      "session": 2890503,
+      "state": "R"
+    },
+    "tool_session_id": 93198,
+    "exit": 0,
+    "started_monotonic": 876263.812725083,
+    "application_deadline": 877163.812725083,
+    "fixed_final_deadline": 877223.812725083,
+    "finished_monotonic": 876527.587164293,
+    "elapsed_seconds": 263.77443921007216,
+    "within_final_deadline": true
+  },
+  "budget": {
+    "application_seconds": 900,
+    "final_seconds_from_start": 960,
+    "cleanup_seconds": 60,
+    "maximum_commands": 16,
+    "sum_phase_caps_seconds": 820,
+    "routed_case_seconds": 240,
+    "routed_setup_seconds": 90,
+    "routed_idle_ms": 65000,
+    "signal_wait_policy": "Same fixed final deadline caps every TERM2/KILL2/reap3/poll wait; no new cleanup grace clock."
+  },
+  "first_unexpected": null,
+  "unrun_commands": [],
+  "cleanup": {
+    "controller_owned_processes": 26,
+    "independent_identities_including_outer": 27,
+    "independent_group_sessions_including_outer": 17,
+    "remaining_recorded_processes": [],
+    "remaining_group_members": [],
+    "exact_ports": [
+      {
+        "origin": "http://127.0.0.1:36295",
+        "port": 36295,
+        "rebound": true
+      },
+      {
+        "origin": "http://127.0.0.1:40883",
+        "port": 40883,
+        "rebound": true
+      },
+      {
+        "origin": "https://127.0.0.1:44161",
+        "port": 44161,
+        "rebound": true
+      },
+      {
+        "origin": "https://127.0.0.1:45041",
+        "port": 45041,
+        "rebound": true
+      }
+    ],
+    "remaining_fixtures": [],
+    "controller_scratch_removed": true,
+    "signals": [],
+    "signal_actions": 0,
+    "adopted_children_reaped": 0,
+    "independent_audit_sha256": "ddd8757ffbf585e745f7a19cbe41390e0e931d10ba159c11989ccfb789de1caa",
+    "fixture_precision": "Controller creates the owned fixture before spawn and assigns catalog path under it; it does not mkdir catalog itself before spawn.",
+    "slot_explicitly_released_before_packaging": true
+  },
+  "raw_artifacts": {
+    "root_workspace_relative": "artifacts/performance-issues-2026-11-07/issue95-routed-read-1",
+    "absolute_host_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-routed-read-1",
+    "index": "raw-files.json",
+    "index_sha256": "1d403f2b4a56f30df369bdbe699e87eb756aca01b686f1434a422cb269c4644b",
+    "controller_receipt_sha256": "68307bd29ba233310ebce3ba24e09f9d8affc13f883ceb598720895f7b345523",
+    "redaction": "Only specified synthetic controlToken fields; original output SHA256 retained per command.",
+    "public_raw_artifact_reference": "not yet published; mandatory gate remains open"
+  },
+  "conclusions": {
+    "both_controlled_routed_cases_passed": true,
+    "selected_callers": "Both actual archived stacks identify worker drain -> assertManagedLifecycle, not the previously reproduced timer-observation defect.",
+    "historical_caller_identified": false,
+    "original_failed_row_reclassified": false,
+    "original_feasibility_unrun_cells": 25,
+    "feasibility_resumed": false,
+    "resource_gain_eligible": false,
+    "performance_qualification": false,
+    "new_normal_regression_passed_once_per_exact_runtime": true,
+    "full_suite_run": false,
+    "timeout_interruption_forced_cleanup_paths_qualified": false,
+    "reviews_started": false
+  }
+}

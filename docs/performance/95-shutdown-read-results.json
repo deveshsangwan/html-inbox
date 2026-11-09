@@ -1,0 +1,923 @@
+{
+  "grant_id": "root-95-shutdown-read-d320-20261108-r1",
+  "diagnostic_source_pin": "d320bb0d100e016ce6a84a1df36c02293ac2f868",
+  "parent": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+  "candidate": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+  "measured_harness_pin": "a7f87190129a353689ee8759756292164ec8ff87",
+  "controller_sha256": "56fec3d600e380db7565880833851c386190eef373e74cab1d8d468e4a338ed9",
+  "manifest_sha256": "5effb0eac277aa61b91aa4f0c45f1016e2cf3466f33d60c38996b4d21b3ff97b",
+  "probe_sha256": "ead053a9a1be2d2fe0cf31a4214325b037d119eb14d4688ef06ae010c684d4de",
+  "runtimes": {
+    "24.19.0": {
+      "path": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+      "sha256": "bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12"
+    },
+    "20.20.2": {
+      "path": "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+      "sha256": "6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd"
+    }
+  },
+  "identities": {
+    "parent": {
+      "revision": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+      "archive_sha256": "86188674797c578bb250d72de44319a89b283326d33006b91fbeb203c5f47424",
+      "source_files": 198,
+      "source_aggregate": "c5dc0efe8975079c7c9a02ab499899b326b867d496d1c0bcf1e30d48dec835ce",
+      "compiled_files": 195,
+      "compiled_aggregate": "41663c8ae9c916f5613ae86def13123a29f24749da88ea14b09eeb4fb7822ebc",
+      "full_identity_file_sha256": "720570b5c33d6b2c884409ef0833697c0790846abfccf063099a68d1a361680f"
+    },
+    "candidate": {
+      "revision": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+      "archive_sha256": "80c6a47f288425b6a2cd25e5600fa1e96e13faaeb47d758ef9f91dcdd368e00e",
+      "source_files": 201,
+      "source_aggregate": "74cafa8d13145a365984b0a4a8babc6814c2aca9c99d1d5a9da52b31b4bb6110",
+      "compiled_files": 198,
+      "compiled_aggregate": "742950a62a3e02494700e45d917ec271d887da5fd6c6738ef81473f085d4671e",
+      "full_identity_file_sha256": "cc8d15f0919d783e82ca095ebc2ebd95c6bfb1c7121ba504790ed5d7743060f1"
+    }
+  },
+  "commands": [
+    {
+      "label": "pin",
+      "command": [
+        "/usr/bin/git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 5,
+      "command_deadline": 804213.207593466,
+      "exit": 0,
+      "identity": {
+        "pid": 2625399,
+        "start_ticks": 80420820,
+        "ppid": 2625390,
+        "group": 2625399,
+        "session": 2625399,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.07833687996026129,
+      "fixture_removed": true,
+      "probe_environment": {},
+      "original_output_digests": {
+        "tap_original_sha256": "2d707974177beb22448ba9b9ea64d494db4f8ab623b52a0b7f99fd3636e634a7",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "status",
+      "command": [
+        "/usr/bin/git",
+        "status",
+        "--porcelain"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 5,
+      "command_deadline": 804213.286509397,
+      "exit": 0,
+      "identity": {
+        "pid": 2625400,
+        "start_ticks": 80420828,
+        "ppid": 2625390,
+        "group": 2625400,
+        "session": 2625400,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.07764154707547277,
+      "fixture_removed": true,
+      "probe_environment": {},
+      "original_output_digests": {
+        "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "production-frozen",
+      "command": [
+        "/usr/bin/git",
+        "diff",
+        "--exit-code",
+        "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+        "--",
+        "packages/cli/src"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 5,
+      "command_deadline": 804213.364709305,
+      "exit": 0,
+      "identity": {
+        "pid": 2625401,
+        "start_ticks": 80420836,
+        "ppid": 2625390,
+        "group": 2625401,
+        "session": 2625401,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.0534306860063225,
+      "fixture_removed": true,
+      "probe_environment": {},
+      "original_output_digests": {
+        "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "node-24.19.0",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--version"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 5,
+      "command_deadline": 804213.74730245,
+      "exit": 0,
+      "identity": {
+        "pid": 2625413,
+        "start_ticks": 80420874,
+        "ppid": 2625390,
+        "group": 2625413,
+        "session": 2625413,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.058292069006711245,
+      "fixture_removed": true,
+      "probe_environment": {},
+      "original_output_digests": {
+        "tap_original_sha256": "b7677d3ec37ee1897ba07dc2cfe8292fe421c9ac93396cca5bbece486d1a2a41",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "node-20.20.2",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--version"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 5,
+      "command_deadline": 804214.091374488,
+      "exit": 0,
+      "identity": {
+        "pid": 2625446,
+        "start_ticks": 80420909,
+        "ppid": 2625390,
+        "group": 2625446,
+        "session": 2625446,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.06458490306977183,
+      "fixture_removed": true,
+      "probe_environment": {},
+      "original_output_digests": {
+        "tap_original_sha256": "fa2f297fd185bb1c8acba036117f05240eaa1f42eeb8902e870982523ae06edf",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "archive-parent",
+      "command": [
+        "/usr/bin/git",
+        "archive",
+        "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+        "packages/cli/src",
+        "packages/cli/tsconfig.json",
+        "tsconfig.base.json"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 15,
+      "command_deadline": 804224.156740133,
+      "exit": 0,
+      "identity": {
+        "pid": 2625459,
+        "start_ticks": 80420915,
+        "ppid": 2625390,
+        "group": 2625459,
+        "session": 2625459,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.07260654808487743,
+      "fixture_removed": true,
+      "probe_environment": {},
+      "original_output_digests": {
+        "tar_original_sha256": "86188674797c578bb250d72de44319a89b283326d33006b91fbeb203c5f47424",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "build-parent",
+      "command": [
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/node_modules/.bin/tsc-rs",
+        "-p",
+        "/tmp/html-inbox-issue95-shutdown-pd0grixg/build-parent/packages/cli/tsconfig.json"
+      ],
+      "cwd": "/tmp/html-inbox-issue95-shutdown-pd0grixg/build-parent",
+      "bound_seconds": 60,
+      "command_deadline": 804269.319729227,
+      "exit": 0,
+      "identity": {
+        "pid": 2625470,
+        "start_ticks": 80420931,
+        "ppid": 2625390,
+        "group": 2625470,
+        "session": 2625470,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.7627350699622184,
+      "fixture_removed": true,
+      "probe_environment": {},
+      "original_output_digests": {
+        "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "archive-candidate",
+      "command": [
+        "/usr/bin/git",
+        "archive",
+        "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+        "packages/cli/src",
+        "packages/cli/tsconfig.json",
+        "tsconfig.base.json"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 15,
+      "command_deadline": 804225.109334545,
+      "exit": 0,
+      "identity": {
+        "pid": 2625505,
+        "start_ticks": 80421010,
+        "ppid": 2625390,
+        "group": 2625505,
+        "session": 2625505,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.05622595304157585,
+      "fixture_removed": true,
+      "probe_environment": {},
+      "original_output_digests": {
+        "tar_original_sha256": "80c6a47f288425b6a2cd25e5600fa1e96e13faaeb47d758ef9f91dcdd368e00e",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "build-candidate",
+      "command": [
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/node_modules/.bin/tsc-rs",
+        "-p",
+        "/tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate/packages/cli/tsconfig.json"
+      ],
+      "cwd": "/tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate",
+      "bound_seconds": 60,
+      "command_deadline": 804270.235336344,
+      "exit": 0,
+      "identity": {
+        "pid": 2625506,
+        "start_ticks": 80421023,
+        "ppid": 2625390,
+        "group": 2625506,
+        "session": 2625506,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 0.6383745700586587,
+      "fixture_removed": true,
+      "probe_environment": {},
+      "original_output_digests": {
+        "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "probe-24.19.0-parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter=tap",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 90,
+      "command_deadline": 804300.899988678,
+      "exit": 1,
+      "identity": {
+        "pid": 2625540,
+        "start_ticks": 80421090,
+        "ppid": 2625390,
+        "group": 2625540,
+        "session": 2625540,
+        "state": "R"
+      },
+      "terminated_exit": 1,
+      "group_joined": true,
+      "elapsed_seconds": 1.4813505929196253,
+      "fixture_removed": true,
+      "probe_environment": {
+        "ISSUE95_DIAG_DIST": "/tmp/html-inbox-issue95-shutdown-pd0grixg/build-parent/packages/cli/dist",
+        "ISSUE95_DIAG_REVISION": "610c931b7b22920cce59cf03e49c0de15ebaf2a2"
+      },
+      "original_output_digests": {
+        "tap_original_sha256": "ff3c8c8863ddd9d8f30fab0988cea0a83e6e2354ddcb8efceec6532880aa55ce",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "probe-24.19.0-candidate",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter=tap",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 90,
+      "command_deadline": 804302.38471237,
+      "exit": 0,
+      "identity": {
+        "pid": 2625625,
+        "start_ticks": 80421238,
+        "ppid": 2625390,
+        "group": 2625625,
+        "session": 2625625,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 2.487100315047428,
+      "fixture_removed": true,
+      "probe_environment": {
+        "ISSUE95_DIAG_DIST": "/tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate/packages/cli/dist",
+        "ISSUE95_DIAG_REVISION": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f"
+      },
+      "original_output_digests": {
+        "tap_original_sha256": "2293a55138dcde72d796e12dd7c4c485195651a245c0c4b72fba56153855254b",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "probe-20.20.2-parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter=tap",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 90,
+      "command_deadline": 804304.8744307,
+      "exit": 1,
+      "identity": {
+        "pid": 2625652,
+        "start_ticks": 80421487,
+        "ppid": 2625390,
+        "group": 2625652,
+        "session": 2625652,
+        "state": "R"
+      },
+      "terminated_exit": 1,
+      "group_joined": true,
+      "elapsed_seconds": 1.584908211021684,
+      "fixture_removed": true,
+      "probe_environment": {
+        "ISSUE95_DIAG_DIST": "/tmp/html-inbox-issue95-shutdown-pd0grixg/build-parent/packages/cli/dist",
+        "ISSUE95_DIAG_REVISION": "610c931b7b22920cce59cf03e49c0de15ebaf2a2"
+      },
+      "original_output_digests": {
+        "tap_original_sha256": "169e80eabbc7cb1670b7754f618cb0a7ed557fc487191d561d5a2f6a4b599792",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "probe-20.20.2-candidate",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter=tap",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 90,
+      "command_deadline": 804306.462339584,
+      "exit": 0,
+      "identity": {
+        "pid": 2625669,
+        "start_ticks": 80421646,
+        "ppid": 2625390,
+        "group": 2625669,
+        "session": 2625669,
+        "state": "R"
+      },
+      "terminated_exit": 0,
+      "group_joined": true,
+      "elapsed_seconds": 2.5691489099990577,
+      "fixture_removed": true,
+      "probe_environment": {
+        "ISSUE95_DIAG_DIST": "/tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate/packages/cli/dist",
+        "ISSUE95_DIAG_REVISION": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f"
+      },
+      "original_output_digests": {
+        "tap_original_sha256": "68a4a655f59b18a26601d859b72d275b5c1c50b456103d129a6277cbaf51f31f",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "probe_results": [
+    {
+      "label": "probe-24.19.0-parent",
+      "revision": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+      "runtime": "v24.19.0",
+      "command_exit": 1,
+      "tap_stats": {
+        "tests": 3,
+        "pass": 2,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "unexpected": [],
+      "qualification": false,
+      "classifications": [
+        {
+          "mode": "timer-observation",
+          "tap_verdict": "not ok",
+          "classification": "expected-strict-parent-contract-red",
+          "passing_cell": false
+        },
+        {
+          "mode": "foreground-lifecycle",
+          "tap_verdict": "ok",
+          "classification": "worker-read-joined",
+          "passing_cell": false
+        },
+        {
+          "mode": "external-observer",
+          "tap_verdict": "ok",
+          "classification": "external-observer-control",
+          "passing_cell": false
+        }
+      ]
+    },
+    {
+      "label": "probe-24.19.0-candidate",
+      "revision": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+      "runtime": "v24.19.0",
+      "command_exit": 0,
+      "tap_stats": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "unexpected": [],
+      "qualification": false,
+      "classifications": [
+        {
+          "mode": "timer-observation",
+          "tap_verdict": "ok",
+          "classification": "worker-read-joined",
+          "passing_cell": false
+        },
+        {
+          "mode": "foreground-lifecycle",
+          "tap_verdict": "ok",
+          "classification": "worker-read-joined",
+          "passing_cell": false
+        },
+        {
+          "mode": "external-observer",
+          "tap_verdict": "ok",
+          "classification": "external-observer-control",
+          "passing_cell": false
+        }
+      ]
+    },
+    {
+      "label": "probe-20.20.2-parent",
+      "revision": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+      "runtime": "v20.20.2",
+      "command_exit": 1,
+      "tap_stats": {
+        "tests": 3,
+        "pass": 2,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "unexpected": [],
+      "qualification": false,
+      "classifications": [
+        {
+          "mode": "timer-observation",
+          "tap_verdict": "not ok",
+          "classification": "expected-strict-parent-contract-red",
+          "passing_cell": false
+        },
+        {
+          "mode": "foreground-lifecycle",
+          "tap_verdict": "ok",
+          "classification": "worker-read-joined",
+          "passing_cell": false
+        },
+        {
+          "mode": "external-observer",
+          "tap_verdict": "ok",
+          "classification": "external-observer-control",
+          "passing_cell": false
+        }
+      ]
+    },
+    {
+      "label": "probe-20.20.2-candidate",
+      "revision": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+      "runtime": "v20.20.2",
+      "command_exit": 0,
+      "tap_stats": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "unexpected": [],
+      "qualification": false,
+      "classifications": [
+        {
+          "mode": "timer-observation",
+          "tap_verdict": "ok",
+          "classification": "worker-read-joined",
+          "passing_cell": false
+        },
+        {
+          "mode": "foreground-lifecycle",
+          "tap_verdict": "ok",
+          "classification": "worker-read-joined",
+          "passing_cell": false
+        },
+        {
+          "mode": "external-observer",
+          "tap_verdict": "ok",
+          "classification": "external-observer-control",
+          "passing_cell": false
+        }
+      ]
+    }
+  ],
+  "case_observations": [
+    {
+      "label": "probe-24.19.0-parent",
+      "mode": "timer-observation",
+      "classification": "expected-strict-parent-contract-red",
+      "tap": "not ok",
+      "passing_cell": false,
+      "caller": "Error: issue95-held-read-caller\\n    at ManagedSyncStore.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:92:25)\\n    at Object.apply (node:internal/test_runner/mock/mock:767:20)\\n    at tick (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-parent/packages/cli/dist/sync-worker.js:341:36)\\n    at /tmp/html-inbox-issue95-shutdown-pd0grixg/build-parent/packages/cli/dist/sync-worker.js:135:42\\n    at MockTimers.tick (node:internal/test_runner/mock/mock_timers:705:7)\\n    at TestContext.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:138:21)\\n    at async Test.run (node:internal/test_runner/test:1389:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)",
+      "held_active": true,
+      "closed_during_hold": true,
+      "lifetime_during_hold": false,
+      "held_at": 144.661838,
+      "observed_at": 149.26081299999998,
+      "released_at": 149.328478,
+      "read_finished_at": 150.899409,
+      "closed_at": 149.017136,
+      "cleanup_failures": [],
+      "active_after_join": []
+    },
+    {
+      "label": "probe-24.19.0-parent",
+      "mode": "foreground-lifecycle",
+      "classification": "worker-read-joined",
+      "tap": "ok",
+      "passing_cell": false,
+      "caller": "Error: issue95-held-read-caller\\n    at ManagedSyncStore.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:92:25)\\n    at Object.apply (node:internal/test_runner/mock/mock:767:20)\\n    at assertManagedLifecycle (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-parent/packages/cli/dist/sync-lifecycle.js:27:52)\\n    at async drain (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-parent/packages/cli/dist/sync-worker.js:246:28)",
+      "held_active": true,
+      "closed_during_hold": false,
+      "lifetime_during_hold": true,
+      "held_at": 61.28324600000002,
+      "observed_at": 1063.2653799999998,
+      "released_at": 1063.302979,
+      "read_finished_at": 1065.332567,
+      "closed_at": 1074.4681249999999,
+      "cleanup_failures": [],
+      "active_after_join": []
+    },
+    {
+      "label": "probe-24.19.0-parent",
+      "mode": "external-observer",
+      "classification": "external-observer-control",
+      "tap": "ok",
+      "passing_cell": false,
+      "caller": "Error: issue95-held-read-caller\\n    at ManagedSyncStore.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:92:25)\\n    at Object.apply (node:internal/test_runner/mock/mock:767:20)\\n    at TestContext.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:142:32)\\n    at async Test.run (node:internal/test_runner/test:1389:7)\\n    at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)",
+      "held_active": true,
+      "closed_during_hold": true,
+      "lifetime_during_hold": false,
+      "held_at": 61.005840000000035,
+      "observed_at": 62.86767500000019,
+      "released_at": 62.89194300000008,
+      "read_finished_at": 63.95625000000018,
+      "closed_at": 62.68169000000012,
+      "cleanup_failures": [],
+      "active_after_join": []
+    },
+    {
+      "label": "probe-24.19.0-candidate",
+      "mode": "timer-observation",
+      "classification": "worker-read-joined",
+      "tap": "ok",
+      "passing_cell": false,
+      "caller": "Error: issue95-held-read-caller\\n    at ManagedSyncStore.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:92:25)\\n    at Object.apply (node:internal/test_runner/mock/mock:767:20)\\n    at /tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate/packages/cli/dist/sync-worker.js:398:49\\n    at async refreshSchedule (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate/packages/cli/dist/sync-worker.js:396:29)\\n    at async observeSchedule (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate/packages/cli/dist/sync-worker.js:386:17)\\n    at async drain (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate/packages/cli/dist/sync-worker.js:261:17)",
+      "held_active": true,
+      "closed_during_hold": false,
+      "lifetime_during_hold": true,
+      "held_at": 103.798638,
+      "observed_at": 1109.010624,
+      "released_at": 1109.193455,
+      "read_finished_at": 1113.3494110000001,
+      "closed_at": 1120.686177,
+      "cleanup_failures": [],
+      "active_after_join": []
+    },
+    {
+      "label": "probe-24.19.0-candidate",
+      "mode": "foreground-lifecycle",
+      "classification": "worker-read-joined",
+      "tap": "ok",
+      "passing_cell": false,
+      "caller": "Error: issue95-held-read-caller\\n    at ManagedSyncStore.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:92:25)\\n    at Object.apply (node:internal/test_runner/mock/mock:767:20)\\n    at assertManagedLifecycle (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate/packages/cli/dist/sync-lifecycle.js:27:52)\\n    at async drain (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate/packages/cli/dist/sync-worker.js:271:28)",
+      "held_active": true,
+      "closed_during_hold": false,
+      "lifetime_during_hold": true,
+      "held_at": 71.44644999999991,
+      "observed_at": 1076.810894,
+      "released_at": 1076.937827,
+      "read_finished_at": 1082.129225,
+      "closed_at": 1088.3036869999999,
+      "cleanup_failures": [],
+      "active_after_join": []
+    },
+    {
+      "label": "probe-24.19.0-candidate",
+      "mode": "external-observer",
+      "classification": "external-observer-control",
+      "tap": "ok",
+      "passing_cell": false,
+      "caller": "Error: issue95-held-read-caller\\n    at ManagedSyncStore.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:92:25)\\n    at Object.apply (node:internal/test_runner/mock/mock:767:20)\\n    at TestContext.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:142:32)\\n    at async Test.run (node:internal/test_runner/test:1389:7)\\n    at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)",
+      "held_active": true,
+      "closed_during_hold": true,
+      "lifetime_during_hold": false,
+      "held_at": 82.41859399999976,
+      "observed_at": 84.19657999999981,
+      "released_at": 84.22309199999972,
+      "read_finished_at": 85.64957499999991,
+      "closed_at": 84.05299699999978,
+      "cleanup_failures": [],
+      "active_after_join": []
+    },
+    {
+      "label": "probe-20.20.2-parent",
+      "mode": "timer-observation",
+      "classification": "expected-strict-parent-contract-red",
+      "tap": "not ok",
+      "passing_cell": false,
+      "caller": "Error: issue95-held-read-caller\\n    at ManagedSyncStore.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:92:25)\\n    at Object.apply (node:internal/test_runner/mock/mock:586:20)\\n    at tick (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-parent/packages/cli/dist/sync-worker.js:341:36)\\n    at /tmp/html-inbox-issue95-shutdown-pd0grixg/build-parent/packages/cli/dist/sync-worker.js:135:42\\n    at MockTimers.tick (node:internal/test_runner/mock/mock_timers:684:7)\\n    at TestContext.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:138:21)\\n    at async Test.run (node:internal/test_runner/test:797:9)\\n    at async Test.processPendingSubtests (node:internal/test_runner/test:526:7)",
+      "held_active": true,
+      "closed_during_hold": true,
+      "lifetime_during_hold": false,
+      "held_at": 166.20854500000002,
+      "observed_at": 170.991042,
+      "released_at": 171.06239,
+      "read_finished_at": 172.698079,
+      "closed_at": 170.733905,
+      "cleanup_failures": [],
+      "active_after_join": []
+    },
+    {
+      "label": "probe-20.20.2-parent",
+      "mode": "foreground-lifecycle",
+      "classification": "worker-read-joined",
+      "tap": "ok",
+      "passing_cell": false,
+      "caller": "Error: issue95-held-read-caller\\n    at ManagedSyncStore.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:92:25)\\n    at Object.apply (node:internal/test_runner/mock/mock:586:20)\\n    at assertManagedLifecycle (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-parent/packages/cli/dist/sync-lifecycle.js:27:52)\\n    at async drain (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-parent/packages/cli/dist/sync-worker.js:246:28)",
+      "held_active": true,
+      "closed_during_hold": false,
+      "lifetime_during_hold": true,
+      "held_at": 77.17893399999997,
+      "observed_at": 1081.569716,
+      "released_at": 1081.682008,
+      "read_finished_at": 1087.639614,
+      "closed_at": 1108.2875549999999,
+      "cleanup_failures": [],
+      "active_after_join": []
+    },
+    {
+      "label": "probe-20.20.2-parent",
+      "mode": "external-observer",
+      "classification": "external-observer-control",
+      "tap": "ok",
+      "passing_cell": false,
+      "caller": "Error: issue95-held-read-caller\\n    at ManagedSyncStore.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:92:25)\\n    at Object.apply (node:internal/test_runner/mock/mock:586:20)\\n    at TestContext.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:142:32)\\n    at async Test.run (node:internal/test_runner/test:797:9)\\n    at async Test.processPendingSubtests (node:internal/test_runner/test:526:7)",
+      "held_active": true,
+      "closed_during_hold": true,
+      "lifetime_during_hold": false,
+      "held_at": 75.06145399999991,
+      "observed_at": 76.82248000000004,
+      "released_at": 76.85053099999982,
+      "read_finished_at": 78.03777999999988,
+      "closed_at": 76.67141300000003,
+      "cleanup_failures": [],
+      "active_after_join": []
+    },
+    {
+      "label": "probe-20.20.2-candidate",
+      "mode": "timer-observation",
+      "classification": "worker-read-joined",
+      "tap": "ok",
+      "passing_cell": false,
+      "caller": "Error: issue95-held-read-caller\\n    at ManagedSyncStore.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:92:25)\\n    at Object.apply (node:internal/test_runner/mock/mock:586:20)\\n    at /tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate/packages/cli/dist/sync-worker.js:398:49\\n    at async refreshSchedule (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate/packages/cli/dist/sync-worker.js:396:29)\\n    at async observeSchedule (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate/packages/cli/dist/sync-worker.js:386:17)\\n    at async drain (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate/packages/cli/dist/sync-worker.js:261:17)",
+      "held_active": true,
+      "closed_during_hold": false,
+      "lifetime_during_hold": true,
+      "held_at": 152.058957,
+      "observed_at": 1159.984724,
+      "released_at": 1160.15095,
+      "read_finished_at": 1165.814709,
+      "closed_at": 1172.554889,
+      "cleanup_failures": [],
+      "active_after_join": []
+    },
+    {
+      "label": "probe-20.20.2-candidate",
+      "mode": "foreground-lifecycle",
+      "classification": "worker-read-joined",
+      "tap": "ok",
+      "passing_cell": false,
+      "caller": "Error: issue95-held-read-caller\\n    at ManagedSyncStore.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:92:25)\\n    at Object.apply (node:internal/test_runner/mock/mock:586:20)\\n    at assertManagedLifecycle (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate/packages/cli/dist/sync-lifecycle.js:27:52)\\n    at async drain (/tmp/html-inbox-issue95-shutdown-pd0grixg/build-candidate/packages/cli/dist/sync-worker.js:271:28)",
+      "held_active": true,
+      "closed_during_hold": false,
+      "lifetime_during_hold": true,
+      "held_at": 109.8193940000001,
+      "observed_at": 1115.3384030000002,
+      "released_at": 1115.437454,
+      "read_finished_at": 1119.541013,
+      "closed_at": 1123.77839,
+      "cleanup_failures": [],
+      "active_after_join": []
+    },
+    {
+      "label": "probe-20.20.2-candidate",
+      "mode": "external-observer",
+      "classification": "external-observer-control",
+      "tap": "ok",
+      "passing_cell": false,
+      "caller": "Error: issue95-held-read-caller\\n    at ManagedSyncStore.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:92:25)\\n    at Object.apply (node:internal/test_runner/mock/mock:586:20)\\n    at TestContext.<anonymous> (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-shutdown-read.regression.cjs:142:32)\\n    at async Test.run (node:internal/test_runner/test:797:9)\\n    at async Test.processPendingSubtests (node:internal/test_runner/test:526:7)",
+      "held_active": true,
+      "closed_during_hold": true,
+      "lifetime_during_hold": false,
+      "held_at": 65.94776300000012,
+      "observed_at": 68.42454799999996,
+      "released_at": 68.45529100000022,
+      "read_finished_at": 69.83034499999985,
+      "closed_at": 68.271299,
+      "cleanup_failures": [],
+      "active_after_join": []
+    }
+  ],
+  "cleanup": {
+    "remaining_identities": [],
+    "observed_identity_count": 18,
+    "observed_groups": [
+      2625390,
+      2625399,
+      2625400,
+      2625401,
+      2625413,
+      2625446,
+      2625459,
+      2625470,
+      2625505,
+      2625506,
+      2625540,
+      2625625,
+      2625652,
+      2625669
+    ],
+    "scratch": "/tmp/html-inbox-issue95-shutdown-pd0grixg",
+    "scratch_absent": true,
+    "exact_ports_rebound_by_probe": [
+      "http://127.0.0.1:37405",
+      "http://127.0.0.1:40093",
+      "http://127.0.0.1:39651",
+      "http://127.0.0.1:35729",
+      "http://127.0.0.1:41599",
+      "http://127.0.0.1:37621",
+      "http://127.0.0.1:40551",
+      "http://127.0.0.1:33269",
+      "http://127.0.0.1:45267",
+      "http://127.0.0.1:41389",
+      "http://127.0.0.1:33997",
+      "http://127.0.0.1:38641"
+    ],
+    "command_count": 13,
+    "command_exits": [
+      {
+        "label": "pin",
+        "exit": 0
+      },
+      {
+        "label": "status",
+        "exit": 0
+      },
+      {
+        "label": "production-frozen",
+        "exit": 0
+      },
+      {
+        "label": "node-24.19.0",
+        "exit": 0
+      },
+      {
+        "label": "node-20.20.2",
+        "exit": 0
+      },
+      {
+        "label": "archive-parent",
+        "exit": 0
+      },
+      {
+        "label": "build-parent",
+        "exit": 0
+      },
+      {
+        "label": "archive-candidate",
+        "exit": 0
+      },
+      {
+        "label": "build-candidate",
+        "exit": 0
+      },
+      {
+        "label": "probe-24.19.0-parent",
+        "exit": 1
+      },
+      {
+        "label": "probe-24.19.0-candidate",
+        "exit": 0
+      },
+      {
+        "label": "probe-20.20.2-parent",
+        "exit": 1
+      },
+      {
+        "label": "probe-20.20.2-candidate",
+        "exit": 0
+      }
+    ],
+    "first_unexpected": null,
+    "diagnostic_complete": true,
+    "elapsed_seconds": 10.85230013600085,
+    "within_fixed_final_deadline": true,
+    "remaining_budget_seconds": 589.1476998639992,
+    "unrun_commands": [],
+    "remaining_group_members": []
+  },
+  "bounds": {
+    "application_deadline": 804808.206903856,
+    "fixed_final_deadline": 804868.206903856,
+    "started_monotonic": 804208.206903856,
+    "finished_monotonic": 804219.059203992,
+    "elapsed_seconds": 10.85230013600085,
+    "within_final_deadline": true,
+    "first_unexpected": null,
+    "signal_actions": 0,
+    "adopted_exits": 0,
+    "signals_received": [],
+    "timeout_interrupt_or_forced_cleanup_qualified": false
+  },
+  "original_routed_caller": "untagged",
+  "original_feasibility_unrun_cells": 25,
+  "qualification": false,
+  "raw_artifacts": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-shutdown-read-1",
+  "original_receipt_sha256": "5348fd9c01c6f8b36b44a36c6f0ca6221b53de70aa737568e0aad390f3c2725f",
+  "controller_exit": 0
+}

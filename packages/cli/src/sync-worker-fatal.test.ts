@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import http from "node:http";
-import { lstat, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { lstat, mkdtemp, readFile, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import platformTest, { type TestContext } from "node:test";
@@ -281,7 +281,7 @@ test("shutdown holds lifetime authority until a pending drain settles", { timeou
   assert.equal(await readWorkerRecordOffline(f.home), null);
 });
 
-test("timer and failed drain persistence race without duplicate notification or self-await", { timeout: 6000 }, async (t) => {
+test("timer joins pending failed drain persistence without overlapping reads or self-await", { timeout: 6000 }, async (t) => {
   const f = await libraryFixture(t);
   let notified = 0;
   let release = () => {};
@@ -296,15 +296,22 @@ test("timer and failed drain persistence race without duplicate notification or 
   });
   worker.requestRun({ ticketId: randomUUID(), deadlineAt: Date.now() + 2000, requestMs: 100 });
   await waitUntil("drain error bookkeeping held", async () => persisting, Boolean);
-  t.mock.method(ManagedSyncStore.prototype, "snapshot", async () => { throw new Error("synthetic timer failure"); });
+  let timerReads = 0;
+  t.mock.method(ManagedSyncStore.prototype, "snapshot", async () => { timerReads += 1; throw new Error("synthetic timer failure"); });
   try {
-    await waitUntil("fatal notification before drain settles", async () => notified, (value) => value === 1, 2000);
+    const observation = worker.tick();
+    await delay(300);
+    assert.equal(timerReads, 0, "pending failure bookkeeping owns the only scheduler flight");
+    assert.equal(notified, 0);
     assert.ok(await lstat(workerRecords.workerPaths(f.home).lifetime));
+    release();
+    await observation;
   } finally {
     release();
   }
 
   await worker.close();
+  assert.equal(timerReads, 0);
   assert.equal(notified, 1);
 });
 
@@ -449,8 +456,8 @@ test("actual detached worker captures the sanitized fatal diagnostic in its priv
     saved = await readFile(ledgerPath);
     const target = path.join(f.root, "detached-sentinel");
     await writeFile(target, "synthetic sentinel", { mode: 0o600 });
-    await rm(ledgerPath);
-    await symlink(target, ledgerPath);
+    await symlink(target, `${ledgerPath}.unsafe`);
+    await rename(`${ledgerPath}.unsafe`, ledgerPath);
     await waitUntil("retained detached child exits", async () => closed, Boolean, 3000);
     assert.deepEqual(await completion, { code: 1, signal: null });
     const log = await readFile(paths.log, "utf8");
@@ -489,8 +496,8 @@ test("disposable failure-sensitive supervisor restarts fatal exit 1 and leaves d
         saved = await readFile(ledgerPath);
         const target = path.join(f.root, "supervisor-sentinel");
         await writeFile(target, "supervisor synthetic sentinel", { mode: 0o600 });
-        await rm(ledgerPath);
-        await symlink(target, ledgerPath);
+        await symlink(target, `${ledgerPath}.unsafe`);
+        await rename(`${ledgerPath}.unsafe`, ledgerPath);
       } else {
         await contactWorker(f.home, "stop");
       }
@@ -562,8 +569,9 @@ test("actual ready foreground worker exits unsuccessfully on an unsafe ledger wi
     const target = path.join(f.root, "synthetic-unsafe-target");
     const sentinel = "synthetic target must remain unchanged";
     await writeFile(target, sentinel, { mode: 0o600 });
-    await rm(ledgerPath);
-    await symlink(target, ledgerPath);
+    // Publish the unsafe entry atomically so the observer cannot fail on a missing-file gap.
+    await symlink(target, `${ledgerPath}.unsafe`);
+    await rename(`${ledgerPath}.unsafe`, ledgerPath);
 
     await waitUntil("fatal child exit", async () => closed, Boolean, 3000);
     assert.deepEqual(await completion, { code: 1, signal: null });
