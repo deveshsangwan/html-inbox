@@ -384,9 +384,9 @@ remain separate unresolved readiness gates. No gain/full-feasibility/behavior.
 Root statically accepted the exact admission-correlation observer prepared at32d
 and authorized its byte-for-byte copy to the existing tracked observer. Its SHA256
 is `67a0a21b015f7a459ea8c9b375625c6fda950b5e87a6744f496659bb9237ff54`.
-The original ignored proposal/diff/schema/proof remain immutable. This source has
-not been parsed by Node, imported or executed; source review is not full-PR review
-or runtime qualification.
+The original ignored proposal/diff/schema/proof remain immutable. At that source
+publication it was unexecuted. Its separate cc6 diagnostic is recorded below;
+source review alone is not full-PR review or runtime qualification.
 
 Eight earliest numeric call rows, weak store ordinals and original rejection-object
 links remain bounded. Synchronous context ends when the original returns; later
@@ -414,3 +414,36 @@ The32d17-check notification is hosted watcher evidence only; root did not audit
 its job logs, and it gives no credit to this previously ignored observer. Failed
 85dc/eaff/older observations retain their separate histories and unknown causes.
 Exact binding review and a later once-only execution decision remain required.
+
+
+## Accepted admission correlation result and ignored phase proposal
+
+The one-parent/exact20/count1000/outbound diagnostic at testedcc6 has ended.
+All5 exits were0/0/0/0/1. Original strict0versus1000 failed before setup/idle,
+not an observed setup/case/application timeout. The1,513-byte event has six19-field
+records, all known callers and no omissions/faults. Original-error links[6,3]
+associate later authorization rejection with selected identity request rejection
+and classifier input. Call6 parent/request remain null. Its pre-original sample
+was278ms past the effective inner deadline after the initial admission's observed
+fulfilled interval. Cause of that interval and any link into later durable count
+state remain unknown. See the [accepted result](95-admission-correlation-results.md).
+
+All9 saved identities,6 groups/session pairs,11 paths and two recorded ports were
+accounted for.869 hashes/private390/parent198 source-config+390outputs/index matched.
+Explicit release preceded classification and root accepted it. The78.650893-second
+interval after finish is inside SAME fixedSTART330, not cleanup duration or a new
+finish-plus60 deadline. Terminal sidecar was added later without rewriting release.
+All original bytes/history remain. cc6's18-green watcher notification is CI-only;
+root did not audit logs or resolve historical causes. No performance/behavior gain.
+
+Only an ignored unapplied/unexecuted observer proposal may now examine one exact
+source-proved mutate invocation in selected request/client-attempt/registration
+ancestry. A per-invocation closure may carry that established token into a callback
+observer; no global active context crosses await and clocks do not make identity.
+Any proposed callback substitution must preserve once-only invocation, original
+this/arguments and promise/value/error identities. Pre-callback, callback and
+post-callback reaction intervals remain broad observations, never lock-wait,
+CPU/I/O or native cleanup measurements. Missing/omitted phases stay explicit;
+one4,096-byte failure event and all timing ineligibility remain. Existing observer67a0,
+controller62a16b, manifest0ba2c783/private390, production/tests/oracles/deadlines
+stay frozen. No operational binding, runtime, reviewer or automatic follow-on.
