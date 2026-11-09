@@ -349,6 +349,20 @@ class SchedulerClassificationTests(unittest.TestCase):
             del self.event(data, 'idle-stop')['observations'][0][name]
             self.assert_rejected(data)
 
+    def reconciliation_callers(self, chain):
+        prefix = 'Error: issue95-routed-held-read\n    at ManagedSyncStore.snapshot (/repo/scheduler-process.cjs:79:5)'
+        frames = [f'\n    at {name} (/fixture/dist/{filename}:{line}:21)' for name, filename, line in chain]
+        callers = [prefix + ''.join(frames)]
+        queue_frame = '\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)'
+
+        for index, (name, _, _) in enumerate(chain):
+            if not name.startswith('async '):
+                continue
+
+            callers.append(prefix + ''.join(frames[:index]) + queue_frame + ''.join(frames[index:]))
+
+        return callers
+
     def test_other_known_archived_owned_callers_can_pass_without_retrying_selection(self):
         for tail in ['    at async refreshSchedule (/fixture/dist/sync-worker.js:396:5)\n'
                      '    at async observeSchedule (/fixture/dist/sync-worker.js:385:5)\n'
@@ -361,20 +375,19 @@ class SchedulerClassificationTests(unittest.TestCase):
 
         for role in ['parent', 'candidate']:
             for chain in self.fixture(role=role)['provenance']['callsites']['reconciliation_chains']:
-                with self.subTest(role=role, chain=chain):
-                    data = self.fixture(passed=True, role=role)
-                    self.event(data, 'read-held')['caller'] = (
-                        'Error: issue95-routed-held-read\n'
-                        '    at ManagedSyncStore.snapshot (/repo/scheduler-process.cjs:79:5)' +
-                        ''.join(f'\n    at {name} (/fixture/dist/{filename}:{line}:21)' for name, filename, line in chain))
-                    result = self.verdict(data)
-                    self.assertTrue(result['continue_case'], result)
-                    self.assertTrue(result['qualified_case'])
-                    self.assertTrue(result['passing_cell'])
-                    self.assertTrue(result['read_joined'])
-                    self.assertEqual(result['caller_kind'], 'reconciliation')
-                    self.assertEqual(result['shutdown_correctness'], 'passed')
-                    self.assertFalse(result['resource_gain_eligible'])
+                for caller in self.reconciliation_callers(chain):
+                    with self.subTest(role=role, chain=chain, caller=caller):
+                        data = self.fixture(passed=True, role=role)
+                        self.event(data, 'read-held')['caller'] = caller
+                        result = self.verdict(data)
+                        self.assertTrue(result['continue_case'], result)
+                        self.assertTrue(result['qualified_case'])
+                        self.assertTrue(result['passing_cell'])
+                        self.assertTrue(result['read_joined'])
+                        self.assertEqual(result['caller'], caller, 'Keep the complete original runtime frame in evidence')
+                        self.assertEqual(result['caller_kind'], 'reconciliation')
+                        self.assertEqual(result['shutdown_correctness'], 'passed')
+                        self.assertFalse(result['resource_gain_eligible'])
 
         sources = {
             'sync-worker.js': '    async function drain() {\n        const latest = await store.snapshot();\n'
@@ -489,6 +502,45 @@ class SchedulerClassificationTests(unittest.TestCase):
                 f'\n    at drain (/fixture/dist/sync-worker.js:{296 if role == "parent" else 332}:21)')
             self.assert_rejected(data)
 
+        queue_frame = '\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)'
+        for role in ['parent', 'candidate']:
+            for chain in self.fixture(role=role)['provenance']['callsites']['reconciliation_chains']:
+                callers = self.reconciliation_callers(chain)
+                original = callers[0]
+                for misplaced in [original + queue_frame,
+                                  original.replace('\n    at ManagedSyncStore.snapshot', queue_frame + '\n    at ManagedSyncStore.snapshot', 1),
+                                  original.replace(f'\n    at {chain[0][0]} (', queue_frame + f'\n    at {chain[0][0]} (', 1)]:
+                    data = self.fixture(passed=True, role=role)
+                    self.event(data, 'read-held')['caller'] = misplaced
+                    self.assert_rejected(data)
+
+                for caller in callers[1:]:
+                    for runtime in ['20.20.2', '24.22.2']:
+                        data = self.fixture(passed=True, role=role)
+                        data['row']['runtime'] = runtime
+                        for identity in ['actual', 'expected']:
+                            data['provenance'][identity]['runtime_version'] = runtime
+                        self.event(data, 'read-held')['caller'] = caller
+                        self.assert_rejected(data)
+
+                    replacements = [queue_frame * 2, queue_frame.replace(':104:5)', ':105:5)'),
+                                    queue_frame.replace(':104:5)', ':104:6)'),
+                                    queue_frame.replace('process.processTicksAndRejections', 'process.nextTick'),
+                                    queue_frame.replace('node:internal/process/task_queues', 'node:internal/timers')]
+                    invalid_callers = [caller.replace(queue_frame, replacement) for replacement in replacements]
+                    invalid_callers.append(caller + '\n    at externalObserver (/foreign/observer.js:1:1)')
+                    for name, filename, line in chain:
+                        frame = f'\n    at {name} (/fixture/dist/{filename}:{line}:21)'
+                        for replacement in ['', frame.replace('/fixture/dist/', '/foreign/dist/'),
+                                            frame.replace(f':{line}:', f':{line + 1000}:'),
+                                            frame.replace(f'at {name} ', 'at externalObserver ')]:
+                            invalid_callers.append(caller.replace(frame, replacement))
+                    for invalid in invalid_callers:
+                        with self.subTest(role=role, chain=chain, caller=invalid):
+                            data = self.fixture(passed=True, role=role)
+                            self.event(data, 'read-held')['caller'] = invalid
+                            self.assert_rejected(data)
+
     def test_release_before_close_or_foreign_completion_cannot_be_parent_exception(self):
         for field, value in [('pid', 999), ('readId', 2), ('storeId', 3), ('scriptStore', True), ('monotonic', 13)]:
             with self.subTest(field=field):
@@ -545,11 +597,10 @@ class SchedulerClassificationTests(unittest.TestCase):
 
         for role in ['parent', 'candidate']:
             for chain in self.fixture(role=role)['provenance']['callsites']['reconciliation_chains']:
-                data = self.fixture(role=role)
-                self.event(data, 'read-held')['caller'] = (
-                    'Error: issue95-routed-held-read\n    at ManagedSyncStore.snapshot (/repo/scheduler-process.cjs:79:5)' +
-                    ''.join(f'\n    at {name} (/fixture/dist/{filename}:{line}:21)' for name, filename, line in chain))
-                self.assert_rejected(data)
+                for caller in self.reconciliation_callers(chain):
+                    data = self.fixture(role=role)
+                    self.event(data, 'read-held')['caller'] = caller
+                    self.assert_rejected(data)
 
     def test_success_requires_fulfilled_rpc_read_before_close(self):
         for kind, field, value in [('read-released', 'reason', 'disconnect'), ('read-finished', 'outcome', 'rejected'),
@@ -566,29 +617,28 @@ class SchedulerClassificationTests(unittest.TestCase):
 
         for role in ['parent', 'candidate']:
             for chain in self.fixture(role=role)['provenance']['callsites']['reconciliation_chains']:
-                caller = ('Error: issue95-routed-held-read\n    at ManagedSyncStore.snapshot (/repo/scheduler-process.cjs:79:5)' +
-                          ''.join(f'\n    at {name} (/fixture/dist/{filename}:{line}:21)' for name, filename, line in chain))
-                changes = [('read-released', 'reason', 'disconnect'), ('read-finished', 'outcome', 'rejected'),
-                           ('read-released', 'monotonic', 10), ('read-finished', 'monotonic', 11),
-                           ('read-finished', 'monotonic', 15), ('read-finished', 'storeId', 9),
-                           ('read-held', 'scriptStore', True), ('read-held', 'pid', 999),
-                           ('read-held', 'storeId', 9)]
-                for kind, field, value in changes + [(kind, None, None) for kind in ['read-released', 'read-finished']]:
-                    with self.subTest(role=role, chain=chain, kind=kind, field=field):
+                for caller in self.reconciliation_callers(chain):
+                    changes = [('read-released', 'reason', 'disconnect'), ('read-finished', 'outcome', 'rejected'),
+                               ('read-released', 'monotonic', 10), ('read-finished', 'monotonic', 11),
+                               ('read-finished', 'monotonic', 15), ('read-finished', 'storeId', 9),
+                               ('read-held', 'scriptStore', True), ('read-held', 'pid', 999),
+                               ('read-held', 'storeId', 9)]
+                    for kind, field, value in changes + [(kind, None, None) for kind in ['read-released', 'read-finished']]:
+                        with self.subTest(role=role, chain=chain, kind=kind, field=field):
+                            data = self.fixture(passed=True, role=role)
+                            self.event(data, 'read-held')['caller'] = caller
+                            if field is None:
+                                data['events'].remove(self.event(data, kind))
+                            else:
+                                self.event(data, kind)[field] = value
+                            self.assert_rejected(data)
+
+                    for earlier, later in [('read-released', 'read-finished'), ('read-finished', 'worker-event')]:
                         data = self.fixture(passed=True, role=role)
                         self.event(data, 'read-held')['caller'] = caller
-                        if field is None:
-                            data['events'].remove(self.event(data, kind))
-                        else:
-                            self.event(data, kind)[field] = value
+                        first, second = data['events'].index(self.event(data, earlier)), data['events'].index(self.event(data, later))
+                        data['events'][first], data['events'][second] = data['events'][second], data['events'][first]
                         self.assert_rejected(data)
-
-                for earlier, later in [('read-released', 'read-finished'), ('read-finished', 'worker-event')]:
-                    data = self.fixture(passed=True, role=role)
-                    self.event(data, 'read-held')['caller'] = caller
-                    first, second = data['events'].index(self.event(data, earlier)), data['events'].index(self.event(data, later))
-                    data['events'][first], data['events'][second] = data['events'][second], data['events'][first]
-                    self.assert_rejected(data)
 
     def test_late_completion_is_observed_but_never_joined_before_parent_close(self):
         data = self.fixture()

@@ -14,17 +14,19 @@ The original untagged failure and all 25 historical unrun cells remain unchanged
 Production and TypeScript remain at the previously tested pins; there is no
 browser change or retry.
 
-Root reactivated source-only work at clean `14017c7a96424bb09de87ac3d0817e064c79e6ae`.
-The first correction at 65023b3 covered only top-level async reconciliation. Root
-accepted that source branch but withheld a matrix grant while known nested reads
-were unsupported. This follow-up adds the finite exact nested and initial-entry
-forms listed below. The Python correction
-has not been imported or executed. New controls extend existing test methods;
-there are still 17 classifier methods and five unchanged cleanup methods, so the
-executed corrected R2 controller can be reused byte-for-byte. Previous passes
-remain pinned to 02fc and do not qualify these new assertions. See the prepared
-next request and complete caller inventory below. No local slot is granted;
-#97 has measurement priority.
+Root's finite-chain correction at `8f212d30d93b0c643c87f4b1ff2f92a0fd834ca6`
+was executed once in feasibility4. Its 17 classifier methods, five cleanup methods
+and nine preliminaries passed. Eleven workloads exited 0, ten formally qualified,
+and the Node24 inbound parent stopped on one interposed native task-queue frame.
+All 25 fresh unrun names and the original formal row remain. See the
+[immutable feasibility4 receipt](95-feasibility4-results.md).
+
+This publication copies root's exact two-file task-queue source correction.
+It and its expanded controls are UNEXECUTED. There are still 17 classifier methods
+and five unchanged cleanup methods, so controller66f remains byte-identical.
+The ten application-chain forms stay unchanged; only one exact Node24 context
+frame may be handled as described below. Tested 8f results do not qualify the new
+controls. No runtime slot is granted; root decides any next execution.
 
 The existing `scheduler.py` now parses each natural held-read case after child
 exit and fresh teardown, before another case can start. It compares reviewed
@@ -34,8 +36,9 @@ classification requires the actual tick snapshot line, actual interval callback
 line and positive native timer ancestry. Other accepted worker-owned paths are
 the archived lifecycle read, direct drain snapshot and serialized refresh under
 drain. The new branch requires one complete ordered hook/helper/reconciliation/worker
-frame chain derived from exact archived snapshot, invocation and await lines. A reconciliation frame
-cannot fall through to another known-caller branch. An unknown caller stops,
+frame chain derived from exact archived snapshot, invocation and await lines.
+One exact pinned Node24 task-queue frame is permitted at the documented position.
+A reconciliation frame cannot fall through to another known-caller branch. An unknown caller stops,
 even after an exit-0 workload.
 
 The parser checks all original pre-hold controls and timing/count/direction
@@ -182,8 +185,9 @@ source-derived application stacks, not newly observed runtime stacks. Every
 nested async form must end at parent worker JS307 or candidate JS343. Frame
 names include the required synchronous/async spelling; positions and lines are
 not interchangeable. No function-name substring or arbitrary source range is an
-accepted frame chain. The matcher requires the complete exact stack with no
-additional frame before, between or after its application frames.
+accepted frame chain. The matcher still requires the complete exact application stack. Only the one
+pinned Node24 task-queue context described below may be removed for that match;
+all original raw caller text is retained.
 
 Initial JS37 calls snapshot before the first reconciliation await. The verified
 parent emitted worker calls reconciliation at JS296, retains it as `done`, awaits
@@ -202,13 +206,23 @@ existing root checkout and matched reviewed parent SHA256
 candidate matched `7645ddb8a64fb20b070532bb4b2573dfc3f3cb1d5cc506605fd72c34ab8dad87`.
 Copies are retained as ignored data-only preparation evidence. No build ran.
 
-The initial direct stack and all nested stacks remain unobserved in this source
-phase. No claim is made that every V8 stack shape is covered. Extra native or
-async frames, omitted frames or other shapes still stop. For example, an added
-`processTicksAndRejections` tail is not swallowed. This is not a reason to rerun
-a stopped matrix automatically. Root must review the finite source forms before
-any grant; the historical R2 caller remains exactly the observed top-level JS99
-form and the older failure remains untagged.
+The initial direct stack and nested helper variants are source-supported, not
+runtime-observed by this correction. No exhaustive V8 stack coverage is claimed.
+Feasibility4 observed exactly parent reconciliation JS99 ->
+`process.processTicksAndRejections(node:internal/process/task_queues:104:5)` ->
+async drain JS307 on exact 24.19.0. The old row remains unrecognized; observing a
+joined read does not retroactively pass it.
+
+Root's exact source copy allows at most one complete literal version of that
+frame, only when the pinned runtime is 24.19.0 and the frame is immediately before
+an existing async application frame. The otherwise unchanged complete application
+chain must then match. Its original caller string remains in evidence. Different
+versions, functions, module paths, line/column, positions, duplicate native frames
+or unknown application ancestry still stop. A queue frame at the start, end or
+before a synchronous application frame is not removed. Positions before other
+existing async chain frames have only synthetic source-supported controls, not
+runtime observations. No additional native-frame filtering or new application
+caller is included. No stopped run is resumed automatically.
 
 The extractor records exact snapshot lines within each named source function,
 exact awaits from reconcile to push/pull/recordFailure and push to recordFailure,
@@ -230,34 +244,35 @@ row. All original 33 fresh unrun names, older 25 unrun names and R1 evidence rem
 
 Unexecuted pure controls cover all ten parent and candidate frame chains, each
 frame's path/line/name/async spelling, missing/reordered helper ancestry,
-wrong-role worker callsites, foreign observer/native tails, and a later snapshot
+wrong-role worker callsites, foreign observer/native frames, and a later snapshot
 masquerading as initial synchronous entry. Extraction has explicit expected
 chains and rejects initial entry without a worker `await done` relationship.
 Every chain also has failed-non-timer, external-store/foreign PID, missing/rejected
 completion and release/finish/closed clock and order controls. These remain
 subtests inside the existing 17 methods. The five cleanup methods and controller
-are unchanged. No new tests or classifier/callsite functions have been imported
-or executed; original 02fc passes do not qualify the new controls.
+are unchanged. The expanded root task-queue controls have not run. The 17+5 passes
+at exact 8f in feasibility4 do not qualify them. No new classifier import or execution
+was used to rewrite an original row.
 
 ## Prepared next bounded request, not granted
 
 Request one fresh attempt using the unchanged executed
 `artifacts/issue95-shutdown-diagnosis/controller-feasibility2-r2.py`, SHA256
 `66f43e6bb44b668a3088ba1304383d1318dfd3336010af475bbab6343d851c4e`.
-The 650 preparation and `manifest-feasibility3.json` remain unchanged.
-The separate ignored `manifest-feasibility4.json` binds the final clean source
+The 650 and 8f preparations, manifest3 and executed manifest4 remain unchanged.
+The separate ignored `manifest-feasibility5.json` binds the final clean source
 commit, updated Python/scope hashes and candidate archive metadata. The command
 and exact manifest diff are retained beside it. No controller copy is rewritten.
 
 ```sh
 /usr/bin/python3.13 /home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/controller-feasibility2-r2.py \
-  --manifest /home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/manifest-feasibility4.json \
+  --manifest /home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/manifest-feasibility5.json \
   --grant-id <separately-issued-root-grant>
 ```
 
 Proposed fresh outer output is
-`/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility4-grant-1`;
-runner output is adjacent `issue95-feasibility-4`. Both must remain absent before
+`/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility5-grant-1`;
+runner output is adjacent `issue95-feasibility-5`. Both must remain absent before
 admission. The preserved R2 outputs, 54-file index and earlier controllers/manifests
 are inputs to the preparation audit, never reused as fresh output.
 

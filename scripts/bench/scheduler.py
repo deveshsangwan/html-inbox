@@ -153,11 +153,18 @@ def classify_case(events, row, provenance, cleanup):
         serialized = (frame('refreshSchedule', 'sync-worker.js', sites['refresh']) and
                       frame('drain', 'sync-worker.js', sites['drain']))
         direct_drain = frame('drain', 'sync-worker.js', sites['drain_snapshot'])
+
+        reconciliation_caller = caller
+        queue_frame = '\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)'
+        # The pinned Node24 runtime can interpose this frame before an awaited application frame.
+        if row['runtime'] == '24.19.0' and caller.count(queue_frame) == 1:
+            reconciliation_caller = caller.replace(queue_frame + '\n    at async ', '\n    at async ', 1)
+
         reconciliation = any(re.fullmatch(
             r'Error: issue95-routed-held-read\n    at ManagedSyncStore\.snapshot \(' +
             re.escape(provenance['observer_path']) + ':' + str(provenance['observer_line']) +
             r':\d+\)' + ''.join(r'\n    at ' + re.escape(name) + r' \(' + re.escape(str(dist / filename)) +
-                                ':' + str(line) + r':\d+\)' for name, filename, line in chain) + r'\n?', caller)
+                                ':' + str(line) + r':\d+\)' for name, filename, line in chain) + r'\n?', reconciliation_caller)
             for chain in sites['reconciliation_chains'])
 
         # A reconciliation trace must not fall through to a different known caller.
