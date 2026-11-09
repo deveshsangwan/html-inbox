@@ -441,8 +441,8 @@ diff, eleven compiled anchors, four complete ownership spans and both original
 payloads. The exact approved observer has now been copied to its existing path,
 without byte edits or a mode change. Its SHA256 is
 `aed35cf595e65ef1c4ca496f8088b7d6ac4acf6626e5693f7a67562483c81635`.
-The original ignored proposal and prior observer67a0 remain preserved. This is
-source approval and application only; the added phases remain unexecuted.
+The original ignored proposal and prior observer67a0 remain preserved. At that publication this was
+source approval and application only; the added phases were unexecuted.
 
 One exact immediate source frame and the existing same-store selected identity
 request/client-attempt/registration ancestry select at most one mutation. A
@@ -479,3 +479,41 @@ inode/replacement evidence are absent. The hosted exception and all historical C
 remain separate unresolved readiness gates. No reader, assertion, lifecycle,
 deadline or policy change, workflow retry, runtime/test/build/import, reviewer or
 performance/readiness approval follows this source publication.
+
+
+## Accepted phase boundary result and consumed grant
+
+The once-only actual610/exact20/count1000/outbound diagnostic at tested4f has ended
+with all5 exits0/0/0/0/1. Original strict receiver0versus1000 failed before setup
+or idle, without an observed90/240/270 timeout. See the
+[immutable phase result](95-admission-phases-results.md) and its safe JSON data.
+One1857-byte framed event retained six19-cell calls and two7-cell phase rows.
+Source/store/request ancestry5->4->3 selected the admission and one callback; no
+misses, omissions or faults were observed. Phase5 and its callback fulfilled.
+Phase5 is not an errorCallId. Original-error links[6,3] associate later expired
+authorization with selected request3; call6 parent/request remain null. This is
+not evidence phase5 generated that error or caused durable blocked/count state.
+
+Same-worker observed intervals were3923.826584ms before callback entry,
+1344.432497ms from callback entry to its fulfillment reaction and979.664490ms
+until mutation fulfillment reaction. Callback entry had1076ms remaining; callback
+and mutation reactions were269/1249ms past the inner deadline. Source alternatives
+and handler/substitution effects remain; none measures lock wait,CPU,I/O or native
+cleanup. Every instrumented timing/resource stays gain-ineligible. Preserve the
+exact579-byte mismatch with BOTH route errors null, not earlier611/551 states.
+
+Root accepted explicit release before classification: all9 saved identities,
+6groups/session pairs and11paths absent, original two ports rebound,869pins,
+private390, parent198+390+195JS/index and25 copies matched. Owner audit123.133874s
+after finish was127.125033s before SAME fixedSTART330, not cleanup duration or a
+finish-plus60 reset. Later root corroboration made no binds/signals/deletes. Two
+root reader corrections, one-based witness lines and workload jsonl versus other
+tap digest keys, are additive read-only audit facts, not application failures.
+
+All original raw/receipts/terminal/copies/proposals, failed rows and old unrun
+lists remain immutable. Hosted4f eligibleLookups0versus2 and aggregate Verify
+remain separate red readiness gates; new docs-head CI is separate. No performance,
+full feasibility, behavior, raw-delivery or review gate is upgraded. The requested
+phase boundary question is answered at these observed/source-reviewed boundaries.
+LOCAL is FREE, the grant is consumed, and no proposal/source/binding/helper/reviewer,
+application/test/build/import/parser/version, retry or next attempt is authorized.
