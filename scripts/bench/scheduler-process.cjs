@@ -99,6 +99,78 @@ async function main() {
     const { url } = await server.start();
     send({ type: 'ready', url, resources: totalResources() });
   } else {
+    if (settings.role === 'worker') {
+      try {
+        const failure = load('sync-failure.js');
+        const classify = failure.classifySyncFailure;
+        let observedClassification = false;
+        failure.classifySyncFailure = function classifySyncFailure(error) {
+          'use strict';
+          const result = Reflect.apply(classify, this, arguments);
+
+          try {
+            if (!observedClassification && result.kind === 'blocked' && result.code === 'local-validation-or-storage-failed') {
+              observedClassification = true;
+
+              const messageKinds = new Map([
+                ["Communication authorization deadline exceeded", "communication-authorization-deadline"],
+                ["Managed store lock deadline exceeded", "local-queue-deadline"],
+                ["Managed store lock deadline exceeded; unknown or live owners are never stolen", "filesystem-ownership-deadline"],
+                ["Revoked, stale, or incorrectly bound route authorization", "route-authorization"],
+                ["Communication blocked during migration or restore quarantine", "migration-or-quarantine"],
+                ["Locally initiated sync is persistently paused", "persistent-local-pause"],
+                ["Route credential or TLS trust reference is not configured", "credential-reference"],
+                ["Sync credential is not a canonical high-entropy token", "credential-token"],
+                ["Storage outcome is uncertain; explicit recovery is required before further mutation", "storage-outcome-uncertain"],
+                ["Managed file changed during open", "managed-file-changed"],
+                ["Unsupported or missing schema fields", "schema-fields"],
+                ["Invalid identity response", "identity-response-shape"]
+              ]);
+              const errorKinds = new Map([[Error.prototype, 'error'], [TypeError.prototype, 'type-error'],
+                [SyntaxError.prototype, 'syntax-error'], [RangeError.prototype, 'range-error'], [AggregateError.prototype, 'aggregate-error']]);
+              const codeKinds = new Map([['ENOENT', 'enoent'], ['EPERM', 'eperm'], ['ABORT_ERR', 'abort']]);
+              const isObject = error !== null && typeof error === 'object';
+              const message = isObject ? Object.getOwnPropertyDescriptor(error, 'message')?.value : undefined;
+              const code = isObject ? Object.getOwnPropertyDescriptor(error, 'code')?.value : undefined;
+              const stack = isObject ? Object.getOwnPropertyDescriptor(error, 'stack')?.value : undefined;
+              const frames = typeof stack === 'string' ? stack.slice(0, 8192).split('\n').slice(1, 13) : [];
+              const frameSites = [
+                ["communication-deadline", "sync-store.js", 451],
+                ["ledger-json-read", "sync-store.js", 1294],
+                ["wire-json-decode", "sync-wire.js", 73],
+                ["identity-response-shape", "sync-wire.js", 81]
+              ];
+              let frameKind = 'unknown';
+              for (const frame of frames) {
+                for (const [kind, module, line] of frameSites) {
+                  const location = `(${path.join(dist, module)}:${line}:`;
+                  const at = frame.lastIndexOf(location);
+                  if (frame.startsWith('    at ') && at >= 0 && /^[1-9][0-9]{0,3}\)$/.test(frame.slice(at + location.length))) {
+                    frameKind = kind;
+                    break;
+                  }
+                }
+                if (frameKind !== 'unknown') break;
+              }
+
+              const observation = { pid: process.pid, wall: Date.now(), monotonic: performance.now(),
+                type: 'issue95-first-generic-blocked', ordinal: 1, timingEligibility: 'ineligible',
+                errorKind: isObject ? errorKinds.get(Object.getPrototypeOf(error)) ?? 'unknown' : 'non-object',
+                messageKind: messageKinds.get(message) ?? 'unknown', codeKind: codeKinds.get(code) ?? 'unknown', frameKind };
+              const framed = JSON.stringify({ wall: observation.wall, monotonic: observation.monotonic, role: 'worker', ...observation });
+              if (process.connected && Buffer.byteLength(framed, 'utf8') + 1 <= 4096) process.send?.(observation, () => {});
+            }
+          } catch {
+            // Observation and IPC failures cannot replace the original classification.
+          }
+
+          return result;
+        };
+      } catch {
+        // A missing diagnostic is not evidence that no generic failure occurred.
+      }
+    }
+
     if (traceReadsFromStartup) installReadHold();
 
     worker = await load('sync-worker.js').startOwnedSyncWorker(settings.home, { testHooks: {

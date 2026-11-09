@@ -321,19 +321,38 @@ start-plus330 final, not physical cleanup duration or a finish-plus60 deadline.
 All executed controller/manifest/source copies and raw records remain immutable.
 No matrix continuation, source fix, replay or runtime grant follows publication.
 
-Root now authorizes only one ignored observer source proposal confined to
-`scheduler-process.cjs`. It may observe the first original worker classification
-returning blocked/local-validation-or-storage-failed through the existing pinned
-sync-failure export. The wrapper must call the original exactly once with the
-same this/arguments, return the identical result and preserve throws. Any bounded,
-redacted diagnostic failure must not change classification. No production,
-assertion, workload, controller, manifest, fixture or timing change is authorized.
-No extra await/RPC/snapshot/request/timer/poll/ticket/barrier/retry/pass is allowed.
-A possible future single actual610/Node20/count1000/outbound request is data-only;
-source application, binding and execution require separate root decisions.
+Root statically accepted the exact ignored observer proposal at eaff and
+authorized its copy to the existing `scheduler-process.cjs` path. Its SHA256 is
+`4aa84502116b7e4a91dba12c6c39db4d861845d7dcf68904a36eaefb72f55c4d`.
+It observes only the first original worker classification returning
+blocked/local-validation-or-storage-failed through the pinned sync-failure export.
+The original runs once with identical this/arguments; its result reference and
+throws are preserved. Diagnostic construction and IPC failures cannot replace
+classification. Output has fixed error/message/code/frame enums and a 4,096-byte
+framed cap. Unknown or absent output remains inconclusive; an enum is not native
+cause proof. The first observed error need not match a later persisted error.
+
+This source has not been imported, parsed by Node or executed. There is no new
+await/RPC/snapshot/request/timer/poll/ticket/barrier/retry/pass. Production,
+TypeScript, tests, workload, classifier and controller stay unchanged. Every
+instrumented timing/resource observation is gain-ineligible, even without output.
+The original result Markdown/JSON, private raw records and executed inputs remain
+byte-identical. Static approval gives no runtime or branch-coverage credit.
+
+An ignored versioned manifest proposes one actual610/Node20/count1000/outbound
+case using unchanged controller62a16b74 and the existing private390 input files.
+Its five commands, curated environment, admission30/application270/fixed-start330
+clocks, setup90/case240/idle65 and original request/pass/reaction/custody assertions
+remain. There is no candidate, Node24 command, test, compiler or matrix follow-on.
+All failures stop. Fresh output/scratch/unused-runner targets remain absent; no
+grant or launch exists. Exact publication/binding review and a separate explicit
+execution decision are required before any runtime work.
 
 The7f Ubuntu24 outer post-child EADDRINUSE36379 and aggregate Verify remain
 separate red readiness gates; child0 does not establish parent cleanup. The prior
 c4b history admission-seam failure and other CI histories remain unchanged. No
 shared cause, baseline, scheduler exoneration or retry is inferred. Public raw,
 high-count, repeated-pair, full-behavior and independent-review gates remain open.
+The eaff Windows Browser file-level failure after viewer-record unlink EPERM is
+retained separately. No individual failing assertion or native owner was printed;
+the underlying cause and readiness gate remain unresolved.
