@@ -46,12 +46,8 @@ test("hub dropdown applies filters immediately and preserves query, history and 
   await sharedPage.close();
 
   await inbox.focus();
-  await waitForReload(page, async () => {
-    // macOS opens the picker with ArrowDown; Space leaves it closed there.
-    await inbox.press(process.platform === "darwin" ? "ArrowDown" : "Space");
-    await inbox.press("ArrowDown");
-    await inbox.press("Enter");
-  });
+  // Typeahead uses real keys without opening a macOS native popup that CDP cannot drive.
+  await waitForReload(page, () => inbox.press("h"));
   await assertFilterResults(page, "home", "report", ["home report"], "1 of 2 documents");
   assert.equal(await inbox.evaluate((element) => element === document.activeElement), true);
   await inbox.press("Tab");
