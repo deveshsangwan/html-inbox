@@ -293,7 +293,7 @@ function renderCopyDialog(copyUrl: string): string {
 
 function renderInboxFilter(sources: HubInboxListing[], selected: string, isEmpty: boolean): string {
   return `<label class="visually-hidden" for="inbox-filter">Inbox</label>
-            <span class="visually-hidden" id="inbox-filter-help">Choose an inbox, then use Search if results do not reload automatically.</span>
+            <span class="visually-hidden" id="inbox-filter-help">Changing the inbox reloads the page automatically. If it does not reload, use Search.</span>
             <select id="inbox-filter" name="inbox" aria-label="Inbox" aria-describedby="inbox-filter-help document-count${isEmpty ? " empty-title" : ""}">
               <option value="">All selected inboxes</option>
               ${sources.map((source) => `<option value="${escapeHtml(source.name)}"${source.name === selected ? " selected" : ""}>${escapeHtml(source.name)}</option>`).join("")}

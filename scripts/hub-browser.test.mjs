@@ -46,7 +46,12 @@ test("hub dropdown applies filters immediately and preserves query, history and 
   await sharedPage.close();
 
   await inbox.focus();
-  await waitForReload(page, () => inbox.press("ArrowDown"));
+  await waitForReload(page, async () => {
+    // Open the native picker before moving, since macOS commits only when it closes.
+    await inbox.press("Space");
+    await inbox.press("ArrowDown");
+    await inbox.press("Enter");
+  });
   await assertFilterResults(page, "home", "report", ["home report"], "1 of 2 documents");
   assert.equal(await inbox.evaluate((element) => element === document.activeElement), true);
   await inbox.press("Tab");
@@ -58,7 +63,7 @@ test("hub dropdown applies filters immediately and preserves query, history and 
 
   const description = await inbox.evaluate((element) => element.getAttribute("aria-describedby")
     .split(/\s+/).map((id) => document.getElementById(id).textContent).join(" "));
-  assert.match(description, /use Search if results do not reload automatically/);
+  assert.match(description, /Changing the inbox reloads the page automatically/);
   assert.match(description, /0 documents/);
   assert.match(description, /No documents in scratch\./);
 
