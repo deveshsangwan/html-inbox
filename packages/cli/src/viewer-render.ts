@@ -73,12 +73,20 @@ function renderLibrary(
           .includes(normalizedQuery),
       )
     : allDocuments;
-  const hasUnavailableInboxes = hub?.sources.some((source) => !source.available) ?? false;
-  const publishInbox = hub?.sources.find((source) => source.name === hub.inbox) ?? hub?.sources[0];
+  const selectedInbox = hub?.sources.find((source) => source.name === hub.inbox);
+  const hasUnavailableInboxes = hub?.sources.some((source) =>
+    !source.available && (!hub.inbox || source.name === hub.inbox)) ?? false;
+  const publishInbox = selectedInbox ?? hub?.sources[0];
+  const emptyTitle = hasUnavailableInboxes
+    ? "No readable documents"
+    : selectedInbox
+      ? query ? `No matching documents in ${selectedInbox.name}.` : `No documents in ${selectedInbox.name}.`
+      : query ? "No matching documents" : "No documents yet";
+
   const documentContent =
     documents.length === 0
       ? `<section class="empty-state" aria-labelledby="empty-title">
-          <h2 id="empty-title">${hasUnavailableInboxes ? "No readable documents" : query ? "No matching documents" : "No documents yet"}</h2>
+          <h2 id="empty-title">${escapeHtml(emptyTitle)}</h2>
           <p>${
             query
               ? "Try another title, type, or source file name."
@@ -124,7 +132,7 @@ function renderLibrary(
         <form class="search" role="search" method="get" action="${homePath}" ${options.clientSearch ? "data-client-search" : ""}>
           <label class="visually-hidden" for="document-search">Search documents</label>
           <div class="search__control">
-            ${hub ? `${renderInboxFilter(hub.sources, hub.inbox)}\n            ` : ""}<input id="document-search" name="q" type="search" value="${escapeHtml(query)}" placeholder="Search title, type, or file" maxlength="200">
+            ${hub ? `${renderInboxFilter(hub.sources, hub.inbox, documents.length === 0)}\n            ` : ""}<input id="document-search" name="q" type="search" value="${escapeHtml(query)}" placeholder="Search title, type, or file" maxlength="200">
             <button class="search__button" type="submit" data-search-submit>Search</button>
             ${
               options.clientSearch
@@ -139,7 +147,7 @@ function renderLibrary(
         </form>
         ${renderAppearanceMenu()}
       </header>
-      ${hub ? renderAvailability(hub.sources) : ""}${options.deletion ? '<p class="deletion-notice" role="status" data-deletion-notice hidden></p>' : ""}<p class="document-count" aria-live="polite" data-document-count>${countLabel}</p>
+      ${hub ? renderAvailability(hub.sources) : ""}${options.deletion ? '<p class="deletion-notice" role="status" data-deletion-notice hidden></p>' : ""}<p id="document-count" class="document-count" aria-live="polite" data-document-count>${countLabel}</p>
       ${
         options.clientSearch && allDocuments.length > 0
           ? '<section class="empty-state" aria-labelledby="client-empty-title" data-client-empty hidden><h2 id="client-empty-title">No matching documents</h2><p>Try another title, type, or source file name.</p></section>'
@@ -277,9 +285,10 @@ function renderCopyDialog(copyUrl: string): string {
       </dialog>`;
 }
 
-function renderInboxFilter(sources: HubInboxListing[], selected: string): string {
+function renderInboxFilter(sources: HubInboxListing[], selected: string, isEmpty: boolean): string {
   return `<label class="visually-hidden" for="inbox-filter">Inbox</label>
-            <select id="inbox-filter" name="inbox" aria-label="Inbox">
+            <span class="visually-hidden" id="inbox-filter-help">Choosing an inbox applies the filter and reloads the page. Use Search if it does not reload automatically.</span>
+            <select id="inbox-filter" name="inbox" aria-label="Inbox" aria-describedby="inbox-filter-help document-count${isEmpty ? " empty-title" : ""}">
               <option value="">All selected inboxes</option>
               ${sources.map((source) => `<option value="${escapeHtml(source.name)}"${source.name === selected ? " selected" : ""}>${escapeHtml(source.name)}</option>`).join("")}
             </select>`;

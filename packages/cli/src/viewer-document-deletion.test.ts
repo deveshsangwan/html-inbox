@@ -112,7 +112,7 @@ test("hub deletion uses source-qualified identity and retains the other collidin
   assert.equal(result.status, 204);
   assert.equal((await request(url, "/sources/work/documents/shared-id")).status, 404);
   assert.equal((await request(url, "/sources/personal/documents/shared-id/content")).body, "<html>personal</html>");
-  assert.equal((await request(url, "/?inbox=work")).body.includes("No documents yet"), true);
+  assert.equal((await request(url, "/?inbox=work")).body.includes("No documents in work."), true);
 });
 
 test("replaced roots refuse deletion without mutating the replacement", async (t) => {

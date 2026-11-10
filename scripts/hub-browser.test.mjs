@@ -9,6 +9,138 @@ import { getInboxInstanceId } from "../packages/cli/dist/viewer-records.js";
 import { startHub } from "../packages/cli/dist/hub.js";
 import { isolationHtml } from "./browser-fixtures.mjs";
 
+test("hub dropdown applies filters immediately and preserves query, history and keyboard focus", { timeout: 30_000 }, async (t) => {
+  const { page, context, origin } = await createFilterFixture(t);
+  const inbox = page.getByRole("combobox", { name: "Inbox", exact: true });
+  const search = page.getByRole("searchbox", { name: "Search documents" });
+
+  await page.goto(origin);
+  await assertFilterResults(page, "", "", ["home note", "home report", "office report"], "3 documents");
+  await changeInbox(page, () => inbox.selectOption("home"));
+  await assertFilterResults(page, "home", "", ["home note", "home report"], "2 documents");
+  assert.equal(await inbox.evaluate((element) => element === document.activeElement), true);
+
+  // A dropdown change also submits text that has not yet been searched.
+  await search.fill("report");
+  await changeInbox(page, () => inbox.selectOption("office"));
+  await assertFilterResults(page, "office", "report", ["office report"], "1 of 1 documents");
+  const sharedUrl = page.url();
+  await changeInbox(page, () => inbox.selectOption(""));
+  await assertFilterResults(page, "", "report", ["home report", "office report"], "2 of 3 documents");
+  await changeInbox(page, () => inbox.selectOption("scratch"));
+  await assertFilterResults(page, "scratch", "report", [], "0 of 0 documents");
+  assert.equal(await page.getByRole("heading", { name: "No matching documents in scratch.", exact: true }).count(), 1);
+
+  await page.goBack();
+  await assertFilterResults(page, "", "report", ["home report", "office report"], "2 of 3 documents");
+  await page.goBack();
+  await assertFilterResults(page, "office", "report", ["office report"], "1 of 1 documents");
+  await page.goForward();
+  await assertFilterResults(page, "", "report", ["home report", "office report"], "2 of 3 documents");
+  await page.reload();
+  await assertFilterResults(page, "", "report", ["home report", "office report"], "2 of 3 documents");
+
+  const sharedPage = await context.newPage();
+  await sharedPage.goto(sharedUrl);
+  await assertFilterResults(sharedPage, "office", "report", ["office report"], "1 of 1 documents");
+  await sharedPage.close();
+
+  await inbox.focus();
+  await changeInbox(page, () => inbox.press("ArrowDown"));
+  await assertFilterResults(page, "home", "report", ["home report"], "1 of 2 documents");
+  assert.equal(await inbox.evaluate((element) => element === document.activeElement), true);
+  await inbox.press("Tab");
+  assert.equal(await search.evaluate((element) => element === document.activeElement), true);
+  await search.fill("");
+  await changeInbox(page, () => inbox.selectOption("scratch"));
+  await assertFilterResults(page, "scratch", "", [], "0 documents");
+  assert.equal(await page.getByRole("heading", { name: "No documents in scratch.", exact: true }).count(), 1);
+
+  const description = await inbox.evaluate((element) => element.getAttribute("aria-describedby")
+    .split(/\s+/).map((id) => document.getElementById(id).textContent).join(" "));
+  assert.match(description, /Choosing an inbox applies the filter/);
+  assert.match(description, /0 documents/);
+  assert.match(description, /No documents in scratch\./);
+
+  await search.fill("note");
+  await changeInbox(page, () => page.getByRole("button", { name: "Search", exact: true }).click());
+  await assertFilterResults(page, "scratch", "note", [], "0 of 0 documents");
+  await changeInbox(page, () => inbox.selectOption("home"));
+  await assertFilterResults(page, "home", "note", ["home note"], "1 of 2 documents");
+  await search.fill("report");
+  await changeInbox(page, () => search.press("Enter"));
+  await assertFilterResults(page, "home", "report", ["home report"], "1 of 2 documents");
+});
+
+test("hub GET search works with JavaScript disabled through Search and Enter", { timeout: 30_000 }, async (t) => {
+  const { page, origin } = await createFilterFixture(t, { javaScriptEnabled: false });
+  const inbox = page.getByRole("combobox", { name: "Inbox", exact: true });
+  const search = page.getByRole("searchbox", { name: "Search documents" });
+
+  await page.goto(origin);
+  await inbox.selectOption("home");
+  await search.fill("report");
+  assert.equal(await page.locator("[data-search-text]").count(), 3);
+  await changeInbox(page, () => page.getByRole("button", { name: "Search", exact: true }).click());
+  await assertFilterResults(page, "home", "report", ["home report"], "1 of 2 documents");
+
+  await inbox.selectOption("office");
+  await changeInbox(page, () => search.press("Enter"));
+  await assertFilterResults(page, "office", "report", ["office report"], "1 of 1 documents");
+  await inbox.selectOption("");
+  await changeInbox(page, () => search.press("Enter"));
+  await assertFilterResults(page, "", "report", ["home report", "office report"], "2 of 3 documents");
+});
+
+async function changeInbox(page, change) {
+  await Promise.all([page.waitForEvent("load"), change()]);
+}
+
+async function assertFilterResults(page, inbox, query, titles, count) {
+  assert.equal(await page.getByRole("combobox", { name: "Inbox", exact: true }).inputValue(), inbox);
+  assert.equal(await page.getByRole("searchbox", { name: "Search documents" }).inputValue(), query);
+  assert.equal(new URL(page.url()).searchParams.get("inbox") ?? "", inbox);
+  assert.equal(new URL(page.url()).searchParams.get("q") ?? "", query);
+  assert.deepEqual((await page.locator(".doc__title").allTextContents())
+    .map((title) => title.replace(/\s+(home|office)$/, "")).sort(), titles);
+  assert.equal(await page.locator("[data-document-count]").textContent(), count);
+}
+
+async function createFilterFixture(t, contextOptions = {}) {
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-filter-browser-")));
+  let browser;
+  let hub;
+  t.after(async () => {
+    await browser?.close();
+    await hub?.close();
+    await rm(root, { recursive: true, force: true });
+  });
+
+  const sources = [];
+  for (const name of ["home", "office", "scratch"]) {
+    const home = path.join(root, name);
+    const instanceId = await getInboxInstanceId(home);
+    const backend = new LocalDocumentBackend(home);
+
+    for (const type of name === "home" ? ["report", "note"] : name === "office" ? ["report"] : []) {
+      await backend.publish({
+        originalBytes: Buffer.from("<!doctype html><html><body>Document</body></html>"),
+        title: `${name} ${type}`, type, sourceFileName: `${type}.html`,
+      });
+    }
+
+    sources.push({ name, home, instanceId });
+  }
+
+  hub = await startHub({ schemaVersion: 1, name: "Filter test", sources }, 0);
+  browser = await chromium.launch(process.env.HTML_INBOX_BROWSER_EXECUTABLE ? { executablePath: process.env.HTML_INBOX_BROWSER_EXECUTABLE } : {});
+  const context = await browser.newContext(contextOptions);
+  const page = await context.newPage();
+  page.setDefaultTimeout(5_000);
+
+  return { page, context, origin: hub.urls[0] };
+}
+
 test("hub reads colliding source IDs with search, filters, isolation and partial failure", { timeout: 30_000 }, async (t) => {
   const root = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-hub-browser-")));
   let browser;
