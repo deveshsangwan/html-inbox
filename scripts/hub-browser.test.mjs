@@ -47,8 +47,8 @@ test("hub dropdown applies filters immediately and preserves query, history and 
 
   await inbox.focus();
   await waitForReload(page, async () => {
-    // Open the native picker before moving, since macOS commits only when it closes.
-    await inbox.press("Space");
+    // macOS opens the picker with ArrowDown; Space leaves it closed there.
+    await inbox.press(process.platform === "darwin" ? "ArrowDown" : "Space");
     await inbox.press("ArrowDown");
     await inbox.press("Enter");
   });
