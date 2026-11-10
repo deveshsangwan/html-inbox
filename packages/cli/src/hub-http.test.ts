@@ -282,9 +282,22 @@ test("filtered hub empty-state publishing targets the selected source", async (t
   t.after(() => hub.close());
 
   const html = await (await fetch(`${hub.urls[0]}/?inbox=office`)).text();
-  assert.match(html, /No documents yet/);
+  assert.match(html, /No documents in office\./);
   assert.match(html, /publish \.\/document.html --inbox office/);
   assert.doesNotMatch(html, /publish \.\/document.html --inbox home/);
+
+  const noMatches = await (await fetch(`${hub.urls[0]}/?inbox=office&q=report`)).text();
+  assert.match(noMatches, /No matching documents in office\./);
+
+  await writeFile(path.join(home.config.home, "instance-id"), randomUUID());
+  const unrelatedUnavailable = await (await fetch(`${hub.urls[0]}/?inbox=office`)).text();
+  assert.match(unrelatedUnavailable, /No documents in office\./);
+  assert.match(unrelatedUnavailable, /Results are incomplete/);
+
+  await writeFile(path.join(officeHome, "instance-id"), randomUUID());
+  const selectedUnavailable = await (await fetch(`${hub.urls[0]}/?inbox=office`)).text();
+  assert.match(selectedUnavailable, /No readable documents/);
+  assert.doesNotMatch(selectedUnavailable, /No documents in office\./);
 });
 
 test("standalone label is optional and preserves legacy URLs and static export rendering", async (t) => {
