@@ -77,11 +77,17 @@ function renderLibrary(
   const hasUnavailableInboxes = hub?.sources.some((source) =>
     !source.available && (!hub.inbox || source.name === hub.inbox)) ?? false;
   const publishInbox = selectedInbox ?? hub?.sources[0];
-  const emptyTitle = hasUnavailableInboxes
-    ? "No readable documents"
-    : selectedInbox
-      ? query ? `No matching documents in ${selectedInbox.name}.` : `No documents in ${selectedInbox.name}.`
-      : query ? "No matching documents" : "No documents yet";
+  let emptyTitle = query ? "No matching documents" : "No documents yet";
+
+  if (selectedInbox) {
+    emptyTitle = query
+      ? `No matching documents in ${selectedInbox.name}.`
+      : `No documents in ${selectedInbox.name}.`;
+  }
+
+  if (hasUnavailableInboxes) {
+    emptyTitle = "No readable documents";
+  }
 
   const documentContent =
     documents.length === 0
@@ -287,7 +293,7 @@ function renderCopyDialog(copyUrl: string): string {
 
 function renderInboxFilter(sources: HubInboxListing[], selected: string, isEmpty: boolean): string {
   return `<label class="visually-hidden" for="inbox-filter">Inbox</label>
-            <span class="visually-hidden" id="inbox-filter-help">Choosing an inbox applies the filter and reloads the page. Use Search if it does not reload automatically.</span>
+            <span class="visually-hidden" id="inbox-filter-help">Choose an inbox, then use Search if results do not reload automatically.</span>
             <select id="inbox-filter" name="inbox" aria-label="Inbox" aria-describedby="inbox-filter-help document-count${isEmpty ? " empty-title" : ""}">
               <option value="">All selected inboxes</option>
               ${sources.map((source) => `<option value="${escapeHtml(source.name)}"${source.name === selected ? " selected" : ""}>${escapeHtml(source.name)}</option>`).join("")}

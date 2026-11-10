@@ -16,18 +16,18 @@ test("hub dropdown applies filters immediately and preserves query, history and 
 
   await page.goto(origin);
   await assertFilterResults(page, "", "", ["home note", "home report", "office report"], "3 documents");
-  await changeInbox(page, () => inbox.selectOption("home"));
+  await waitForReload(page, () => inbox.selectOption("home"));
   await assertFilterResults(page, "home", "", ["home note", "home report"], "2 documents");
   assert.equal(await inbox.evaluate((element) => element === document.activeElement), true);
 
   // A dropdown change also submits text that has not yet been searched.
   await search.fill("report");
-  await changeInbox(page, () => inbox.selectOption("office"));
+  await waitForReload(page, () => inbox.selectOption("office"));
   await assertFilterResults(page, "office", "report", ["office report"], "1 of 1 documents");
   const sharedUrl = page.url();
-  await changeInbox(page, () => inbox.selectOption(""));
+  await waitForReload(page, () => inbox.selectOption(""));
   await assertFilterResults(page, "", "report", ["home report", "office report"], "2 of 3 documents");
-  await changeInbox(page, () => inbox.selectOption("scratch"));
+  await waitForReload(page, () => inbox.selectOption("scratch"));
   await assertFilterResults(page, "scratch", "report", [], "0 of 0 documents");
   assert.equal(await page.getByRole("heading", { name: "No matching documents in scratch.", exact: true }).count(), 1);
 
@@ -46,29 +46,29 @@ test("hub dropdown applies filters immediately and preserves query, history and 
   await sharedPage.close();
 
   await inbox.focus();
-  await changeInbox(page, () => inbox.press("ArrowDown"));
+  await waitForReload(page, () => inbox.press("ArrowDown"));
   await assertFilterResults(page, "home", "report", ["home report"], "1 of 2 documents");
   assert.equal(await inbox.evaluate((element) => element === document.activeElement), true);
   await inbox.press("Tab");
   assert.equal(await search.evaluate((element) => element === document.activeElement), true);
   await search.fill("");
-  await changeInbox(page, () => inbox.selectOption("scratch"));
+  await waitForReload(page, () => inbox.selectOption("scratch"));
   await assertFilterResults(page, "scratch", "", [], "0 documents");
   assert.equal(await page.getByRole("heading", { name: "No documents in scratch.", exact: true }).count(), 1);
 
   const description = await inbox.evaluate((element) => element.getAttribute("aria-describedby")
     .split(/\s+/).map((id) => document.getElementById(id).textContent).join(" "));
-  assert.match(description, /Choosing an inbox applies the filter/);
+  assert.match(description, /use Search if results do not reload automatically/);
   assert.match(description, /0 documents/);
   assert.match(description, /No documents in scratch\./);
 
   await search.fill("note");
-  await changeInbox(page, () => page.getByRole("button", { name: "Search", exact: true }).click());
+  await waitForReload(page, () => page.getByRole("button", { name: "Search", exact: true }).click());
   await assertFilterResults(page, "scratch", "note", [], "0 of 0 documents");
-  await changeInbox(page, () => inbox.selectOption("home"));
+  await waitForReload(page, () => inbox.selectOption("home"));
   await assertFilterResults(page, "home", "note", ["home note"], "1 of 2 documents");
   await search.fill("report");
-  await changeInbox(page, () => search.press("Enter"));
+  await waitForReload(page, () => search.press("Enter"));
   await assertFilterResults(page, "home", "report", ["home report"], "1 of 2 documents");
 });
 
@@ -81,18 +81,18 @@ test("hub GET search works with JavaScript disabled through Search and Enter", {
   await inbox.selectOption("home");
   await search.fill("report");
   assert.equal(await page.locator("[data-search-text]").count(), 3);
-  await changeInbox(page, () => page.getByRole("button", { name: "Search", exact: true }).click());
+  await waitForReload(page, () => page.getByRole("button", { name: "Search", exact: true }).click());
   await assertFilterResults(page, "home", "report", ["home report"], "1 of 2 documents");
 
   await inbox.selectOption("office");
-  await changeInbox(page, () => search.press("Enter"));
+  await waitForReload(page, () => search.press("Enter"));
   await assertFilterResults(page, "office", "report", ["office report"], "1 of 1 documents");
   await inbox.selectOption("");
-  await changeInbox(page, () => search.press("Enter"));
+  await waitForReload(page, () => search.press("Enter"));
   await assertFilterResults(page, "", "report", ["home report", "office report"], "2 of 3 documents");
 });
 
-async function changeInbox(page, change) {
+async function waitForReload(page, change) {
   await Promise.all([page.waitForEvent("load"), change()]);
 }
 
@@ -101,8 +101,13 @@ async function assertFilterResults(page, inbox, query, titles, count) {
   assert.equal(await page.getByRole("searchbox", { name: "Search documents" }).inputValue(), query);
   assert.equal(new URL(page.url()).searchParams.get("inbox") ?? "", inbox);
   assert.equal(new URL(page.url()).searchParams.get("q") ?? "", query);
-  assert.deepEqual((await page.locator(".doc__title").allTextContents())
-    .map((title) => title.replace(/\s+(home|office)$/, "")).sort(), titles);
+  const actualTitles = await page.locator(".doc__title").evaluateAll((links) => links.map((link) => {
+    const title = link.cloneNode(true);
+    title.querySelectorAll(".inbox-badge").forEach((badge) => badge.remove());
+
+    return title.textContent.trim();
+  }));
+  assert.deepEqual(actualTitles.sort(), titles);
   assert.equal(await page.locator("[data-document-count]").textContent(), count);
 }
 
