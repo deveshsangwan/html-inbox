@@ -141,9 +141,12 @@ export class ManagedSyncStore {
     });
   }
 
-  async recover(): Promise<void> {
+  async recover(validateMaintenance?: () => Promise<void>): Promise<void> {
     await checkDirectory(this.directory);
-    await withStoreLock(this.directory, this.lockDeadlineMs, () => this.recoverLocked());
+    await withStoreLock(this.directory, this.lockDeadlineMs, async () => {
+      await validateMaintenance?.();
+      await this.recoverLocked();
+    });
   }
 
   async snapshot(): Promise<SyncLedger> {

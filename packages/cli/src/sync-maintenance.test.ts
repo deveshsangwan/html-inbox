@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { execFile, spawnSync } from "node:child_process";
+import { execFile, spawn, spawnSync } from "node:child_process";
 import { randomBytes, randomUUID } from "node:crypto";
 import * as fs from "node:fs/promises";
 import { createServer } from "node:http";
@@ -9,14 +9,15 @@ import path from "node:path";
 import { test as platformTest, type TestContext } from "node:test";
 import { maintainSyncIdentity } from "./sync-maintenance";
 import { ManagedSyncStore } from "./sync-store";
-import { workerPaths } from "./sync-worker-records";
+import { acquireViewerStartLock } from "./viewer-start-lock";
+import { acquireWorkerExclusion, workerPaths } from "./sync-worker-records";
 
 const test = process.platform === "win32" ? platformTest.skip : platformTest;
 const html = Buffer.from("<!doctype html><html><body>synthetic maintenance fixture</body></html>");
 
-async function fixture(t: TestContext, worker: boolean, viewer: boolean) {
+async function fixture(t: TestContext, worker: boolean, viewer: boolean, cleanup?: () => Promise<void>) {
   const home = await fs.realpath(await fs.mkdtemp(path.join(tmpdir(), "inbox-maintenance-")));
-  t.after(() => fs.rm(home, { recursive: true, force: true }));
+  t.after(async () => { try { await cleanup?.(); } finally { await fs.rm(home, { recursive: true, force: true }); } });
   const store = new ManagedSyncStore(home);
   await store.enroll();
   await store.publish({ originalBytes: html, title: "Fixture", type: "report", sourceFileName: "fixture.html" }, "fixture");
@@ -226,3 +227,166 @@ test("a live runtime appearing during startup exclusion acquisition blocks quara
   await assert.rejects(fs.stat(path.join(f.home, "viewer-start.lock")), { code: "ENOENT" });
   await assert.rejects(fs.stat(f.paths.startup), { code: "ENOENT" });
 });
+
+async function crashFixture(t: TestContext, action: "quarantine" | "fork", cut: string) {
+  let closeChild = async () => {};
+  const f = await fixture(t, true, true, () => closeChild());
+  const env = { PATH: path.dirname(process.execPath), HOME: f.home, HTML_INBOX_CATALOG_HOME: path.join(f.home, "catalog") };
+  const child = spawn(process.execPath, [path.join(__dirname, "sync-maintenance-crash-child.js"), f.home, f.ledger.inboxId, action, cut],
+    { env, stdio: ["ignore", "pipe", "pipe", "ipc"] });
+  let output = "";
+  child.stderr?.on("data", (data: Buffer) => { output += data.toString(); });
+  const closed = new Promise<void>((resolve, reject) => { child.once("error", reject); child.once("close", () => resolve()); });
+  closeChild = async () => {
+    if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+    await closed;
+  };
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`Crash seam not reached: ${output}`)), 10000);
+    child.once("message", (message) => { clearTimeout(timer); assert.deepEqual(message, { cut, pid: child.pid }); resolve(); });
+    child.once("exit", () => { clearTimeout(timer); reject(new Error(`Crash child exited before seam: ${output}`)); });
+    child.once("error", (error) => { clearTimeout(timer); reject(error); });
+  });
+  const kill = async () => { child.kill("SIGKILL"); await closed; };
+  return { ...f, env, child, kill };
+}
+
+for (const [action, cut] of [["quarantine", "candidate"], ["quarantine", "linked"], ["quarantine", "lifetime"], ["fork", "lifetime"], ["quarantine", "quarantine"],
+  ["fork", "quarantine"], ["fork", "fork"], ["fork", "cleanup"]] as const) {
+  test(`actual CLI resumes ${action} after owned maintenance crash at ${cut}`, { timeout: 20000 }, async (t) => {
+    const f = await crashFixture(t, action, cut);
+    await f.kill();
+    const args = action === "fork" ? ["sync", "fork"] : ["sync", "restore", "quarantine"];
+    const result = await promisify(execFile)(process.execPath, [path.join(__dirname, "index.js"), ...args,
+      "--home", f.home, "--expect-inbox", f.ledger.inboxId, "--yes", "--json"], { env: f.env, timeout: 10000 });
+    const state = JSON.parse(result.stdout);
+    assert.equal(state.quarantined, action === "quarantine");
+    assert.equal(state.readerIdentityMatches, true);
+    assert.equal(state.inboxId === f.ledger.inboxId, action === "quarantine");
+    const store = new ManagedSyncStore(f.home);
+    assert.deepEqual((await store.getDocument((await store.listDocuments())[0].id))?.originalBytes, html);
+    for (const file of [f.paths.lifetime, path.join(f.paths.directory, "maintenance-claim.json")]) {
+      await assert.rejects(fs.stat(file), { code: "ENOENT" });
+    }
+  });
+}
+
+for (const evidence of ["live", "denied", "replaced-worker"]) {
+  test(`maintenance claim cannot override ${evidence} ownership evidence`, async (t) => {
+    const f = await crashFixture(t, "quarantine", "lifetime");
+    await f.kill();
+    const viewerExclusion = await acquireViewerStartLock(f.home);
+    await viewerExclusion.release();
+    const workerExclusion = await acquireWorkerExclusion(f.home);
+    await workerExclusion.release();
+
+    if (evidence === "denied") {
+      const kill = process.kill;
+      t.mock.method(process, "kill", (...args: Parameters<typeof process.kill>) => {
+        if (args[0] === f.child.pid && args[1] === 0) throw Object.assign(new Error("synthetic denied maintenance probe"), { code: "EPERM" });
+        return kill(...args);
+      });
+    } else if (evidence === "replaced-worker") {
+      const record = JSON.parse(await fs.readFile(f.paths.record, "utf8"));
+      record.processId = randomUUID();
+      await fs.writeFile(f.paths.record, JSON.stringify(record));
+    } else {
+      // A reused live PID with null start proves no former maintenance owner dead.
+      const owner = JSON.parse(await fs.readFile(f.paths.lifetime, "utf8"));
+      owner.pid = process.pid;
+      owner.start = null;
+      await fs.writeFile(f.paths.lifetime, JSON.stringify(owner));
+    }
+    const before = await snapshot(f.home);
+    await assert.rejects(maintainSyncIdentity(f.home, f.ledger.inboxId, "quarantine"), /live or unknown|disagree/);
+    assert.deepEqual(await snapshot(f.home), before);
+  });
+}
+
+for (const action of ["quarantine", "fork"] as const) {
+  test(`${action} rejects reader identity replacement after quarantine commit`, async (t) => {
+    const f = await fixture(t, true, true);
+    const catalog: typeof import("./inbox-catalog") = require("./inbox-catalog");
+    const readTransition = catalog.readCatalogIdentityTransition;
+    const withTransition = catalog.withCatalogIdentityTransition;
+    t.mock.method(catalog, "readCatalogIdentityTransition", (home: string, id: string) => readTransition(home, id, path.join(f.home, "catalog")));
+    t.mock.method(catalog, "withCatalogIdentityTransition", (...[home, id, operation]: Parameters<typeof withTransition>) =>
+      withTransition(home, id, operation, path.join(f.home, "catalog")));
+    const quarantine = ManagedSyncStore.prototype.quarantineRestore;
+    const replacement = randomUUID();
+    t.mock.method(ManagedSyncStore.prototype, "quarantineRestore", async function (this: ManagedSyncStore, ...args: Parameters<typeof quarantine>) {
+      await quarantine.apply(this, args);
+      await fs.writeFile(path.join(f.home, "instance-id"), replacement);
+    });
+    await assert.rejects(maintainSyncIdentity(f.home, f.ledger.inboxId, action), /changed during restore quarantine/);
+    assert.equal(await fs.readFile(path.join(f.home, "instance-id"), "utf8"), replacement);
+    assert.equal(JSON.parse(await fs.readFile(f.ledgerPath, "utf8")).inboxId, f.ledger.inboxId);
+    assert.ok(await fs.stat(f.paths.record));
+  });
+}
+
+test("interrupted fork revalidates identity under the recovery mutation lock", async (t) => {
+  const f = await fixture(t, false, false);
+  const oldId = randomUUID();
+  const transition: import("./inbox-catalog").CatalogIdentityTransition = {
+    schemaVersion: 1, name: null, home: f.home, oldInboxId: oldId, newInboxId: f.ledger.inboxId,
+  };
+  const catalog: typeof import("./inbox-catalog") = require("./inbox-catalog");
+  t.mock.method(catalog, "readCatalogIdentityTransition", async () => transition);
+  t.mock.method(catalog, "withCatalogIdentityTransition", async (...[_home, _expected, operation]: Parameters<typeof catalog.withCatalogIdentityTransition>) => operation(transition, async () => {}));
+  const files: typeof import("node:fs/promises") = require("node:fs/promises");
+  const link = files.link;
+  const replacement = randomUUID();
+  let hits = 0;
+  t.mock.method(files, "link", async (...args: Parameters<typeof link>) => {
+    await link(...args);
+    if (args[1] === path.join(f.home, "sync", "mutation.lock")) {
+      hits += 1;
+      await fs.writeFile(path.join(f.home, "instance-id"), replacement);
+    }
+  });
+  const before = await fs.readFile(f.ledgerPath);
+  await assert.rejects(maintainSyncIdentity(f.home, oldId, "fork"), /changed during maintenance/);
+  assert.equal(hits, 1);
+  assert.equal(await fs.readFile(path.join(f.home, "instance-id"), "utf8"), replacement);
+  assert.deepEqual(await fs.readFile(f.ledgerPath), before);
+});
+
+test("retry preserves the durable claim if lifetime reacquisition fails again", async (t) => {
+  const f = await crashFixture(t, "quarantine", "lifetime");
+  await f.kill();
+  const claimPath = path.join(f.paths.directory, "maintenance-claim.json");
+  const claim = await fs.readFile(claimPath);
+  const lifetime = await fs.readFile(f.paths.lifetime);
+  const files: typeof import("./sync-files") = require("./sync-files");
+  const acquire = files.acquireSyncOwnership;
+  const fault = t.mock.method(files, "acquireSyncOwnership", async (...args: Parameters<typeof acquire>) => {
+    if (args[0] === f.paths.lifetime) throw new Error("synthetic retry acquisition interruption");
+    return acquire(...args);
+  });
+  await assert.rejects(maintainSyncIdentity(f.home, f.ledger.inboxId, "quarantine"), /retry acquisition interruption/);
+  const retryClaim = JSON.parse(await fs.readFile(claimPath, "utf8"));
+  assert.equal(retryClaim.previousToken, JSON.parse(claim.toString()).token);
+  assert.notEqual(retryClaim.token, retryClaim.previousToken);
+  assert.deepEqual(await fs.readFile(f.paths.lifetime), lifetime);
+  fault.mock.restore();
+  assert.equal((await maintainSyncIdentity(f.home, f.ledger.inboxId, "quarantine")).quarantined, true);
+});
+
+for (const field of ["token", "home", "expectedInboxId"]) {
+  test(`an unrelated maintenance claim ${field} cannot justify a disagreeing worker lock`, async (t) => {
+    const f = await crashFixture(t, "quarantine", "lifetime");
+    await f.kill();
+    const viewerExclusion = await acquireViewerStartLock(f.home);
+    await viewerExclusion.release();
+    const workerExclusion = await acquireWorkerExclusion(f.home);
+    await workerExclusion.release();
+    const claimPath = path.join(f.paths.directory, "maintenance-claim.json");
+    const claim = JSON.parse(await fs.readFile(claimPath, "utf8"));
+    claim[field] = field === "home" ? path.join(f.home, "other-home") : randomUUID();
+    await fs.writeFile(claimPath, JSON.stringify(claim));
+    const before = await snapshot(f.home);
+    await assert.rejects(maintainSyncIdentity(f.home, f.ledger.inboxId, "quarantine"), /disagree/);
+    assert.deepEqual(await snapshot(f.home), before);
+  });
+}
