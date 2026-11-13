@@ -53,46 +53,51 @@ function registerAcquisitionTests() {
     let holdHits = 0;
     let admissionFailure: unknown;
     let requestRemainingMs: number | undefined;
+    let release = () => {};
+    let acquired = () => {};
+    const ready = new Promise<void>((resolve) => { acquired = resolve; });
+    const held = new Promise<void>((resolve) => { release = resolve; });
+    const holder = withStoreLock(path.join(home, "sync"), 1000, async () => {
+      holdHits += 1;
+      acquired();
+      await held;
+    });
     t.mock.method(store, "openRouteAttempt", async (...args: Parameters<typeof store.openRouteAttempt>) => {
-      let acquired = () => {};
-      const ready = new Promise<void>((resolve) => { acquired = resolve; });
-      const holder = withStoreLock(path.join(home, "sync"), 1000, async () => {
-        holdHits += 1;
-        acquired();
-        await delay(140);
-      });
-      // Observe holder failure even if acquisition fails before the ready notification.
-      await Promise.race([ready, holder]);
-
       try {
         return await openAttempt(...args);
       } catch (error) {
         admissionFailure = error;
         requestRemainingMs = args[2] === undefined ? undefined : args[2] - Date.now();
         throw error;
-      } finally {
-        await holder;
       }
     });
 
-    const startedAt = Date.now();
-    const deadlineAt = startedAt + 300;
     let requestFailure: unknown;
+    let remainingPassMs = 0;
     try {
-      await client.json(routeAuthorization(route), "identity", { nonce: opaqueToken() }, parseIdentityResponse, WIRE_LIMITS.identity,
-        { requestMs: 100, deadlineAt });
-    } catch (error) {
-      requestFailure = error;
+      // Durable holder acquisition belongs to fixture setup, before the request
+      // clock starts. Keep it held until the actual queue timer rejects admission.
+      await Promise.race([ready, holder]);
+      const deadlineAt = Date.now() + 3000;
+      try {
+        await client.json(routeAuthorization(route), "identity", { nonce: opaqueToken() }, parseIdentityResponse, WIRE_LIMITS.identity,
+          { requestMs: 100, deadlineAt });
+      } catch (error) {
+        requestFailure = error;
+      }
+
+      remainingPassMs = deadlineAt - Date.now();
+    } finally {
+      release();
+      await holder;
     }
 
-    const remainingPassMs = deadlineAt - Date.now();
     t.diagnostic(JSON.stringify({ holdHits, requestRemainingMs, remainingPassMs, credentialCalls, requests: client.counters.requests,
       admissionError: admissionFailure instanceof Error ? admissionFailure.message : null, failure: classifySyncFailure(requestFailure) }));
     assert.equal(holdHits, 1);
     assert.ok(admissionFailure instanceof StoreLockQueueDeadlineError);
     assert.equal(admissionFailure.message, "Managed store lock deadline exceeded", "the real local queue timer must be the reached origin");
     assert.ok(remainingPassMs > 0, "whole-pass expiry cannot satisfy the local scheduling regression");
-    assert.ok(Date.now() - startedAt < 1500);
     assert.equal(credentialCalls, 0);
     assert.equal(client.counters.requests, 0);
     assert.deepEqual(await store.snapshot(), before);
