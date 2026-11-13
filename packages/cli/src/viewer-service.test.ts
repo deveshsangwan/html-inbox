@@ -189,9 +189,9 @@ test("administrator managed service operations validate as the selected owner be
   const managerCalls = fixture.manager.invocations.length;
   const copied = path.join(fixture.directory, "copied");
   await cp(fixture.home, copied, { recursive: true });
-  await assert.rejects(installViewerService({ ...fixture.options, home: copied, user: "alice" }, fixture.runtime), /Copied or moved/);
+  await assert.rejects(installViewerService({ ...fixture.options, home: copied, user: "alice" }, fixture.runtime), /ownership anchor changed/);
   await assert.rejects(getViewerServiceStatus({ home: fixture.home, user: "another" }, fixture.runtime), /Selected user/);
-  await assert.rejects(serviceRuntime.prepareViewerServiceInbox({ ...await prepareDefinition({ ...fixture.options, user: "alice" }, fixture.runtime, "linux"), home: copied }, fixture.runtime), /Copied or moved/);
+  await assert.rejects(serviceRuntime.prepareViewerServiceInbox({ ...await prepareDefinition({ ...fixture.options, user: "alice" }, fixture.runtime, "linux"), home: copied }, fixture.runtime), /ownership anchor changed/);
   assert.equal(fixture.manager.invocations.length, managerCalls);
 
   process.getuid = ownerUid;

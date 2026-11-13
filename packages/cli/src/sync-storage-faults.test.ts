@@ -582,9 +582,9 @@ function registerStorageFaultTests() {
     const copyHome = path.join(copyParent, "copy");
     await cp(fixture.home, copyHome, { recursive: true });
     const clone = new ManagedSyncStore(copyHome);
-    await assert.rejects(clone.snapshot(), /Copied or moved/);
-    await assert.rejects(clone.recover(), /Copied or moved/);
-    await assert.rejects(clone.publish(input, "Cannot-Clone-Owner"), /Copied or moved/);
+    await assert.rejects(clone.snapshot(), /ownership anchor changed/);
+    await assert.rejects(clone.recover(), /ownership anchor changed/);
+    await assert.rejects(clone.publish(input, "Cannot-Clone-Owner"), /ownership anchor changed/);
     assert.deepEqual(await rawLedger(copyHome), before);
     await assert.rejects(clone.fork(), /quarantine/);
     await clone.quarantineRestore();
@@ -634,8 +634,8 @@ function registerStorageFaultTests() {
 
     const movedHome = path.join(copyParent, "moved");
     await rename(copyHome, movedHome);
-    await assert.rejects(new ManagedSyncStore(movedHome).recover(), /Copied or moved/);
-    await assert.rejects(new ManagedSyncStore(movedHome).snapshot(), /Copied or moved/);
+    await assert.rejects(new ManagedSyncStore(movedHome).recover(), /ownership anchor changed/);
+    await assert.rejects(new ManagedSyncStore(movedHome).snapshot(), /ownership anchor changed/);
   });
 
   test("missing or untrusted terminal history keeps reconnected copies detached and live forwarding blocked", { timeout: 10_000 }, async (t) => {

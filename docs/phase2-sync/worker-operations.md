@@ -61,7 +61,7 @@ After manual setup, use `sync worker supervisor status --inbox research --defini
 
 ## Offline copies, restore quarantine and fork
 
-Ordinary managed entry points validate ledger/format barrier, reader UUID and canonical home/device/inode before credentials or endpoints. A copied/moved home, a barrier missing its ledger or an unexplained UUID mismatch blocks safely. Never copy a runtime record elsewhere and use its PID or endpoint to find the original process.
+Ordinary managed entry points validate ledger/format barrier, reader UUID and canonical home/device/inode before credentials or endpoints. An ownership anchor change, a barrier missing its ledger or an unexplained UUID mismatch blocks safely. An anchor change does not establish that copying or moving occurred. Never copy a runtime record elsewhere and use its PID or endpoint to find the original process.
 
 ```sh
 html-inbox sync restore inspect --home /canonical/copied-home --json
@@ -76,3 +76,5 @@ Registered identity replacement uses a durable catalog transition naming only th
 The tested platform is Linux with Node 24.19.0 and Node 20.20.2 in disposable stores. POSIX file/directory fsync behavior and process-crash cuts have been exercised; this does not prove physical persistence across real host power loss, reboot, OS sleep or two-host LAN/Tailscale. Windows rejection is exercised through an isolated simulated platform on Linux; native Windows execution remains untested here. General orphan/body reclamation and trusted old-owner recovery remain unavailable. No real report stores, installed viewers/CLIs, live services, access grants or network settings were changed.
 
 Managed viewer service administration validates the selected normal owner through the existing privilege-drop boundary before reading saved viewer settings or contacting a manager. Installed status/removal verify the definition account against the current account lookup, so they do not depend on SUDO_USER. A copied home, damaged ledger/barrier, reader mismatch or failed owner preflight remains an error before service effects. This correction is covered by simulated administrator/owner boundaries and recording managers; no real setuid, systemd or launchd operation was executed for its validation.
+
+See [ownership anchor changes and recovery](ownership-recovery.md) for conclusively dead runtime maintenance, quarantine versus original-identity recovery, remaining durable-evidence design work and a proposed deployment sequence.

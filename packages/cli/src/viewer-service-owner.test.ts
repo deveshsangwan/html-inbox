@@ -124,7 +124,7 @@ test("owner preflight preserves named, raw, environment and default catalog sele
   assert.equal(selected.source, "environment");
   const copied = path.join(f.root, "copied");
   await cp(f.home, copied, { recursive: true });
-  await assert.rejects(resolveInboxSelection({ home: copied }, environment, undefined, { inspectHome }), /Copied or moved/);
+  await assert.rejects(resolveInboxSelection({ home: copied }, environment, undefined, { inspectHome }), /ownership anchor changed/);
 });
 
 test("copied, mismatched and incomplete managed homes fail the owner bridge before legacy status or any endpoint", async (t) => {

@@ -462,7 +462,7 @@ for (const condition of ["malformed-json", "signature", "anchor", "reader-identi
       return originalOpen(...args);
     });
 
-    const error = condition === "signature" ? /signature/ : condition === "anchor" ? /Copied or moved/ :
+    const error = condition === "signature" ? /signature/ : condition === "anchor" ? /ownership anchor changed/ :
       condition === "reader-identity" ? /Reader identity differs/ : condition === "barrier" ? /barrier/ : SyntaxError;
     await assert.rejects(store.snapshot(), error);
     assert.equal(reads, 1);
