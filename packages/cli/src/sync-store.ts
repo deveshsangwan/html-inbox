@@ -141,9 +141,12 @@ export class ManagedSyncStore {
     });
   }
 
-  async recover(): Promise<void> {
+  async recover(validateMaintenance?: () => Promise<void>): Promise<void> {
     await checkDirectory(this.directory);
-    await withStoreLock(this.directory, this.lockDeadlineMs, () => this.recoverLocked());
+    await withStoreLock(this.directory, this.lockDeadlineMs, async () => {
+      await validateMaintenance?.();
+      await this.recoverLocked();
+    });
   }
 
   async snapshot(): Promise<SyncLedger> {
@@ -1075,11 +1078,18 @@ export class ManagedSyncStore {
     return originalBytes ? { metadata: readerMetadata(record, ledger.inboxId), originalBytes } : null;
   }
 
-  /** Receiver custody resets; owner recovery remains quarantined until a fresh fork. */
-  async quarantineRestore(): Promise<void> {
+  /** Receiver custody resets; owner recovery remains quarantined until a fresh fork.
+   * Maintenance revalidates lifecycle evidence inside the mutation lock before changing identity.
+   */
+  async quarantineRestore(validateMaintenance?: () => Promise<void>, expectedInboxId?: string): Promise<void> {
     await withStoreLock(this.directory, this.lockDeadlineMs, async () => {
       await this.prepareManagedDirectories();
       const ledger = await this.readLedger();
+      if (expectedInboxId && ledger.inboxId !== expectedInboxId) {
+        throw new Error("Offline expected inbox identity differs from the ledger");
+      }
+
+      await validateMaintenance?.();
       ledger.ownerAnchor = await this.currentAnchor();
       ledger.storageIncarnation = randomUUID();
       ledger.receipts = {};
@@ -1100,7 +1110,7 @@ export class ManagedSyncStore {
     });
   }
 
-  async fork(expected?: { oldInboxId: string; newInboxId: string }): Promise<{ inboxId: string; historyEpoch: string }> {
+  async fork(expected?: { oldInboxId: string; newInboxId: string }, validateMaintenance?: () => Promise<void>): Promise<{ inboxId: string; historyEpoch: string }> {
     await withStoreLock(this.directory, this.lockDeadlineMs, async () => {
       await this.prepareManagedDirectories();
       const ledger = await this.readLedger();
@@ -1112,6 +1122,7 @@ export class ManagedSyncStore {
         throw new Error("Fork source identity differs from the recorded transition");
       }
 
+      await validateMaintenance?.();
       const inboxId = expected ? parseUuid(expected.newInboxId) : randomUUID();
       const historyEpoch = randomUUID();
       const grant = await this.createOwnerKey(inboxId, historyEpoch);
@@ -1540,7 +1551,8 @@ export class ManagedSyncStore {
   private async assertAnchor(ledger: SyncLedger): Promise<void> {
     const anchor = await this.currentAnchor();
     if (anchor.home !== ledger.ownerAnchor.home || anchor.dev !== ledger.ownerAnchor.dev || anchor.ino !== ledger.ownerAnchor.ino) {
-      throw new Error("Copied or moved managed store requires explicit restore quarantine and fork");
+      const changed = (["home", "dev", "ino"] as const).filter((field) => anchor[field] !== ledger.ownerAnchor[field]);
+      throw new Error(`Managed ownership anchor changed (${changed.join(", ")}); original ownership is unproven. Explicit restore inspection is required; quarantine disables signing and a fork creates a new identity`);
     }
   }
 
