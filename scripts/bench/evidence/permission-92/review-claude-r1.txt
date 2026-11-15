@@ -1,0 +1,116 @@
+# Review of PR #118 (#92), frozen head 07a3b2b
+
+I made no changes. I read the issue (no comments), `brief-92.txt`, the full `execution-contract.txt`, the PR body, the source, the new test, `permissions.py` and all committed comparison and check evidence. I decompressed the logs and recomputed hashes.
+
+**Confirmed independently**
+- `git diff 52cdb70..HEAD` touches no production file. The only file under `packages/` is `private-storage.test.ts`.
+- `packages/cli/src/private-storage.ts` is byte-identical to the parent. Its SHA-256 is `000d77f9…`, which matches `baseline.ts.gz`, the `baseline` and `restored` fingerprints, and the report.
+- `fingerprints.json.gz` holds 394 files per build. `baseline` equals `restored` exactly. `candidate` differs from `baseline` in exactly one file, `dist/private-storage.js`, so the candidate build was isolated.
+- The comparison manifest has 11 commands with the expected exits. Baseline exits 0 on Node 20.20.2 and 24.19.0. Candidate exits 1 on both, with 4 failed and 0 passed.
+- The failures are the intended ones.
+  - Removal gives "Missing expected rejection" for ENOENT.
+  - Replacement gives 511 where 384 (file) or 448 (directory) is expected.
+- The candidate diff in `candidate-diff.log.gz` guards both chmod calls with the full `0o7777` mask, and `win32` always chmods.
+- Every check count in the report matches its log.
+
+  | Check | Result |
+  |---|---|
+  | Targeted tests, both runtimes | 218/218 |
+  | Full suite, Node 20 | 1332 passed, 2 skipped |
+  | Full suite, Node 24 retry | 1331 passed, 3 skipped |
+  | Harness/skills, both runtimes | 161 passed, 2 skipped |
+  | Browser, both runtimes | 73 passed, 1 skipped |
+
+- The checks manifest has 16 rows: 15 exit 0 and one exit 143.
+- The four new tests appear in both full-suite logs as tests 328–331, and all pass on the restored build.
+- The interrupted Node 24 log reached 980 of 1245 subtests with 0 failures and no summary. The report counts it as neither a pass nor a failure, and `interruption.json` records the cleanup.
+
+## Findings
+
+**1. Medium — `scripts/bench/permissions.py:78-86`: restoration depends on `finally`, and the script has no signal handling.**
+- Problem: the script rewrites tracked production source at line 68. SIGTERM (exit 143) terminates Python without running `finally`, so the mutated source stays. The same session did take a 143 on a neighbouring runner. `scripts/bench/run.py` handles SIGINT and SIGTERM, per the bench README.
+- Impact: a killed run leaves a "candidate" `private-storage.ts` that could be committed.
+- Fix: install a SIGTERM handler that raises, or add a pre-flight check that refuses to run on a dirty source file. Alternatively, build the candidate in a copied or worktree checkout and never touch the tracked file. Disclose the limit in the report if you leave it.
+
+**2. Low — `permissions.py:78-86`: restoration asserts can hide the real failure.**
+- `assert` statements inside `finally` replace any earlier exception, and `python -O` strips them.
+- `restoration.json` hard-codes `true` booleans. It is only written after the asserts pass, so it is truthful today.
+- Fix: compute the booleans from the comparisons and raise explicit errors. Keep the original exception chained.
+
+**3. Low — `permissions.py:24-28`: there is no clean-tree check, and the file does not record the repository head's dirty state.**
+- `candidate-diff` runs `git diff -- source`, which silently includes any prior local edit.
+- `head.log` records the SHA but not `git status`.
+- Fix: assert `git diff --quiet -- <source>` at the start and record `git status --porcelain`.
+
+**4. Low — `permissions.py:64`: the script is single-use and brittle.**
+- `candidate.count(before) == 1` fails as soon as `private-storage.ts` is reformatted, because the replacement strings are hard-coded.
+- The file is generically named `permissions.py` for a rejected one-off. It also differs from `listing.py` in quote style and in having no shebang or `REPO` constant.
+- The convention is acceptable, since `listing.py` is also an "#91 only" runner. The docstring already says "#92".
+- Fix: say in the module docstring that it reproduces the experiment only against `52cdb70` and breaks when that file changes. Consider renaming it `permission-92.py`.
+
+**5. Low — `packages/cli/src/private-storage.test.ts:38-71`: the replacement test can pass without exercising anything.**
+- If the `fs.lstat` mock stops intercepting, the target is already private. This would happen if the module moved to ESM named imports, which bind at link time. The `0600`/`0700` assertion at line 69 would then pass vacuously.
+- The removal test would fail loudly in that case, and baseline did prove the mock fires today. The gap is therefore latent.
+- Fix: count interceptions in each test and `assert.equal(count, 1)`.
+
+**6. Low — `private-storage.test.ts:12-71`: duplicated setup and no explanatory comment.**
+- Fixture creation (lines 16–20 and 42–46) and the `lstat` interceptor (lines 23–32 and 49–66) are repeated.
+- Nothing says why the test hooks `lstat` at that exact point.
+- Fix: extract one helper such as `mutateAfterInspection(t, target, mutate)`. Add a short comment: it pins "path-based chmod acts on the object present at chmod time" as a characterization test, so a future descriptor-based design must change it deliberately.
+
+**7. Low — `private-storage.test.ts:2` and `permission-92.md:30-37`: the tests encode the implementation, not only the contract.**
+- A descriptor-based hardening would legitimately fail the removal test, because `fchmod` on an open fd succeeds after unlink.
+- The report calls these "observable interleavings" and defers descriptor design as out of scope, which is consistent. State outright that these are characterization tests tied to the path-based implementation.
+
+**8. Low — `permission-92.md:14-16`: orchestration chatter in a public document.**
+- "Root granted the exclusive qualification slot after #93 released it" leaks internal scheduling.
+- Slot and review-process mentions at lines 15, 135–136 and 141–147 are process notes, not evidence.
+- Fix: drop them from the report. Keep them in the PR body or root receipt.
+
+**9. Low — `permission-92.md:141-147`: the dispositions are still placeholders.**
+- Findings, verdicts and reviewer settings are future tense ("will inspect").
+- The issue and contract require the dispositions to be recorded before the PR leaves draft.
+- Fix: record this review's findings and dispositions, and the other review's.
+
+**10. Low — `permission-92.md:10-42`: acceptance criteria and release routing are not mapped explicitly.**
+- The issue's three criteria are unmet or unmeasured by design. The issue also says to move non-contract-preserving work to 1.x.
+- The report says "applies to the Node >=20 line and forward-port planning" and that descriptor/ownership work needs separate review. It never states that nothing is deferred to 1.x and no modern contract is approved.
+- Fix: add a short criteria-to-disposition list, and say no modern contract is approved here.
+
+**11. Low — `permission-92/**`: evidence hygiene.**
+- Logs and manifests embed absolute local paths (`/home/agent/.t3/worktrees/...`, `/home/agent/.local/share/fnm/...`), PIDs and `/tmp` fixture names.
+- `baseline.ts.gz` and `candidate.ts.gz` duplicate `git show` plus `candidate-diff`.
+- `checks/commands.jsonl` was assembled by hand. It has a different schema from the comparison manifest (`seconds` and `status` fields, no `cwd`), and no committed tool produces it.
+- Total is 396 KB. That is proportionate, but these items are optional clutter.
+- Fix: document that `checks/commands.jsonl` is a hand-curated receipt, and drop the two `.ts.gz` copies if you want to trim.
+
+**12. Suggestion — `permission-92.md:85-90`: the no-go rests on correctness alone.**
+- It is honest that no speed was measured. A reader could still read "no-go" as "no benefit."
+- Add one sentence: the decision is a contract rejection, not a finding that chmod elision is slow or fast. The 15,004 historical API calls are unverified for the current base, and the benefit stays unquantified.
+
+**13. Suggestion — `permission-92.md:131-133`: unslop.**
+- The archival-notes paragraph (an assertion that stopped before copying logs) is process noise that doesn't affect the evidence.
+- "Another lstat moves the race." (line 34) is clipped, and the double blank line at 139–140 is stray.
+
+**No blockers found in the code or the evidence.** The remaining items are polish. Findings 8 and 9 must be done before the PR leaves draft because the contract requires recorded dispositions. Finding 1 is the one I would fix first, since the runner mutates tracked source.
+
+## Verdicts
+
+**Functionality: PASS.**
+- There is no production change, and Windows, read-only sources, the eight listing slots and sibling drain are untouched by construction.
+- The four tests are valid oracles. They pass on baseline on both runtimes and fail on the full-mask shortcut on both, for the stated reasons.
+- Restoration is proven by hash. The wider suite passes on Node 20 and 24 on Linux.
+- Limits are disclosed correctly: macOS and Windows are CI-only, ownership/EPERM is unestablished, and path-based chmod is not claimed race-free.
+
+**Code quality: PASS WITH CONDITIONS.**
+- The conditions are findings 8 and 9 (public-doc cleanliness and recorded dispositions). I recommend fixing finding 1 as well.
+- The test is small, typed without `any`, non-null assertions or suppressions, and uses the existing `temporaryHome` cleanup helper.
+- The runner follows the `listing.py` precedent, but its restoration is fragile (findings 1–3).
+- The added test, runner and evidence are proportionate to a no-go decision that blocks a contract-weakening optimization.
+
+**Performance/no-go evidence: PASS.**
+- The no-go is justified on correctness grounds: skipping chmod on the earlier stat changes ENOENT reporting and loose-replacement repair, both explicitly in the issue's "do not weaken" scope.
+- Skipping performance runs after the correctness failure is permitted by the contract's no-go clause. The report makes no speedup claim.
+- It should state clearly that the benefit is unquantified (finding 12).
+
+PR https://github.com/deveshsangwan/html-inbox/pull/118, head 07a3b2b1dd6ff6f694f488488c6facbc19e38425, checks local qualification complete and CI/root audit pending, reviews functionality PASS, code quality PASS WITH CONDITIONS (findings 8 and 9 required, finding 1 recommended), performance/no-go evidence PASS

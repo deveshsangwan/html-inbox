@@ -1,0 +1,191 @@
+{
+  "unstaged": {
+    "editedSourceUnchanged": true,
+    "indexEntryUnchanged": true,
+    "noBuildStarted": true,
+    "outerSourceRestored": true,
+    "outerIndexBytesRestored": true
+  },
+  "staged": {
+    "editedSourceUnchanged": true,
+    "indexEntryUnchanged": true,
+    "noBuildStarted": true,
+    "outerSourceRestored": true,
+    "outerIndexBytesRestored": true
+  },
+  "signal": {
+    "runnerPid": 2427181,
+    "groupId": 2427181,
+    "signal": "SIGTERM",
+    "signalTarget": "runner PID only",
+    "phase": "candidate source installed; pnpm build member observed",
+    "sourceAtSignal": "0136220d91065ce8bb5782eeb809c7c776d5f8af36a3d2b2737876fadef0392a",
+    "membersBeforeSignal": [
+      {
+        "pid": 2427181,
+        "state": "S",
+        "startTime": "79148407",
+        "command": "python3 scripts/bench/permissions.py --node20 /home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node --node24 /home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node --out /home/agent/.t3/worktrees/html-inbox/perf-92-chmod/artifacts/permission-92/requalification/safety/signal "
+      },
+      {
+        "pid": 2427331,
+        "state": "R",
+        "startTime": "79148638",
+        "command": "node /run/user/1001/fnm_multishells/2423289_1794073177246/bin/pnpm build "
+      }
+    ],
+    "exit": 1,
+    "observedMembers": [
+      {
+        "pid": 2427181,
+        "state": "Z",
+        "startTime": "79148407",
+        "command": ""
+      },
+      {
+        "pid": 2427185,
+        "state": "Z",
+        "startTime": "79148412",
+        "command": ""
+      },
+      {
+        "pid": 2427203,
+        "state": "S",
+        "startTime": "79148464",
+        "command": "sh -c node -e \"require('node:fs').rmSync('packages/cli/dist', { recursive: true, force: true })\" && pnpm --filter html-inbox build "
+      },
+      {
+        "pid": 2427204,
+        "state": "R",
+        "startTime": "79148465",
+        "command": "node -e require('node:fs').rmSync('packages/cli/dist', { recursive: true, force: true }) "
+      },
+      {
+        "pid": 2427215,
+        "state": "Z",
+        "startTime": "79148469",
+        "command": ""
+      },
+      {
+        "pid": 2427257,
+        "state": "S",
+        "startTime": "79148528",
+        "command": "sh -c tsc-rs -p tsconfig.json "
+      },
+      {
+        "pid": 2427258,
+        "state": "S",
+        "startTime": "79148528",
+        "command": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/.pnpm/@tsc-rs+linux-x64@0.7.0/node_modules/@tsc-rs/linux-x64/lib/tsc -p tsconfig.json "
+      },
+      {
+        "pid": 2427294,
+        "state": "R",
+        "startTime": "79148608",
+        "command": "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node --test --test-reporter=tap packages/cli/dist/private-storage.test.js "
+      },
+      {
+        "pid": 2427300,
+        "state": "R",
+        "startTime": "79148613",
+        "command": "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node /home/agent/.t3/worktrees/html-inbox/perf-92-chmod/packages/cli/dist/private-storage.test.js "
+      },
+      {
+        "pid": 2427313,
+        "state": "R",
+        "startTime": "79148623",
+        "command": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node --test --test-reporter=tap packages/cli/dist/private-storage.test.js "
+      },
+      {
+        "pid": 2427319,
+        "state": "R",
+        "startTime": "79148628",
+        "command": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node --experimental-addon-modules --test-coverage-functions=0 --test-concurrency=0 --inspect-publish-uid=stderr,http --inspect-port=127.0.0.1:9229 --report-signal=SIGUSR2 --test-coverage-lines=0 --test-isolation=process --heap-prof-interval=524288 --cpu-prof-interval=1000 --v8-pool-size=4 --trace-event-file-pattern=node_trace.${rotation}.log --secure-heap-min=2 --network-family-autoselection-attempt-timeout=250 --tls-cipher-list=TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:DHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA256:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!SRP:!CAMELLIA --use-largepages=off --secure-heap=0 --watch-kill-signal=SIGTERM --test-coverage-branches=0 --max-http-header-size=16384 --test-timeout=0 --node-snapshot --stack-trace-limit=10 --heapsnapshot-near-heap-limit=0 packages/cli/dist/private-storage.test.js "
+      },
+      {
+        "pid": 2427331,
+        "state": "R",
+        "startTime": "79148638",
+        "command": "node /run/user/1001/fnm_multishells/2423289_1794073177246/bin/pnpm build "
+      },
+      {
+        "pid": 2427343,
+        "state": "S",
+        "startTime": "79148689",
+        "command": "sh -c node -e \"require('node:fs').rmSync('packages/cli/dist', { recursive: true, force: true })\" && pnpm --filter html-inbox build "
+      },
+      {
+        "pid": 2427344,
+        "state": "R",
+        "startTime": "79148690",
+        "command": "node -e require('node:fs').rmSync('packages/cli/dist', { recursive: true, force: true }) "
+      },
+      {
+        "pid": 2427351,
+        "state": "R",
+        "startTime": "79148693",
+        "command": "node /run/user/1001/fnm_multishells/2423289_1794073177246/bin/pnpm --filter html-inbox build "
+      },
+      {
+        "pid": 2427363,
+        "state": "S",
+        "startTime": "79148746",
+        "command": "sh -c tsc-rs -p tsconfig.json "
+      },
+      {
+        "pid": 2427364,
+        "state": "S",
+        "startTime": "79148746",
+        "command": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/.pnpm/@tsc-rs+linux-x64@0.7.0/node_modules/@tsc-rs/linux-x64/lib/tsc -p tsconfig.json "
+      },
+      {
+        "pid": 2427397,
+        "state": "R",
+        "startTime": "79148815",
+        "command": "node /run/user/1001/fnm_multishells/2423289_1794073177246/bin/pnpm build "
+      },
+      {
+        "pid": 2427411,
+        "state": "S",
+        "startTime": "79148870",
+        "command": "sh -c node -e \"require('node:fs').rmSync('packages/cli/dist', { recursive: true, force: true })\" && pnpm --filter html-inbox build "
+      },
+      {
+        "pid": 2427412,
+        "state": "R",
+        "startTime": "79148870",
+        "command": "node -e require('node:fs').rmSync('packages/cli/dist', { recursive: true, force: true }) "
+      },
+      {
+        "pid": 2427419,
+        "state": "R",
+        "startTime": "79148874",
+        "command": "node /run/user/1001/fnm_multishells/2423289_1794073177246/bin/pnpm --filter html-inbox build "
+      },
+      {
+        "pid": 2427431,
+        "state": "S",
+        "startTime": "79148928",
+        "command": "sh -c tsc-rs -p tsconfig.json "
+      },
+      {
+        "pid": 2427432,
+        "state": "S",
+        "startTime": "79148928",
+        "command": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/.pnpm/@tsc-rs+linux-x64@0.7.0/node_modules/@tsc-rs/linux-x64/lib/tsc -p tsconfig.json "
+      }
+    ],
+    "remainingGroupMembers": [],
+    "restoration": {
+      "sourceByteIdentical": true,
+      "allBuildHashesIdentical": true
+    }
+  },
+  "outerFinally": {
+    "sourceByteIdentical": true,
+    "indexByteIdentical": true,
+    "sourceSha256": "000d77f9dbd585e3f10ea393f03a6e59049980d4d3aae34a219e2cbfd4413e62",
+    "indexSha256": "a195a1c9d02bf3fa36bbdd0f17334cde39933a8f157b109b2716fc4cb81ef84d",
+    "allBuildHashesMatch": true
+  }
+}

@@ -1,0 +1,25 @@
+No findings or material blockers in the complete focused diff from `52cdb70` to frozen head `6dd7d3a`. No additional optional suggestions.
+
+I read the full current [issue #92](https://github.com/deveshsangwan/html-inbox/issues/92), which has no comments, the brief/contract, both original reviews, all 13 dispositions, source/tests, and archived requalification evidence. Review remained read-only; no installs, builds, runtime tests, measurements, mutations, delegation, or watcher actions occurred.
+
+- **Functionality: PASS for the investigation-only scope.** The four tests exercise real `lstat` followed by controlled removal/replacement. Interception counts prevent vacuous replacement passes. Both runtimes show four baseline passes and four candidate failures for the intended reasons: missing `ENOENT` rejection and unrepaired `0777` replacements. Production source is byte-identical to the immediate parent. Read-only behavior, eight shared slots, sibling draining, runtime and policy remain unchanged.
+- **Code quality: PASS.** The prior conditional requirements are satisfied. Explicit errors, computed restoration booleans, exception chaining, source preflight, source hash pinning and characterization comments address the substantive runner/test concerns. The direct test flows remain understandable without helper extraction.
+- **Performance/no-go evidence: PASS.** The correctness failure justifies rejecting this shortcut before benchmarking. No practical benefit was measured or claimed. This does not establish race-free baseline behavior, foreign-owner/EPERM equivalence, or an approved modern contract.
+
+Prior findings are satisfactorily disposed:
+
+| Original findings | Second-round disposition |
+|---|---|
+| 1–3: signal restoration, assertions, dirty/staged preflight | Fixed. Raw refusals exit 1 before builds; signal evidence supports the exercised restoration path. |
+| 4–7: source specificity, interception, duplication and characterization | Pin/hash and interception checks verified. Characterization is explicit; declining helper extraction is reasonable. |
+| 8–10: public prose, missing dispositions, acceptance/release mapping | Fixed. All findings are recorded; no optimization ships and no portion is approved or deferred to 1.x. |
+| 11: evidence hygiene | Retention is justified for this audit. Manifest provenance and synthetic paths are explained; original evidence remains preserved. |
+| 12–13: unquantified benefit and prose | Addressed. The contract rejection and measurement limits are clear. |
+
+The [safety receipt](/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/scripts/bench/evidence/permission-92/requalification/safety/receipts.json) supports the actual signal claim: runner PID `2427181` received SIGTERM after candidate bytes matched and build child `2427331` was observed. The command completed, restoration ran, and the runner exited 1 with `InterruptedError: Received signal 15`. Descendant observations and the empty final group scan provide evidence beyond waiting for the direct child. Source/index restoration is computed in the procedure and recorded in receipts.
+
+Independently recomputed source and all 394 current build hashes match the updated normal and signal baseline/restored fingerprints. Only `private-storage.test.js` differs from the original qualification build. Final regression logs report 4 passes and focused logs 218 passes on each runtime.
+
+The report correctly excludes unexercised group interruption, SIGINT, timeouts, emergency cleanup, SIGKILL and machine failure. Final-head CI/root audit remain pending; no further broad review or local execution is warranted by this review.
+
+PR https://github.com/deveshsangwan/html-inbox/pull/118, head 6dd7d3aae557e1bdc508bb0aa83c71ea233cbd66, checks local requalification passed and final-head CI/root audit pending, reviews functionality PASS; code quality PASS; performance/no-go evidence PASS.

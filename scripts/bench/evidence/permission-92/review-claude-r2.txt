@@ -1,0 +1,70 @@
+I inspected the frozen head `6dd7d3a` read-only, with no builds, test runs or checkout changes. All 13 prior findings are dispositioned correctly, and I have no blockers, only Low items and Suggestions.
+
+## Checked
+- **Scope:** `git diff 52cdb70..6dd7d3a` touches no production file; `private-storage.ts` is still SHA-256 `000d77f9…`.
+- **Issue and contract:** I read issue #92 (it has no comments), `brief-92.txt`, `execution-contract.txt`, both R1 reviews and the whole diff.
+- **Fingerprints:** The new normal-run `baseline`, `restored`, signal `baseline`/`restored` and `final-hashes` all agree. The original baseline differs only in `private-storage.test.js` (394 files, same file set), as expected from the new interception-count assertions.
+- **Candidate build:** The candidate differs from baseline only in `private-storage.js` and `.test.js`. The candidate diff guards both chmod calls with the full `0o7777` mask.
+- **Normal comparison:** Baseline passes 4 cases on Node 20 and 24, the candidate fails all 4, and restoration reports true.
+- **Refusals:** The unstaged and staged cases each fail with `source-clean: expected exit 0, got 1` at the preflight, before any build log exists. Each case records edited source bytes unchanged, index entry unchanged, no build started, and outer source and index bytes restored.
+- **Signal run:** The traceback is `InterruptedError: Received signal 15`, raised after `build-candidate` completed (exit 0).
+  - Its manifest then records `build-restored`, and `restoration.json` is true, with the computed source and build hashes equal to baseline.
+  - At the signal, the source hash was the candidate hash (`0136220d…`) and the group held the runner (2427181) and `pnpm build` (2427331).
+  - The `/proc` scan observed compiler and node descendants, and `remainingGroupMembers` is `[]`.
+- **Post-signal regressions:** All four regressions and the 218 focused tests passed on both runtimes.
+
+## Disposition of prior findings
+| Finding | Verdict |
+|---|---|
+| 1 Medium, SIGTERM bypasses `finally` | **Resolved.** Handlers defer the stop to `check_interruption()` (at `permissions.py:41`) between commands. Signals are ignored while restoring. The final `check_interruption()` re-raises a signal that arrived during restoration. A pre-mutation signal exits before any source write. Exercised for SIGTERM only; SIGINT, timeout and SIGKILL are disclosed as not exercised. |
+| 2 asserts and hard-coded booleans | **Resolved.** Explicit errors, computed booleans, and `raise … from failure` chaining. |
+| 3 preflight and status receipt | **Resolved.** The `git diff --quiet HEAD` check covers both staged and unstaged edits, and a byte hash pin is also enforced. The status log is recorded but informational only, which is fine. |
+| 4 one-off script | **Resolved.** The docstring and the hash pin document the constraint. Keeping the filename is reasonable. |
+| 5 vacuous mock | **Resolved.** `interceptions` is asserted in both cases. |
+| 6 helper extraction | **Declined, accepted.** Roughly 8 lines of duplication across four short flows is tolerable, and the comment explains the interleaving. This is optional (Suggestion). |
+| 7 characterization wording | **Resolved** in the test comment and report. |
+| 8 scheduling chatter | **Mostly resolved** in the report, but see Low 1 below. |
+| 9 dispositions | **Resolved.** |
+| 10 criteria and release mapping | **Resolved.** The report states that nothing is deferred to 1.x and no modern contract is approved. |
+| 11 evidence hygiene | **Declined with reasons, accepted.** Absolute paths and PIDs stay as reproduction evidence, and the manifest schema difference is explained. |
+| 12 and 13 | **Resolved.** The report calls the no-go a contract rejection with the benefit unquantified. |
+
+## Findings
+**Low 1: scheduling language in committed source.**
+- Location: `requalify.py:1`.
+- Problem: the docstring says "…after a slot grant", which is the same kind of orchestration note as prior finding 8.
+- Fix: drop "after a slot grant".
+
+**Low 2: undocumented input dependency in the safety procedure.**
+- Location: `requalify.py:52`.
+- Problem: it reads `out.parent/comparison/fingerprints.json`, the uncompressed output of a prior normal run. The committed copy is gzip, and neither the script nor the report states this precondition.
+- Impact: `commands.json` shows the order, but a reader who runs it alone gets a `FileNotFoundError`.
+- Fix: add one docstring sentence.
+
+**Low 3: the 120 s wait window is partly accidental.**
+- Location: `requalify.py:132`.
+- Problem: the post-signal wait is `deadline + 60`, measured from the start of the checkpoint search, not from the signal. A late checkpoint shrinks the restoration window.
+- Impact: this fails safe. The `finally` block SIGKILLs the group, and the outer `finally` restores source, index and build. It was not exercised.
+- Fix: use a fresh deadline taken at signal time.
+
+**Suggestion 1: evidence volume.**
+- Problem: `requalification/` adds about 348 KB, against 392 KB for the earlier `checks` and `comparison` directories. It repeats the fingerprints three times and `baseline.ts.gz`/`candidate.ts.gz` twice more.
+- Impact: it is committed evidence for a no-go with no production diff. It is acceptable, and the declined trimming is reasonable.
+
+**Suggestion 2: say the test hash changed.**
+- Problem: the report doesn't say the original and new baselines differ in exactly one file, `private-storage.test.js`, because of the interception counts.
+- Fix: add that one sentence. The original 4-fail evidence is against the pre-fix test, and the new normal comparison re-establishes it.
+
+**Suggestion 3: the signal checkpoint is timing-dependent.**
+- Problem: a 5 ms `/proc` poll catches the candidate-build window. This is disclosed as one exercised interleaving.
+- Impact: the evidence shows the procedure worked once, and the report does not overclaim.
+
+## Linux safety procedure
+It is test evidence, not production architecture. It is bounded: 300 s per command, 60 s to reach the checkpoint, and an emergency SIGKILL path that was not needed. It is cleaned up: source and index bytes are restored, the build is rebuilt if hashes differ, and a group scan found nothing left. The report is honest about what was not exercised: SIGINT, group interruption, timeouts, SIGKILL and machine failure. At 184 lines it is somewhat heavy for a one-off, but proportionate to the Medium risk of a script that mutates tracked source. The preflight refusals and the signal restoration are directly evidenced, so I would not ask for trimming.
+
+## Verdicts
+- **Functionality: PASS.** There is no production change, and the contract rejection stands as evidenced on both Node versions.
+- **Code quality: PASS.** Every R1 condition is met, and the remaining items are Low or optional.
+- **Performance / no-go evidence: PASS.** The report makes no speedup claim, correctly calls the benefit unquantified, and says plainly that no further measurement was done after the correctness failure.
+
+PR https://github.com/deveshsangwan/html-inbox/pull/118, head 6dd7d3aae557e1bdc508bb0aa83c71ea233cbd66, checks local requalification passed and final-head CI/root audit pending, reviews functionality PASS, code quality PASS (Low 1–3 and Suggestions optional), performance/no-go evidence PASS
