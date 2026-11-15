@@ -2,6 +2,19 @@
 
 All notable changes to HTML Inbox will be documented here.
 
+## 0.6.3 - 2026-11-15
+
+- Apply the hub inbox filter immediately when the dropdown changes, preserving the current search text and updating document results and counts.
+- Restore filters and results through refresh, shared links and Back/Forward. Keep keyboard focus on the dropdown and expose the updated count and empty-state heading to assistive technology.
+- Name the selected inbox in empty states and keep an unrelated unavailable inbox from masking that state. Preserve Search and Enter submission when JavaScript is disabled.
+- Add real-browser coverage for repeated dropdown changes, keyboard typeahead, navigation and the no-JavaScript form.
+
+### Upgrade to 0.6.3
+
+No CLI, viewer-protocol or managed-ledger/ownership-schema migration is required from 0.6.2. Stop verified running viewers, hubs and independent sync workers with the old executable before updating, then restart the components you use. Updating the package does not reload running readers; restart the hub to load the immediate filter behavior. Stored documents, routes, credentials and exposure settings remain unchanged.
+
+The [0.6.2 ownership recovery limits](#upgrade-to-062) and [0.6.0 migration and rollback limits](docs/named-inboxes.md#upgrade-to-060) still apply.
+
 ## 0.6.2 - 2026-11-15
 
 - Allow explicit restore quarantine after an ownership-anchor change when saved same-home workers and viewers are conclusively dead. Keep publication, signing, communication and uncertain ownership fail closed.

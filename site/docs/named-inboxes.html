@@ -251,6 +251,11 @@ html-inbox hub --config /absolute/path/to/reading-hub.json --port 4322</code></p
           The hub runs in the foreground until Ctrl-C. Its default listener is
           loopback port 3218. It combines list and search with inbox badges and
           a source filter. Source names keep identical document IDs distinct.
+          In 0.6.3 and newer, choosing an inbox applies the filter immediately
+          while preserving search text. Choose All selected inboxes to restore
+          all mounted sources. Search or Enter submits a typed query; without
+          JavaScript, use Search or Enter after choosing an inbox too. Refresh,
+          shared links and Back/Forward restore the selected inbox and query.
           Missing, mismatched, or corrupt sources mark results incomplete while
           healthy sources remain readable. Public notices omit local paths and
           control details; operator diagnostics go to stderr.
