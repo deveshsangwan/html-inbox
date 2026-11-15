@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { generateKeyPairSync, randomUUID } from "node:crypto";
+import crypto, { generateKeyPairSync, randomUUID } from "node:crypto";
 import fs, { chmod, cp, lstat, mkdtemp, readFile, rename, rm, stat, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -204,5 +204,48 @@ for (const isValid of [true, false]) {
 
     assert.equal(didReplace, true);
     assert.equal(ledgerOpens, 2, "the unlinked warmed inode cannot supply the final snapshot");
+  });
+}
+
+for (const change of ["device", "reader-identity"] as const) {
+  test(`warm crypto facts cannot authorize publication or communication after changed ${change}`, async (t) => {
+    const { home, store, ledgerPath } = await fixture(t);
+    const initial = await store.snapshot();
+
+    const route = await store.configureRoute({ id: randomUUID(), revision: 1, direction: "outbound", peerId: randomUUID(),
+      peerUrl: "https://127.0.0.1:1", sourceInboxId: initial.inboxId, destinationInboxId: randomUUID(), localInboxName: "synthetic",
+      readerAudience: "synthetic warm ownership guard", allowedOrigins: initial.originKeys, credentialRef: "token", tlsTrustRef: "ca",
+      state: "active", lastError: null });
+    const authorization = { routeId: route.id, revision: route.revision, peerId: route.peerId,
+      sourceInboxId: route.sourceInboxId, destinationInboxId: route.destinationInboxId };
+
+    await store.startCommunication(authorization, () => {});
+    const current = await store.snapshot();
+    const identityPath = path.join(home, "instance-id");
+    const signing = t.mock.method(crypto, "sign", crypto.sign);
+
+    let error = /Reader identity differs/;
+    if (change === "device") {
+      current.ownerAnchor.dev += 1;
+      await replaceWithoutGenerationChange(ledgerPath, current);
+      error = /Managed ownership anchor changed \(dev\); original ownership is unproven/;
+    } else {
+      await writeFile(identityPath, `${randomUUID()}\n`);
+    }
+
+    const beforeLedger = await readFile(ledgerPath);
+    const beforeIdentity = await readFile(identityPath);
+    await assertAllReadsReject(store, error);
+    await assert.rejects(store.publish(input, `blocked-${change}`), error);
+
+    let communicationStarts = 0;
+    await assert.rejects(store.startCommunication(authorization, () => {
+      communicationStarts += 1;
+    }, undefined, undefined, true), error);
+
+    assert.equal(signing.mock.callCount(), 0);
+    assert.equal(communicationStarts, 0);
+    assert.deepEqual(await readFile(ledgerPath), beforeLedger);
+    assert.deepEqual(await readFile(identityPath), beforeIdentity);
   });
 }
