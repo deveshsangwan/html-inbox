@@ -86,6 +86,28 @@ test("formatters are lazy and bounded to one per render, including filtered resu
   renderIndex(documents.slice(7), "", { timeZone: "invalid-zone" });
   renderIndex(validDocuments, "no matches", { timeZone: "invalid-zone" });
   renderDocumentShell(documents[7], { timeZone: "invalid-zone" });
+
+  const selectedName = 'office<&"';
+  const sources = [
+    { name: "other", available: false, documents: validDocuments },
+    { name: selectedName, available: true, documents: [] },
+  ];
+  const selectedEmpty = renderHubIndex(sources, "", selectedName, { timeZone: "invalid-zone" });
+  const selectedUnavailable = renderHubIndex(sources.map((source) => ({ ...source, available: false })),
+    "", selectedName, { timeZone: "invalid-zone" });
+
+  assert.deepEqual({
+    emptyTitle: selectedEmpty.match(/<h2 id="empty-title">(.*?)<\/h2>/)?.[1],
+    filterDescription: selectedEmpty.match(/aria-describedby="(.*?)"/)?.[1],
+    unavailableTitle: selectedUnavailable.match(/<h2 id="empty-title">(.*?)<\/h2>/)?.[1],
+    constructions,
+  }, {
+    emptyTitle: escapeHtml(`No documents in ${selectedName}.`),
+    filterDescription: "inbox-filter-help document-count empty-title",
+    unavailableTitle: "No readable documents",
+    constructions: 0,
+  });
+
   assert.equal(constructions, 0);
 
   renderIndex(validDocuments, "");
