@@ -1,0 +1,476 @@
+{
+  "qualification": "zero-record harness smoke only; no performance-retention approval",
+  "parent": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+  "candidate": "c00f61453823a3e15c6132fbd3cdbcb1d6e8a092",
+  "production_equivalent_to": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+  "python": "3.13.5",
+  "runtimes": [
+    {
+      "version": "v20.20.2",
+      "path": "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+      "sha256": "6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd"
+    },
+    {
+      "version": "v24.19.0",
+      "path": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+      "sha256": "bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12"
+    }
+  ],
+  "preliminary_commands": [
+    {
+      "label": "filesystem",
+      "command": [
+        "stat",
+        "-f",
+        "-c",
+        "%T",
+        "/tmp/html-inbox-scheduler-tgt1ocxg"
+      ],
+      "timeout_seconds": 5,
+      "exit": 0,
+      "pid": 2565703,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.01666268997360021
+    },
+    {
+      "label": "archive-parent",
+      "command": [
+        "git",
+        "archive",
+        "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+        "packages/cli/src",
+        "packages/cli/tsconfig.json",
+        "tsconfig.base.json"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2565704,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.046796745038591325
+    },
+    {
+      "label": "build-parent",
+      "command": [
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/node_modules/.bin/tsc-rs",
+        "-p",
+        "/tmp/html-inbox-scheduler-tgt1ocxg/build-parent/packages/cli/tsconfig.json"
+      ],
+      "timeout_seconds": 60,
+      "exit": 0,
+      "pid": 2565706,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.5344218061072752
+    },
+    {
+      "label": "archive-candidate",
+      "command": [
+        "git",
+        "archive",
+        "c00f61453823a3e15c6132fbd3cdbcb1d6e8a092",
+        "packages/cli/src",
+        "packages/cli/tsconfig.json",
+        "tsconfig.base.json"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2565739,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.04552837403025478
+    },
+    {
+      "label": "build-candidate",
+      "command": [
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/node_modules/.bin/tsc-rs",
+        "-p",
+        "/tmp/html-inbox-scheduler-tgt1ocxg/build-candidate/packages/cli/tsconfig.json"
+      ],
+      "timeout_seconds": 60,
+      "exit": 0,
+      "pid": 2565740,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.5305707480292767
+    },
+    {
+      "label": "reader-race-20.20.2-parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-name-pattern=an enabled owned worker keeps its process identity",
+        "/tmp/html-inbox-scheduler-tgt1ocxg/build-parent/packages/cli/dist/sync-ledger-read-race.test.js"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2565772,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.6317220120690763
+    },
+    {
+      "label": "reader-race-20.20.2-candidate",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-name-pattern=an enabled owned worker keeps its process identity",
+        "/tmp/html-inbox-scheduler-tgt1ocxg/build-candidate/packages/cli/dist/sync-ledger-read-race.test.js"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2565813,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.7829907819395885
+    },
+    {
+      "label": "reader-race-24.19.0-parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-name-pattern=an enabled owned worker keeps its process identity",
+        "/tmp/html-inbox-scheduler-tgt1ocxg/build-parent/packages/cli/dist/sync-ledger-read-race.test.js"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2565896,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.632317351992242
+    },
+    {
+      "label": "reader-race-24.19.0-candidate",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-name-pattern=an enabled owned worker keeps its process identity",
+        "/tmp/html-inbox-scheduler-tgt1ocxg/build-candidate/packages/cli/dist/sync-ledger-read-race.test.js"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2565976,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.6310252479743212
+    }
+  ],
+  "cases": [
+    {
+      "name": "20.20.2-0-none-0-parent",
+      "runtime": "20.20.2",
+      "count": 0,
+      "direction": "none",
+      "sample": 0,
+      "revision": "parent",
+      "exit": 0,
+      "elapsed_seconds": 65.88085660000797,
+      "qualified_case": true
+    },
+    {
+      "name": "20.20.2-0-none-0-candidate",
+      "runtime": "20.20.2",
+      "count": 0,
+      "direction": "none",
+      "sample": 0,
+      "revision": "candidate",
+      "exit": 0,
+      "elapsed_seconds": 65.71777181397192,
+      "qualified_case": true
+    },
+    {
+      "name": "20.20.2-0-outbound-0-parent",
+      "runtime": "20.20.2",
+      "count": 0,
+      "direction": "outbound",
+      "sample": 0,
+      "revision": "parent",
+      "exit": 0,
+      "elapsed_seconds": 68.44533585594036,
+      "qualified_case": true
+    },
+    {
+      "name": "20.20.2-0-outbound-0-candidate",
+      "runtime": "20.20.2",
+      "count": 0,
+      "direction": "outbound",
+      "sample": 0,
+      "revision": "candidate",
+      "exit": 0,
+      "elapsed_seconds": 98.44274088193197,
+      "qualified_case": true
+    },
+    {
+      "name": "20.20.2-0-inbound-0-parent",
+      "runtime": "20.20.2",
+      "count": 0,
+      "direction": "inbound",
+      "sample": 0,
+      "revision": "parent",
+      "exit": 0,
+      "elapsed_seconds": 98.69236485101283,
+      "qualified_case": true
+    },
+    {
+      "name": "20.20.2-0-inbound-0-candidate",
+      "runtime": "20.20.2",
+      "count": 0,
+      "direction": "inbound",
+      "sample": 0,
+      "revision": "candidate",
+      "exit": 0,
+      "elapsed_seconds": 98.54271349299233,
+      "qualified_case": true
+    },
+    {
+      "name": "24.19.0-0-none-0-parent",
+      "runtime": "24.19.0",
+      "count": 0,
+      "direction": "none",
+      "sample": 0,
+      "revision": "parent",
+      "exit": 0,
+      "elapsed_seconds": 65.6677372509148,
+      "qualified_case": true
+    },
+    {
+      "name": "24.19.0-0-none-0-candidate",
+      "runtime": "24.19.0",
+      "count": 0,
+      "direction": "none",
+      "sample": 0,
+      "revision": "candidate",
+      "exit": 0,
+      "elapsed_seconds": 65.68351010605693,
+      "qualified_case": true
+    },
+    {
+      "name": "24.19.0-0-outbound-0-parent",
+      "runtime": "24.19.0",
+      "count": 0,
+      "direction": "outbound",
+      "sample": 0,
+      "revision": "parent",
+      "exit": 0,
+      "elapsed_seconds": 67.9579980840208,
+      "qualified_case": true
+    },
+    {
+      "name": "24.19.0-0-outbound-0-candidate",
+      "runtime": "24.19.0",
+      "count": 0,
+      "direction": "outbound",
+      "sample": 0,
+      "revision": "candidate",
+      "exit": 0,
+      "elapsed_seconds": 98.0371172860032,
+      "qualified_case": true
+    },
+    {
+      "name": "24.19.0-0-inbound-0-parent",
+      "runtime": "24.19.0",
+      "count": 0,
+      "direction": "inbound",
+      "sample": 0,
+      "revision": "parent",
+      "exit": 0,
+      "elapsed_seconds": 98.18857009301428,
+      "qualified_case": true
+    },
+    {
+      "name": "24.19.0-0-inbound-0-candidate",
+      "runtime": "24.19.0",
+      "count": 0,
+      "direction": "inbound",
+      "sample": 0,
+      "revision": "candidate",
+      "exit": 0,
+      "elapsed_seconds": 97.9191974690184,
+      "qualified_case": true
+    }
+  ],
+  "cleanup": {
+    "process_groups_reaped": true,
+    "remaining": [],
+    "owned_groups": [
+      2565703,
+      2565704,
+      2565706,
+      2565739,
+      2565740,
+      2565772,
+      2565813,
+      2565896,
+      2565976,
+      2566047,
+      2566309,
+      2566738,
+      2567211,
+      2567699,
+      2568294,
+      2569048,
+      2569453,
+      2569830,
+      2570098,
+      2570754,
+      2571250
+    ],
+    "fixture_root_removed": true
+  },
+  "budget_ledger": {
+    "first_attempt_consumption_seconds_with_reserve": 123,
+    "second_attempt_consumption_seconds_with_reserve": 337,
+    "restart_budget_seconds": 1340,
+    "total_runner_budget_seconds": 1800,
+    "candidate": "c00f61453823a3e15c6132fbd3cdbcb1d6e8a092",
+    "production_equivalent_to": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+    "command": [
+      "python3",
+      "-B",
+      "scripts/bench/scheduler.py",
+      "--candidate",
+      "c00f61453823a3e15c6132fbd3cdbcb1d6e8a092",
+      "--node20",
+      "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+      "--node24",
+      "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+      "--phase",
+      "smoke",
+      "--budget-seconds",
+      "1340",
+      "--out",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-harness-smoke-3"
+    ]
+  },
+  "log_hashes": {
+    "24.19.0-0-none-0-parent.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "environment.json": "61557d9af3653708e9a7bf32ab7e559930ff71dd4aecab3b146e6951c7253b08",
+    "reader-race-20.20.2-candidate.log": "ad30a92bfe9861bae0d280b6bf44f9c09727b12a9463734ceef32f25903246c2",
+    "20.20.2-0-outbound-0-parent.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "20.20.2-0-inbound-0-parent.proc.jsonl": "1f307380f1876ac92efde75be8fadd61b3945ec1febaaed9962f2eb40ccab655",
+    "24.19.0-0-outbound-0-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "20.20.2-0-inbound-0-candidate.jsonl": "d9de1362cfb86d1b1e076a41c5d2c7354ddbf00b23199a705781204037c3b834",
+    "cleanup.json": "3f341ce857df22367865ed47ce4a242556883f49430e8d341e86641b86b20d12",
+    "20.20.2-0-inbound-0-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "24.19.0-0-inbound-0-candidate.jsonl": "7d32c1f5046d3bafc09494ee5eff1cb767282abea5f47cf0d847d81c1cf45fd1",
+    "20.20.2-0-none-0-candidate.jsonl": "fdac14ad06d224ca780663f6247a19aea112bafbe8085eef3efda753b7cf4f30",
+    "reader-race-20.20.2-parent.log": "82f1a12288633abff469e96001b6bcc5f764ac8329e6bed9dadf2bba94e2e070",
+    "24.19.0-0-outbound-0-candidate.jsonl": "17a8570b8900391d9913f8222dd8823df0cdb71585dd4a0b644ad151b6020c9a",
+    "24.19.0-0-none-0-parent.proc.jsonl": "c7b03bb7207741a122af41945a0b60ba9583a5a9c5f3ac3d480fa706d703fa36",
+    "reader-race-24.19.0-candidate.log": "a936073c5432b41f14f122e9f396b42cc491824aeff13059d1da5cf269671c07",
+    "24.19.0-0-outbound-0-parent.proc.jsonl": "ab698c0a73bff8138218c5beb18f36b49bfe4e2b1f7ffdbaf983d4b28886e0b5",
+    "20.20.2-0-outbound-0-parent.jsonl": "5c76cfc067ecdc134072d43c19677b94f44e3b8d6fcfbe63f935a4c753e1bf83",
+    "20.20.2-0-outbound-0-candidate.proc.jsonl": "bbfb51492ca611b399ec606fcc30de1ff602ac490fb1350d16b0f5444f611e22",
+    "build-candidate.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "20.20.2-0-outbound-0-parent.proc.jsonl": "5fe15d9ba61c571a1337936f5c7db4d2a7dcbc3f10f727c4e88a38b6844fca98",
+    "24.19.0-0-none-0-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "24.19.0-0-none-0-candidate.jsonl": "300326277ad40ad3bd8e65d7cd3980e60b221f24174a99f932948109069c321c",
+    "20.20.2-0-outbound-0-candidate.jsonl": "2d300c7bc5e4bbb7f41e307a6f45f9fb3295571d72f4dac12b1ecbcea3c3c86c",
+    "20.20.2-0-inbound-0-parent.jsonl": "bfd89214c74b4170f95638cb2c048e438de21ce7e117106fffcd3e4da33a0ea5",
+    "20.20.2-0-none-0-parent.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "filesystem.log": "f23f0177ae6d4b7017fcaacd265360c0a7aa662f35571247acd86b32f6675ba7",
+    "24.19.0-0-outbound-0-parent.jsonl": "64b1122c334c1db07bb22f22af275f5052789ffb90362f83724acad24d1149ee",
+    "24.19.0-0-inbound-0-candidate.proc.jsonl": "ba647458f741ce64bcd4395b36f0785d4e93e7f3804c00c6056da8520d0e352c",
+    "24.19.0-0-inbound-0-parent.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "20.20.2-0-none-0-parent.proc.jsonl": "97a58c51e919df75d61376241dd314a13600df1cbd3fb7a615737106fd3113c8",
+    "24.19.0-0-inbound-0-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reader-race-24.19.0-parent.log": "629eac080e04e7601476202403310dea43c207f6d5aadc455b2f338166c2e1fd",
+    "20.20.2-0-inbound-0-parent.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "24.19.0-0-outbound-0-parent.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "20.20.2-0-none-0-parent.jsonl": "4b89cc83ef13e6ed9f02844adc2270d1dee8ae3797dba1938deb65fba2382f74",
+    "summary.json": "24d1454f965a2888b4dba56f97a671f2405cef2d41a475834333bd9ed7283ab4",
+    "24.19.0-0-inbound-0-parent.jsonl": "935d734f73e9434a610661ebe2256d1d456f16627fffa7126d6ee325e5a7b598",
+    "20.20.2-0-none-0-candidate.proc.jsonl": "9c92390e606d4fe1523e92e025ad5d520b4499befe899fd67fab19ad89d5fee3",
+    "24.19.0-0-none-0-parent.jsonl": "1838cc1ffd2ade3d3b63d25ce8caeb1b0900c55c19b4ea4ef58d620f86d22b0e",
+    "20.20.2-0-outbound-0-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "24.19.0-0-none-0-candidate.proc.jsonl": "d28031b2ce09f9c0bfa3e749a35d401d299a5de08801f710236e9abb0e70c0e0",
+    "20.20.2-0-none-0-candidate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "build-parent.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "20.20.2-0-inbound-0-candidate.proc.jsonl": "de74aa0e623070af534442c020721f6381f5dbfdc9f6166b76590ebbace1b5a8",
+    "24.19.0-0-inbound-0-parent.proc.jsonl": "1362bd81a5b6fa4eb119f4e424b30cd3340f32a2cb682941ca7a412fcc872ef9",
+    "24.19.0-0-outbound-0-candidate.proc.jsonl": "e150d282be3b06c909b2474dac2e09a9503da103fc7c065c9b422c1a68f8fbac",
+    "commands.jsonl": "341df64c1f02c224d25fedb324a23033eabba3de91a14a784fa038e16334a851"
+  },
+  "attempts": [
+    {
+      "directory": "issue95-harness-smoke-1",
+      "disposition": "stopped and invalidated: parent startup bookkeeping entered idle window",
+      "cleanup": {
+        "process_groups_reaped": true,
+        "remaining": [],
+        "owned_groups": [
+          2560889,
+          2560890,
+          2560891,
+          2560930,
+          2560931,
+          2560963,
+          2560980,
+          2560998,
+          2561035,
+          2561053,
+          2561608
+        ],
+        "fixture_root_removed": true
+      }
+    },
+    {
+      "directory": "issue95-harness-smoke-2",
+      "disposition": "failed outbound empty-outbox precondition; stopped for actual custody/pass-completion correction",
+      "cleanup": {
+        "process_groups_reaped": true,
+        "remaining": [],
+        "owned_groups": [
+          2562973,
+          2562974,
+          2562975,
+          2563007,
+          2563008,
+          2563041,
+          2563058,
+          2563075,
+          2563093,
+          2563111,
+          2563461,
+          2563889,
+          2564248,
+          2565020
+        ],
+        "fixture_root_removed": true
+      }
+    },
+    {
+      "directory": "issue95-harness-smoke-3",
+      "disposition": "all 12 cells qualified for smoke only",
+      "cleanup": {
+        "process_groups_reaped": true,
+        "remaining": [],
+        "owned_groups": [
+          2565703,
+          2565704,
+          2565706,
+          2565739,
+          2565740,
+          2565772,
+          2565813,
+          2565896,
+          2565976,
+          2566047,
+          2566309,
+          2566738,
+          2567211,
+          2567699,
+          2568294,
+          2569048,
+          2569453,
+          2569830,
+          2570098,
+          2570754,
+          2571250
+        ],
+        "fixture_root_removed": true
+      }
+    }
+  ]
+}

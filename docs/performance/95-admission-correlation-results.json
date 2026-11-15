@@ -1,0 +1,553 @@
+{
+  "outcome": "FAILED_DIAGNOSTIC_BOUNDARY_EVIDENCE_ONLY",
+  "tested_head": "cc6ca259d0e3a9171dc58c45f6e08ff770d6803b",
+  "actual_parent": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+  "production_equivalent_to": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+  "publication": "Documentation-only descendant; tested source pin remains distinct.",
+  "grant_id": "root-95-admission-correlation-cc6ca25-20261109-r1",
+  "execution": {
+    "command_exits": [
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    "unrun_commands": [],
+    "controller_exit": 1,
+    "controller_elapsed_seconds": 64.521314390935,
+    "workload_elapsed_seconds": 63.442910708952695,
+    "first_issue_kind": "command-result",
+    "command_error_value": null,
+    "workload_group_joined": true,
+    "workload_fixture_removed": true,
+    "setup_seconds": null,
+    "observed_setup_case_application_timeout": false,
+    "qualification": false,
+    "resource_gain_eligible": false
+  },
+  "commands": [
+    {
+      "label": "pin",
+      "exit": 0,
+      "terminated_exit": 0,
+      "error": null,
+      "elapsed_seconds": 0.06720059795770794,
+      "bound_seconds": 5,
+      "setup_seconds": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "status",
+      "exit": 0,
+      "terminated_exit": 0,
+      "error": null,
+      "elapsed_seconds": 0.054728546063415706,
+      "bound_seconds": 5,
+      "setup_seconds": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "production-frozen",
+      "exit": 0,
+      "terminated_exit": 0,
+      "error": null,
+      "elapsed_seconds": 0.05593266396317631,
+      "bound_seconds": 5,
+      "setup_seconds": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "node-20.20.2",
+      "exit": 0,
+      "terminated_exit": 0,
+      "error": null,
+      "elapsed_seconds": 0.05547414906322956,
+      "bound_seconds": 5,
+      "setup_seconds": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "workload",
+      "exit": 1,
+      "terminated_exit": 1,
+      "error": null,
+      "elapsed_seconds": 63.442910708952695,
+      "bound_seconds": 240,
+      "setup_seconds": null,
+      "group_joined": true,
+      "fixture_removed": true
+    }
+  ],
+  "first_observer": {
+    "row_zero_based": 46,
+    "bytes_including_LF": 1513,
+    "sha256": "6f5e793b73a4e8b4ff346eacd3865bd95995da6510a563a8f71578b7bad9499e",
+    "event": {
+      "wall": 1794199710352,
+      "monotonic": 15714.699953,
+      "role": "worker",
+      "pid": 3058602,
+      "type": "issue95-first-generic-blocked",
+      "ordinal": 1,
+      "timingEligibility": "ineligible",
+      "errorKind": "error",
+      "messageKind": "communication-authorization-deadline",
+      "codeKind": "unknown",
+      "frameKind": "communication-deadline",
+      "admission": {
+        "schema": 1,
+        "firstIdentity": "identity-json",
+        "firstRequestCallId": 3,
+        "errorCallIds": [
+          6,
+          3
+        ],
+        "historyOmitted": 0,
+        "outputOmitted": 0,
+        "observationFaults": 0,
+        "calls": [
+          [
+            1,
+            1,
+            "attempt",
+            "outer-attempt",
+            null,
+            null,
+            1794199756493,
+            null,
+            1794199699192,
+            4553.986352,
+            1794199699192,
+            4554.80152,
+            1794199705072,
+            10434.484739,
+            57301,
+            57301,
+            51421,
+            "fulfilled",
+            0
+          ],
+          [
+            2,
+            1,
+            "communication",
+            "attempt-registration",
+            null,
+            1,
+            1794199756493,
+            null,
+            1794199699192,
+            4554.58384,
+            1794199699192,
+            4554.795246,
+            1794199705072,
+            10434.391761,
+            57301,
+            57301,
+            51421,
+            "fulfilled",
+            1
+          ],
+          [
+            3,
+            1,
+            "request",
+            "identity-json",
+            1,
+            null,
+            1794199756493,
+            5000,
+            1794199705073,
+            10435.432843,
+            1794199705074,
+            10435.943404,
+            1794199710352,
+            15714.329317,
+            51420,
+            51419,
+            46141,
+            "rejected",
+            0
+          ],
+          [
+            4,
+            1,
+            "attempt",
+            "client-attempt",
+            1,
+            3,
+            1794199710073,
+            null,
+            1794199705073,
+            10435.717615,
+            1794199705074,
+            10435.941358,
+            1794199710351,
+            15713.573307,
+            5000,
+            4999,
+            -278,
+            "fulfilled",
+            1
+          ],
+          [
+            5,
+            1,
+            "communication",
+            "attempt-registration",
+            1,
+            4,
+            1794199710073,
+            null,
+            1794199705073,
+            10435.897034,
+            1794199705074,
+            10435.937693,
+            1794199710351,
+            15713.516369,
+            5000,
+            4999,
+            -278,
+            "fulfilled",
+            2
+          ],
+          [
+            6,
+            1,
+            "communication",
+            "request-authorization",
+            null,
+            null,
+            1794199710073,
+            null,
+            1794199710351,
+            15713.735844,
+            1794199710351,
+            15713.847818,
+            1794199710351,
+            15713.903927,
+            -278,
+            -278,
+            -278,
+            "rejected",
+            1
+          ]
+        ]
+      }
+    },
+    "validation": {
+      "published_output_schema": {
+        "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/admission-correlation-source-v1/output.schema.json",
+        "sha256": "195631a96bed1a2b78da79f6a7eda2cad6c425c98afe0f3a0366338dfdef11c0"
+      },
+      "required_fields_types_enums_caps": true,
+      "six_unique_nineteen_column_rows": true,
+      "referenced_ids_present": true,
+      "same_worker_sample_order": true,
+      "all_remaining_margin_arithmetic": true,
+      "all_recorded_callers_recognized": true
+    }
+  },
+  "call_row_columns": [
+    "callId",
+    "storeId",
+    "kind",
+    "caller",
+    "requestId",
+    "parentId",
+    "submittedDeadlineAt",
+    "submittedRequestMs",
+    "entryWall",
+    "entryMonotonic",
+    "invocationReturnWall",
+    "invocationReturnMonotonic",
+    "settlementObservedWall",
+    "settlementObservedMonotonic",
+    "remainingAtEntry",
+    "remainingAtInvocationReturn",
+    "remainingAtSettlementObserved",
+    "outcome",
+    "otherRecordedUnsettledForStore"
+  ],
+  "deadline_findings": {
+    "selected_request_call_id": 3,
+    "linked_rejected_call_ids": [
+      6,
+      3
+    ],
+    "effective_deadline": 1794199710073,
+    "request_options_cap": 1794199756493,
+    "request_ms": 5000,
+    "entry_options_cap_remaining_ms": 51420,
+    "client_attempt_observed_interval_ms": 5277.855692000001,
+    "registration_observed_interval_ms": 5277.619335000001,
+    "registration_settlement_observed_remaining_ms": -278,
+    "later_authorization_pre_original_remaining_ms": -278,
+    "later_authorization_observed_interval_ms": 0.16808299999865994,
+    "later_authorization_parent_and_request_ids": [
+      null,
+      null
+    ]
+  },
+  "accepted_inference": "For this recorded selected identity request, the original error object observed at later authorization rejection was also observed at request rejection and classifier input. The later authorization pre-original sample was already 278ms past its supplied effective deadline, following an observed fulfilled initial-admission interval. This locates the observed rejection boundary and does not identify the cause of the prior elapsed interval.",
+  "later_mismatch": {
+    "row_zero_based": 153,
+    "bytes_including_LF": 611,
+    "sha256": "437d97b3b6fb81b395917eb2faab8fb5653dc847073677683e7aebc5f424f540",
+    "event": {
+      "type": "caught-up-count-mismatch",
+      "expectedCount": 1000,
+      "sourceCount": 1000,
+      "receiverCount": 0,
+      "sourceRoute": {
+        "present": true,
+        "state": "reconnecting",
+        "lastError": "local-validation-or-storage-failed"
+      },
+      "receiverRoute": {
+        "present": true,
+        "state": "reconnecting",
+        "lastError": null
+      },
+      "localWorker": {
+        "enabled": true,
+        "retryPaused": false,
+        "ownerQuarantined": false,
+        "bootSupervised": false,
+        "lastError": null
+      },
+      "localRetry": {
+        "present": true,
+        "attempts": 1,
+        "blocked": true,
+        "hasDeadline": true,
+        "lastError": "local-validation-or-storage-failed"
+      },
+      "localOutbox": {
+        "pending": 0,
+        "confirmed": 0,
+        "blocked": 1000,
+        "retired": 0
+      },
+      "receiverCommittedReceipts": 0
+    },
+    "error_identity_link_to_durable_state": false,
+    "older_payload_byte_equality_is_not_historical_causation": true
+  },
+  "raw_assertion": {
+    "code": "ERR_ASSERTION",
+    "actual": 0,
+    "expected": 1000,
+    "location": "scripts/bench/scheduler-workload.cjs:229:16",
+    "caller": "scripts/bench/scheduler-workload.cjs:247:5",
+    "reached_strict_finally_assertion": true
+  },
+  "event_order": [
+    [
+      46,
+      "first-generic-blocked"
+    ],
+    [
+      148,
+      "pass-finished-1"
+    ],
+    [
+      151,
+      "initial-catch-up-settled"
+    ],
+    [
+      152,
+      "second-worker-pass"
+    ],
+    [
+      153,
+      "mismatch"
+    ],
+    [
+      154,
+      "worker-stopping"
+    ],
+    [
+      155,
+      "pass-finished-2"
+    ],
+    [
+      156,
+      "worker-closed-activeReads-empty"
+    ],
+    [
+      158,
+      "peer-stopping"
+    ],
+    [
+      160,
+      "cleanup"
+    ],
+    [
+      161,
+      "workload-failed"
+    ]
+  ],
+  "unreached": [
+    "caught-up completion and setup marker",
+    "idle sampling and 65s/two-periodic-pass qualification",
+    "explicit wake/clock/retry reaction controls",
+    "external-commit custody and lost-body repair",
+    "stale-route fencing",
+    "selected held-read shutdown-joining oracle"
+  ],
+  "reached": [
+    "four admissions pass",
+    "worker/peer startup",
+    "first identity-shaped private request with exact identity-json caller",
+    "outer/client registration and later-authorization observation",
+    "one bounded first classifier event",
+    "initial-catch-up-settled report, original two captured snapshots and strict count failure",
+    "ordinary worker close with empty activeReads and successful group/fixture teardown"
+  ],
+  "source_context": {
+    "files": [
+      {
+        "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-process.cjs",
+        "sha256": "67a0a21b015f7a459ea8c9b375625c6fda950b5e87a6744f496659bb9237ff54"
+      },
+      {
+        "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "sha256": "48eab29f72543313ffcb58d37e2825f4745db985b5f7a33f44ed795bc4bbe4bf"
+      },
+      {
+        "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/caught-up-count-parent-input-v1/dist/sync-client.js",
+        "sha256": "5390eab23621b379377a6310fa824b650b5b1e619241e6e77e2ec5ee211226b5"
+      },
+      {
+        "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/caught-up-count-parent-input-v1/dist/sync-store.js",
+        "sha256": "d1d78bb5d10e96e01686405990ceb38b9a233684f2404fc5a7df53bae32e10e0"
+      },
+      {
+        "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/caught-up-count-parent-input-v1/dist/sync-files.js",
+        "sha256": "b370ac08df5d68b01332e499e45bceae3631a8378ff17bf0fb56bc78287d2032"
+      },
+      {
+        "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/caught-up-count-parent-input-v1/dist/sync-failure.js",
+        "sha256": "353576379bbc350acfa2f79a0801be2406380c0b2af48e3eeea097160609ba56"
+      },
+      {
+        "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/caught-up-count-parent-input-v1/dist/sync-reconciliation.js",
+        "sha256": "226e7ffcb63bbb709be7e6b63b78ced791918a95fb905ae3c4ce3a4fdd9271a6"
+      }
+    ],
+    "error_links": "The observer uses WeakMap keys of exact original rejection objects, returns original promises, and freezes projection at the original classifier result. It does not join errors by clocks, shared store, deadline or chronology. Observed uniqueness is limited to the six retained calls.",
+    "client": "Compiled request80 awaits initial openRouteAttempt; only StoreLockQueueDeadlineError from that initial boundary is translated. Later authorization96 receives the same effective deadline. Its guarded callback contains HTTPS construction.",
+    "guard": "Compiled store451 throws the observed plain communication authorization deadline Error before mutate453. This source inference is narrower than a native request/receiver trace.",
+    "protected_path": "mutate1099 awaits directory validation and withStoreLock1106; inside the protected operation it may recover, then reads/verifies ledger and anchor/barrier/reader identity before operation1121. Communication callback authorizes and awaits baseline1240 before its original start callback. Successful mutation completion also awaits ownership cleanup. No durations for these subphases were captured.",
+    "contract": "Existing actual610 acquisition-deadline control intentionally preserves later communication queue error identity and blocked classification. No broad retry translation or deadline change is justified by this result."
+  },
+  "limitations": [
+    "Initial interval includes unknown queue/acquisition, protected work, cleanup and promise-reaction scheduling; no lock wait, callback entry, CPU, I/O, native owner or host-load phase was measured.",
+    "otherUnsettled includes ancestor calls and is not a competing-holder count.",
+    "No native dispatch or receiver-admission observation, and no error-object link into later persisted route/retry/outbox state or automatic count-failure cause.",
+    "Bookkeeping fulfillment and intercepted client method calls do not prove successful reconciliation or native requests. Settle is not a background-drain barrier.",
+    "All instrumented time/resource values are gain-ineligible; unobserved install/emission/unknown/cap/overlap/error-reuse/interrupt/native paths remain unqualified.",
+    "Historical runs, unrun matrices, failed parent timer control, and CI observations retain their original classifications.",
+    "The owner audit interval 78.650893s after finish is not physical cleanup duration or a reset finish+60 deadline."
+  ],
+  "release": {
+    "root": {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-correlation-cc6ca25-root-release.json",
+      "sha256": "05db617912c6ec72708982ac1f50a39ebed68359ea708d26f0e1564206686a65"
+    },
+    "owner": {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-correlation-probe-1/independent-cleanup.json",
+      "sha256": "14214efb4aee4ff95240df3d2c53c140211b4231a4fe60ff8d9ae52cd3088613"
+    },
+    "saved_identities_absent": 9,
+    "saved_groups_absent": 6,
+    "saved_session_pairs_absent": 6,
+    "scoped_paths_absent": 11,
+    "recorded_ports_rebound": 2,
+    "unreadable_proc_entries": 0,
+    "frozen_hashes": 869,
+    "prepared_files": 390,
+    "owner_audit_after_finish_seconds": 78.65089293406345,
+    "same_fixed_final": true,
+    "seconds_remaining_fixed_final": 186.82779267500155,
+    "no_finish_plus60_reset": true,
+    "root_repeated_bind_signal_delete": false,
+    "sampling_limits": "Only actually saved PID/start/group/session/owned paths and ready/control/cleanup URL ports audited. Unseen short-lived identities, native ownership and unused timeout/interruption paths remain unqualified; prepared input retained unchanged."
+  },
+  "originals": [
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-correlation-probe-1/receipt.json",
+      "sha256": "ddcafb9a455a9d821b4575e493870f6f74b253b5291971c2c994fd926f7f1d1b"
+    },
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-correlation-probe-1/workload.jsonl",
+      "sha256": "dd6884e444d4215fe15851af22c544a2fddb86e0cbc7c6973b4b3466884afdfd"
+    },
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-correlation-probe-1/workload.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-correlation-probe-1/independent-cleanup.json",
+      "sha256": "14214efb4aee4ff95240df3d2c53c140211b4231a4fe60ff8d9ae52cd3088613"
+    },
+    {
+      "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/admission-correlation-v1-result.json",
+      "sha256": "e58cfcbd910b5c8668664c0dec28799891c033e5664f6185b5b3e375b6f0332d"
+    },
+    {
+      "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/admission-correlation-v1-terminal.json",
+      "sha256": "bea3327ba1ed262a10eca0ea46f032265553197afdfc3c0515812823db496aad"
+    },
+    {
+      "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/admission-correlation-v1-executed-inputs/index-with-launch.json",
+      "sha256": "88daa7ec3b18bc1e7d539671e7282fffeacf3820cfcad3e880e8b7c1a3ddb46e"
+    }
+  ],
+  "preservation": {
+    "executed_input_index": {
+      "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/admission-correlation-v1-executed-inputs/index-with-launch.json",
+      "sha256": "88daa7ec3b18bc1e7d539671e7282fffeacf3820cfcad3e880e8b7c1a3ddb46e"
+    },
+    "source_and_copy_hashes_verified": 20,
+    "terminal_sidecar": {
+      "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/admission-correlation-v1-terminal.json",
+      "sha256": "bea3327ba1ed262a10eca0ea46f032265553197afdfc3c0515812823db496aad"
+    },
+    "terminal_credit": "Saved original tool94546 chunk55c8af exit1 is now durably retained. Earlier root release correctly recorded sidecar absent then; no old receipt is rewritten.",
+    "root_readonly_audit_only": true,
+    "repeat_binds_signals_removals": false,
+    "application_or_controller_execution": false,
+    "tracked_source_changes": false
+  },
+  "root_result": {
+    "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-correlation-cc6ca25-root-result.json",
+    "sha256": "dfa43d5bae1e7fe1c0c914d0326947bda497d9f997633b86ccabfea441f37c3e"
+  },
+  "next_decision": {
+    "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-correlation-cc6ca25-next-decision.json",
+    "sha256": "49ab84fbf2a537204b3f74e772e22449fa6029580e5e1298186980a9d48f94a4"
+  },
+  "history": [
+    "All original failed/unrun matrix rows, original untagged shutdown failure, proven timer exception, R1/R2 and later feasibility receipts remain unchanged.",
+    "Older7f611-byte payload equality is not a causal classification;85dc551-byte state remains separate.",
+    "No new diagnostic replaces a failed cell or qualifies high counts/full behavior."
+  ],
+  "CI": {
+    "cc6": "Watcher reported18 checks passed; no independent root job/log audit or old-cause waiver.",
+    "older": "85dc initial page.goto ERR_NO_BUFFER_SPACE/Verify, eaff EPERM/Verify and all older shared histories remain separately unresolved.",
+    "retry": false
+  },
+  "next_source": "Only an ignored/unapplied/unexecuted minimal selected-mutation/callback phase proposal. No operational binding, source application or runtime grant.",
+  "qualification": false,
+  "resource_gain_eligible": false,
+  "full_feasibility": false,
+  "full_behavior": false,
+  "readiness": false
+}

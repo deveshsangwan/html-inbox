@@ -1,0 +1,602 @@
+{
+  "grant_id": "root-95-feasibility4-8f212d3-20261109-r1",
+  "tested_head": "8f212d30d93b0c643c87f4b1ff2f92a0fd834ca6",
+  "parent": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+  "production_equivalent_to": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+  "outcome": "Operational classifier coverage stop after eleven workload exits0; original formal row preserved",
+  "controller_sha256": "66f43e6bb44b668a3088ba1304383d1318dfd3336010af475bbab6343d851c4e",
+  "manifest4_sha256": "aed83b3a19b2a37582bbeac14a1663114afc95dcfe13bd96ff0f80f19a3c0a1d",
+  "launch": {
+    "grant_id": "root-95-feasibility4-8f212d3-20261109-r1",
+    "tool_session_id": 65946,
+    "exact_argv": [
+      "/usr/bin/python3.13",
+      "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/controller-feasibility2-r2.py",
+      "--manifest",
+      "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/manifest-feasibility4.json",
+      "--grant-id",
+      "root-95-feasibility4-8f212d3-20261109-r1"
+    ],
+    "preexec_identity": {
+      "pid": 3019810,
+      "start_ticks": 90285535,
+      "ppid": 2978068,
+      "group": 3019810,
+      "session": 3019810,
+      "state": "R"
+    },
+    "independent_live_identity": {
+      "pid": 3019810,
+      "start_ticks": 90285535,
+      "ppid": 2978068,
+      "group": 3019810,
+      "session": 3019810,
+      "state": "S"
+    },
+    "preexec_umask": "0002",
+    "live_umask": "0002",
+    "started_monotonic": 902855.463232282,
+    "application_deadline": 908255.463232282,
+    "fixed_final_deadline": 908315.463232282,
+    "independent_checked_monotonic": 902869.306788678,
+    "output": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility4-grant-1",
+    "runner_output": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-4"
+  },
+  "finished_monotonic": 903888.940406734,
+  "elapsed_seconds": 1033.4771744520403,
+  "controller_exit": 1,
+  "runner_exit": 1,
+  "outer_commands": [
+    {
+      "label": "pin",
+      "exit": 0,
+      "bound_seconds": 5,
+      "elapsed_seconds": 0.07578046701382846
+    },
+    {
+      "label": "status",
+      "exit": 0,
+      "bound_seconds": 5,
+      "elapsed_seconds": 0.056174558005295694
+    },
+    {
+      "label": "production-frozen",
+      "exit": 0,
+      "bound_seconds": 5,
+      "elapsed_seconds": 0.05704538698773831
+    },
+    {
+      "label": "node-24.19.0",
+      "exit": 0,
+      "bound_seconds": 5,
+      "elapsed_seconds": 0.05468381498940289
+    },
+    {
+      "label": "node-20.20.2",
+      "exit": 0,
+      "bound_seconds": 5,
+      "elapsed_seconds": 0.05526518903207034
+    },
+    {
+      "label": "classifier-tests",
+      "exit": 0,
+      "bound_seconds": 30,
+      "elapsed_seconds": 0.582766207982786
+    },
+    {
+      "label": "cleanup-tests",
+      "exit": 0,
+      "bound_seconds": 45,
+      "elapsed_seconds": 8.625272714998573
+    },
+    {
+      "label": "feasibility",
+      "exit": 1,
+      "bound_seconds": 5400,
+      "elapsed_seconds": 1023.1650163939921
+    }
+  ],
+  "preliminaries": [
+    {
+      "label": "filesystem",
+      "exit": 0,
+      "timeout_seconds": 5
+    },
+    {
+      "label": "archive-parent",
+      "exit": 0,
+      "timeout_seconds": 15
+    },
+    {
+      "label": "build-parent",
+      "exit": 0,
+      "timeout_seconds": 60
+    },
+    {
+      "label": "archive-candidate",
+      "exit": 0,
+      "timeout_seconds": 15
+    },
+    {
+      "label": "build-candidate",
+      "exit": 0,
+      "timeout_seconds": 60
+    },
+    {
+      "label": "reader-race-20.20.2-parent",
+      "exit": 0,
+      "timeout_seconds": 15
+    },
+    {
+      "label": "reader-race-20.20.2-candidate",
+      "exit": 0,
+      "timeout_seconds": 15
+    },
+    {
+      "label": "reader-race-24.19.0-parent",
+      "exit": 0,
+      "timeout_seconds": 15
+    },
+    {
+      "label": "reader-race-24.19.0-candidate",
+      "exit": 0,
+      "timeout_seconds": 15
+    }
+  ],
+  "tests": {
+    "classifier_methods_passed": 17,
+    "classifier_reported_seconds": 0.411,
+    "cleanup_methods_passed": 5,
+    "cleanup_reported_seconds": 8.426,
+    "scope": "These passes apply to exact8f only; root task-queue correction and expanded controls remain UNEXECUTED."
+  },
+  "runtimes": [
+    {
+      "version": "v20.20.2",
+      "path": "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+      "sha256": "6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd"
+    },
+    {
+      "version": "v24.19.0",
+      "path": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+      "sha256": "bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12"
+    }
+  ],
+  "builds": {
+    "parent": {
+      "revision": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+      "source_files": 198,
+      "emitted_files": 195,
+      "emitted_aggregate_sha256": "41663c8ae9c916f5613ae86def13123a29f24749da88ea14b09eeb4fb7822ebc",
+      "archive_sha256": "86188674797c578bb250d72de44319a89b283326d33006b91fbeb203c5f47424",
+      "identity_table_sha256": "e0e770fa926f1633111ffc0f412b6b5dbafd7f2f1a5703a05d3cdad15ab60df7"
+    },
+    "candidate": {
+      "revision": "8f212d30d93b0c643c87f4b1ff2f92a0fd834ca6",
+      "source_files": 201,
+      "emitted_files": 198,
+      "emitted_aggregate_sha256": "cc1dc274e01b9869d407e3f53c5889c38197627d21d53ada9e0304d3ce2b042a",
+      "archive_sha256": "0f0ea7a64f3217b2ee49537423535073c6f3500918cb4d2360c9d7eb489a647c",
+      "identity_table_sha256": "475a9a3bb2acb0f2a65a073570743c686e8524648333a5403b7f0a3fd6107104"
+    }
+  },
+  "cases": [
+    {
+      "name": "20.20.2-0-none-0-parent",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "shutdown_correctness": "passed",
+      "caller_kind": "lifecycle",
+      "setup_seconds": 0.5824162230128422,
+      "elapsed_seconds": 65.95743116305675
+    },
+    {
+      "name": "20.20.2-0-none-0-candidate",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "shutdown_correctness": "passed",
+      "caller_kind": "lifecycle",
+      "setup_seconds": 0.5838130570482463,
+      "elapsed_seconds": 65.8181063530501
+    },
+    {
+      "name": "20.20.2-0-outbound-0-parent",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "shutdown_correctness": "passed",
+      "caller_kind": "reconciliation",
+      "setup_seconds": 1.1266404540510848,
+      "elapsed_seconds": 98.73512695601676
+    },
+    {
+      "name": "20.20.2-0-outbound-0-candidate",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "shutdown_correctness": "passed",
+      "caller_kind": "lifecycle",
+      "setup_seconds": 1.1353892530314624,
+      "elapsed_seconds": 98.59732563002035
+    },
+    {
+      "name": "20.20.2-0-inbound-0-parent",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "shutdown_correctness": "passed",
+      "caller_kind": "reconciliation",
+      "setup_seconds": 1.1389510199660435,
+      "elapsed_seconds": 128.98285631998442
+    },
+    {
+      "name": "20.20.2-0-inbound-0-candidate",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "shutdown_correctness": "passed",
+      "caller_kind": "lifecycle",
+      "setup_seconds": 1.253167289076373,
+      "elapsed_seconds": 98.73000135202892
+    },
+    {
+      "name": "24.19.0-0-none-0-parent",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "shutdown_correctness": "passed",
+      "caller_kind": "lifecycle",
+      "setup_seconds": 0.6704837849829346,
+      "elapsed_seconds": 65.91874671401456
+    },
+    {
+      "name": "24.19.0-0-none-0-candidate",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "shutdown_correctness": "passed",
+      "caller_kind": "lifecycle",
+      "setup_seconds": 0.6545721670845523,
+      "elapsed_seconds": 65.8032784240786
+    },
+    {
+      "name": "24.19.0-0-outbound-0-parent",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "shutdown_correctness": "passed",
+      "caller_kind": "lifecycle",
+      "setup_seconds": 1.0940097429556772,
+      "elapsed_seconds": 98.43394370097667
+    },
+    {
+      "name": "24.19.0-0-outbound-0-candidate",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "shutdown_correctness": "passed",
+      "caller_kind": "lifecycle",
+      "setup_seconds": 1.1025391219882295,
+      "elapsed_seconds": 98.14013301301748
+    },
+    {
+      "name": "24.19.0-0-inbound-0-parent",
+      "exit": 0,
+      "qualified_case": false,
+      "passing_cell": false,
+      "shutdown_correctness": "unrecognized",
+      "caller_kind": null,
+      "setup_seconds": 1.0987213670741767,
+      "elapsed_seconds": 128.96655569109134
+    }
+  ],
+  "stop": {
+    "case": "24.19.0-0-inbound-0-parent",
+    "formal": {
+      "exit": 0,
+      "qualified_case": false,
+      "passing_cell": false,
+      "shutdown_correctness": "unrecognized",
+      "resource_observation_complete": false,
+      "release_observation": "unobserved",
+      "completion_observation": "unobserved",
+      "errors": [
+        "Unknown actual archived worker-owned caller"
+      ]
+    },
+    "read_joined_field_present": false,
+    "raw_observation": {
+      "caller": "Error: issue95-routed-held-read\n    at ManagedSyncStore.snapshot (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-process.cjs:79:54)\n    at reconcileSyncRoutes (/tmp/html-inbox-issue95-feasibility2-lyw8zbuh/fixture-feasibility/html-inbox-scheduler-avsciman/build-parent/packages/cli/dist/sync-reconciliation.js:99:49)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async drain (/tmp/html-inbox-issue95-feasibility2-lyw8zbuh/fixture-feasibility/html-inbox-scheduler-avsciman/build-parent/packages/cli/dist/sync-worker.js:307:21)",
+      "events": [
+        {
+          "type": "read-held",
+          "pid": 3022853,
+          "readId": 1,
+          "storeId": 1,
+          "monotonic": 128044.595118,
+          "activeReads": [
+            {
+              "readId": 1,
+              "storeId": 1,
+              "scriptStore": false
+            }
+          ]
+        },
+        {
+          "type": "stopping",
+          "pid": 3022853,
+          "monotonic": 128068.263828,
+          "activeReads": [
+            {
+              "readId": 1,
+              "storeId": 1,
+              "scriptStore": false
+            }
+          ]
+        },
+        {
+          "type": "read-released",
+          "pid": 3022853,
+          "readId": 1,
+          "storeId": 1,
+          "monotonic": 128094.928238,
+          "reason": "rpc"
+        },
+        {
+          "type": "read-finished",
+          "pid": 3022853,
+          "readId": 1,
+          "storeId": 1,
+          "monotonic": 128102.179981,
+          "outcome": "fulfilled",
+          "activeReads": []
+        },
+        {
+          "type": "worker-event",
+          "event": "closed",
+          "pid": 3022853,
+          "monotonic": 128118.421937,
+          "activeReads": []
+        }
+      ],
+      "interpretation": "Selected read released by RPC and fulfilled before close in the raw trace. Original formal row remains unrecognized/nonpassing and is not reclassified."
+    },
+    "interpretation": "Exact complete-stack matcher stopped on the interposed task-queue frame before collecting release/completion events. Unobserved defaults are not the full raw trace. No retrospective qualification, shutdown defect or native-timer-red disposition."
+  },
+  "summary": {
+    "qualified_cases": 10,
+    "total_cases": 11,
+    "required_cases": 36,
+    "complete": false,
+    "resource_observations_complete": 10,
+    "resource_feasibility_complete": false,
+    "shutdown_controls_complete": false,
+    "behavior_qualification_complete": false,
+    "resource_gain_eligible": false,
+    "global_cleanup_passed": true,
+    "failed_shutdown_controls": [
+      {
+        "name": "24.19.0-0-inbound-0-parent",
+        "exit": 0,
+        "correctness": "unrecognized"
+      }
+    ],
+    "unrun_cases": [
+      "24.19.0-0-inbound-0-candidate",
+      "20.20.2-1000-none-0-parent",
+      "20.20.2-1000-none-0-candidate",
+      "20.20.2-1000-outbound-0-parent",
+      "20.20.2-1000-outbound-0-candidate",
+      "20.20.2-1000-inbound-0-parent",
+      "20.20.2-1000-inbound-0-candidate",
+      "24.19.0-1000-none-0-parent",
+      "24.19.0-1000-none-0-candidate",
+      "24.19.0-1000-outbound-0-parent",
+      "24.19.0-1000-outbound-0-candidate",
+      "24.19.0-1000-inbound-0-parent",
+      "24.19.0-1000-inbound-0-candidate",
+      "20.20.2-10000-none-0-parent",
+      "20.20.2-10000-none-0-candidate",
+      "20.20.2-10000-outbound-0-parent",
+      "20.20.2-10000-outbound-0-candidate",
+      "20.20.2-10000-inbound-0-parent",
+      "20.20.2-10000-inbound-0-candidate",
+      "24.19.0-10000-none-0-parent",
+      "24.19.0-10000-none-0-candidate",
+      "24.19.0-10000-outbound-0-parent",
+      "24.19.0-10000-outbound-0-candidate",
+      "24.19.0-10000-inbound-0-parent",
+      "24.19.0-10000-inbound-0-candidate"
+    ]
+  },
+  "known_parent_timer_red_dispositions": 0,
+  "cleanup": {
+    "owner_audit_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility4-grant-1/independent-cleanup.json",
+    "owner_audit_sha256": "1b449f0f72916a1994a0afdab3844da6bb781626f656b4db36a74d764358f78b",
+    "identities": 67,
+    "pgids": 34,
+    "observed_group_session_pairs": 32,
+    "absent_paths": 21,
+    "owner_audit_seconds_after_exit": 39.54234004893806,
+    "inside_fixed_final": true,
+    "owner_exact_timed_ports": [
+      {
+        "origin": "http://127.0.0.1:35559",
+        "host": "127.0.0.1",
+        "port": 35559,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "http://127.0.0.1:36585",
+        "host": "127.0.0.1",
+        "port": 36585,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "http://127.0.0.1:37287",
+        "host": "127.0.0.1",
+        "port": 37287,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "http://127.0.0.1:38583",
+        "host": "127.0.0.1",
+        "port": 38583,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "http://127.0.0.1:40153",
+        "host": "127.0.0.1",
+        "port": 40153,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "http://127.0.0.1:43521",
+        "host": "127.0.0.1",
+        "port": 43521,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "http://127.0.0.1:44131",
+        "host": "127.0.0.1",
+        "port": 44131,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "http://127.0.0.1:44907",
+        "host": "127.0.0.1",
+        "port": 44907,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "http://127.0.0.1:45287",
+        "host": "127.0.0.1",
+        "port": 45287,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "http://127.0.0.1:46257",
+        "host": "127.0.0.1",
+        "port": 46257,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "http://127.0.0.1:46707",
+        "host": "127.0.0.1",
+        "port": 46707,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "https://127.0.0.1:33317",
+        "host": "127.0.0.1",
+        "port": 33317,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "https://127.0.0.1:37763",
+        "host": "127.0.0.1",
+        "port": 37763,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "https://127.0.0.1:37799",
+        "host": "127.0.0.1",
+        "port": 37799,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "https://127.0.0.1:40451",
+        "host": "127.0.0.1",
+        "port": 40451,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "https://127.0.0.1:42185",
+        "host": "127.0.0.1",
+        "port": 42185,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "https://127.0.0.1:42301",
+        "host": "127.0.0.1",
+        "port": 42301,
+        "rebound_and_closed": true
+      },
+      {
+        "origin": "https://127.0.0.1:46343",
+        "host": "127.0.0.1",
+        "port": 46343,
+        "rebound_and_closed": true
+      }
+    ],
+    "remaining_identities": [],
+    "remaining_groups": [],
+    "remaining_fixtures": [],
+    "controller_signal_actions": [],
+    "controller_adopted_reaps": [],
+    "limits": [
+      "Two short-lived Popen groups lack separate sampled session pairs.",
+      "Preliminary numeric ports not independently rebound; exact workload port rebind is owner evidence.",
+      "Synthetic cleanup tests do not qualify unused controller timeout/interruption paths."
+    ],
+    "root_independent_scan": true,
+    "root_repeated_bind_or_signal": false,
+    "release_accepted": true
+  },
+  "root_result": {
+    "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility4-8f212d3-root-result.json",
+    "sha256": "7ffccdf273bd3c8ea63aa08087b8820b172528d4e824ee48221abf91313e2b4a",
+    "reader_corrections": [
+      {
+        "original_error": "KeyError('tap_original_sha256')",
+        "correct_field": "stdout_original_sha256 for feasibility; tap_original_sha256 for preliminary rows",
+        "error_file": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility4-root-reader-error.json",
+        "note": "Error file says stdout_sha256; this exact field correction supersedes that wording."
+      },
+      {
+        "original_error": "AssertionError comparing unreadable_proc_entries with numeric zero",
+        "correct_schema": "empty list, verified length zero"
+      }
+    ],
+    "scope": "Read-only extraction corrections disclosed by root, no original rewrite or classifier/application rerun."
+  },
+  "raw_evidence": {
+    "outer": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility4-grant-1",
+    "runner": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-4",
+    "index_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility4-grant-1/raw-artifact-index.json",
+    "index_sha256": "4f8025264b93f1442fa90b919d25768495f6f3cfea180a4aa0863ee61330bfac",
+    "file_count": 106,
+    "root_verified_runner_output_hashes": 69,
+    "executed_inputs": 15,
+    "important_hashes": {
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility4-grant-1/receipt.json": "c469b67bd44b367fa8b00333fdd8123babc0ffee80e39367db43650fd70dc643",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility4-grant-1/independent-cleanup.json": "1b449f0f72916a1994a0afdab3844da6bb781626f656b4db36a74d764358f78b",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility4-grant-1/executed-inputs/index.json": "f941ed610c9e2f995fd10e30eb72192a68cc5a0da04c729e6393503453ba2324",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-4/summary.json": "b7c630138de15b03a07690da20bc03a143d5132f23ab4f8630683a33202fe6cc",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-4/checkpoint.json": "7e709cab0290ac4ffb4ee15938929ffa648e660f8323b784123feae231cabf1b",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-4/commands.jsonl": "9619accca092f581290a98b98d60af883c117576754547b2f4dfd1ca8bbd5b46",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-4/24.19.0-0-inbound-0-parent.jsonl": "c347a72b71193321a2843daf1c69fef354c3cabe6d9d84dfdd8582d1a7099b95",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-4/24.19.0-0-inbound-0-parent.classification.json": "409a3c824e917091f4de6131e5ae77d8997f0bacdbb410d0caab425a8f0da87f",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-4/24.19.0-0-inbound-0-parent.cleanup.json": "86e9d2e27d15c34d024c5de95246d39b87f2bcf8b0c31f24350d49feb2851a72"
+    },
+    "public_artifact_gate": "Still open; local retained hashes are not durable public raw publication."
+  },
+  "historical_invariance": {
+    "R2_33_unrun_and_unrecognized_row": "Unchanged",
+    "old_original_25_unrun_and_untagged_failure": "Unchanged",
+    "R1_stop": "Unchanged",
+    "CI": "Windows deletion renameEPERM/Verify remains readiness failure; older held-ACK/acquisition/browser observations separate, no cause/baseline/flake attribution."
+  },
+  "source_followup": {
+    "authority": "Root exact-copy SOURCE-ONLY decision",
+    "decision_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-task-queue-source-root-decision.json",
+    "decision_sha256": "0aa86b7bde53399e1339371a642b877ae51ea1d008bea8b5c94a8ad6302341cf",
+    "scheduler_sha256": "da12cc3bbb712b13d6b4021cfa01dc856f6b0a209c3ffdc0ac99c0dff2671491",
+    "test_sha256": "898e8723acc6143b5b2aeec428a3922976a1fe916e91a9443f7e19fe0cc8d2fe",
+    "tested": false,
+    "policy": "At most one exact process.processTicksAndRejections(node:internal/process/task_queues:104:5), only pinned24.19.0 and immediately before an existing async application frame, then unchanged full application-chain match. Raw caller retained. Other positions are synthetic coverage, only parent99\u2192queue104:5\u2192asyncdrain307 observed. Failed-parent exception unchanged."
+  },
+  "qualification": "No high-count/full-behavior/practical-benefit/noise/retention qualification. Five n1 zero-record pairs are raw feasibility observations only. Every high-count case remains unrun. New execution requires separate grant."
+}
