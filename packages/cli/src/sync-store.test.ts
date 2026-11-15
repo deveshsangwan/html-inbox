@@ -433,8 +433,8 @@ test("copy/move anchor mismatches fail closed; restore quarantines owner and com
   const copyHome = path.join(path.dirname(a.home), "copy");
   await cp(a.home, copyHome, { recursive: true });
   const copied = new ManagedSyncStore(copyHome);
-  await assert.rejects(copied.listDocuments(), /Copied or moved/);
-  await assert.rejects(copied.publish(input), /Copied or moved/);
+  await assert.rejects(copied.listDocuments(), /ownership anchor changed/);
+  await assert.rejects(copied.publish(input), /ownership anchor changed/);
   await copied.quarantineRestore();
   let ledger = await copied.snapshot();
   assert.notEqual(ledger.storageIncarnation, original.storageIncarnation);
