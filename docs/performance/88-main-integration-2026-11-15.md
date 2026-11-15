@@ -57,3 +57,17 @@ Grant root-owner88-main-integration-20261115-r1 retained its conservative start 
 The cancelled task's generated-before backup was verified as an empty tar and empty hash map, matching absent dist/bundle before this build. Current absence was separately recorded. After checks, no Node process remained bound to this checkout; generated output was restored to the original absent state. Fixture logs report owned children reaped and ports rebound, and browser/HTTP cleanup settled. Local slot was explicitly released to root before extended reporting. No installed CLI, service, real inbox, report, route or PAM access occurred.
 
 Raw commands, exact timestamps, exit codes, both full-suite logs, compiler launcher error, b63 logs and cleanup records remain in the root-coordinated artifact directory `artifacts/performance-ownership-integration-2026-11-15/owner88-main-integration-r1`. This committed receipt preserves the outcomes and reproduction commands independently of those local raw logs.
+
+## 0.6.3 metadata integration follow-up
+
+Merged exact main `ff0bc4cda2db35cd014c6fcd31a3ffe659b12f17` into preserved head `b18acfd00f29236f71614ca7b8653d25285e0680`. The full eight-file b63..ff0 delta was read: only documentation and package metadata changed; runtime source and scripts did not. README.md and packages/cli/README.md conflicted at the introduction. Both resolutions retain the complete incoming 0.6.3 filter/restart paragraph, existing 0.6.2 recovery limits and pending 0.7/1.x policy. Current-version wording in these two READMEs and docs/release-policy.md now says 0.6.3. Incoming package 0.6.3, changelog, named-inbox, releasing and site documentation remain intact. Skill fallback stays 0.5.0; no runtime activation or publication occurred.
+
+Grant `root-owner88-release063-integration-20261115-r2` started once before the first check, with 180 seconds for application and 60 for cleanup. On resolved staged tree `4063959247cb8726e1978e6e53669f458fc6cc5d`, the exact installed `/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node` ran these commands once, each with a 30-second cap:
+
+- `--test scripts/release-policy.test.mjs`: exit 0, 4 passed.
+- `scripts/verify-site.mjs`: exit 0, 15 pages passed.
+- `--test scripts/site-theme.test.mjs`: exit 0, 9 passed.
+
+All completed in under one second combined. Generated dist/bundle remained absent; these checks launched no application/browser fixture processes. The slot was promptly released before reporting. No compiler, build, install, version probe, app, browser, package, full suite, benchmark or retry command ran under this follow-up grant. Raw timestamps, exact commands and exit codes are retained in the root-coordinated `artifacts/performance-ownership-integration-2026-11-15/owner88-release063-r2` budget/checks/cleanup JSON and logs.
+
+Runtime source remains exactly ff0/b63, and the entire scripts tree is unchanged from b18. Earlier 5a8 full-suite failures, b63 targeted passes, launcher error, historical review pins and their limitations above remain original evidence. Passing documentation/policy checks do not resolve the history-gate failure, supply baseline execution, requalify runtime behavior or establish a speedup. PR remains draft for root-coordinated diagnostic and final-head gates; release/0.7 is left untouched.

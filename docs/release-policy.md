@@ -1,6 +1,6 @@
 # Release lines and activation gates
 
-The current CLI is 0.6.2 with Node >=20. The planned lines are 0.7.x for compatible improvements and 1.x for modern runtime and storage work. Version 0.7.0 and the `node20` npm tag remain pending; no modern candidate exists yet.
+The current CLI is 0.6.3 with Node >=20. The planned lines are 0.7.x for compatible improvements and 1.x for modern runtime and storage work. Version 0.7.0 and the `node20` npm tag remain pending; no modern candidate exists yet.
 
 ## Branches and publication
 
@@ -13,7 +13,7 @@ Before 1.0, stable releases retain npm `latest`. After 1.0, `latest` belongs to 
 
 ## Runtime and library selection
 
-Today, use the current 0.6.2 CLI on Node >=20. Both skills retain the independently tested published 0.5.0 npm fallback and their current installed-version rules. The fallback has no managed-sync commands. A missing feature requires an authorized compatible upgrade, preserving the selected library and saved exposure.
+Today, use the current 0.6.3 CLI on Node >=20. Both skills retain the independently tested published 0.5.0 npm fallback and their current installed-version rules. The fallback has no managed-sync commands. A missing feature requires an authorized compatible upgrade, preserving the selected library and saved exposure.
 
 Once 0.7 is published, Node 20 users will install `html-inbox@0.7`, or `html-inbox@node20` after that tag is explicitly published. These are future installation choices, not currently tested fallback pins. Maintaining a Node 20 compatible package does not promise upstream Node 20 maintenance.
 
