@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - release/0.7
 
 permissions:
   contents: read
@@ -68,7 +69,7 @@ jobs:
 
       - name: Test harness checks
         if: matrix.shard != '2/2'
-        run: node --test scripts/viewer-systemd-cleanup.test.mjs scripts/run-unit-tests.test.mjs
+        run: node --test scripts/viewer-systemd-cleanup.test.mjs scripts/run-unit-tests.test.mjs scripts/release-policy.test.mjs
 
       - name: Package smoke test
         if: matrix.shard != '2/2'

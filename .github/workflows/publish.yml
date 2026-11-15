@@ -8,6 +8,15 @@ on:
         required: true
         type: string
 
+      tag:
+        description: "npm tag: latest before 1.0; node20 for 0.7 maintenance after 1.0"
+        required: true
+        default: latest
+        type: choice
+        options:
+          - latest
+          - node20
+
 permissions:
   contents: read
 
@@ -33,28 +42,19 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org/
 
-      - name: Verify release version
+      - name: Read current stable npm release
+        id: registry
+        run: |
+          latest_version=$(npm view html-inbox@latest version --prefer-online --registry=https://registry.npmjs.org/)
+          echo "latest=$latest_version" >> "$GITHUB_OUTPUT"
+
+      - name: Verify release policy
         id: release
         env:
           EXPECTED_VERSION: ${{ inputs.version }}
-        run: |
-          node --input-type=module <<'JS'
-          import { appendFileSync, readFileSync } from "node:fs";
-          if (process.env.GITHUB_REF !== "refs/heads/main") {
-            throw new Error("Publish reviewed releases from the main branch");
-          }
-
-          const { version } = JSON.parse(readFileSync("packages/cli/package.json", "utf8"));
-          if (!/^\d+\.\d+\.\d+$/.test(version)) {
-            throw new Error("This workflow publishes stable semantic versions only");
-          }
-
-          if (process.env.EXPECTED_VERSION !== version) {
-            throw new Error(`Requested ${process.env.EXPECTED_VERSION} does not match package ${version}`);
-          }
-
-          appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);
-          JS
+          RELEASE_TAG: ${{ inputs.tag }}
+          NPM_LATEST_VERSION: ${{ steps.registry.outputs.latest }}
+        run: node scripts/release-policy.mjs
 
       - name: Enable Corepack
         run: corepack enable
@@ -87,7 +87,8 @@ jobs:
       - name: Publish verified artifact with npm trusted publishing
         env:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
-        run: npm publish "./html-inbox-${RELEASE_VERSION}.tgz" --access public --registry=https://registry.npmjs.org/
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: npm publish "./html-inbox-${RELEASE_VERSION}.tgz" --access public --tag "$RELEASE_TAG" --registry=https://registry.npmjs.org/
 
       - name: Verify published version
         env:
