@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { mkdtemp, realpath, rename, rm, stat } from "node:fs/promises";
+import { spawn } from "node:child_process";
+import { mkdtemp, readFile, realpath, rename, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -7,6 +8,8 @@ import { chromium } from "playwright";
 import { LocalDocumentBackend } from "../packages/cli/dist/backend.js";
 import { getInboxInstanceId } from "../packages/cli/dist/viewer-records.js";
 import { startHub } from "../packages/cli/dist/hub.js";
+import { writeHubConfig } from "../packages/cli/dist/hub-config.js";
+import { availablePort } from "../packages/cli/dist/test-fixtures.js";
 import { isolationHtml } from "./browser-fixtures.mjs";
 
 test("hub dropdown applies filters immediately and preserves query, history and keyboard focus", { timeout: 30_000 }, async (t) => {
@@ -116,11 +119,7 @@ async function createFilterFixture(t, contextOptions = {}) {
   const root = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-filter-browser-")));
   let browser;
   let hub;
-  t.after(async () => {
-    await browser?.close();
-    await hub?.close();
-    await rm(root, { recursive: true, force: true });
-  });
+  t.after(() => closeHubFixture(t, browser, hub, root));
 
   const sources = [];
   for (const name of ["home", "office", "scratch"]) {
@@ -138,7 +137,7 @@ async function createFilterFixture(t, contextOptions = {}) {
     sources.push({ name, home, instanceId });
   }
 
-  hub = await startHub({ schemaVersion: 1, name: "Filter test", sources }, 0);
+  hub = await startFixtureHub(root, { schemaVersion: 1, name: "Filter test", sources }, (started) => { hub = started; });
   browser = await chromium.launch(process.env.HTML_INBOX_BROWSER_EXECUTABLE ? { executablePath: process.env.HTML_INBOX_BROWSER_EXECUTABLE } : {});
   const context = await browser.newContext(contextOptions);
   const page = await context.newPage();
@@ -151,11 +150,7 @@ test("hub reads colliding source IDs with search, filters, isolation and partial
   const root = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-hub-browser-")));
   let browser;
   let hub;
-  t.after(async () => {
-    await browser?.close();
-    await hub?.close();
-    await rm(root, { recursive: true, force: true });
-  });
+  t.after(() => closeHubFixture(t, browser, hub, root));
 
   const sources = [];
   for (const name of ["home", "office"]) {
@@ -168,7 +163,7 @@ test("hub reads colliding source IDs with search, filters, isolation and partial
   }
 
   const hubName = "Development ".repeat(16).trim();
-  hub = await startHub({ schemaVersion: 1, name: hubName, sources }, 0);
+  hub = await startFixtureHub(root, { schemaVersion: 1, name: hubName, sources }, (started) => { hub = started; });
   const origin = hub.urls[0];
   browser = await chromium.launch(process.env.HTML_INBOX_BROWSER_EXECUTABLE ? { executablePath: process.env.HTML_INBOX_BROWSER_EXECUTABLE } : {});
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -240,6 +235,164 @@ test("hub reads colliding source IDs with search, filters, isolation and partial
   await page.getByRole("link", { name: /^home report/ }).click();
   await assertScopedCopy(page, "/sources/home/documents/same-id/copy.json", "Quarterly results\nloading\nloading");
 });
+
+async function startFixtureHub(root, configuration, onStarted) {
+  if (!process.env.HTML_INBOX_HUB_TEST_CLI) {
+    return startHub(configuration, 0);
+  }
+
+  assert.equal(path.isAbsolute(process.env.HTML_INBOX_HUB_TEST_CLI), true);
+  const executable = await realpath(process.env.HTML_INBOX_HUB_TEST_CLI);
+  const installedRoot = path.dirname(path.dirname(executable));
+  const installedPackage = JSON.parse(await readFile(path.join(installedRoot, "package.json"), "utf8"));
+  assert.equal(path.basename(installedRoot), "html-inbox");
+  assert.equal(path.basename(path.dirname(installedRoot)), "node_modules");
+  assert.equal(installedPackage.name, "html-inbox");
+  assert.equal(installedPackage.bin["html-inbox"], "bundle/index.js");
+  assert.equal(executable, path.join(installedRoot, "bundle", "index.js"));
+  const sourcePackage = JSON.parse(await readFile(new URL("../packages/cli/package.json", import.meta.url), "utf8"));
+  assert.equal(installedPackage.version, sourcePackage.version);
+
+  const config = path.join(root, "hub.json");
+  await writeHubConfig(config, configuration);
+  const origin = `http://127.0.0.1:${await availablePort()}`;
+  const child = spawn(process.execPath, [executable, "hub", "--config", config,
+    "--loopback", "--host", "127.0.0.1", "--port", new URL(origin).port], {
+    cwd: root,
+    env: { ...process.env, HOME: root, USERPROFILE: root,
+      HTML_INBOX_HOME: path.join(root, "unused-home"), HTML_INBOX_CATALOG_HOME: path.join(root, "catalog"),
+      XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data"),
+      XDG_STATE_HOME: path.join(root, "state"), XDG_CACHE_HOME: path.join(root, "cache"),
+      TMPDIR: root, TMP: root, TEMP: root, NODE_OPTIONS: "", NODE_PATH: "" },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  const childErrors = [];
+  let readinessPublished = false;
+  let teardownRequested = false;
+  let nativeExit;
+  let closeOutcome;
+  child.on("error", (error) => { childErrors.push(error); });
+  child.once("exit", (code, signal) => {
+    nativeExit = { code, signal, beforeTeardown: !teardownRequested };
+  });
+  const closed = new Promise((resolve) => child.once("close", (code, signal) => {
+    resolve({ code, signal, beforeTeardown: !teardownRequested });
+  }));
+  let stderr = "";
+  child.stderr.on("data", (chunk) => { stderr = (stderr + chunk.toString()).slice(-16 * 1024); });
+  let closing;
+  const close = () => closing ??= (async () => {
+    const hadExited = nativeExit !== undefined || child.exitCode !== null || child.signalCode !== null;
+    if (!hadExited) {
+      teardownRequested = true;
+      try {
+        if (!child.kill("SIGTERM")) childErrors.push(new Error("Installed hub did not accept its teardown signal"));
+      } catch (error) { childErrors.push(error); }
+    }
+
+    let forced = false;
+    const timer = setTimeout(() => {
+      if (child.exitCode === null && child.signalCode === null) {
+        forced = true;
+        try {
+          if (!child.kill("SIGKILL")) childErrors.push(new Error("Installed hub did not accept forced cleanup"));
+        } catch (error) { childErrors.push(error); }
+      }
+    }, 3000);
+    let result;
+    try {
+      result = await closed;
+    } finally {
+      clearTimeout(timer);
+    }
+
+    closeOutcome = { pid: child.pid, readinessPublished, teardownRequested, hadExited,
+      nativeExit, nativeClose: result, forced, stderr,
+      errors: childErrors.map((error) => error instanceof Error
+        ? { ...error, name: error.name, message: error.message, stack: error.stack }
+        : { thrown: String(error) }) };
+    const failures = [...childErrors];
+    if (hadExited || result.beforeTeardown || nativeExit?.beforeTeardown) {
+      failures.push(new Error("Installed hub terminated before intentional fixture teardown"));
+    }
+    if (result.code !== 0 || result.signal !== null) {
+      failures.push(new Error(`Installed hub shutdown was not code0/signalnull: ${result.code}/${result.signal}`));
+    }
+    if (readinessPublished && (!nativeExit || nativeExit.code !== 0 || nativeExit.signal !== null)) {
+      failures.push(new Error("Ready installed hub did not emit a normal code0/signalnull exit"));
+    }
+    if (forced) failures.push(new Error("Installed hub required forced shutdown"));
+
+    if (failures.length) {
+      const error = new AggregateError(failures, `Installed hub shutdown failed.\n${stderr}`);
+      error.outcome = closeOutcome;
+
+      throw error;
+    }
+  })();
+  // Publish the close handle before readiness, so the fixture also owns a failed initializer.
+  const handle = { urls: [origin], close, get nativeOutcome() { return closeOutcome; } };
+  onStarted(handle);
+
+  let timer;
+  try {
+    await new Promise((resolve, reject) => {
+      let stdout = "";
+      let readinessSettled = false;
+      const failReadiness = (error) => {
+        if (readinessSettled) return;
+
+        readinessSettled = true;
+        reject(error);
+      };
+      child.once("error", failReadiness);
+      child.once("close", (code, signal) => failReadiness(new Error(`Installed hub exited before readiness (${signal ?? code}).\n${stderr}`)));
+      child.stdout.on("data", (chunk) => {
+        if (readinessSettled) return;
+
+        stdout = (stdout + chunk.toString()).slice(0, 8193);
+        if (stdout.length > 8192) {
+          failReadiness(new Error("Installed hub readiness output exceeded its fixture bound"));
+        } else if (stdout.includes("\n")) {
+          if (stdout.trim() === origin) {
+            readinessSettled = true;
+            readinessPublished = true;
+            resolve();
+          } else {
+            failReadiness(new Error(`Unexpected installed hub readiness URL: ${stdout.trim()}`));
+          }
+        }
+      });
+      timer = setTimeout(() => failReadiness(new Error(`Installed hub did not announce readiness.\n${stderr}`)), 5000);
+    });
+    return handle;
+  } catch (error) {
+    try { await close(); } catch (cleanupError) {
+      throw new AggregateError([error, cleanupError], `Installed hub startup/cleanup failed; fixture retained at ${root}`);
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function closeHubFixture(t, browser, hub, root) {
+  const outcomes = await Promise.allSettled([
+    Promise.resolve().then(() => browser?.close()),
+    Promise.resolve().then(() => hub?.close()),
+  ]);
+  const failures = outcomes.flatMap((outcome) => outcome.status === "rejected" ? [outcome.reason] : []);
+  if (hub?.nativeOutcome) {
+    try { t.diagnostic(JSON.stringify(hub.nativeOutcome)); } catch (error) { failures.push(error); }
+  }
+
+  if (failures.length) {
+    throw new AggregateError(failures, `Hub fixture shutdown failed; evidence retained at ${root}`);
+  }
+
+  await rm(root, { recursive: true, force: true });
+}
 
 async function assertScopedCopy(page, copyUrl, expected) {
   assert.equal(await page.locator("[data-copy-dialog]").getAttribute("data-copy-url"), copyUrl);

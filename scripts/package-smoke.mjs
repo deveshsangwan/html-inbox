@@ -97,9 +97,27 @@ try {
   assert.match(help, /viewer \[--foreground\]/);
   assert.match(help, /viewer service install/);
 
+  const startupGuard = path.join(temporaryRoot, "startup-guard.cjs");
+  await writeFile(startupGuard, `
+const Module = require("node:module");
+const load = Module._load;
+Module._load = function (request, ...args) {
+  if (/^(node:)?(http|https|http2|tls|net|crypto|child_process|readline(?:\\/promises)?)$/.test(request)) {
+    throw new Error("Unexpected subsystem during help/version: " + request);
+  }
+  return load.call(this, request, ...args);
+};
+`);
+  for (const args of [[], ["--help"], ["-h"], ["--version"], ["-v"]]) {
+    const result = await run(process.execPath, ["--require", startupGuard, executable, ...args], consumerRoot);
+    assert.equal(result.stdout, args[0] === "--version" || args[0] === "-v" ? `${installedPackage.version}\n` : help);
+    assert.equal(result.stderr, "");
+  }
+
   const isolatedHome = path.join(temporaryRoot, "home");
   const viewerPort = await findAvailablePort();
   const cliEnvironment = {
+    HTML_INBOX_CATALOG_HOME: path.join(temporaryRoot, "catalog"),
     HTML_INBOX_HOME: isolatedHome,
     HTML_INBOX_PORT: String(viewerPort),
   };
@@ -118,6 +136,10 @@ try {
     state: null,
     operation: null,
   });
+
+  await assert.rejects(runInstalledCli(["__delete-document"]), /Unknown command/);
+  await assert.rejects(runInstalledCli(["--internal-viewer-owner-preflight"]), /requires one bounded input/);
+  await assert.rejects(runInstalledCli(["--internal-viewer-owner-preflight", "x".repeat(8193)]), /input is too large/);
 
   // Own a foreground process so even a failed publish cannot strand a detached viewer.
   viewer = await startInstalledViewer(executable, consumerRoot, cliEnvironment);
@@ -272,6 +294,57 @@ try {
     await assert.rejects(runInstalledCli(["viewer", "service", "install", "--user", userInfo().username]), /administrator privileges/);
   }
 
+  if (process.platform !== "win32") {
+    const managedHome = path.join(temporaryRoot, "managed");
+    const runManaged = (args) => runInstalledCli([...args, "--home", managedHome, "--json"]);
+    await runInstalledCli(["inbox", "create", "managed", "--home", managedHome, "--json"]);
+    const workerPids = [];
+    try {
+      assert.equal(JSON.parse((await runManaged(["sync", "enroll", "--yes"])).stdout).enrolled, true);
+      assert.equal(JSON.parse((await runManaged(["sync", "worker", "startup"])).stdout).skipped, true);
+      const enabled = JSON.parse((await runManaged(["sync", "worker", "enable"])).stdout);
+      assert.equal(enabled.worker.running, true);
+      workerPids.push(JSON.parse(await readFile(path.join(managedHome, "sync", "worker", "runtime.json"), "utf8")).pid);
+      const status = JSON.parse((await runManaged(["sync", "worker", "status"])).stdout);
+      assert.equal(status.worker.running, true);
+      await runManaged(["sync", "worker", "stop"]);
+      assert.equal(JSON.parse((await runManaged(["sync", "worker", "status"])).stdout).worker.running, false);
+      await runManaged(["sync", "worker", "start"]);
+      workerPids.push(JSON.parse(await readFile(path.join(managedHome, "sync", "worker", "runtime.json"), "utf8")).pid);
+      assert.equal(JSON.parse((await runManaged(["sync", "worker", "status"])).stdout).worker.running, true);
+
+      const user = userInfo();
+      if (user.uid > 0) {
+        const preflight = await runInstalledCli(["--internal-viewer-owner-preflight", JSON.stringify({
+          home: managedHome, user: { name: user.username, uid: user.uid, gid: user.gid, home: temporaryRoot },
+        })]);
+        const inspection = JSON.parse(preflight.stdout);
+        assert.equal(inspection.home, managedHome);
+        assert.equal(inspection.managed, true);
+        assert.equal(typeof inspection.instanceId, "string");
+      }
+    } finally {
+      await runManaged(["sync", "worker", "disable"]);
+      assert.equal(JSON.parse((await runManaged(["sync", "worker", "status"])).stdout).worker.running, false);
+      await assert.rejects(readFile(path.join(managedHome, "sync", "worker", "runtime.json")), { code: "ENOENT" });
+      for (const pid of workerPids) {
+        const deadline = Date.now() + 3000;
+        while (true) {
+          try {
+            process.kill(pid, 0);
+          } catch (error) {
+            if (error.code === "ESRCH") break;
+            throw error;
+          }
+
+          assert(Date.now() < deadline, `Managed worker ${pid} survived verified shutdown`);
+          await delay(20);
+        }
+      }
+    }
+    console.log("Installed package owner preflight and detached managed worker enable/status/stop/start/disable passed.");
+  }
+
   console.log("Installed package foreground, detached concurrency, LAN, exposure reset, publish restart, content, export, CLI/UI deletion, and shutdown passed.");
 } finally {
   try {
@@ -279,6 +352,7 @@ try {
     const installedExecutable = path.join(temporaryRoot, "consumer", "node_modules", "html-inbox", "bundle", "index.js");
     await run(process.execPath, [installedExecutable, "viewer", "stop", "--json"], temporaryRoot, {
       HTML_INBOX_HOME: path.join(temporaryRoot, "home"),
+      HTML_INBOX_CATALOG_HOME: path.join(temporaryRoot, "catalog"),
       ...tailscaleEnvironment,
     }).catch(() => {});
   } finally {
