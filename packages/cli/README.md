@@ -1,5 +1,7 @@
 # HTML Inbox
 
+Version 0.6.3 applies hub inbox filters immediately while preserving search text, URL navigation and keyboard focus. Search and Enter still work without JavaScript. Restart the hub after updating to load the fix. See the [0.6.3 upgrade notes](https://github.com/deveshsangwan/html-inbox/blob/main/CHANGELOG.md#upgrade-to-063).
+
 Version 0.6.2 repairs explicit offline quarantine and interrupted maintenance after ownership-anchor changes. Ordinary publication and signing still fail closed; quarantine does not restore the old identity or publication. Stop verified viewers, hubs and independent sync workers with the old executable before updating, then restart them. If ownership checks prevent normal lifecycle commands, follow the recovery guidance instead of bypassing them. See the [0.6.2 upgrade notes](https://github.com/deveshsangwan/html-inbox/blob/main/CHANGELOG.md#upgrade-to-062).
 
 Version 0.6.0 adds opt-in managed synchronization on POSIX systems, with independent workers and explicit route, credential and TLS configuration. Ordinary unenrolled libraries remain supported on Windows. Read the [0.6.0 migration and rollback limits](https://github.com/deveshsangwan/html-inbox/blob/main/docs/named-inboxes.md#upgrade-to-060) before enrollment. Version 0.5.0 introduced live-reader deletion, 0.4.0 reader copying, and 0.3.0 named libraries and local hubs. Check the executable's `--help` and the running reader for actual capabilities. Updating a skill does not update the CLI or a running viewer.
