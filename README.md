@@ -1,6 +1,6 @@
 # HTML Inbox
 
-Version 0.6.1 fixes concurrent startup identity creation, sync pause/resume, and record-reading/shutdown races. Before updating the CLI, stop running viewers, hubs, and independent sync workers with the old executable. Update the CLI, then restart the components you use to load the fixes. See the [0.6.1 upgrade notes](CHANGELOG.md#upgrade-to-061).
+Version 0.6.2 repairs explicit offline quarantine and interrupted maintenance after ownership-anchor changes. Ordinary publication and signing still fail closed; quarantine does not restore the old identity or publication. Stop verified viewers, hubs and independent sync workers with the old executable before updating, then restart them. If ownership checks prevent normal lifecycle commands, follow the recovery guidance instead of bypassing them. See the [0.6.2 upgrade notes](CHANGELOG.md#upgrade-to-062).
 
 [Website](https://deveshsangwan.github.io/html-inbox/) | [Documentation](https://deveshsangwan.github.io/html-inbox/docs/) | [npm](https://www.npmjs.com/package/html-inbox)
 
