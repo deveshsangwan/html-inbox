@@ -92,7 +92,7 @@ for (const change of ["ledger-permissions", "directory-permissions", "anchor", "
     } else if (change === "anchor") {
       ledger.ownerAnchor.ino += 1;
       await replaceWithoutGenerationChange(ledgerPath, ledger);
-      error = /Copied or moved/;
+      error = /Managed ownership anchor changed \(ino\); original ownership is unproven/;
     } else if (change === "reader-identity") {
       await writeFile(path.join(home, "instance-id"), `${randomUUID()}\n`);
       error = /Reader identity differs/;
@@ -135,7 +135,7 @@ test("warm shared signatures do not bypass copied-store quarantine or fresh-fork
   const copiedHome = path.join(root, "restored");
   await cp(home, copiedHome, { recursive: true });
   const copied = new ManagedSyncStore(copiedHome);
-  await assertAllReadsReject(copied, /Copied or moved/);
+  await assertAllReadsReject(copied, /Managed ownership anchor changed \(home, ino\); original ownership is unproven/);
 
   await copied.quarantineRestore();
   const quarantined = await copied.snapshot();

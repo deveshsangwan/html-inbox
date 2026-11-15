@@ -164,6 +164,20 @@ export function initializeViewer(): void {
         }
       });
 
+    const inboxFilter = document.querySelector("#inbox-filter");
+
+    if (inboxFilter instanceof HTMLSelectElement && inboxFilter.form) {
+      const form = inboxFilter.form;
+
+      inboxFilter.addEventListener("change", () => {
+        // Native fragment navigation keeps keyboard focus on the filter after the GET.
+        const action = new URL(form.action);
+        action.hash = inboxFilter.id;
+        form.action = action.href;
+        form.requestSubmit();
+      });
+    }
+
     const searchForm = document.querySelector("[data-client-search]");
     if (searchForm instanceof HTMLFormElement) {
       const input = searchForm.querySelector('input[name="q"]');
