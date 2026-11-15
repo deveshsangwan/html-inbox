@@ -1,0 +1,10 @@
+{
+  "packages/cli/src/backend.ts": "a71a57af866018854f56434c893f783a8c48dc752e6fa87a006a839eb66795aa",
+  "scripts/bench/listing.py": "fa9ffd9e64ce26bb53de51261cb7673ce717e7892accf47e4cd61795c9a690d9",
+  "scripts/bench/listing.cjs": "397b606a7481626a4d20570b0be5bf8b14df4892cf72934ab643c80a5f99b76d",
+  "scripts/bench/listing-behavior.cjs": "2d3438062a2f52bf0af2f11a65817a854ed0ff68304b89a92e6ca6f92be08db8",
+  "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node": "6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd",
+  "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node": "bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12",
+  "packages/cli/dist/backend.js": "4db184225d367cd020d7a7eb9fdcf4ae44fd31d67a7cca1f29fbae0ca670e345",
+  "packages/cli/bundle/index.js": "ad2e725ee40af991b92168a38fe38fbfbb4b3545f88b752fa47d3c59f925e208"
+}
