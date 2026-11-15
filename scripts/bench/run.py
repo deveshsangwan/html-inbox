@@ -18,13 +18,17 @@ REPO = Path(__file__).resolve().parents[2]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('workload', choices=['baseline', 'cli', 'viewer', 'worker', 'parser', 'managed', 'sync'])
+    parser.add_argument('workload', choices=['baseline', 'cli', 'viewer', 'worker', 'parser', 'managed', 'sync', 'signatures', 'signature-history'])
     parser.add_argument('--counts', default='0,100')
     parser.add_argument('--sizes', default='10240,1048576,9437184')
     parser.add_argument('--samples', type=int, default=3)
     parser.add_argument('--node', default=shutil.which('node'))
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--candidate', help='CommonJS module exporting validateHtml for exact-result parser comparison')
+    parser.add_argument('--signature-mode', choices=['full', 'keys'], default='full',
+                        help='Signatures companion only: production behavior or parsed-key reuse without verification reuse')
+    parser.add_argument('--implementation-dist', type=Path, help='Signatures only: prebuilt production dist directory')
+    parser.add_argument('--implementation-ref', help='Signatures only: asserted source pin for the selected build, independently verify its build receipt')
     parser.add_argument('--timeout', type=int, default=600)
     args = parser.parse_args()
     try:
@@ -37,6 +41,12 @@ def main():
         parser.error('node was not found; supply --node with an executable path')
     if args.candidate and args.workload not in ['baseline', 'parser']:
         parser.error('--candidate requires the parser or baseline workload')
+    if args.signature_mode != 'full' and args.workload not in ['signatures', 'signature-history']:
+        parser.error('--signature-mode requires the signatures workload')
+    if (args.implementation_dist or args.implementation_ref) and args.workload not in ['signatures', 'signature-history']:
+        parser.error('--implementation-dist and --implementation-ref require the signatures workload')
+    if bool(args.implementation_dist) != bool(args.implementation_ref):
+        parser.error('--implementation-dist and --implementation-ref must be supplied together')
     if len(set(counts)) != len(counts) or len(set(sizes)) != len(sizes):
         parser.error('counts and sizes must not contain duplicates')
     if not counts or any(n not in [0, 100, 1000, 5000, 10000] for n in counts):
@@ -133,6 +143,20 @@ def main():
             fingerprints = dict(bundle_sha256=hashlib.sha256((REPO / 'packages/cli/bundle/index.js').read_bytes()).hexdigest(),
                                 dist_js_sha256=dist_hash.hexdigest(),
                                 candidate_sha256=hashlib.sha256(Path(args.candidate).read_bytes()).hexdigest() if args.candidate else None)
+            signature_implementation = None
+            if args.workload in ['signatures', 'signature-history']:
+                signature_dist = (args.implementation_dist or REPO / 'packages/cli/dist').resolve()
+                if not (signature_dist / 'sync-store.js').is_file():
+                    parser.error('signature implementation dist must contain sync-store.js')
+                signature_hash = hashlib.sha256()
+                for artifact in sorted(signature_dist.rglob('*.js')):
+                    signature_hash.update(str(artifact.relative_to(signature_dist)).encode() + b'\0')
+                    signature_hash.update(artifact.read_bytes())
+                signature_implementation = dict(dist=str(signature_dist), asserted_source_ref=args.implementation_ref,
+                                                dist_js_sha256=signature_hash.hexdigest(), signature_mode=args.signature_mode,
+                                                source_pin_verified=False,
+                                                companion_sha256={name: hashlib.sha256((REPO / 'scripts/bench' / name).read_bytes()).hexdigest()
+                                                                  for name in ['run.py', 'workload.cjs', 'signatures.cjs']})
             metadata = dict(commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO, text=True).strip(),
                             dirty=subprocess.check_output(['git', 'status', '--porcelain'], cwd=REPO, text=True),
                             node=subprocess.check_output(node + ['--version'], text=True).strip(),
@@ -143,7 +167,7 @@ def main():
                             cache='fresh isolated fixtures; filesystem cache uncontrolled/warm; no OS cache eviction',
                             bundle_bytes=(REPO / 'packages/cli/bundle/index.js').stat().st_size,
                             limits={'timeout_seconds': args.timeout, 'concurrency': 1}, fixture_root=directory,
-                            fingerprints=fingerprints, invocation=sys.argv)
+                            fingerprints=fingerprints, signature_implementation=signature_implementation, invocation=sys.argv)
             (args.out / 'environment.json').write_text(json.dumps(metadata, indent=2))
             success = False
             try:
@@ -152,6 +176,14 @@ def main():
                         run('cli/version', cli + ['--version'])
                 for count in counts:
                     home = root / f'library-{count}'
+                    if args.workload in ['signatures', 'signature-history']:
+                        signature_helper = node + ['--expose-gc', str(REPO / 'scripts/bench/workload.cjs')]
+                        for sample in range(args.samples):
+                            signature_root = root / f'signatures-{count}-{sample}'
+                            fixture_args = [str(signature_root), str(count), str(sizes[0]), '1', args.signature_mode, '-', str(signature_dist)]
+                            run(f'signatures/setup/{count}', signature_helper + ['signature-setup'] + fixture_args)
+                            run(f'signatures/process/{count}', signature_helper + [args.workload] + fixture_args)
+                            shutil.rmtree(signature_root)
                     if args.workload in ['baseline', 'cli', 'viewer']:
                         run(f'setup/{count}', helper + ['seed', str(home), str(count), str(sizes[0]), '1'])
                     if args.workload in ['baseline', 'cli']:

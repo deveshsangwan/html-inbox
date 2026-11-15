@@ -49,3 +49,10 @@ The cheap cleanup tests also run in Linux Node 24 verification CI. The manual me
 Commit concise evidence under `scripts/bench/evidence/`; CI uploads full raw results. Performance PRs should include exact commands, revisions, spread, behavior and cleanup outcomes. Keep runtime-upgrade effects separate from source changes. This suite's acceptance is reproducibility and cleanup, not a runtime gain.
 
 Sync uses an equal-size plain `x` body and peer-specific metadata; CLI/parser/viewer fixtures use the text/dense generators. Compare each workload against itself across revisions. Sync documents currently share their content and metadata, so byte/count checks do not qualify identity-preserving optimizations without additional identity assertions.
+
+
+## Origin signature companion
+
+Issue 94 adds opt-in `signatures` and `signature-history` workloads. The first measures full reads and configured warm owned-worker no-op passes over real TLS. Public validating store operations establish actual receiver custody, followed by confirmed zero-transfer TLS reconciliation before timing. It does not measure initial sync, cold daemon launch or separate hosts. Both peers share one process and signature cache. `signature-history` omits worker setup and measures full reads, re-signing churn and bounded retention independently.
+
+Use `--implementation-dist` with `--implementation-ref` to compare preserved builds from actual source pins. The runner hashes the selected JavaScript and companion sources; the source ref remains an assertion until independently checked against a build receipt. `--signature-mode keys` is a benchmark-only parsed-key adapter for the candidate, not a production option or baseline. See [the issue 94 plan and receipt](evidence/signatures-94.md) for commands, pairing, correctness gates and limitations.
