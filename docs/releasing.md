@@ -2,6 +2,18 @@
 
 The source workspace uses Node.js 24, Corepack, and the pinned pnpm lockfile. The published `html-inbox` CLI supports Node.js 20 or newer and contains one self-contained ncc executable with no runtime package dependencies. Publish `packages/cli`, never the private workspace root.
 
+## Prepare 0.6.3
+
+This patch release includes the immediate hub inbox filter from PR #125. It retains the 0.6.2 CLI and storage contracts, viewer protocol 3, managed ledger schema 1 and ownership schema 2. Keep the published 0.5.0 skill fallbacks unchanged; installed stable 0.6.x is already accepted.
+
+Follow the general preparation, main-only publishing and public-release verification steps below with version `0.6.3`, checking that npm has not accepted it before dispatch. Include the [0.6.3 restart guidance](../CHANGELOG.md#upgrade-to-063) and existing [ownership recovery limits](phase2-sync/ownership-recovery.md). Publication does not update running hubs, viewers, workers or services.
+
+## Prepare 0.6.2
+
+This patch release contains the explicit offline ownership/quarantine repair from PR #126. It retains viewer protocol 3, managed ledger schema 1 and ownership schema 2. The private maintenance claim supports interrupted recovery; it does not establish original ownership or migrate legacy anchors. Keep the published 0.5.0 skill fallbacks unchanged; installed stable 0.6.x is already accepted.
+
+Follow the general preparation, main-only publishing and public-release verification steps below with version `0.6.2`, checking that npm has not accepted it before dispatch. Include the [0.6.2 upgrade notes](../CHANGELOG.md#upgrade-to-062), [ownership recovery limits](phase2-sync/ownership-recovery.md) and [0.6.0 migration/rollback limits](named-inboxes.md#upgrade-to-060). Quarantine disables signing and clears saved exposure/control state; a fork creates a new identity and needs peer coordination. Neither operation nor an installed-CLI update is part of package publication. Native macOS reboot/remount safety remains unproven.
+
 ## Prepare 0.6.1
 
 This patch release contains the runtime fixes and CI improvements from PRs #82 through #85. It retains the 0.6.0 CLI and managed-format contracts, viewer protocol 3, managed ledger schema 1, and ownership schema 2. Keep both skill fallbacks pinned to published 0.5.0; stable installed 0.6.x versions are already accepted.
