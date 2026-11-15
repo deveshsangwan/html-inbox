@@ -2,6 +2,22 @@
 
 All notable changes to HTML Inbox will be documented here.
 
+## 0.6.2 - 2026-11-15
+
+- Allow explicit restore quarantine after an ownership-anchor change when saved same-home workers and viewers are conclusively dead. Keep publication, signing, communication and uncertain ownership fail closed.
+- Inspect worker lifetime ownership independently of runtime records, reclaim dead locks through checked ownership, and retain lifecycle exclusions through fork and catalog completion.
+- Persist a private maintenance claim so interrupted quarantine and fork can resume without confusing maintenance ownership with the former worker. Revalidate runtime, anchor and reader identity inside mutation transactions, including interrupted-fork recovery.
+- Report which ownership-anchor fields changed without claiming that copying or moving caused the change. Add disposable CLI, crash, ambiguous-owner and replacement-race regressions.
+- Keep the queue-expiry regression focused on actual queue waiting by moving durable fixture setup outside its request budget.
+
+### Upgrade to 0.6.2
+
+No CLI, viewer-protocol or managed-ledger/ownership-schema migration is required from 0.6.1. Stop verified running viewers, hubs and independent sync workers using the old executable before updating, then restart the components you use. Updating the package does not reload running processes or alter stored documents, routes, credentials or exposure settings.
+
+An anchor mismatch still does not prove original ownership. If normal lifecycle commands reject ownership, preserve the store and follow the [ownership recovery guide](docs/phase2-sync/ownership-recovery.md); do not delete runtime records or rewrite anchors to bypass the checks. Quarantine disables signing and clears saved control/exposure state, including viewer configuration and copied Tailscale ownership records. It does not restore publication. A fresh fork is a separate explicit decision that changes future identity and requires coordinated peer grants and configuration. Trusted original-identity recovery remains unavailable, and actual macOS reboot/remount safety is unproven.
+
+The [0.6.0 migration and rollback limits](docs/named-inboxes.md#upgrade-to-060) still apply. This release does not automatically quarantine, fork or reanchor a legacy store.
+
 ## 0.6.1 - 2026-11-07
 
 - Prevent a sync pause during request admission from permanently blocking delivery. Preserve queued work and allow delivery after resume.
