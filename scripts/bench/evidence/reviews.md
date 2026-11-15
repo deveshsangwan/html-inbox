@@ -1,0 +1,36 @@
+# Review and integration receipt
+
+Both independent reviews inspected base `099dcbd6378e3b6f73216966cfe9ea7f91ed5d8e` through frozen head `d22e256799ba9767a813a29e4fc3a44191a30e38`. Neither changed the checkout or ran heavy measurements.
+
+* Functionality: Codex provider, `gpt-6.1-sol`, reasoningEffort `high`. No blocking findings. Functionality passed, code quality passed with optional improvements, performance evidence passed for infrastructure qualification. Reviewer independently recomputed all 45 summary groups from each archive's 30 raw rows and 58 nested samples. Both cleanup tests passed independently.
+* Code quality: Claude Code provider `claudeAgent`, `claude-sonnet-5-5`, effort `medium`. Quality acceptable with one conditional cleanup concern. The reviewer did not independently assess functionality or performance evidence beyond inspection, and found no measurement-invalidating issue. The functionality review supplies those independent verdicts.
+
+## Findings and disposition
+
+1. Quality Medium, cleanup receipt supposedly clears `active` after only a best-effort wait: rejected as factually incorrect. At reviewed run.py lines 108–109 the unconditional blocking `child.wait()` follows SIGKILL, and only its successful return clears `active`. A failure leaves `active` set and the outer receipt false. Normal successful paths have already reaped the child via `wait4`. The receipt describes direct-child reaping, not descendant reaping. Added an explicit return-code assertion and comment to make this invariant visible. Timeout tests independently check descendant termination, fixture removal and socket rebind. A process-group existence probe would misclassify already-dead descendant zombies as live resources.
+2. Quality Medium, large main closure: deferred. The runner is one small dependency-free file with direct workload dispatch. Splitting argument parsing, resource execution, metadata and summary functions can be done as extensions warrant it. The current structure does not obscure a correctness defect. Replaced the inline dynamic sys import with a normal import.
+3. Quality Medium, cleanup tests only in manual CI: accepted. Added the cheap tests to Linux Node 24 verification, shard 1/2. Measurement CI remains manual/report-only. `pnpm test:bench` was always run separately during qualification; the `pnpm test` receipt never stood in for it.
+4. Quality Low, distinct fixture generators: documented. Sync deliberately uses a plain equal-size body and peer metadata; parser/viewer/CLI use text/dense fixtures. Comparisons must stay within the same workload. No cross-workload performance equivalence is claimed.
+5. Quality Low, module style and unused exports: deferred. Cosmetic rewrites or a shared loader do not improve the measured contract. Internal helper exports are harmless and not a public API promise.
+6. Quality Low, positional internal argv: deferred. Only the maintained Python dispatcher constructs it, after validating counts/sizes. Named public options live in Python. Introducing a second public CLI is unnecessary here.
+7. Quality Low, missing Node, ignored candidate and duplicate selections: accepted. Added explicit argument errors, including malformed count/size lists.
+8. Quality Low, untimed receiver enrollment: accepted comment. Receiver creation is setup; source enrollment is the measured operation.
+9. Quality Suggestion, local ignore and evidence size: no change requested. The reviewer accepted the proportionate compressed evidence and the disclosure about post-measurement tests.
+10. Functionality Low, identical sync document fixtures cannot detect swapped canonical associations or receipt identities: deferred and documented. Current checks qualify count/byte/transfer/receipt behavior, not every future identity-sensitive optimization. Such an optimization needs distinguishable documents and explicit identity assertions before it can use this suite as equivalence evidence.
+11. Functionality Suggestion, build fingerprints: accepted. Future metadata includes SHA-256 of the release bundle, sorted compiled JS paths/content and optional candidate entry module. Original measured receipts remain unchanged and have no retroactively invented hashes. Their clean revision and documented rebuild commands were independently accepted by the reviewer. Candidate transitive dependencies are not covered by the entry-module hash.
+
+The post-review changes add metadata, argument diagnostics, a redundant cleanup assertion, a setup comment, documentation and a CI test step. They do not change the timed operations, fixtures or production code and need no third full review. No material finding remains unresolved.
+
+## Validation and measured revision
+
+The two full baseline commands documented in README.md exited 0 at clean `485273a2f7f20f604a2ae1e5e6a915396eba290e`. Evidence/test additions through reviewed `d22e256` did not change workloads. `pnpm build`, `pnpm --filter html-inbox bundle`, `pnpm typecheck`, `pnpm test:bench`, targeted HTML validation tests and the complete `pnpm test` passed. The standard test log remains at `artifacts/bench-89/tests.log` in the owner checkout. The first exclusive slot was explicitly released to the root after full tests completed.
+
+After review, only lightweight checks ran: `pnpm test:bench` and `python3 scripts/bench/run.py parser --sizes 10240 --samples 1 --out artifacts/bench-89/fingerprints`. Both exited 0; the latter checked both shapes, fingerprint shape, behavior and cleanup. No sustained benchmarks or full suites were rerun after release of the slot. CI results and final integration head are reported in the PR.
+
+`release/0.7` at `1b2009132b8df184540c1990091fd1e9911dbb00` is the immediate integration base requested by the root. Its inherited policy/docs/checks are already reviewed in PR #113 and do not change production CLI behavior. The focused PR targets that branch, retaining its release-policy test script alongside the new benchmark scripts. The measurements remain attributed to their actual earlier source revision, not the integration or review-receipt commits. No runtime speedup is claimed.
+
+## Root integration check
+
+Root inspected the final diff and both review results, and independently recomputed every summary group and cleanup receipt from the two committed raw archives. All matched. The code-quality cleanup concern is rejected on the blocking `child.wait()` evidence described above.
+
+Root found a CI ordering defect introduced after the frozen review. The cleanup tests read build fingerprints, but their new verification step ran before package smoke created the bundle. Running `python3 -m unittest discover -s scripts/bench -p 'test_*.py'` with the existing bundle temporarily absent reproduced two errors. Restoring that bundle made both tests pass, exit 0. Verification now runs these tests after package smoke, whose `npm pack` executes the build/bundle prepack hook. Timed workloads and measured evidence are unchanged. Final-head CI must pass before the PR leaves draft.
