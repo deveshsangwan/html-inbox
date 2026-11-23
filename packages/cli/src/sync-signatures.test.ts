@@ -79,6 +79,22 @@ test("malformed and non-Ed25519 keys are never retained as successful keys or ve
   assert.deepEqual(verifier.usage(), { keys: 0, keyBytes: 0, verifications: 0, verificationBytes: 0 });
 });
 
+test("a retained key pays its canonical check once, not on every new success", (t) => {
+  const verifier = new OriginSignatureVerifier();
+  const owner = signer();
+  const messages = ["first", "second", "third"].map((text) => Buffer.from(text));
+  const signatures = messages.map((bytes) => owner.signature(bytes));
+  // Public keys export from their concrete prototype, not from KeyObject.prototype.
+  const keyPrototype: crypto.KeyObject = Object.getPrototypeOf(crypto.createPublicKey(owner.publicKey));
+  const exportKey = t.mock.method(keyPrototype, "export");
+  messages.forEach((bytes, index) => verifier.verify(owner.publicKey, signatures[index], bytes));
+
+  assert.equal(exportKey.mock.callCount(), 1);
+  assert.deepEqual(exportKey.mock.calls[0].arguments, [{ format: "jwk" }]);
+  assert.equal(verifier.usage().keys, 1);
+  assert.equal(verifier.usage().verifications, 3);
+});
+
 test("private key text still verifies as before but is never retained", (t) => {
   const verifier = new OriginSignatureVerifier();
   const { privateKey } = generateKeyPairSync("ed25519");

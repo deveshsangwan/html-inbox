@@ -12,6 +12,9 @@ export const ORIGIN_SIGNATURE_CACHE_LIMITS = Object.freeze({
 // createPublicKey also derives keys from private PEM and ignores bytes after the SPKI structure.
 // Retain only text whose payload is exactly the parsed public key, so no other input is held.
 const PUBLIC_KEY_PEM = /^-----BEGIN PUBLIC KEY-----\r?\n([A-Za-z0-9+/=\r\n]+)-----END PUBLIC KEY-----\s*$/;
+// Fixed DER header of an Ed25519 SPKI; it is 12 bytes, so its base64 joins the key's base64 exactly.
+// A DER export costs about as much as parsing on OpenSSL 3.0, while the JWK coordinate is cheap.
+const ED25519_SPKI_PREFIX = "MCowBQYDK2VwAyEA";
 
 /** Reuses cryptographic facts only. Callers must still parse and authorize every current state. */
 export class OriginSignatureVerifier {
@@ -21,14 +24,19 @@ export class OriginSignatureVerifier {
   private verificationBytes = 0;
 
   parsePublicKey(publicKey: string): KeyObject {
+    return this.admitPublicKey(publicKey).key;
+  }
+
+  /** Decides retention once per key text; a cached key has already passed the canonical check. */
+  private admitPublicKey(publicKey: string): { key: KeyObject; isRetainable: boolean } {
     const cached = this.keys.get(publicKey);
     if (cached) {
-      return cached.key;
+      return { key: cached.key, isRetainable: true };
     }
 
     const key = createPublicKey(publicKey);
-    if (key.asymmetricKeyType !== "ed25519" || !isRetainablePublicKey(publicKey, key)) {
-      return key;
+    if (key.asymmetricKeyType !== "ed25519" || !isCanonicalPublicKey(publicKey, key)) {
+      return { key, isRetainable: false };
     }
 
     // Two bytes per code unit plus an allowance for the fixed-size Ed25519 KeyObject and map entry.
@@ -45,7 +53,7 @@ export class OriginSignatureVerifier {
 
     this.keys.set(copyText(publicKey), { key, bytes });
     this.keyBytes += bytes;
-    return key;
+    return { key, isRetainable: true };
   }
 
   verify(publicKey: string, signature: string, signedBytes: Buffer): void {
@@ -60,13 +68,13 @@ export class OriginSignatureVerifier {
       return;
     }
 
-    const key = this.parsePublicKey(publicKey);
+    const { key, isRetainable } = this.admitPublicKey(publicKey);
     const isValid = key.asymmetricKeyType === "ed25519" && verifyEd25519(null, Buffer.from(message, "latin1"), key, Buffer.from(signature, "base64url"));
     if (!isValid) {
       throw new Error("Origin signature verification failed");
     }
 
-    if (identity === undefined || !isRetainablePublicKey(publicKey, key)) {
+    if (identity === undefined || !isRetainable) {
       return;
     }
 
@@ -88,13 +96,18 @@ export class OriginSignatureVerifier {
   }
 }
 
-function isRetainablePublicKey(publicKey: string, key: KeyObject): boolean {
+function isCanonicalPublicKey(publicKey: string, key: KeyObject): boolean {
   if (publicKey.length > ORIGIN_SIGNATURE_CACHE_LIMITS.keyCodeUnits) {
     return false;
   }
 
   const payload = PUBLIC_KEY_PEM.exec(publicKey)?.[1].replace(/\s/g, "");
-  return payload === key.export({ format: "der", type: "spki" }).toString("base64");
+  if (payload === undefined) {
+    return false;
+  }
+
+  const { x } = key.export({ format: "jwk" });
+  return typeof x === "string" && payload === ED25519_SPKI_PREFIX + Buffer.from(x, "base64url").toString("base64");
 }
 
 function copyText(value: string): string {

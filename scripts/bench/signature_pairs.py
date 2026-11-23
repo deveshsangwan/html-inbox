@@ -106,9 +106,10 @@ def block(run):
 def intended_operations(workload, count):
     """Operation labels and repeat counts each process must emit, mirroring signatures.cjs."""
     churn_rounds = -(-18_000 // count) if count >= 1000 else 3
-    operations = {'snapshot-cold': 1, 'snapshot-warm': 5, 'list': 1, 'churn-miss': churn_rounds, 'churn-repeat': churn_rounds, 'adversarial': 1}
+    operations = {'snapshot-cold': 1, 'snapshot-warm': 5, 'list': 1, 'churn-miss': churn_rounds, 'churn-repeat': churn_rounds}
     if count:
-        operations['get'] = 1
+        # Without records there is nothing to get or corrupt, so signatures.cjs skips both.
+        operations.update({'get': 1, 'adversarial': 1})
     if workload == 'signatures':
         operations.update({'worker-startup': 1, 'worker-noop-validated-custody': 1, 'worker-idle': 1, 'worker-close': 1})
 

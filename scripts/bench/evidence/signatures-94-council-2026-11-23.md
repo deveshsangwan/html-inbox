@@ -75,7 +75,9 @@ Reading:
 - Retained post-GC heap at 100 records is within about 0.3 MiB across variants. Process peak RSS is a cumulative high-water mark, read at the end of the warm worker no-op; the median and range over five processes are:
   - Node 20: full cache 140.6 MiB [139.7, 143.5], parent 120.9 MiB [119.1, 122.8], key-only 118.9 MiB [118.1, 124.4]. The full cache costs about 20 MiB more.
   - Node 24: 173.3 MiB [169.5, 178.5], parent 171.7 MiB [169.0, 179.3], key-only 171.9 MiB [167.6, 175.9]. The full cache costs about 1.6 MiB more.
-- The table omits worker idle and worker close. Worker idle is a one-second wait whose full/parent CPU ratio is 0.49× on Node 20 and 0.30× on Node 24. Worker close takes under 10 ms with no verification, and its ratios range from 0.25× to 5.02×, which is noise. Both are in `pairs-summary.json`.
+- The table omits worker idle and worker close; both are in `pairs-summary.json`.
+  - Worker idle is a window of about one second (999–1011 ms elapsed) that includes background validation work. Every parent and key-only sample made 400 verifications in it, and every full-cache sample made none. Its full/parent CPU ratio is 0.49× on Node 20 and 0.30× on Node 24.
+  - Worker close took 3.1–25.9 ms of CPU, with 6 of 30 samples at 10 ms or more. One Node 24 key-only sample made 100 verifications; every other close sample made none. Its per-block ratios range from 0.25× to 5.02×, so close is too noisy to report as a result.
 - This one cell does not qualify 1,000- or 10,000-record, over-capacity, initial-sync, separate-host or persistent-media behaviour. Those limits from the earlier evidence still apply.
 
 Raw outputs: [`signatures-94-integrated-pairs-2026-11-23.tar.gz`](signatures-94-integrated-pairs-2026-11-23.tar.gz), SHA-256 `453a14472478e14f18dd2eb8b6db23f13b8e0ead27aa5c5636dd6ec6985cadc6`, 211 members. It holds every process's `samples.jsonl`, `environment.json`, `summary.json`, `cleanup.json` and full transcript, plus `commands.jsonl`, `pairs-summary.json`, `intended-operations-check.json`, the TAP and build logs, before and after hash manifests, the qualification script and the check script.
@@ -99,3 +101,26 @@ Both reviewers again worked read-only on the same brief and the same exact head.
 | The zero-crypto integration test could pass vacuously if the mocks stopped intercepting | Opus, Nit | Fixed: the mocks are installed before the fixture, nonzero calls during warmup are asserted, then counts are reset before the zero assertions |
 | `usage()` lacked an explicit return type | Opus, Nit | Fixed |
 
+## Round 3 on `2f8e89f`
+
+Both reviewers again worked read-only on the same brief and exact head. Hosted CI passed all 18 checks on that head, and a root-granted local run passed focused TAP 112/112 and 64/64 on each runtime.
+
+| Delegate | Functionality | Code quality | Scoped performance evidence | Score |
+|---|---|---|---|---:|
+| Claude Opus 5.5, high effort | PASS | PASS | FAIL | 9.0/10 |
+| Codex gpt-6.2-sol, high effort | PASS | PASS | PASS | 9.3/10 |
+
+| Finding | Source | Disposition |
+|---|---|---|
+| Every success-cache miss ran the canonical check, including its DER export, even with the key already cached, and a cold key paid it twice. Opus measured the DER export at about 134 µs on Node 20 and 44 µs on Node 24, comparable to the parse that the key cache removes, so the round 2 fix regressed the miss paths | Opus, Medium; Sol, Low | Fixed. `admitPublicKey` decides retention once per key text and returns it with the key. A cached key has already passed the check, so a success miss under a retained key does no export and no regex. The check builds the canonical SPKI base64 from the fixed 12-byte Ed25519 header and the JWK `x` coordinate. The owner confirmed it equals the DER export for 500 of 500 keys on each runtime, at about 3 µs instead of 120 µs (Node 20) and 2 µs instead of 41 µs (Node 24). A unit test asserts one JWK export across three successes under one key |
+| The check exported even when the PEM pattern failed | Opus, Nit | Fixed: it returns early when the pattern does not match |
+| The driver expected `adversarial` for zero-record runs, which `signatures.cjs` skips | Both, Low | Fixed: `get` and `adversarial` are expected only with records. Tests cover a complete zero-record block, and the archived zero-record matrix processes from the original qualification match the 17 intended operations |
+| The worker idle/close explanation contradicted the raw samples | Sol, Low | Fixed above with the observed ranges and verification counts |
+| Extra blank line at the end of this file | Sol, Nit | Fixed |
+
+The integrated measurement above belongs to `2ba6ffb`. The current head differs in its retention check:
+- On a success miss with a retained key, it does less work than `2ba6ffb`, which ran a regex before every success insertion; the current head does one map lookup.
+- A new key pays one regex and one JWK export, about 3 µs, once per retained key text.
+- Text that is declined for retention pays the check on every attempt.
+
+Whether the one cell is re-measured at the current head is a root decision.

@@ -138,6 +138,10 @@ class InstrumentationTests(unittest.TestCase):
         self.assertEqual(intended['signatures/snapshot-warm/100'], 5)
         self.assertEqual(signature_pairs.intended_operations('signature-history', 1000)['signatures/churn-miss/1000'], 18)
         self.assertNotIn('signatures/worker-idle/1000', signature_pairs.intended_operations('signature-history', 1000))
+        empty_cell = signature_pairs.intended_operations('signatures', 0)
+        self.assertNotIn('signatures/get/0', empty_cell)
+        self.assertNotIn('signatures/adversarial/0', empty_cell)
+        self.assertEqual(sum(empty_cell.values()), 17)
 
         def write_block(run, labels):
             run['out'].mkdir()
@@ -175,6 +179,11 @@ class InstrumentationTests(unittest.TestCase):
         self.assertEqual({row['operation'].split('/')[1]: row['cpu_ratio'] for row in result['paired']}['get'], 0.4)
         self.assertEqual({(row['operation'].split('/')[1], row['variant']): row['samples'] for row in result['marginal']}
                          [('snapshot-warm', 'parent')], 5)
+        with tempfile.TemporaryDirectory() as directory:
+            zero = signature_pairs.plan_runs(argparse.Namespace(out=Path(directory), cells=[(0, 10240)], pairs=1, variants=['parent']), ['v20.20.2'])
+            write_block(zero[0], [label for label, times in empty_cell.items() for _ in range(times)])
+            zero_result = signature_pairs.summarize(zero, [dict(zero[0], exit_code=0)], 'signatures')
+        self.assertTrue(zero_result['complete'], zero_result['missing_operations'])
         self.assertFalse(empty_result['complete'])
         self.assertEqual(len(empty_result['missing_operations']), 2 * len(intended))
         self.assertEqual(empty_result['marginal'], [])
