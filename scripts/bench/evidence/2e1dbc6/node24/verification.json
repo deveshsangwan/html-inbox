@@ -1,0 +1,36 @@
+{
+ "summary success": true,
+ "cleanup complete": true,
+ "no failures": true,
+ "pinned clean commit": true,
+ "fresh build": true,
+ "bundle fingerprint": true,
+ "node fingerprint": true,
+ "tmpfs fixtures": true,
+ "expected sample counts": true,
+ "rss readings complete": true,
+ "runner peak recorded": true,
+ "cli above spawn floor": true,
+ "cli above own spawn floor": true,
+ "spawn floor recorded on every row": true,
+ "parser above cli": true,
+ "distinct process peaks": true,
+ "behavior recorded": true,
+ "fixture removed on disk": true,
+ "harness fingerprints": true,
+ "lockfile fingerprint": true,
+ "rss detail": {
+  "spawn_floor_kib": [
+   22824,
+   22824
+  ],
+  "cli_version_kib": [
+   68372,
+   68140
+  ],
+  "parser_dense_9mib_kib": [
+   1452736
+  ],
+  "runner_before_kib": 22824
+ }
+}

@@ -1,0 +1,34 @@
+# Issue 89 qualification
+
+The [Node 24 and Node 20 qualification at 2e1dbc6](2e1dbc6/README.md) includes the revised runner, verified cleanup, and raw samples.
+
+## Historical measurements at 485273a
+
+> **Historical evidence only.** These two runs were produced by the harness at `485273a2f7f20f604a2ae1e5e6a915396eba290e` against that revision's CLI build. They qualified the original measurement infrastructure and are not a baseline for new runs. The current runner ends process wall time at pidfd exit instead of a 5 ms poll, gives every fixture document a distinct body, labels sync source setup separately from the managed workload, checks peer identities and verifies process groups during cleanup. The runs used tmpfs, where kernel read/write byte counters stay near zero, and their `cleanup.json` predates the `process_groups_empty` check. The closing remark that measured workload code is unchanged applied only until those later changes. Their numbers are therefore not comparable with runs from the current harness, and they do not measure the integrated `release/0.7` source. Any comparison must re-measure both sides with one harness revision, build, runtime and machine.
+
+A later local qualification at `dc690e48e895d4ed4cb04bc7b37c3c8f2fafc28d` completed on both runtimes. Whole-file fingerprinting in the runner contaminated process peak RSS. Those readings are invalid for workload memory comparisons. Its original raw data is retained. The successor attempt at `69d185ade9054c43499240f6dbe7250fe1ae5d18` stopped during synthetic teardown after six `pidfd_open` EINVAL tracebacks. Neither runtime baseline ran. The logs did not capture the affected PID or its identity.
+
+Implementation base: `099dcbd6378e3b6f73216966cfe9ea7f91ed5d8e`.
+Measured source and suite: `485273a2f7f20f604a2ae1e5e6a915396eba290e`, clean working tree for both runs.
+
+Build on Node 24.19.0:
+
+```sh
+pnpm build
+pnpm --filter html-inbox bundle
+```
+
+Measured sequentially on the same host in the exclusive benchmark slot:
+
+```sh
+python3 scripts/bench/run.py baseline --samples 2 --out artifacts/bench-89/node24
+python3 scripts/bench/run.py baseline --samples 2 --node /home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node --out artifacts/bench-89/node20
+```
+
+Both commands exited 0. Both used 0/100 records and all three HTML sizes in text and dense-element shapes. All behavior assertions passed, including export bytes, original viewer bytes, actual TLS transfer counts, exact received bodies, receipts, no-op and one-body repair. Both cleanup receipts confirm fixture removal and child reaping. Every summary has 45 labels with its actual sample count and min/median/max. Viewer idle has one one-second window per record count; worker idle has two. These short idle observations do not qualify long-running service behavior.
+
+The adjacent runtime directories contain complete environment metadata, summaries, cleanup receipts and gzip-compressed raw JSONL. Decompress with `gzip -dc scripts/bench/evidence/node24/samples.jsonl.gz`. These are the runner's original outputs, not selected samples. The compressed raw files are about 19 KB each. Full local artifacts remain under the commands' output paths; public reproducibility does not depend on those ignored paths.
+
+This qualifies measurement infrastructure. There is no production candidate, before/after delta or claimed speedup. The two runtime runs are separate qualifications, not evidence of a source optimization. OS caches were uncontrolled/warm and I/O counters are subject to the limits in the suite README. Larger record counts are supported targeted workloads, not a claim that 1,000/5,000/10,000 records were measured here. Future modern-line forward ports and Node 26 qualification belong to their implementation and release gates.
+
+Additional checks are recorded in the PR and review receipt. The socket-cleanup test was extended after these measurements; measured workload code is unchanged.

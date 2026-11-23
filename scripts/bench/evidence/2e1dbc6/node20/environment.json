@@ -1,0 +1,92 @@
+{
+  "commit": "2e1dbc62a559832e696df5fc600a2eac6ed87063",
+  "dirty": "",
+  "node": "v20.20.2",
+  "versions": {
+    "node": "20.20.2",
+    "acorn": "8.16.0",
+    "ada": "2.9.2",
+    "ares": "1.34.6",
+    "brotli": "1.1.0",
+    "cjs_module_lexer": "2.2.0",
+    "cldr": "48.0",
+    "icu": "78.2",
+    "llhttp": "9.3.1",
+    "modules": "115",
+    "napi": "9",
+    "nghttp2": "1.61.0",
+    "openssl": "3.0.19",
+    "simdutf": "6.4.2",
+    "tz": "2025c",
+    "undici": "6.24.1",
+    "unicode": "17.0",
+    "uv": "1.46.0",
+    "uvwasi": "0.0.23",
+    "v8": "11.3.244.8-node.38",
+    "zlib": "1.3.1-e00f703"
+  },
+  "parser": "7.3.0",
+  "filesystem": "tmpfs",
+  "host": {
+    "machine": [
+      "Linux",
+      "homeserver",
+      "6.12.113+deb13-amd64",
+      "#1 SMP PREEMPT_DYNAMIC Debian 6.12.113-1 (2026-10-15)",
+      "x86_64"
+    ],
+    "cpu_model": "Intel(R) Core(TM) i5-7300HQ CPU @ 2.50GHz",
+    "cpu_count": 4,
+    "mem_total_kib": 16264520,
+    "python": "3.13.5 (main, Aug 10 2026, 12:06:59) [GCC 14.2.0]"
+  },
+  "load_average_before": [
+    1.19,
+    1.44,
+    1.52
+  ],
+  "samples": 2,
+  "counts": [
+    0,
+    100
+  ],
+  "sizes": [
+    10240,
+    1048576,
+    9437184
+  ],
+  "cache": "fresh isolated fixtures; filesystem cache uncontrolled/warm; no OS cache eviction",
+  "bundle_bytes": 1284581,
+  "stale_build_inputs": [],
+  "allow_stale_build": false,
+  "limits": {
+    "timeout_seconds": 600,
+    "concurrency": 1
+  },
+  "fixture_root": "/tmp/html-inbox-bench-idpcm0_s",
+  "fingerprints": {
+    "bundle_sha256": "6e34827440c576add5dc4a02d6c46315a340bbb577062dfc96183f9eb68e59ae",
+    "dist_js_sha256": "3815133ee1c3ce82d6f1fb795c04d682f5d5b46f37aca5ce00dd1be3056f1154",
+    "node_sha256": "6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd",
+    "harness_sha256": {
+      "scripts/bench/run.py": "1e9ebfb32a0a862177a7441e83cf6d51084534c202022836622ae978b1e8daed",
+      "scripts/bench/workload.cjs": "541e57c35517d6eac962dd178f37def92624bd090d3279d6e2fb93d652a0c536",
+      "scripts/bench/sync.cjs": "e8750b2cea48929ef11c4d0a19791c09e2a3644aa5f4f17df851ab6928ca6107"
+    },
+    "lockfile_sha256": "5a022657a76a03234db5f20fdd70162869356b4444cf4fe3ad0938a44806c677",
+    "candidate_sha256": null
+  },
+  "runner_peak_rss_kib_before_workloads": 22824,
+  "invocation": [
+    "scripts/bench/run.py",
+    "baseline",
+    "--samples",
+    "2",
+    "--counts",
+    "0,100",
+    "--node",
+    "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+    "--out",
+    "/home/agent/.t3/worktrees/html-inbox/perf-89-bench/artifacts/bench-89/council-r4/node20"
+  ]
+}
