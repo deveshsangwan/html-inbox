@@ -29,3 +29,7 @@ The formatting follow-up leaves production `backend.ts` byte-identical to the re
 `fingerprints.json` identifies the measured/reviewed versions. `post-review-fingerprints.json` identifies the three formatted files. Historical raw data and manifests were not rewritten. The recorded full suites ran on the frozen review revision; final-head CI must qualify this formatting/documentation follow-up. No local heavy work ran after the slot release.
 
 Root audit and required final-head CI remain separate gates. PR #116 remains draft. No merge, watch, release or publication was performed.
+
+## Follow-up, 23 November 2026
+
+The deferred combined scenario is now covered by `backend-listing.test.ts`, "a failing listing keeps its error while another listing's queued workers complete". One listing fails on two records with distinct errors while a second listing in another home queues behind the same eight shared permits. The failing listing rejects with one of its own errors, the healthy listing returns every record in order, aggregate active reads stay at or below eight and both listings drain before settling. A later listing must hold eight reads open at once before any can finish, so a leaked permit fails the test by timeout instead of hanging. Production source is unchanged. The text above remains the historical disposition for `427942f`.

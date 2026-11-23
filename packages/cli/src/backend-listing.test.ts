@@ -80,6 +80,72 @@ test("ordinary listings share a read limit across instances, preserve ties and r
   assert.deepEqual(await backends[1].listDocuments(), expected);
 });
 
+test("a failing listing keeps its error while another listing's queued workers complete", { timeout: 10_000 }, async (t) => {
+  const failingHome = await temporaryHome(t);
+  const healthyHome = await temporaryHome(t);
+  await seed(failingHome, 24);
+  const expected = await seed(healthyHome, 48);
+  const readFile = fs.readFile;
+  const failingRecords = new Map([
+    [path.join(failingHome, "documents", "document-003", "metadata.json"), "first synthetic failure"],
+    [path.join(failingHome, "documents", "document-004", "metadata.json"), "sibling synthetic failure"],
+  ]);
+  let activeReads = 0;
+  let peakReads = 0;
+  let isGated = false;
+  let openGate = () => {};
+  const gate = new Promise<void>((resolve) => { openGate = resolve; });
+
+  t.mock.method(fs, "readFile", async (...args: Parameters<typeof fs.readFile>) => {
+    const file = String(args[0]);
+
+    if (!file.endsWith("metadata.json")) {
+      return readFile(...args);
+    }
+
+    activeReads += 1;
+    peakReads = Math.max(peakReads, activeReads);
+
+    try {
+      if (isGated) {
+        if (activeReads === 8) {
+          openGate();
+        }
+
+        await gate;
+      }
+
+      await setImmediate();
+
+      const message = failingRecords.get(file);
+
+      if (message) {
+        throw Object.assign(new Error(message), { code: "EACCES" });
+      }
+
+      return await readFile(...args);
+    } finally {
+      activeReads -= 1;
+    }
+  });
+
+  const [failed, healthy] = await Promise.allSettled([
+    new LocalDocumentBackend(failingHome).listDocuments(),
+    new LocalDocumentBackend(healthyHome).listDocuments(),
+  ]);
+
+  assert.equal(failed.status, "rejected");
+  assert.ok(failed.reason instanceof Error);
+  assert.ok([...failingRecords.values()].includes(failed.reason.message));
+  assert.deepEqual(healthy, { status: "fulfilled", value: expected });
+  assert.ok(peakReads <= 8, `aggregate active reads: ${peakReads}`);
+  assert.equal(activeReads, 0, "both listings drain before settling");
+
+  // A leaked permit would leave fewer than eight slots, so this listing could never open the gate.
+  isGated = true;
+  assert.deepEqual(await new LocalDocumentBackend(healthyHome).listDocuments(), expected);
+});
+
 test("ordinary listing retains corruption diagnostics, unsafe-entry handling and permission hardening", async (t) => {
   const home = await temporaryHome(t);
   const expected = await seed(home, 6);
