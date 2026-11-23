@@ -71,8 +71,9 @@ def run_pairs(args):
     if len(nodes) != len(args.node):
         raise ValueError('each --node must be a distinct runtime version')
 
+    planned = plan_runs(args, list(nodes))
     commands = []
-    for run in plan_runs(args, list(nodes)):
+    for run in planned:
         dist, ref = builds['parent' if run['variant'] == 'parent' else 'candidate']
         command = [sys.executable, str(RUNNER), args.workload, '--node', nodes[run['runtime']], '--counts', str(run['count']),
                    '--sizes', str(run['size']), '--samples', '1', '--timeout', str(args.timeout), '--implementation-dist', str(dist),
@@ -91,16 +92,29 @@ def run_pairs(args):
         print('DONE', run['out'].name, result.returncode, entry['wall_seconds'], flush=True)
 
         if result.returncode:
+            # Stop measuring, but still summarize so the failed and unrun blocks are reported as missing.
             print(run['log'].read_text(), flush=True)
-            sys.exit(result.returncode)
+            break
 
-    return commands
+    return planned, commands
 
 
-def summarize(commands):
+def block(run):
+    return (run['runtime'], run['count'], run['size'], run['variant'], run['pair'])
+
+
+def summarize(planned, commands):
+    exit_codes = {block(entry): entry['exit_code'] for entry in commands}
+    missing_processes = [dict(runtime=run['runtime'], count=run['count'], body_bytes=run['size'], variant=run['variant'], pair=run['pair'],
+                              reason='not run' if block(run) not in exit_codes else f"exit {exit_codes[block(run)]}")
+                         for run in planned if exit_codes.get(block(run)) != 0]
+
     per_process = defaultdict(list)
     per_pair = {}
     for entry in commands:
+        if entry['exit_code']:
+            continue
+
         output = Path(entry['out'])
         assert json.loads((output / 'summary.json').read_text())['success'], output
         assert json.loads((output / 'cleanup.json').read_text()) == {'fixture_root_removed': True, 'children_reaped': True}, output
@@ -117,7 +131,7 @@ def summarize(commands):
             process = dict(cpu_ms=statistics.median(row['cpu_ms'] for row in rows),
                            wall_ms=statistics.median(row['wall_ms'] for row in rows),
                            verifications=statistics.median(row['crypto']['verifications'] for row in rows),
-                           retained_heap_bytes=max(row['memory_after_gc']['heapUsed'] for row in rows))
+                           retained_heap_bytes=max(row['memory_after_gc']['heapUsed'] for row in rows), samples=len(rows))
             per_process[key].append(process)
             per_pair[key + (entry['pair'],)] = process
 
@@ -125,11 +139,20 @@ def summarize(commands):
     for (runtime, count, size, label, variant), processes in sorted(per_process.items()):
         cpu = [process['cpu_ms'] for process in processes]
         summary.append(dict(runtime=runtime, count=count, body_bytes=size, operation=label, variant=variant, processes=len(processes),
+                            samples=sum(process['samples'] for process in processes),
                             cpu_ms_median=statistics.median(cpu), cpu_ms_min=min(cpu), cpu_ms_max=max(cpu),
                             wall_ms_median=statistics.median(process['wall_ms'] for process in processes),
                             verifications_median=statistics.median(process['verifications'] for process in processes),
                             retained_heap_bytes_max=max(process['retained_heap_bytes'] for process in processes)))
-    return summary, paired_comparisons(per_pair)
+    # Any operation seen in one block is expected in every planned block of the same cell.
+    operations = {(runtime, count, size, label) for runtime, count, size, label, _variant in per_process}
+    missing_operations = [dict(runtime=runtime, count=count, body_bytes=size, operation=label, variant=run['variant'], pair=run['pair'])
+                          for runtime, count, size, label in sorted(operations)
+                          for run in planned if (run['runtime'], run['count'], run['size']) == (runtime, count, size)
+                          and (runtime, count, size, label, run['variant'], run['pair']) not in per_pair]
+
+    return dict(complete=not missing_processes and not missing_operations, missing_processes=missing_processes,
+                missing_operations=missing_operations, marginal=summary, paired=paired_comparisons(per_pair))
 
 
 def paired_comparisons(per_pair):
@@ -155,14 +178,20 @@ def main():
                    invocation=sys.argv)
     (args.out / 'harness.json').write_text(json.dumps(harness, indent=2) + '\n')
 
-    summary, comparisons = summarize(run_pairs(args))
-    (args.out / 'pairs-summary.json').write_text(json.dumps(dict(marginal=summary, paired=comparisons), indent=2) + '\n')
-    for row in summary:
+    result = summarize(*run_pairs(args))
+    (args.out / 'pairs-summary.json').write_text(json.dumps(result, indent=2) + '\n')
+    for row in result['marginal']:
         print(f"{row['runtime']} {row['count']}:{row['body_bytes']} {row['operation']} {row['variant']}: "
-              f"CPU median {row['cpu_ms_median']:.3f} ms [{row['cpu_ms_min']:.3f}, {row['cpu_ms_max']:.3f}] n={row['processes']}")
-    for row in comparisons:
+              f"CPU median {row['cpu_ms_median']:.3f} ms [{row['cpu_ms_min']:.3f}, {row['cpu_ms_max']:.3f}] "
+              f"processes={row['processes']} samples={row['samples']}")
+    for row in result['paired']:
         print(f"{row['runtime']} {row['count']}:{row['body_bytes']} {row['operation']} pair{row['pair']} {row['variant']}/parent: "
               f"{row['variant_cpu_ms']:.3f}/{row['parent_cpu_ms']:.3f} ms")
+    for row in result['missing_processes'] + result['missing_operations']:
+        print('MISSING', json.dumps(row), flush=True)
+
+    if not result['complete']:
+        sys.exit(1)
 
 
 if __name__ == '__main__':

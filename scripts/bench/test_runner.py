@@ -129,5 +129,33 @@ class InstrumentationTests(unittest.TestCase):
             self.assertEqual(run['log'].name, run['out'].name + '.log')
         self.assertEqual([run['variant'] for run in runs[:6]], ['parent', 'keys', 'candidate', 'candidate', 'keys', 'parent'])
 
+    def test_signature_pair_summary_reports_failed_unrun_and_absent_blocks_as_missing(self):
+        spec = importlib.util.spec_from_file_location('signature_pairs', RUNNER.with_name('signature_pairs.py'))
+        signature_pairs = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(signature_pairs)
+        with tempfile.TemporaryDirectory() as directory:
+            args = argparse.Namespace(out=Path(directory), cells=[(100, 10240)], pairs=2, variants=['parent', 'candidate'])
+            planned = signature_pairs.plan_runs(args, ['v20.20.2'])
+            commands = []
+            for run, exit_code, labels in zip(planned, [0, 0, 0], [['get', 'list'], ['get', 'list'], ['get']]):
+                run['out'].mkdir()
+                (run['out'] / 'summary.json').write_text(json.dumps({'success': True}))
+                (run['out'] / 'cleanup.json').write_text(json.dumps({'fixture_root_removed': True, 'children_reaped': True}))
+                rows = [json.dumps({'label': label, 'cpu_ms': 4.0 if run['variant'] == 'candidate' else 10.0, 'wall_ms': 1.0,
+                                    'crypto': {'verifications': 0}, 'memory_after_gc': {'heapUsed': 1}}) for label in labels]
+                (run['out'] / 'samples.jsonl').write_text(json.dumps({'stdout': '\n'.join(rows)}) + '\n')
+                commands.append(dict(run, exit_code=exit_code))
+            commands[2]['exit_code'] = 1
+
+            result = signature_pairs.summarize(planned, commands)
+
+        self.assertFalse(result['complete'])
+        self.assertEqual([(row['pair'], row['variant'], row['reason']) for row in result['missing_processes']],
+                         [(1, 'candidate', 'exit 1'), (1, 'parent', 'not run')])
+        self.assertEqual(sorted((row['operation'], row['pair'], row['variant']) for row in result['missing_operations']),
+                         [('get', 1, 'candidate'), ('get', 1, 'parent'), ('list', 1, 'candidate'), ('list', 1, 'parent')])
+        self.assertEqual([(row['operation'], row['pair'], row['cpu_ratio']) for row in result['paired']], [('get', 0, 0.4), ('list', 0, 0.4)])
+        self.assertEqual({row['samples'] for row in result['marginal']}, {1})
+
 if __name__ == '__main__':
     unittest.main()
