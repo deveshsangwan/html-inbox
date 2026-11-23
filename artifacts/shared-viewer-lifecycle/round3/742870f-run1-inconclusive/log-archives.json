@@ -1,0 +1,17 @@
+{
+  "prefix-5c49486-copy-build-node24.log": {
+    "bytes": 304,
+    "sha256": "a31565c1f300a80e149e6c8d0610235af0ac57da2dba81dbd4103be42cffdf5a",
+    "gz_sha256": "def98809f8c6d91209800bc303e139c8c6df56c7fc05d0f6b3ce8273fb49c979"
+  },
+  "red-prefix-5c49486-node24.log": {
+    "bytes": 5200,
+    "sha256": "73765eb7e6b86f2a15596033692581f20e1086270db43e78b49714334579ad92",
+    "gz_sha256": "34ea22258b818e93e1101a93bb1c143cebd9076413c36804aec2426caf1beb94"
+  },
+  "typecheck-node24.log": {
+    "bytes": 122,
+    "sha256": "f31c3f608459b9e20f1003fa22b21a8b8db1e6a68336c68ed000cc2e077e5a57",
+    "gz_sha256": "46fad10521e1363787c991db318486313a2f948b158257415d4e254913b215d1"
+  }
+}

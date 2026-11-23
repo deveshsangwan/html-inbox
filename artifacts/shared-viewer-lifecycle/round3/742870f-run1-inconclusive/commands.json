@@ -1,0 +1,66 @@
+[
+  {
+    "label": "typecheck-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "pnpm",
+      "typecheck"
+    ],
+    "exit_code": 0,
+    "seconds": 2.5,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "prefix-5c49486-copy-build-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47/node_modules/.bin/tsc-rs",
+      "-p",
+      "/tmp/claude-1001/-home-agent--t3-worktrees-html-inbox-t3-26d1cd47/eaedad0e-0d8d-4c7f-b8c4-f3a43d6ff252/scratchpad/round3-742870f-20261123T231717/prefix-5c49486-copy/packages/cli/tsconfig.json"
+    ],
+    "exit_code": 0,
+    "seconds": 1.1,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "emitted_viewer_server_js_sha256": "360c33f1e341e8600cfccac73cabdc05832a94b97205f75ed1582fc9853605b2"
+  },
+  {
+    "label": "red-prefix-5c49486-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "--test-force-exit",
+      "--test-name-pattern=start-lock release",
+      "/tmp/claude-1001/-home-agent--t3-worktrees-html-inbox-t3-26d1cd47/eaedad0e-0d8d-4c7f-b8c4-f3a43d6ff252/scratchpad/round3-742870f-20261123T231717/prefix-5c49486-copy/packages/cli/dist/viewer-owned-lifecycle.test.js"
+    ],
+    "exit_code": 1,
+    "seconds": 0.4,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "failed_count": 3,
+    "failed_cases": [
+      "a signal during start-lock release rejects startup after its shared shutdown",
+      "start-lock release failure after readiness rolls back the live viewer",
+      "startup failure keeps both its cause and a start-lock release failure"
+    ],
+    "verdict": "INCONCLUSIVE"
+  },
+  {
+    "label": "prior-0463edb-copy-build-node24",
+    "outcome": "UNRUN",
+    "reason": "negative control 1 not credited"
+  },
+  {
+    "label": "red-prior-0463edb-node24",
+    "outcome": "UNRUN",
+    "reason": "negative control 1 not credited"
+  }
+]

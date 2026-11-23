@@ -1,13 +1,17 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import fs, { mkdtemp, readFile, stat } from "node:fs/promises";
 import http from "node:http";
+import { createRequire, syncBuiltinESMExports } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
+import { setImmediate } from "node:timers/promises";
 import { chromium } from "playwright";
 import { LocalDocumentBackend } from "../packages/cli/dist/backend.js";
 import { exportStaticSnapshot } from "../packages/cli/dist/static-export.js";
-import { startViewer } from "../packages/cli/dist/viewer-server.js";
+import { closeFixtureResources, startFixtureViewer } from "./browser-fixtures.mjs";
+
+const records = createRequire(import.meta.url)("../packages/cli/dist/viewer-records.js");
 
 const storageKey = "html-inbox-isolation-secret";
 const viewerSecret = "viewer-only-data";
@@ -19,34 +23,7 @@ const cdnScripts = new Map([
 ]);
 
 test("response sandbox isolates direct documents and reader frames", { timeout: 120_000 }, async (t) => {
-  const home = await mkdtemp(path.join(tmpdir(), "html-inbox-document-isolation-"));
-  t.after(() => rm(home, { recursive: true, force: true }));
-
-  const backend = new LocalDocumentBackend(home);
-  const published = await backend.publish({
-    title: "Document isolation probe",
-    type: "report",
-    sourceFileName: "isolation.html",
-    originalBytes: Buffer.from(renderIsolationProbe()),
-  });
-  const viewer = await startViewer(backend, home, 0);
-  t.after(() => closeServer(viewer));
-  const localOrigin = serverOrigin(viewer);
-
-  const snapshot = await exportStaticSnapshot(backend, {
-    outputDir: path.join(home, "snapshot"),
-    capability: "AAAAAAAAAAAAAAAAAAAAAA",
-  });
-  const staticServer = await serveSnapshot(snapshot, published.id);
-  t.after(() => closeServer(staticServer));
-  const staticOrigin = serverOrigin(staticServer);
-
-  const browser = await chromium.launch(
-    process.env.HTML_INBOX_BROWSER_EXECUTABLE
-      ? { executablePath: process.env.HTML_INBOX_BROWSER_EXECUTABLE }
-      : {},
-  );
-  t.after(() => browser.close());
+  const { browser, published, snapshot, localOrigin, staticOrigin } = await createIsolationFixture(t);
 
   const documentPaths = [
     { name: "local content", origin: localOrigin, inboxPath: "", contentPath: `/documents/${published.id}/content` },
@@ -94,6 +71,126 @@ test("response sandbox isolates direct documents and reader frames", { timeout: 
     });
   }
 });
+
+test("isolation fixture joins owned viewer cleanup before removing its home", { timeout: 15_000 }, async (t) => {
+  const hooks = [];
+  // Mirror node:test, which runs after-hooks in registration order.
+  const teardown = async () => {
+    for (const hook of hooks) await hook();
+  };
+  let fixture;
+  try {
+    fixture = await createIsolationFixture({ after: (hook) => { hooks.push(hook); } }, {
+      launch: async () => ({ close: async () => {} }),
+    });
+  } catch (setupError) {
+    // A partial setup may already own a viewer; drain what it registered.
+    try {
+      await teardown();
+    } catch (teardownError) {
+      throw new AggregateError([setupError, teardownError], "Isolation fixture setup and teardown failed");
+    }
+
+    throw setupError;
+  }
+
+  const entered = gate();
+  const release = gate();
+  const remove = records.removeViewerRecord;
+  const rm = fs.rm;
+  let hasCompletedRecordRemoval = false;
+  let isRecordRemovedAtRootRemoval;
+  t.mock.method(records, "removeViewerRecord", async (...args) => {
+    entered.release();
+    await release.promise;
+    await remove(...args);
+    hasCompletedRecordRemoval = true;
+  });
+  t.mock.method(fs, "rm", async (target, options) => {
+    if (target === fixture.home) {
+      isRecordRemovedAtRootRemoval ??= hasCompletedRecordRemoval;
+    }
+
+    return rm(target, options);
+  });
+  syncBuiltinESMExports();
+  const outcome = teardown().then(() => ({}), (error) => ({ error }));
+  let failure;
+
+  try {
+    const first = await Promise.race([entered.promise.then(() => "entered"), outcome.then(() => "settled")]);
+    // Drain callbacks from native listener close while owned record cleanup is gated.
+    await setImmediate();
+    const isHomePresent = await stat(fixture.home).then((entry) => entry.isDirectory(), () => false);
+    assert.equal(isHomePresent, true, `isolation home removed before owned viewer cleanup completed (teardown ${first} first)`);
+    assert.equal(first, "entered", "isolation teardown settled before owned viewer record cleanup started");
+    assert(await records.readViewerRecord(fixture.home));
+    release.release();
+    if (!(await outcome).error) {
+      await assert.rejects(stat(fixture.home), { code: "ENOENT" });
+      assert.equal(isRecordRemovedAtRootRemoval, true, "isolation home removal started before owned record cleanup completed");
+    }
+  } catch (error) {
+    failure = error;
+  }
+
+  release.release();
+  const { error: teardownError } = await outcome;
+  t.mock.restoreAll();
+  syncBuiltinESMExports();
+  if (failure || teardownError) {
+    const isEvidencePresent = await stat(fixture.home).then(() => true, () => false);
+    t.diagnostic(`isolation fixture home ${fixture.home} ${isEvidencePresent ? "retained as evidence" : "already removed"}`);
+  }
+
+  if (failure && teardownError) {
+    throw new AggregateError([failure, teardownError], `Isolation fixture assertion and teardown failed at ${fixture.home}`);
+  }
+
+  if (failure || teardownError) {
+    throw failure ?? teardownError;
+  }
+});
+
+async function createIsolationFixture(t, browserType = chromium) {
+  const home = await mkdtemp(path.join(tmpdir(), "html-inbox-document-isolation-"));
+  const resources = { servers: [] };
+  // Hooks run in registration order, so one hook owns the whole teardown sequence.
+  t.after(() => closeFixtureResources(home, resources));
+
+  const backend = new LocalDocumentBackend(home);
+  const published = await backend.publish({
+    title: "Document isolation probe",
+    type: "report",
+    sourceFileName: "isolation.html",
+    originalBytes: Buffer.from(renderIsolationProbe()),
+  });
+  const viewer = await startFixtureViewer(resources, backend, home);
+  const localOrigin = serverOrigin(viewer);
+
+  const snapshot = await exportStaticSnapshot(backend, {
+    outputDir: path.join(home, "snapshot"),
+    capability: "AAAAAAAAAAAAAAAAAAAAAA",
+  });
+  const staticServer = await serveSnapshot(snapshot, published.id);
+  resources.servers.push(staticServer);
+  const staticOrigin = serverOrigin(staticServer);
+
+  const browser = await browserType.launch(
+    process.env.HTML_INBOX_BROWSER_EXECUTABLE
+      ? { executablePath: process.env.HTML_INBOX_BROWSER_EXECUTABLE }
+      : {},
+  );
+  resources.browser = browser;
+
+  return { home, browser, published, snapshot, localOrigin, staticOrigin };
+}
+
+function gate() {
+  let release;
+  const promise = new Promise((resolve) => { release = resolve; });
+  return { promise, release };
+}
 
 function renderIsolationProbe() {
   return `<!doctype html><html><body>
@@ -340,10 +437,4 @@ function serverOrigin(server) {
   assert(address && typeof address !== "string");
 
   return `http://127.0.0.1:${address.port}`;
-}
-
-function closeServer(server) {
-  return new Promise((resolve, reject) => {
-    server.close((error) => error ? reject(error) : resolve());
-  });
 }

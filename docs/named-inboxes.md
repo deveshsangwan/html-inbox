@@ -159,6 +159,8 @@ html-inbox hub --config /absolute/path/to/reading-hub.json --port 4322
 
 The hub serves one combined list and search over all selected inboxes, with inbox badges and a source filter. Document links contain the source name plus original document ID, so identical IDs in different libraries remain distinct. Content routes return the original bytes through the existing sandbox and CSP. Standalone viewer and export URLs retain their existing forms.
 
+In 0.6.3 and newer, choosing an inbox applies the filter immediately while preserving the search text. Choose All selected inboxes to search across every mounted source again. Search or Enter submits a typed query; without JavaScript, use Search or Enter after choosing an inbox too. Refresh, shared links and Back/Forward restore the selected inbox and query.
+
 Every reachable live hub reader can permanently delete individual documents from every mounted inbox. Choose **Delete** in a list row's three-dot menu or in document options. The modal shows the title, filename, and source inbox, explains permanent deletion, and defaults to Cancel. There is no Undo or bulk deletion. The original source file, existing exports, and remote snapshots remain unchanged. Static exported or hosted snapshots are read-only independent copies with no live viewer credentials.
 
 For an inbox enrolled in managed sync, deleting an original also propagates deletion to its authorized copies when they reconnect. Deleting a received copy hides it only in the selected inbox. Saved bytes remain retained, so managed deletion does not free disk space. Existing exports and hosted snapshots stay independent.
