@@ -40,6 +40,6 @@
     "bundle": "node -e \"require('node:fs').rmSync('bundle', { recursive: true, force: true })\" && ncc build dist/index.js -o bundle",
     "test": "pnpm run build && pnpm run test:self",
     "test:self": "node ../../scripts/run-unit-tests.mjs",
-    "prepack": "tsc-rs -p tsconfig.json && node -e \"require('node:fs').rmSync('bundle', { recursive: true, force: true })\" && ncc build dist/index.js -o bundle"
+    "prepack": "tsc-rs -p tsconfig.json && npm run bundle"
   }
 }

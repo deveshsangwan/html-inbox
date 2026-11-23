@@ -2,6 +2,12 @@
 
 Parent: `610c931b7b22920cce59cf03e49c0de15ebaf2a2` on `perf/89-bench`, PR #114. Candidate production source: `8ae19fd9c746d335b0fbf0c8ca6e21ada1dd9f80`. The timing figures below belong to these two measured artifacts. Commits up to `f290211` add only qualification scripts and evidence. The later merge `d812d25` brings in parent-stack production changes (ownership recovery, hub filtering, 0.6.3 metadata). The integrated head keeps the lazy entry and deferred chunks, which the [15 November installed integration](integration-2026-11-15.md) checked for correctness only; it did not re-measure timing. The parent has no CLI source changes relative to `099dcbd6378e3b6f73216966cfe9ea7f91ed5d8e`, the original #88/#89 integration baseline. Thus this comparison also covers the combined stack's production startup change. The older exploration reference `1ae641a` is not a measured baseline.
 
+## Packaging correction, 23 November 2026
+
+The [15 November integration receipt](integration-2026-11-15.md) stays unchanged as the historical record, but its packaging interpretation was wrong. Its tarball (510,170 bytes, SHA256 `36437d03…5ad7`) held 15 bundle JS files. Only 8 came from that build: ncc writes into `bundle/` without clearing it, and the bundle step had not cleared it first. The other 7 were byte-identical chunks left over from the earlier measured candidate. The receipt's "15 bundle JS files" therefore counts stale output, not a new chunk layout.
+
+Its functional evidence still stands. The tested entry requests only the chunk IDs its own build emitted, and the stale chunks were never loaded. A clean rebuild at `fee269e` emitted 8 JS files, and its tarball (264,161 bytes, SHA256 `a85ae436…dcfd`) holds exactly those 8 plus `LICENSE`, `README.md` and `package.json`. The package's `bundle` script now clears `bundle/` before running ncc, and `prepack` builds through that same script, so a repack cannot ship stale chunks.
+
 ## Reproduce
 
 Use Linux, Python >=3.11, the frozen lockfile, build Node 24.19.0, pnpm 11.7.0, tsc-rs 0.7.0 and ncc 0.44.1. Run sequentially in an otherwise idle slot. Use one clean owned checkout for both pinned refs. No separate worktree is needed.

@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { mkdtemp, readFile, realpath, rename, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { test } from "node:test";
+import { after, test } from "node:test";
 import { chromium } from "playwright";
 import { LocalDocumentBackend } from "../packages/cli/dist/backend.js";
 import { getInboxInstanceId } from "../packages/cli/dist/viewer-records.js";
@@ -11,6 +11,15 @@ import { startHub } from "../packages/cli/dist/hub.js";
 import { writeHubConfig } from "../packages/cli/dist/hub-config.js";
 import { availablePort } from "../packages/cli/dist/test-fixtures.js";
 import { isolationHtml } from "./browser-fixtures.mjs";
+
+// Installed hub children that never closed. They stay registered after their handles are released,
+// so a late close is still recorded and the suite still fails while any remain.
+const unjoinedHubChildren = new Map();
+after(() => {
+  if (unjoinedHubChildren.size > 0) {
+    throw new Error(`Installed hub children remain unjoined: ${JSON.stringify([...unjoinedHubChildren.values()])}`);
+  }
+});
 
 test("hub dropdown applies filters immediately and preserves query, history and keyboard focus", { timeout: 30_000 }, async (t) => {
   const { page, context, origin } = await createFilterFixture(t);
@@ -319,6 +328,11 @@ async function startFixtureHub(root, configuration, onStarted) {
 
     if (!result) {
       // Release the parent's references so an unkillable child cannot keep the test process alive.
+      unjoinedHubChildren.set(child.pid, { pid: child.pid, root });
+      closed.then((late) => {
+        unjoinedHubChildren.delete(child.pid);
+        console.error(`Installed hub child ${child.pid} closed late: ${JSON.stringify(late)}; fixture retained at ${root}`);
+      });
       child.stdout.destroy();
       child.stderr.destroy();
       child.unref();
