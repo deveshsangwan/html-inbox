@@ -71,7 +71,7 @@ test("viewer, hub and static dates match the original formatter across runtime t
   }
 });
 
-test("formatters are lazy and bounded to one per render, including filtered results", (t) => {
+test("formatters are lazy and bounded to one per render, including filtered and selected-empty hub results", (t) => {
   let constructions = 0;
   const Original = Intl.DateTimeFormat;
   t.mock.method(Intl, "DateTimeFormat", new Proxy(Original, {
@@ -87,6 +87,7 @@ test("formatters are lazy and bounded to one per render, including filtered resu
   renderIndex(validDocuments, "no matches", { timeZone: "invalid-zone" });
   renderDocumentShell(documents[7], { timeZone: "invalid-zone" });
 
+  // The empty-state strings prove these zero-construction renders took the selected-empty and unavailable branches.
   const selectedName = 'office<&"';
   const sources = [
     { name: "other", available: false, documents: validDocuments },
