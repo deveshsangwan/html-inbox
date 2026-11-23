@@ -1,6 +1,6 @@
 # Per-render formatter reuse, issue #90
 
-Baseline: `1b2009132b8df184540c1990091fd1e9911dbb00` on `release/0.7`. Measured candidate: `76a6f4b95565c085759d8735bb68094cbdc6dc4c`. Both were independently archived from the actual Git refs and compiled with npm package tsc-rs 0.7.0, whose CLI reports `Version 7.1.0-dev`. The host CPU is Intel Core i5-7300HQ at 2.50 GHz; this model was read from `/proc/cpuinfo` after the run on the same host. Subsequent report commits do not change production code. The only production difference is a lazy formatter scoped to each render.
+Baseline: `1b2009132b8df184540c1990091fd1e9911dbb00` on `release/0.7`. Measured candidate: `76a6f4b95565c085759d8735bb68094cbdc6dc4c`. Both were independently archived from the actual Git refs and compiled with npm package tsc-rs 0.7.0, whose CLI reports `Version 7.1.0-dev`. The host CPU is Intel Core i5-7300HQ at 2.50 GHz; this model was read from `/proc/cpuinfo` after the run on the same host. Subsequent report commits do not change production code. The only production difference is a lazy formatter scoped to each render. The later merge with PR #125 at `6fcd5e8` changed surrounding `renderLibrary` code but not the formatter delta, which remains line-for-line identical at the current head; that integrated revision was not re-benchmarked. See the [integration receipt](90-main-integration-2026-11-15.md).
 
 ## Method
 

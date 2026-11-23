@@ -83,9 +83,10 @@ test("formatters are lazy and bounded to one per render, including filtered and 
   const validDocuments = documents.slice(0, 7);
 
   renderIndex([], "", { timeZone: "invalid-zone" });
-  renderIndex(documents.slice(7), "", { timeZone: "invalid-zone" });
+  const invalidDates = documents.slice(7).map((document) => escapeHtml(document.createdAt));
+  assert.deepEqual(renderedDates(renderIndex(documents.slice(7), "", { timeZone: "invalid-zone" })), invalidDates);
   renderIndex(validDocuments, "no matches", { timeZone: "invalid-zone" });
-  renderDocumentShell(documents[7], { timeZone: "invalid-zone" });
+  assert.deepEqual(renderedDates(renderDocumentShell(documents[7], { timeZone: "invalid-zone" })), invalidDates.slice(0, 1));
 
   // The empty-state strings prove these zero-construction renders took the selected-empty and unavailable branches.
   const selectedName = 'office<&"';
@@ -99,7 +100,7 @@ test("formatters are lazy and bounded to one per render, including filtered and 
 
   assert.deepEqual({
     emptyTitle: selectedEmpty.match(/<h2 id="empty-title">(.*?)<\/h2>/)?.[1],
-    filterDescription: selectedEmpty.match(/aria-describedby="(.*?)"/)?.[1],
+    filterDescription: selectedEmpty.match(/<select id="inbox-filter"[^>]*\saria-describedby="(.*?)"/)?.[1],
     unavailableTitle: selectedUnavailable.match(/<h2 id="empty-title">(.*?)<\/h2>/)?.[1],
     constructions,
   }, {
@@ -118,4 +119,6 @@ test("formatters are lazy and bounded to one per render, including filtered and 
   renderDocumentShell(documents[0]);
   assert.equal(constructions, 4);
   assert.throws(() => renderIndex(validDocuments, "", { timeZone: "invalid-zone" }), RangeError);
+  assert.throws(() => renderDocumentShell(documents[0], { timeZone: "invalid-zone" }), RangeError);
+  assert.throws(() => renderHubIndex([{ name: "reports", available: true, documents }], "", "", { timeZone: "invalid-zone" }), RangeError);
 });
