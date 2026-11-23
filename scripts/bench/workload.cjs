@@ -30,6 +30,17 @@ async function seed(root, count, size) {
   }
 }
 
+// Runs `operation`, then `close`; a close failure never replaces the operation's own error.
+async function closeAfter(operation, close) {
+  try {
+    await operation();
+  } catch (error) {
+    await Promise.resolve().then(close).catch(() => {});
+    throw error;
+  }
+  await close();
+}
+
 async function main() {
   const [mode, root, countValue, sizeValue, samplesValue, shape = 'text', candidate] = process.argv.slice(2);
   const count = Number(countValue), size = Number(sizeValue), samples = Number(samplesValue);
@@ -58,7 +69,12 @@ async function main() {
     const fixtures = [html(size, shape), '<html><a href="javascript:alert(1)">x</a></html>',
       '<html><template><img src="remote.png"></template></html>', '<select><html></select>',
       '<html><svg><style><a href="javascript:x">x</a></style></svg></html>'];
-    for (const fixture of fixtures) assert.deepEqual(validate(fixture), baseline(fixture));
+    // The measured validator gets exactly one warm-up call per fixture with or without a candidate.
+    for (const fixture of fixtures) {
+      const expected = candidate ? baseline(fixture) : null;
+      const actual = validate(fixture);
+      if (candidate) assert.deepEqual(actual, expected);
+    }
 
     for (let i = 0; i < samples; i++) {
       await record(`parser/${shape}/${size}`, () => {
@@ -74,7 +90,7 @@ async function main() {
     const server = await load('viewer-http-server.js').startViewerHttpServer(backend,
       load('viewer-network.js').resolveViewerNetworkConfig(0),
       { instanceId: 'benchmark', processId: 'benchmark', protocolVersion: 1, pid: process.pid });
-    try {
+    await closeAfter(async () => {
       await record('viewer/idle', async () => { await delay(1000); return { interval_ms: 1000 }; });
       for (let i = 0; i < samples; i++) {
         await record('viewer/index', async () => {
@@ -96,9 +112,7 @@ async function main() {
           return { response_bytes: size, document: id, behavior: 'exact source bytes' };
         });
       }
-    } finally {
-      await server.close();
-    }
+    }, () => server.close());
     return;
   }
   if (mode === 'worker') {
@@ -109,7 +123,7 @@ async function main() {
     }
     await store.setWorkerEnabled(true);
     const worker = await load('sync-worker.js').startOwnedSyncWorker(root);
-    try {
+    await closeAfter(async () => {
       const deadline = Date.now() + 10000;
       while (worker.status().processState !== 'idle') {
         assert.ok(Date.now() < deadline, 'worker readiness deadline');
@@ -122,9 +136,7 @@ async function main() {
           return { interval_ms: 1000, state: 'idle' };
         });
       }
-    } finally {
-      await worker.close();
-    }
+    }, () => worker.close());
     return;
   }
   throw new Error(`Unknown workload ${mode}`);

@@ -9,7 +9,6 @@ permissions:
 jobs:
   measure:
     runs-on: ubuntu-latest
-    continue-on-error: true
     # Historical tmpfs runs spent up to five minutes in one two-sample sync child; hosted disks are slower.
     timeout-minutes: 90
     strategy:

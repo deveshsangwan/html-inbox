@@ -46,8 +46,10 @@ async function assertDocuments(store, inputs) {
   }
 }
 
-// Receiver records and receipts must carry the sender's canonical identities and hashes.
-async function assertReceived(source, destination, routeId) {
+// The receiver must hold each document's own bytes, and records plus committed receipts on this route
+// revision that carry the sender's canonical identities and body/metadata hashes.
+async function assertReceived(source, destination, route, inputs) {
+  await assertDocuments(destination, inputs);
   const sent = (await source.snapshot()).records;
   const received = await destination.snapshot();
   const expectedKeys = Object.keys(sent).sort();
@@ -58,10 +60,14 @@ async function assertReceived(source, destination, routeId) {
   }
 
   const receiptKeys = [];
-  for (const { routeId: receiptRouteId, originState } of Object.values(received.receipts)) {
+  for (const receipt of Object.values(received.receipts)) {
+    const { originState } = receipt;
     const key = canonicalKey(originState.originInboxId, originState.originDocumentId);
-    assert.equal(receiptRouteId, routeId);
+    assert.equal(receipt.routeId, route.id);
+    assert.equal(receipt.revision, route.revision);
+    assert.equal(receipt.disposition, "committed", key);
     assert.equal(originState.sha256, sent[key]?.sha256, key);
+    assert.equal(originState.metadataSha256, sent[key]?.metadataSha256, key);
     receiptKeys.push(key);
   }
   assert.deepEqual(receiptKeys.sort(), expectedKeys);
@@ -81,14 +87,10 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
 
     for (let sample = 0; sample < samples; sample += 1) {
       const source = new ManagedSyncStore(path.join(root, `source-${sample}`));
-      const destinationHome = path.join(root, `receiver-${sample}`);
-      const destination = new ManagedSyncStore(destinationHome);
       await record(`${setup}enroll/${count}`, async () => {
         await source.enroll();
         return { source: storageCounters(source) };
       });
-      // Receiver enrollment is setup; only source enrollment is an operation sample.
-      await destination.enroll();
       await record(`${setup}publish/${count}`, async () => {
         const before = storageCounters(source);
         for (let index = 0; index < count; index += 1) {
@@ -106,6 +108,10 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
 
       if (mode === "managed") continue;
 
+      // Receiver enrollment is setup; only source enrollment is an operation sample.
+      const destinationHome = path.join(root, `receiver-${sample}`);
+      const destination = new ManagedSyncStore(destinationHome);
+      await destination.enroll();
       const ca = await readFile(tls.caPath);
       const key = await readFile(tls.trusted.keyPath);
       const cert = await readFile(tls.trusted.certPath);
@@ -146,29 +152,33 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
           };
         }
 
+        // Receiver state is verified after every pass, outside the timed interval.
         await record(`peer/initial/${count}`, () => reconcile("initial", count));
-        await assertDocuments(destination, inputs);
-        const ledger = await assertReceived(source, destination, route.id);
+        await assertReceived(source, destination, route, inputs);
         await record(`peer/noop/${count}`, () => reconcile("no-op", 0));
+        const ledger = await assertReceived(source, destination, route, inputs);
 
         if (count > 0) {
           const recordToRepair = Object.values(ledger.records)[0];
           assert.equal(typeof recordToRepair.bodyFile, "string");
           await rm(path.join(destinationHome, "sync", "bodies", recordToRepair.bodyFile));
           await record(`peer/repair/${count}`, () => reconcile("repair", 1));
-          await assertDocuments(destination, inputs);
-          await assertReceived(source, destination, route.id);
+          await assertReceived(source, destination, route, inputs);
         }
-      } finally {
-        await server.close();
+      } catch (error) {
+        // A close failure must not replace the sample's original error.
+        await server.close().catch(() => {});
+        throw error;
       }
-      // Checked after the finally block so a failed sample reports its original error.
+      await server.close();
       assert.equal(server.status().listening, false);
       assert.equal(server.status().sockets, 0);
     }
-  } finally {
-    for (const cleanup of cleanups.reverse()) await cleanup();
+  } catch (error) {
+    for (const cleanup of cleanups.reverse()) await cleanup().catch(() => {});
+    throw error;
   }
+  for (const cleanup of cleanups.reverse()) await cleanup();
 }
 
 module.exports = { runSync };

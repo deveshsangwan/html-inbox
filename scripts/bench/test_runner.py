@@ -14,16 +14,22 @@ RUNNER = Path(__file__).with_name('run.py')
 CLEAN = {'fixture_root_removed': True, 'children_reaped': True, 'process_groups_empty': True}
 
 # Answers the runner's metadata probes; the scenario body then handles workload commands.
-FAKE_NODE = '''#!/usr/bin/env python3
-import json, os, signal, socket, sys, time
+# HANG_PROBE makes the version probe fork a descendant and hang, to exercise probe supervision.
+FAKE_NODE = '''
 if sys.argv[1] == '--version':
+    if HANG_PROBE:
+        child = os.fork()
+        if child == 0:
+            while True: time.sleep(1)
+        open(PIDS, 'w').write(json.dumps([os.getpid(), child, 0]))
+        while True: time.sleep(1)
     print('v20.0.0'); sys.exit(0)
 if sys.argv[1] == '-p':
     print('{}'); sys.exit(0)
 command = sys.argv[2] if len(sys.argv) > 2 else ''
 '''
 
-# Completes the `cli --counts 0` workload: version, seed, an empty list and an empty export.
+# Completes the `cli --counts 0` workload: version, seed, an empty list and a minimal empty-library export.
 SUCCEEDING = '''
 if command == 'seed' and LOCK_FIXTURES:
     locked = os.path.join(os.environ['TMPDIR'], 'locked')
@@ -33,7 +39,13 @@ if command == 'seed' and LOCK_FIXTURES:
 if command == 'list':
     print(LIST_OUTPUT)
 if command == 'export':
-    os.makedirs(sys.argv[sys.argv.index('--out') + 1])
+    out = sys.argv[sys.argv.index('--out') + 1]
+    for name in ([] if EMPTY_EXPORT else ['index.html', '__html-inbox/ownership.json', 'i/capability/index.html']):
+        os.makedirs(os.path.dirname(os.path.join(out, name)), exist_ok=True)
+        open(os.path.join(out, name), 'w').close()
+    os.makedirs(out, exist_ok=True)
+    if SIGNAL_RUNNER:
+        os.kill(os.getppid(), signal.SIGTERM)
 '''
 
 # Ignores SIGTERM, holds a listener and forks a descendant, then records their identities.
@@ -72,20 +84,29 @@ class RunnerTests(unittest.TestCase):
         self.addCleanup(self.kill_recorded_processes)
 
     def kill_recorded_processes(self):
-        # Only processes still running this test's fake executable are ours; PIDs may have been recycled.
+        # Pin each recorded PID first, then confirm it still runs this test's fake executable; PIDs may be recycled.
         if not self.pids.exists():
             return
         for pid in json.loads(self.pids.read_text())[:2]:
             try:
+                process = os.pidfd_open(pid)
+            except ProcessLookupError:
+                continue
+            try:
                 if str(self.executable).encode() in Path(f'/proc/{pid}/cmdline').read_bytes():
-                    os.kill(pid, signal.SIGKILL)
+                    signal.pidfd_send_signal(process, signal.SIGKILL)
             except (FileNotFoundError, ProcessLookupError):
                 pass
+            finally:
+                os.close(process)
 
-    def start(self, scenario, timeout, output, lock_fixtures=False, list_output='[]'):
-        settings = f'PIDS = {str(self.pids)!r}\nLOCK_FIXTURES = {lock_fixtures}\nLIST_OUTPUT = {list_output!r}\n'
-        self.executable.write_text(FAKE_NODE + settings + scenario)
-        self.executable.chmod(0o700)
+    def start(self, scenario, timeout, output, lock_fixtures=False, list_output='[]', empty_export=False,
+              signal_runner=False, hang_probe=False, executable_mode=0o700):
+        settings = (f'PIDS = {str(self.pids)!r}\nLOCK_FIXTURES = {lock_fixtures}\nLIST_OUTPUT = {list_output!r}\n'
+                    f'EMPTY_EXPORT = {empty_export}\nSIGNAL_RUNNER = {signal_runner}\nHANG_PROBE = {hang_probe}\n')
+        header = '#!/usr/bin/env python3\nimport json, os, signal, socket, sys, time\n'
+        self.executable.write_text(header + settings + FAKE_NODE + scenario)
+        self.executable.chmod(executable_mode)
 
         self.addCleanup(self.remove_fixture_root, output)
         runner = subprocess.Popen(['python3', str(RUNNER), 'cli', '--counts', '0', '--samples', '1', '--allow-stale-build',
@@ -107,7 +128,12 @@ class RunnerTests(unittest.TestCase):
     def stop_runner(self, runner):
         if runner.poll() is None:
             runner.kill()
-        runner.communicate()
+        try:
+            runner.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            # A leaked fake can hold the runner's output pipes open; stop it, then collect the runner.
+            self.kill_recorded_processes()
+            runner.communicate(timeout=5)
 
     def finish(self, runner, output):
         runner.communicate(timeout=20)
@@ -145,10 +171,16 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertEqual(cleanup, CLEAN)
         self.assertTrue(summary['success'])
-        self.assertEqual(sorted(summary['groups']), ['cli/export/0', 'cli/list/0', 'cli/version', 'setup/0'])
+        self.assertEqual(sorted(summary['groups']), ['cli/export/0', 'cli/list/0', 'cli/version', 'control/spawn-floor', 'setup/0'])
+        self.assertEqual(summary['groups']['control/spawn-floor']['n'], 2)
         self.assertFalse((output / 'failures.jsonl').exists())
         rows = [json.loads(line) for line in (output / 'samples.jsonl').read_text().splitlines()]
         self.assertTrue(all(row['wall_ms'] > 0 and row['exit_code'] == 0 for row in rows if 'wall_ms' in row))
+        self.assertEqual({row['label']: row['behavior'] for row in rows if row['label'].startswith('cli/')},
+                         {'cli/version': 'unchecked', 'cli/list/0': 'passed', 'cli/export/0': 'passed'})
+        environment = json.loads((output / 'environment.json').read_text())
+        self.assertGreater(environment['runner_peak_rss_kib_before_workloads'], 0)
+        self.assertEqual(len(environment['fingerprints']['node_sha256']), 64)
 
     def test_failed_behavior_check_is_recorded(self):
         output = self.root / 'results'
@@ -157,6 +189,41 @@ class RunnerTests(unittest.TestCase):
         failure = self.failures(output)[0]
         self.assertEqual(failure['label'], 'cli/list/0')
         self.assertIn('BehaviorCheckError', failure['error'])
+        rows = [json.loads(line) for line in (output / 'samples.jsonl').read_text().splitlines()]
+        self.assertEqual([row['behavior'] for row in rows if row['label'] == 'cli/list/0'], ['failed'])
+
+    def test_export_without_required_files_fails(self):
+        output = self.root / 'results'
+        self.assert_failed_cleanly(self.start(SUCCEEDING, 10, output, empty_export=True), output)
+
+        self.assertEqual(self.failures(output)[0]['label'], 'cli/export/0')
+
+    def test_unlaunchable_node_is_recorded_as_probe_failure(self):
+        output = self.root / 'results'
+        self.assert_failed_cleanly(self.start(SUCCEEDING, 10, output, executable_mode=0o600), output)
+
+        failure = self.failures(output)[0]
+        self.assertTrue(failure['label'].startswith('probe/'))
+        self.assertIn('PermissionError', failure['error'])
+
+    def test_hanging_probe_and_its_descendant_are_stopped(self):
+        output = self.root / 'results'
+        self.assert_failed_cleanly(self.start(SUCCEEDING, 1, output, hang_probe=True), output)
+
+        self.assert_processes_gone()
+        failure = self.failures(output)[0]
+        self.assertEqual(failure['label'], 'probe/node-version')
+        self.assertIn('TimeoutError', failure['error'])
+
+    def test_signal_at_final_workload_exit_cancels_run(self):
+        output = self.root / 'results'
+        runner = self.start(SUCCEEDING, 10, output, signal_runner=True)
+        exit_code, cleanup, summary = self.finish(runner, output)
+
+        self.assertEqual(exit_code, 128 + signal.SIGTERM)
+        self.assertEqual(cleanup, CLEAN)
+        self.assertFalse(summary['success'])
+        self.assertEqual(summary['interrupted_by'], signal.SIGTERM)
 
     @unittest.skipIf(os.geteuid() == 0, 'root can remove read-only directories')
     def test_failed_fixture_removal_fails_successful_workloads(self):
@@ -176,7 +243,7 @@ class RunnerTests(unittest.TestCase):
         output = self.root / 'results'
         self.assert_failed_cleanly(self.start(FAILING, 1, output), output)
 
-        row = json.loads((output / 'samples.jsonl').read_text().splitlines()[0])
+        row = next(row for row in map(json.loads, (output / 'samples.jsonl').read_text().splitlines()) if row['label'] == 'cli/version')
         self.assertEqual(row['exit_code'], 17)
         self.assertIn('synthetic failure', row['stderr'])
 
@@ -211,7 +278,8 @@ class RunnerTests(unittest.TestCase):
 
         self.assert_processes_gone()
         self.assertIn('outlived the workload process', self.failures(output)[0]['error'])
-        self.assertEqual(json.loads((output / 'samples.jsonl').read_text().splitlines()[0])['exit_code'], 0)
+        rows = [json.loads(line) for line in (output / 'samples.jsonl').read_text().splitlines()]
+        self.assertEqual([row['exit_code'] for row in rows if row['label'] == 'cli/version'], [0])
 
 
 if __name__ == '__main__':
