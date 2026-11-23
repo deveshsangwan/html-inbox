@@ -10,7 +10,7 @@ import statistics
 import subprocess
 import sys
 import time
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -103,7 +103,19 @@ def block(run):
     return (run['runtime'], run['count'], run['size'], run['variant'], run['pair'])
 
 
-def summarize(planned, commands):
+def intended_operations(workload, count):
+    """Operation labels and repeat counts each process must emit, mirroring signatures.cjs."""
+    churn_rounds = -(-18_000 // count) if count >= 1000 else 3
+    operations = {'snapshot-cold': 1, 'snapshot-warm': 5, 'list': 1, 'churn-miss': churn_rounds, 'churn-repeat': churn_rounds, 'adversarial': 1}
+    if count:
+        operations['get'] = 1
+    if workload == 'signatures':
+        operations.update({'worker-startup': 1, 'worker-noop-validated-custody': 1, 'worker-idle': 1, 'worker-close': 1})
+
+    return Counter({f'signatures/{name}/{count}': times for name, times in operations.items()})
+
+
+def summarize(planned, commands, workload):
     exit_codes = {block(entry): entry['exit_code'] for entry in commands}
     missing_processes = [dict(runtime=run['runtime'], count=run['count'], body_bytes=run['size'], variant=run['variant'], pair=run['pair'],
                               reason='not run' if block(run) not in exit_codes else f"exit {exit_codes[block(run)]}")
@@ -111,6 +123,7 @@ def summarize(planned, commands):
 
     per_process = defaultdict(list)
     per_pair = {}
+    missing_operations = []
     for entry in commands:
         if entry['exit_code']:
             continue
@@ -126,7 +139,16 @@ def summarize(planned, commands):
                 operation = json.loads(line)
                 operations[operation['label']].append(operation)
 
+        expected = intended_operations(workload, entry['count'])
+        for label in sorted(set(expected) | set(operations)):
+            if len(operations[label]) != expected[label]:
+                missing_operations.append(dict(runtime=entry['runtime'], count=entry['count'], body_bytes=entry['size'], variant=entry['variant'],
+                                               pair=entry['pair'], operation=label, expected=expected[label], observed=len(operations[label])))
+
         for label, rows in operations.items():
+            if not rows:
+                continue
+
             key = (entry['runtime'], entry['count'], entry['size'], label, entry['variant'])
             process = dict(cpu_ms=statistics.median(row['cpu_ms'] for row in rows),
                            wall_ms=statistics.median(row['wall_ms'] for row in rows),
@@ -144,13 +166,6 @@ def summarize(planned, commands):
                             wall_ms_median=statistics.median(process['wall_ms'] for process in processes),
                             verifications_median=statistics.median(process['verifications'] for process in processes),
                             retained_heap_bytes_max=max(process['retained_heap_bytes'] for process in processes)))
-    # Any operation seen in one block is expected in every planned block of the same cell.
-    operations = {(runtime, count, size, label) for runtime, count, size, label, _variant in per_process}
-    missing_operations = [dict(runtime=runtime, count=count, body_bytes=size, operation=label, variant=run['variant'], pair=run['pair'])
-                          for runtime, count, size, label in sorted(operations)
-                          for run in planned if (run['runtime'], run['count'], run['size']) == (runtime, count, size)
-                          and (runtime, count, size, label, run['variant'], run['pair']) not in per_pair]
-
     return dict(complete=not missing_processes and not missing_operations, missing_processes=missing_processes,
                 missing_operations=missing_operations, marginal=summary, paired=paired_comparisons(per_pair))
 
@@ -178,7 +193,7 @@ def main():
                    invocation=sys.argv)
     (args.out / 'harness.json').write_text(json.dumps(harness, indent=2) + '\n')
 
-    result = summarize(*run_pairs(args))
+    result = summarize(*run_pairs(args), args.workload)
     (args.out / 'pairs-summary.json').write_text(json.dumps(result, indent=2) + '\n')
     for row in result['marginal']:
         print(f"{row['runtime']} {row['count']}:{row['body_bytes']} {row['operation']} {row['variant']}: "

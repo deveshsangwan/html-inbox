@@ -9,8 +9,9 @@ export const ORIGIN_SIGNATURE_CACHE_LIMITS = Object.freeze({
   verificationEntryBytes: 128 * 1024,
 });
 
-// createPublicKey also derives public keys from private PEM. Retain only text that is itself public.
-const PUBLIC_KEY_PEM = /^-----BEGIN PUBLIC KEY-----\r?\n[A-Za-z0-9+/=\r\n]+-----END PUBLIC KEY-----\s*$/;
+// createPublicKey also derives keys from private PEM and ignores bytes after the SPKI structure.
+// Retain only text whose payload is exactly the parsed public key, so no other input is held.
+const PUBLIC_KEY_PEM = /^-----BEGIN PUBLIC KEY-----\r?\n([A-Za-z0-9+/=\r\n]+)-----END PUBLIC KEY-----\s*$/;
 
 /** Reuses cryptographic facts only. Callers must still parse and authorize every current state. */
 export class OriginSignatureVerifier {
@@ -26,7 +27,7 @@ export class OriginSignatureVerifier {
     }
 
     const key = createPublicKey(publicKey);
-    if (key.asymmetricKeyType !== "ed25519" || !isRetainablePublicKey(publicKey)) {
+    if (key.asymmetricKeyType !== "ed25519" || !isRetainablePublicKey(publicKey, key)) {
       return key;
     }
 
@@ -65,7 +66,7 @@ export class OriginSignatureVerifier {
       throw new Error("Origin signature verification failed");
     }
 
-    if (identity === undefined || !isRetainablePublicKey(publicKey)) {
+    if (identity === undefined || !isRetainablePublicKey(publicKey, key)) {
       return;
     }
 
@@ -82,13 +83,18 @@ export class OriginSignatureVerifier {
     this.verificationBytes += bytes;
   }
 
-  usage() {
+  usage(): { keys: number; keyBytes: number; verifications: number; verificationBytes: number } {
     return { keys: this.keys.size, keyBytes: this.keyBytes, verifications: this.successes.size, verificationBytes: this.verificationBytes };
   }
 }
 
-function isRetainablePublicKey(publicKey: string): boolean {
-  return publicKey.length <= ORIGIN_SIGNATURE_CACHE_LIMITS.keyCodeUnits && PUBLIC_KEY_PEM.test(publicKey);
+function isRetainablePublicKey(publicKey: string, key: KeyObject): boolean {
+  if (publicKey.length > ORIGIN_SIGNATURE_CACHE_LIMITS.keyCodeUnits) {
+    return false;
+  }
+
+  const payload = PUBLIC_KEY_PEM.exec(publicKey)?.[1].replace(/\s/g, "");
+  return payload === key.export({ format: "der", type: "spki" }).toString("base64");
 }
 
 function copyText(value: string): string {

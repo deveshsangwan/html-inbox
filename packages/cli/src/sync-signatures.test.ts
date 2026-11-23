@@ -94,6 +94,22 @@ test("private key text still verifies as before but is never retained", (t) => {
   assert.deepEqual(verifier.usage(), { keys: 0, keyBytes: 0, verifications: 0, verificationBytes: 0 });
 });
 
+test("public key text with bytes after the parsed SPKI still verifies but is never retained", (t) => {
+  const verifier = new OriginSignatureVerifier();
+  const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+  const payload = Buffer.concat([publicKey.export({ format: "der", type: "spki" }), Buffer.from("ignored by the parser")]);
+  const paddedPem = `-----BEGIN PUBLIC KEY-----\n${payload.toString("base64").replace(/.{64}/g, "$&\n")}\n-----END PUBLIC KEY-----\n`;
+  const bytes = Buffer.from("padded input");
+  const signature = sign(null, bytes, privateKey).toString("base64url");
+  const verify = t.mock.method(crypto, "verify", crypto.verify);
+  verifier.verify(paddedPem, signature, bytes);
+  verifier.verify(paddedPem, signature, bytes);
+
+  assert.equal(verifier.parsePublicKey(paddedPem).asymmetricKeyType, "ed25519");
+  assert.equal(verify.mock.callCount(), 2);
+  assert.deepEqual(verifier.usage(), { keys: 0, keyBytes: 0, verifications: 0, verificationBytes: 0 });
+});
+
 test("key reuse is globally entry/byte bounded and evicts the oldest parsed key", (t) => {
   const verifier = new OriginSignatureVerifier();
   const owner = signer();

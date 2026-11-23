@@ -18,11 +18,11 @@ Neither reviewer found a Critical, High or Medium defect.
 | Measurements predate the integrated base, so the percentage gains at the current head are unmeasured | Both | Fixed: committed pairing driver and a fresh paired measurement of `08d5b2b0` against `2ba6ffb5` on Node 20 and 24, reported below |
 | `signatures` and `signature-history` silently use only the first `--sizes` value | Sol, Low | Fixed: `run.py` rejects anything but one size for these workloads; `test_runner.py` covers it |
 | No test admits an exact signed state and then removes its route grant | Sol, Low | Fixed: new integration test admits a state through `startCommunication`, removes the route's origin grant at the same generation, and asserts rejection before the callback, with no signing and unchanged ledger bytes |
-| Private Ed25519 PEM text in a grant was retained in the process-wide caches | Opus, Low | Fixed: retention now requires SPKI `PUBLIC KEY` PEM text. Verification behaviour is unchanged. The suggested `key.type === "public"` check would be ineffective because `createPublicKey` derives a public `KeyObject` from private PEM, which was confirmed experimentally |
+| Private Ed25519 PEM text in a grant was retained in the process-wide caches | Opus, Low | Fixed: retention now requires SPKI `PUBLIC KEY` PEM text, tightened in round 2 to the exact canonical payload. Verification behaviour is unchanged. The suggested `key.type === "public"` check would be ineffective because `createPublicKey` derives a public `KeyObject` from private PEM, which was confirmed experimentally |
 | No integration test proves warm store reads hit the cache | Opus, Low | Fixed: new test asserts zero `crypto.verify` and `createPublicKey` calls across warm snapshot/list/get reads and a second reader instance |
 | Pairing driver existed only inside the raw archive | Opus, Low | Fixed: `scripts/bench/signature_pairs.py`, argument tests and a README entry |
 | Imported `verify` shadows the method name; dense identity block | Opus, Nit | Fixed: imported as `verifyEd25519`; identity construction separated from the guards |
-| Retained-byte budget charges 2 bytes per character although V8 likely stores these strings at 1 byte | Opus, Low | Declined. The budget is a deliberate upper bound that does not depend on V8's internal string representation, and the measured retention, heap and RSS figures rely on it. Halving the charge would double real retention and invalidate those figures. The 10,000-record repeated-scan regime remains explicitly unqualified; it still verifies every record correctly and beats the parent |
+| Retained-byte budget charges 2 bytes per character although V8 likely stores these strings at 1 byte | Opus, Low | Declined. The budget is a deliberate upper bound that does not depend on V8's internal string representation, and the measured retention, heap and RSS figures rely on it. Halving the charge would double real retention and invalidate those figures. The 10,000-record repeated-scan regime remains explicitly unqualified. Every record is still verified correctly there, but no measurement establishes its speed against the parent |
 | Evidence prose is dense | Opus, Nit | Declined as a rewrite of preserved historical receipts. This file and the PR description carry the current summary |
 | The parser read-counter test is loosely tied to issue 94 | Opus, Nit | Kept. It guards the shared runner instrumentation this PR's companion depends on |
 
@@ -72,7 +72,30 @@ Reading:
 - The full cache cuts warm snapshot and get CPU to 0.20–0.31× of the integrated parent, list to about 0.5×, and the warm TLS worker no-op to 0.35× on Node 20 and 0.45× on Node 24. For warm snapshot, get, list, worker startup and the worker no-op it beats key-only reuse in all five blocks on both runtimes.
 - On Node 24, key-only reuse gains little over the parent (worker 0.92×, get 0.82×), so the exact-success cache supplies most of the benefit there.
 - Costs stay disclosed. A cold snapshot on Node 24 is no faster than the parent: median 0.98×, with one block at 1.23×. Paths that pay the miss cost lose to key-only reuse. Cold snapshot is slower than key-only in 5/5 blocks on Node 20 and 4/5 on Node 24. Churn miss is slower in 3/5 blocks on Node 20, where the medians are close (19.8 against 19.5 ms), and in 4/5 on Node 24 (21.6 against 18.7 ms).
-- Retained heap at 100 records is within about 0.3 MiB across variants.
+- Retained post-GC heap at 100 records is within about 0.3 MiB across variants. Process peak RSS is a cumulative high-water mark, read at the end of the warm worker no-op; the median and range over five processes are:
+  - Node 20: full cache 140.6 MiB [139.7, 143.5], parent 120.9 MiB [119.1, 122.8], key-only 118.9 MiB [118.1, 124.4]. The full cache costs about 20 MiB more.
+  - Node 24: 173.3 MiB [169.5, 178.5], parent 171.7 MiB [169.0, 179.3], key-only 171.9 MiB [167.6, 175.9]. The full cache costs about 1.6 MiB more.
+- The table omits worker idle and worker close. Worker idle is a one-second wait whose full/parent CPU ratio is 0.49× on Node 20 and 0.30× on Node 24. Worker close takes under 10 ms with no verification, and its ratios range from 0.25× to 5.02×, which is noise. Both are in `pairs-summary.json`.
 - This one cell does not qualify 1,000- or 10,000-record, over-capacity, initial-sync, separate-host or persistent-media behaviour. Those limits from the earlier evidence still apply.
 
 Raw outputs: [`signatures-94-integrated-pairs-2026-11-23.tar.gz`](signatures-94-integrated-pairs-2026-11-23.tar.gz), SHA-256 `453a14472478e14f18dd2eb8b6db23f13b8e0ead27aa5c5636dd6ec6985cadc6`, 211 members. It holds every process's `samples.jsonl`, `environment.json`, `summary.json`, `cleanup.json` and full transcript, plus `commands.jsonl`, `pairs-summary.json`, `intended-operations-check.json`, the TAP and build logs, before and after hash manifests, the qualification script and the check script.
+
+## Round 2 on `73bf783`
+
+Both reviewers again worked read-only on the same brief and the same exact head. Both extracted the raw archive and recomputed every figure in the table.
+
+| Delegate | Functionality | Code quality | Scoped performance evidence | Score |
+|---|---|---|---|---:|
+| Claude Opus 5.5, high effort | PASS | PASS | PASS | 9.5/10 |
+| Codex gpt-6.2-sol, high effort | PASS | PASS | PASS | 9.2/10 |
+
+| Finding | Source | Disposition |
+|---|---|---|
+| `createPublicKey` accepts a `PUBLIC KEY` PEM with bytes after the SPKI, so the round 1 guard could still retain bytes the parser ignored | Sol, Low | Fixed and reproduced on Node 20.20.2 and 24.19.0. Retention now requires the PEM body, whitespace removed, to equal the canonical base64 of the parsed key's SPKI export. Verification behaviour is unchanged. A regression test checks that padded key text verifies and is never retained |
+| The pairing driver inferred expected labels from observed rows, so empty or truncated blocks could pass | Sol, Low | Fixed: `intended_operations` mirrors `signatures.cjs` for each workload and record count, and every successful block is checked for exact label counts. Tests cover a label absent from every block, a truncated warm-snapshot sequence and empty output. Re-summarizing the archived run with the revised driver gives `complete: true` and identical marginal and paired output |
+| Integrated summary omitted the peak-RSS cost | Sol, Low | Fixed above |
+| The byte-budget disposition claimed an unmeasured speed win for 10,000 records | Sol, Nit | Fixed: the speed claim is removed and the correctness statement kept |
+| Worker idle and close are measured but not in the table | Opus, Nit | Fixed above with the reason |
+| The zero-crypto integration test could pass vacuously if the mocks stopped intercepting | Opus, Nit | Fixed: the mocks are installed before the fixture, nonzero calls during warmup are asserted, then counts are reset before the zero assertions |
+| `usage()` lacked an explicit return type | Opus, Nit | Fixed |
+

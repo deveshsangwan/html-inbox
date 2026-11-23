@@ -256,9 +256,15 @@ for (const change of ["device", "reader-identity"] as const) {
 }
 
 test("warm store reads reuse every parsed key and exact signature without new crypto", async (t) => {
-  const { home, store } = await fixture(t);
   const verify = t.mock.method(crypto, "verify", crypto.verify);
   const parseKey = t.mock.method(crypto, "createPublicKey", crypto.createPublicKey);
+  const { home, store } = await fixture(t);
+
+  // Fresh keys and records must reach the mocks while warming, or the zero counts below prove nothing.
+  assert.ok(verify.mock.callCount() > 0);
+  assert.ok(parseKey.mock.callCount() > 0);
+  verify.mock.resetCalls();
+  parseKey.mock.resetCalls();
 
   await store.snapshot();
   await store.listDocuments();

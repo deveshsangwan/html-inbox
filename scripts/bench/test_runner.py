@@ -129,33 +129,55 @@ class InstrumentationTests(unittest.TestCase):
             self.assertEqual(run['log'].name, run['out'].name + '.log')
         self.assertEqual([run['variant'] for run in runs[:6]], ['parent', 'keys', 'candidate', 'candidate', 'keys', 'parent'])
 
-    def test_signature_pair_summary_reports_failed_unrun_and_absent_blocks_as_missing(self):
+    def test_signature_pair_summary_checks_every_block_against_intended_operations(self):
         spec = importlib.util.spec_from_file_location('signature_pairs', RUNNER.with_name('signature_pairs.py'))
         signature_pairs = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(signature_pairs)
+        intended = signature_pairs.intended_operations('signatures', 100)
+        self.assertEqual(sum(intended.values()), 19)
+        self.assertEqual(intended['signatures/snapshot-warm/100'], 5)
+        self.assertEqual(signature_pairs.intended_operations('signature-history', 1000)['signatures/churn-miss/1000'], 18)
+        self.assertNotIn('signatures/worker-idle/1000', signature_pairs.intended_operations('signature-history', 1000))
+
+        def write_block(run, labels):
+            run['out'].mkdir()
+            (run['out'] / 'summary.json').write_text(json.dumps({'success': True}))
+            (run['out'] / 'cleanup.json').write_text(json.dumps({'fixture_root_removed': True, 'children_reaped': True}))
+            rows = [json.dumps({'label': label, 'cpu_ms': 4.0 if run['variant'] == 'candidate' else 10.0, 'wall_ms': 1.0,
+                                'crypto': {'verifications': 0}, 'memory_after_gc': {'heapUsed': 1}}) for label in labels]
+            (run['out'] / 'samples.jsonl').write_text(json.dumps({'stdout': '\n'.join(rows)}) + '\n')
+
+        # Adversarial is absent from every block, so it cannot be inferred from observed rows.
+        complete_labels = [label for label, times in intended.items() for _ in range(times) if 'adversarial' not in label]
+        truncated_labels = [label for label in complete_labels if 'snapshot-warm' not in label] + ['signatures/snapshot-warm/100']
         with tempfile.TemporaryDirectory() as directory:
             args = argparse.Namespace(out=Path(directory), cells=[(100, 10240)], pairs=2, variants=['parent', 'candidate'])
             planned = signature_pairs.plan_runs(args, ['v20.20.2'])
-            commands = []
-            for run, exit_code, labels in zip(planned, [0, 0, 0], [['get', 'list'], ['get', 'list'], ['get']]):
-                run['out'].mkdir()
-                (run['out'] / 'summary.json').write_text(json.dumps({'success': True}))
-                (run['out'] / 'cleanup.json').write_text(json.dumps({'fixture_root_removed': True, 'children_reaped': True}))
-                rows = [json.dumps({'label': label, 'cpu_ms': 4.0 if run['variant'] == 'candidate' else 10.0, 'wall_ms': 1.0,
-                                    'crypto': {'verifications': 0}, 'memory_after_gc': {'heapUsed': 1}}) for label in labels]
-                (run['out'] / 'samples.jsonl').write_text(json.dumps({'stdout': '\n'.join(rows)}) + '\n')
-                commands.append(dict(run, exit_code=exit_code))
-            commands[2]['exit_code'] = 1
+            write_block(planned[0], complete_labels)
+            write_block(planned[1], truncated_labels)
+            write_block(planned[2], complete_labels)
+            commands = [dict(planned[0], exit_code=0), dict(planned[1], exit_code=0), dict(planned[2], exit_code=1)]
+            result = signature_pairs.summarize(planned, commands, 'signatures')
 
-            result = signature_pairs.summarize(planned, commands)
+            empty = signature_pairs.plan_runs(argparse.Namespace(out=Path(directory) / 'empty', cells=[(100, 10240)], pairs=1,
+                                                                 variants=['parent', 'candidate']), ['v24.19.0'])
+            (Path(directory) / 'empty').mkdir()
+            for run in empty:
+                write_block(run, [])
+            empty_result = signature_pairs.summarize(empty, [dict(run, exit_code=0) for run in empty], 'signatures')
 
         self.assertFalse(result['complete'])
         self.assertEqual([(row['pair'], row['variant'], row['reason']) for row in result['missing_processes']],
                          [(1, 'candidate', 'exit 1'), (1, 'parent', 'not run')])
-        self.assertEqual(sorted((row['operation'], row['pair'], row['variant']) for row in result['missing_operations']),
-                         [('get', 1, 'candidate'), ('get', 1, 'parent'), ('list', 1, 'candidate'), ('list', 1, 'parent')])
-        self.assertEqual([(row['operation'], row['pair'], row['cpu_ratio']) for row in result['paired']], [('get', 0, 0.4), ('list', 0, 0.4)])
-        self.assertEqual({row['samples'] for row in result['marginal']}, {1})
+        self.assertEqual(sorted((row['pair'], row['variant'], row['operation'].split('/')[1], row['expected'], row['observed'])
+                                for row in result['missing_operations']),
+                         [(0, 'candidate', 'adversarial', 1, 0), (0, 'candidate', 'snapshot-warm', 5, 1), (0, 'parent', 'adversarial', 1, 0)])
+        self.assertEqual({row['operation'].split('/')[1]: row['cpu_ratio'] for row in result['paired']}['get'], 0.4)
+        self.assertEqual({(row['operation'].split('/')[1], row['variant']): row['samples'] for row in result['marginal']}
+                         [('snapshot-warm', 'parent')], 5)
+        self.assertFalse(empty_result['complete'])
+        self.assertEqual(len(empty_result['missing_operations']), 2 * len(intended))
+        self.assertEqual(empty_result['marginal'], [])
 
 if __name__ == '__main__':
     unittest.main()
