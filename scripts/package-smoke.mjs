@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import {
   mkdtemp,
   mkdir,
@@ -14,12 +14,15 @@ import http from "node:http";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import { createPackageTailscaleFixture } from "./package-tailscale-fixture.mjs";
 
-const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const executeFile = promisify(execFile);
+const repositoryRoot =path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const temporaryRoot = await mkdtemp(path.join(tmpdir(), "html-inbox-package-"));
 let viewer;
 let tailscaleEnvironment;
+let shouldRetainFixture = false;
 
 try {
   assert.equal(process.argv.length <= 3, true, "Pass at most one package tarball");
@@ -299,6 +302,7 @@ Module._load = function (request, ...args) {
     const runManaged = (args) => runInstalledCli([...args, "--home", managedHome, "--json"]);
     await runInstalledCli(["inbox", "create", "managed", "--home", managedHome, "--json"]);
     const workerPids = [];
+    let managedFailure;
     try {
       assert.equal(JSON.parse((await runManaged(["sync", "enroll", "--yes"])).stdout).enrolled, true);
       assert.equal(JSON.parse((await runManaged(["sync", "worker", "startup"])).stdout).skipped, true);
@@ -323,24 +327,40 @@ Module._load = function (request, ...args) {
         assert.equal(inspection.managed, true);
         assert.equal(typeof inspection.instanceId, "string");
       }
-    } finally {
-      await runManaged(["sync", "worker", "disable"]);
-      assert.equal(JSON.parse((await runManaged(["sync", "worker", "status"])).stdout).worker.running, false);
-      await assert.rejects(readFile(path.join(managedHome, "sync", "worker", "runtime.json")), { code: "ENOENT" });
-      for (const pid of workerPids) {
-        const deadline = Date.now() + 3000;
-        while (true) {
-          try {
-            process.kill(pid, 0);
-          } catch (error) {
-            if (error.code === "ESRCH") break;
-            throw error;
-          }
+    } catch (error) {
+      managedFailure = error;
+    }
 
-          assert(Date.now() < deadline, `Managed worker ${pid} survived verified shutdown`);
-          await delay(20);
-        }
+    // Every step runs even when disable fails, so a detached worker is never stranded silently.
+    const cleanupFailures = [];
+    try {
+      await runManaged(["sync", "worker", "disable"]);
+    } catch (error) {
+      cleanupFailures.push(error);
+    }
+
+    for (const pid of workerPids) {
+      try {
+        const survivor = await stopManagedWorker(pid, managedHome);
+        if (survivor) cleanupFailures.push(survivor);
+      } catch (error) {
+        cleanupFailures.push(error);
       }
+    }
+
+    if (cleanupFailures.length === 0) {
+      try {
+        assert.equal(JSON.parse((await runManaged(["sync", "worker", "status"])).stdout).worker.running, false);
+        await assert.rejects(readFile(path.join(managedHome, "sync", "worker", "runtime.json")), { code: "ENOENT" });
+      } catch (error) {
+        cleanupFailures.push(error);
+      }
+    }
+
+    if (managedFailure || cleanupFailures.length > 0) {
+      shouldRetainFixture = cleanupFailures.length > 0;
+      throw new AggregateError([managedFailure, ...cleanupFailures].filter(Boolean),
+        `Installed managed worker qualification failed${shouldRetainFixture ? `; fixture retained at ${temporaryRoot}` : ""}`);
     }
     console.log("Installed package owner preflight and detached managed worker enable/status/stop/start/disable passed.");
   }
@@ -356,7 +376,7 @@ Module._load = function (request, ...args) {
       ...tailscaleEnvironment,
     }).catch(() => {});
   } finally {
-    if (process.env.HTML_INBOX_KEEP_PACKAGE_SMOKE !== "1") {
+    if (process.env.HTML_INBOX_KEEP_PACKAGE_SMOKE !== "1" && !shouldRetainFixture) {
       await rm(temporaryRoot, { recursive: true, force: true });
     }
   }
@@ -373,6 +393,47 @@ async function deleteThroughViewer(origin, documentUrl) {
   });
   assert.equal(result.status, 204, await result.text());
   assert.equal((await fetch(documentUrl, { signal: AbortSignal.timeout(3000) })).status, 404);
+}
+
+// Returns a failure when the worker outlives disable; it is killed only while its
+// command line still names this fixture's home, so a reused PID is never signalled.
+async function stopManagedWorker(pid, home) {
+  if (await waitForProcessExit(pid, 3000)) return undefined;
+
+  const workerCommand = `sync worker start --foreground --home ${home} --json`;
+  let command;
+  try {
+    command = (await executeFile("ps", ["-ww", "-o", "command=", "-p", String(pid)])).stdout.trim();
+  } catch (error) {
+    if (error.code === 1 && await waitForProcessExit(pid, 0)) return undefined;
+
+    return new Error(`Managed worker ${pid} survived disable and could not be identified`, { cause: error });
+  }
+
+  if (!command.endsWith(workerCommand)) return undefined;
+
+  try {
+    process.kill(pid, "SIGKILL");
+  } catch (error) {
+    if (error.code !== "ESRCH") throw error;
+  }
+  const isKilled = await waitForProcessExit(pid, 3000);
+  return new Error(`Managed worker ${pid} survived disable; forced cleanup ${isKilled ? "succeeded" : "failed"}`);
+}
+
+async function waitForProcessExit(pid, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (true) {
+    try {
+      process.kill(pid, 0);
+    } catch (error) {
+      if (error.code === "ESRCH") return true;
+      throw error;
+    }
+
+    if (Date.now() >= deadline) return false;
+    await delay(20);
+  }
 }
 
 async function run(command, args, cwd, env = {}) {
