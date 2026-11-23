@@ -349,6 +349,15 @@ Module._load = function (request, ...args) {
     // Every step runs even when disable fails, so a detached worker is never stranded silently.
     // A live recorded PID cannot be proven to be the worker, so it is reported, never signalled.
     const cleanupFailures = [];
+    // A worker started by a command that then failed may be recorded only in runtime.json, which shutdown
+    // removes before the process exits; capture it now so it is probed too.
+    const recordedPid = await readFile(path.join(managedHome, "sync", "worker", "runtime.json"), "utf8")
+      .then((value) => JSON.parse(value).pid)
+      .catch(() => undefined);
+    if (Number.isSafeInteger(recordedPid) && recordedPid > 0 && !workerPids.includes(recordedPid)) {
+      workerPids.push(recordedPid);
+    }
+
     try {
       await runManaged(["sync", "worker", "disable"]);
     } catch (error) {
@@ -485,12 +494,13 @@ async function waitForProcessExit(pid, timeoutMs) {
 }
 
 // Children see only this fixture's html-inbox and Node settings, never the developer shell's
-// (for example a saved Tailscale configuration that could reach a real daemon).
+// (for example a saved Tailscale configuration that could reach a real daemon). npm copies its own
+// node-options configuration into NODE_OPTIONS for lifecycle scripts, so that is cleared too.
 function fixtureEnvironment(overrides) {
   const inherited = Object.entries(process.env)
-    .filter(([key]) => !/^(HTML_INBOX_|NODE_)/i.test(key));
+    .filter(([key]) => !/^(HTML_INBOX_|NODE_|npm_config_node_options$)/i.test(key));
 
-  return { ...Object.fromEntries(inherited), ...overrides };
+  return { ...Object.fromEntries(inherited), npm_config_node_options: "", ...overrides };
 }
 
 async function run(command, args, cwd, env = {}) {
@@ -513,7 +523,19 @@ async function run(command, args, cwd, env = {}) {
       stderr += chunk.toString();
     });
     child.once("error", reject);
+    // A descendant holding an output pipe can delay close indefinitely after the command exits.
+    let closeTimer;
+    child.once("exit", () => {
+      closeTimer = setTimeout(() => {
+        shouldRetainFixture = true;
+        child.stdout.destroy();
+        child.stderr.destroy();
+        child.unref();
+        reject(new Error(`${command} exited but is unjoined: its output pipes stayed open for 5 s`));
+      }, 5000);
+    });
     child.once("close", (code, signal) => {
+      clearTimeout(closeTimer);
       const output = stdout + stderr;
       if (code === 0) {
         resolve({ output, stdout, stderr });
