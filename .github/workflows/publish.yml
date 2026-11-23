@@ -44,16 +44,13 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org/
 
-      # The policy validates the registry value before anything reaches GITHUB_OUTPUT.
+      # The policy reads npm latest itself and validates it before anything reaches GITHUB_OUTPUT.
       - name: Verify release policy against npm latest
         id: release
         env:
           EXPECTED_VERSION: ${{ inputs.version }}
           RELEASE_TAG: ${{ inputs.tag }}
-        run: |
-          NPM_LATEST_VERSION=$(npm view html-inbox@latest version --prefer-online --registry=https://registry.npmjs.org/)
-          export NPM_LATEST_VERSION
-          node scripts/release-policy.mjs
+        run: node scripts/release-policy.mjs
 
       - name: Enable Corepack
         run: corepack enable
@@ -88,10 +85,8 @@ jobs:
         env:
           EXPECTED_VERSION: ${{ inputs.version }}
           RELEASE_TAG: ${{ inputs.tag }}
-        run: |
-          NPM_LATEST_VERSION=$(npm view html-inbox@latest version --prefer-online --registry=https://registry.npmjs.org/)
-          export NPM_LATEST_VERSION
-          node scripts/release-policy.mjs
+          GITHUB_OUTPUT: /dev/null
+        run: node scripts/release-policy.mjs
 
       - name: Publish verified artifact with npm trusted publishing
         env:

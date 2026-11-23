@@ -3,8 +3,21 @@ import { fileURLToPath } from "node:url";
 
 const stableVersionPattern = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/;
 
+// npm's own fetch layer can answer from its local cache when revalidation fails. Node's fetch
+// keeps no HTTP cache, so every check sees the registry's current dist-tags or fails.
+export async function readNpmLatestVersion(registry = "https://registry.npmjs.org") {
+  const response = await fetch(`${registry}/-/package/html-inbox/dist-tags`, { cache: "no-store", signal: AbortSignal.timeout(30_000) });
+  if (!response.ok) {
+    throw new Error(`npm dist-tag lookup failed with HTTP ${response.status}`);
+  }
+
+  const { latest } = await response.json();
+  return latest;
+}
+
 // Release-branch publication stays off until a release administrator protects the release
-// branches and binds npm trusted publishing to an approval-gated environment.
+// branches and binds npm trusted publishing to an approval-gated environment. Enabling it
+// takes a reviewed change to the entry point below.
 export function verifyReleasePolicy({ version, engines, requestedVersion, ref, tag, latestVersion, isReleaseBranchApproved = false }) {
   if (!stableVersionPattern.test(version) || version !== requestedVersion) {
     throw new Error("Requested version must match the package's stable semantic version");
@@ -65,7 +78,7 @@ export function verifyReleasePolicy({ version, engines, requestedVersion, ref, t
 }
 
 // Compare real paths so a symlinked invocation still runs the check instead of exiting silently.
-if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const { version, engines } = JSON.parse(readFileSync("packages/cli/package.json", "utf8"));
   const release = verifyReleasePolicy({
     version,
@@ -73,7 +86,8 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
     requestedVersion: process.env.EXPECTED_VERSION,
     ref: process.env.GITHUB_REF,
     tag: process.env.RELEASE_TAG,
-    latestVersion: process.env.NPM_LATEST_VERSION,
+    // Tests point this at a local registry; publication uses the public default.
+    latestVersion: await readNpmLatestVersion(process.env.HTML_INBOX_NPM_REGISTRY),
   });
 
   appendFileSync(process.env.GITHUB_OUTPUT, `version=${release.version}\ntag=${release.tag}\n`);

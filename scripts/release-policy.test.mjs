@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { execFile } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync, symlinkSync } from "node:fs";
+import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import { verifyReleasePolicy } from "./release-policy.mjs";
+
+const execFileAsync = promisify(execFile);
 
 const compatibilityRelease = {
   version: "0.7.0",
@@ -75,26 +79,52 @@ test("latest cannot move backward across minor or patch versions", () => {
   }).tag, "latest");
 });
 
-test("the workflow entry point writes outputs only for an accepted release", () => {
+test("the workflow entry point reads npm latest itself and writes outputs only on acceptance", async () => {
   const repositoryRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
   const { version } = JSON.parse(readFileSync(path.join(repositoryRoot, "packages/cli/package.json"), "utf8"));
   const directory = mkdtempSync(path.join(tmpdir(), "html-inbox-release-policy-"));
   const outputPath = path.join(directory, "output");
-  const run = (tag) => spawnSync(process.execPath, ["scripts/release-policy.mjs"], {
-    cwd: repositoryRoot,
-    encoding: "utf8",
-    env: { ...process.env, EXPECTED_VERSION: version, GITHUB_REF: "refs/heads/main", RELEASE_TAG: tag, NPM_LATEST_VERSION: version, GITHUB_OUTPUT: outputPath },
+  const linkedScript = path.join(directory, "linked-release-policy.mjs");
+  symlinkSync(path.join(repositoryRoot, "scripts/release-policy.mjs"), linkedScript);
+  let isRegistryAvailable = true;
+  const registry = createServer((request, response) => {
+    if (!isRegistryAvailable || request.url !== "/-/package/html-inbox/dist-tags") {
+      response.writeHead(503).end();
+      return;
+    }
+
+    response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ latest: version }));
   });
+  await new Promise((resolve) => registry.listen(0, "127.0.0.1", resolve));
+  const registryUrl = `http://127.0.0.1:${registry.address().port}`;
+  const run = async ({ tag = "latest", ref = "refs/heads/main", script = "scripts/release-policy.mjs" } = {}) => {
+    try {
+      await execFileAsync(process.execPath, [script], {
+        cwd: repositoryRoot,
+        env: { ...process.env, EXPECTED_VERSION: version, GITHUB_REF: ref, RELEASE_TAG: tag, GITHUB_OUTPUT: outputPath, HTML_INBOX_NPM_REGISTRY: registryUrl },
+      });
+      return { isAccepted: true, stderr: "" };
+    } catch (error) {
+      return { isAccepted: false, stderr: String(error.stderr) };
+    }
+  };
+  const assertNoOutput = () => assert.throws(() => readFileSync(outputPath), { code: "ENOENT" });
 
   try {
-    const rejected = run("node20");
-    assert.notEqual(rejected.status, 0);
-    assert.throws(() => readFileSync(outputPath), { code: "ENOENT" });
+    assert.match((await run({ tag: "node20" })).stderr, /require npm tag latest/);
+    assertNoOutput();
+    // The checkout's package version decides which release-branch refusal applies.
+    assert.match((await run({ ref: "refs/heads/release/0.7" })).stderr, /only from main|waits for branch protection/);
+    assertNoOutput();
+    isRegistryAvailable = false;
+    assert.match((await run()).stderr, /dist-tag lookup failed with HTTP 503/);
+    assertNoOutput();
+    isRegistryAvailable = true;
 
-    const accepted = run("latest");
-    assert.equal(accepted.status, 0, accepted.stderr);
+    assert.equal((await run({ script: linkedScript })).isAccepted, true);
     assert.equal(readFileSync(outputPath, "utf8"), `version=${version}\ntag=latest\n`);
   } finally {
+    await new Promise((resolve) => registry.close(resolve));
     rmSync(directory, { recursive: true, force: true });
   }
 });
