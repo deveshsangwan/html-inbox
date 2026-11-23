@@ -397,6 +397,7 @@ Module._load = function (request, ...args) {
     await viewer?.close();
   } catch (error) {
     cleanupFailures.push(error);
+    shouldRetainFixture = true;
   }
 
   // Once a viewer may have started, an unconfirmed stop could leave it running against this fixture.
@@ -434,20 +435,25 @@ Module._load = function (request, ...args) {
   if (primaryFailure) throw primaryFailure;
 }
 
-// ncc writes into bundle/ without clearing it, so a pack can carry chunks from an earlier build.
-// Every shipped chunk must be one the shipped code requests, and every requested chunk must ship.
+// ncc writes into bundle/ without clearing it, so a pack that skips the clean bundle script can carry
+// chunks from an earlier build. Shipped JavaScript must be exactly what index.js can reach through chunk
+// requests; stale chunks that only reference each other are still unreachable.
 async function assertNoStaleChunks(bundleDirectory) {
-  const files = (await readdir(bundleDirectory)).filter((name) => name.endsWith(".js"));
-  const requested = new Set();
-  for (const name of files) {
-    const source = await readFile(path.join(bundleDirectory, name), "utf8");
+  const shipped = (await readdir(bundleDirectory)).filter((name) => name.endsWith(".js")).sort();
+  const reachable = new Set(["index.js"]);
+  const pending = ["index.js"];
+  while (pending.length > 0) {
+    const source = await readFile(path.join(bundleDirectory, pending.pop()), "utf8");
     for (const match of source.matchAll(/__nccwpck_require__\.e\((\d+)\)/g)) {
-      requested.add(`${match[1]}.index.js`);
+      const chunk = `${match[1]}.index.js`;
+      if (!reachable.has(chunk)) {
+        reachable.add(chunk);
+        pending.push(chunk);
+      }
     }
   }
 
-  const shipped = files.filter((name) => name !== "index.js").sort();
-  assert.deepEqual(shipped, [...requested].sort(), "Installed bundle chunks must match the chunks its code requests");
+  assert.deepEqual(shipped, [...reachable].sort(), "Installed bundle JavaScript must be exactly what index.js can reach");
 }
 
 async function deleteThroughViewer(origin, documentUrl) {
@@ -564,11 +570,23 @@ async function startInstalledViewer(executable, cwd, env) {
       child.kill("SIGTERM");
     }
 
-    const timeout = setTimeout(() => child.kill("SIGKILL"), 3000);
+    const forceTimer = setTimeout(() => child.kill("SIGKILL"), 3000);
+    let deadlineTimer;
+    const deadline = new Promise((resolve) => { deadlineTimer = setTimeout(() => resolve(false), 6000); });
+    let isJoined;
     try {
-      await closed;
+      isJoined = await Promise.race([closed.then(() => true), deadline]);
     } finally {
-      clearTimeout(timeout);
+      clearTimeout(forceTimer);
+      clearTimeout(deadlineTimer);
+    }
+
+    // An unjoined viewer may still own the fixture, so keep it and stop holding this process open.
+    if (!isJoined) {
+      shouldRetainFixture = true;
+      child.stderr.destroy();
+      child.unref();
+      throw new Error(`Installed foreground viewer ${child.pid} is unjoined: no close within 6 s, including forced cleanup`);
     }
   };
 
@@ -598,7 +616,11 @@ async function startInstalledViewer(executable, cwd, env) {
 
     throw new Error(`Installed viewer did not become ready at ${origin}.\n${stderr}`);
   } catch (error) {
-    await close();
+    try {
+      await close();
+    } catch (cleanupError) {
+      throw new AggregateError([error, cleanupError], "Installed viewer startup and cleanup failed");
+    }
 
     throw error;
   }

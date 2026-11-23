@@ -2,10 +2,10 @@
 
 The user requested a council: one Anthropic and one OpenAI flagship reviewer, each at high effort. Both reviewers get the same brief and review the same exact revision, read-only, each in its own isolated worktree. Rounds repeat until both independently score at least 9.5/10 on the same revision. Scores are recorded as given, never averaged or rounded. Earlier stack-status and V1/V2 reviews in [reviews.md](reviews.md) do not count toward this council.
 
-| Delegate | Exact settings | Round 1 | Round 2 | Round 3 |
-| --- | --- | --- | --- | --- |
-| Claude Opus | provider `claudeAgent`, model `claude-opus-5-5`, `effort=high` | 9.0/10 | 9.2/10 | 9.3/10 |
-| GPT Sol | provider `codex`, model `gpt-6.2-sol`, `reasoningEffort=high` | 8.3/10 | 8.4/10 | 8.8/10 |
+| Delegate | Exact settings | Round 1 | Round 2 | Round 3 | Round 4 |
+| --- | --- | --- | --- | --- | --- |
+| Claude Opus | provider `claudeAgent`, model `claude-opus-5-5`, `effort=high` | 9.0/10 | 9.2/10 | 9.3/10 | no score |
+| GPT Sol | provider `codex`, model `gpt-6.2-sol`, `reasoningEffort=high` | 8.3/10 | 8.4/10 | 8.8/10 | 8.7/10 |
 
 ## Round 1
 
@@ -94,7 +94,7 @@ Revision `6f12a372f8c6db31ee8d648953e45524a7717ea5`, base `08d5b2b`. Both review
 | The teardown addendum still said installed qualification was pending | Sol, Nit | Fixed. It points to the passed `fee269e` run and to this record for later heads. |
 | No automatic check catches stale chunks in a tarball packed with `--ignore-scripts` | Opus, Low | Fixed. Package smoke now asserts that the installed bundle's chunk files equal the chunk IDs its code requests (`__nccwpck_require__.e(N)`). Against the retained bundles (read-only), the check passes the clean `fee269e` bundle, the single-file base and the measured candidate. It fails the 15 November bundle, naming exactly its 7 stale chunks. |
 | The shared Tailscale recording fixture's `NODE_OPTIONS` change also affects `skill-cli-package-smoke.mjs`, and no record mentioned it | Opus, Low | Documented and kept. The fixture no longer forwards the caller's `NODE_OPTIONS`, so the Tailscale phase of both package smoke and the skill CLI smoke runs with only the fixture's preload. Package smoke is fully isolated. The skill smoke's other phases still inherit the shell's `NODE_OPTIONS`. CI sets no `NODE_*`, so CI behavior is unchanged. |
-| "Production entry graph byte-identical" could be read as covering `cli-commands.ts`'s transitive imports | Opus, Nit | Fixed in the PR body. The six canonical help/version load-set files are byte-identical to `8ae19fd`. Modules that `cli-commands.ts` imports changed through the `d812d25` merge, and canonical help/version never load them. |
+| "Production entry graph byte-identical" could be read as covering `cli-commands.ts`'s transitive imports | Opus, Nit | Fixed in the PR body, and refined in round 4: the six entry-related sources are byte-identical to `8ae19fd`. Canonical help/version load only `index.ts`, `cli-usage.ts`, `cli-entrypoints.ts` and `validation.ts`. Modules that `cli-commands.ts` imports changed through the `d812d25` merge. |
 
 ### Failure-path coverage
 
@@ -103,3 +103,28 @@ The hub fixture's failure paths can be driven with fake installed bundles, witho
 ### Still required
 
 The round 4 revision needs a root-granted qualification. It runs the real scripts-enabled `npm pack` and `npm run bundle` against a seeded obsolete chunk in a disposable project. The preserved tarball then feeds both Node smokes and the installed hub suite, plus the source-mode checks and the hub failure probes. Light checks so far: `node --check`, and the read-only stale-chunk check on retained bundles.
+
+## Round 4
+
+Revision `5d4f93fe22fb017b3f8bea542989f1a9cb342780`, base `08d5b2b`. Sol completed a full review and found no production-code defect. The Claude Opus delegate failed before returning a review because it hit a Claude API usage limit ("You've hit your 5-hour limit"). Round 4 therefore records **no score** for Opus. That is a delegate failure, not a pass. The next round reruns the same Opus settings on the next revision.
+
+### Hosted Windows observation
+
+Normal pull_request run 45203396820, attempt 1, job 137792582613: Source (windows-latest, 24, 1/1) on image `windows-2025-vs2026` 20261111.635 with Node 24.22.3. Two tests failed: "independent public deleters coordinate real child processes" (`EPERM` renaming a document into `.trash`) and "catalog replacement retries stop after a bounded number of changing files" (a continuously changing record was accepted). `Verify` (job 137800112888) failed only as the aggregate.
+
+Matched evidence from the same workflow on this PR: on the same image version and Node patch, the byte-identical `packages/` and `.github` at `6f12a37` passed both tests (job 137786605286). So did `fee269e` and `8041962` (jobs 137779572432 and 137771393768), whose differences are limited to `packages/cli/package.json` scripts and `cli-startup.test.ts`. `41727d5` and `f290211` passed on image 20261103.629 with Node 24.22.2. Logs and job metadata are preserved in the owner checkout's ignored `artifacts/93/ci/5d4f93f-windows-source-45203396820-137792582613/` (`summary.json` SHA256 `06decb5e69d50e52a3fb7ca34def0501f43f673a6b1e35ac02c2b1deff3e7fcd`). This establishes no cause and claims no exoneration. Root holds any retry and routes both Windows observations separately.
+
+### Fixed
+
+| Finding | Reviewer, severity | Disposition |
+| --- | --- | --- |
+| Windows concurrent deletion and catalog replacement failed on the reviewed head | Sol, Medium | Not a code change. Matched base/head evidence on the same image and Node patch is recorded above. The lazy worker import is present and unchanged in every passing run. Root holds the retry decision. |
+| The foreground viewer close waited for `close` without a deadline, and a startup cleanup rejection could replace the readiness error | Sol, Medium | Fixed. The close wait has a 6 s deadline after SIGTERM, with SIGKILL at 3 s. An unjoined viewer is reported, its handles are released, and the fixture is retained. A startup failure and its cleanup failure are aggregated, and an outer close failure also retains the fixture. |
+| A late `close` after the fixture destroyed its own pipe ends removed the hub's unjoined record | Sol, Low | Fixed. Every missed close deadline stays registered through suite teardown. A later close is only recorded as `lateCloseAfterLocalPipeDestroy`, and the suite-level hook fails while any record exists. |
+| The stale-chunk check accepted unreachable chunks that reference themselves or each other | Sol, Low | Fixed. Shipped JavaScript must equal the set reachable from `index.js` through chunk requests. Checked read-only: the clean `fee269e` bundle, the single-file base and the measured candidate pass. The 15 November bundle fails, and so does a synthetic copy with a self-referencing stale chunk and a mutually referencing pair. The README now says that the clean-repack guarantee needs lifecycle scripts, and that package smoke catches `--ignore-scripts` packs. |
+| "Canonical help/version load set" named `cli-args.ts` and `cli-commands.ts`, which canonical startup does not load | Sol, Nit | Fixed. The PR body calls them entry-related sources and lists the four modules canonical startup loads. |
+| The wrong-URL probe should exit 0 only after SIGTERM | Sol, Nit | Already so: the fake waits for SIGTERM and then exits 0. |
+
+### Still required
+
+The round 5 revision needs the queued root-granted qualification, with the runner revised to expect the new suite-level message. It also needs a full Opus review and a fresh Sol review on the same revision.

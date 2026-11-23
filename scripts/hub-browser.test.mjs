@@ -12,12 +12,12 @@ import { writeHubConfig } from "../packages/cli/dist/hub-config.js";
 import { availablePort } from "../packages/cli/dist/test-fixtures.js";
 import { isolationHtml } from "./browser-fixtures.mjs";
 
-// Installed hub children that never closed. They stay registered after their handles are released,
-// so a late close is still recorded and the suite still fails while any remain.
+// Installed hub children that missed their close deadline. Every entry stays through suite teardown: a close
+// observed after this fixture destroyed its own pipe ends proves nothing about descendants still holding them.
 const unjoinedHubChildren = new Map();
 after(() => {
   if (unjoinedHubChildren.size > 0) {
-    throw new Error(`Installed hub children remain unjoined: ${JSON.stringify([...unjoinedHubChildren.values()])}`);
+    throw new Error(`Installed hub children missed their close deadline: ${JSON.stringify([...unjoinedHubChildren.values()])}`);
   }
 });
 
@@ -307,10 +307,10 @@ async function startFixtureHub(root, configuration, onStarted) {
 
     if (!result) {
       // Release the parent's references so an unkillable child cannot keep the test process alive.
-      unjoinedHubChildren.set(child.pid, { pid: child.pid, root });
+      const record = { pid: child.pid, root, lateCloseAfterLocalPipeDestroy: null };
+      unjoinedHubChildren.set(child.pid, record);
       closed.then((late) => {
-        unjoinedHubChildren.delete(child.pid);
-        console.error(`Installed hub child ${child.pid} closed late: ${JSON.stringify(late)}; fixture retained at ${root}`);
+        record.lateCloseAfterLocalPipeDestroy = late;
       });
       child.stdout.destroy();
       child.stderr.destroy();
