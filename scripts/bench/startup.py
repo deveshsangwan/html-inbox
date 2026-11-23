@@ -22,6 +22,10 @@ def fingerprint(directory):
             for p in sorted(directory.rglob('*')) if p.is_file()}
 
 
+class SampleInterrupted(Exception):
+    """Ends a sample's wait so its group is killed and reaped before the recorded signal is re-raised."""
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--base', type=Path, required=True, help='baseline consumer directory')
@@ -75,11 +79,16 @@ def main():
                 command = [str(node), cli, *prefix, *arguments]
 
             with tempfile.TemporaryFile() as stdout, tempfile.TemporaryFile() as stderr:
-                # Defer interrupts from spawn until reap, so an interrupted run never leaves a sample group alive.
-                # The child still starts with default dispositions, because exec resets caught signals.
+                # SIGINT and SIGTERM are recorded while the child is being created or cleaned up, and interrupt
+                # only the wait between, so a sample group is always killed and reaped before the signal takes
+                # effect. The child still starts with default dispositions, because exec resets caught signals.
                 interrupts = []
-                deferred = {number: signal.signal(number, lambda signum, frame: interrupts.append(signum))
-                            for number in (signal.SIGINT, signal.SIGTERM)}
+                is_waiting = [False]
+                def interrupt(signum, frame):
+                    interrupts.append(signum)
+                    if is_waiting[0]:
+                        raise SampleInterrupted(signum)
+                deferred = {number: signal.signal(number, interrupt) for number in (signal.SIGINT, signal.SIGTERM)}
                 def timeout(signum, frame):
                     raise TimeoutError(command)
                 previous = signal.signal(signal.SIGALRM, timeout)
@@ -87,10 +96,14 @@ def main():
                     start = time.perf_counter()
                     child = subprocess.Popen(command, cwd=consumer, env=env, stdout=stdout, stderr=stderr, start_new_session=True)
                     try:
+                        is_waiting[0] = True
+                        if interrupts:
+                            raise SampleInterrupted(interrupts[0])
                         signal.alarm(30)
                         os.waitid(os.P_PID, child.pid, os.WEXITED | os.WNOWAIT)
                         elapsed = (time.perf_counter() - start) * 1000
                     finally:
+                        is_waiting[0] = False
                         signal.alarm(0)
                         # Kill the group before reaping: the unreaped leader keeps its group ID from being reused.
                         try:
@@ -102,8 +115,9 @@ def main():
                     signal.signal(signal.SIGALRM, previous)
                     for number, handler in deferred.items():
                         signal.signal(number, handler)
-                if interrupts:
-                    signal.raise_signal(interrupts[0])
+                    # The recorded signal takes precedence over a timeout or the internal interruption.
+                    if interrupts:
+                        signal.raise_signal(interrupts[0])
                 child.returncode = os.waitstatus_to_exitcode(status)
                 stdout.seek(0)
                 stderr.seek(0)

@@ -62,6 +62,9 @@ try {
     "npm",
     [
       "install",
+      // Explicit, so inherited global or location settings cannot install into a real npm prefix.
+      "--global=false",
+      "--location=project",
       "--ignore-scripts",
       "--no-audit",
       "--no-fund",
@@ -358,11 +361,17 @@ Module._load = function (request, ...args) {
     const cleanupFailures = [];
     // A worker started by a command that then failed may be recorded only in runtime.json, which shutdown
     // removes before the process exits; capture it now so it is probed too.
-    const recordedPid = await readFile(path.join(managedHome, "sync", "worker", "runtime.json"), "utf8")
-      .then((value) => JSON.parse(value).pid)
-      .catch(() => undefined);
-    if (Number.isSafeInteger(recordedPid) && recordedPid > 0 && !workerPids.includes(recordedPid)) {
-      workerPids.push(recordedPid);
+    try {
+      const recordedPid = JSON.parse(await readFile(path.join(managedHome, "sync", "worker", "runtime.json"), "utf8")).pid;
+      assert(Number.isSafeInteger(recordedPid) && recordedPid > 0, `Invalid worker runtime record PID: ${recordedPid}`);
+      if (!workerPids.includes(recordedPid)) {
+        workerPids.push(recordedPid);
+      }
+    } catch (error) {
+      // Only a missing record means no worker; any other read or validation failure leaves its exit unconfirmed.
+      if (error.code !== "ENOENT") {
+        cleanupFailures.push(error);
+      }
     }
 
     try {
@@ -562,7 +571,8 @@ async function run(command, args, cwd, env = {}) {
         child.stdout.destroy();
         child.stderr.destroy();
         child.unref();
-        reject(new Error(`${command} exited but is unjoined: its output pipes stayed open for 5 s`));
+        reject(new Error(`${command} exited but is unjoined: its output pipes stayed open for 5 s; ` +
+          `fixture retained at ${temporaryRoot}.\n${(stdout + stderr).slice(-4000)}`));
       }, 5000);
     });
     child.once("close", (code, signal) => {
