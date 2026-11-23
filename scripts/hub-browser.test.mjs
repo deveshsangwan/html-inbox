@@ -255,32 +255,15 @@ async function startFixtureHub(root, configuration, onStarted) {
     throw new Error("HTML_INBOX_HUB_TEST_CLI requires POSIX signals; unset it to use the in-process hub on Windows");
   }
 
-  assert.equal(path.isAbsolute(process.env.HTML_INBOX_HUB_TEST_CLI), true);
-  const executable = await realpath(process.env.HTML_INBOX_HUB_TEST_CLI);
-  const installedRoot = path.dirname(path.dirname(executable));
-  const installedPackage = JSON.parse(await readFile(path.join(installedRoot, "package.json"), "utf8"));
-  assert.equal(path.basename(installedRoot), "html-inbox");
-  assert.equal(path.basename(path.dirname(installedRoot)), "node_modules");
-  assert.equal(installedPackage.name, "html-inbox");
-  assert.equal(installedPackage.bin["html-inbox"], "bundle/index.js");
-  assert.equal(executable, path.join(installedRoot, "bundle", "index.js"));
-  const sourcePackage = JSON.parse(await readFile(new URL("../packages/cli/package.json", import.meta.url), "utf8"));
-  assert.equal(installedPackage.version, sourcePackage.version);
-
+  const executable = await resolveInstalledExecutable(process.env.HTML_INBOX_HUB_TEST_CLI);
   const config = path.join(root, "hub.json");
   await writeHubConfig(config, configuration);
-  // Developer-shell library, limit and Node runtime settings must not reach the fixture child.
-  const inheritedEnvironment = Object.fromEntries(Object.entries(process.env)
-    .filter(([key]) => !key.startsWith("HTML_INBOX_") && !key.startsWith("NODE_")));
+
   const origin = `http://127.0.0.1:${await availablePort()}`;
   const child = spawn(process.execPath, [executable, "hub", "--config", config,
     "--loopback", "--host", "127.0.0.1", "--port", new URL(origin).port], {
     cwd: root,
-    env: { ...inheritedEnvironment, HOME: root, USERPROFILE: root,
-      HTML_INBOX_HOME: path.join(root, "unused-home"), HTML_INBOX_CATALOG_HOME: path.join(root, "catalog"),
-      XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data"),
-      XDG_STATE_HOME: path.join(root, "state"), XDG_CACHE_HOME: path.join(root, "cache"),
-      TMPDIR: root, TMP: root, TEMP: root },
+    env: isolatedChildEnvironment(root),
     stdio: ["ignore", "pipe", "pipe"],
   });
   const childErrors = [];
@@ -302,18 +285,14 @@ async function startFixtureHub(root, configuration, onStarted) {
     const hadExited = nativeExit !== undefined || child.exitCode !== null || child.signalCode !== null;
     if (!hadExited) {
       teardownRequested = true;
-      try {
-        if (!child.kill("SIGTERM")) childErrors.push(new Error("Installed hub did not accept its teardown signal"));
-      } catch (error) { childErrors.push(error); }
+      signalChild(child, "SIGTERM", childErrors, "Installed hub did not accept its teardown signal");
     }
 
     let forced = false;
     const timer = setTimeout(() => {
       if (child.exitCode === null && child.signalCode === null) {
         forced = true;
-        try {
-          if (!child.kill("SIGKILL")) childErrors.push(new Error("Installed hub did not accept forced cleanup"));
-        } catch (error) { childErrors.push(error); }
+        signalChild(child, "SIGKILL", childErrors, "Installed hub did not accept forced cleanup");
       }
     }, 3000);
     let deadlineTimer;
@@ -356,7 +335,9 @@ async function startFixtureHub(root, configuration, onStarted) {
     if (readinessPublished && (!nativeExit || nativeExit.code !== 0 || nativeExit.signal !== null)) {
       failures.push(new Error("Ready installed hub did not emit a normal code0/signalnull exit"));
     }
-    if (forced) failures.push(new Error("Installed hub required forced shutdown"));
+    if (forced) {
+      failures.push(new Error("Installed hub required forced shutdown"));
+    }
 
     if (failures.length) {
       const error = new AggregateError(failures, `Installed hub shutdown failed.\n${stderr}`);
@@ -402,13 +383,54 @@ async function startFixtureHub(root, configuration, onStarted) {
     });
     return handle;
   } catch (error) {
-    try { await close(); } catch (cleanupError) {
+    try {
+      await close();
+    } catch (cleanupError) {
       throw new AggregateError([error, cleanupError], `Installed hub startup/cleanup failed; fixture retained at ${root}`);
     }
 
     throw error;
   } finally {
     clearTimeout(timer);
+  }
+}
+
+async function resolveInstalledExecutable(configuredPath) {
+  assert.equal(path.isAbsolute(configuredPath), true);
+  const executable = await realpath(configuredPath);
+  const installedRoot = path.dirname(path.dirname(executable));
+  const installedPackage = JSON.parse(await readFile(path.join(installedRoot, "package.json"), "utf8"));
+  const sourcePackage = JSON.parse(await readFile(new URL("../packages/cli/package.json", import.meta.url), "utf8"));
+
+  assert.equal(path.basename(installedRoot), "html-inbox");
+  assert.equal(path.basename(path.dirname(installedRoot)), "node_modules");
+  assert.equal(installedPackage.name, "html-inbox");
+  assert.equal(installedPackage.bin["html-inbox"], "bundle/index.js");
+  assert.equal(executable, path.join(installedRoot, "bundle", "index.js"));
+  assert.equal(installedPackage.version, sourcePackage.version);
+
+  return executable;
+}
+
+// Developer-shell library, limit and Node runtime settings must not reach the fixture child.
+function isolatedChildEnvironment(root) {
+  const inherited = Object.fromEntries(Object.entries(process.env)
+    .filter(([key]) => !key.startsWith("HTML_INBOX_") && !key.startsWith("NODE_")));
+
+  return { ...inherited, HOME: root, USERPROFILE: root,
+    HTML_INBOX_HOME: path.join(root, "unused-home"), HTML_INBOX_CATALOG_HOME: path.join(root, "catalog"),
+    XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data"),
+    XDG_STATE_HOME: path.join(root, "state"), XDG_CACHE_HOME: path.join(root, "cache"),
+    TMPDIR: root, TMP: root, TEMP: root };
+}
+
+function signalChild(child, signal, errors, refusal) {
+  try {
+    if (!child.kill(signal)) {
+      errors.push(new Error(refusal));
+    }
+  } catch (error) {
+    errors.push(error);
   }
 }
 

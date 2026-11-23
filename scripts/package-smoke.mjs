@@ -317,6 +317,7 @@ Module._load = function (request, ...args) {
       const status = JSON.parse((await runManaged(["sync", "worker", "status"])).stdout);
       assert.equal(status.worker.running, true);
       await runManaged(["sync", "worker", "stop"]);
+      assert.equal(await waitForProcessExit(workerPids[0], 3000), true, `Managed worker ${workerPids[0]} survived stop`);
       assert.equal(JSON.parse((await runManaged(["sync", "worker", "status"])).stdout).worker.running, false);
       await runManaged(["sync", "worker", "start"]);
       workerPids.push(JSON.parse(await readFile(path.join(managedHome, "sync", "worker", "runtime.json"), "utf8")).pid);
@@ -439,7 +440,7 @@ async function waitForProcessExit(pid, timeoutMs) {
       process.kill(pid, 0);
     } catch (error) {
       if (error.code === "ESRCH") return true;
-      throw error;
+      throw new Error(`Cannot probe managed worker ${pid}`, { cause: error });
     }
 
     if (Date.now() >= deadline) return false;
