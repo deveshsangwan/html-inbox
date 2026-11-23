@@ -111,7 +111,8 @@ original source in `finally`, rebuilds, and verifies source and every compiled
 artifact hash equal the baseline hashes. No real libraries are opened. Test
 fixtures use the existing `temporaryHome` cleanup helper.
 `scripts/bench/test_permissions.py` checks these TAP checks against the
-archived logs and five negative controls.
+archived logs and five negative controls. It also drives the comparison through
+a faked candidate-build timeout without building anything.
 
 The original and requalified comparisons below used earlier runner revisions
 (`a8ea2d1` and `9c266b4`). Those checked exit codes and the `# pass` and
@@ -387,3 +388,4 @@ not.
 | Opus L5, evidence volume | Accepted in part. Nine restored snapshots byte-identical to their before snapshots are replaced by a hash record. Environment receipts stay as recorded. |
 | Sol optional, runtime major versions unchecked | Accepted. |
 | Opus nits: `CASES` before imports, bare `IndexError`, `lstat` name, PR body check count | Accepted. Line wrapping in older sections is left as is. |
+| Owner check after round 2, timeout handler wrote mixed bytes and text | Accepted. `subprocess.TimeoutExpired` carries captured partial output as bytes even with `text=True`, so the `ea8cee6` handler raised `TypeError` before classifying the timeout and the restoration rebuild still ran. The handler now saves the partial output as bytes and keeps the timeout classification if saving fails. Two mocked tests drive the candidate path: one requires the preserved partial output, original source bytes, a `timeout` manifest entry and no restoration build; the other makes the log unwritable. Both fail with the `ea8cee6` handler restored. |

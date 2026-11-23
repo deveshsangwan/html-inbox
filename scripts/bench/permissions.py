@@ -91,14 +91,23 @@ def check_candidate(output):
             raise RuntimeError(f"Candidate case did not fail with {diagnostic!r}: {name}")
 
 
+def as_bytes(output):
+    if isinstance(output, str):
+        return output.encode()
+
+    return output or b""
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", required=True, type=Path)
     parser.add_argument("--node20", required=True)
     parser.add_argument("--node24", required=True)
     args = parser.parse_args()
-    root = Path(__file__).resolve().parents[2]
-    out = args.out.resolve()
+    compare(Path(__file__).resolve().parents[2], args.out.resolve(), args.node20, args.node24)
+
+
+def compare(root, out, node20, node24):
     out.mkdir(parents=True, exist_ok=False)
     source = root / "packages/cli/src/private-storage.ts"
     original = source.read_bytes()
@@ -131,9 +140,17 @@ def main():
         try:
             result = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=300)
         except subprocess.TimeoutExpired as error:
-            (out / f"{label}.log").write_text((error.stdout or "") + (error.stderr or ""))
-            record(label, command, "timeout")
-            raise CommandTimedOut(f"{label}: timed out after 300 seconds") from error
+            timeout = CommandTimedOut(f"{label}: timed out after 300 seconds")
+
+            # Captured partial output is bytes even with text=True. Diagnostics
+            # are best effort; the timeout must still skip the rebuild.
+            try:
+                (out / f"{label}.log").write_bytes(as_bytes(error.stdout) + as_bytes(error.stderr))
+                record(label, command, "timeout")
+            except Exception as persist_error:
+                timeout.add_note(f"Timeout diagnostics not saved: {persist_error!r}")
+
+            raise timeout from error
 
         (out / f"{label}.log").write_text(result.stdout + result.stderr)
         record(label, command, result.returncode)
@@ -166,7 +183,7 @@ def main():
     run("build-baseline", ["pnpm", "build"])
     fingerprint("baseline")
 
-    for label, node in [("20", args.node20), ("24", args.node24)]:
+    for label, node in [("20", node20), ("24", node24)]:
         version = run(f"node-{label}", [node, "--version"])
         if not version.startswith(f"v{label}."):
             raise RuntimeError(f"--node{label} reports {version.strip()}")
@@ -195,7 +212,7 @@ def main():
         run("build-candidate", ["pnpm", "build"])
         fingerprint("candidate")
 
-        for label, node in [("20", args.node20), ("24", args.node24)]:
+        for label, node in [("20", node20), ("24", node24)]:
             output = run(f"candidate-{label}", [node, "--test", "--test-reporter=tap",
                                                "packages/cli/dist/private-storage.test.js"], expected=1)
             check_candidate(output)
