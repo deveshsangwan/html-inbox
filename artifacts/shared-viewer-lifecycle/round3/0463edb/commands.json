@@ -1,0 +1,256 @@
+[
+  {
+    "label": "typecheck-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "pnpm",
+      "typecheck"
+    ],
+    "exit_code": 0,
+    "seconds": 2.7,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "prefix-copy-build-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47/node_modules/.bin/tsc-rs",
+      "-p",
+      "/tmp/claude-1001/-home-agent--t3-worktrees-html-inbox-t3-26d1cd47/eaedad0e-0d8d-4c7f-b8c4-f3a43d6ff252/scratchpad/round3-0463edb-20261123T225841/prefix-copy/packages/cli/tsconfig.json"
+    ],
+    "exit_code": 0,
+    "seconds": 1.2,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "prefix_viewer_server_js_sha256": "360c33f1e341e8600cfccac73cabdc05832a94b97205f75ed1582fc9853605b2"
+  },
+  {
+    "label": "red-prefix-lock-release-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "--test-force-exit",
+      "--test-name-pattern=start-lock release",
+      "/tmp/claude-1001/-home-agent--t3-worktrees-html-inbox-t3-26d1cd47/eaedad0e-0d8d-4c7f-b8c4-f3a43d6ff252/scratchpad/round3-0463edb-20261123T225841/prefix-copy/packages/cli/dist/viewer-owned-lifecycle.test.js"
+    ],
+    "exit_code": 1,
+    "seconds": 0.3,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "verdict": "CONFIRMED"
+  },
+  {
+    "label": "build-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "pnpm",
+      "build"
+    ],
+    "exit_code": 0,
+    "seconds": 2.8,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "fifo-probe-node20",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=20.20.2",
+      "node",
+      "--test",
+      "/tmp/claude-1001/-home-agent--t3-worktrees-html-inbox-t3-26d1cd47/eaedad0e-0d8d-4c7f-b8c4-f3a43d6ff252/scratchpad/round3-0463edb-20261123T225841/fifo-probe.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.2,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "observed_order": [
+      "first-registered",
+      "second-registered"
+    ]
+  },
+  {
+    "label": "fifo-probe-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "/tmp/claude-1001/-home-agent--t3-worktrees-html-inbox-t3-26d1cd47/eaedad0e-0d8d-4c7f-b8c4-f3a43d6ff252/scratchpad/round3-0463edb-20261123T225841/fifo-probe.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.3,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "observed_order": [
+      "first-registered",
+      "second-registered"
+    ]
+  },
+  {
+    "label": "focused-node20",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=20.20.2",
+      "node",
+      "--test",
+      "packages/cli/dist/viewer-owned-lifecycle.test.js",
+      "packages/cli/dist/viewer-mutation-shutdown.test.js",
+      "packages/cli/dist/viewer-shutdown.test.js",
+      "packages/cli/dist/viewer-startup-races.test.js",
+      "packages/cli/dist/viewer-tailscale-lifecycle.test.js",
+      "packages/cli/dist/viewer-background.test.js",
+      "packages/cli/dist/viewer-record-shutdown-race.test.js",
+      "scripts/viewer-fixture-browser.test.mjs",
+      "scripts/document-deletion-browser.test.mjs",
+      "scripts/document-isolation-browser.test.mjs",
+      "scripts/hub-browser.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 38.2,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "focused-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "packages/cli/dist/viewer-owned-lifecycle.test.js",
+      "packages/cli/dist/viewer-mutation-shutdown.test.js",
+      "packages/cli/dist/viewer-shutdown.test.js",
+      "packages/cli/dist/viewer-startup-races.test.js",
+      "packages/cli/dist/viewer-tailscale-lifecycle.test.js",
+      "packages/cli/dist/viewer-background.test.js",
+      "packages/cli/dist/viewer-record-shutdown-race.test.js",
+      "scripts/viewer-fixture-browser.test.mjs",
+      "scripts/document-deletion-browser.test.mjs",
+      "scripts/document-isolation-browser.test.mjs",
+      "scripts/hub-browser.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 27.6,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "ownership-node20",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=20.20.2",
+      "node",
+      "--test",
+      "packages/cli/dist/sync-maintenance.test.js",
+      "packages/cli/dist/sync-acquisition-deadline.test.js",
+      "packages/cli/dist/viewer-service-owner.test.js",
+      "packages/cli/dist/viewer-service.test.js",
+      "packages/cli/dist/hub-http.test.js"
+    ],
+    "exit_code": 0,
+    "seconds": 14.2,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "ownership-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "packages/cli/dist/sync-maintenance.test.js",
+      "packages/cli/dist/sync-acquisition-deadline.test.js",
+      "packages/cli/dist/viewer-service-owner.test.js",
+      "packages/cli/dist/viewer-service.test.js",
+      "packages/cli/dist/hub-http.test.js"
+    ],
+    "exit_code": 0,
+    "seconds": 10.4,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "red-old-isolation-wiring-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "--test-name-pattern=isolation fixture joins owned viewer cleanup",
+      "/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47/scripts/zz-red-isolation-overlay.test.mjs"
+    ],
+    "exit_code": 1,
+    "seconds": 0.7,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "verdict": "CONFIRMED"
+  },
+  {
+    "label": "branch-settles-first-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "--test-force-exit",
+      "--test-name-pattern=isolation fixture joins owned viewer cleanup",
+      "/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47/scripts/zz-red-isolation-overlay.test.mjs"
+    ],
+    "exit_code": 1,
+    "seconds": 0.7,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "verdict": "CONFIRMED"
+  },
+  {
+    "label": "branch-setup-failure-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "--test-name-pattern=isolation fixture joins owned viewer cleanup",
+      "/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47/scripts/zz-red-isolation-overlay.test.mjs"
+    ],
+    "exit_code": 1,
+    "seconds": 0.7,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "verdict": "CONFIRMED"
+  },
+  {
+    "label": "browser-suite-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "scripts/run-browser-tests.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 41.7,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  }
+]

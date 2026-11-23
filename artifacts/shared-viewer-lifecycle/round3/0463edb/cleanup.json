@@ -1,0 +1,12 @@
+{
+  "application_seconds": 141.9,
+  "cleanup_seconds": 0.1,
+  "cleanup_within_budget": true,
+  "quiescent": true,
+  "generated_restored": true,
+  "generated_file_count": 393,
+  "leftover_run_processes": [],
+  "overlay_absent": true,
+  "worktree_status": "",
+  "head": "0463edb6c869e513245ff61774b66ad94f66c9c1"
+}

@@ -463,7 +463,7 @@ test("exact acknowledgement replays revalidate the ownership anchor and reader i
   await cp(f.source.home, copyHome, { recursive: true });
   const copiedLedgerPath = path.join(copyHome, "sync", "ledger.json");
   const copiedBytes = await readFile(copiedLedgerPath);
-  await assert.rejects(new ManagedSyncStore(copyHome).acknowledgeBatch(f.auth, f.receipts), /Copied or moved/);
+  await assert.rejects(new ManagedSyncStore(copyHome).acknowledgeBatch(f.auth, f.receipts), /ownership anchor changed \(home,/);
   assert.deepEqual(await readFile(copiedLedgerPath), copiedBytes);
 
   const ledgerPath = path.join(f.source.home, "sync", "ledger.json");
@@ -657,8 +657,8 @@ test("copy/move anchor mismatches fail closed; restore quarantines owner and com
   const copyHome = path.join(path.dirname(a.home), "copy");
   await cp(a.home, copyHome, { recursive: true });
   const copied = new ManagedSyncStore(copyHome);
-  await assert.rejects(copied.listDocuments(), /Copied or moved/);
-  await assert.rejects(copied.publish(input), /Copied or moved/);
+  await assert.rejects(copied.listDocuments(), /ownership anchor changed/);
+  await assert.rejects(copied.publish(input), /ownership anchor changed/);
   await copied.quarantineRestore();
   let ledger = await copied.snapshot();
   assert.notEqual(ledger.storageIncarnation, original.storageIncarnation);

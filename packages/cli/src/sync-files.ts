@@ -4,7 +4,7 @@ import { link, lstat, mkdir, open, readFile, realpath, rename, unlink, type File
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { readBoundedFile } from "./bounded-file";
-import { parseObject, assertExactKeys, parseInteger, parseString } from "./sync-model";
+import { parseObject, assertExactKeys, parseInteger, parseString, parseUuid } from "./sync-model";
 
 export type StorageEvent = "directory-created" | "directory-flushed" | "migration-intent" | "migration-evacuated" | "migration-barrier" | "migration-enumeration" |
   "body-staged" | "body-flushed" | "body-installed" | "body-directory-flushed" | "ledger-temp-written" | "ledger-temp-fsynced" | "ledger-renamed" | "ledger-dir-fsynced" |
@@ -256,10 +256,10 @@ async function withProcessLock<T>(directory: string, deadline: number, operation
   }, () => ownership.release());
 }
 
-export interface SyncOwnershipOptions { mode?: "managed" | "portable" }
+export interface SyncOwnershipOptions { mode?: "managed" | "portable"; token?: string }
 
 export async function acquireSyncOwnership(lockPath: string, deadline: number, signal?: AbortSignal, options: SyncOwnershipOptions = {}) {
-  const owner: LockOwner = { token: randomUUID(), pid: process.pid, start: await processStart(process.pid) };
+  const owner: LockOwner = { token: options.token === undefined ? randomUUID() : parseUuid(options.token), pid: process.pid, start: await processStart(process.pid) };
   if (options.mode === "portable") {
     return acquirePortableOwnership(lockPath, owner, deadline, signal);
   }
