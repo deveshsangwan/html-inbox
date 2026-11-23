@@ -7,16 +7,21 @@ const distTagsUrl = "https://registry.npmjs.org/-/package/html-inbox/dist-tags";
 
 // npm's own fetch layer can answer from its local cache when revalidation fails. Node's fetch
 // keeps no HTTP cache, so every check sees the public registry's current dist-tags or fails.
-export async function readNpmDistTags() {
+export async function readNpmDistTags({ timeoutMs = 30_000 } = {}) {
   const response = await fetch(distTagsUrl, {
     cache: "no-store",
-    signal: AbortSignal.timeout(30_000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!response.ok) {
     throw new Error(`npm dist-tag lookup failed with HTTP ${response.status}`);
   }
 
-  return response.json();
+  const tags = await response.json();
+  if (typeof tags !== "object" || tags === null || Array.isArray(tags)) {
+    throw new Error("npm dist-tag lookup returned a value that is not a tag object");
+  }
+
+  return tags;
 }
 
 // Release-branch publication stays off until a release administrator protects the release

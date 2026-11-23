@@ -29,7 +29,7 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     permissions:
       contents: read
       id-token: write
@@ -106,26 +106,34 @@ jobs:
           JS
           )
 
-          for attempt in {1..20}; do
-            if published_integrity=$(npm view "html-inbox@${RELEASE_VERSION}" dist.integrity --prefer-online --registry=https://registry.npmjs.org/); then
+          # One five-minute budget covers every lookup and wait, so a slow registry cannot
+          # outlast the job timeout before the recovery message prints.
+          deadline=$((SECONDS + 300))
+          while true; do
+            remaining=$((deadline - SECONDS))
+            if [ "$remaining" -le 0 ]; then
+              echo "Published version or its ${RELEASE_TAG} tag is still unconfirmed after five minutes; inspect npm before retrying publication" >&2
+              exit 1
+            fi
+
+            if published_integrity=$(npm view "html-inbox@${RELEASE_VERSION}" dist.integrity --prefer-online --fetch-retries=0 --fetch-timeout="$((remaining * 1000))" --registry=https://registry.npmjs.org/); then
               if [ "$published_integrity" != "$expected_integrity" ]; then
                 echo "Published package integrity differs from the verified archive" >&2
                 exit 1
               fi
 
               # Read the tag through the policy's cache-free dist-tags lookup, not npm view.
-              tagged_version=$(node --input-type=module -e 'const { readNpmDistTags } = await import("./scripts/release-policy.mjs"); process.stdout.write((await readNpmDistTags())[process.env.RELEASE_TAG] ?? "")' || true)
+              remaining=$((deadline - SECONDS))
+              tagged_version=$(LOOKUP_TIMEOUT_MS="$((remaining > 0 ? remaining * 1000 : 1))" node --input-type=module -e 'const { readNpmDistTags } = await import("./scripts/release-policy.mjs"); const tags = await readNpmDistTags({ timeoutMs: Number(process.env.LOOKUP_TIMEOUT_MS) }); process.stdout.write(tags[process.env.RELEASE_TAG] ?? "")' || true)
               if [ "$tagged_version" = "$RELEASE_VERSION" ]; then
                 echo "Verified html-inbox@${RELEASE_VERSION} as ${RELEASE_TAG}: ${published_integrity}"
                 exit 0
               fi
             fi
 
-            if [ "$attempt" -eq 20 ]; then
-              echo "Published version or its ${RELEASE_TAG} tag is still unconfirmed after 20 checks; inspect npm before retrying publication" >&2
-              exit 1
+            remaining=$((deadline - SECONDS))
+            echo "Waiting for npm to process the published package, ${remaining}s left"
+            if [ "$remaining" -gt 0 ]; then
+              sleep "$((remaining < 15 ? remaining : 15))"
             fi
-
-            echo "Waiting for npm to process the published package, check ${attempt}/20"
-            sleep 15
           done

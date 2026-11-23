@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, symlinkSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -91,8 +91,14 @@ test("the workflow entry point reads npm latest itself and writes outputs only o
   const { version } = JSON.parse(readFileSync(path.join(repositoryRoot, "packages/cli/package.json"), "utf8"));
   const directory = mkdtempSync(path.join(tmpdir(), "html-inbox-release-policy-"));
   const outputPath = path.join(directory, "output");
+  const policyScript = path.join(repositoryRoot, "scripts/release-policy.mjs");
   const linkedScript = path.join(directory, "linked-release-policy.mjs");
-  symlinkSync(path.join(repositoryRoot, "scripts/release-policy.mjs"), linkedScript);
+  symlinkSync(policyScript, linkedScript);
+
+  // A synthetic 0.7.0 checkout reaches the release-control refusal, which 0.6.x stops before.
+  const compatibilityCheckout = path.join(directory, "compatibility-checkout");
+  mkdirSync(path.join(compatibilityCheckout, "packages/cli"), { recursive: true });
+  writeFileSync(path.join(compatibilityCheckout, "packages/cli/package.json"), JSON.stringify({ version: "0.7.0", engines: { node: ">=20" } }));
 
   let registryMode = "available";
   const registry = createServer((request, response) => {
@@ -101,17 +107,18 @@ test("the workflow entry point reads npm latest itself and writes outputs only o
       return;
     }
 
-    const body = registryMode === "malformed" ? "<html>not dist-tags</html>" : JSON.stringify({ latest: version });
+    const bodies = { malformed: "<html>not dist-tags</html>", "wrong-shape": "null" };
+    const body = bodies[registryMode] ?? JSON.stringify({ latest: version });
     response.writeHead(200, { "content-type": "application/json" }).end(body);
   });
   await new Promise((resolve) => registry.listen(0, "127.0.0.1", resolve));
   const registryUrl = `http://127.0.0.1:${registry.address().port}`;
 
-  const run = async ({ tag = "latest", ref = "refs/heads/main", script = "scripts/release-policy.mjs" } = {}) => {
+  const run = async ({ tag = "latest", ref = "refs/heads/main", script = policyScript, cwd = repositoryRoot, expectedVersion = version } = {}) => {
     try {
       await execFileAsync(process.execPath, ["--import", loopbackRegistryPreload, script], {
-        cwd: repositoryRoot,
-        env: { ...process.env, EXPECTED_VERSION: version, GITHUB_REF: ref, RELEASE_TAG: tag, GITHUB_OUTPUT: outputPath, RELEASE_POLICY_TEST_REGISTRY: registryUrl },
+        cwd,
+        env: { ...process.env, EXPECTED_VERSION: expectedVersion, GITHUB_REF: ref, RELEASE_TAG: tag, GITHUB_OUTPUT: outputPath, RELEASE_POLICY_TEST_REGISTRY: registryUrl },
       });
       return { isAccepted: true, stderr: "" };
     } catch (error) {
@@ -124,8 +131,8 @@ test("the workflow entry point reads npm latest itself and writes outputs only o
     assert.match((await run({ tag: "node20" })).stderr, /require npm tag latest/);
     assertNoOutput();
 
-    // The checkout's package version decides which release-branch refusal applies.
-    assert.match((await run({ ref: "refs/heads/release/0.7" })).stderr, /only from main|waits for branch protection/);
+    const releaseBranchRun = await run({ ref: "refs/heads/release/0.7", cwd: compatibilityCheckout, expectedVersion: "0.7.0" });
+    assert.match(releaseBranchRun.stderr, /waits for branch protection/);
     assertNoOutput();
 
     registryMode = "unavailable";
@@ -134,6 +141,10 @@ test("the workflow entry point reads npm latest itself and writes outputs only o
 
     registryMode = "malformed";
     assert.match((await run()).stderr, /SyntaxError/);
+    assertNoOutput();
+
+    registryMode = "wrong-shape";
+    assert.match((await run()).stderr, /not a tag object/);
     assertNoOutput();
 
     registryMode = "available";

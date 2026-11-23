@@ -63,29 +63,36 @@ The normal release path is the [GitHub publishing workflow](#publish-with-github
 
 Authenticate the package owner on the machine that will publish. Run `npm login --registry=https://registry.npmjs.org/` yourself, complete its browser sign-in, and check `npm whoami --registry=https://registry.npmjs.org/`. A 401 means the publishing session needs to be restored. Keep tokens, passwords, and recovery codes out of repository files and chat.
 
-Build, test and publish the same archive in one fail-stop procedure. Set two inputs first: the reviewed release commit (the full SHA whose required checks passed) and the policy tag (`latest`, or `node20` only for 0.7.x maintenance after 1.0). The subshell uses `set -e`, and every check whose failure matters runs as its own command. The procedure:
+Build, test and publish the same archive in one fail-stop procedure. It runs in a fresh clone of the canonical repository at the reviewed commit, so nothing in your own checkout (edits, ignored files, build output or installed dependencies) can reach the archive. Set three inputs first:
+- the reviewed release commit: the full SHA whose required checks passed;
+- its release branch;
+- the policy tag: `latest`, or `node20` only for 0.7.x maintenance after 1.0.
 
-1. Confirms that HEAD and the canonical repository's branch tip are both the reviewed commit, and that the worktree is clean.
-2. Runs the policy, which reads the current npm `latest` itself.
-3. Removes ignored build outputs, reinstalls the locked dependencies, packs into a private temporary directory and records the archive's SHA-512.
+The subshell uses `set -e`, and every check whose failure matters runs as its own command. The procedure:
+
+1. Clones the canonical repository into a private temporary directory, checks out the reviewed commit, and confirms that it is the branch's current tip.
+2. Runs that commit's policy, which reads the current npm `latest` itself.
+3. Installs the locked dependencies, packs, and records the archive's SHA-512.
 4. Runs smoke and a dry run, then shows the commit, version and tag and waits for your confirmation.
-5. Repeats the source and policy checks, confirms the archive still has its recorded digest, and only then publishes.
+5. Repeats the tip and policy checks, confirms the archive still has its recorded digest, and only then publishes.
 
 ```sh
 inbox_release_commit=<reviewed full commit SHA>
-inbox_release_tag=latest
+inbox_release_branch=main
+inbox_release_tag=<latest or node20>
 (
   set -eu
-  branch=$(git branch --show-current)
+  build_directory=$(mktemp -d)
+  git clone --quiet --no-checkout https://github.com/deveshsangwan/html-inbox.git "$build_directory/source"
+  cd "$build_directory/source"
+  git checkout --quiet --detach "$inbox_release_commit"
   check_release_source() {
     current_commit=$(git rev-parse HEAD)
     test "$current_commit" = "$inbox_release_commit"
-    worktree_status=$(git status --porcelain)
-    test -z "$worktree_status"
-    git fetch https://github.com/deveshsangwan/html-inbox.git "refs/heads/$branch"
+    git fetch --quiet origin "refs/heads/$inbox_release_branch"
     upstream_commit=$(git rev-parse FETCH_HEAD)
     test "$upstream_commit" = "$inbox_release_commit"
-    EXPECTED_VERSION="$version" RELEASE_TAG="$inbox_release_tag" GITHUB_REF="refs/heads/$branch" \
+    EXPECTED_VERSION="$version" RELEASE_TAG="$inbox_release_tag" GITHUB_REF="refs/heads/$inbox_release_branch" \
       GITHUB_OUTPUT=/dev/null node scripts/release-policy.mjs
   }
   archive_digest() {
@@ -93,11 +100,9 @@ inbox_release_tag=latest
   }
   version=$(node -p "require('./packages/cli/package.json').version")
   check_release_source
-  rm -rf packages/cli/bundle packages/cli/dist
   corepack pnpm install --frozen-lockfile
-  pack_directory=$(mktemp -d)
-  npm pack ./packages/cli --pack-destination "$pack_directory"
-  archive="$pack_directory/html-inbox-${version}.tgz"
+  npm pack ./packages/cli --pack-destination "$build_directory"
+  archive="$build_directory/html-inbox-${version}.tgz"
   tested_digest=$(archive_digest)
   node scripts/package-smoke.mjs "$archive"
   npm publish "$archive" --dry-run --access public --tag "$inbox_release_tag" --registry=https://registry.npmjs.org/
@@ -112,7 +117,7 @@ inbox_release_tag=latest
 )
 ```
 
-`npm pack` builds from the working tree. The cleanliness check keeps tracked and untracked edits out of the archive. Removing the ignored `bundle` and `dist` outputs and reinstalling with the lockfile keeps stale build products and dependency drift out too. The private directory and the digest check mean only the archive that passed smoke can be published. Keep that directory until you have compared the public `dist.integrity` with the printed digest.
+The digest check means only the archive that passed smoke can be published. Keep the printed build directory until you have compared the public `dist.integrity` with the printed digest.
 
 Complete any npm authentication or 2FA challenge. Local publication does not claim GitHub provenance. A dry run validates the archive; it does not prove that npm will authorize the real publish.
 
@@ -164,4 +169,4 @@ Compare `dist.integrity` with the tested archive's SHA-512 integrity. Confirm th
 
 If npm reports an error after uploading, query the exact version before retrying. A version that already exists cannot be overwritten or republished. Preserve the tested artifact and command output while determining whether the upload completed.
 
-npm may accept the upload before the version becomes publicly available. The publish workflow retries its registry lookup for up to five minutes and compares the public integrity with the verified archive. If verification times out after a successful upload, check the registry again; do not rerun publication just to repeat verification.
+npm may accept the upload before the version becomes publicly available. The publish workflow gives its registry lookups and waits a single five-minute budget and compares the public integrity with the verified archive. If verification times out after a successful upload, check the registry again; do not rerun publication just to repeat verification.
