@@ -437,7 +437,8 @@ test("acknowledgement batches reject invalid bindings without partially retiring
     assert.deepEqual(await readFile(ledgerPath), bytes);
   }
 
-  await assert.rejects(f.source.store.acknowledgeBatch(f.auth, [receipt, { ...receipt, storageIncarnation: randomUUID() }]), /replaced receiver/);
+  await assert.rejects(f.source.store.acknowledgeBatch(f.auth, [receipt, { ...receipt, storageIncarnation: randomUUID() }]), /mixes receiver storage incarnations/);
+  await assert.rejects(f.source.store.acknowledgeBatch(f.auth, [f.receipts[0], { ...receipt, storageIncarnation: randomUUID() }]), /mixes receiver storage incarnations/);
   await assert.rejects(f.source.store.acknowledgeBatch(f.auth, [receipt, { ...receipt, disposition: "suppressed" }]), /Conflicting receipts/);
   assert.deepEqual(await readFile(ledgerPath), bytes);
 });

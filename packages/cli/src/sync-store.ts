@@ -721,10 +721,15 @@ export class ManagedSyncStore {
   async acknowledgeBatch(authorization: unknown, values: unknown): Promise<void> {
     const auth = parseAuthorization(authorization);
     if (!Array.isArray(values) || values.length < 1 || values.length > SYNC_LIMITS.manifestPage) {
-      throw new Error("Acknowledgement batch requires 1 to 128 receipts");
+      throw new Error(`Acknowledgement batch requires 1 to ${SYNC_LIMITS.manifestPage} receipts`);
     }
 
     const receipts = values.map(parseReceipt);
+    // One page answers one authenticated holdings response, so it speaks for a single receiver incarnation.
+    if (receipts.some((receipt) => receipt.storageIncarnation !== receipts[0].storageIncarnation)) {
+      throw new Error("Acknowledgement batch mixes receiver storage incarnations");
+    }
+
     await this.mutate(async (ledger) => {
       this.authorizeRoute(ledger, auth, "outbound");
       const bindings = new Map<string, string>();
@@ -752,14 +757,15 @@ export class ManagedSyncStore {
         }
 
         const id = receiptKey(receipt);
+        const encoded = JSON.stringify(receipt);
         const previous = bindings.get(entryKey);
-        if (previous !== undefined && previous !== id) {
+        if (previous !== undefined && previous !== encoded) {
           throw new Error("Conflicting receipts for one queued obligation");
         }
 
-        bindings.set(entryKey, id);
+        bindings.set(entryKey, encoded);
         if (entry.disposition === "confirmed" && entry.receiptDisposition === receipt.disposition && entry.lastError === null &&
-            entry.receiverStorageIncarnation === receipt.storageIncarnation && JSON.stringify(ledger.receipts[id]) === JSON.stringify(receipt)) {
+            entry.receiverStorageIncarnation === receipt.storageIncarnation && JSON.stringify(ledger.receipts[id]) === encoded) {
           continue;
         }
 
