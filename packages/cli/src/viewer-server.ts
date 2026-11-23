@@ -352,14 +352,21 @@ export async function startViewerLifecycle(
         }),
       };
       // Release inside the rollback boundary: a failure here must stop the live viewer, not strand it handle-less.
-      await releaseLock();
+      await releaseLock().catch((releaseError: unknown) => {
+        throw new Error("Viewer start lock could not be released after readiness; rolling the viewer back", { cause: releaseError });
+      });
+      if (closing) {
+        // A signal during release already started the shared shutdown; never hand out a closing viewer.
+        throw new Error("Viewer startup interrupted before readiness");
+      }
+
       return lifecycle;
     } catch (error) {
       try {
         await close("startup-failure");
       } catch (cleanupError) {
         await reportShutdownFailure(cleanupError);
-        throw new AggregateError([error, cleanupError], "Viewer startup failed and Tailscale cleanup failed; private ownership journal retained");
+        throw new AggregateError([error, cleanupError], "Viewer startup failed and its rollback failed; private ownership journal retained");
       }
 
       throw error;
@@ -375,7 +382,8 @@ export async function startViewerLifecycle(
 }
 
 function containsError(error: unknown, candidate: unknown) {
-  return error === candidate || (error instanceof AggregateError && error.errors.includes(candidate));
+  const members = error instanceof AggregateError ? [error, ...error.errors] : [error];
+  return members.some((member) => member === candidate || (member instanceof Error && member.cause === candidate));
 }
 
 function shutdownDeadline(record: ViewerRecord): number {

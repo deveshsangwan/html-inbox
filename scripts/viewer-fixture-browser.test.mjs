@@ -268,3 +268,22 @@ test("fixture teardown retains its root when a plain server cannot close", async
   assert.equal(hasClosedViewer, true);
   assert((await fs.stat(root)).isDirectory());
 });
+
+test("fixture teardown keeps a viewer startup cause when a plain server also fails to close", async (t) => {
+  const root = await fs.mkdtemp(path.join(tmpdir(), "html-inbox-teardown-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const startupError = new Error("viewer startup failed");
+
+  await assert.rejects(closeFixtureResources(root, {
+    servers: [http.createServer()],
+    failedViewerStartup: { error: startupError },
+  }), (error) => {
+    assert(error instanceof AggregateError);
+    assert(error.message.includes(root));
+    assert.equal(error.errors.length, 2);
+    assert.equal(error.errors[0].code, "ERR_SERVER_NOT_RUNNING");
+    assert.equal(error.errors[1], startupError);
+    return true;
+  });
+  assert((await fs.stat(root)).isDirectory());
+});
