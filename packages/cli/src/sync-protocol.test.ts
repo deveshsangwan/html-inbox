@@ -158,6 +158,8 @@ test("simultaneous push and independent pull install one row; lost final ACK res
 
 test("current holdings receipts acknowledge one page with one ledger replacement and exact repeats replace nothing", { timeout: 30_000 }, async (t) => {
   const f = await pair(t);
+  // An empty pass completes trusted terminal inventory so the receiver accepts live states directly.
+  assert.equal((await f.run(f.a, f.outbound)).routes[0].status, "confirmed");
   const ids = ["held-0", "held-1", "held-2"];
   for (const id of ids) {
     await f.a.store.publish(input, id);
