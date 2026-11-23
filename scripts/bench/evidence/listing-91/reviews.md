@@ -64,3 +64,13 @@ After the round-3 fixes, mutants of a compiled copy were again each run three ti
 - releasing a permit twice on the skip path;
 - releasing a permit twice on the error path;
 - serving waiters LIFO instead of FIFO.
+
+Council round 4 reviewed `6832f50`. Claude Opus 5.5 at high effort scored 9.2/10 and GPT-6.2 Sol at high effort scored 9.1/10. Neither found a production defect. The round-4 follow-up makes these changes:
+
+- **Failing-home enumeration.** Sol showed that the queued-worker assertion depended on the failing home's directory order. If `.staging` came ninth, a worker that ignored the failure returned at the unsafe-ID guard without a counted read. The failing home now lists a real record ninth.
+- **Runner cleanup.** Sol found that `listing.py` created the fixture directory before the protected block that removes it. The environment capture now runs inside that block. A successful run is unaffected, and both recorded runs report successful cleanup. `listing.py` therefore no longer matches `post-review-fingerprints.json`; the recorded samples came from the earlier runner.
+- **NCC wording.** At Sol's request, the integration receipt now says the remediation left the observed cache bytes in place, rather than that no cache was rewritten. `tool_identity_exact=false` is unchanged.
+- **Timeouts and corruption cases.** Following Opus, every listing test has a timeout. The corruption test also covers a metadata ID that does not match its directory and a symlinked `index.html`.
+- **README.** The README notes that a failed listing's waiting worker must still receive a permit before the listing rejects. It corrects two rounded percentages, 14.1% and 7.3%, from the raw samples.
+
+Opus's mutant without the loop's `!hasFailed` guard survives and is accepted as equivalent. The post-acquire check still prevents every read; the only cost is one permit acquisition and release per remaining entry after a failure.

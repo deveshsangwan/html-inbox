@@ -122,7 +122,9 @@ test("ordinary listings share a read limit across instances and keep enumeration
 test("a failed listing keeps its first error and skips queued reads while a waiting listing completes", { timeout: 10_000 }, async (t) => {
   const failingHome = await temporaryHome(t);
   const healthyHome = await temporaryHome(t);
-  await seed(failingHome, 24);
+  const failingRecords = await seed(failingHome, 24);
+  const failingEnumeration = failingRecords.map((record) => record.id).sort();
+  const failingDocuments = path.join(failingHome, "documents");
   const healthyRecords = await seed(healthyHome, 48);
   const healthyEnumeration = interleaveByThree(healthyRecords.map((record) => record.id));
   const expected = inEnumerationOrder(healthyRecords, healthyEnumeration);
@@ -147,7 +149,12 @@ test("a failed listing keeps its first error and skips queued reads while a wait
   let reportHealthyEnumerated = () => {};
   const healthyEnumerated = new Promise<void>((resolve) => { reportHealthyEnumerated = resolve; });
 
+  // The failing home lists a real record ninth, so a worker that ignores the failure would make a counted read.
   t.mock.method(fs, "readdir", async (...args: Parameters<typeof fs.readdir>) => {
+    if (String(args[0]) === failingDocuments) {
+      return enumerateInOrder(readdir, failingDocuments, failingEnumeration);
+    }
+
     if (String(args[0]) !== healthyDocuments) {
       return readdir(...args);
     }
@@ -343,7 +350,7 @@ test("waiting listings receive released permits in arrival order", { timeout: 10
   assert.equal((await holding).length, 8);
 });
 
-test("a listing rejects with the exact value its warning callback throws, even undefined", async (t) => {
+test("a listing rejects with the exact value its warning callback throws, even undefined", { timeout: 10_000 }, async (t) => {
   const home = await temporaryHome(t);
   await seed(home, 3);
   await fs.writeFile(path.join(home, "documents", "document-001", "metadata.json"), "{");
@@ -356,9 +363,9 @@ test("a listing rejects with the exact value its warning callback throws, even u
   assert.equal(rejection, undefined);
 });
 
-test("ordinary listing retains corruption diagnostics, unsafe-entry handling and permission hardening", async (t) => {
+test("ordinary listing retains corruption diagnostics, unsafe-entry handling and permission hardening", { timeout: 10_000 }, async (t) => {
   const home = await temporaryHome(t);
-  const expected = await seed(home, 6);
+  const expected = await seed(home, 8);
   const directory = (index: number) => path.join(home, "documents", `document-00${index}`);
   await fs.writeFile(path.join(directory(1), "metadata.json"), "{");
   await fs.rm(path.join(directory(2), "index.html"));
@@ -366,6 +373,10 @@ test("ordinary listing retains corruption diagnostics, unsafe-entry handling and
   await fs.symlink(directory(0), directory(3));
   await fs.rm(path.join(directory(4), "metadata.json"));
   await fs.symlink(path.join(directory(0), "metadata.json"), path.join(directory(4), "metadata.json"));
+  const mismatched = JSON.parse(await fs.readFile(path.join(directory(6), "metadata.json"), "utf8"));
+  await fs.writeFile(path.join(directory(6), "metadata.json"), JSON.stringify({ ...mismatched, id: "document-999" }));
+  await fs.rm(path.join(directory(7), "index.html"));
+  await fs.symlink(path.join(directory(0), "index.html"), path.join(directory(7), "index.html"));
   await fs.mkdir(path.join(home, "documents", "unsafe name"));
   await fs.chmod(directory(0), 0o755);
   await fs.chmod(path.join(directory(0), "metadata.json"), 0o644);
@@ -373,9 +384,9 @@ test("ordinary listing retains corruption diagnostics, unsafe-entry handling and
   const backend = new LocalDocumentBackend(home, (message) => warnings.push(message));
 
   assert.deepEqual(await backend.listDocuments(), expected.filter((record) => ["document-000", "document-005"].includes(record.id)));
-  assert.equal(warnings.length, 4);
+  assert.equal(warnings.length, 6);
 
-  for (const id of [1, 2, 3, 4]) {
+  for (const id of [1, 2, 3, 4, 6, 7]) {
     assert.ok(warnings.some((message) => message.includes(`skipping corrupt document document-00${id}:`)));
   }
 
@@ -388,7 +399,7 @@ test("ordinary listing retains corruption diagnostics, unsafe-entry handling and
   assert.equal(await backend.getDocumentMetadata("document-005"), null);
 });
 
-test("a failed hardening operation drains its sibling before releasing the listing slot", async (t) => {
+test("a failed hardening operation drains its sibling before releasing the listing slot", { timeout: 10_000 }, async (t) => {
   const home = await temporaryHome(t);
   await seed(home, 1);
   const chmod = fs.chmod;
@@ -425,7 +436,7 @@ test("a failed hardening operation drains its sibling before releasing the listi
   }
 });
 
-test("a record removed after enumeration remains a silent missing record", async (t) => {
+test("a record removed after enumeration remains a silent missing record", { timeout: 10_000 }, async (t) => {
   const home = await temporaryHome(t);
   const expected = await seed(home, 2);
   const missingDirectory = path.join(home, "documents", "document-000");
