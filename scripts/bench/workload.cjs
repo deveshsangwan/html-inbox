@@ -84,11 +84,16 @@ async function main() {
           if (count) assert.ok(body.includes('Benchmark 0'));
           return { response_bytes: Buffer.byteLength(body), scope: 'loopback client and server in one process' };
         });
-        if (count) await record('viewer/content', async () => {
-          const response = await fetch(server.urls[0] + '/documents/bench-00000/content');
+        if (!count) continue;
+
+        // Rotate documents across samples; expected bytes are built before timing starts.
+        const id = `bench-${String(i % count).padStart(5, '0')}`;
+        const expected = Buffer.from(html(size, 'text', id));
+        await record('viewer/content', async () => {
+          const response = await fetch(`${server.urls[0]}/documents/${id}/content`);
           assert.equal(response.status, 200);
-          assert.deepEqual(Buffer.from(await response.arrayBuffer()), Buffer.from(html(size, 'text', 'bench-00000')));
-          return { response_bytes: size, behavior: 'exact source bytes' };
+          assert.deepEqual(Buffer.from(await response.arrayBuffer()), expected);
+          return { response_bytes: size, document: id, behavior: 'exact source bytes' };
         });
       }
     } finally {
@@ -111,9 +116,12 @@ async function main() {
         await delay(10);
       }
       for (let i = 0; i < samples; i++) {
-        await record('worker/idle', async () => { await delay(1000); return { interval_ms: 1000, state: worker.status().processState }; });
+        await record('worker/idle', async () => {
+          await delay(1000);
+          assert.equal(worker.status().processState, 'idle');
+          return { interval_ms: 1000, state: 'idle' };
+        });
       }
-      assert.equal(worker.status().processState, 'idle');
     } finally {
       await worker.close();
     }

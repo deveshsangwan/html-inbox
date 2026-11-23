@@ -5,6 +5,7 @@ const path = require("node:path");
 const { createSyncHttpsCredentials } = require("../../packages/cli/dist/sync-https-fixtures.js");
 const { createSyncIngestionServer } = require("../../packages/cli/dist/sync-http-server.js");
 const { reconcileSyncRoutes } = require("../../packages/cli/dist/sync-reconciliation.js");
+const { canonicalKey } = require("../../packages/cli/dist/sync-model.js");
 const { ManagedSyncStore } = require("../../packages/cli/dist/sync-store.js");
 const { opaqueToken } = require("../../packages/cli/dist/sync-wire.js");
 
@@ -45,27 +46,50 @@ async function assertDocuments(store, inputs) {
   }
 }
 
+// Receiver records and receipts must carry the sender's canonical identities and hashes.
+async function assertReceived(source, destination, routeId) {
+  const sent = (await source.snapshot()).records;
+  const received = await destination.snapshot();
+  const expectedKeys = Object.keys(sent).sort();
+  assert.deepEqual(Object.keys(received.records).sort(), expectedKeys);
+  for (const [key, record] of Object.entries(sent)) {
+    assert.equal(received.records[key].sha256, record.sha256, key);
+    assert.equal(received.records[key].metadataSha256, record.metadataSha256, key);
+  }
+
+  const receiptKeys = [];
+  for (const { routeId: receiptRouteId, originState } of Object.values(received.receipts)) {
+    const key = canonicalKey(originState.originInboxId, originState.originDocumentId);
+    assert.equal(receiptRouteId, routeId);
+    assert.equal(originState.sha256, sent[key]?.sha256, key);
+    receiptKeys.push(key);
+  }
+  assert.deepEqual(receiptKeys.sort(), expectedKeys);
+
+  return received;
+}
+
 // Both peers run in this process, so caller CPU measurements include sender and receiver.
 async function runSync({ root, count, size = 10240, samples = 3, record, mode = "sync" }) {
   const cleanups = [];
-  const tls = await createSyncHttpsCredentials({ after: (cleanup) => cleanups.push(cleanup) });
+  // Managed-only runs never open a connection, so they skip generating TLS credentials.
+  const tls = mode === "sync" ? await createSyncHttpsCredentials({ after: (cleanup) => cleanups.push(cleanup) }) : null;
+  // Sync runs label their source-store setup separately, so managed samples come from managed runs only.
+  const setup = mode === "sync" ? "peer/source-" : "managed/";
   try {
-    const ca = await readFile(tls.caPath);
-    const key = await readFile(tls.trusted.keyPath);
-    const cert = await readFile(tls.trusted.certPath);
     const inputs = Array.from({ length: count }, (_, index) => peerInput(index, size));
 
     for (let sample = 0; sample < samples; sample += 1) {
       const source = new ManagedSyncStore(path.join(root, `source-${sample}`));
       const destinationHome = path.join(root, `receiver-${sample}`);
       const destination = new ManagedSyncStore(destinationHome);
-      await record(`managed/enroll/${count}`, async () => {
+      await record(`${setup}enroll/${count}`, async () => {
         await source.enroll();
         return { source: storageCounters(source) };
       });
       // Receiver enrollment is setup; only source enrollment is an operation sample.
       await destination.enroll();
-      await record(`managed/publish/${count}`, async () => {
+      await record(`${setup}publish/${count}`, async () => {
         const before = storageCounters(source);
         for (let index = 0; index < count; index += 1) {
           await source.publish(inputs[index], `document-${index}`);
@@ -74,7 +98,7 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
         return { source: difference(storageCounters(source), before), bodyBytes: count * size };
       });
       await assertDocuments(source, inputs);
-      await record(`managed/status/${count}`, async () => {
+      await record(`${setup}status/${count}`, async () => {
         const ledger = await source.snapshot();
         assert.equal(Object.keys(ledger.records).length, count);
         return { records: Object.keys(ledger.records).length };
@@ -82,6 +106,9 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
 
       if (mode === "managed") continue;
 
+      const ca = await readFile(tls.caPath);
+      const key = await readFile(tls.trusted.keyPath);
+      const cert = await readFile(tls.trusted.certPath);
       const sourcePeerId = randomUUID();
       const destinationPeerId = randomUUID();
       const token = opaqueToken();
@@ -121,8 +148,7 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
 
         await record(`peer/initial/${count}`, () => reconcile("initial", count));
         await assertDocuments(destination, inputs);
-        const ledger = await destination.snapshot();
-        assert.equal(Object.keys(ledger.receipts).length, count);
+        const ledger = await assertReceived(source, destination, route.id);
         await record(`peer/noop/${count}`, () => reconcile("no-op", 0));
 
         if (count > 0) {
@@ -131,7 +157,7 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
           await rm(path.join(destinationHome, "sync", "bodies", recordToRepair.bodyFile));
           await record(`peer/repair/${count}`, () => reconcile("repair", 1));
           await assertDocuments(destination, inputs);
-          assert.equal(Object.keys((await destination.snapshot()).receipts).length, count);
+          await assertReceived(source, destination, route.id);
         }
       } finally {
         await server.close();

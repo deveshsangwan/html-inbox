@@ -10,7 +10,8 @@ jobs:
   measure:
     runs-on: ubuntu-latest
     continue-on-error: true
-    timeout-minutes: 20
+    # Historical tmpfs runs spent up to five minutes in one two-sample sync child; hosted disks are slower.
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -26,7 +27,7 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: ${{ matrix.node }}
-      - run: python3 scripts/bench/run.py baseline --out artifacts/resources
+      - run: python3 scripts/bench/run.py baseline --samples 2 --timeout 1800 --out artifacts/resources
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

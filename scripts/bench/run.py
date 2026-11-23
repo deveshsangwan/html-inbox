@@ -20,8 +20,20 @@ DIST = REPO / 'packages/cli/dist'
 HARNESS = [Path(__file__).resolve(), REPO / 'scripts/bench/workload.cjs', REPO / 'scripts/bench/sync.cjs']
 SUPPORTED_COUNTS = [0, 100, 1000, 5000, 10000]
 SUPPORTED_SIZES = [10240, 1048576, 9437184]
+DEFERRED_SIGNALS = [signal.SIGINT, signal.SIGTERM, signal.SIGHUP]
 TERMINATE_GRACE_SECONDS = 2
 KILL_SETTLE_SECONDS = 2
+PROBE_TIMEOUT_SECONDS = 60
+
+
+class BehaviorCheckError(RuntimeError):
+    """A workload produced output that does not match its fixture."""
+
+
+def expect(condition, message):
+    # Explicit raises keep behavior checks active under `python -O`, which strips assert statements.
+    if not condition:
+        raise BehaviorCheckError(message)
 
 
 def parse_arguments():
@@ -35,7 +47,7 @@ def parse_arguments():
     parser.add_argument('--candidate', help='CommonJS module exporting validateHtml for exact-result parser comparison')
     parser.add_argument('--timeout', type=int, default=600)
     parser.add_argument('--allow-stale-build', action='store_true',
-                        help='measure even when CLI sources are newer than the bundle; recorded in environment.json')
+                        help='measure even when build inputs are newer than the build; recorded in environment.json')
     args = parser.parse_args()
 
     try:
@@ -52,16 +64,20 @@ def parse_arguments():
         parser.error('counts and sizes must not contain duplicates')
     if any(n not in SUPPORTED_COUNTS for n in args.counts):
         parser.error('counts must be drawn from 0,100,1000,5000,10000')
-    if any(n not in SUPPORTED_SIZES for n in args.sizes) or not 1 <= args.samples <= 100 or not 1 <= args.timeout <= 3600:
-        parser.error('invalid sizes, samples or timeout')
-    if not Path('/proc/self/io').exists() or not hasattr(os, 'wait4') or not hasattr(os, 'pidfd_open'):
-        parser.error('resource collection requires Linux /proc, wait4 and pidfd_open')
+    if any(n not in SUPPORTED_SIZES for n in args.sizes):
+        parser.error('sizes must be drawn from 10240,1048576,9437184')
+    if not 1 <= args.samples <= 100:
+        parser.error('samples must be between 1 and 100')
+    if not 1 <= args.timeout <= 3600:
+        parser.error('timeout must be between 1 and 3600 seconds')
+    if not Path('/proc/self/io').exists() or not hasattr(os, 'pidfd_open'):
+        parser.error('resource collection requires Linux 5.3+ /proc and Python 3.9+ pidfd_open')
     if not BUNDLE.is_file() or not (DIST / 'index.js').is_file():
         parser.error('build and bundle first: pnpm build && pnpm --filter html-inbox bundle')
 
     stale_inputs = stale_build_inputs()
     if stale_inputs and not args.allow_stale_build:
-        parser.error(f'CLI sources are newer than the bundle; rebuild or pass --allow-stale-build: {stale_inputs[:5]}')
+        parser.error(f'the build is older than its inputs; rebuild or pass --allow-stale-build: {stale_inputs[:5]}')
 
     args.stale_inputs = stale_inputs
     args.node = str(Path(args.node).resolve())
@@ -70,48 +86,67 @@ def parse_arguments():
 
 
 def stale_build_inputs():
-    """Return CLI build inputs modified after the bundle was written.
+    """Return build inputs newer than the compiled output, and the bundle if it predates that output.
 
-    Modification times only detect edits or checkouts after the last bundle; the
-    fingerprints remain the authoritative identity of the measured bytes.
+    Modification times detect edits or checkouts after the last build, and a
+    bundle refreshed over old compiled output. The fingerprints remain the
+    authoritative identity of the measured bytes.
     """
-    bundle_mtime = BUNDLE.stat().st_mtime
+    compiled_mtime = max(p.stat().st_mtime for p in DIST.rglob('*.js'))
     cli = REPO / 'packages/cli'
-    inputs = [cli / 'package.json', cli / 'tsconfig.json', REPO / 'pnpm-lock.yaml', *(cli / 'src').rglob('*')]
+    inputs = [cli / 'package.json', cli / 'tsconfig.json', REPO / 'tsconfig.base.json', REPO / 'pnpm-lock.yaml',
+              *(cli / 'src').rglob('*')]
 
-    return sorted(str(p.relative_to(REPO)) for p in inputs if p.is_file() and p.stat().st_mtime > bundle_mtime)
+    stale = sorted(str(p.relative_to(REPO)) for p in inputs if p.is_file() and p.stat().st_mtime > compiled_mtime)
+    if BUNDLE.stat().st_mtime < compiled_mtime:
+        stale.append(f'{BUNDLE.relative_to(REPO)} predates packages/cli/dist')
+    return stale
 
 
 def sha256_file(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def build_fingerprints(candidate):
+def build_fingerprints(args):
     dist_hash = hashlib.sha256()
     for artifact in sorted(DIST.rglob('*.js')):
         dist_hash.update(str(artifact.relative_to(REPO)).encode() + b'\0')
         dist_hash.update(artifact.read_bytes())
 
-    return dict(bundle_sha256=sha256_file(BUNDLE), dist_js_sha256=dist_hash.hexdigest(),
+    return dict(bundle_sha256=sha256_file(BUNDLE), dist_js_sha256=dist_hash.hexdigest(), node_sha256=sha256_file(Path(args.node)),
                 harness_sha256={str(p.relative_to(REPO)): sha256_file(p) for p in HARNESS},
-                candidate_sha256=sha256_file(Path(candidate)) if candidate else None)
+                candidate_sha256=sha256_file(Path(args.candidate)) if args.candidate else None)
 
 
-def collect_metadata(args, fixture_root):
-    node = [args.node]
-    git = lambda *command: subprocess.check_output(['git', *command], cwd=REPO, text=True)
+def host_description():
+    cpuinfo = Path('/proc/cpuinfo').read_text()
+    model = next((line.split(':', 1)[1].strip() for line in cpuinfo.splitlines() if line.startswith('model name')), None)
+    memory = next(line.split()[1] for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith('MemTotal:'))
 
-    return dict(commit=git('rev-parse', 'HEAD').strip(), dirty=git('status', '--porcelain'),
-                node=subprocess.check_output(node + ['--version'], text=True).strip(),
-                versions=json.loads(subprocess.check_output(node + ['-p', 'JSON.stringify(process.versions)'], text=True)),
+    return dict(machine=list(os.uname()), cpu_model=model, cpu_count=os.cpu_count(), mem_total_kib=int(memory),
+                python=sys.version)
+
+
+def load_average():
+    return [float(value) for value in Path('/proc/loadavg').read_text().split()[:3]]
+
+
+def collect_metadata(args, fixture_root, env):
+    # Probes use the workload environment so inherited NODE_OPTIONS cannot alter the recorded runtime.
+    probe = lambda *command, cwd=None: subprocess.check_output(command, cwd=cwd, env=env, text=True, timeout=PROBE_TIMEOUT_SECONDS)
+
+    return dict(commit=probe('git', 'rev-parse', 'HEAD', cwd=REPO).strip(), dirty=probe('git', 'status', '--porcelain', cwd=REPO),
+                node=probe(args.node, '--version').strip(),
+                versions=json.loads(probe(args.node, '-p', 'JSON.stringify(process.versions)')),
                 parser=json.loads((REPO / 'node_modules/parse5/package.json').read_text())['version'],
-                filesystem=subprocess.check_output(['stat', '-f', '-c', '%T', str(fixture_root)], text=True).strip(),
-                machine=list(os.uname()), samples=args.samples, counts=args.counts, sizes=args.sizes,
+                filesystem=probe('stat', '-f', '-c', '%T', str(fixture_root)).strip(),
+                host=host_description(), load_average_before=load_average(),
+                samples=args.samples, counts=args.counts, sizes=args.sizes,
                 cache='fresh isolated fixtures; filesystem cache uncontrolled/warm; no OS cache eviction',
                 bundle_bytes=BUNDLE.stat().st_size, stale_build_inputs=args.stale_inputs,
                 allow_stale_build=args.allow_stale_build,
                 limits={'timeout_seconds': args.timeout, 'concurrency': 1}, fixture_root=str(fixture_root),
-                fingerprints=build_fingerprints(args.candidate), invocation=sys.argv)
+                fingerprints=build_fingerprints(args), invocation=sys.argv)
 
 
 def live_group_members(group):
@@ -146,7 +181,7 @@ def signal_group(group, signum):
 
 
 class Interrupts:
-    """Turn SIGINT/SIGTERM into a flag plus a wakeup descriptor.
+    """Turn SIGINT/SIGTERM/SIGHUP into a flag plus a wakeup descriptor.
 
     Raising from the handler could abandon a half-finished cleanup, so signals
     are acted on only at explicit checkpoints and while waiting for a child.
@@ -156,11 +191,18 @@ class Interrupts:
         self.signum = None
         self.reader, writer = os.pipe2(os.O_NONBLOCK | os.O_CLOEXEC)
         signal.set_wakeup_fd(writer, warn_on_full_buffer=False)
-        for signum in [signal.SIGINT, signal.SIGTERM]:
+        for signum in DEFERRED_SIGNALS:
             signal.signal(signum, self.handle)
 
     def handle(self, signum, frame):
         self.signum = signum
+
+    def drain(self):
+        while True:
+            try:
+                os.read(self.reader, 512)
+            except BlockingIOError:
+                return
 
     def check(self):
         if self.signum is not None:
@@ -177,7 +219,7 @@ class ProcessRunner:
         self.interrupts = interrupts
         self.rows = []
         self.active = None
-        self.unclean_groups = []
+        self.unverified_groups = {}
 
     def append(self, row):
         self.rows.append(row)
@@ -188,61 +230,70 @@ class ProcessRunner:
         self.interrupts.check()
 
         with tempfile.TemporaryFile() as stdout, tempfile.TemporaryFile() as stderr:
-            start = time.perf_counter()
-            child = subprocess.Popen(command, env=self.env, cwd=REPO, stdout=stdout, stderr=stderr, start_new_session=True)
-            self.active = child
             try:
-                try:
-                    self.wait_for_exit(child.pid, label, start + self.timeout)
-                    wall_ms = (time.perf_counter() - start) * 1000
-                finally:
-                    strays, survivors = self.stop_group(child.pid)
-                    exit_code, usage = self.reap(child)
-                if survivors:
-                    raise RuntimeError(f'{label}: process group {child.pid} survived SIGKILL: {survivors}')
-
-                stdout.seek(0)
-                stderr.seek(0)
-                output, errors = stdout.read().decode(), stderr.read().decode()
-                self.append(dict(label=label, command=command, exit_code=exit_code, wall_ms=wall_ms,
-                                 cpu_ms=(usage.ru_utime + usage.ru_stime) * 1000, peak_rss_kib=usage.ru_maxrss,
-                                 input_blocks=usage.ru_inblock, output_blocks=usage.ru_oublock,
-                                 stdout=output, stderr=errors))
-
-                if exit_code:
-                    raise RuntimeError(f'{label}: {errors[-2000:]}')
-                if strays:
-                    raise RuntimeError(f'{label}: descendants {strays} outlived the workload process')
+                output = self.execute(label, command, stdout, stderr)
                 if check:
                     check(output)
                 return output
             except BaseException as error:
-                stdout.seek(0)
-                stderr.seek(0)
-                with (self.out / 'failures.jsonl').open('a') as stream:
-                    stream.write(json.dumps(dict(label=label, command=command, error=repr(error),
-                                                 stdout=stdout.read().decode(errors='replace'),
-                                                 stderr=stderr.read().decode(errors='replace'))) + '\n')
+                self.record_failure(label, command, error, stdout, stderr)
                 raise
+
+    def execute(self, label, command, stdout, stderr):
+        start = time.perf_counter()
+        child = subprocess.Popen(command, env=self.env, cwd=REPO, stdout=stdout, stderr=stderr, start_new_session=True)
+        self.active = child
+        self.unverified_groups[child.pid] = []
+        try:
+            self.wait_for_exit(child.pid, label, start + self.timeout)
+            wall_ms = (time.perf_counter() - start) * 1000
+        finally:
+            strays, survivors = self.stop_group(child.pid)
+            exit_code, usage = self.reap(child)
+        if survivors:
+            raise RuntimeError(f'{label}: process group {child.pid} survived SIGKILL: {survivors}')
+
+        stdout.seek(0)
+        stderr.seek(0)
+        output, errors = stdout.read().decode(), stderr.read().decode()
+        self.append(dict(label=label, command=command, exit_code=exit_code, wall_ms=wall_ms,
+                         cpu_ms=(usage.ru_utime + usage.ru_stime) * 1000, peak_rss_kib=usage.ru_maxrss,
+                         input_blocks=usage.ru_inblock, output_blocks=usage.ru_oublock,
+                         stdout=output, stderr=errors))
+
+        if exit_code:
+            raise RuntimeError(f'{label}: exit {exit_code}: {errors[-2000:]}')
+        if strays:
+            raise RuntimeError(f'{label}: descendants {strays} outlived the workload process')
+        return output
+
+    def record_failure(self, label, command, error, stdout, stderr):
+        stdout.seek(0)
+        stderr.seek(0)
+        # A cleanup failure raised during a timeout or interrupt keeps the original cause visible.
+        with (self.out / 'failures.jsonl').open('a') as stream:
+            stream.write(json.dumps(dict(label=label, command=command, error=repr(error),
+                                         context=repr(error.__context__) if error.__context__ else None,
+                                         stdout=stdout.read().decode(errors='replace'),
+                                         stderr=stderr.read().decode(errors='replace'))) + '\n')
 
     def wait_for_exit(self, pid, label, deadline):
         """Wait without reaping, so the zombie leader keeps its group ID reserved for cleanup."""
         process = os.pidfd_open(pid)
+        poller = select.poll()
+        poller.register(process, select.POLLIN)
+        poller.register(self.interrupts.reader, select.POLLIN)
         try:
             while True:
                 remaining = deadline - time.perf_counter()
                 if remaining <= 0:
                     raise TimeoutError(label)
 
-                ready, _, _ = select.select([process, self.interrupts.reader], [], [], remaining)
+                ready = {fd for fd, _ in poller.poll(remaining * 1000)}
                 if process in ready:
                     return
                 if self.interrupts.reader in ready:
-                    while True:
-                        try:
-                            os.read(self.interrupts.reader, 512)
-                        except BlockingIOError:
-                            break
+                    self.interrupts.drain()
                     self.interrupts.check()
         finally:
             os.close(process)
@@ -261,7 +312,9 @@ class ProcessRunner:
         survivors = wait_for_group_exit(group, KILL_SETTLE_SECONDS)
 
         if survivors:
-            self.unclean_groups.append(dict(group=group, survivors=survivors))
+            self.unverified_groups[group] = survivors
+        else:
+            del self.unverified_groups[group]
         return strays, survivors
 
     def reap(self, child):
@@ -293,8 +346,8 @@ def run_workloads(args, runner, root):
 
         if args.workload in ['baseline', 'cli']:
             def check_list(output):
-                documents = json.loads(output)
-                assert sorted(d['id'] for d in documents) == expected_ids, (count, documents)
+                listed = sorted(document['id'] for document in json.loads(output))
+                expect(listed == expected_ids, f'list returned {listed[:5]}..., expected {count} fixture IDs')
 
             for _ in range(args.samples):
                 runner.run(f'cli/list/{count}', cli + ['list', '--json', '--home', str(home)], check_list)
@@ -317,13 +370,15 @@ def run_workloads(args, runner, root):
 
 
 def measure_export(runner, cli, home, destination, count, expected_ids):
-    runner.run(f'cli/export/{count}', cli + ['export', '--json', '--home', str(home), '--out', str(destination)])
+    def check_export(output):
+        exported = list(destination.glob('**/documents/*/content/index.html'))
+        exported_ids = sorted(content.parent.parent.name for content in exported)
+        expect(exported_ids == expected_ids, f'export wrote {len(exported_ids)} documents, expected {count}')
+        for content in exported:
+            original = home / 'documents' / content.parent.parent.name / 'index.html'
+            expect(content.read_bytes() == original.read_bytes(), f'{content} differs from its source document')
 
-    exported = list(destination.glob('**/documents/*/content/index.html'))
-    assert sorted(content.parent.parent.name for content in exported) == expected_ids
-    for content in exported:
-        original = home / 'documents' / content.parent.parent.name / 'index.html'
-        assert content.read_bytes() == original.read_bytes()
+    runner.run(f'cli/export/{count}', cli + ['export', '--json', '--home', str(home), '--out', str(destination)], check_export)
 
     files = [p for p in destination.rglob('*') if p.is_file()]
     runner.append(dict(label=f'disk/export/{count}', logical_bytes=sum(p.stat().st_size for p in files),
@@ -348,32 +403,43 @@ def summarize(rows):
             for label, values in groups.items()}
 
 
+def remove_fixtures(root, runner):
+    # Children may already be killed here; TMPDIR inside the root means this also removes TLS credentials.
+    shutil.rmtree(root, ignore_errors=True)
+
+    return dict(fixture_root_removed=not root.exists(),
+                children_reaped=runner is None or runner.active is None,
+                process_groups_empty=runner is None or not runner.unverified_groups,
+                fixture_root=str(root),
+                unverified_groups=[] if runner is None else [dict(group=g, survivors=s) for g, s in runner.unverified_groups.items()])
+
+
 def main():
     args = parse_arguments()
     args.out.mkdir(parents=True, exist_ok=False)
     interrupts = Interrupts()
     root = Path(tempfile.mkdtemp(prefix='html-inbox-bench-'))
+    env = {'PATH': os.environ.get('PATH', ''), 'HOME': str(root), 'TMPDIR': str(root),
+           'XDG_CONFIG_HOME': str(root), 'XDG_STATE_HOME': str(root), 'XDG_DATA_HOME': str(root),
+           'HTML_INBOX_HOME': str(root), 'HTML_INBOX_CATALOG_HOME': str(root / 'catalog')}
     runner = None
+    workloads_succeeded = False
     try:
-        env = {'PATH': os.environ.get('PATH', ''), 'HOME': str(root), 'TMPDIR': str(root),
-               'XDG_CONFIG_HOME': str(root), 'XDG_STATE_HOME': str(root), 'XDG_DATA_HOME': str(root),
-               'HTML_INBOX_HOME': str(root), 'HTML_INBOX_CATALOG_HOME': str(root / 'catalog')}
+        (args.out / 'environment.json').write_text(json.dumps(collect_metadata(args, root, env), indent=2))
         runner = ProcessRunner(args.out, env, args.timeout, interrupts)
-        (args.out / 'environment.json').write_text(json.dumps(collect_metadata(args, root), indent=2))
-
-        success = False
-        try:
-            run_workloads(args, runner, root)
-            success = True
-        finally:
-            (args.out / 'summary.json').write_text(json.dumps(dict(success=success, groups=summarize(runner.rows)), indent=2))
+        run_workloads(args, runner, root)
+        workloads_succeeded = True
     finally:
-        # Children may already be killed here; TMPDIR inside the root means this also removes TLS credentials.
-        shutil.rmtree(root, ignore_errors=True)
-        (args.out / 'cleanup.json').write_text(json.dumps(dict(
-            fixture_root_removed=not root.exists(),
-            children_reaped=runner is None or runner.active is None,
-            process_groups_empty=runner is None or not runner.unclean_groups)))
+        # Cleanup decides success too: a run that leaves fixtures or processes behind is not accepted.
+        cleanup = remove_fixtures(root, runner)
+        is_clean = cleanup['fixture_root_removed'] and cleanup['children_reaped'] and cleanup['process_groups_empty']
+        (args.out / 'cleanup.json').write_text(json.dumps(cleanup, indent=2))
+        (args.out / 'summary.json').write_text(json.dumps(dict(
+            success=workloads_succeeded and is_clean, load_average_after=load_average(),
+            groups=summarize(runner.rows if runner else [])), indent=2))
+
+    if not is_clean:
+        sys.exit(f'cleanup incomplete; see {args.out / "cleanup.json"}')
 
 
 if __name__ == '__main__':
