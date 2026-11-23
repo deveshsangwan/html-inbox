@@ -38,32 +38,40 @@ function interleaveByThree(names: string[]) {
   return [2, 0, 1].flatMap((remainder) => sorted.filter((_, index) => index % 3 === remainder));
 }
 
+async function enumerateInOrder(readdir: typeof fs.readdir, directory: string, enumeration: string[]) {
+  const storageEntries = (await readdir(directory)).filter((name) => !enumeration.includes(name));
+
+  return [...enumeration, ...storageEntries];
+}
+
 function inEnumerationOrder<T extends { id: string; createdAt: string }>(records: T[], enumeration: string[]) {
   return [...records]
     .sort((left, right) => enumeration.indexOf(left.id) - enumeration.indexOf(right.id))
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
 }
 
-test("ordinary listings share a read limit across instances and keep enumeration order for ties", async (t) => {
+test("ordinary listings share a read limit across instances and keep enumeration order for ties", { timeout: 10_000 }, async (t) => {
   const home = await temporaryHome(t);
   const records = await seed(home, 96);
   const documentsDirectory = path.join(home, "documents");
   const enumeration = interleaveByThree(records.map((record) => record.id));
   const expected = inEnumerationOrder(records, enumeration);
+  const createdAtById = new Map(records.map((record) => [record.id, record.createdAt]));
+  const tiedPartnerId = enumeration.slice(1).find((id) => createdAtById.get(id) === createdAtById.get(enumeration[0]));
+  assert.ok(tiedPartnerId);
   const delayedFile = path.join(documentsDirectory, enumeration[0], "metadata.json");
+  const tiedPartnerFile = path.join(documentsDirectory, tiedPartnerId, "metadata.json");
+  const listingCount = 3;
   const readdir = fs.readdir;
   const readFile = fs.readFile;
-  const completedFiles: string[] = [];
   let activeReads = 0;
   let peakReads = 0;
+  let tiedPartnerReads = 0;
+  let releaseDelayedReads = () => {};
+  const tiedPartnerReadEverywhere = new Promise<void>((resolve) => { releaseDelayedReads = resolve; });
 
   t.mock.method(fs, "readdir", async (...args: Parameters<typeof fs.readdir>) => {
-    if (String(args[0]) === documentsDirectory) {
-      const storageEntries = (await readdir(documentsDirectory)).filter((name) => !enumeration.includes(name));
-      return [...enumeration, ...storageEntries];
-    }
-
-    return readdir(...args);
+    return String(args[0]) === documentsDirectory ? enumerateInOrder(readdir, documentsDirectory, enumeration) : readdir(...args);
   });
 
   t.mock.method(fs, "readFile", async (...args: Parameters<typeof fs.readFile>) => {
@@ -77,29 +85,35 @@ test("ordinary listings share a read limit across instances and keep enumeration
     peakReads = Math.max(peakReads, activeReads);
 
     try {
-      // The first enumerated record finishes after later tied records.
-      const turns = file === delayedFile ? 5 : 1;
+      await setImmediate();
+      const bytes = await readFile(...args);
 
-      for (let turn = 0; turn < turns; turn += 1) {
-        await setImmediate();
+      if (file === tiedPartnerFile) {
+        tiedPartnerReads += 1;
+
+        if (tiedPartnerReads === listingCount) {
+          releaseDelayedReads();
+        }
       }
 
-      const bytes = await readFile(...args);
-      completedFiles.push(file);
+      // Each listing reads the partner once, so in every listing a later tied record finishes before the first one.
+      if (file === delayedFile) {
+        await tiedPartnerReadEverywhere;
+      }
+
       return bytes;
     } finally {
       activeReads -= 1;
     }
   });
 
-  const backends = Array.from({ length: 3 }, () => new LocalDocumentBackend(home));
+  const backends = Array.from({ length: listingCount }, () => new LocalDocumentBackend(home));
   const results = await Promise.all(backends.map((backend) => backend.listDocuments()));
 
   for (const result of results) {
     assert.deepEqual(result, expected);
   }
 
-  assert.ok(completedFiles.indexOf(delayedFile) > 0, "a later tied read completed first");
   assert.ok(peakReads > 1);
   assert.ok(peakReads <= 8, `aggregate active reads: ${peakReads}`);
   assert.equal(activeReads, 0);
@@ -109,7 +123,9 @@ test("a failed listing keeps its first error and skips queued reads while a wait
   const failingHome = await temporaryHome(t);
   const healthyHome = await temporaryHome(t);
   await seed(failingHome, 24);
-  const expected = await seed(healthyHome, 48);
+  const healthyRecords = await seed(healthyHome, 48);
+  const healthyEnumeration = interleaveByThree(healthyRecords.map((record) => record.id));
+  const expected = inEnumerationOrder(healthyRecords, healthyEnumeration);
   const healthyDocuments = path.join(healthyHome, "documents");
   const readdir = fs.readdir;
   const readFile = fs.readFile;
@@ -127,12 +143,12 @@ test("a failed listing keeps its first error and skips queued reads while a wait
   const healthyEnumerated = new Promise<void>((resolve) => { reportHealthyEnumerated = resolve; });
 
   t.mock.method(fs, "readdir", async (...args: Parameters<typeof fs.readdir>) => {
-    const entries = await readdir(...args);
-
-    if (String(args[0]) === healthyDocuments) {
-      reportHealthyEnumerated();
+    if (String(args[0]) !== healthyDocuments) {
+      return readdir(...args);
     }
 
+    const entries = await enumerateInOrder(readdir, healthyDocuments, healthyEnumeration);
+    reportHealthyEnumerated();
     return entries;
   });
 
@@ -224,6 +240,19 @@ test("a failed listing keeps its first error and skips queued reads while a wait
   // A leaked permit would leave fewer than eight slots, so this listing could never open the gate.
   isGated = true;
   assert.deepEqual(await new LocalDocumentBackend(healthyHome).listDocuments(), expected);
+});
+
+test("a listing rejects with the exact value its warning callback throws, even undefined", async (t) => {
+  const home = await temporaryHome(t);
+  await seed(home, 3);
+  await fs.writeFile(path.join(home, "documents", "document-001", "metadata.json"), "{");
+  const backend = new LocalDocumentBackend(home, () => {
+    throw undefined;
+  });
+
+  let rejection: unknown = "not rejected";
+  await backend.listDocuments().catch((error: unknown) => { rejection = error; });
+  assert.equal(rejection, undefined);
 });
 
 test("ordinary listing retains corruption diagnostics, unsafe-entry handling and permission hardening", async (t) => {

@@ -36,10 +36,23 @@ Production `backend.ts` is unchanged in this follow-up. Its SHA-256 still equals
 
 Council round 1 reviewed `3a61d7c`: Claude Opus 5.5 at high effort scored 8.0/10 and GPT-6.2 Sol at high effort scored 9.0/10. Neither found a production defect. Both reported that the first cross-listing test accepted either sibling error and left queueing and draining to scheduling. Sol reported that tie order depended on the filesystem returning records in seed order. Opus reported that the drain assertion could not fail for the failing listing, and that early rejection escaped the first test in about one run in eight. The regression tests now cover:
 
-- **Shared bound and tie order.** Three backends list 96 records. `readdir` returns them in an explicit order that is neither ascending nor descending, and the first enumerated record finishes after later tied records. Results must match that enumeration order, and aggregate active metadata reads stay between two and eight.
-- **Failure across listings.** The failing listing holds all eight permits before a second listing starts, and the second listing must make no metadata read until a permit is released. One failing-listing worker finishes, claims another record and queues behind the second listing. Two distinct errors are then released in a fixed order. The failed listing must reject with the first error object and have no reads in flight at the moment it settles. The queued worker must skip its read after receiving a permit, which leaves exactly eight failing-listing reads. The second listing must return every record in order. A later listing must hold eight reads open at once, so a leaked permit fails by timeout.
+- **Shared bound and tie order.** Three backends list 96 records. `readdir` returns them in an explicit order that is neither ascending nor descending. The first enumerated record's read cannot finish until a later record with the same timestamp has been read by all three listings, so within every listing a later tied record completes first. Results must match the enumeration order, and aggregate active metadata reads stay between two and eight.
+- **Failure across listings.** The failing listing holds all eight permits before a second listing starts, and the second listing must make no metadata read until a permit is released. One failing-listing worker finishes, claims another record and queues behind the second listing. Two distinct errors are then released in a fixed order. The failed listing must reject with the first error object and have no reads in flight at the moment it settles. The queued worker must skip its read after receiving a permit, which leaves exactly eight failing-listing reads. The second listing's home also has an explicit enumeration, and that listing must return every record in that order. A later listing must hold eight reads open at once, so a leaked permit fails by timeout.
+- **Thrown `undefined`.** A warning callback that throws `undefined` while a malformed record is being reported must make the listing reject with exactly `undefined`.
 - **Unchanged earlier coverage:** hardening-sibling drain, corruption, missing, symlink, unsafe-entry and permission behaviour, and records removed after enumeration.
 
-Mutants of a compiled copy were each run three times on Node 24.19.0. Each of these failed at least one test every run: no post-acquire guard, keeping the last error, leaking a permit after failure, placing results in completion order, per-listing instead of shared permits, serialising whole listings, rejecting before workers drain, and dropping the hardening-sibling drain. A LIFO waiter queue is not detected. FIFO hand-off remains verified by inspection only.
+Council round 2 reviewed `0ec8db6`. GPT-6.2 Sol at high effort scored 9.0/10, again with no production defect. It found that the cross-listing test still assumed the healthy home enumerated in seed order, that the late tied read relied on timing, that the reproduction note understated checkout writes, and that the earlier note about `undefined` was too broad. A filesystem rejection caught by `readMetadata` does become a `TypeError` when `.code` is read, but a warning callback that throws `undefined` reaches the worker unchanged. The tests and README now cover those points. The Claude Opus 5.5 round-2 run failed on a provider rate limit before reporting, so that round has no Opus score.
 
-Thrown `undefined` is not tested. `readMetadata` reads `.code` from any caught value, so an `undefined` thrown below it becomes a `TypeError` before it reaches the worker loop. The `hasFailed` flag still keeps the failure state separate from the error value.
+Mutants of a compiled copy were each run three times on Node 24.19.0. Each of these failed at least one test every run:
+
+- no post-acquire guard;
+- keeping the last error;
+- leaking a permit after failure;
+- placing results in completion order;
+- per-listing instead of shared permits;
+- serialising whole listings;
+- rejecting before workers drain;
+- treating an `undefined` rejection as success;
+- dropping the hardening-sibling drain.
+
+A LIFO waiter queue is not detected. FIFO hand-off remains verified by inspection only: a release transfers the counted permit to the oldest waiter without opening a slot for a new caller.
