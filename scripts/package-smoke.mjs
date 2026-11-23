@@ -315,6 +315,7 @@ Module._load = function (request, ...args) {
     await runInstalledCli(["inbox", "create", "managed", "--home", managedHome, "--json"]);
     const workerPids = [];
     let managedFailure;
+    let isOwnerPreflightRun = false;
     let isEnrolled = false;
     try {
       assert.equal(JSON.parse((await runManaged(["sync", "enroll", "--yes"])).stdout).enrolled, true);
@@ -341,6 +342,7 @@ Module._load = function (request, ...args) {
         assert.equal(inspection.home, managedHome);
         assert.equal(inspection.managed, true);
         assert.equal(typeof inspection.instanceId, "string");
+        isOwnerPreflightRun = true;
       }
     } catch (error) {
       managedFailure = error;
@@ -389,11 +391,13 @@ Module._load = function (request, ...args) {
     }
 
     if (managedFailure || cleanupFailures.length > 0) {
-      shouldRetainFixture = cleanupFailures.length > 0;
+      shouldRetainFixture ||= cleanupFailures.length > 0;
       throw new AggregateError([managedFailure, ...cleanupFailures].filter(Boolean),
         `Installed managed worker qualification failed${shouldRetainFixture ? `; fixture retained at ${temporaryRoot}` : ""}`);
     }
-    console.log("Installed package owner preflight and detached managed worker enable/status/stop/start/disable passed.");
+    console.log(isOwnerPreflightRun
+      ? "Installed package owner preflight and detached managed worker enable/status/stop/start/disable passed."
+      : "Installed package detached managed worker enable/status/stop/start/disable passed; owner preflight skipped under root.");
   }
 
   console.log("Installed package foreground, detached concurrency, LAN, exposure reset, publish restart, content, export, CLI/UI deletion, and shutdown passed.");
@@ -437,7 +441,9 @@ Module._load = function (request, ...args) {
   }
 
   if (cleanupFailures.length > 0) {
-    throw new AggregateError([primaryFailure, ...cleanupFailures].filter(Boolean),
+    const failures = [primaryFailure, ...cleanupFailures]
+      .filter((error, index, all) => error && all.indexOf(error) === index);
+    throw new AggregateError(failures,
       `Installed package smoke cleanup failed${shouldRetainFixture ? `; fixture retained at ${temporaryRoot}` : ""}`);
   }
 
@@ -587,7 +593,9 @@ async function startInstalledViewer(executable, cwd, env) {
   child.once("error", (error) => { failure = error; });
   child.stderr.on("data", (chunk) => { stderr += chunk.toString(); });
 
-  const close = async () => {
+  // Memoized, so a later cleanup call reuses the first outcome instead of waiting again.
+  let closing;
+  const close = () => closing ??= (async () => {
     if (child.exitCode === null && child.signalCode === null) {
       child.kill("SIGTERM");
     }
@@ -610,7 +618,7 @@ async function startInstalledViewer(executable, cwd, env) {
       child.unref();
       throw new Error(`Installed foreground viewer ${child.pid} is unjoined: no close within 6 s, including forced cleanup`);
     }
-  };
+  })();
 
   const origin = `http://127.0.0.1:${env.HTML_INBOX_PORT}`;
   try {

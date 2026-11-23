@@ -2,10 +2,10 @@
 
 The user requested a council: one Anthropic and one OpenAI flagship reviewer, each at high effort. Both reviewers get the same brief and review the same exact revision, read-only, each in its own isolated worktree. Rounds repeat until both independently score at least 9.5/10 on the same revision. Scores are recorded as given, never averaged or rounded. Earlier stack-status and V1/V2 reviews in [reviews.md](reviews.md) do not count toward this council.
 
-| Delegate | Exact settings | Round 1 | Round 2 | Round 3 | Round 4 |
-| --- | --- | --- | --- | --- | --- |
-| Claude Opus | provider `claudeAgent`, model `claude-opus-5-5`, `effort=high` | 9.0/10 | 9.2/10 | 9.3/10 | no score |
-| GPT Sol | provider `codex`, model `gpt-6.2-sol`, `reasoningEffort=high` | 8.3/10 | 8.4/10 | 8.8/10 | 8.7/10 |
+| Delegate | Exact settings | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Claude Opus | provider `claudeAgent`, model `claude-opus-5-5`, `effort=high` | 9.0/10 | 9.2/10 | 9.3/10 | no score | 9.4/10 |
+| GPT Sol | provider `codex`, model `gpt-6.2-sol`, `reasoningEffort=high` | 8.3/10 | 8.4/10 | 8.8/10 | 8.7/10 | 8.7/10 |
 
 ## Round 1
 
@@ -125,6 +125,35 @@ Neither test file changed, but the concurrent-deleter test forks `index.js` thro
 | "Canonical help/version load set" named `cli-args.ts` and `cli-commands.ts`, which canonical startup does not load | Sol, Nit | Fixed. The PR body calls them entry-related sources and lists the four modules canonical startup loads. |
 | The wrong-URL probe should exit 0 only after SIGTERM | Sol, Nit | Already so: the fake waits for SIGTERM and then exits 0. |
 
-### Still required
+### Pending after round 4
 
 The round 5 revision needs the queued root-granted qualification, with the runner revised to expect the new suite-level message. It also needs a full Opus review and a fresh Sol review on the same revision.
+
+## Round 5
+
+Revision `4e3e6490f15cea1395d32857ce4a743a21143bed`, base `08d5b2b`. Both reviewers completed full reviews and found no production-code defect. Both recomputed all 60 summary groups with zero mismatches. Opus agreed with every earlier decline.
+
+### Hosted CI on the round 5 revision
+
+Normal pull_request run 45223882351, attempt 1, at `4e3e649`: all 16 Actions jobs succeeded, including Verify (job 137870057709) and Source (windows-latest, 24, 1/1) (job 137865076200, which passed the two tests that failed at `5d4f93f`). Package smoke ran through the real `npm pack` → `prepack` → `npm run bundle` path. It passed on Ubuntu Node 20 (job 137865076258), Ubuntu Node 24 (job 137865075893) and macOS Node 20 (job 137865075833), each printing the Tailscale, owner-preflight/managed-worker and foreground/detached lines. On Windows Node 24 (job 137865076200) it printed the foreground/detached line, and the POSIX-only blocks were skipped. Those runs covered the reachability check, the bounded foreground close and the strict fallback stop on their success paths. The default hub browser cases passed on every Browser job.
+
+So this PR's Windows Source job has failed only at `5d4f93f`. That remains an observation with no established cause.
+
+### Fixed
+
+| Finding | Reviewer, severity | Disposition |
+| --- | --- | --- |
+| Default `npm pack` lifecycle scripts can get `NODE_OPTIONS` back from npm's `node-options` configuration | Sol, Medium | Fixed. Every package-smoke child drops an inherited `npm_config_node_options` and gets an empty one, so npm injects no preload. |
+| `run()` waits for `close` without a deadline after the command exits, so a descendant holding a pipe can block cleanup | Sol, Medium | Fixed. A command gets 5 s after `exit` to close. Otherwise it is reported as unjoined, its pipes are released and the fixture is retained. |
+| A worker started by a command that then failed may be recorded only in `runtime.json`, which shutdown removes | Sol, Low | Fixed. A valid PID from `runtime.json` is captured before `disable` and probed with the others. Recorded PIDs are still never signalled. |
+| The Windows record said the failing tests exercise no changed code and called earlier PR revisions base/head evidence | Sol, Low | Fixed. The concurrent-deleter test forks `index.js` and so exercises the lazy IPC entry. The matched runs are earlier PR revisions, and a head-specific timing effect is not ruled out. |
+| The status record still said the changes after `fee269e` had not been executed | Opus, Low | Fixed. The run above is recorded, and the remaining gaps are stated below. |
+| The foreground viewer `close()` was not memoized, so a second call waited another 6 s and duplicated the error | Opus, Low | Fixed. `close()` is memoized like the hub fixture's, and the final aggregate removes duplicate error objects. |
+| Fixture retention was set by plain assignment in one place | Opus, Nit | Fixed with `||=`; retention only moves one way. |
+| The owner-preflight success line printed when preflight was skipped under root | Opus, Nit | Fixed. A separate line says preflight was skipped under root. |
+| The plan said later commits change only tests, scripts and evidence | Opus, Nit | Fixed. It now names the package build-script change and says it changes how the tarball is assembled, not its source. |
+| No automated test covers the runner's kill-before-reap order, and package smoke's failure paths are review-only | Opus, Low | Acknowledged as the main residual risk. The order was checked in a scratchpad and by both reviewers. Package smoke's failure paths would need production test hooks. |
+
+### Still required
+
+Not yet executed at any head: installed hub mode with the hub failure probes, the real scripts-enabled pack and `npm run bundle` over a seeded obsolete chunk, and package smoke's failure paths. The first two are in the queued root-granted qualification; the last stays review-only.
