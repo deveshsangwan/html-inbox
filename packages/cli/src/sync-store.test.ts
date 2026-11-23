@@ -454,6 +454,24 @@ test("already-applied acknowledgements still reject stale authority, fingerprint
   await assert.rejects(f.source.store.acknowledgeBatch(f.auth, f.receipts), /authorization/);
 });
 
+test("exact acknowledgement replays revalidate the ownership anchor and reader identity before skipping replacement", async (t) => {
+  const f = await acknowledgementFixture(t);
+  await f.source.store.acknowledgeBatch(f.auth, f.receipts);
+
+  const copyHome = path.join(path.dirname(f.source.home), "acknowledged-copy");
+  await cp(f.source.home, copyHome, { recursive: true });
+  const copiedLedgerPath = path.join(copyHome, "sync", "ledger.json");
+  const copiedBytes = await readFile(copiedLedgerPath);
+  await assert.rejects(new ManagedSyncStore(copyHome).acknowledgeBatch(f.auth, f.receipts), /Copied or moved/);
+  assert.deepEqual(await readFile(copiedLedgerPath), copiedBytes);
+
+  const ledgerPath = path.join(f.source.home, "sync", "ledger.json");
+  const bytes = await readFile(ledgerPath);
+  await writeFile(path.join(f.source.home, "instance-id"), randomUUID());
+  await assert.rejects(f.source.store.acknowledgeBatch(f.auth, f.receipts), /Reader identity/);
+  assert.deepEqual(await readFile(ledgerPath), bytes);
+});
+
 test("a retired obligation cannot be revived by a receipt even with current route authority", async (t) => {
   const f = await acknowledgementFixture(t, 1);
   const ledger = await f.source.store.snapshot();

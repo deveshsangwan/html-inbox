@@ -156,6 +156,34 @@ test("simultaneous push and independent pull install one row; lost final ACK res
   assert.equal(Object.keys((await f.b.store.snapshot()).records).length, 1);
 });
 
+test("current holdings receipts acknowledge one page with one ledger replacement and exact repeats replace nothing", { timeout: 30_000 }, async (t) => {
+  const f = await pair(t);
+  const ids = ["held-0", "held-1", "held-2"];
+  for (const id of ids) {
+    await f.a.store.publish(input, id);
+    assert.notEqual((await f.b.store.apply(routeAuthorization(f.inbound), await descriptor(f.a, id), bytes)).status, "needs-body");
+  }
+
+  const batches: { receipts: number; replacements: number }[] = [];
+  const acknowledgeBatch = f.a.store.acknowledgeBatch.bind(f.a.store);
+  f.a.store.acknowledgeBatch = async (authorization, values) => {
+    const before = f.a.store.counters.events["ledger-renamed"] ?? 0;
+    await acknowledgeBatch(authorization, values);
+    batches.push({ receipts: Array.isArray(values) ? values.length : -1, replacements: (f.a.store.counters.events["ledger-renamed"] ?? 0) - before });
+  };
+
+  const first = await f.run(f.a, f.outbound);
+  assert.equal(first.routes[0].status, "confirmed", JSON.stringify(first));
+  assert.equal(first.routes[0].transferred, 0);
+  assert.deepEqual(batches, [{ receipts: ids.length, replacements: 1 }]);
+  for (const id of ids) {
+    assert.equal((await f.a.store.deliveryStatus(f.outbound.id, f.outbound.sourceInboxId, id)).isCommitted, true);
+  }
+
+  assert.equal((await f.run(f.a, f.outbound)).routes[0].status, "confirmed");
+  assert.deepEqual(batches, [{ receipts: ids.length, replacements: 1 }, { receipts: ids.length, replacements: 0 }]);
+});
+
 test("new route IDs and explicit reconnection reconcile retained copies and offline tombstones before live bytes", { timeout: 30_000 }, async (t) => {
   const f = await pair(t);
   await f.a.store.publish(input, "offline-delete");
