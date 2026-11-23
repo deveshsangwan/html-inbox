@@ -1,5 +1,7 @@
 # HTML Inbox
 
+The planned release lines are 0.7.x on Node >=20 and 1.x on Node >=24.19.0. Both are pending; current 0.6.x releases keep Node >=20. See the [release policy and remaining activation gates](https://github.com/deveshsangwan/html-inbox/blob/main/docs/release-policy.md).
+
 Version 0.6.3 applies hub inbox filters immediately while preserving search text, URL navigation and keyboard focus. Search and Enter still work without JavaScript. Restart the hub after updating to load the fix. See the [0.6.3 upgrade notes](https://github.com/deveshsangwan/html-inbox/blob/main/CHANGELOG.md#upgrade-to-063).
 
 Version 0.6.2 repairs explicit offline quarantine and interrupted maintenance after ownership-anchor changes. Ordinary publication and signing still fail closed; quarantine does not restore the old identity or publication. Stop verified viewers, hubs and independent sync workers with the old executable before updating, then restart them. If ownership checks prevent normal lifecycle commands, follow the recovery guidance instead of bypassing them. See the [0.6.2 upgrade notes](https://github.com/deveshsangwan/html-inbox/blob/main/CHANGELOG.md#upgrade-to-062).

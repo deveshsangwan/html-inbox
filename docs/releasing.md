@@ -59,25 +59,65 @@ On hosts where zsh startup adds Node to the resolver tests' restricted PATH, run
 
 ## Publish locally
 
-The normal release path is the main-only [GitHub publishing workflow](#publish-with-github-actions). Local publication is an alternative for an authenticated package owner.
+The normal release path is the [GitHub publishing workflow](#publish-with-github-actions). Both paths follow the [release policy](release-policy.md): 0.6.x and 0.7.x compatibility releases use npm tag `latest` before 1.0, and after 1.0 0.7.x maintenance publishes only from `release/0.7` with tag `node20`, once that branch's release-control gate is complete. Local publication is an alternative for an authenticated package owner.
 
 Authenticate the package owner on the machine that will publish. Run `npm login --registry=https://registry.npmjs.org/` yourself, complete its browser sign-in, and check `npm whoami --registry=https://registry.npmjs.org/`. A 401 means the publishing session needs to be restored. Keep tokens, passwords, and recovery codes out of repository files and chat.
 
-Build and test the same archive you will publish. From the checkout root, read its version from the reviewed package metadata:
+Build, test and publish the same archive in one fail-stop procedure. It runs in a fresh clone of the canonical repository at the reviewed commit, so nothing in your own checkout (edits, ignored files, build output or installed dependencies) can reach the archive. Set three inputs first:
+- the reviewed release commit: the full SHA whose required checks passed;
+- its release branch;
+- the policy tag: `latest`, or `node20` only for 0.7.x maintenance after 1.0.
+
+The subshell uses `set -e`, and every check whose failure matters runs as its own command. The procedure:
+
+1. Clones the canonical repository into a private temporary directory, checks out the reviewed commit, and confirms that it is the branch's current tip.
+2. Runs that commit's policy, which reads the current npm `latest` itself.
+3. Installs the locked dependencies, packs, and records the archive's SHA-512.
+4. Runs smoke and a dry run, then shows the commit, version and tag and waits for your confirmation.
+5. Repeats the tip and policy checks, confirms the archive still has its recorded digest, and only then publishes.
 
 ```sh
-mkdir -p artifacts
-inbox_release_version=$(node -p "require('./packages/cli/package.json').version")
-npm pack ./packages/cli --pack-destination ./artifacts
-node scripts/package-smoke.mjs "artifacts/html-inbox-${inbox_release_version}.tgz"
-npm publish "./artifacts/html-inbox-${inbox_release_version}.tgz" --dry-run --access public --registry=https://registry.npmjs.org/
+inbox_release_commit=<reviewed full commit SHA>
+inbox_release_branch=main
+inbox_release_tag=<latest or node20>
+(
+  set -eu
+  build_directory=$(mktemp -d)
+  git clone --quiet --no-checkout https://github.com/deveshsangwan/html-inbox.git "$build_directory/source"
+  cd "$build_directory/source"
+  git checkout --quiet --detach "$inbox_release_commit"
+  check_release_source() {
+    current_commit=$(git rev-parse HEAD)
+    test "$current_commit" = "$inbox_release_commit"
+    git fetch --quiet origin "refs/heads/$inbox_release_branch"
+    upstream_commit=$(git rev-parse FETCH_HEAD)
+    test "$upstream_commit" = "$inbox_release_commit"
+    EXPECTED_VERSION="$version" RELEASE_TAG="$inbox_release_tag" GITHUB_REF="refs/heads/$inbox_release_branch" \
+      GITHUB_OUTPUT=/dev/null node scripts/release-policy.mjs
+  }
+  archive_digest() {
+    node -e 'process.stdout.write(require("node:crypto").createHash("sha512").update(require("node:fs").readFileSync(process.argv[1])).digest("base64"))' "$archive"
+  }
+  version=$(node -p "require('./packages/cli/package.json').version")
+  check_release_source
+  corepack pnpm install --frozen-lockfile
+  npm pack ./packages/cli --pack-destination "$build_directory"
+  archive="$build_directory/html-inbox-${version}.tgz"
+  tested_digest=$(archive_digest)
+  node scripts/package-smoke.mjs "$archive"
+  npm publish "$archive" --dry-run --access public --tag "$inbox_release_tag" --registry=https://registry.npmjs.org/
+  printf 'Type publish to release %s as %s from %s: ' "$version" "$inbox_release_tag" "$inbox_release_commit"
+  read -r confirmation
+  test "$confirmation" = publish
+  check_release_source
+  publish_digest=$(archive_digest)
+  test "$publish_digest" = "$tested_digest"
+  npm publish "$archive" --access public --tag "$inbox_release_tag" --registry=https://registry.npmjs.org/
+  echo "Published $archive (sha512-$tested_digest)"
+)
 ```
 
-After the file list and installed-package checks pass, publish that exact archive:
-
-```sh
-npm publish "./artifacts/html-inbox-${inbox_release_version}.tgz" --access public --registry=https://registry.npmjs.org/
-```
+The digest check means only the archive that passed smoke can be published. Keep the printed build directory until you have compared the public `dist.integrity` with the printed digest.
 
 Complete any npm authentication or 2FA challenge. Local publication does not claim GitHub provenance. A dry run validates the archive; it does not prove that npm will authorize the real publish.
 
@@ -93,7 +133,7 @@ The package owner must configure a trusted publisher once in [html-inbox package
 | Organization or user | `deveshsangwan` |
 | Repository | `html-inbox` |
 | Workflow filename | `publish.yml` |
-| Environment name | Leave blank |
+| Environment name | Leave blank until the release-control gate in the [release policy](release-policy.md#activation-requirements) adds a protected environment |
 | Allowed actions | Enable direct `npm publish` |
 
 The workflow file must already exist on GitHub. New trusted-publisher configurations can allow staged publishing alone; this workflow uses direct publishing, so select its permission explicitly. See the [current npm trusted-publisher documentation](https://docs.npmjs.com/trusted-publishers/).
@@ -110,7 +150,7 @@ Complete the browser 2FA challenge. Inspect existing relationships first; preser
 
 Complete the first successful publish within two days of creating the connection. Otherwise npm marks it expired and disables editing; delete that expired connection, recreate it with the values above, and publish before the new deadline.
 
-For each release, merge the reviewed version change into main and verify that merge commit's required checks. Open Actions, choose **Publish npm release**, select **Run workflow** on main, and enter the exact package version. The workflow refuses a mismatched or non-stable version. It has a manual trigger so merging code or pushing an artifact tag does not publish unexpectedly. Successful trusted publishing from this public repository produces npm provenance automatically.
+For each release, merge the reviewed version change into `main` and verify that merge commit's required checks. The policy refuses publication from `release/0.7` until its release-control gate is complete and a reviewed change enables that branch in the policy's entry point. Open Actions, choose **Publish npm release**, select **Run workflow** on `main`, enter the exact package version and choose the npm tag. The default, `choose`, fails the policy so that the tag is always an explicit selection. The policy script reads the current npm `latest` from the registry's dist-tags endpoint, without npm's local cache, and refuses a mismatched or non-stable version, a wrong branch, engine or tag, or a release that would move `latest` backward. It rereads `latest` immediately before publishing and confirms the selected tag afterward; these checks cover the registry state it observes, not a concurrent publication elsewhere. It has a manual trigger so merging code or pushing an artifact tag does not publish unexpectedly. Successful trusted publishing from this public repository produces npm provenance automatically.
 
 The existing [Package release artifact workflow](../.github/workflows/package.yml) still creates verified archives on `v<version>` tags or manual runs and never publishes to npm. Website deployment, package artifact generation, and npm publication are separate workflows.
 
@@ -125,8 +165,8 @@ npm view html-inbox dist-tags --json --registry=https://registry.npmjs.org/
 npm exec --yes --registry=https://registry.npmjs.org/ --package="html-inbox@${inbox_release_version}" -- html-inbox --version
 ```
 
-Compare `dist.integrity` with the tested archive's SHA-512 integrity. Confirm that `latest` points to the intended stable version. Record a matching `v<version>` Git tag at the reviewed release commit and attach the tested archive to release notes when creating a GitHub release.
+Compare `dist.integrity` with the tested archive's SHA-512 integrity. Confirm that the selected tag (`latest`, or `node20` for 0.7.x maintenance after 1.0) points to the intended stable version. Record a matching `v<version>` Git tag at the reviewed release commit and attach the tested archive to release notes when creating a GitHub release.
 
 If npm reports an error after uploading, query the exact version before retrying. A version that already exists cannot be overwritten or republished. Preserve the tested artifact and command output while determining whether the upload completed.
 
-npm may accept the upload before the version becomes publicly available. The publish workflow retries its registry lookup for up to five minutes and compares the public integrity with the verified archive. If verification times out after a successful upload, check the registry again; do not rerun publication just to repeat verification.
+npm may accept the upload before the version becomes publicly available. The publish workflow allows five minutes in total for registry requests, response bodies and retry waits. It compares the public package name, version and SHA-512 integrity with the verified archive and checks the selected dist-tag's exact version string. If verification times out after a successful upload, check the registry again; do not rerun publication just to repeat verification.
