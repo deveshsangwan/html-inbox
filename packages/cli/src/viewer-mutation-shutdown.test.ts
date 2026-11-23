@@ -20,11 +20,11 @@ import { startViewerHttpServer } from "./viewer-http-server";
 import * as viewerProcess from "./viewer-process";
 import * as viewerRecords from "./viewer-records";
 import { getInboxInstanceId, readViewerRecord, ViewerRecordFormatError, writeViewerRecord } from "./viewer-records";
-import { ensureViewer, getViewerStatus, startViewer, stopViewer } from "./viewer-server";
+import { ensureViewer, getViewerStatus, startViewer, startViewerLifecycle, stopViewer } from "./viewer-server";
 
 const bytes = Buffer.from("<!doctype html><html><body>Reader shutdown custody</body></html>");
 
-for (const entry of ["startViewer", "ensureViewer"] as const) {
+for (const entry of ["startViewer", "ensureViewer", "startViewerLifecycle"] as const) {
   test(`${entry} preserves a draining viewer's record until its disconnected managed deletion settles`, {
     skip: process.platform === "win32" ? "Managed enrollment requires POSIX storage" : false,
     timeout: 15_000,
@@ -52,7 +52,8 @@ for (const entry of ["startViewer", "ensureViewer"] as const) {
     const spawn = t.mock.method(viewerProcess, "spawnDetachedViewer", async () => {
       throw new Error("A draining viewer must be rejected before spawning a successor");
     });
-    const original = await startViewer(backend, home, 0);
+    const lifecycle = entry === "startViewerLifecycle" ? await startViewerLifecycle(backend, home, 0) : undefined;
+    const original = lifecycle?.server ?? await startViewer(backend, home, 0);
     const record = await readViewerRecord(home);
     assert(record);
     const recordChecksum = await viewerRecordChecksum(home);
@@ -72,15 +73,18 @@ for (const entry of ["startViewer", "ensureViewer"] as const) {
       await bounded(admitted.promise, "actual managed deletion admission");
       await disconnect(request);
       const nativeClosed = once(original, "close");
-      original.close();
+      let hasClosed = false;
+      const ownedClosing = lifecycle?.close().then(() => { hasClosed = true; });
+      if (!lifecycle) original.close();
       original.closeAllConnections();
       await bounded(nativeClosed, "original native reader close");
       assert.equal((await getViewerStatus(home)).state, "stopped");
       await rebind(record.config.port);
       await rebind(Number(new URL(record.controlUrl).port));
       assert.equal((await store.snapshot()).records[key].state, "live");
+      assert.equal(hasClosed, false);
 
-      await assert.rejects(entry === "startViewer"
+      await assert.rejects(entry !== "ensureViewer"
         ? startViewer(backend, home, 0).then((server) => { successor = server; return server; })
         : ensureViewer(home, 0), /Existing viewer process record is unverified/);
       assert.equal(spawn.mock.callCount(), 0, "ensure must refuse before spawning or deleting the old record");
@@ -88,7 +92,7 @@ for (const entry of ["startViewer", "ensureViewer"] as const) {
       assert.equal((await store.snapshot()).records[key].state, "live");
 
       release.release();
-      await bounded(Promise.all([holding, mutation, stopped.promise]), "original mutation and lifecycle settlement");
+      await bounded(Promise.all([holding, mutation, stopped.promise, ownedClosing]), "original mutation and lifecycle settlement");
       assert.equal(await readViewerRecord(home), null);
       const terminal = (await store.snapshot()).records[key];
       assert.equal(terminal.state, "deleted");

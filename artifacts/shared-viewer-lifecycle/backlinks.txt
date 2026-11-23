@@ -1,0 +1,3 @@
+Verified PR120 body references https://github.com/deveshsangwan/html-inbox/issues/87 as originating coordination item.
+Verified issue87 body includes https://github.com/deveshsangwan/html-inbox/pull/120 in Related pull requests.
+Original issue body preserved as exact prefix; existing backlinks unchanged. No closing keyword.

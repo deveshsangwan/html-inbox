@@ -1,0 +1,9 @@
+# Qualification of the viewer start-lock release fix
+
+Tested source 742870fd1e7bb9c30d868632814c8e9aacf66a3f, tree f2b59f82a33d9338532d396acfeda445d78a7216. The stack base is 08d5b2b056515ad876ac8aec2a164eea82050fa0. A signal during start-lock release now rejects startup and joins the shared shutdown. A release failure after readiness rolls back the viewer and preserves its cause. Tests cover both listeners, process handlers, journal completion, and combined startup and cleanup failures.
+
+The first attempt, archived in the sibling 742870f-run1-inconclusive directory, stopped after the first negative control. Typecheck and the prefix build succeeded. Three cases failed, but the runner could not credit the expected diagnostics. Subsequent checks were unrun. Both attempts have separate original logs, command and cleanup records.
+
+The authorized second run used runner SHA256 2abf3d4a1c3117a21950e98c56c5fc54544439145611578c18f0cf443f96f09d. All 16 stages ran. Both compiled historical controls produced the expected failures (three cases on 5c49486 and one on 0463edb). All three isolation-fixture controls produced their expected failures. Typecheck, build and both FIFO probes passed. The focused lifecycle/browser suite passed all 95 tests on each of Node 20.20.2 and 24.19.0. The ownership/service/HTTP suite passed all 85 tests on each. The full Node 24 browser suite passed 87 with one skip.
+
+The second run took 140.1 seconds plus 0.1 seconds for cleanup. Both cleanup receipts record a clean checkout, absent overlay, restored generated files and zero leftover run processes. At collection, the 393 generated file paths and SHA256s matched both pre-run inventories, the overlay was absent, and every archived log verified against its recorded uncompressed SHA256. No tests were rerun during collection. Earlier checks and reviews retain their original source pins. Final hosted checks and council approval remain separate gates.

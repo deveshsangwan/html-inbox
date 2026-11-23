@@ -1,0 +1,43 @@
+Base 610c931b7b22920cce59cf03e49c0de15ebaf2a2; initial status clean
+$ git rev-parse HEAD
+4b43e0062d4b6d1f4fb01fca83db3885a21141cc
+ EXIT 0
+$ git status --short
+ EXIT 0
+$ git branch --show-current
+t3/shared-viewer-lifecycle-repair
+ EXIT 0
+$ uname -a
+Linux homeserver 6.12.113+deb13-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.12.113-1 (2026-10-15) x86_64 GNU/Linux
+ EXIT 0
+$ fnm exec --using=24.19.0 node -p JSON.stringify({execPath:process.execPath,versions:process.versions})
+{"execPath":"/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node","versions":{"node":"24.19.0","acorn":"8.17.0","ada":"3.4.4","amaro":"1.1.10","ares":"1.34.6","brotli":"1.2.0","cldr":"48.0","icu":"78.3","llhttp":"9.4.3","merve":"1.2.2","modules":"137","napi":"10","nbytes":"0.1.4","ncrypto":"0.0.1","nghttp2":"1.69.0","nghttp3":"","ngtcp2":"","openssl":"3.5.7","simdjson":"4.6.4","simdutf":"6.4.0","sqlite":"3.53.3","tz":"2026b","undici":"7.29.0","unicode":"17.0","uv":"1.52.1","uvwasi":"0.0.23","v8":"13.6.233.17-node.51","zlib":"1.3.2.1-motley-3246f1b","zstd":"1.5.7"}}
+ EXIT 0
+$ fnm exec --using=20.20.2 node -p JSON.stringify({execPath:process.execPath,versions:process.versions})
+{"execPath":"/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node","versions":{"node":"20.20.2","acorn":"8.16.0","ada":"2.9.2","ares":"1.34.6","brotli":"1.1.0","cjs_module_lexer":"2.2.0","cldr":"48.0","icu":"78.2","llhttp":"9.3.1","modules":"115","napi":"9","nghttp2":"1.61.0","openssl":"3.0.19","simdutf":"6.4.2","tz":"2025c","undici":"6.24.1","unicode":"17.0","uv":"1.46.0","uvwasi":"0.0.23","v8":"11.3.244.8-node.38","zlib":"1.3.1-e00f703"}}
+ EXIT 0
+$ fnm exec --using=24.19.0 pnpm --version
+11.7.0
+ EXIT 0
+$ fnm exec --using=24.19.0 pnpm exec tsc-rs --version
+Version 7.1.0-dev
+ EXIT 0
+5a022657a76a03234db5f20fdd70162869356b4444cf4fe3ad0938a44806c677 pnpm-lock.yaml
+50f208b3f24eeb5823510df6b2f7d02375adffd1d9acbdbfd9980fcadcaf2161 packages/cli/src/viewer-server.ts
+973f35b90f5927d0a88f3cd9d76e1ed0cc1af4baf71c88764fefdbee380ec4e6 packages/cli/src/viewer-mutation-shutdown.test.ts
+b5b9867226d8c2c67eef747100fd419c57e36493c981c285b9204bd1458e2645 packages/cli/src/viewer-owned-lifecycle.test.ts
+2ce6459bdf7c9fcb27f9cb0f5f576b54eb5c116704444fc05d9aa3d243aa4477 scripts/browser-fixtures.mjs
+f708a8c5926e8e4cda1391e05fd74b192a10bf8c07e8b38534582480438dd507 scripts/viewer-fixture-browser.test.mjs
+36cc810dfbfd1edbff302f37a53b929fe3f2594e7027b142d3f6c1ee59dd1e3c packages/cli/dist/viewer-server.js
+83cf012786a6a905be64182923b9384dc6d3a7c112e2de6662811d2c2d0c9bb2 packages/cli/dist/viewer-owned-lifecycle.test.js
+61c92f8189693ae0d35017eb2a33b51555e90617177c0d1e4098b4f38fe7c1ec /home/agent/.t3/worktrees/html-inbox/perf-93-startup/artifacts/93/windows-diagnostic/receipt.txt
+3b27a9f4b043f12a521efeba035d79878bde25c4326d7157f94d5c47f0f70ccc /home/agent/.t3/worktrees/html-inbox/perf-93-startup/artifacts/93/windows-diagnostic/source-hashes.json
+88038c90e716195d6b9ab36093043181398544a87b692f16757daa4312e9271e /home/agent/.t3/worktrees/html-inbox/perf-93-startup/artifacts/93/windows-diagnostic/evidence-manifest.json
+113_original original unchanged: True ea44e8329ffdf6501b800c25d02c75cc4b48e4b087a7b1e9d5fa702539bdfacb
+113_same_head_green original unchanged: True 11c0180db4a516217af65ffe7eeb950ab0a1224baa4d1ec7df15b69025d5ca11
+113_existing_retry original unchanged: True d2848cb637598a9379325a6ae5d2a05d27e8603a2ff9fa0f66c7af88142386e4
+115_original original unchanged: True 111c69c0f1dab8fe702b998b533b06fa9b40137a6823db8cc8b4afcf1ddfc4c7
+117_historical original unchanged: True 88994ad3a1b0060ee7a788e6731fec3fbbc559b46beeedc00164344bd6ee547f
+119_owner_original original unchanged: True 4fab242ae8aa8500be85ca991a2151e2d13a4819f436c5b390070ecb2ce8455a
+119_readonly_copy original unchanged: True 4fab242ae8aa8500be85ca991a2151e2d13a4819f436c5b390070ecb2ce8455a
+node_win_fs original unchanged: True 41633b8f58bb08c21f2dc8daa32990365e2df7154bb167a076e470339a218d18

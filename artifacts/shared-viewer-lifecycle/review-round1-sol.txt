@@ -1,0 +1,30 @@
+Independent round-1 review of [PR #120](https://github.com/deveshsangwan/html-inbox/pull/120), frozen head `6546267e0bf6053cb699ef5284de18b50987f7f8` against base `610c931b7b22920cce59cf03e49c0de15ebaf2a2`.
+
+Two material failure-handling gaps remain.
+
+1. **Medium — Failed startup rollback does not retain fixture evidence.**  
+   [scripts/browser-fixtures.mjs:110](/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47/scripts/browser-fixtures.mjs:110) assigns `closeViewer` only after startup succeeds. If startup and its owned rollback both reject, `startViewerLifecycle` throws an aggregate at [viewer-server.ts:355](/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47/packages/cli/src/viewer-server.ts:355). The registered fixture teardown then has neither `server` nor `closeViewer`, skips shutdown, and removes the root at line 84. This deletes evidence despite unresolved cleanup; failure journaling started by the native-close observer can also remain unjoined.  
+   **Fix:** Track failed viewer startup and conservatively retain its root when cleanup completion is uncertain. Join failure journaling before returning the rollback failure. Add an injected startup-plus-rollback failure regression asserting both causes, retained evidence, and settled background reporting.
+
+2. **Medium — Root-removal failure hides the browser-close error.**  
+   [scripts/browser-fixtures.mjs:84](/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47/scripts/browser-fixtures.mjs:84) awaits `rm` before throwing the saved browser error. If browser close rejects, owned shutdown succeeds, and root removal rejects, only the removal error escapes. This leaves the brief’s browser-error preservation requirement incomplete.  
+   **Fix:** Capture removal failure and aggregate it with the saved browser error, preserving both identities and the root path. Test this combination for local and static fixtures.
+
+**FUNCTIONALITY: REQUEST CHANGES.** The successful-start lifecycle join is sound: `startViewer` still returns `http.Server`; repeated owned close shares one promise; shutdown retains the existing listener, mutation, Tailscale, and processId ownership sequence. Static fixtures retain ordinary HTTP close. The two failure cases above block full acceptance.
+
+**CODE QUALITY: PASS with the failure-handling changes above required.** The API is small and reuses existing machinery. No speculative abstraction, new unsafe TypeScript escape, security/validation relaxation, storage/wire change, rename-lock patch, retry masking, or unrelated policy change was found. Names and comments generally communicate purpose; the error handling needs to cover the entire fixture lifecycle consistently.
+
+**VALIDATION EVIDENCE: QUALIFIED PASS for recorded Linux checks; incomplete acceptance coverage.**
+
+- Resolved all three supplied pins and read the commit log, complete change, required diagnostic material, and qualification evidence.
+- Recomputed affected source and lockfile hashes: frozen head, tested implementation `4b43e0062d4b6d1f4fb01fca83db3885a21141cc`, and identity receipt match. Both recorded compiled hashes match disk. All eight original diagnostic artifacts match their manifest hashes. The final commit changes evidence only.
+- Original parent-red records the intended ordering assertion, exit 1. The gate tests root-removal ordering rather than probabilistic native EPERM. Both focused runtime logs record 59 passes, exit 0.
+- Full Node 24 verification records exit 0: 1,326 source passes, 15 harness passes, 146 skill passes, 78 browser passes, nine site passes, and package smoke, with disclosed skips.
+- Cleanup receipts record released resources and clean implementation status. My read-only source diff check passed; repair checkout remains clean.
+- GitHub confirms the pinned head/base and both #87 ↔ PR120 body links. No closing claim for #93 is present.
+
+Unmet criteria are complete cleanup-failure evidence retention and browser-error preservation in the combinations above. Native Windows/macOS qualification remains the parent’s gate. The red log supports the lifecycle defect, but its exact-parent build identity is documented rather than independently reconstructable from a retained parent compiled-source manifest. Neither Linux success nor historical shared-file identity establishes the native EPERM actor or resolves the separate rename hypothesis.
+
+No installs, builds, tests, services, edits, helpers, watches, or PR mutations were performed.
+
+PR https://github.com/deveshsangwan/html-inbox/pull/120, head 6546267e0bf6053cb699ef5284de18b50987f7f8, checks and reviews: recorded local checks pass; independent functionality review requests changes; final platform qualification remains with parent.

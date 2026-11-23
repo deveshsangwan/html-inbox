@@ -1,0 +1,72 @@
+{
+  "branch-settles-first-node24.log": {
+    "bytes": 1399,
+    "sha256": "97d97a585eb7df57bb191f409c881a5090b11011eb84c47fad2e9f99a20dd623",
+    "gz_sha256": "b62f869866dd926afba33caa39c68a81c94e6dd43470a1f3854cad4d3c5a6ed7"
+  },
+  "branch-setup-failure-node24.log": {
+    "bytes": 1218,
+    "sha256": "b4405451ed87a1da368d5b5ab2569a76fe43155e04b81a3fd7e26f3b403291d6",
+    "gz_sha256": "5859e6f7d4eefe76b2bbb0c978c7fa71b221c08440529844ad19cbef70ff423e"
+  },
+  "browser-suite-node24.log": {
+    "bytes": 16433,
+    "sha256": "6c55a343e1b41ee8c84061a9b0968caec272f28697f13a07fc1dafa0fdbba99b",
+    "gz_sha256": "73ad110960d6003b5ab41c0cadd047a647049a2035f24fa9e58adf5d239e2c06"
+  },
+  "build-node24.log": {
+    "bytes": 199,
+    "sha256": "f773459490a2219dd1cddb019baaee5c39c5f1059894a3d17b7b3e1e92bbca9d",
+    "gz_sha256": "55c03c777aeafb2d68824449a9b2fe8f498b50ff466d91a1131c319ff970d2f5"
+  },
+  "fifo-probe-node20.log": {
+    "bytes": 419,
+    "sha256": "557d55db43c63107a9a49a26b08fd56ba5bcf25a6c15ba2c4fc79dbc2137c0d0",
+    "gz_sha256": "511493db6dff3e99cb29dea24e09740764b169b260bf8e1099d2f1a3d33fb9b3"
+  },
+  "fifo-probe-node24.log": {
+    "bytes": 361,
+    "sha256": "f9c2ca83070c19a451cbfcaa3d37a46a9459e95726b2f927e14da07b3f62ec90",
+    "gz_sha256": "17b24243ded5173cca89960eb2ee9b1ad20e0edccb74fa4640c29c0fb6c57b64"
+  },
+  "focused-node20.log": {
+    "bytes": 26664,
+    "sha256": "0d5a5f1b649d35b523a077a0907dfdf5f49197be626ff50e5c9232867a42b5b1",
+    "gz_sha256": "f170d80ac111590fec821ba61e695857171ac077038a5720dd02c8251a4bc0ce"
+  },
+  "focused-node24.log": {
+    "bytes": 15984,
+    "sha256": "796d5a7c5efaf6cf28de72a8645c130bbbdc42845042638d427fc3a9e9a1313a",
+    "gz_sha256": "9b8916bb034420ed0c441024fd8b08a4cdf14d5fb8d44423e9cd92aa5c72443f"
+  },
+  "ownership-node20.log": {
+    "bytes": 39352,
+    "sha256": "940b25eac262a24a86ad1e49ca785f8b6d686bb28fcfac180f9feb1b037ddd6b",
+    "gz_sha256": "a6359bd8c98e072d4df9bd1021f340f199c29a15b7e4acc7c1d68d948c8c9e68"
+  },
+  "ownership-node24.log": {
+    "bytes": 29476,
+    "sha256": "bd90fb81f1eaac47371bd2415348b82b9b8731b79f90da96807dd30287916294",
+    "gz_sha256": "6fe0df49e9241c14d11568d8b593d83eaaaa069decac8164064c7f373a3e9480"
+  },
+  "prefix-copy-build-node24.log": {
+    "bytes": 296,
+    "sha256": "ad2346d6ff45f6ebc41a3abdd1e29d3f79ae6b4f0c0c46cb87ec2dc423ccccc5",
+    "gz_sha256": "d2da890fd381a84e8f005fcd9e9c8fcf0ce23ac04941550201e34787d14a82d1"
+  },
+  "red-old-isolation-wiring-node24.log": {
+    "bytes": 1537,
+    "sha256": "53a110ce710510ef08f0ec68aa59df611c822754443b093cdd31c79d0b0f42c9",
+    "gz_sha256": "f7591cb7dad645bc86914dde18ad8a1dbb815fe4ebb4da30f1ff34d281d0341e"
+  },
+  "red-prefix-lock-release-node24.log": {
+    "bytes": 4201,
+    "sha256": "7ba31c4ca34713c2cf57baecb84ad674bcb50903c37147a2090a90a28150ce96",
+    "gz_sha256": "32743a91d00b5a8879f6b1a75ea68596d418e65bf2177e1fa3810cb1cc64e82f"
+  },
+  "typecheck-node24.log": {
+    "bytes": 122,
+    "sha256": "f31c3f608459b9e20f1003fa22b21a8b8db1e6a68336c68ed000cc2e077e5a57",
+    "gz_sha256": "46fad10521e1363787c991db318486313a2f948b158257415d4e254913b215d1"
+  }
+}

@@ -200,9 +200,25 @@ export async function startViewer(
   input: number | ViewerNetworkOptions,
   inboxName?: string,
 ): Promise<http.Server> {
+  return (await startViewerLifecycle(backend, home, input, inboxName)).server;
+}
+
+export interface ViewerLifecycle {
+  server: http.Server;
+  close(): Promise<void>;
+}
+
+export async function startViewerLifecycle(
+  backend: DocumentBackend,
+  home: string,
+  input: number | ViewerNetworkOptions,
+  inboxName?: string,
+): Promise<ViewerLifecycle> {
   await assertManagedLifecycle(home);
   const inherited = await hasInheritedViewerStartLock(home);
   const lock = inherited ? null : await acquireViewerStartLock(home);
+  let lockRelease: Promise<void> | undefined;
+  const releaseLock = () => lockRelease ??= lock?.release() ?? Promise.resolve();
   try {
     const existing = await getViewerStatus(home, undefined, { refreshLanUrls: false });
     if (existing.state === "running") {
@@ -219,7 +235,8 @@ export async function startViewer(
     let prepared: PreparedTailscale | undefined;
     let startup: Promise<void> | undefined;
     let closing: Promise<void> | undefined;
-    let hasReportedShutdownFailure = false;
+    let shutdownFailure: Promise<void> | undefined;
+    let ownedClosing: Promise<void> | undefined;
     const close = (reason: "SIGTERM" | "SIGINT" | "reader-close" | "startup-failure") => closing ??= (async () => {
       console.error(`${new Date().toISOString()} html-inbox: Viewer ${process.pid} shutting down (${reason})`);
 
@@ -244,23 +261,19 @@ export async function startViewer(
         process.off("SIGINT", onSigint);
       }
     })();
-    const reportShutdownFailure = (error: unknown) => {
-      if (hasReportedShutdownFailure) {
-        return;
-      }
-
-      hasReportedShutdownFailure = true;
+    const reportShutdownFailure = (error: unknown) => shutdownFailure ??= (async () => {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`${new Date().toISOString()} html-inbox: Viewer ${process.pid} shutdown failed: ${message}`);
       process.exitCode = 1;
-      void readViewerRecord(home).then((record) => {
+      try {
+        const record = await readViewerRecord(home);
         if (record?.processId === processId) {
-          return writeViewerRecord(home, { ...record, shutdownError: message });
+          await writeViewerRecord(home, { ...record, shutdownError: message });
         }
-      }).catch((recordError: unknown) => {
+      } catch (recordError) {
         console.error(`html-inbox: Could not record shutdown failure: ${String(recordError)}`);
-      });
-    };
+      }
+    })();
     const onSigterm = () => { void close("SIGTERM").catch(reportShutdownFailure); };
     const onSigint = () => { void close("SIGINT").catch(reportShutdownFailure); };
 
@@ -330,19 +343,47 @@ export async function startViewer(
         throw new Error("Viewer startup finished without a reader");
       }
 
-      return reader.server;
+      const lifecycle = {
+        server: reader.server,
+        close: () => ownedClosing ??= close("reader-close").catch(async (error: unknown) => {
+          // Join failure journaling too, so callers can safely retain or inspect the fixture.
+          await reportShutdownFailure(error);
+          throw error;
+        }),
+      };
+      // Release inside the rollback boundary: a failure here must stop the live viewer, not strand it handle-less.
+      await releaseLock().catch((releaseError: unknown) => {
+        throw new Error("Viewer start lock could not be released after readiness; rolling the viewer back", { cause: releaseError });
+      });
+      if (closing) {
+        // A signal during release already started the shared shutdown; never hand out a closing viewer.
+        throw new Error("Viewer startup interrupted before readiness");
+      }
+
+      return lifecycle;
     } catch (error) {
       try {
         await close("startup-failure");
       } catch (cleanupError) {
-        throw new AggregateError([error, cleanupError], "Viewer startup failed and Tailscale cleanup failed; private ownership journal retained");
+        await reportShutdownFailure(cleanupError);
+        throw new AggregateError([error, cleanupError], "Viewer startup failed and its rollback failed; private ownership journal retained");
       }
 
       throw error;
     }
-  } finally {
-    await lock?.release();
+  } catch (error) {
+    const release = await releaseLock().then(() => ({ hasFailed: false as const }), (failure: unknown) => ({ hasFailed: true as const, failure }));
+    if (!release.hasFailed || containsError(error, release.failure)) {
+      throw error;
+    }
+
+    throw new AggregateError([error, release.failure], "Viewer startup failed and its startup lock could not be released");
   }
+}
+
+function containsError(error: unknown, candidate: unknown) {
+  const members = error instanceof AggregateError ? [error, ...error.errors] : [error];
+  return members.some((member) => member === candidate || (member instanceof Error && member.cause === candidate));
 }
 
 function shutdownDeadline(record: ViewerRecord): number {

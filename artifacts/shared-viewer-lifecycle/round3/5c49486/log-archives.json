@@ -1,0 +1,52 @@
+{
+  "browser-suite-node24.log": {
+    "bytes": 16456,
+    "sha256": "74e73a7a686913c9a11d264d48318d7d013872da7b0e5446f394996bedfb6897",
+    "gz_sha256": "b1fc5d841463b6437769a717649d008b50f1d24ecb60e232575916ac6d753626"
+  },
+  "build-node24.log": {
+    "bytes": 199,
+    "sha256": "f773459490a2219dd1cddb019baaee5c39c5f1059894a3d17b7b3e1e92bbca9d",
+    "gz_sha256": "55c03c777aeafb2d68824449a9b2fe8f498b50ff466d91a1131c319ff970d2f5"
+  },
+  "fifo-probe-node20.log": {
+    "bytes": 418,
+    "sha256": "0925e1636017213b45e8363d2e8f3cb4c2e757f2989f25abf88075fffbcc508b",
+    "gz_sha256": "9e0876f8ac5e04e1d91060a41bb7135600c3b5b7cfb3377aa81f23532ed2ac85"
+  },
+  "fifo-probe-node24.log": {
+    "bytes": 360,
+    "sha256": "aa641ff2f2585b61e1959a9e1eb8bdba8a3d81e5ac53552565210321a5221d26",
+    "gz_sha256": "d099a3442dc09ce93aa33f73211a743342edf2462fa2f25fc5f5977999d1e961"
+  },
+  "focused-node20.log": {
+    "bytes": 25923,
+    "sha256": "ba5771274eda037f60aeb4467ba52b2ffad53623cc1ad45e534b7687660e3631",
+    "gz_sha256": "ef1729181df6538b29fa024c7f3e2bc63ef351538ec03c3f1c854cfff3c67fbc"
+  },
+  "focused-node24.log": {
+    "bytes": 15499,
+    "sha256": "e760bf5d12b8b66f83cca8fbc719c74c5ef4152508fa3be7e57448b9d4be091f",
+    "gz_sha256": "b7bddf04f9791fd24d7b9f18ea9850263d6365a6dd8bf57021c989028df0cdc4"
+  },
+  "ownership-node20.log": {
+    "bytes": 39402,
+    "sha256": "cc86fa9cbd1b6c8ea40548e729018e2d600c78089779a290bc3299058bdbccf4",
+    "gz_sha256": "e7c230b6785dbceb1712adf694074e1f5005ed835e8d67e644cd4f546983b42a"
+  },
+  "ownership-node24.log": {
+    "bytes": 29501,
+    "sha256": "5de97ac04745845b1bccee2c5419582546e2691db744a013f6fd736d765932d8",
+    "gz_sha256": "8da2adf95a45cd1a50425c2c2ed9c3ccfbb27ac4d34986f9c9e6bdc39e6a9785"
+  },
+  "red-old-isolation-wiring-node24.log": {
+    "bytes": 1513,
+    "sha256": "a59d4adcf1df66e6db5c56cc216b4b88d9642cb7abbdb759056773b20d7951d9",
+    "gz_sha256": "163295135447c88304438059483c2bdb65829817863001d72b1d3c54f260dc7b"
+  },
+  "typecheck-node24.log": {
+    "bytes": 122,
+    "sha256": "f31c3f608459b9e20f1003fa22b21a8b8db1e6a68336c68ed000cc2e077e5a57",
+    "gz_sha256": "46fad10521e1363787c991db318486313a2f948b158257415d4e254913b215d1"
+  }
+}
