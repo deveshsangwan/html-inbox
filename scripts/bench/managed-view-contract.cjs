@@ -442,6 +442,10 @@ for (const target of ['ledger', 'body']) {
         } else {
           await assert.rejects(result, (error) => error === reason);
         }
+        if (outcome === 'cancel') {
+          // The scope's final check would reject anyway; the admitted read itself must not deliver data.
+          await assert.rejects(admitted, (error) => error === reason);
+        }
         assert.equal(closeCalls, 1, 'native handle closed before the scope settled');
         await assert.rejects(escaped.listDocuments(), /view is closed/);
         await assert.rejects(escaped.getDocumentMetadata('original'), /view is closed/);
@@ -512,14 +516,17 @@ for (const sourceKind of ['backend', 'read-only source']) {
     const listCheckedDocuments = ManagedSyncStore.prototype.listCheckedDocuments;
     let checkedListsAfterRelease = 0;
     let isReleased = false;
-    t.mock.method(ManagedSyncStore.prototype, 'listCheckedDocuments', function (...args) {
+    t.mock.method(ManagedSyncStore.prototype, 'listCheckedDocuments', async function (...args) {
+      const documents = await listCheckedDocuments.apply(this, args);
       if (isReleased) checkedListsAfterRelease += 1;
-      return listCheckedDocuments.apply(this, args);
+      return documents;
     });
 
+    let admitted;
     const scope = f.source.withReadView((view) => {
       isInsideScope = true;
-      return view.listDocuments();
+      admitted = view.listDocuments();
+      return admitted;
     }, controller.signal);
     void scope.catch(() => {});
     try {
@@ -532,8 +539,9 @@ for (const sourceKind of ['backend', 'read-only source']) {
     }
 
     await assert.rejects(scope, (error) => error === reason);
-    // The caller's reason alone does not show ownership: the admitted read must finish its checked listing.
-    assert.equal(checkedListsAfterRelease, 1, 'the admitted adapter read reached the checked ledger listing');
+    await assert.rejects(admitted, (error) => error === reason);
+    // The caller's reason alone does not show ownership: the admitted read must complete its checked listing.
+    assert.equal(checkedListsAfterRelease, 1, 'the admitted adapter read completed the checked ledger listing');
   });
 }
 
@@ -557,6 +565,7 @@ test('an abort between admitted reads rejects the next read with the caller\'s r
 
 test('a repeated NaN abort reason is reported once', async () => {
   const controller = new AbortController();
+  let read;
   const entered = deferred();
   const release = deferred();
   const scope = withDocumentReadView({
@@ -565,7 +574,8 @@ test('a repeated NaN abort reason is reported once', async () => {
     async getDocument() { return null; },
   }, async (view) => {
     // Observed, so the only thing under test is deduplication of the repeated reason.
-    view.listDocuments().catch(() => {});
+    read = view.listDocuments();
+    read.catch(() => {});
     await entered.promise;
     controller.abort(Number.NaN);
     throw controller.signal.reason;
@@ -574,6 +584,7 @@ test('a repeated NaN abort reason is reported once', async () => {
   await entered.promise;
   release.resolve();
   await verdict;
+  await assert.rejects(read, (error) => Number.isNaN(error));
 });
 
 async function legacyBackend(t, label, ids, onWarning = () => {}) {
@@ -698,6 +709,20 @@ test('legacy scoped reads wait for both file hardening checks of an incomplete d
   assert.deepEqual(await scope, []);
   assert.deepEqual(warnings, ['skipping corrupt document first: document files are incomplete']);
 });
+
+for (const sourceKind of ['backend', 'read-only source']) {
+  test(`${sourceKind}: an already cancelled adapter scope rejects with the caller's reason before any storage check`, async (t) => {
+    const f = await fixture(t, sourceKind);
+    const controller = new AbortController();
+    const reason = new Error('cancelled before the adapter scope');
+    controller.abort(reason);
+    const isEnrolled = t.mock.method(ManagedSyncStore, 'isEnrolled');
+
+    await assert.rejects(f.source.withReadView(async () => { assert.fail('callback was invoked'); }, controller.signal),
+      (error) => error === reason);
+    assert.equal(isEnrolled.mock.callCount(), 0, 'no enrollment check ran after cancellation');
+  });
+}
 
 test('already cancelled scopes dispose without invoking their callback or admitting a read', async () => {
   const controller = new AbortController();

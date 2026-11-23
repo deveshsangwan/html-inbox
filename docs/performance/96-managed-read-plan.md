@@ -508,3 +508,22 @@ Both legacy controls wait for a held read only if it was entered. The NaN
 control observes its read, so only the dedicated regression leaves a read
 unobserved. The scoped legacy list now passes an explicit `isScoped` flag.
 The probe still expects 50 tests. 823b972 and 4aa15eb were never executed.
+
+## Council round 4 follow-up
+
+Round 4 at f3df65e found no production defect. The executed receipt at that
+pin covered contract 50/50 and retention 1/1 on both runtimes. It also
+recorded the intended red A and red B failures. Two Low findings led to
+these changes:
+
+- Both adapters now check the caller's signal before their first enrollment
+  or identity check. An already cancelled operation therefore rejects with the
+  caller's reason and does no storage I/O.
+- The cancellation controls also require the admitted read itself to reject
+  with the caller's reason. Before this, the scope's final abort check could
+  hide an admitted read that delivered data after cancellation. The adapter
+  spy now counts completed checked listings instead of entries.
+
+Two controls were added for the already cancelled adapter case, so the
+actual-view probe now expects 52 tests. The full suite and hosted CI still
+need to run at the integrated head.

@@ -78,6 +78,9 @@ export class LocalDocumentBackend implements DocumentBackend {
   }
 
   async withReadView<T>(operation: (view: DocumentReadView) => Promise<T>, signal?: AbortSignal): Promise<T> {
+    // An already-cancelled operation must not start enrollment I/O that could replace the caller's reason.
+    signal?.throwIfAborted();
+
     const read = (managed?: DocumentReadView) => withDocumentReadView({
       listDocuments: () => this.listCurrentDocuments({ managed, isScoped: true }),
       getDocumentMetadata: (id) => this.readCurrentMetadata(id, managed),
@@ -130,7 +133,11 @@ export class LocalDocumentBackend implements DocumentBackend {
 
   private async readCurrentDocument(id: string, managed?: DocumentReadView): Promise<StoredDocument | null> {
     if (await ManagedSyncStore.isEnrolled(this.home)) {
-      return isSafeDocumentId(id) ? (managed ? managed.getDocument(id) : new ManagedSyncStore(this.home).getDocument(id)) : null;
+      if (!isSafeDocumentId(id)) {
+        return null;
+      }
+
+      return managed ? managed.getDocument(id) : new ManagedSyncStore(this.home).getDocument(id);
     }
 
     const metadata = await this.getDocumentMetadata(id);

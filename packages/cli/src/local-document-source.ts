@@ -42,6 +42,9 @@ export class LocalDocumentSource implements DocumentSource {
   }
 
   async withReadView<T>(operation: (view: DocumentReadView) => Promise<T>, signal?: AbortSignal): Promise<T> {
+    // An already-cancelled operation must not start identity or enrollment I/O that could replace the caller's reason.
+    signal?.throwIfAborted();
+
     const read = (managed?: DocumentReadView) => withDocumentReadView({
       listDocuments: () => this.listCurrentDocuments(managed),
       getDocumentMetadata: (id) => this.readCurrentMetadata(id, managed),
