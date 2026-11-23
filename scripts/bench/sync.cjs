@@ -23,21 +23,25 @@ function difference(after, before) {
   return Object.fromEntries(Object.entries(after).map(([key, value]) => [key, value - before[key]]));
 }
 
-function htmlBytes(size) {
-  const head = "<!doctype html><html><head><title>Peer benchmark</title></head><body>";
+// Equal-size bodies with a per-document label, so swapped bodies or receipts fail the checks.
+function peerInput(index, size) {
+  const head = `<!doctype html><html><head><title>Peer benchmark</title></head><body>document-${index} `;
   const tail = "</body></html>";
   assert.ok(size >= head.length + tail.length, "Peer fixture size is too small");
 
-  return Buffer.from(head + "x".repeat(size - head.length - tail.length) + tail);
+  return { originalBytes: Buffer.from(head + "x".repeat(size - head.length - tail.length) + tail),
+    title: `Peer benchmark ${index}`, type: "report", sourceFileName: "fixture.html" };
 }
 
-async function assertDocuments(store, count, bytes) {
+async function assertDocuments(store, inputs) {
+  const expected = new Map(inputs.map((input) => [input.title, input.originalBytes]));
   const documents = await store.listDocuments();
-  assert.equal(documents.length, count);
+  assert.deepEqual(documents.map((metadata) => metadata.title).sort(), [...expected.keys()].sort());
+
   for (const metadata of documents) {
     const document = await store.getDocument(metadata.id);
     assert.ok(document);
-    assert.deepEqual(document.originalBytes, bytes);
+    assert.deepEqual(document.originalBytes, expected.get(metadata.title));
   }
 }
 
@@ -49,8 +53,7 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
     const ca = await readFile(tls.caPath);
     const key = await readFile(tls.trusted.keyPath);
     const cert = await readFile(tls.trusted.certPath);
-    const bytes = htmlBytes(size);
-    const input = { originalBytes: bytes, title: "Peer benchmark", type: "report", sourceFileName: "fixture.html" };
+    const inputs = Array.from({ length: count }, (_, index) => peerInput(index, size));
 
     for (let sample = 0; sample < samples; sample += 1) {
       const source = new ManagedSyncStore(path.join(root, `source-${sample}`));
@@ -65,12 +68,12 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
       await record(`managed/publish/${count}`, async () => {
         const before = storageCounters(source);
         for (let index = 0; index < count; index += 1) {
-          await source.publish(input, `document-${index}`);
+          await source.publish(inputs[index], `document-${index}`);
         }
 
         return { source: difference(storageCounters(source), before), bodyBytes: count * size };
       });
-      await assertDocuments(source, count, bytes);
+      await assertDocuments(source, inputs);
       await record(`managed/status/${count}`, async () => {
         const ledger = await source.snapshot();
         assert.equal(Object.keys(ledger.records).length, count);
@@ -117,7 +120,7 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
         }
 
         await record(`peer/initial/${count}`, () => reconcile("initial", count));
-        await assertDocuments(destination, count, bytes);
+        await assertDocuments(destination, inputs);
         const ledger = await destination.snapshot();
         assert.equal(Object.keys(ledger.receipts).length, count);
         await record(`peer/noop/${count}`, () => reconcile("no-op", 0));
@@ -127,14 +130,15 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
           assert.equal(typeof recordToRepair.bodyFile, "string");
           await rm(path.join(destinationHome, "sync", "bodies", recordToRepair.bodyFile));
           await record(`peer/repair/${count}`, () => reconcile("repair", 1));
-          await assertDocuments(destination, count, bytes);
+          await assertDocuments(destination, inputs);
           assert.equal(Object.keys((await destination.snapshot()).receipts).length, count);
         }
       } finally {
         await server.close();
-        assert.equal(server.status().listening, false);
-        assert.equal(server.status().sockets, 0);
       }
+      // Checked after the finally block so a failed sample reports its original error.
+      assert.equal(server.status().listening, false);
+      assert.equal(server.status().sockets, 0);
     }
   } finally {
     for (const cleanup of cleanups.reverse()) await cleanup();

@@ -1,5 +1,7 @@
 # Issue 89 qualification
 
+> **Historical evidence only.** These two runs were produced by the harness at `485273a2f7f20f604a2ae1e5e6a915396eba290e` against that revision's CLI build. They qualified the original measurement infrastructure and are not a baseline for new runs. The current runner ends process wall time at pidfd exit instead of a 5 ms poll, gives every fixture document a distinct body and verifies process groups during cleanup. Their numbers are therefore not comparable with runs from the current harness, and they do not measure the integrated `release/0.7` source. Any comparison must re-measure both sides with one harness revision, build, runtime and machine.
+
 Implementation base: `099dcbd6378e3b6f73216966cfe9ea7f91ed5d8e`.
 Measured source and suite: `485273a2f7f20f604a2ae1e5e6a915396eba290e`, clean working tree for both runs.
 

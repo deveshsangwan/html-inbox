@@ -6,8 +6,9 @@ const { setTimeout: delay } = require('node:timers/promises');
 const dist = path.resolve(__dirname, '../../packages/cli/dist');
 const load = name => require(path.join(dist, name));
 
-function html(size, shape = 'text') {
-  const head = '<!doctype html><html><head><title>Benchmark</title></head><body>';
+// A per-document label keeps equal-size bodies distinct, so byte checks also verify identity.
+function html(size, shape = 'text', label = '') {
+  const head = `<!doctype html><html><head><title>Benchmark</title></head><body>${label}`;
   const tail = '</body></html>';
   const unit = shape === 'dense' ? '<p>Benchmark</p>' : 'Benchmark text. ';
   const remaining = size - head.length - tail.length;
@@ -17,7 +18,6 @@ function html(size, shape = 'text') {
 
 async function seed(root, count, size) {
   const { parseDocumentMetadata } = load('documents.js');
-  const bytes = html(size);
   await fs.mkdir(root, { recursive: true, mode: 0o700 });
   for (let i = 0; i < count; i++) {
     const id = `bench-${String(i).padStart(5, '0')}`;
@@ -26,7 +26,7 @@ async function seed(root, count, size) {
       createdAt: '2026-11-07T00:00:00.000Z', sourceFileName: 'fixture.html' });
     await fs.mkdir(directory, { recursive: true, mode: 0o700 });
     await fs.writeFile(path.join(directory, 'metadata.json'), JSON.stringify(metadata), { mode: 0o600 });
-    await fs.writeFile(path.join(directory, 'index.html'), bytes, { mode: 0o600 });
+    await fs.writeFile(path.join(directory, 'index.html'), html(size, 'text', id), { mode: 0o600 });
   }
 }
 
@@ -87,7 +87,7 @@ async function main() {
         if (count) await record('viewer/content', async () => {
           const response = await fetch(server.urls[0] + '/documents/bench-00000/content');
           assert.equal(response.status, 200);
-          assert.deepEqual(Buffer.from(await response.arrayBuffer()), Buffer.from(html(size)));
+          assert.deepEqual(Buffer.from(await response.arrayBuffer()), Buffer.from(html(size, 'text', 'bench-00000')));
           return { response_bytes: size, behavior: 'exact source bytes' };
         });
       }
@@ -100,7 +100,7 @@ async function main() {
     const store = new (load('sync-store.js').ManagedSyncStore)(root);
     await store.enroll();
     for (let i = 0; i < count; i++) {
-      await store.publish({ originalBytes: Buffer.from(html(size)), title: `Benchmark ${i}`, type: 'report', sourceFileName: 'fixture.html' }, `bench-${i}`);
+      await store.publish({ originalBytes: Buffer.from(html(size, 'text', `bench-${i}`)), title: `Benchmark ${i}`, type: 'report', sourceFileName: 'fixture.html' }, `bench-${i}`);
     }
     await store.setWorkerEnabled(true);
     const worker = await load('sync-worker.js').startOwnedSyncWorker(root);
