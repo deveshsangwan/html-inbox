@@ -187,6 +187,8 @@ for (const mode of ["local", "static"]) {
         await page.goto(inboxUrl);
         await assertLocalizedDates(page, documents.length);
         await page.getByRole("link", { name: documents[0].title, exact: true }).click();
+        // The client localizes dates on DOMContentLoaded; waitForURL waits for the shell's load event.
+        await page.waitForURL((url) => url.pathname.includes(`/documents/${documents[0].id}`));
         await assertLocalizedDates(page, 1);
       } finally {
         await localizedContext.close();
