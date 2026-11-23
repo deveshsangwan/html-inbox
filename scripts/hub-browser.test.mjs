@@ -126,9 +126,9 @@ async function assertFilterResults(page, inbox, query, titles, count) {
 
 async function createFilterFixture(t, contextOptions = {}) {
   const root = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-filter-browser-")));
-  let browser;
+  let browserLaunch;
   let hub;
-  t.after(() => closeHubFixture(t, browser, hub, root));
+  t.after(() => closeHubFixture(t, browserLaunch, hub, root));
 
   const sources = [];
   for (const name of ["home", "office", "scratch"]) {
@@ -147,7 +147,9 @@ async function createFilterFixture(t, contextOptions = {}) {
   }
 
   hub = await startFixtureHub(root, { schemaVersion: 1, name: "Filter test", sources }, (started) => { hub = started; }, t.signal);
-  browser = await chromium.launch(process.env.HTML_INBOX_BROWSER_EXECUTABLE ? { executablePath: process.env.HTML_INBOX_BROWSER_EXECUTABLE } : {});
+  t.signal.throwIfAborted();
+  browserLaunch = chromium.launch(process.env.HTML_INBOX_BROWSER_EXECUTABLE ? { executablePath: process.env.HTML_INBOX_BROWSER_EXECUTABLE } : {});
+  const browser = await browserLaunch;
   const context = await browser.newContext(contextOptions);
   const page = await context.newPage();
   page.setDefaultTimeout(5_000);
@@ -157,9 +159,9 @@ async function createFilterFixture(t, contextOptions = {}) {
 
 test("hub reads colliding source IDs with search, filters, isolation and partial failure", { timeout: 30_000 }, async (t) => {
   const root = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-hub-browser-")));
-  let browser;
+  let browserLaunch;
   let hub;
-  t.after(() => closeHubFixture(t, browser, hub, root));
+  t.after(() => closeHubFixture(t, browserLaunch, hub, root));
 
   const sources = [];
   for (const name of ["home", "office"]) {
@@ -174,7 +176,9 @@ test("hub reads colliding source IDs with search, filters, isolation and partial
   const hubName = "Development ".repeat(16).trim();
   hub = await startFixtureHub(root, { schemaVersion: 1, name: hubName, sources }, (started) => { hub = started; }, t.signal);
   const origin = hub.urls[0];
-  browser = await chromium.launch(process.env.HTML_INBOX_BROWSER_EXECUTABLE ? { executablePath: process.env.HTML_INBOX_BROWSER_EXECUTABLE } : {});
+  t.signal.throwIfAborted();
+  browserLaunch = chromium.launch(process.env.HTML_INBOX_BROWSER_EXECUTABLE ? { executablePath: process.env.HTML_INBOX_BROWSER_EXECUTABLE } : {});
+  const browser = await browserLaunch;
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await page.addInitScript(() => {
     if (window !== window.top) {
@@ -247,7 +251,11 @@ test("hub reads colliding source IDs with search, filters, isolation and partial
 
 async function startFixtureHub(root, configuration, onStarted, signal) {
   if (!process.env.HTML_INBOX_HUB_TEST_CLI) {
-    return startHub(configuration, 0);
+    signal.throwIfAborted();
+    const starting = startHub(configuration, 0);
+    onStarted({ close: async () => (await starting).close() });
+
+    return starting;
   }
 
   // Teardown asserts a graceful SIGTERM exit, which Windows cannot deliver.
@@ -442,9 +450,9 @@ function signalChild(child, signal, errors, refusal) {
   }
 }
 
-async function closeHubFixture(t, browser, hub, root) {
+async function closeHubFixture(t, browserLaunch, hub, root) {
   const outcomes = await Promise.allSettled([
-    Promise.resolve().then(() => browser?.close()),
+    browserLaunch?.then((browser) => browser.close()),
     Promise.resolve().then(() => hub?.close()),
   ]);
   const failures = outcomes.flatMap((outcome) => outcome.status === "rejected" ? [outcome.reason] : []);

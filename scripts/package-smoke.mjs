@@ -19,7 +19,7 @@ import { createPackageTailscaleFixture } from "./package-tailscale-fixture.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 // Canonical, so paths the CLI reports (such as macOS /private/var) match the fixture's spelling.
-const temporaryRoot = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-package-")));
+const temporaryRoot = await realpath(await mkdtemp(path.join(tmpdir(), process.platform === "win32" ? "html-inbox package-" : "html-inbox-package-")));
 const npmUserConfig = path.join(temporaryRoot, "npm-user.npmrc");
 const npmGlobalConfig = path.join(temporaryRoot, "npm-global.npmrc");
 let viewer;
@@ -40,8 +40,7 @@ try {
     assert.equal(path.extname(tarballPath), ".tgz", "Package artifact must be a .tgz file");
     assert.equal((await stat(tarballPath)).isFile(), true);
   } else {
-    const packResult = await run(
-      "npm",
+    const packResult = await runNpm(
       // Explicit, so an inherited ignore-scripts setting cannot skip the prepack build being qualified.
       ["pack", "--ignore-scripts=false", "--pack-destination", temporaryRoot],
       path.join(repositoryRoot, "packages", "cli"),
@@ -58,8 +57,7 @@ try {
     path.join(consumerRoot, "package.json"),
     `${JSON.stringify({ name: "html-inbox-package-smoke", private: true }, null, 2)}\n`,
   );
-  await run(
-    "npm",
+  await runNpm(
     [
       "install",
       // Explicit, so inherited global, location or workspace settings cannot install outside the consumer.
@@ -100,13 +98,10 @@ try {
   assert.equal((await stat(executable)).isFile(), true);
   await assertNoStaleChunks(path.dirname(executable));
   assert.equal((await run(process.execPath, [executable, "--version"], consumerRoot)).output.trim(), installedPackage.version);
-  const installedBin = path.join(
-    consumerRoot,
-    "node_modules",
-    ".bin",
-    process.platform === "win32" ? "html-inbox.cmd" : "html-inbox",
-  );
-  assert.equal((await run(installedBin, ["--version"], consumerRoot)).output.trim(), installedPackage.version);
+  const shimVersion = process.platform === "win32"
+    ? await run("cmd.exe", ["/d", "/c", ".\\node_modules\\.bin\\html-inbox.cmd", "--version"], consumerRoot)
+    : await run(path.join(consumerRoot, "node_modules", ".bin", "html-inbox"), ["--version"], consumerRoot);
+  assert.equal(shimVersion.output.trim(), installedPackage.version);
   const help = (await run(process.execPath, [executable, "--help"], consumerRoot)).output;
   assert.match(help, /remote init --account/);
   assert.match(help, /export --out <directory>/);
@@ -558,12 +553,21 @@ function fixtureEnvironment(overrides) {
   };
 }
 
+function runNpm(args, cwd, env) {
+  if (process.platform === "win32") {
+    const npmCli = path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js");
+
+    return run(process.execPath, [npmCli, ...args], cwd, env);
+  }
+
+  return run("npm", args, cwd, env);
+}
+
 async function run(command, args, cwd, env = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd,
       env: fixtureEnvironment(env),
-      shell: process.platform === "win32" && command !== process.execPath,
       stdio: ["ignore", "pipe", "pipe"],
       timeout: 120_000,
       killSignal: "SIGKILL",

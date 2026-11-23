@@ -44,7 +44,9 @@ def main():
     def interrupt(signum, frame):
         raise InterruptedError(f'signal {signum}')
 
-    signal.signal(signal.SIGTERM, interrupt)
+    if signal.getsignal(signal.SIGTERM) != signal.SIG_IGN:
+        signal.signal(signal.SIGTERM, interrupt)
+
     args.out.mkdir(parents=True, exist_ok=False)
     node = args.node.resolve()
     consumers = {'base': args.base.resolve(), 'candidate': args.candidate.resolve()}
@@ -82,8 +84,7 @@ def main():
                 # SIGINT and SIGTERM are recorded while the child is being created or cleaned up, and interrupt
                 # only the wait between, so a sample group is always killed and reaped before the signal takes
                 # effect. Handlers raise only while waiting and clear that state first, so nothing raises inside
-                # the cleanup. An inherited SIG_IGN is left alone, and the child starts with default
-                # dispositions because exec resets caught signals.
+                # the cleanup. exec preserves ignored signals and resets caught signals to default.
                 interrupts = []
                 is_waiting = False
 
@@ -101,7 +102,7 @@ def main():
                         raise TimeoutError(command)
 
                 deferred = {number: signal.signal(number, interrupt) for number in (signal.SIGINT, signal.SIGTERM)
-                            if signal.getsignal(number) is not signal.SIG_IGN}
+                            if signal.getsignal(number) != signal.SIG_IGN}
                 previous = signal.signal(signal.SIGALRM, timeout)
                 try:
                     start = time.perf_counter()
