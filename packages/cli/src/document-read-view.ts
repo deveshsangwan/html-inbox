@@ -14,14 +14,17 @@ export async function withDocumentReadView<T>(
   let callbackFailure: unknown;
   const stopAdmission = () => { isClosed = true; };
 
-  async function read<Result>(action: (source: DocumentReadView) => Promise<Result>): Promise<Result> {
+  function read<Result>(action: (source: DocumentReadView) => Promise<Result>): Promise<Result> {
     if (isClosed || !current) {
-      throw new Error("Document read view is closed");
+      return Promise.reject(new Error("Document read view is closed"));
     }
 
-    signal?.throwIfAborted();
+    if (signal?.aborted) {
+      return Promise.reject(signal.reason);
+    }
+
     if (pending) {
-      throw new Error("Document read view already has an active read");
+      return Promise.reject(new Error("Document read view already has an active read"));
     }
 
     const source = current;

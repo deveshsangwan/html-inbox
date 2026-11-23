@@ -6,13 +6,14 @@ import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import type { TestContext } from "node:test";
 
-/** The probes own no services. Join their process group before removing their TMPDIR. */
+/** Run each probe in one process and verify its group is gone before removing its TMPDIR. */
 export async function runManagedViewProbe(t: TestContext, kind: "actual-view" | "retention") {
   assert.notEqual(process.platform, "win32", "Managed storage probes require POSIX enrollment");
   const root = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-view-ci-")));
   const repo = path.resolve(__dirname, "../../..");
   const script = kind === "actual-view" ? "managed-view-contract.cjs" : "managed-view-retention.cjs";
-  const args = [...(kind === "retention" ? ["--expose-gc"] : []), "--test", "--test-reporter=tap", path.join(repo, "scripts", "bench", script)];
+  // These files register node:test cases themselves. --test would spawn a second process.
+  const args = [...(kind === "retention" ? ["--expose-gc"] : []), "--test-reporter=tap", path.join(repo, "scripts", "bench", script)];
   const child = spawn(process.execPath, args, {
     cwd: repo,
     detached: true,
@@ -32,19 +33,11 @@ export async function runManagedViewProbe(t: TestContext, kind: "actual-view" | 
     child.once("close", (code, signal) => resolve({ code, signal }));
   });
 
-  const signalGroup = (signal: NodeJS.Signals) => {
-    if (!child.pid) {
-      return;
-    }
-
+  const signalChild = (signal: NodeJS.Signals) => {
     try {
-      process.kill(-child.pid, signal);
+      child.kill(signal);
     } catch (error) {
-      if (error instanceof Error && "code" in error && error.code === "ESRCH") {
-        return;
-      }
-
-      failure = new AggregateError([...(failure ? [failure] : []), error], "Managed view probe group signalling failed");
+      failure = new AggregateError([...(failure ? [failure] : []), error], "Managed view probe signalling failed");
     }
   };
   const stop = (error: Error) => {
@@ -53,8 +46,8 @@ export async function runManagedViewProbe(t: TestContext, kind: "actual-view" | 
     }
 
     failure = error;
-    signalGroup("SIGTERM");
-    escalation = setTimeout(() => signalGroup("SIGKILL"), 2000);
+    signalChild("SIGTERM");
+    escalation = setTimeout(() => signalChild("SIGKILL"), 2000);
   };
   const record = (bytes: Buffer, stream: "stdout" | "stderr") => {
     outputBytes += bytes.length;
@@ -104,7 +97,6 @@ export async function runManagedViewProbe(t: TestContext, kind: "actual-view" | 
     t.signal.removeEventListener("abort", onAbort);
     try {
       await closed;
-      signalGroup("SIGKILL");
       const until = Date.now() + 3000;
       let absent = false;
       while (Date.now() < until) {

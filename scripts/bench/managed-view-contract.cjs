@@ -454,7 +454,7 @@ for (const target of ['ledger', 'body']) {
   }
 }
 
-test('callback and admitted-read failures both survive drain and disposal', async () => {
+test('callback and admitted-read failures both reach the scope without observing the read separately', async () => {
   const entered = deferred();
   const release = deferred();
   const callbackError = new Error('callback primary');
@@ -467,7 +467,7 @@ test('callback and admitted-read failures both survive drain and disposal', asyn
     async getDocument() { return null; },
   }, async (view) => {
     escaped = view;
-    void view.listDocuments().catch(() => {});
+    void view.listDocuments();
     await entered.promise;
     throw callbackError;
   }, undefined, () => { disposed += 1; });
