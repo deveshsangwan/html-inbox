@@ -2,7 +2,7 @@
 
 Issue: https://github.com/deveshsangwan/html-inbox/issues/93
 
-Immediate benchmark parent: `610c931b7b22920cce59cf03e49c0de15ebaf2a2`, branch `perf/89-bench`, PR #114. The exploration reference `1ae641ac088e5e504fc222e39726ad631b342b8c` is historical, not the measurement baseline. Compatibility remains Node >=20. No runtime, package version, storage or release policy changes.
+Benchmark parent at measurement time: `610c931b7b22920cce59cf03e49c0de15ebaf2a2`, branch `perf/89-bench`, PR #114. The PR has since been restacked on `08d5b2b056515ad876ac8aec2a164eea82050fa0`; see the measurement outcome below for what that changes. Current integration status is in `scripts/bench/evidence/startup/integration-2026-11-15.md` and the PR body. The exploration reference `1ae641ac088e5e504fc222e39726ad631b342b8c` is historical, not the measurement baseline. Compatibility remains Node >=20. No runtime, package version, storage or release policy changes.
 
 This change is provisional until the installed ncc artifact demonstrates a repeatable benefit. The lightweight entrypoint handles complete no-argument/help/version invocations. Other arguments retain the existing parser. Command handlers are loaded after parsing; internal owner inspection runs before parsing, and IPC deletion retains its original argument/connection gate. No command implementation or parser rules change.
 

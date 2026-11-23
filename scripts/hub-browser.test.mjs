@@ -260,15 +260,18 @@ async function startFixtureHub(root, configuration, onStarted) {
 
   const config = path.join(root, "hub.json");
   await writeHubConfig(config, configuration);
+  // Developer-shell library, limit and Node runtime settings must not reach the fixture child.
+  const inheritedEnvironment = Object.fromEntries(Object.entries(process.env)
+    .filter(([key]) => !key.startsWith("HTML_INBOX_") && !key.startsWith("NODE_")));
   const origin = `http://127.0.0.1:${await availablePort()}`;
   const child = spawn(process.execPath, [executable, "hub", "--config", config,
     "--loopback", "--host", "127.0.0.1", "--port", new URL(origin).port], {
     cwd: root,
-    env: { ...process.env, HOME: root, USERPROFILE: root,
+    env: { ...inheritedEnvironment, HOME: root, USERPROFILE: root,
       HTML_INBOX_HOME: path.join(root, "unused-home"), HTML_INBOX_CATALOG_HOME: path.join(root, "catalog"),
       XDG_CONFIG_HOME: path.join(root, "config"), XDG_DATA_HOME: path.join(root, "data"),
       XDG_STATE_HOME: path.join(root, "state"), XDG_CACHE_HOME: path.join(root, "cache"),
-      TMPDIR: root, TMP: root, TEMP: root, NODE_OPTIONS: "", NODE_PATH: "" },
+      TMPDIR: root, TMP: root, TEMP: root },
     stdio: ["ignore", "pipe", "pipe"],
   });
   const childErrors = [];
@@ -315,13 +318,13 @@ async function startFixtureHub(root, configuration, onStarted) {
     }
 
     closeOutcome = { pid: child.pid, readinessPublished, teardownRequested, hadExited,
-      nativeExit, nativeClose: result, forced, stderr,
+      nativeExit, nativeClose: result ?? "unjoined", forced, stderr,
       errors: childErrors.map((error) => error instanceof Error
         ? { ...error, name: error.name, message: error.message, stack: error.stack }
         : { thrown: String(error) }) };
     const failures = [...childErrors];
     if (!result) {
-      failures.push(new Error("Installed hub did not close within 6 s, including forced cleanup"));
+      failures.push(new Error(`Installed hub child ${child.pid} is unjoined: no close within 6 s, including forced cleanup`));
     }
     if (hadExited || result?.beforeTeardown || nativeExit?.beforeTeardown) {
       failures.push(new Error("Installed hub terminated before intentional fixture teardown"));

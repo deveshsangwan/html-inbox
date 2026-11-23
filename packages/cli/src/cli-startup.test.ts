@@ -19,18 +19,21 @@ test("entry dispatch preserves parser output and errors around help/version", as
   ];
 
   for (const args of invocations) {
-    let expectedOutput: string;
+    let expectedOutput = "";
     let expectedError = "";
     let expectedCode = 0;
+    let command: string | undefined;
 
     try {
-      const parsed = parseCommand(args);
-      assert.ok(parsed.command === "help" || parsed.command === "version");
-      expectedOutput = `${parsed.command === "help" ? USAGE : getCliVersion()}\n`;
+      command = parseCommand(args).command;
     } catch (error) {
-      expectedOutput = "";
       expectedError = `html-inbox: ${error instanceof Error ? error.message : String(error)}\n`;
       expectedCode = 1;
+    }
+
+    if (command !== undefined) {
+      assert.ok(command === "help" || command === "version", JSON.stringify(args));
+      expectedOutput = `${command === "help" ? USAGE : getCliVersion()}\n`;
     }
 
     const result = await executeFile(process.execPath, [path.join(__dirname, "index.js"), ...args])

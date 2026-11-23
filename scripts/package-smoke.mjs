@@ -106,8 +106,10 @@ try {
 const Module = require("node:module");
 const load = Module._load;
 Module._load = function (request, ...args) {
-  if (/^(node:)?(http|https|http2|tls|net|crypto|child_process|readline(?:\\/promises)?)$/.test(request)) {
-    throw new Error("Unexpected subsystem during help/version: " + request);
+  // Canonical help/version must need no deferred ncc chunk (./NNN.index.js) and no network/process subsystem.
+  if (/^(node:)?(http|https|http2|tls|net|crypto|child_process|readline(?:\\/promises)?)$/.test(request) ||
+    /\\.index\\.js$/.test(request)) {
+    throw new Error("Unexpected module during help/version: " + request);
   }
   return load.call(this, request, ...args);
 };
