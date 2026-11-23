@@ -129,14 +129,19 @@ test("a failed listing keeps its first error and skips queued reads while a wait
   const healthyDocuments = path.join(healthyHome, "documents");
   const readdir = fs.readdir;
   const readFile = fs.readFile;
+  const lstat = fs.lstat;
   const heldReads: Array<(error?: Error) => void> = [];
   let failingReads = 0;
   let activeFailingReads = 0;
   let healthyReads = 0;
   let activeHealthyReads = 0;
-  let isGated = false;
-  let openGate = () => {};
-  const gate = new Promise<void>((resolve) => { openGate = resolve; });
+  let isCountingAdmissions = false;
+  let healthyEnumerations = 0;
+  let admittedRecords = 0;
+  let releaseEnumerations = () => {};
+  const bothEnumerated = new Promise<void>((resolve) => { releaseEnumerations = resolve; });
+  let releaseAdmissions = () => {};
+  const admissionsCounted = new Promise<void>((resolve) => { releaseAdmissions = resolve; });
   let reportEightHeld = () => {};
   const eightHeld = new Promise<void>((resolve) => { reportEightHeld = resolve; });
   let reportHealthyEnumerated = () => {};
@@ -149,7 +154,30 @@ test("a failed listing keeps its first error and skips queued reads while a wait
 
     const entries = await enumerateInOrder(readdir, healthyDocuments, healthyEnumeration);
     reportHealthyEnumerated();
+
+    if (isCountingAdmissions) {
+      healthyEnumerations += 1;
+
+      if (healthyEnumerations === 2) {
+        releaseEnumerations();
+      }
+
+      await bothEnumerated;
+    }
+
     return entries;
+  });
+
+  // Hardening starts with lstat on the record directory as soon as a worker holds a permit.
+  t.mock.method(fs, "lstat", async (...args: Parameters<typeof fs.lstat>) => {
+    const file = String(args[0]);
+
+    if (isCountingAdmissions && path.dirname(file) === healthyDocuments && healthyEnumeration.includes(path.basename(file))) {
+      admittedRecords += 1;
+      await admissionsCounted;
+    }
+
+    return lstat(...args);
   });
 
   t.mock.method(fs, "readFile", async (...args: Parameters<typeof fs.readFile>) => {
@@ -191,14 +219,6 @@ test("a failed listing keeps its first error and skips queued reads while a wait
     activeHealthyReads += 1;
 
     try {
-      if (isGated) {
-        if (activeHealthyReads === 8) {
-          openGate();
-        }
-
-        await gate;
-      }
-
       await setImmediate();
       return await readFile(...args);
     } finally {
@@ -214,7 +234,7 @@ test("a failed listing keeps its first error and skips queued reads while a wait
   let isHealthySettled = false;
   const healthy = new LocalDocumentBackend(healthyHome).listDocuments().finally(() => { isHealthySettled = true; });
   await healthyEnumerated;
-  await new Promise((resolve) => setTimeout(resolve, 20));
+  await setImmediate();
   assert.equal(healthyReads, 0, "the second listing waits while the first holds all eight permits");
   assert.equal(isHealthySettled, false);
 
@@ -237,9 +257,90 @@ test("a failed listing keeps its first error and skips queued reads while a wait
   assert.deepEqual(await healthy, expected);
   assert.equal(activeHealthyReads, 0);
 
-  // A leaked permit would leave fewer than eight slots, so this listing could never open the gate.
-  isGated = true;
-  assert.deepEqual(await new LocalDocumentBackend(healthyHome).listDocuments(), expected);
+  // Both listings enumerate together, so their sixteen workers ask for permits in one turn. Exactly eight
+  // may be admitted: a leaked permit admits fewer, and a permit released twice admits more.
+  isCountingAdmissions = true;
+  const concurrent = Promise.all([0, 1].map(() => new LocalDocumentBackend(healthyHome).listDocuments()));
+  await bothEnumerated;
+  await setImmediate();
+  assert.equal(admittedRecords, 8);
+
+  releaseAdmissions();
+  assert.deepEqual(await concurrent, [expected, expected]);
+});
+
+test("waiting listings receive released permits in arrival order", { timeout: 10_000 }, async (t) => {
+  const holdingHome = await temporaryHome(t);
+  const firstHome = await temporaryHome(t);
+  const secondHome = await temporaryHome(t);
+  const holdingRecords = await seed(holdingHome, 8);
+  const holdingEnumeration = holdingRecords.map((record) => record.id).sort();
+  const holdingDocuments = path.join(holdingHome, "documents");
+  const firstExpected = await seed(firstHome, 1);
+  const secondExpected = await seed(secondHome, 1);
+  const readdir = fs.readdir;
+  const readFile = fs.readFile;
+  const heldReads: Array<() => void> = [];
+  const enumerationSignals = new Map<string, () => void>();
+  const settlementOrder: string[] = [];
+  let reportEightHeld = () => {};
+  const eightHeld = new Promise<void>((resolve) => { reportEightHeld = resolve; });
+
+  // Records come before storage directories, so the holding listing's eight workers all read real records.
+  t.mock.method(fs, "readdir", async (...args: Parameters<typeof fs.readdir>) => {
+    const directory = String(args[0]);
+    const entries = directory === holdingDocuments
+      ? await enumerateInOrder(readdir, holdingDocuments, holdingEnumeration)
+      : await readdir(...args);
+
+    enumerationSignals.get(directory)?.();
+    return entries;
+  });
+
+  t.mock.method(fs, "readFile", async (...args: Parameters<typeof fs.readFile>) => {
+    const bytes = await readFile(...args);
+    const file = String(args[0]);
+
+    if (file.startsWith(holdingDocuments + path.sep) && file.endsWith("metadata.json")) {
+      await new Promise<void>((resolve) => {
+        heldReads.push(resolve);
+
+        if (heldReads.length === 8) {
+          reportEightHeld();
+        }
+      });
+    }
+
+    return bytes;
+  });
+
+  const startWaitingListing = async (home: string, label: string) => {
+    const enumerated = new Promise<void>((resolve) => { enumerationSignals.set(path.join(home, "documents"), resolve); });
+    const listing = new LocalDocumentBackend(home).listDocuments().then((documents) => {
+      settlementOrder.push(label);
+      return documents;
+    });
+
+    await enumerated;
+    await setImmediate();
+    return { listing };
+  };
+
+  const holding = new LocalDocumentBackend(holdingHome).listDocuments();
+  await eightHeld;
+  const first = await startWaitingListing(firstHome, "first");
+  const second = await startWaitingListing(secondHome, "second");
+
+  // One permit circulates: every waiter of the earlier listing is served before any waiter of the later one.
+  heldReads[0]();
+  assert.deepEqual(await Promise.all([first.listing, second.listing]), [firstExpected, secondExpected]);
+  assert.deepEqual(settlementOrder, ["first", "second"]);
+
+  for (const release of heldReads.slice(1)) {
+    release();
+  }
+
+  assert.equal((await holding).length, 8);
 });
 
 test("a listing rejects with the exact value its warning callback throws, even undefined", async (t) => {
