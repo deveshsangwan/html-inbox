@@ -4,12 +4,12 @@ Current 0.6.x releases require Node >=20. The planned lines are 0.7.x for compat
 
 ## Branches and publication
 
-- `release/0.7` starts from the reviewed compatibility base on `main`.
+- `release/0.7` was created from this policy PR's reviewed head and now points at an integration of it with `main`. Reconcile it with `main` after the policy PR merges.
 - Compatible performance changes target `release/0.7`. The 0.7.x package keeps Node >=20 and current storage, wire, validation, permissions and durability behavior.
 - Forward-port shared fixes to `main` with separate tests against its implementation. Storage divergence makes an untested cherry-pick unsafe.
 - A separate reviewed activation PR changes `main` to 1.0.0, Node >=24.19.0, modern CI and pre-storage runtime rejection together, after driver/minimum qualification. Modern production changes wait for activation; isolated design/prototype PRs may proceed earlier.
 
-Before 1.0, stable releases retain npm `latest`. After 1.0, `latest` belongs to the modern line and `node20` belongs to the latest 0.7.x release from `release/0.7`. The manual publish workflow requires an explicit tag, reads the current stable npm version, and rejects wrong branch/engine/tag combinations before installing or packing. It blocks all modern publication until activation implements the remaining gates. Registry lookup failure stops publication. npm tags and Git release tags change only during a separately authorized release, never during policy implementation. No automatic merge or publication is authorized here.
+Before 1.0, stable releases retain npm `latest`. After 1.0, `latest` belongs to the modern line and `node20` belongs to the latest 0.7.x release from `release/0.7`. The manual publish workflow requires an explicit tag, reads the current stable npm version, and rejects wrong branch/engine/tag combinations or a backward `latest` move before installing or packing. It rereads `latest` just before publishing and confirms the selected tag afterward. These checks see only the registry state at each read. It blocks all modern publication until activation implements the remaining gates. Registry lookup failure stops publication. npm tags and Git release tags change only during a separately authorized release, never during policy implementation. No automatic merge or publication is authorized here.
 
 ## Runtime and library selection
 
@@ -23,4 +23,4 @@ Before switching versions or formats, stop viewers, hubs and independent sync wo
 
 ## Activation requirements
 
-Modern activation requires driver qualification, pre-storage runtime rejection, exact-archive tests on Node 24.19.0 and Node 26, and format-aware skill resolution. Raising the runtime minimum later requires a deliberate release-policy change, never a silent patch. Package engines, CI, package smoke checks, READMEs, website and both skills must agree at activation. See the [implementation receipt and remaining gates](performance/88-prerequisite-validation.md) for current validation status.
+Before 0.7.0 is published, both skills must accept installed stable 0.7.x, with tests; their current check accepts only 0.2.x through 0.6.x and would route 0.7.x users to the 0.5.0 fallback. Modern activation requires driver qualification, pre-storage runtime rejection, exact-archive tests on Node 24.19.0 and Node 26, and format-aware skill resolution. Raising the runtime minimum later requires a deliberate release-policy change, never a silent patch. Package engines, CI, package smoke checks, READMEs, website and both skills must agree at activation. See the [implementation receipt and remaining gates](performance/88-prerequisite-validation.md) for current validation status.

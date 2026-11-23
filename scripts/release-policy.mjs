@@ -49,6 +49,10 @@ export function verifyReleasePolicy({ version, engines, requestedVersion, ref, t
     return { version, tag };
   }
 
+  if (major === 0n) {
+    throw new Error("Before 1.x activation, publish only 0.6.x or 0.7.x compatibility releases");
+  }
+
   // Modern publication stays blocked until the candidate's driver and package gates exist.
   throw new Error("Modern release activation is pending the 1.x runtime, storage and package qualification PR");
 }

@@ -42,19 +42,16 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org/
 
-      - name: Read current stable npm release
-        id: registry
-        run: |
-          latest_version=$(npm view html-inbox@latest version --prefer-online --registry=https://registry.npmjs.org/)
-          echo "latest=$latest_version" >> "$GITHUB_OUTPUT"
-
-      - name: Verify release policy
+      # The policy validates the registry value before anything reaches GITHUB_OUTPUT.
+      - name: Verify release policy against npm latest
         id: release
         env:
           EXPECTED_VERSION: ${{ inputs.version }}
           RELEASE_TAG: ${{ inputs.tag }}
-          NPM_LATEST_VERSION: ${{ steps.registry.outputs.latest }}
-        run: node scripts/release-policy.mjs
+        run: |
+          NPM_LATEST_VERSION=$(npm view html-inbox@latest version --prefer-online --registry=https://registry.npmjs.org/)
+          export NPM_LATEST_VERSION
+          node scripts/release-policy.mjs
 
       - name: Enable Corepack
         run: corepack enable
@@ -84,15 +81,26 @@ jobs:
           path: html-inbox-${{ steps.release.outputs.version }}.tgz
           if-no-files-found: error
 
+      # Testing and packing take minutes, so reread latest just before the irreversible publish.
+      - name: Recheck release policy against current npm latest
+        env:
+          EXPECTED_VERSION: ${{ inputs.version }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          NPM_LATEST_VERSION=$(npm view html-inbox@latest version --prefer-online --registry=https://registry.npmjs.org/)
+          export NPM_LATEST_VERSION
+          node scripts/release-policy.mjs
+
       - name: Publish verified artifact with npm trusted publishing
         env:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
         run: npm publish "./html-inbox-${RELEASE_VERSION}.tgz" --access public --tag "$RELEASE_TAG" --registry=https://registry.npmjs.org/
 
-      - name: Verify published version
+      - name: Verify published version and tag
         env:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
         run: |
           expected_integrity=$(node --input-type=module <<'JS'
           import { createHash } from "node:crypto";
@@ -109,12 +117,15 @@ jobs:
                 exit 1
               fi
 
-              echo "Verified html-inbox@${RELEASE_VERSION}: ${published_integrity}"
-              exit 0
+              tagged_version=$(npm view "html-inbox@${RELEASE_TAG}" version --prefer-online --registry=https://registry.npmjs.org/ || true)
+              if [ "$tagged_version" = "$RELEASE_VERSION" ]; then
+                echo "Verified html-inbox@${RELEASE_VERSION} as ${RELEASE_TAG}: ${published_integrity}"
+                exit 0
+              fi
             fi
 
             if [ "$attempt" -eq 20 ]; then
-              echo "Published version is still unavailable after 20 checks; inspect npm before retrying publication" >&2
+              echo "Published version or its ${RELEASE_TAG} tag is still unconfirmed after 20 checks; inspect npm before retrying publication" >&2
               exit 1
             fi
 

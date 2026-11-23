@@ -27,6 +27,7 @@ This prerequisite supplies branch/tag publication guards, lightweight policy tes
 Before #88 can close:
 
 - Qualify 0.7.x packages on Node 20 and a modern runtime, preserving existing behavior.
+- Before 0.7.0 publication, extend both skills' installed-version check to accept stable 0.7.x, with tests. Today it accepts 0.2.x through 0.6.x and would select the 0.5.0 fallback for 0.7.x.
 - Select the modern driver and qualify the actual Node >=24.19.0 minimum. Raising that minimum later requires a deliberate release-policy change, never a silent patch.
 - Build a modern candidate with an entry point that rejects unsupported runtimes before imports or initialization can touch storage. An `engines` declaration alone is insufficient.
 - Test the exact modern archive at the minimum and Node 26, including unsupported-runtime rejection with an untouched library. Add the modern CI matrix and publish artifact gates together with activation.
