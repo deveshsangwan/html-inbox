@@ -88,6 +88,7 @@ try {
 
   const executable = path.join(installedRoot, "bundle", "index.js");
   assert.equal((await stat(executable)).isFile(), true);
+  await assertNoStaleChunks(path.dirname(executable));
   assert.equal((await run(process.execPath, [executable, "--version"], consumerRoot)).output.trim(), installedPackage.version);
   const installedBin = path.join(
     consumerRoot,
@@ -431,6 +432,22 @@ Module._load = function (request, ...args) {
   }
 
   if (primaryFailure) throw primaryFailure;
+}
+
+// ncc writes into bundle/ without clearing it, so a pack can carry chunks from an earlier build.
+// Every shipped chunk must be one the shipped code requests, and every requested chunk must ship.
+async function assertNoStaleChunks(bundleDirectory) {
+  const files = (await readdir(bundleDirectory)).filter((name) => name.endsWith(".js"));
+  const requested = new Set();
+  for (const name of files) {
+    const source = await readFile(path.join(bundleDirectory, name), "utf8");
+    for (const match of source.matchAll(/__nccwpck_require__\.e\((\d+)\)/g)) {
+      requested.add(`${match[1]}.index.js`);
+    }
+  }
+
+  const shipped = files.filter((name) => name !== "index.js").sort();
+  assert.deepEqual(shipped, [...requested].sort(), "Installed bundle chunks must match the chunks its code requests");
 }
 
 async function deleteThroughViewer(origin, documentUrl) {

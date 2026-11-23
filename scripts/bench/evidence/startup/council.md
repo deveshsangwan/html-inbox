@@ -2,10 +2,10 @@
 
 The user requested a council: one Anthropic and one OpenAI flagship reviewer, each at high effort. Both reviewers get the same brief and review the same exact revision, read-only, each in its own isolated worktree. Rounds repeat until both independently score at least 9.5/10 on the same revision. Scores are recorded as given, never averaged or rounded. Earlier stack-status and V1/V2 reviews in [reviews.md](reviews.md) do not count toward this council.
 
-| Delegate | Exact settings | Round 1 | Round 2 |
-| --- | --- | --- | --- |
-| Claude Opus | provider `claudeAgent`, model `claude-opus-5-5`, `effort=high` | 9.0/10 | 9.2/10 |
-| GPT Sol | provider `codex`, model `gpt-6.2-sol`, `reasoningEffort=high` | 8.3/10 | 8.4/10 |
+| Delegate | Exact settings | Round 1 | Round 2 | Round 3 |
+| --- | --- | --- | --- | --- |
+| Claude Opus | provider `claudeAgent`, model `claude-opus-5-5`, `effort=high` | 9.0/10 | 9.2/10 | 9.3/10 |
+| GPT Sol | provider `codex`, model `gpt-6.2-sol`, `reasoningEffort=high` | 8.3/10 | 8.4/10 | 8.8/10 |
 
 ## Round 1
 
@@ -75,6 +75,31 @@ Pre-run generated outputs were restored by set, kind, mode, mtime_ns, size, sha2
 | The first worker PID was checked only after the final disable, and a probe error lost its PID | Opus, Nit | Fixed. The success path asserts that the first worker exits right after `stop`, and probe errors name the PID. |
 | `startFixtureHub` mixed validation, environment construction and teardown in compressed blocks | Opus, Nit | Partly fixed without behavior change. Installed-executable validation, the isolated child environment and child signalling are extracted; compressed `try` and `if` lines are expanded. The close and readiness logic stays inline, because splitting it further would mean restructuring tested teardown without a behavior benefit. |
 
-### Still required
+### Pending after round 2
 
 The round 3 revision changes package scripts and harnesses after the `fee269e` qualification. Running the real package script from a disposable checkout pre-seeded with an obsolete chunk, the startup test and package smoke on both runtimes, and the source and installed hub browser cases on Node 24 all need a new root grant. Light checks so far: `node --check` on every changed script. Hosted CI on `fee269e` was still running when the reviewers looked.
+
+## Round 3
+
+Revision `6f12a372f8c6db31ee8d648953e45524a7717ea5`, base `08d5b2b`. Both reviewers again recomputed all 60 summary groups with zero mismatches and found no production-code defect. Both read the emitted `fee269e` installed bundle: canonical help/version return before any chunk load, and every command, parser, preflight and deletion-worker module sits behind a chunk request. Opus confirmed that hosted package smoke at `6f12a37` passed on Ubuntu Node 20, Ubuntu Node 24 and Windows Node 24, through the real `npm pack` → `prepack` → clean bundle path.
+
+### Fixed
+
+| Finding | Reviewer, severity | Disposition |
+| --- | --- | --- |
+| The fallback viewer stop accepted exit 0 even when the state was `conflict` or `incompatible`, both of which leave the viewer unsignalled | Sol, Medium | Fixed. The fallback parses the JSON and requires `stopped`. Any other state is a cleanup failure, and the fixture is retained. |
+| `Promise.all` over the three concurrent viewer starts let cleanup run while a sibling start was still in progress | Sol, Medium | Fixed. The starts stay concurrent, but every one is joined with `Promise.allSettled` before failures are reported and cleanup runs. |
+| After a failed disable or PID probe, both worker postconditions were skipped | Sol, Low | Fixed. The runtime-record check always runs; the status check runs whenever enrollment succeeded. |
+| A hub readiness failure followed by a clean close deleted the fixture | Sol, Low | Fixed. The handle records the startup failure, and `closeHubFixture` keeps the root and reports where. |
+| The teardown addendum still said installed qualification was pending | Sol, Nit | Fixed. It points to the passed `fee269e` run and to this record for later heads. |
+| No automatic check catches stale chunks in a tarball packed with `--ignore-scripts` | Opus, Low | Fixed. Package smoke now asserts that the installed bundle's chunk files equal the chunk IDs its code requests (`__nccwpck_require__.e(N)`). Against the retained bundles (read-only), the check passes the clean `fee269e` bundle, the single-file base and the measured candidate. It fails the 15 November bundle, naming exactly its 7 stale chunks. |
+| The shared Tailscale recording fixture's `NODE_OPTIONS` change also affects `skill-cli-package-smoke.mjs`, and no record mentioned it | Opus, Low | Documented and kept. The fixture no longer forwards the caller's `NODE_OPTIONS`, so the Tailscale phase of both package smoke and the skill CLI smoke runs with only the fixture's preload. Package smoke is fully isolated. The skill smoke's other phases still inherit the shell's `NODE_OPTIONS`. CI sets no `NODE_*`, so CI behavior is unchanged. |
+| "Production entry graph byte-identical" could be read as covering `cli-commands.ts`'s transitive imports | Opus, Nit | Fixed in the PR body. The six canonical help/version load-set files are byte-identical to `8ae19fd`. Modules that `cli-commands.ts` imports changed through the `d812d25` merge, and canonical help/version never load them. |
+
+### Failure-path coverage
+
+The hub fixture's failure paths can be driven with fake installed bundles, without production test hooks. The next qualification adds two expected-failure probes. In one, the fake bundle announces the wrong URL and then exits cleanly; the probe expects a reported startup failure and a retained fixture. In the other, the fake bundle announces the right origin but leaves a grandchild holding its pipes; the probe expects the "unjoined" report, the suite-level failure and a retained fixture. Package smoke's unconfirmed-stop, failed-concurrent-start and failed-disable paths cannot be triggered without production test hooks, so they rest on code review by both reviewers.
+
+### Still required
+
+The round 4 revision needs a root-granted qualification. It runs the real scripts-enabled `npm pack` and `npm run bundle` against a seeded obsolete chunk in a disposable project. The preserved tarball then feeds both Node smokes and the installed hub suite, plus the source-mode checks and the hub failure probes. Light checks so far: `node --check`, and the read-only stale-chunk check on retained bundles.
