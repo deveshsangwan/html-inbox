@@ -86,7 +86,8 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
     const inputs = Array.from({ length: count }, (_, index) => peerInput(index, size));
 
     for (let sample = 0; sample < samples; sample += 1) {
-      const source = new ManagedSyncStore(path.join(root, `source-${sample}`));
+      const sourceHome = path.join(root, `source-${sample}`);
+      const source = new ManagedSyncStore(sourceHome);
       await record(`${setup}enroll/${count}`, async () => {
         await source.enroll();
         return { source: storageCounters(source) };
@@ -106,7 +107,11 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
         return { records: Object.keys(ledger.records).length };
       });
 
-      if (mode === "managed") continue;
+      // Each verified sample's stores are removed outside timing, so disk use does not grow with samples.
+      if (mode === "managed") {
+        await rm(sourceHome, { recursive: true, force: true });
+        continue;
+      }
 
       // Receiver enrollment is setup; only source enrollment is an operation sample.
       const destinationHome = path.join(root, `receiver-${sample}`);
@@ -173,6 +178,8 @@ async function runSync({ root, count, size = 10240, samples = 3, record, mode = 
       await server.close();
       assert.equal(server.status().listening, false);
       assert.equal(server.status().sockets, 0);
+      await rm(sourceHome, { recursive: true, force: true });
+      await rm(destinationHome, { recursive: true, force: true });
     }
   } catch (error) {
     for (const cleanup of cleanups.reverse()) await cleanup().catch(() => {});

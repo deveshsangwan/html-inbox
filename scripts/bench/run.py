@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Linux resource runner. No third party Python packages; build and bundle first."""
 import argparse
+import filecmp
 import hashlib
 import json
 import os
@@ -31,6 +32,10 @@ HASH_CHUNK_BYTES = 1 << 20
 
 class BehaviorCheckError(RuntimeError):
     """A workload produced output that does not match its fixture."""
+
+
+class RunInterrupted(Exception):
+    """A deferred SIGINT, SIGTERM or SIGHUP cancelled the run."""
 
 
 def expect(condition, message):
@@ -109,7 +114,7 @@ def stale_build_inputs():
 
 
 def update_hash(digest, path):
-    # Children inherit the runner's memory high-water mark at exec, so large files are never read whole.
+    # Large allocations in the runner can contaminate later child RSS measurements.
     with path.open('rb') as stream:
         while chunk := stream.read(HASH_CHUNK_BYTES):
             digest.update(chunk)
@@ -129,6 +134,7 @@ def build_fingerprints(args):
     return dict(bundle_sha256=sha256_file(BUNDLE), dist_js_sha256=dist_hash.hexdigest(),
                 node_sha256=sha256_file(Path(args.node)),
                 harness_sha256={str(p.relative_to(REPO)): sha256_file(p) for p in HARNESS},
+                lockfile_sha256=sha256_file(REPO / 'pnpm-lock.yaml'),
                 candidate_sha256=sha256_file(Path(args.candidate)) if args.candidate else None)
 
 
@@ -228,7 +234,7 @@ class Interrupts:
 
     def check(self):
         if self.signum is not None:
-            raise InterruptedError(f'signal {self.signum}')
+            raise RunInterrupted(f'signal {self.signum}')
 
 
 class ProcessRunner:
@@ -243,27 +249,39 @@ class ProcessRunner:
         self.active = None
         self.unverified_groups = {}
 
-    def append(self, row):
-        self.rows.append(row)
+    def append(self, row, *, helper_output=False):
         with (self.out / 'samples.jsonl').open('a') as stream:
             stream.write(json.dumps(row) + '\n')
 
-    def run(self, label, command, check=None):
-        """Run a measured command; its row records whether the behavior check passed."""
+        # Raw output stays in samples.jsonl; memory keeps only what the summary needs, so the
+        # runner's high-water mark (inherited by later children) does not grow with output size.
+        if 'wall_ms' in row:
+            operations = nested_operations(row['stdout']) if helper_output else []
+            self.rows.append(dict(label=row['label'], wall_ms=row['wall_ms'], operations=operations))
+
+    def run(self, label, command, check=None, helper_checks=False):
+        """Run a measured command; its row records how its behavior was checked.
+
+        `check` validates output in Python. Helper workloads assert inside Node and
+        exit nonzero on a mismatch, so their checks pass exactly when they exit 0.
+        """
         def measured(result, completed):
-            behavior = 'not checked: command failed' if not completed else 'unchecked'
+            behavior = 'none' if completed else result['failure']
             try:
-                if completed and check:
-                    check(result['output'])
-                    behavior = 'passed'
+                if completed:
+                    behavior = 'passed: helper exit status' if helper_checks else 'none'
+                    if check:
+                        check(result['output'])
+                        behavior = 'passed'
             except BaseException:
                 behavior = 'failed'
                 raise
             finally:
                 self.append(dict(label=label, command=command, exit_code=result['exit_code'], wall_ms=result['wall_ms'],
                                  cpu_ms=result['cpu_ms'], peak_rss_kib=result['peak_rss_kib'],
+                                 runner_peak_rss_kib_at_spawn=result['runner_peak_rss_kib_at_spawn'],
                                  input_blocks=result['input_blocks'], output_blocks=result['output_blocks'],
-                                 behavior=behavior, stdout=result['output'], stderr=result['errors']))
+                                 behavior=behavior, stdout=result['output'], stderr=result['errors']), helper_output=helper_checks)
             return result['output']
 
         return self.supervise(label, command, self.timeout, measured)
@@ -279,9 +297,11 @@ class ProcessRunner:
             try:
                 result = self.execute(label, command, timeout, stdout, stderr)
                 if result['exit_code']:
+                    result['failure'] = 'not checked: command failed'
                     finish(result, False)
                     raise RuntimeError(f"{label}: exit {result['exit_code']}: {result['errors'][-2000:]}")
                 if result['strays']:
+                    result['failure'] = 'not checked: stray descendants'
                     finish(result, False)
                     raise RuntimeError(f"{label}: descendants {result['strays']} outlived the workload process")
                 return finish(result, True)
@@ -290,6 +310,7 @@ class ProcessRunner:
                 raise
 
     def execute(self, label, command, timeout, stdout, stderr):
+        runner_peak_at_spawn = runner_peak_rss_kib()
         start = time.perf_counter()
         child = subprocess.Popen(command, env=self.env, cwd=REPO, stdout=stdout, stderr=stderr, start_new_session=True)
         self.active = child
@@ -306,7 +327,8 @@ class ProcessRunner:
         stdout.seek(0)
         stderr.seek(0)
         return dict(exit_code=exit_code, wall_ms=wall_ms, cpu_ms=(usage.ru_utime + usage.ru_stime) * 1000,
-                    peak_rss_kib=usage.ru_maxrss, input_blocks=usage.ru_inblock, output_blocks=usage.ru_oublock,
+                    peak_rss_kib=usage.ru_maxrss, runner_peak_rss_kib_at_spawn=runner_peak_at_spawn,
+                    input_blocks=usage.ru_inblock, output_blocks=usage.ru_oublock,
                     output=stdout.read().decode(errors='replace'), errors=stderr.read().decode(errors='replace'),
                     strays=strays)
 
@@ -333,7 +355,7 @@ class ProcessRunner:
                     raise TimeoutError(label)
 
                 ready = {fd for fd, _ in poller.poll(remaining * 1000)}
-                # A pending signal wins over a simultaneous exit, so cancellation is never lost.
+                # A pending signal is reported against the command that was running when it arrived.
                 if self.interrupts.reader in ready:
                     self.interrupts.drain()
                     self.interrupts.check()
@@ -378,7 +400,7 @@ def run_workloads(args, runner, root):
     helper = node + [str(REPO / 'scripts/bench/workload.cjs')]
     cli = node + [str(BUNDLE)]
 
-    # A trivial process shows the peak RSS floor that every process row inherits from the runner.
+    # A trivial process gives a reference RSS for launching a child with minimal work.
     runner.run('control/spawn-floor', ['/bin/true'])
 
     if args.workload in ['baseline', 'cli']:
@@ -389,7 +411,7 @@ def run_workloads(args, runner, root):
         home = root / f'library-{count}'
         expected_ids = [f'bench-{i:05}' for i in range(count)]
         if args.workload in ['baseline', 'cli', 'viewer']:
-            runner.run(f'setup/{count}', helper + ['seed', str(home), str(count), str(args.sizes[0]), '1'])
+            runner.run(f'setup/{count}', helper + ['seed', str(home), str(count), str(args.sizes[0]), '1'], helper_checks=True)
 
         if args.workload in ['baseline', 'cli']:
             def check_list(output):
@@ -403,7 +425,8 @@ def run_workloads(args, runner, root):
         for mode in ['viewer', 'worker', 'managed', 'sync']:
             if args.workload in ['baseline', mode]:
                 store = home if mode == 'viewer' else root / f'{mode}-{count}'
-                runner.run(f'{mode}/{count}', helper + [mode, str(store), str(count), str(args.sizes[0]), str(args.samples)])
+                runner.run(f'{mode}/{count}', helper + [mode, str(store), str(count), str(args.sizes[0]), str(args.samples)],
+                           helper_checks=True)
 
     if args.workload in ['baseline', 'parser']:
         for size in args.sizes:
@@ -411,7 +434,7 @@ def run_workloads(args, runner, root):
                 command = helper + ['parser', str(root), '0', str(size), str(args.samples), shape]
                 if args.candidate:
                     command.append(str(Path(args.candidate).resolve()))
-                runner.run(f'parser/{shape}/{size}', command)
+                runner.run(f'parser/{shape}/{size}', command, helper_checks=True)
 
     runner.run('control/spawn-floor', ['/bin/true'])
     runner.interrupts.check()
@@ -427,9 +450,12 @@ def measure_export(runner, cli, home, destination, count, expected_ids):
         exported = list(destination.glob('**/documents/*/content/index.html'))
         exported_ids = sorted(content.parent.parent.name for content in exported)
         expect(exported_ids == expected_ids, f'export wrote {len(exported_ids)} documents, expected {count}')
+        # Each sample reuses these paths. Never reuse a prior sample's comparison at the same mtime.
+        filecmp.clear_cache()
         for content in exported:
             original = home / 'documents' / content.parent.parent.name / 'index.html'
-            expect(content.read_bytes() == original.read_bytes(), f'{content} differs from its source document')
+            # filecmp compares in small chunks, keeping large bodies out of the runner's memory peak.
+            expect(filecmp.cmp(content, original, shallow=False), f'{content} differs from its source document')
 
     runner.run(f'cli/export/{count}', cli + ['export', '--json', '--home', str(home), '--out', str(destination)], check_export)
 
@@ -439,18 +465,26 @@ def measure_export(runner, cli, home, destination, count, expected_ids):
     shutil.rmtree(destination)
 
 
+def nested_operations(output):
+    """Return (label, wall_ms) for each operation sample a helper printed as a JSON line."""
+    operations = []
+    for line in output.splitlines():
+        try:
+            nested = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(nested, dict) and 'wall_ms' in nested:
+            operations.append((nested['label'], nested['wall_ms']))
+    return operations
+
+
 def summarize(rows):
     groups = {}
     for row in rows:
         if 'wall_ms' in row:
             groups.setdefault(row['label'], []).append(row['wall_ms'])
-        for line in row.get('stdout', '').splitlines():
-            try:
-                nested = json.loads(line)
-            except ValueError:
-                continue
-            if isinstance(nested, dict) and 'wall_ms' in nested:
-                groups.setdefault('operation/' + nested['label'], []).append(nested['wall_ms'])
+        for label, wall_ms in row.get('operations', []):
+            groups.setdefault('operation/' + label, []).append(wall_ms)
 
     return {label: dict(n=len(values), min_ms=min(values), median_ms=statistics.median(values), max_ms=max(values))
             for label, values in groups.items()}
@@ -473,31 +507,35 @@ def main():
            'XDG_CONFIG_HOME': str(root), 'XDG_STATE_HOME': str(root), 'XDG_DATA_HOME': str(root),
            'HTML_INBOX_HOME': str(root), 'HTML_INBOX_CATALOG_HOME': str(root / 'catalog')}
     runner = ProcessRunner(args.out, env, args.timeout, interrupts)
-    workloads_succeeded = False
+    failure = None
     try:
         (args.out / 'environment.json').write_text(json.dumps(collect_metadata(args, runner, root), indent=2))
         run_workloads(args, runner, root)
-        workloads_succeeded = True
-    except InterruptedError:
-        pass
-    finally:
-        # Cleanup decides success too: a run that leaves fixtures or processes behind is not accepted.
-        # TMPDIR is inside the root, so this also removes TLS credentials.
-        shutil.rmtree(root, ignore_errors=True)
-        cleanup = cleanup_receipt(root, runner)
-        is_clean = cleanup['fixture_root_removed'] and cleanup['children_reaped'] and cleanup['process_groups_empty']
-        # A signal received at any point, including during cleanup, cancels the run.
-        interrupted = interrupts.signum is not None
-        (args.out / 'cleanup.json').write_text(json.dumps(cleanup, indent=2))
-        (args.out / 'summary.json').write_text(json.dumps(dict(
-            success=workloads_succeeded and is_clean and not interrupted, interrupted_by=interrupts.signum,
-            load_average_after=load_average(), runner_peak_rss_kib_after=runner_peak_rss_kib(),
-            groups=summarize(runner.rows)), indent=2))
+    except BaseException as error:
+        failure = error
 
-    if interrupted:
-        print(f'interrupted by signal {interrupts.signum}; see {args.out}', file=sys.stderr)
-        sys.exit(128 + interrupts.signum)
-    if not is_clean:
+    # Cleanup decides success too: a run that leaves fixtures or processes behind is not accepted.
+    # TMPDIR is inside the root, so this also removes TLS credentials.
+    shutil.rmtree(root, ignore_errors=True)
+    cleanup = cleanup_receipt(root, runner)
+    is_clean = cleanup['fixture_root_removed'] and cleanup['children_reaped'] and cleanup['process_groups_empty']
+
+    # One cancellation decision, taken after cleanup, drives both the summary and the exit status.
+    # Signals arriving after this point no longer change the outcome.
+    signum = interrupts.signum
+    success = failure is None and is_clean and signum is None
+    (args.out / 'cleanup.json').write_text(json.dumps(cleanup, indent=2))
+    (args.out / 'summary.json').write_text(json.dumps(dict(
+        success=success, interrupted_by=signum, failure=None if failure is None else repr(failure),
+        load_average_after=load_average(), runner_peak_rss_kib_after=runner_peak_rss_kib(),
+        groups=summarize(runner.rows)), indent=2))
+
+    if signum is not None:
+        print(f'interrupted by signal {signum}; see {args.out}', file=sys.stderr)
+        sys.exit(128 + signum)
+    if failure is not None:
+        raise failure
+    if not success:
         sys.exit(f'cleanup incomplete; see {args.out / "cleanup.json"}')
 
 
