@@ -1,5 +1,12 @@
 # Review and integration receipt
 
+> **Historical receipt, superseded in part.** This records the review of frozen `d22e256` and the November 2026 integration. The harness has changed since, so these statements no longer describe the current code:
+> * Finding 1 relied on a final blocking `child.wait()` and argued against a process-group probe. The runner now waits on a pidfd, terminates the group before a non-blocking reap and verifies each group through `/proc`, ignoring zombies.
+> * Finding 10 deferred distinguishable sync fixtures. Every fixture document now has a distinct body, and peer checks compare canonical identities, hashes and receipts.
+> * "Post-review changes do not change the timed operations or fixtures" held for that revision only. Fixtures, labels and the timing method have since changed.
+>
+> The current council review is recorded in PR #114.
+
 Both independent reviews inspected base `099dcbd6378e3b6f73216966cfe9ea7f91ed5d8e` through frozen head `d22e256799ba9767a813a29e4fc3a44191a30e38`. Neither changed the checkout or ran heavy measurements.
 
 * Functionality: Codex provider, `gpt-6.1-sol`, reasoningEffort `high`. No blocking findings. Functionality passed, code quality passed with optional improvements, performance evidence passed for infrastructure qualification. Reviewer independently recomputed all 45 summary groups from each archive's 30 raw rows and 58 nested samples. Both cleanup tests passed independently.

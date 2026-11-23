@@ -1,5 +1,7 @@
 # Issue 89 parent integration, 15 November 2026
 
+> **Historical receipt.** It describes the tested merge `edf9d32` and head `08d5b2b`. Later commits changed the harness and its tests, so "Harness scripts … are unchanged from 610c931" and "2 passed" describe that revision only. The inherited parent gates listed under "Open gates" remain open and are tracked in PR #114.
+
 Related to [issue #89](https://github.com/deveshsangwan/html-inbox/issues/89) and [PR #114](https://github.com/deveshsangwan/html-inbox/pull/114). This is harness integration, not an optimization, release or new speedup claim. The PR remains draft for shared failure and final-head CI gates.
 
 ## Source and ancestry

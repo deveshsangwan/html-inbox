@@ -288,7 +288,8 @@ async function runSignatures({ root, count, size, record, seed, html, setup, his
     const { ManagedSyncStore } = load('sync-store.js');
     for (const name of ['source', 'churn']) {
       const home = path.join(root, name);
-      await seed(home, count, size);
+      // Signature comparisons use one exact body across all records and both peers.
+      await seed(home, count, size, html(size));
       await new ManagedSyncStore(home).enroll();
     }
 

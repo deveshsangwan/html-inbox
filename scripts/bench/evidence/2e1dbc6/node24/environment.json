@@ -1,0 +1,100 @@
+{
+  "commit": "2e1dbc62a559832e696df5fc600a2eac6ed87063",
+  "dirty": "",
+  "node": "v24.19.0",
+  "versions": {
+    "node": "24.19.0",
+    "acorn": "8.17.0",
+    "ada": "3.4.4",
+    "amaro": "1.1.10",
+    "ares": "1.34.6",
+    "brotli": "1.2.0",
+    "cldr": "48.0",
+    "icu": "78.3",
+    "llhttp": "9.4.3",
+    "merve": "1.2.2",
+    "modules": "137",
+    "napi": "10",
+    "nbytes": "0.1.4",
+    "ncrypto": "0.0.1",
+    "nghttp2": "1.69.0",
+    "nghttp3": "",
+    "ngtcp2": "",
+    "openssl": "3.5.7",
+    "simdjson": "4.6.4",
+    "simdutf": "6.4.0",
+    "sqlite": "3.53.3",
+    "tz": "2026b",
+    "undici": "7.29.0",
+    "unicode": "17.0",
+    "uv": "1.52.1",
+    "uvwasi": "0.0.23",
+    "v8": "13.6.233.17-node.51",
+    "zlib": "1.3.2.1-motley-3246f1b",
+    "zstd": "1.5.7"
+  },
+  "parser": "7.3.0",
+  "filesystem": "tmpfs",
+  "host": {
+    "machine": [
+      "Linux",
+      "homeserver",
+      "6.12.113+deb13-amd64",
+      "#1 SMP PREEMPT_DYNAMIC Debian 6.12.113-1 (2026-10-15)",
+      "x86_64"
+    ],
+    "cpu_model": "Intel(R) Core(TM) i5-7300HQ CPU @ 2.50GHz",
+    "cpu_count": 4,
+    "mem_total_kib": 16264520,
+    "python": "3.13.5 (main, Aug 10 2026, 12:06:59) [GCC 14.2.0]"
+  },
+  "load_average_before": [
+    0.99,
+    1.71,
+    1.62
+  ],
+  "samples": 2,
+  "counts": [
+    0,
+    100
+  ],
+  "sizes": [
+    10240,
+    1048576,
+    9437184
+  ],
+  "cache": "fresh isolated fixtures; filesystem cache uncontrolled/warm; no OS cache eviction",
+  "bundle_bytes": 1284581,
+  "stale_build_inputs": [],
+  "allow_stale_build": false,
+  "limits": {
+    "timeout_seconds": 600,
+    "concurrency": 1
+  },
+  "fixture_root": "/tmp/html-inbox-bench-e6bm27x2",
+  "fingerprints": {
+    "bundle_sha256": "6e34827440c576add5dc4a02d6c46315a340bbb577062dfc96183f9eb68e59ae",
+    "dist_js_sha256": "3815133ee1c3ce82d6f1fb795c04d682f5d5b46f37aca5ce00dd1be3056f1154",
+    "node_sha256": "bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12",
+    "harness_sha256": {
+      "scripts/bench/run.py": "1e9ebfb32a0a862177a7441e83cf6d51084534c202022836622ae978b1e8daed",
+      "scripts/bench/workload.cjs": "541e57c35517d6eac962dd178f37def92624bd090d3279d6e2fb93d652a0c536",
+      "scripts/bench/sync.cjs": "e8750b2cea48929ef11c4d0a19791c09e2a3644aa5f4f17df851ab6928ca6107"
+    },
+    "lockfile_sha256": "5a022657a76a03234db5f20fdd70162869356b4444cf4fe3ad0938a44806c677",
+    "candidate_sha256": null
+  },
+  "runner_peak_rss_kib_before_workloads": 22824,
+  "invocation": [
+    "scripts/bench/run.py",
+    "baseline",
+    "--samples",
+    "2",
+    "--counts",
+    "0,100",
+    "--node",
+    "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+    "--out",
+    "/home/agent/.t3/worktrees/html-inbox/perf-89-bench/artifacts/bench-89/council-r4/node24"
+  ]
+}

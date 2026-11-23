@@ -130,8 +130,13 @@ def summarize(planned, commands, workload):
             continue
 
         output = Path(entry['out'])
-        assert json.loads((output / 'summary.json').read_text())['success'], output
-        assert json.loads((output / 'cleanup.json').read_text()) == {'fixture_root_removed': True, 'children_reaped': True}, output
+        if json.loads((output / 'summary.json').read_text())['success'] is not True:
+            raise ValueError(f'unsuccessful runner summary: {output}')
+
+        cleanup = json.loads((output / 'cleanup.json').read_text())
+        required = ('fixture_root_removed', 'children_reaped', 'process_groups_empty')
+        if any(cleanup.get(key) is not True for key in required) or cleanup.get('unverified_groups') != []:
+            raise ValueError(f'incomplete cleanup: {output}')
 
         operations = defaultdict(list)
         for raw in (output / 'samples.jsonl').read_text().splitlines():

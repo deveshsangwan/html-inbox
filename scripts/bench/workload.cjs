@@ -6,8 +6,9 @@ const { setTimeout: delay } = require('node:timers/promises');
 let dist = path.resolve(__dirname, '../../packages/cli/dist');
 const load = name => require(path.join(dist, name));
 
-function html(size, shape = 'text') {
-  const head = '<!doctype html><html><head><title>Benchmark</title></head><body>';
+// A per-document label keeps equal-size bodies distinct, so byte checks also verify identity.
+function html(size, shape = 'text', label = '') {
+  const head = `<!doctype html><html><head><title>Benchmark</title></head><body>${label}`;
   const tail = '</body></html>';
   const unit = shape === 'dense' ? '<p>Benchmark</p>' : 'Benchmark text. ';
   const remaining = size - head.length - tail.length;
@@ -15,9 +16,8 @@ function html(size, shape = 'text') {
   return head + unit.repeat(Math.floor(remaining / unit.length)) + ' '.repeat(remaining % unit.length) + tail;
 }
 
-async function seed(root, count, size) {
+async function seed(root, count, size, sharedBody) {
   const { parseDocumentMetadata } = load('documents.js');
-  const bytes = html(size);
   await fs.mkdir(root, { recursive: true, mode: 0o700 });
   for (let i = 0; i < count; i++) {
     const id = `bench-${String(i).padStart(5, '0')}`;
@@ -26,8 +26,19 @@ async function seed(root, count, size) {
       createdAt: '2026-11-07T00:00:00.000Z', sourceFileName: 'fixture.html' });
     await fs.mkdir(directory, { recursive: true, mode: 0o700 });
     await fs.writeFile(path.join(directory, 'metadata.json'), JSON.stringify(metadata), { mode: 0o600 });
-    await fs.writeFile(path.join(directory, 'index.html'), bytes, { mode: 0o600 });
+    await fs.writeFile(path.join(directory, 'index.html'), sharedBody ?? html(size, 'text', id), { mode: 0o600 });
   }
+}
+
+// Runs `operation`, then `close`; a close failure never replaces the operation's own error.
+async function closeAfter(operation, close) {
+  try {
+    await operation();
+  } catch (error) {
+    await Promise.resolve().then(close).catch(() => {});
+    throw error;
+  }
+  await close();
 }
 
 async function main() {
@@ -64,7 +75,12 @@ async function main() {
     const fixtures = [html(size, shape), '<html><a href="javascript:alert(1)">x</a></html>',
       '<html><template><img src="remote.png"></template></html>', '<select><html></select>',
       '<html><svg><style><a href="javascript:x">x</a></style></svg></html>'];
-    for (const fixture of fixtures) assert.deepEqual(validate(fixture), baseline(fixture));
+    // The measured validator gets exactly one warm-up call per fixture with or without a candidate.
+    for (const fixture of fixtures) {
+      const expected = candidate ? baseline(fixture) : null;
+      const actual = validate(fixture);
+      if (candidate) assert.deepEqual(actual, expected);
+    }
 
     for (let i = 0; i < samples; i++) {
       await record(`parser/${shape}/${size}`, () => {
@@ -80,7 +96,7 @@ async function main() {
     const server = await load('viewer-http-server.js').startViewerHttpServer(backend,
       load('viewer-network.js').resolveViewerNetworkConfig(0),
       { instanceId: 'benchmark', processId: 'benchmark', protocolVersion: 1, pid: process.pid });
-    try {
+    await closeAfter(async () => {
       await record('viewer/idle', async () => { await delay(1000); return { interval_ms: 1000 }; });
       for (let i = 0; i < samples; i++) {
         await record('viewer/index', async () => {
@@ -90,39 +106,43 @@ async function main() {
           if (count) assert.ok(body.includes('Benchmark 0'));
           return { response_bytes: Buffer.byteLength(body), scope: 'loopback client and server in one process' };
         });
-        if (count) await record('viewer/content', async () => {
-          const response = await fetch(server.urls[0] + '/documents/bench-00000/content');
+        if (!count) continue;
+
+        // Rotate documents across samples; expected bytes are built before timing starts.
+        const id = `bench-${String(i % count).padStart(5, '0')}`;
+        const expected = Buffer.from(html(size, 'text', id));
+        await record('viewer/content', async () => {
+          const response = await fetch(`${server.urls[0]}/documents/${id}/content`);
           assert.equal(response.status, 200);
-          assert.deepEqual(Buffer.from(await response.arrayBuffer()), Buffer.from(html(size)));
-          return { response_bytes: size, behavior: 'exact source bytes' };
+          assert.deepEqual(Buffer.from(await response.arrayBuffer()), expected);
+          return { response_bytes: size, document: id, behavior: 'exact source bytes' };
         });
       }
-    } finally {
-      await server.close();
-    }
+    }, () => server.close());
     return;
   }
   if (mode === 'worker') {
     const store = new (load('sync-store.js').ManagedSyncStore)(root);
     await store.enroll();
     for (let i = 0; i < count; i++) {
-      await store.publish({ originalBytes: Buffer.from(html(size)), title: `Benchmark ${i}`, type: 'report', sourceFileName: 'fixture.html' }, `bench-${i}`);
+      await store.publish({ originalBytes: Buffer.from(html(size, 'text', `bench-${i}`)), title: `Benchmark ${i}`, type: 'report', sourceFileName: 'fixture.html' }, `bench-${i}`);
     }
     await store.setWorkerEnabled(true);
     const worker = await load('sync-worker.js').startOwnedSyncWorker(root);
-    try {
+    await closeAfter(async () => {
       const deadline = Date.now() + 10000;
       while (worker.status().processState !== 'idle') {
         assert.ok(Date.now() < deadline, 'worker readiness deadline');
         await delay(10);
       }
       for (let i = 0; i < samples; i++) {
-        await record('worker/idle', async () => { await delay(1000); return { interval_ms: 1000, state: worker.status().processState }; });
+        await record('worker/idle', async () => {
+          await delay(1000);
+          assert.equal(worker.status().processState, 'idle');
+          return { interval_ms: 1000, state: 'idle' };
+        });
       }
-      assert.equal(worker.status().processState, 'idle');
-    } finally {
-      await worker.close();
-    }
+    }, () => worker.close());
     return;
   }
   throw new Error(`Unknown workload ${mode}`);
