@@ -82,15 +82,20 @@ def main():
                 # SIGINT and SIGTERM are recorded while the child is being created or cleaned up, and interrupt
                 # only the wait between, so a sample group is always killed and reaped before the signal takes
                 # effect. The child still starts with default dispositions, because exec resets caught signals.
+                # Handlers raise only while waiting and clear that state first, so no signal can raise inside the
+                # cleanup below and skip the kill or the reap.
                 interrupts = []
                 is_waiting = [False]
                 def interrupt(signum, frame):
                     interrupts.append(signum)
                     if is_waiting[0]:
+                        is_waiting[0] = False
                         raise SampleInterrupted(signum)
                 deferred = {number: signal.signal(number, interrupt) for number in (signal.SIGINT, signal.SIGTERM)}
                 def timeout(signum, frame):
-                    raise TimeoutError(command)
+                    if is_waiting[0]:
+                        is_waiting[0] = False
+                        raise TimeoutError(command)
                 previous = signal.signal(signal.SIGALRM, timeout)
                 try:
                     start = time.perf_counter()
@@ -98,9 +103,11 @@ def main():
                     try:
                         is_waiting[0] = True
                         if interrupts:
+                            is_waiting[0] = False
                             raise SampleInterrupted(interrupts[0])
                         signal.alarm(30)
                         os.waitid(os.P_PID, child.pid, os.WEXITED | os.WNOWAIT)
+                        is_waiting[0] = False
                         elapsed = (time.perf_counter() - start) * 1000
                     finally:
                         is_waiting[0] = False

@@ -329,14 +329,17 @@ Module._load = function (request, ...args) {
       assert.equal(JSON.parse((await runManaged(["sync", "enroll", "--yes"])).stdout).enrolled, true);
       isEnrolled = true;
       assert.equal(JSON.parse((await runManaged(["sync", "worker", "startup"])).stdout).skipped, true);
+
       const enabled = JSON.parse((await runManaged(["sync", "worker", "enable"])).stdout);
       assert.equal(enabled.worker.running, true);
       workerPids.push(JSON.parse(await readFile(path.join(managedHome, "sync", "worker", "runtime.json"), "utf8")).pid);
       const status = JSON.parse((await runManaged(["sync", "worker", "status"])).stdout);
       assert.equal(status.worker.running, true);
+
       await runManaged(["sync", "worker", "stop"]);
       assert.equal(await waitForProcessExit(workerPids[0], 3000), true, `Managed worker ${workerPids[0]} survived stop`);
       assert.equal(JSON.parse((await runManaged(["sync", "worker", "status"])).stdout).worker.running, false);
+
       await runManaged(["sync", "worker", "start"]);
       workerPids.push(JSON.parse(await readFile(path.join(managedHome, "sync", "worker", "runtime.json"), "utf8")).pid);
       assert.equal(JSON.parse((await runManaged(["sync", "worker", "status"])).stdout).worker.running, true);
@@ -374,10 +377,13 @@ Module._load = function (request, ...args) {
       }
     }
 
-    try {
-      await runManaged(["sync", "worker", "disable"]);
-    } catch (error) {
-      cleanupFailures.push(error);
+    // Worker commands require an enrolled inbox, and no worker can start before enrollment succeeds.
+    if (isEnrolled) {
+      try {
+        await runManaged(["sync", "worker", "disable"]);
+      } catch (error) {
+        cleanupFailures.push(error);
+      }
     }
 
     for (const pid of workerPids) {
@@ -461,6 +467,10 @@ Module._load = function (request, ...args) {
       `Installed package smoke cleanup failed${shouldRetainFixture ? `; fixture retained at ${temporaryRoot}` : ""}`);
   }
 
+  if (primaryFailure && shouldRetainFixture) {
+    throw new AggregateError([primaryFailure], `Installed package smoke failed; fixture retained at ${temporaryRoot}`);
+  }
+
   if (primaryFailure) throw primaryFailure;
 }
 
@@ -520,6 +530,13 @@ async function waitForProcessExit(pid, timeoutMs) {
   }
 }
 
+async function isZombie(pid) {
+  if (process.platform !== "linux") return false;
+
+  const stat = await readFile(`/proc/${pid}/stat`, "utf8").catch(() => "");
+  return stat.slice(stat.lastIndexOf(")") + 2).startsWith("Z");
+}
+
 // Children see only this fixture's html-inbox and Node settings, never the developer shell's
 // (for example a saved Tailscale configuration that could reach a real daemon). npm copies its
 // node-options setting into NODE_OPTIONS for lifecycle scripts and ignores empty overrides, so npm
@@ -534,13 +551,6 @@ function fixtureEnvironment(overrides) {
     npm_config_globalconfig: npmGlobalConfig,
     ...overrides,
   };
-}
-
-async function isZombie(pid) {
-  if (process.platform !== "linux") return false;
-
-  const stat = await readFile(`/proc/${pid}/stat`, "utf8").catch(() => "");
-  return stat.slice(stat.lastIndexOf(")") + 2).startsWith("Z");
 }
 
 async function run(command, args, cwd, env = {}) {

@@ -295,6 +295,7 @@ async function startFixtureHub(root, configuration, onStarted) {
         signalChild(child, "SIGKILL", childErrors, "Installed hub did not accept forced cleanup");
       }
     }, 3000);
+
     let deadlineTimer;
     const deadline = new Promise((resolve) => { deadlineTimer = setTimeout(resolve, 6000); });
     let result;
@@ -322,6 +323,7 @@ async function startFixtureHub(root, configuration, onStarted) {
       errors: childErrors.map((error) => error instanceof Error
         ? { ...error, name: error.name, message: error.message, stack: error.stack }
         : { thrown: String(error) }) };
+
     const failures = [...childErrors];
     if (!result) {
       failures.push(new Error(`Installed hub child ${child.pid} is unjoined: no close within 6 s, including forced cleanup`));

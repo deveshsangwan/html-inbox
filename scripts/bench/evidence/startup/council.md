@@ -2,10 +2,10 @@
 
 The user requested a council: one Anthropic and one OpenAI flagship reviewer, each at high effort. Both reviewers get the same brief and review the same exact revision, read-only, each in its own isolated worktree. Rounds repeat until both independently score at least 9.5/10 on the same revision. Scores are recorded as given, never averaged or rounded. Earlier stack-status and V1/V2 reviews in [reviews.md](reviews.md) do not count toward this council.
 
-| Delegate | Exact settings | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 | Round 6 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Claude Opus | provider `claudeAgent`, model `claude-opus-5-5`, `effort=high` | 9.0/10 | 9.2/10 | 9.3/10 | no score | 9.4/10 | 9.5/10 |
-| GPT Sol | provider `codex`, model `gpt-6.2-sol`, `reasoningEffort=high` | 8.3/10 | 8.4/10 | 8.8/10 | 8.7/10 | 8.7/10 | 8.7/10 |
+| Delegate | Exact settings | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 | Round 6 | Round 7 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Claude Opus | provider `claudeAgent`, model `claude-opus-5-5`, `effort=high` | 9.0/10 | 9.2/10 | 9.3/10 | no score | 9.4/10 | 9.5/10 | 9.5/10 |
+| GPT Sol | provider `codex`, model `gpt-6.2-sol`, `reasoningEffort=high` | 8.3/10 | 8.4/10 | 8.8/10 | 8.7/10 | 8.7/10 | 8.7/10 | 8.9/10 |
 
 ## Round 1
 
@@ -164,7 +164,7 @@ Revision `79ed1589856243ddafb8230ca3c7d97abccdb5a7`, base `08d5b2b`. Both review
 
 ### Hosted CI on the round 6 revision
 
-Normal pull_request run 45226185322, attempt 1, at `79ed158`: all 16 Actions jobs succeeded, including Verify (job 137878688478) and Source (windows-latest, 24, 1/1) (job 137873188926). Windows Source has now passed at `4e3e649` and `79ed158` after the single failure at `5d4f93f`. That failure was an `EPERM` rename and not a worker deadline, which a lost IPC message would produce. No cause is claimed.
+Normal pull_request run 45226185322, attempt 1, at `79ed158`: all 16 Actions jobs succeeded, including Verify (job 137878688478) and Source (windows-latest, 24, 1/1) (job 137873188926). Windows Source has now passed at `4e3e649` and `79ed158` after the single failure at `5d4f93f`. That failure was an `EPERM` rename and not a worker deadline, which a lost IPC message would produce. No cause is claimed. The source suites fork the tsc `dist/index.js`, where `module: node16` keeps a native asynchronous ESM `import()` of the deletion worker. The shipped ncc bundle instead loads that worker through a synchronous `require` inside a promise. So any timing effect seen in the dist-based Windows test does not carry over directly to the shipped artifact.
 
 ### Fixed
 
@@ -180,6 +180,62 @@ Normal pull_request run 45226185322, attempt 1, at `79ed158`: all 16 Actions job
 | Default in-process hub teardown now closes browser and hub concurrently and retains the root on a failed close | Opus, Nit | Recorded here. Startup in default mode is still exactly `startHub(configuration, 0)`; the teardown change fixes the base's hub leak when `browser.close` throws. |
 | The stale-chunk check covers only JavaScript | Opus, Nit | Documented in the code and README: ncc emits no other assets for this package. |
 
-### Still required
+### Pending after round 6
 
 Same as after round 5: the queued root-granted qualification of the successor head, covering both negative hub probes and both seeded-obsolete-chunk package-script controls. Package smoke's own failure paths stay review-only.
+
+## Round 7
+
+Revision `f32c0cf18627421b073f6d679f98394562182b5a`, base `08d5b2b`. Both reviewers completed full reviews and found no production-code defect. Opus scored 9.5 and Sol 8.9.
+
+### Hosted CI on the round 7 revision
+
+Normal pull_request run 45227991728, attempt 1, at `f32c0cf`: all 16 Actions jobs succeeded, including Verify (job 137883805121) and Source (windows-latest, 24, 1/1) (job 137879574767). That makes three consecutive green heads since the single Windows failure at `5d4f93f`.
+
+### Installed qualification of the round 7 revision: FAILED
+
+Root grant `pr117-f32c0cf-installed-controls-20261123` ran once at exact `f32c0cf`, with runner SHA256 `8f04fdfce8a3c5b9240e46fe49a328dd5cb532c955b804554ec8421849e7f111`. It finished in 51.3 s of application time and 0.22 s of cleanup, and exited 1. The receipt is in the owner checkout's ignored `artifacts/93/f32c0cf-qualification-v1/receipt.json`, SHA256 `26d8b94f37f2e4f5cfd1c73d2f2d8d7a8aa52449ec85f17e9b4c69ed6670b79a`. The first failure is preserved, and nothing was rerun.
+
+Passed:
+
+- In a disposable project with no shared `.bin` ancestor and a seeded `999.index.js`, the real scripts-enabled `npm pack` ran the private shims [tsc-rs, ncc]. The seeded chunk was absent from both `bundle/` and the tarball, the tarball bundle matched ncc's emitted inventory, and the file set was exact. The tarball is 264,214 bytes, SHA256 `6507360d48ff1440c4a3df06da16e97415c2f873a41b0c30bf8034b02d470541`.
+- After re-seeding, the real `npm run bundle` ran [tsc-rs, ncc, ncc], removed the seeded chunk and emitted the same inventory.
+- Shared typecheck and clean build passed, and the shared and packed `dist` were identical.
+- The startup parity test passed on Node 20.20.2 and 24.19.0.
+- Package smoke of the exact tarball passed on both runtimes, including owner preflight and the managed worker.
+- On Node 24, the source-mode hub browser passed 3/3, and installed mode passed 3/3 from a consumer whose bundle equals the tarball's.
+- The `wrong-url` probe exited 1, reported both expected diagnostics, retained one fixture and left no strays.
+- Cleanup was quiescent. The verified backup and preserved candidate allowed restoration, so the shared `dist` matches its pre-run state, the shared bundle was untouched, the tracked tree stayed clean and no process was left over.
+
+Failed: the check `probe-hub-unjoined-reported`. The `unjoined` probe itself met its requirements:
+
+- native exit 1, with no timeout or signal
+- exactly one retained fixture
+- the marked grandchild identified, reparented to the scoped subreaper, and reaped by the runner with exit -9
+- the per-test diagnostic `nativeClose:"unjoined"`
+- the suite-level "Installed hub children missed their close deadline", naming the retained root
+
+The log did not contain "is unjoined: no close within 6 s" or "evidence retained at". Node 24's spec reporter printed only the test body's first error (`page.goto` `ERR_CONNECTION_REFUSED`), not the per-test `t.after` AggregateError that carries both strings, although the diagnostic shows that the hook ran. So the runner's expectation of what the reporter prints was wrong; the fixture behavior was not. The revised runner, SHA256 `570e7e55c66da06cfca081c65d50ed1170d607615a0de072c304cac354fc8af8`, judges the probe by the diagnostic and the suite-level message, and requires that message to name the one retained root. Read-only against the preserved logs, the revised expectations hold. That evaluation does not change the recorded result.
+
+### Fixed
+
+| Finding | Reviewer, severity | Disposition |
+| --- | --- | --- |
+| The consumer install inherits `npm_config_global` or `npm_config_location` and could install into a real npm prefix | Sol, Medium (pre-existing) | Fixed with explicit `--global=false --location=project`. |
+| A hung benchmark sample ignored SIGINT and SIGTERM until its 30 s alarm, and a timeout could lose the recorded signal | Sol, Medium | Fixed. Signals interrupt only the wait; they are recorded while the child is created or cleaned up. The group is still killed before the leader is reaped, and the recorded signal is re-raised after cleanup, ahead of a timeout. Scratchpad checks: SIGTERM ended a slow sample in 0.51 s with exit 143 and its background process gone; a 1 s alarm killed the group and raised `TimeoutError`. |
+| The SIGALRM or an interrupt could arrive at the start of the cleanup and skip `killpg`/`wait4` | Opus, Nit | Fixed. Handlers raise only while waiting and clear that state first, so nothing raises inside the cleanup. |
+| An unreadable `runtime.json` was treated as absent | Sol, Low | Fixed. Only `ENOENT` means no worker. Any other read or validation error is a cleanup failure, and the fixture is retained. |
+| An unjoined command or viewer could retain the fixture without printing where it is | Sol and Opus, Low | Fixed. The unjoined-command error names the fixture and includes an output tail. A retained-fixture primary failure is wrapped with the fixture path. |
+| `sync worker disable` ran even when enrollment failed, adding a false cleanup failure | Opus, Low | Fixed. It runs only after enrollment succeeded; the runtime-record and PID checks still run. |
+| The Windows record did not say the source tests fork the tsc `dist`, whose worker import differs from the bundle's | Opus, Low | Fixed in the round 6 CI note above and in the PR body. |
+| Missing blank lines in the managed-worker block and the hub close body; `isZombie` defined away from its caller | Opus, Nit | Fixed. |
+
+### Not changed
+
+| Finding | Reviewer, severity | Reason |
+| --- | --- | --- |
+| Narrow `runCommand`'s parameter to exclude `help` and `version` | Opus, Nit | Kept. `cli-commands.ts` is an entry-related source that stays byte-identical to the measured `8ae19fd`, and the call site already narrows those cases. |
+
+### Still required
+
+A fresh root-granted qualification of the round 8 revision with the revised runner. It covers both negative hub probes and both seeded-obsolete-chunk package-script controls, plus the startup, smoke and hub happy paths. Package smoke's own failure paths stay review-only.
