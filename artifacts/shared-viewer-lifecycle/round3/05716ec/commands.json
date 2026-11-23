@@ -1,0 +1,112 @@
+[
+  {
+    "label": "typecheck-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "pnpm",
+      "typecheck"
+    ],
+    "exit_code": 0,
+    "seconds": 3.0
+  },
+  {
+    "label": "build-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "pnpm",
+      "build"
+    ],
+    "exit_code": 0,
+    "seconds": 2.3
+  },
+  {
+    "label": "focused-node20",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=20.20.2",
+      "node",
+      "--test",
+      "packages/cli/dist/viewer-owned-lifecycle.test.js",
+      "packages/cli/dist/viewer-mutation-shutdown.test.js",
+      "packages/cli/dist/viewer-shutdown.test.js",
+      "packages/cli/dist/viewer-startup-races.test.js",
+      "packages/cli/dist/viewer-tailscale-lifecycle.test.js",
+      "scripts/viewer-fixture-browser.test.mjs",
+      "scripts/document-deletion-browser.test.mjs",
+      "scripts/document-isolation-browser.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 35.0
+  },
+  {
+    "label": "focused-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "packages/cli/dist/viewer-owned-lifecycle.test.js",
+      "packages/cli/dist/viewer-mutation-shutdown.test.js",
+      "packages/cli/dist/viewer-shutdown.test.js",
+      "packages/cli/dist/viewer-startup-races.test.js",
+      "packages/cli/dist/viewer-tailscale-lifecycle.test.js",
+      "scripts/viewer-fixture-browser.test.mjs",
+      "scripts/document-deletion-browser.test.mjs",
+      "scripts/document-isolation-browser.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 31.7
+  },
+  {
+    "label": "ownership-node20",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=20.20.2",
+      "node",
+      "--test",
+      "packages/cli/dist/sync-maintenance.test.js",
+      "packages/cli/dist/sync-acquisition-deadline.test.js",
+      "packages/cli/dist/viewer-service-owner.test.js",
+      "packages/cli/dist/viewer-service.test.js",
+      "packages/cli/dist/hub-http.test.js"
+    ],
+    "exit_code": 0,
+    "seconds": 14.7
+  },
+  {
+    "label": "ownership-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "packages/cli/dist/sync-maintenance.test.js",
+      "packages/cli/dist/sync-acquisition-deadline.test.js",
+      "packages/cli/dist/viewer-service-owner.test.js",
+      "packages/cli/dist/viewer-service.test.js",
+      "packages/cli/dist/hub-http.test.js"
+    ],
+    "exit_code": 0,
+    "seconds": 13.3
+  },
+  {
+    "label": "verify-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "pnpm",
+      "verify"
+    ],
+    "exit_code": "TIMEOUT",
+    "seconds": 600.0
+  }
+]

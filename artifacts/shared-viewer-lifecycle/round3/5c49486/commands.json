@@ -1,0 +1,187 @@
+[
+  {
+    "label": "typecheck-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "pnpm",
+      "typecheck"
+    ],
+    "exit_code": 0,
+    "seconds": 1.7,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "build-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "pnpm",
+      "build"
+    ],
+    "exit_code": 0,
+    "seconds": 1.7,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "fifo-probe-node20",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=20.20.2",
+      "node",
+      "--test",
+      "/tmp/claude-1001/-home-agent--t3-worktrees-html-inbox-t3-26d1cd47/eaedad0e-0d8d-4c7f-b8c4-f3a43d6ff252/scratchpad/round3-5c49486-20261123T203709/fifo-probe.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.1,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "observed_order": [
+      "first-registered",
+      "second-registered"
+    ]
+  },
+  {
+    "label": "fifo-probe-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "/tmp/claude-1001/-home-agent--t3-worktrees-html-inbox-t3-26d1cd47/eaedad0e-0d8d-4c7f-b8c4-f3a43d6ff252/scratchpad/round3-5c49486-20261123T203709/fifo-probe.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.1,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "observed_order": [
+      "first-registered",
+      "second-registered"
+    ]
+  },
+  {
+    "label": "focused-node20",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=20.20.2",
+      "node",
+      "--test",
+      "packages/cli/dist/viewer-owned-lifecycle.test.js",
+      "packages/cli/dist/viewer-mutation-shutdown.test.js",
+      "packages/cli/dist/viewer-shutdown.test.js",
+      "packages/cli/dist/viewer-startup-races.test.js",
+      "packages/cli/dist/viewer-tailscale-lifecycle.test.js",
+      "packages/cli/dist/viewer-background.test.js",
+      "packages/cli/dist/viewer-record-shutdown-race.test.js",
+      "scripts/viewer-fixture-browser.test.mjs",
+      "scripts/document-deletion-browser.test.mjs",
+      "scripts/document-isolation-browser.test.mjs",
+      "scripts/hub-browser.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 29.4,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "focused-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "packages/cli/dist/viewer-owned-lifecycle.test.js",
+      "packages/cli/dist/viewer-mutation-shutdown.test.js",
+      "packages/cli/dist/viewer-shutdown.test.js",
+      "packages/cli/dist/viewer-startup-races.test.js",
+      "packages/cli/dist/viewer-tailscale-lifecycle.test.js",
+      "packages/cli/dist/viewer-background.test.js",
+      "packages/cli/dist/viewer-record-shutdown-race.test.js",
+      "scripts/viewer-fixture-browser.test.mjs",
+      "scripts/document-deletion-browser.test.mjs",
+      "scripts/document-isolation-browser.test.mjs",
+      "scripts/hub-browser.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 30.8,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "ownership-node20",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=20.20.2",
+      "node",
+      "--test",
+      "packages/cli/dist/sync-maintenance.test.js",
+      "packages/cli/dist/sync-acquisition-deadline.test.js",
+      "packages/cli/dist/viewer-service-owner.test.js",
+      "packages/cli/dist/viewer-service.test.js",
+      "packages/cli/dist/hub-http.test.js"
+    ],
+    "exit_code": 0,
+    "seconds": 12.8,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "ownership-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "packages/cli/dist/sync-maintenance.test.js",
+      "packages/cli/dist/sync-acquisition-deadline.test.js",
+      "packages/cli/dist/viewer-service-owner.test.js",
+      "packages/cli/dist/viewer-service.test.js",
+      "packages/cli/dist/hub-http.test.js"
+    ],
+    "exit_code": 0,
+    "seconds": 13.0,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "red-old-isolation-wiring-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "--test-name-pattern=isolation fixture joins owned viewer cleanup",
+      "/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47/scripts/zz-red-isolation-overlay.test.mjs"
+    ],
+    "exit_code": 1,
+    "seconds": 1.1,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "red_verdict": "RED-CONFIRMED"
+  },
+  {
+    "label": "browser-suite-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "scripts/run-browser-tests.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 49.9,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  }
+]
