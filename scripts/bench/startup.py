@@ -82,17 +82,18 @@ def main():
                 previous = signal.signal(signal.SIGALRM, timeout)
                 try:
                     signal.alarm(30)
-                    _, status, usage = os.wait4(child.pid, 0)
+                    os.waitid(os.P_PID, child.pid, os.WEXITED | os.WNOWAIT)
                     elapsed = (time.perf_counter() - start) * 1000
-                    child.returncode = os.waitstatus_to_exitcode(status)
                 finally:
                     signal.alarm(0)
                     signal.signal(signal.SIGALRM, previous)
+                    # Kill the group before reaping: the unreaped leader keeps its group ID from being reused.
                     try:
                         os.killpg(child.pid, signal.SIGKILL)
                     except ProcessLookupError:
                         pass
-                    child.wait()
+                    _, status, usage = os.wait4(child.pid, 0)
+                child.returncode = os.waitstatus_to_exitcode(status)
                 stdout.seek(0)
                 stderr.seek(0)
                 output, errors = stdout.read().decode(), stderr.read().decode()

@@ -241,6 +241,11 @@ async function startFixtureHub(root, configuration, onStarted) {
     return startHub(configuration, 0);
   }
 
+  // Teardown asserts a graceful SIGTERM exit, which Windows cannot deliver.
+  if (process.platform === "win32") {
+    throw new Error("HTML_INBOX_HUB_TEST_CLI requires POSIX signals; unset it to use the in-process hub on Windows");
+  }
+
   assert.equal(path.isAbsolute(process.env.HTML_INBOX_HUB_TEST_CLI), true);
   const executable = await realpath(process.env.HTML_INBOX_HUB_TEST_CLI);
   const installedRoot = path.dirname(path.dirname(executable));
@@ -299,11 +304,14 @@ async function startFixtureHub(root, configuration, onStarted) {
         } catch (error) { childErrors.push(error); }
       }
     }, 3000);
+    let deadlineTimer;
+    const deadline = new Promise((resolve) => { deadlineTimer = setTimeout(resolve, 6000); });
     let result;
     try {
-      result = await closed;
+      result = await Promise.race([closed, deadline]);
     } finally {
       clearTimeout(timer);
+      clearTimeout(deadlineTimer);
     }
 
     closeOutcome = { pid: child.pid, readinessPublished, teardownRequested, hadExited,
@@ -312,10 +320,13 @@ async function startFixtureHub(root, configuration, onStarted) {
         ? { ...error, name: error.name, message: error.message, stack: error.stack }
         : { thrown: String(error) }) };
     const failures = [...childErrors];
-    if (hadExited || result.beforeTeardown || nativeExit?.beforeTeardown) {
+    if (!result) {
+      failures.push(new Error("Installed hub did not close within 6 s, including forced cleanup"));
+    }
+    if (hadExited || result?.beforeTeardown || nativeExit?.beforeTeardown) {
       failures.push(new Error("Installed hub terminated before intentional fixture teardown"));
     }
-    if (result.code !== 0 || result.signal !== null) {
+    if (result && (result.code !== 0 || result.signal !== null)) {
       failures.push(new Error(`Installed hub shutdown was not code0/signalnull: ${result.code}/${result.signal}`));
     }
     if (readinessPublished && (!nativeExit || nativeExit.code !== 0 || nativeExit.signal !== null)) {

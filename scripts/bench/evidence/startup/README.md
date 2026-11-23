@@ -1,14 +1,16 @@
 # Issue 93 installed startup
 
-Parent: `610c931b7b22920cce59cf03e49c0de15ebaf2a2` on `perf/89-bench`, PR #114. Candidate production source: `8ae19fd9c746d335b0fbf0c8ca6e21ada1dd9f80`. Later commits add qualification scripts and evidence, with no change to measured production JavaScript. The parent has no CLI source changes relative to `099dcbd6378e3b6f73216966cfe9ea7f91ed5d8e`, the original #88/#89 integration baseline. Thus this comparison also covers the combined stack's production startup change. The older exploration reference `1ae641a` is not a measured baseline.
+Parent: `610c931b7b22920cce59cf03e49c0de15ebaf2a2` on `perf/89-bench`, PR #114. Candidate production source: `8ae19fd9c746d335b0fbf0c8ca6e21ada1dd9f80`. The timing figures below belong to these two measured artifacts. Commits up to `f290211` add only qualification scripts and evidence. The later merge `d812d25` brings in parent-stack production changes (ownership recovery, hub filtering, 0.6.3 metadata). The integrated head keeps the lazy entry and deferred chunks, which the [15 November installed integration](integration-2026-11-15.md) checked for correctness only; it did not re-measure timing. The parent has no CLI source changes relative to `099dcbd6378e3b6f73216966cfe9ea7f91ed5d8e`, the original #88/#89 integration baseline. Thus this comparison also covers the combined stack's production startup change. The older exploration reference `1ae641a` is not a measured baseline.
 
 ## Reproduce
 
-Use Linux, Python >=3.11, the frozen lockfile, build Node 24.19.0, pnpm 11.7.0, tsc-rs 0.7.0 and ncc 0.44.1. Run sequentially in an otherwise idle slot. Use the same clean owned checkout for both refs, preserving the candidate branch. No separate worktree is needed.
+Use Linux, Python >=3.11, the frozen lockfile, build Node 24.19.0, pnpm 11.7.0, tsc-rs 0.7.0 and ncc 0.44.1. Run sequentially in an otherwise idle slot. Use one clean owned checkout for both pinned refs. No separate worktree is needed.
 
-For each pinned source ref, build and pack after removing previous output. Start with a clean worktree. Save the runner outside the checkout if switching to a revision that lacks it.
+For each pinned source ref, build and pack after removing previous output. Start with a clean worktree. Neither measured ref contains the runner, so copy the exact runner that produced this evidence out of the checkout first. Its SHA256 is `af079526a03c22128610bfa1a6992d6ef3c08d82a397a6c0a85b30db967d6795`, recorded as `runner_sha256` in each `environment.json`. The current `scripts/bench/startup.py` differs only in reaping each sample's session leader after killing its process group, not before. That change removes a group-ID reuse race and does not change what is timed.
 
 ```sh
+RUNNER="$(mktemp -d)/startup.py"
+git show ac2b3b7993b893ac914a241d839c83331183679c:scripts/bench/startup.py > "$RUNNER"
 pnpm install --frozen-lockfile
 git switch --detach 610c931b7b22920cce59cf03e49c0de15ebaf2a2
 node -e "require('node:fs').rmSync('packages/cli/bundle', {recursive:true,force:true})"
@@ -18,7 +20,7 @@ mkdir -p artifacts/93/base-clean/consumer
 npm pack --ignore-scripts --pack-destination artifacts/93/base-clean ./packages/cli
 npm install --prefix artifacts/93/base-clean/consumer --ignore-scripts --no-audit --no-fund --package-lock=false ./artifacts/93/base-clean/html-inbox-0.6.1.tgz
 
-git switch perf/93-startup
+git switch --detach 8ae19fd9c746d335b0fbf0c8ca6e21ada1dd9f80
 node -e "require('node:fs').rmSync('packages/cli/bundle', {recursive:true,force:true})"
 pnpm build
 pnpm --filter html-inbox bundle
@@ -26,8 +28,11 @@ mkdir -p artifacts/93/candidate/consumer
 npm pack --ignore-scripts --pack-destination artifacts/93/candidate ./packages/cli
 npm install --prefix artifacts/93/candidate/consumer --ignore-scripts --no-audit --no-fund --package-lock=false ./artifacts/93/candidate/html-inbox-0.6.1.tgz
 
-python3 scripts/bench/startup.py --base artifacts/93/base-clean/consumer --candidate artifacts/93/candidate/consumer --base-ref 610c931b7b22920cce59cf03e49c0de15ebaf2a2 --candidate-ref 8ae19fd9c746d335b0fbf0c8ca6e21ada1dd9f80 --node /home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node --out artifacts/93/qualified-node20
-python3 scripts/bench/startup.py --base artifacts/93/base-clean/consumer --candidate artifacts/93/candidate/consumer --base-ref 610c931b7b22920cce59cf03e49c0de15ebaf2a2 --candidate-ref 8ae19fd9c746d335b0fbf0c8ca6e21ada1dd9f80 --node /home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node --out artifacts/93/qualified-node24
+# Both pinned refs are version 0.6.1. Compare refs.*.tarball_sha256 in build-environment.json.gz before timing.
+sha256sum artifacts/93/base-clean/html-inbox-0.6.1.tgz artifacts/93/candidate/html-inbox-0.6.1.tgz
+
+python3 "$RUNNER" --base artifacts/93/base-clean/consumer --candidate artifacts/93/candidate/consumer --base-ref 610c931b7b22920cce59cf03e49c0de15ebaf2a2 --candidate-ref 8ae19fd9c746d335b0fbf0c8ca6e21ada1dd9f80 --node /home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node --out artifacts/93/qualified-node20
+python3 "$RUNNER" --base artifacts/93/base-clean/consumer --candidate artifacts/93/candidate/consumer --base-ref 610c931b7b22920cce59cf03e49c0de15ebaf2a2 --candidate-ref 8ae19fd9c746d335b0fbf0c8ca6e21ada1dd9f80 --node /home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node --out artifacts/93/qualified-node24
 ```
 
 Node paths are host-specific; substitute equivalent installations with their own npm/npx CLIs. The runner resolves those CLI files, records their versions and hashes, and sets PATH so their child uses the selected Node. Setup installs are untimed, with scripts disabled after the explicit build. npm/npx measurements are offline local-installed resolution, not download or registry latency.

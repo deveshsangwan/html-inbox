@@ -5,6 +5,7 @@ import {
   mkdir,
   readFile,
   readdir,
+  realpath,
   rm,
   stat,
   writeFile,
@@ -17,10 +18,12 @@ import { fileURLToPath } from "node:url";
 import { createPackageTailscaleFixture } from "./package-tailscale-fixture.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const temporaryRoot = await mkdtemp(path.join(tmpdir(), "html-inbox-package-"));
+// Canonical, so paths the CLI reports (such as macOS /private/var) match the fixture's spelling.
+const temporaryRoot = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-package-")));
 let viewer;
 let tailscaleEnvironment;
 let shouldRetainFixture = false;
+let primaryFailure;
 
 try {
   assert.equal(process.argv.length <= 3, true, "Pass at most one package tarball");
@@ -351,6 +354,11 @@ Module._load = function (request, ...args) {
     if (cleanupFailures.length === 0) {
       try {
         assert.equal(JSON.parse((await runManaged(["sync", "worker", "status"])).stdout).worker.running, false);
+      } catch (error) {
+        cleanupFailures.push(error);
+      }
+
+      try {
         await assert.rejects(readFile(path.join(managedHome, "sync", "worker", "runtime.json")), { code: "ENOENT" });
       } catch (error) {
         cleanupFailures.push(error);
@@ -366,20 +374,37 @@ Module._load = function (request, ...args) {
   }
 
   console.log("Installed package foreground, detached concurrency, LAN, exposure reset, publish restart, content, export, CLI/UI deletion, and shutdown passed.");
+} catch (error) {
+  primaryFailure = error;
 } finally {
+  // Cleanup failures are appended to, never substituted for, the smoke's own failure.
+  const cleanupFailures = [];
   try {
     await viewer?.close();
-    const installedExecutable = path.join(temporaryRoot, "consumer", "node_modules", "html-inbox", "bundle", "index.js");
-    await run(process.execPath, [installedExecutable, "viewer", "stop", "--json"], temporaryRoot, {
-      HTML_INBOX_HOME: path.join(temporaryRoot, "home"),
-      HTML_INBOX_CATALOG_HOME: path.join(temporaryRoot, "catalog"),
-      ...tailscaleEnvironment,
-    }).catch(() => {});
-  } finally {
-    if (process.env.HTML_INBOX_KEEP_PACKAGE_SMOKE !== "1" && !shouldRetainFixture) {
+  } catch (error) {
+    cleanupFailures.push(error);
+  }
+
+  const installedExecutable = path.join(temporaryRoot, "consumer", "node_modules", "html-inbox", "bundle", "index.js");
+  await run(process.execPath, [installedExecutable, "viewer", "stop", "--json"], temporaryRoot, {
+    HTML_INBOX_HOME: path.join(temporaryRoot, "home"),
+    HTML_INBOX_CATALOG_HOME: path.join(temporaryRoot, "catalog"),
+    ...tailscaleEnvironment,
+  }).catch(() => {});
+
+  if (process.env.HTML_INBOX_KEEP_PACKAGE_SMOKE !== "1" && !shouldRetainFixture) {
+    try {
       await rm(temporaryRoot, { recursive: true, force: true });
+    } catch (error) {
+      cleanupFailures.push(error);
     }
   }
+
+  if (cleanupFailures.length > 0) {
+    throw new AggregateError([primaryFailure, ...cleanupFailures].filter(Boolean), "Installed package smoke cleanup failed");
+  }
+
+  if (primaryFailure) throw primaryFailure;
 }
 
 async function deleteThroughViewer(origin, documentUrl) {
