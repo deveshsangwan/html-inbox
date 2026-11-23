@@ -1,0 +1,29 @@
+{
+  "observed": [
+    {
+      "pid": 458020,
+      "ppid": 458011,
+      "group": 458020,
+      "start": "143416738",
+      "state": "S",
+      "name": "MainThread"
+    },
+    {
+      "pid": 458032,
+      "ppid": 458020,
+      "group": 458020,
+      "start": "143416807",
+      "state": "R",
+      "name": "MainThread"
+    }
+  ],
+  "groups": [
+    458020
+  ],
+  "remaining": [],
+  "observedSocketInodes": [
+    "25180593",
+    "25182479"
+  ],
+  "matchingNetworkRows": []
+}

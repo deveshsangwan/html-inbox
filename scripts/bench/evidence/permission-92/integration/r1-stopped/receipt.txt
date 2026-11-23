@@ -1,0 +1,33 @@
+Grant: root-owner92-735-validation-20261115-r1
+Outcome: PRECHECK PROCEDURAL FAILURE; HOLD PUSH; no application command ran.
+Source pin: 7356498207bafe235229270c1c1406c385b69c1f
+Root review SHA256: 47b9f46017c4d0dc2407536cbee68e005234202d8de5414b9cf7248948cc298b
+Grant SHA256: 92e1cab5bf00928c036b4e64dd33768e17b4ca48fa214ec65a8da11eece72877
+Both complete files were read and their hashes verified before the next tool call.
+
+Failure: I inspected installed tool/browser paths before persisting START. This violated the grant's requirement to set START before first preflight/capture. No start/deadline is retroactively inferred. No reset, extension or retry is attempted.
+
+Post-grant read-only command, exactly:
+cat artifacts/permission-92/run-check.py; cat artifacts/permission-92/qualify.py; ls -l node_modules/.bin/tsc-rs node_modules/.bin/pnpm /home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/pnpm; cat node_modules/tsc-rs/package.json; cat scripts/browser-fixtures.mjs | head -30; ls -d /home/agent/.cache/ms-playwright/* /home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/corepack
+Shell exit: 0, because the final ls succeeded. Intermediate ls reported nonexistent node_modules/.bin/pnpm; no application dependency diagnosis or installation was attempted. The Corepack pnpm symlink was present. The old controller sources were only read, never run. No cancelled backup was inspected.
+
+The read-only output showed:
+- node_modules/.bin/tsc-rs regular executable, 1811 bytes.
+- Node24 bin/pnpm -> ../lib/node_modules/corepack/dist/pnpm.js.
+- Installed tsc-rs package.json version 0.7.0; no compiler or version command executed.
+- Existing Playwright browser cache directories enumerated; no browser launched.
+Full original read-only command/output remains in the owner thread tool transcript, chunk 6b08ca.
+
+Application status:
+1 pnpm typecheck, Node24, cap120: UNRUN.
+2 pnpm build, Node24, cap120: UNRUN.
+3 exact Node20 serial15-file TAP, cap300: UNRUN.
+4 exact Node24 serial15-file TAP, cap300: UNRUN.
+5 exact Node20 full hub-browser file, cap180: UNRUN.
+6 exact Node24 full hub-browser file, cap180: UNRUN.
+No original application exit/log exists because no application was spawned.
+
+No fresh generated backup or output map was made. No generated output, source, index or installed tool was mutated by this attempt; no full generated/tool equality audit is claimed. No restoration was necessary or attempted. Only ignored receipt creation and read-only final git checks follow LOCAL release.
+All read-only shell sessions completed synchronously. There were no application, compiler, test, listener or browser children to join from this attempt. No claim about unrelated processes is made.
+EXPLICIT LOCAL RELEASE sent to root before this classification, bridge message message:mcp:6ab550eb-f174-4db9-a523-140a3f1cc2f1:thread-send:f1c590f0-595b-4721-884e-99717242fc4f.
+No push, commit, reviewer, helper, CI retry, benchmark, new watch, release or merge of a performance PR. Existing watch unchanged. A new explicit grant would be required before any future application execution.

@@ -1,0 +1,46 @@
+{
+  "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/package.json": {
+    "sha256": "078082715a1c29bab6d9d0e11a8fc8f2c16ed01d17b3ecb1a1a3d26495bc7944",
+    "resolved": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/package.json"
+  },
+  "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/packages/cli/package.json": {
+    "sha256": "41f268d5b878301f8a6f8064fde26b21ce2e4ab2ca01af6a774ada42121febdf",
+    "resolved": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/packages/cli/package.json"
+  },
+  "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/pnpm-workspace.yaml": {
+    "sha256": "731a9761f1429d6eb21052e53abc1e5fa4799754f2916e2c355e4810ba060d4c",
+    "resolved": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/pnpm-workspace.yaml"
+  },
+  "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/tsconfig.base.json": {
+    "sha256": "0ee61cc4109d97d227f5ccb5c3f40d179959ec0a67f433b89dc1a861a029a977",
+    "resolved": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/tsconfig.base.json"
+  },
+  "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/packages/cli/tsconfig.json": {
+    "sha256": "1a9f0873fec04475a675b9b11b9402a9eca94c930c65a199019538b9f521b861",
+    "resolved": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/packages/cli/tsconfig.json"
+  },
+  "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/.bin/tsc-rs": {
+    "sha256": "c19abbe762b03c4dbcd80621e95889cfddd16aa289193e826d57799997cc1e3e",
+    "resolved": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/.bin/tsc-rs"
+  },
+  "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/tsc-rs/package.json": {
+    "sha256": "6a5b39850b57b40d20cce401586c3d129b5fec6d2a4cd6b21724d843e39ab785",
+    "resolved": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/.pnpm/tsc-rs@0.7.0/node_modules/tsc-rs/package.json"
+  },
+  "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/tsc-rs/bin/tsc-rs": {
+    "sha256": "2219f428a7e55aaf1f7ad85b9b0f0cf5078aeb76ccc9a7c6036c92d48f492ffd",
+    "resolved": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/.pnpm/tsc-rs@0.7.0/node_modules/tsc-rs/bin/tsc-rs"
+  },
+  "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/tsc-rs/lib/tsc.js": {
+    "sha256": "cbdfbf11c26ed00dfc073155e316a42d6d6d8a387be61006b82fa9aa93ac572e",
+    "resolved": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/.pnpm/tsc-rs@0.7.0/node_modules/tsc-rs/lib/tsc.js"
+  },
+  "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/tsc-rs/lib/getExePath.js": {
+    "sha256": "2a46a42d54d654f554c41041faaa88e3b0f1fcde4f3b418054d42b33cb4c13f1",
+    "resolved": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/.pnpm/tsc-rs@0.7.0/node_modules/tsc-rs/lib/getExePath.js"
+  },
+  "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/.pnpm/@tsc-rs+linux-x64@0.7.0/node_modules/@tsc-rs/linux-x64/lib/tsc": {
+    "sha256": "fb9223ad1f59392ca225dc4c1a76664e07f146bc5f22c91a13ade6b2f7c217cc",
+    "resolved": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/.pnpm/@tsc-rs+linux-x64@0.7.0/node_modules/@tsc-rs/linux-x64/lib/tsc"
+  }
+}

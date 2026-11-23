@@ -1,0 +1,18 @@
+{
+  "failure": {
+    "type": "RuntimeError",
+    "message": "Command failed or owned descendants remain: hub-browser-20.20.2",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/artifacts/permission-92/validation-735-r3-controller.py\", line 255, in <module>\n    raise RuntimeError('Command failed or owned descendants remain: ' + spec['name'])\nRuntimeError: Command failed or owned descendants remain: hub-browser-20.20.2\n"
+  },
+  "cleanupErrors": [],
+  "commandsRun": 6,
+  "unrun": [
+    "hub-browser-24.19.0"
+  ],
+  "allCommandsExitZero": false,
+  "elapsed": 180.78247737884521,
+  "finishedMonotonic": 1434890.733084407,
+  "fixedFinalDeadline": 1436149.950606401,
+  "cleanupDeadline": 1435066.379598167,
+  "remainingOwned": []
+}

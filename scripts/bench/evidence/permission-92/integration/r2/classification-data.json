@@ -1,0 +1,29 @@
+{
+  "generatedExact": true,
+  "generatedEntries": {
+    "dist": 395,
+    "bundle": 2
+  },
+  "toolsExact": true,
+  "toolEntries": {
+    "bin": 4,
+    "tsc-link": 1,
+    "tsc": 578,
+    "native": 122,
+    "ncc-link": 1,
+    "ncc": 143,
+    "playwright": 78,
+    "playwright-core": 140,
+    "node20": 1,
+    "node24": 1,
+    "pnpm": 555,
+    "corepack": 59,
+    "pnpm-link": 1,
+    "browser": 315
+  },
+  "sourceSemanticExact": true,
+  "rawIndexExact": true,
+  "toolDelta": false,
+  "typecheckLogSHA256": "1545f9145cd36c3401fcd7aca231cb6f4253eeb7c27c48e9a393b1a989c63391",
+  "remainingOwned": []
+}

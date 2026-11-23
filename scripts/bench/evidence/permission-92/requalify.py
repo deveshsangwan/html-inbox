@@ -2,6 +2,8 @@
 
 Run permissions.py first with uncompressed output at <parent>/comparison, then
 use --out <parent>/safety here; comparison/fingerprints.json is required input.
+Use the same clean, disposable checkout. This procedure writes the complete
+saved Git index back after each case, so concurrent staging there is lost.
 """
 
 import argparse

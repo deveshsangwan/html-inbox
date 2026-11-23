@@ -1,0 +1,37 @@
+{
+  "/home/agent": {
+    "uid": 1001,
+    "gid": 1001,
+    "mode": 448,
+    "dev": 66306,
+    "ino": 15204367
+  },
+  "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod": {
+    "uid": 1001,
+    "gid": 1001,
+    "mode": 509,
+    "dev": 66306,
+    "ino": 20337006
+  },
+  "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules": {
+    "uid": 1001,
+    "gid": 1001,
+    "mode": 509,
+    "dev": 66306,
+    "ino": 24653856
+  },
+  "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/node_modules/.pnpm": {
+    "uid": 1001,
+    "gid": 1001,
+    "mode": 509,
+    "dev": 66306,
+    "ino": 25317931
+  },
+  "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/packages/cli": {
+    "uid": 1001,
+    "gid": 1001,
+    "mode": 509,
+    "dev": 66306,
+    "ino": 20337023
+  }
+}

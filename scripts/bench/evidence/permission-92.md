@@ -7,14 +7,17 @@ The original investigation inspected immediate parent
 `perf/91-listing` at `bf80f9fa4815376f1771c3a6cb78d5ed19231ad2`; the
 [integration receipt](permission-92/integration-2026-11-15.md) records that
 merge and its scoped requalification. `packages/cli/src/private-storage.ts` is
-byte-identical at 52cdb70, bf80f9f and `610c931`, so the experiment below
-still applies to the current base. Inherited listing, storage-policy and
+byte-identical at 52cdb70, bf80f9f and `610c931` (the stack's pre-#89
+baseline and an ancestor of bf80f9f), so the experiment below still applies
+to the current base. Inherited listing, storage-policy and
 runtime changes are outside this investigation's diff.
 
 ## Decision
 
-NO-GO. The controlled adversarial comparison confirms that the mode-only
-shortcut violates the required behavior on Node 20.20.2 and Node 24.19.0.
+NO-GO. The controlled adversarial comparison shows that the mode-only shortcut
+changes observable missing-path and replacement behavior on Node 20.20.2 and
+Node 24.19.0. Issue #92 requires that path replacement and error behavior do
+not weaken, so the shortcut fails its acceptance criteria.
 There is no production change or claimed performance improvement. Performance
 experiments stopped at the failed correctness gate. This is a contract rejection,
 not a finding that chmod elision is fast or slow; its benefit remains unquantified.
@@ -31,6 +34,24 @@ behavior at these controlled interleavings:
    point. The current chmod should repair the replacement; the shortcut would
    leave the replacement loose.
 
+These are timing-sensitive differences, not lost lasting guarantees. Neither
+version keeps a path private after the helper returns, since a same-user actor
+can remove or loosen it afterwards. The shortcut moves the moment the helper
+observes the path from `chmod` back to `lstat`. Callers still see the
+difference. Listing classifies documents as complete, incomplete or missing
+from `ENOENT` in `hardenDocument` (`packages/cli/src/backend.ts`), and the
+post-write hardening in `writePrivateFile` and `writeAtomicPrivateJson`
+reports it. The pre-write calls swallow `ENOENT`, so those two paths behave the
+same.
+
+A second, untested reason points the same way. On POSIX, `chmod` by a
+non-owner without `CAP_FOWNER` fails with `EPERM`. A private-mode object owned
+by another user, for example one left by an earlier privileged run, therefore
+makes the current helper reject with `EPERM`. The shortcut would return
+successfully, and later reads or writes might fail with `EACCES` instead.
+Issue #92 asks that ownership behavior stay unchanged. This is analysis only;
+no foreign-owner or privileged run was made.
+
 `packages/cli/src/private-storage.test.ts` adds these cases for files and
 directories. All four cases pass on baseline and fail on the temporary shortcut
 under both runtimes. They describe specific observable interleavings in the current path-based implementation, not a
@@ -38,8 +59,6 @@ claim that path-based chmod is race-free. These are characterization tests; a
 descriptor-based design would require a deliberately reviewed contract change.
 Adding another lstat would move the interval in which replacement can occur. Descriptor-based identity and storage-ownership
 changes require separate review and are outside this compatibility optimization.
-Ownership and EPERM equivalence remain a separate unresolved concern; no
-foreign-user or privileged execution result has been established.
 
 Windows production behavior remains unchanged. POSIX mode-repair assertions are
 skipped on Windows. chmod is not owner-only ACL enforcement. Read-only source
@@ -54,6 +73,11 @@ was pinned and executed at `a8ea2d19458a492e228c86a8b2bbcd9fe3f5a99b`.
 Production source is identical to immediate parent
 `52cdb70cc4a504fa8b983e6cdbcb23432d295592` throughout the shipped diff.
 
+Use a clean, disposable checkout with no concurrent builds or Git writes.
+The runner's first `pnpm build` deletes and regenerates `packages/cli/dist`, so
+afterwards the checkout holds a fresh baseline build, not the previous one.
+pnpm must not need an install, because the runner's builds have no TTY; an
+implicit install attempt aborted in that situation during integration R2.
 From the repository root, using Node 24.19.0 and pnpm 11.7.0 for build tooling:
 
 ```sh
@@ -61,14 +85,20 @@ pnpm install --frozen-lockfile
 python3 scripts/bench/permissions.py --out artifacts/permission-92/comparison --node20 /absolute/node20 --node24 /absolute/node24
 ```
 
-Run the comparison on POSIX storage. Choose a fresh output directory. The runner builds the unchanged source and runs
-all four tests on both runtimes before changing production source. It records
-the temporary candidate source and diff, builds it, requires the expected exit 1
-and four failed assertions on each runtime, restores the original source in
-`finally`, rebuilds, then verifies source and every compiled artifact hash equal
-the baseline hashes. No real libraries are opened. Test fixtures use the existing
-`temporaryHome` cleanup helper. Do not run another build against this checkout
-while the comparison runs.
+Run the comparison on POSIX storage. Choose a fresh output directory. The
+runner refuses unstaged or staged edits to `private-storage.ts`, builds the
+unchanged source and requires all four named tests to pass on both runtimes
+before changing production source. It records the temporary candidate source
+and diff, builds it, and requires exit 1 with each named test failing for its
+expected reason: `Missing expected rejection` for both removals and
+`511 !== 384` or `511 !== 448` for the replacements. It then restores the
+original source in `finally`, rebuilds, and verifies source and every compiled
+artifact hash equal the baseline hashes. No real libraries are opened. Test
+fixtures use the existing `temporaryHome` cleanup helper.
+
+Signal handling covers a SIGINT or SIGTERM delivered to the runner's PID. A
+terminal or process-group signal also reaches the active build, and the
+300-second command timeout kills only the direct child, not its process tree.
 
 The candidate only guards each existing chmod with
 `process.platform === "win32" || (fileStat.mode & 0o7777) !== requiredMode`.
@@ -150,7 +180,10 @@ equivalence.
   since the correctness gate failed; no benefit is claimed.
 
 No part of this rejected shortcut is deferred to 1.x, and no modern contract
-change is approved here. Descriptor/ownership design would be separate work.
+change is approved here. Issue #92 routes contract changes that the
+optimization would need to 1.x. No benefit was measured, so this investigation
+gives no reason to propose one. A maintainer can reopen it for 1.x with
+measurements. Descriptor/ownership design would be separate work.
 
 ## Review dispositions
 
@@ -261,6 +294,12 @@ review round was needed for these documentation-only updates.
 | Low 3, wait deadline anchored at checkpoint-search start | Optional change declined for this completed one-off. The existing bound can shorten the post-signal window after a late checkpoint. Its deadline-expiry path is written to invoke emergency/outer cleanup, but that path was not exercised. The successful receipt covers an early checkpoint only. Retain the qualified executable procedure; do not claim a fresh fixed restoration window or unexercised timeout behavior. |
 | Suggestion 1, evidence volume | Retain original and new raw evidence for the requested independent audit. No new workload or artifact mechanism added. |
 | Suggestion 2, changed test hash | Accepted; explicitly identify the sole baseline artifact difference and renewed candidate-failure proof above. |
+
+Correction to the archived second-round Claude transcript, which is kept
+unchanged: its "Candidate build" line says the candidate differs from baseline
+in `private-storage.js` and `.test.js`. The fingerprint maps show each
+candidate build differs only in `private-storage.js`. The test JS differs only
+between the original and updated baselines, as stated above.
 | Suggestion 3, timing-dependent checkpoint | Accepted limitation. The 5 ms process scan observed one successful candidate-build interleaving; it is not proof that every future execution will hit that window. |
 
 The final documentation receipt remains subject to final-head CI and the

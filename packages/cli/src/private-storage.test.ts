@@ -6,7 +6,9 @@ import { hardenPrivateDirectory, hardenPrivateFile } from "./private-storage";
 import { temporaryHome } from "./test-fixtures";
 
 // Characterize path-based chmod at a controlled lstat-to-chmod interleaving.
-// A descriptor-based design would need an explicitly reviewed contract change.
+// These cases pin current path semantics, not a race-free or symlink-swap
+// guarantee. A descriptor-based design would need an explicitly reviewed
+// contract change and different tests.
 for (const kind of ["file", "directory"] as const) {
   const privateMode = kind === "file" ? 0o600 : 0o700;
   const harden = kind === "file" ? hardenPrivateFile : hardenPrivateDirectory;
@@ -16,10 +18,13 @@ for (const kind of ["file", "directory"] as const) {
     const target = path.join(home, "target");
 
     if (kind === "file") {
-      await fs.writeFile(target, "fixture", { mode: privateMode });
+      await fs.writeFile(target, "fixture");
     } else {
-      await fs.mkdir(target, { mode: privateMode });
+      await fs.mkdir(target);
     }
+
+    // Set the private mode explicitly so a restrictive umask cannot change the premise.
+    await fs.chmod(target, privateMode);
 
     const lstat = fs.lstat;
     let interceptions = 0;
@@ -28,7 +33,7 @@ for (const kind of ["file", "directory"] as const) {
 
       if (String(args[0]) === target) {
         interceptions += 1;
-        await fs.rm(target, { recursive: true });
+        await (kind === "file" ? fs.unlink(target) : fs.rmdir(target));
       }
 
       return checked;
@@ -45,10 +50,13 @@ for (const kind of ["file", "directory"] as const) {
     const target = path.join(home, "target");
 
     if (kind === "file") {
-      await fs.writeFile(target, "fixture", { mode: privateMode });
+      await fs.writeFile(target, "fixture");
     } else {
-      await fs.mkdir(target, { mode: privateMode });
+      await fs.mkdir(target);
     }
+
+    // Set the private mode explicitly so a restrictive umask cannot change the premise.
+    await fs.chmod(target, privateMode);
 
     const lstat = fs.lstat;
     let interceptions = 0;
@@ -57,7 +65,7 @@ for (const kind of ["file", "directory"] as const) {
 
       if (String(args[0]) === target) {
         interceptions += 1;
-        await fs.rm(target, { recursive: true });
+        await (kind === "file" ? fs.unlink(target) : fs.rmdir(target));
 
         if (kind === "file") {
           await fs.writeFile(target, "replacement");

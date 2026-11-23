@@ -1,0 +1,31 @@
+{
+  "generatedExact": true,
+  "beforeEntries": {
+    "dist": 395,
+    "bundle": 2
+  },
+  "installedEntries": {
+    "dist": 399,
+    "bundle": 2
+  },
+  "installedEqualsSavedBuild": true,
+  "installedBundleUnchanged": true,
+  "postEqualsInstalled": true,
+  "toolsExact": true,
+  "toolDelta": false,
+  "sourceSemanticExact": true,
+  "rawIndexExact": true,
+  "tmp": {
+    "removedOwnedRoot": true,
+    "remaining": false
+  },
+  "hashes": {
+    "hub-browser-20.20.2.log": "caee53d77af973b701c00496153cc4b830f90268b5b7861c229c806ad0d35326",
+    "hub-browser-24.19.0.log": "dadf78f8c728185f5ab7fa1c364c901ae3d04ec450bc989d7427b6370b14d233",
+    "commands.json": "46eb6dee6cbddde195d5a74befa3ea75bbd3d9bcd12d6b0790327b99b0785a38",
+    "completion.json": "9c0a84339673800a21ccaafe982d84955a0b0f71efbd0827bbc1c25fc31254dc",
+    "tools-restored.json": "11b48fc1c128670c8d0d9acded43696addb60185a93bdcd69fcd7b6380d164f7",
+    "generated-restored.json": "d153e13c798a9fbe2621d997b5b2e04c52a869bc4db1ee2c1d7a4c108e435c2f",
+    "generated-installed.json": "9254fbc0cdfa69bdc1f5354e885d056c22a677db923a10eca4317691c1758143"
+  }
+}

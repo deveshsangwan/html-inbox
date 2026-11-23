@@ -1,10 +1,29 @@
 """Reproduce #92 against private-storage.ts from 52cdb70 only.
 
 This one-off POSIX comparison rejects other source bytes, including formatting
-changes. Never use real libraries or parallel builds. SIGINT/SIGTERM defer exit
-until the active command finishes, then restore source and rebuild before exit.
-SIGKILL and machine failure cannot be handled.
+changes. Run it only in a clean, disposable checkout with no concurrent builds
+or Git writes. Its first `pnpm build` deletes and regenerates packages/cli/dist,
+so it restores a fresh baseline build, not whatever dist existed before. pnpm
+must not need an install: the build runs without a TTY. Never use real
+libraries.
+
+A SIGINT or SIGTERM delivered to this runner's PID is deferred until the active
+command finishes, then source is restored and rebuilt before exit. A terminal
+or process-group signal also reaches the build itself, and the 300-second
+command timeout kills only the direct child, not its process tree. SIGKILL and
+machine failure cannot be handled.
 """
+
+CASES = [
+    ("private file removed after inspection still reports ENOENT",
+     "error: 'Missing expected rejection.'"),
+    ("private file replaced after inspection still repairs the replacement",
+     "511 !== 384"),
+    ("private directory removed after inspection still reports ENOENT",
+     "error: 'Missing expected rejection.'"),
+    ("private directory replaced after inspection still repairs the replacement",
+     "511 !== 448"),
+]
 
 import argparse
 import hashlib
@@ -17,6 +36,49 @@ import subprocess
 
 def digest(data):
     return hashlib.sha256(data).hexdigest()
+
+
+def tap_results(output):
+    """Map each top-level TAP test name to (passed, its diagnostic block)."""
+    results = {}
+    current = None
+
+    for line in output.splitlines():
+        for prefix, passed in [("not ok ", False), ("ok ", True)]:
+            if line.startswith(prefix):
+                name = line[len(prefix):].split(" - ", 1)[1]
+                current = results[name] = [passed, []]
+                break
+        else:
+            if current is not None and line.startswith("  "):
+                current[1].append(line)
+            elif not line.startswith("  "):
+                current = None
+
+    return {name: (passed, "\n".join(block)) for name, (passed, block) in results.items()}
+
+
+def check_baseline(output):
+    results = tap_results(output)
+
+    if "# pass 4\n" not in output or "# fail 0\n" not in output:
+        raise RuntimeError("Expected exactly four passing baseline tests")
+
+    for name, _diagnostic in CASES:
+        if results.get(name, (False, ""))[0] is not True:
+            raise RuntimeError(f"Baseline case did not pass: {name}")
+
+
+def check_candidate(output):
+    results = tap_results(output)
+
+    if "# pass 0\n" not in output or "# fail 4\n" not in output:
+        raise RuntimeError("Expected all four candidate tests to fail")
+
+    for name, diagnostic in CASES:
+        passed, block = results.get(name, (True, ""))
+        if passed or diagnostic not in block:
+            raise RuntimeError(f"Candidate case did not fail with {diagnostic!r}: {name}")
 
 
 def main():
@@ -76,6 +138,7 @@ def main():
     run("head", ["git", "rev-parse", "HEAD"])
     run("status", ["git", "status", "--porcelain"])
     run("source-clean", ["git", "diff", "--quiet", "HEAD", "--", str(source)])
+    run("source-index-clean", ["git", "diff", "--quiet", "--cached", "HEAD", "--", str(source)])
 
     if digest(original) != "000d77f9dbd585e3f10ea393f03a6e59049980d4d3aae34a219e2cbfd4413e62":
         raise RuntimeError("Expected private-storage.ts bytes from 52cdb70")
@@ -86,8 +149,9 @@ def main():
 
     for label, node in [("20", args.node20), ("24", args.node24)]:
         run(f"node-{label}", [node, "--version"])
-        run(f"baseline-{label}", [node, "--test", "--test-reporter=tap",
-                                 "packages/cli/dist/private-storage.test.js"])
+        output = run(f"baseline-{label}", [node, "--test", "--test-reporter=tap",
+                                          "packages/cli/dist/private-storage.test.js"])
+        check_baseline(output)
 
     candidate = original
     for target, mode in [("directoryPath", "PRIVATE_DIRECTORY_MODE"),
@@ -112,8 +176,7 @@ def main():
         for label, node in [("20", args.node20), ("24", args.node24)]:
             output = run(f"candidate-{label}", [node, "--test", "--test-reporter=tap",
                                                "packages/cli/dist/private-storage.test.js"], expected=1)
-            if "# pass 0\n" not in output or "# fail 4\n" not in output:
-                raise RuntimeError(f"Expected all four candidate tests to fail on Node {label}")
+            check_candidate(output)
     except BaseException as error:
         failure = error
     finally:
