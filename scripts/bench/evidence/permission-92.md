@@ -2,10 +2,14 @@
 
 Issue: https://github.com/deveshsangwan/html-inbox/issues/92
 
-Immediate parent and inspected HEAD: `52cdb70cc4a504fa8b983e6cdbcb23432d295592`
-on `perf/92-chmod`, stacked on `perf/91-listing`. Draft PR #118 targets
-`perf/91-listing`. Inherited listing, storage-policy and runtime changes are
-outside this investigation's diff.
+The original investigation inspected immediate parent
+`52cdb70cc4a504fa8b983e6cdbcb23432d295592`. Draft PR #118 now targets
+`perf/91-listing` at `bf80f9fa4815376f1771c3a6cb78d5ed19231ad2`; the
+[integration receipt](permission-92/integration-2026-11-15.md) records that
+merge and its scoped requalification. `packages/cli/src/private-storage.ts` is
+byte-identical at 52cdb70, bf80f9f and `610c931`, so the experiment below
+still applies to the current base. Inherited listing, storage-policy and
+runtime changes are outside this investigation's diff.
 
 ## Decision
 

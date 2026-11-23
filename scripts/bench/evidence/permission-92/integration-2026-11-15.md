@@ -1,6 +1,6 @@
 # Permission investigation integration, 15 November 2026
 
-Related to [issue #92](https://github.com/deveshsangwan/html-inbox/issues/92) and [PR #118](https://github.com/deveshsangwan/html-inbox/pull/118). This receipt records source integration and the scoped qualification below. Final-head CI and root's shared gates remain pending. No chmod optimization ships and no new performance result is claimed.
+Related to [issue #92](https://github.com/deveshsangwan/html-inbox/issues/92) and [PR #118](https://github.com/deveshsangwan/html-inbox/pull/118). This receipt records source integration and the scoped qualification below. Published head `b813f68a1527ab7843f60aef3d87f0f473050a1d` later passed [Verify run 43678418304](https://github.com/deveshsangwan/html-inbox/actions/runs/43678418304), all 16 Actions jobs, based on run metadata. Root's shared gates remain open. No chmod optimization ships and no new performance result is claimed.
 
 Ordinary-merged exact reviewed PR116 parent `bf80f9fa4815376f1771c3a6cb78d5ed19231ad2` into original qualified head `aa72af4423736821c460807cdcac802f0c9f5634`, without conflicts. Before adding this note, all 102 original own-layer blobs matched aa72 and all 30 changed incoming blobs matched bf80. No production, test, runner or historical evidence adaptation was necessary. The merge commit containing this note is the new source pin. No reset, rebase, independent main merge or cancelled backup was used.
 
