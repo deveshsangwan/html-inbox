@@ -509,6 +509,13 @@ for (const sourceKind of ['backend', 'read-only source']) {
 
       return isEnrolled.call(ManagedSyncStore, home);
     });
+    const listCheckedDocuments = ManagedSyncStore.prototype.listCheckedDocuments;
+    let checkedListsAfterRelease = 0;
+    let isReleased = false;
+    t.mock.method(ManagedSyncStore.prototype, 'listCheckedDocuments', function (...args) {
+      if (isReleased) checkedListsAfterRelease += 1;
+      return listCheckedDocuments.apply(this, args);
+    });
 
     const scope = f.source.withReadView((view) => {
       isInsideScope = true;
@@ -520,10 +527,13 @@ for (const sourceKind of ['backend', 'read-only source']) {
       await Promise.race([entered.promise, scope.then(() => assert.fail('scope settled before the held check'))]);
       controller.abort(reason);
     } finally {
+      isReleased = true;
       release.resolve();
     }
 
     await assert.rejects(scope, (error) => error === reason);
+    // The caller's reason alone does not show ownership: the admitted read must finish its checked listing.
+    assert.equal(checkedListsAfterRelease, 1, 'the admitted adapter read reached the checked ledger listing');
   });
 }
 
@@ -554,7 +564,8 @@ test('a repeated NaN abort reason is reported once', async () => {
     async getDocumentMetadata() { return null; },
     async getDocument() { return null; },
   }, async (view) => {
-    void view.listDocuments();
+    // Observed, so the only thing under test is deduplication of the repeated reason.
+    view.listDocuments().catch(() => {});
     await entered.promise;
     controller.abort(Number.NaN);
     throw controller.signal.reason;
@@ -563,7 +574,6 @@ test('a repeated NaN abort reason is reported once', async () => {
   await entered.promise;
   release.resolve();
   await verdict;
-  await nextTurn();
 });
 
 async function legacyBackend(t, label, ids, onWarning = () => {}) {
@@ -583,23 +593,32 @@ async function legacyBackend(t, label, ids, onWarning = () => {}) {
 
 test('legacy scoped list waits for every started metadata read and keeps the earliest failure', async (t) => {
   const { backend } = await legacyBackend(t, 'legacy join', ['first', 'second', 'third']);
-  const earliest = new Error('first metadata read failed');
-  const later = new Error('third metadata read failed');
+  const earliest = new Error('last entry rejected first');
+  const later = new Error('first entry rejected later');
   const siblingEntered = deferred();
   const release = deferred();
   const siblingFinished = deferred();
   const readMetadata = LocalDocumentBackend.prototype.readMetadata;
+  const documentIds = new Set(['first', 'second', 'third']);
+  let started = 0;
+  let isSiblingEntered = false;
+  // Roles follow call order, which is entry order, so the earliest rejection is always the last entry.
   t.mock.method(LocalDocumentBackend.prototype, 'readMetadata', async function (id) {
-    if (id === 'first') {
-      await siblingEntered.promise;
-      throw earliest;
-    }
+    if (!documentIds.has(id)) return readMetadata.call(this, id);
 
-    if (id === 'third') {
+    const role = started;
+    started += 1;
+    if (role === 0) {
       await release.promise;
       throw later;
     }
 
+    if (role === 2) {
+      await siblingEntered.promise;
+      throw earliest;
+    }
+
+    isSiblingEntered = true;
     siblingEntered.resolve();
     try {
       await release.promise;
@@ -618,10 +637,11 @@ test('legacy scoped list waits for every started metadata read and keeps the ear
     assert.equal(isSettled, false, 'scope settled while a sibling read still touched storage');
   } finally {
     release.resolve();
-    await siblingFinished.promise;
+    if (isSiblingEntered) await siblingFinished.promise;
   }
 
   await assert.rejects(scope, (error) => error === earliest);
+  assert.equal(started, 3);
 });
 
 test('legacy scoped reads wait for both file hardening checks of an incomplete document', async (t) => {
@@ -629,16 +649,26 @@ test('legacy scoped reads wait for both file hardening checks of an incomplete d
   const { home, backend } = await legacyBackend(t, 'legacy hardening', ['first'], (message) => warnings.push(message));
   await rm(path.join(home, 'documents', 'first', 'index.html'));
   const held = deferred();
+  const indexRejected = deferred();
   const release = deferred();
   const heldFinished = deferred();
   const hardenPrivateFile = privateStorage.hardenPrivateFile;
   let isArmed = true;
+  let isHeld = false;
   t.mock.method(privateStorage, 'hardenPrivateFile', async (filePath) => {
+    if (path.basename(filePath) === 'index.html') {
+      return hardenPrivateFile(filePath).catch((error) => {
+        indexRejected.resolve(error);
+        throw error;
+      });
+    }
+
     if (!isArmed || path.basename(filePath) !== 'metadata.json') {
       return hardenPrivateFile(filePath);
     }
 
     isArmed = false;
+    isHeld = true;
     held.resolve();
     try {
       await release.promise;
@@ -652,12 +682,17 @@ test('legacy scoped reads wait for both file hardening checks of an incomplete d
   const scope = backend.withReadView((view) => view.listDocuments());
   void scope.finally(() => { isSettled = true; }).catch(() => {});
   try {
-    await Promise.race([held.promise, scope.then(() => assert.fail('scope settled before the held check'))]);
+    // The real lstat of the missing file finishes on the thread pool; wait for its rejection explicitly.
+    const [, indexError] = await Promise.race([
+      Promise.all([held.promise, indexRejected.promise]),
+      scope.then(() => assert.fail('scope settled before both checks started')),
+    ]);
+    assert.equal(indexError.code, 'ENOENT');
     await nextTurn();
     assert.equal(isSettled, false, 'scope settled while a sibling chmod was still running');
   } finally {
     release.resolve();
-    await heldFinished.promise;
+    if (isHeld) await heldFinished.promise;
   }
 
   assert.deepEqual(await scope, []);

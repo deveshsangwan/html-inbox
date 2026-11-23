@@ -485,3 +485,26 @@ The gated controls race their hold against the scope result and release in
 were added, so the actual-view probe now expects 50 tests.
 `LocalDocumentSource.withReadView` has no production caller today. Export
 uses `LocalDocumentBackend`. The probes still cover both adapters.
+
+## Council round 3 follow-up
+
+Round 3 at 4aa15eb found no production defect. It found three controls that
+would not fail as intended on the pre-fix code:
+
+- After round 2 removed the abort listener, a store scope that receives the
+  signal also rejects with the caller's reason, so error identity no longer
+  showed which scope owns cancellation. The adapter cancellation controls now
+  also require the admitted read to finish its checked ledger listing.
+- The legacy hardening control checked settlement one turn after holding the
+  `metadata.json` check. The real `lstat` of the missing `index.html` could
+  still be pending on the thread pool at that point. The control now waits for
+  that rejection explicitly before checking.
+- The legacy join control assigns roles by call order, so the earliest
+  rejection always comes from the last entry. That separates earliest-in-time
+  from first-in-entry-order, which the round 1 note described and round 2
+  replaced.
+
+Both legacy controls wait for a held read only if it was entered. The NaN
+control observes its read, so only the dedicated regression leaves a read
+unobserved. The scoped legacy list now passes an explicit `isScoped` flag.
+The probe still expects 50 tests. 823b972 and 4aa15eb were never executed.
