@@ -100,6 +100,40 @@ test("static snapshots carry an appearance default in shells and preserve docume
   );
 });
 
+test("static index and document shells format dates in UTC regardless of the host timezone", async (t) => {
+  const previousTimeZone = process.env.TZ;
+  t.after(() => {
+    if (previousTimeZone === undefined) {
+      delete process.env.TZ;
+      return;
+    }
+
+    process.env.TZ = previousTimeZone;
+  });
+  process.env.TZ = "Asia/Kolkata";
+
+  const home = await temporaryHome(t);
+  const backend = new LocalDocumentBackend(home);
+  const document = await backend.publish({
+    originalBytes: Buffer.from("<!doctype html><html><body>Dated document</body></html>"),
+    title: "Dated report",
+    type: "report",
+    sourceFileName: "dated.html",
+  });
+  const snapshot = await exportStaticSnapshot(backend, { outputDir: path.join(home, "snapshot") });
+  const inboxDirectory = path.join(snapshot.outputDir, snapshot.inboxPath.slice(1));
+
+  const createdAt = new Date(document.createdAt);
+  const utcDate = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(createdAt);
+  const hostDate = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(createdAt);
+  assert.notEqual(utcDate, hostDate);
+
+  for (const shellPath of ["index.html", `documents/${document.id}/index.html`]) {
+    const shell = await readFile(path.join(inboxDirectory, shellPath), "utf8");
+    assert.ok(shell.includes(`data-local-date>${utcDate}</time>`), `${shellPath} should render ${utcDate}`);
+  }
+});
+
 test("static export preserves bytes, metadata and atomic replacement", async (t) => {
   const home = await temporaryHome(t);
   const backend = new LocalDocumentBackend(home);
