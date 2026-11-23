@@ -47,6 +47,8 @@ def main():
         parser.error('--implementation-dist and --implementation-ref require the signatures workload')
     if bool(args.implementation_dist) != bool(args.implementation_ref):
         parser.error('--implementation-dist and --implementation-ref must be supplied together')
+    if args.workload in ['signatures', 'signature-history'] and len(sizes) != 1:
+        parser.error('signature workloads take exactly one --sizes value')
     if len(set(counts)) != len(counts) or len(set(sizes)) != len(sizes):
         parser.error('counts and sizes must not contain duplicates')
     if not counts or any(n not in [0, 100, 1000, 5000, 10000] for n in counts):

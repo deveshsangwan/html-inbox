@@ -80,7 +80,9 @@ class InstrumentationTests(unittest.TestCase):
                  (['cli', '--implementation-dist', '/synthetic/dist', '--implementation-ref', 'synthetic'],
                   '--implementation-dist and --implementation-ref require'),
                  (['signatures', '--implementation-dist', '/synthetic/dist'], 'must be supplied together'),
-                 (['signature-history', '--implementation-ref', 'synthetic'], 'must be supplied together')]
+                 (['signature-history', '--implementation-ref', 'synthetic'], 'must be supplied together'),
+                 (['signatures', '--sizes', '10240,1048576'], 'exactly one --sizes value'),
+                 (['signature-history'], 'exactly one --sizes value')]
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / 'results'
             for arguments, message in cases:
@@ -91,6 +93,25 @@ class InstrumentationTests(unittest.TestCase):
                     self.assertIn(message, result.stderr.decode())
                     self.assertFalse(output.exists())
 
+
+    def test_signature_pair_driver_rejects_incomplete_or_reused_qualification_inputs(self):
+        driver = RUNNER.with_name('signature_pairs.py')
+        required = ['--parent-dist', '/synthetic/parent', '--parent-ref', 'parent', '--candidate-dist', '/synthetic/candidate',
+                    '--candidate-ref', 'candidate', '--node', 'node']
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / 'pairs'
+            cases = [(required[2:], 'the following arguments are required: --parent-dist'),
+                     (required + ['--variants', 'parent,parent'], '--variants must be'),
+                     (required + ['--pairs', '0'], '--pairs must be'),
+                     (required + ['--out', directory], '--out must not exist')]
+            for arguments, message in cases:
+                with self.subTest(arguments=arguments):
+                    if '--out' not in arguments:
+                        arguments = arguments + ['--out', str(output)]
+                    result = subprocess.run(['python3', str(driver), *arguments], capture_output=True, timeout=5)
+                    self.assertEqual(result.returncode, 2)
+                    self.assertIn(message, result.stderr.decode())
+                    self.assertFalse(output.exists())
 
 if __name__ == '__main__':
     unittest.main()

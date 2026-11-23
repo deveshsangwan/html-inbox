@@ -41,6 +41,18 @@ async function assertAllReadsReject(store: ManagedSyncStore, error: RegExp) {
   await assert.rejects(store.getDocument("requested"), error);
 }
 
+async function configureOutboundRoute(store: ManagedSyncStore) {
+  const initial = await store.snapshot();
+  const route = await store.configureRoute({ id: randomUUID(), revision: 1, direction: "outbound", peerId: randomUUID(),
+    peerUrl: "https://127.0.0.1:1", sourceInboxId: initial.inboxId, destinationInboxId: randomUUID(), localInboxName: "synthetic",
+    readerAudience: "synthetic warm ownership guard", allowedOrigins: initial.originKeys, credentialRef: "token", tlsTrustRef: "ca",
+    state: "active", lastError: null });
+  const authorization = { routeId: route.id, revision: route.revision, peerId: route.peerId,
+    sourceInboxId: route.sourceInboxId, destinationInboxId: route.destinationInboxId };
+
+  return { route, authorization };
+}
+
 async function replaceWithoutGenerationChange(ledgerPath: string, ledger: SyncLedger) {
   const before = await stat(ledgerPath);
   const replacement = `${ledgerPath}.replacement`;
@@ -210,14 +222,7 @@ for (const isValid of [true, false]) {
 for (const change of ["device", "reader-identity"] as const) {
   test(`warm crypto facts cannot authorize publication or communication after changed ${change}`, async (t) => {
     const { home, store, ledgerPath } = await fixture(t);
-    const initial = await store.snapshot();
-
-    const route = await store.configureRoute({ id: randomUUID(), revision: 1, direction: "outbound", peerId: randomUUID(),
-      peerUrl: "https://127.0.0.1:1", sourceInboxId: initial.inboxId, destinationInboxId: randomUUID(), localInboxName: "synthetic",
-      readerAudience: "synthetic warm ownership guard", allowedOrigins: initial.originKeys, credentialRef: "token", tlsTrustRef: "ca",
-      state: "active", lastError: null });
-    const authorization = { routeId: route.id, revision: route.revision, peerId: route.peerId,
-      sourceInboxId: route.sourceInboxId, destinationInboxId: route.destinationInboxId };
+    const { authorization } = await configureOutboundRoute(store);
 
     await store.startCommunication(authorization, () => {});
     const current = await store.snapshot();
@@ -249,3 +254,44 @@ for (const change of ["device", "reader-identity"] as const) {
     assert.deepEqual(await readFile(identityPath), beforeIdentity);
   });
 }
+
+test("warm store reads reuse every parsed key and exact signature without new crypto", async (t) => {
+  const { home, store } = await fixture(t);
+  const verify = t.mock.method(crypto, "verify", crypto.verify);
+  const parseKey = t.mock.method(crypto, "createPublicKey", crypto.createPublicKey);
+
+  await store.snapshot();
+  await store.listDocuments();
+  assert.deepEqual((await store.getDocument("requested"))?.originalBytes, originalBytes);
+  await new ManagedSyncStore(home).snapshot();
+
+  assert.equal(verify.mock.callCount(), 0, "a warm read must hit the exact-success cache");
+  assert.equal(parseKey.mock.callCount(), 0, "a warm read must hit the parsed-key cache");
+});
+
+test("a warm exact signed state cannot stand in for a removed route grant", async (t) => {
+  const { store, ledgerPath } = await fixture(t);
+  const { route, authorization } = await configureOutboundRoute(store);
+  const active = await store.snapshot();
+  active.routes[route.id].state = "active";
+  await replaceWithoutGenerationChange(ledgerPath, active);
+  const expectedState = toOriginState(active.records[canonicalKey(active.inboxId, "requested")]);
+
+  let communicationStarts = 0;
+  const start = () => {
+    communicationStarts += 1;
+  };
+  await store.startCommunication(authorization, start, expectedState);
+  assert.equal(communicationStarts, 1);
+
+  const revoked = await store.snapshot();
+  revoked.routes[route.id].allowedOrigins = [];
+  await replaceWithoutGenerationChange(ledgerPath, revoked);
+  const beforeLedger = await readFile(ledgerPath);
+  const signing = t.mock.method(crypto, "sign", crypto.sign);
+  await assert.rejects(store.startCommunication(authorization, start, expectedState), /Origin or redistribution outside authorized route scope/);
+
+  assert.equal(communicationStarts, 1);
+  assert.equal(signing.mock.callCount(), 0);
+  assert.deepEqual(await readFile(ledgerPath), beforeLedger);
+});

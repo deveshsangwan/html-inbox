@@ -79,6 +79,21 @@ test("malformed and non-Ed25519 keys are never retained as successful keys or ve
   assert.deepEqual(verifier.usage(), { keys: 0, keyBytes: 0, verifications: 0, verificationBytes: 0 });
 });
 
+test("private key text still verifies as before but is never retained", (t) => {
+  const verifier = new OriginSignatureVerifier();
+  const { privateKey } = generateKeyPairSync("ed25519");
+  const privatePem = privateKey.export({ format: "pem", type: "pkcs8" }).toString();
+  const bytes = Buffer.from("private input");
+  const signature = sign(null, bytes, privateKey).toString("base64url");
+  const verify = t.mock.method(crypto, "verify", crypto.verify);
+  verifier.verify(privatePem, signature, bytes);
+  verifier.verify(privatePem, signature, bytes);
+
+  assert.equal(verifier.parsePublicKey(privatePem).asymmetricKeyType, "ed25519");
+  assert.equal(verify.mock.callCount(), 2);
+  assert.deepEqual(verifier.usage(), { keys: 0, keyBytes: 0, verifications: 0, verificationBytes: 0 });
+});
+
 test("key reuse is globally entry/byte bounded and evicts the oldest parsed key", (t) => {
   const verifier = new OriginSignatureVerifier();
   const owner = signer();

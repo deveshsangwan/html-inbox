@@ -1,5 +1,7 @@
 # Issue 94 measured results
 
+> Every percentage and median below applies to the pre-integration pins named here, not to the integrated base `08d5b2b0`. The [council record](signatures-94-council-2026-11-23.md) holds the integrated-head comparison.
+
 Production parent `610c931b7b22920cce59cf03e49c0de15ebaf2a2`; production candidate `999c75d37e1f1d86c25e58b4d45db3f96a66df38`. Build tools are Node 24.19.0, pnpm 11.7.0 and tsc-rs 0.7.0 with the same frozen lockfile. The clean builds were copied and hashed before switching refs; source hashes were independently checked against Git. See the original receipts and the install-once/per-pin-command execution supplement in the raw archive.
 
 The small/read/worker matrix used harness `b31d7a2eeec8ec302687b158bbdfeb0a2ec69335`. History used `e6b8bbb6883b8f3de4fc974a43500b866bcda7c9`, after restoring the inherited I/O parser. The timing region is byte-identical and signature-path counter parsing is equivalent. Companion fingerprints are recorded per process. Production files are unchanged between these harness pins.

@@ -1,4 +1,4 @@
-import { createPublicKey, verify, type KeyObject } from "node:crypto";
+import { createPublicKey, verify as verifyEd25519, type KeyObject } from "node:crypto";
 
 export const ORIGIN_SIGNATURE_CACHE_LIMITS = Object.freeze({
   keys: 128,
@@ -8,6 +8,9 @@ export const ORIGIN_SIGNATURE_CACHE_LIMITS = Object.freeze({
   verificationBytes: 16 * 1024 * 1024,
   verificationEntryBytes: 128 * 1024,
 });
+
+// createPublicKey also derives public keys from private PEM. Retain only text that is itself public.
+const PUBLIC_KEY_PEM = /^-----BEGIN PUBLIC KEY-----\r?\n[A-Za-z0-9+/=\r\n]+-----END PUBLIC KEY-----\s*$/;
 
 /** Reuses cryptographic facts only. Callers must still parse and authorize every current state. */
 export class OriginSignatureVerifier {
@@ -23,7 +26,7 @@ export class OriginSignatureVerifier {
     }
 
     const key = createPublicKey(publicKey);
-    if (key.asymmetricKeyType !== "ed25519" || publicKey.length > ORIGIN_SIGNATURE_CACHE_LIMITS.keyCodeUnits) {
+    if (key.asymmetricKeyType !== "ed25519" || !isRetainablePublicKey(publicKey)) {
       return key;
     }
 
@@ -51,16 +54,18 @@ export class OriginSignatureVerifier {
     const prefix = `${publicKey.length}:${publicKey}${signature.length}:${signature}`;
     const bytes = (prefix.length + message.length) * 2 + 256;
     const identity = bytes <= ORIGIN_SIGNATURE_CACHE_LIMITS.verificationEntryBytes ? prefix + message : undefined;
+
     if (identity !== undefined && this.successes.has(identity)) {
       return;
     }
 
     const key = this.parsePublicKey(publicKey);
-    if (key.asymmetricKeyType !== "ed25519" || !verify(null, Buffer.from(message, "latin1"), key, Buffer.from(signature, "base64url"))) {
+    const isValid = key.asymmetricKeyType === "ed25519" && verifyEd25519(null, Buffer.from(message, "latin1"), key, Buffer.from(signature, "base64url"));
+    if (!isValid) {
       throw new Error("Origin signature verification failed");
     }
 
-    if (identity === undefined) {
+    if (identity === undefined || !isRetainablePublicKey(publicKey)) {
       return;
     }
 
@@ -80,6 +85,10 @@ export class OriginSignatureVerifier {
   usage() {
     return { keys: this.keys.size, keyBytes: this.keyBytes, verifications: this.successes.size, verificationBytes: this.verificationBytes };
   }
+}
+
+function isRetainablePublicKey(publicKey: string): boolean {
+  return publicKey.length <= ORIGIN_SIGNATURE_CACHE_LIMITS.keyCodeUnits && PUBLIC_KEY_PEM.test(publicKey);
 }
 
 function copyText(value: string): string {
