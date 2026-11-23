@@ -85,7 +85,6 @@ jobs:
         env:
           EXPECTED_VERSION: ${{ inputs.version }}
           RELEASE_TAG: ${{ inputs.tag }}
-          GITHUB_OUTPUT: /dev/null
         run: node scripts/release-policy.mjs
 
       - name: Publish verified artifact with npm trusted publishing
@@ -114,7 +113,8 @@ jobs:
                 exit 1
               fi
 
-              tagged_version=$(npm view "html-inbox@${RELEASE_TAG}" version --prefer-online --registry=https://registry.npmjs.org/ || true)
+              # Read the tag through the policy's cache-free dist-tags lookup, not npm view.
+              tagged_version=$(node --input-type=module -e 'const { readNpmDistTags } = await import("./scripts/release-policy.mjs"); process.stdout.write((await readNpmDistTags())[process.env.RELEASE_TAG] ?? "")' || true)
               if [ "$tagged_version" = "$RELEASE_VERSION" ]; then
                 echo "Verified html-inbox@${RELEASE_VERSION} as ${RELEASE_TAG}: ${published_integrity}"
                 exit 0

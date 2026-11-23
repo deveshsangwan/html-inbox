@@ -79,6 +79,13 @@ test("latest cannot move backward across minor or patch versions", () => {
   }).tag, "latest");
 });
 
+// The child loads this preload before the policy, so only the test process sees a local registry.
+const loopbackRegistryPreload = `data:text/javascript,${encodeURIComponent(`
+  const publicFetch = globalThis.fetch;
+  globalThis.fetch = (url, init) =>
+    publicFetch(String(url).replace("https://registry.npmjs.org", process.env.RELEASE_POLICY_TEST_REGISTRY), init);
+`)}`;
+
 test("the workflow entry point reads npm latest itself and writes outputs only on acceptance", async () => {
   const repositoryRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
   const { version } = JSON.parse(readFileSync(path.join(repositoryRoot, "packages/cli/package.json"), "utf8"));
@@ -86,22 +93,25 @@ test("the workflow entry point reads npm latest itself and writes outputs only o
   const outputPath = path.join(directory, "output");
   const linkedScript = path.join(directory, "linked-release-policy.mjs");
   symlinkSync(path.join(repositoryRoot, "scripts/release-policy.mjs"), linkedScript);
-  let isRegistryAvailable = true;
+
+  let registryMode = "available";
   const registry = createServer((request, response) => {
-    if (!isRegistryAvailable || request.url !== "/-/package/html-inbox/dist-tags") {
+    if (registryMode === "unavailable" || request.url !== "/-/package/html-inbox/dist-tags") {
       response.writeHead(503).end();
       return;
     }
 
-    response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ latest: version }));
+    const body = registryMode === "malformed" ? "<html>not dist-tags</html>" : JSON.stringify({ latest: version });
+    response.writeHead(200, { "content-type": "application/json" }).end(body);
   });
   await new Promise((resolve) => registry.listen(0, "127.0.0.1", resolve));
   const registryUrl = `http://127.0.0.1:${registry.address().port}`;
+
   const run = async ({ tag = "latest", ref = "refs/heads/main", script = "scripts/release-policy.mjs" } = {}) => {
     try {
-      await execFileAsync(process.execPath, [script], {
+      await execFileAsync(process.execPath, ["--import", loopbackRegistryPreload, script], {
         cwd: repositoryRoot,
-        env: { ...process.env, EXPECTED_VERSION: version, GITHUB_REF: ref, RELEASE_TAG: tag, GITHUB_OUTPUT: outputPath, HTML_INBOX_NPM_REGISTRY: registryUrl },
+        env: { ...process.env, EXPECTED_VERSION: version, GITHUB_REF: ref, RELEASE_TAG: tag, GITHUB_OUTPUT: outputPath, RELEASE_POLICY_TEST_REGISTRY: registryUrl },
       });
       return { isAccepted: true, stderr: "" };
     } catch (error) {
@@ -113,14 +123,20 @@ test("the workflow entry point reads npm latest itself and writes outputs only o
   try {
     assert.match((await run({ tag: "node20" })).stderr, /require npm tag latest/);
     assertNoOutput();
+
     // The checkout's package version decides which release-branch refusal applies.
     assert.match((await run({ ref: "refs/heads/release/0.7" })).stderr, /only from main|waits for branch protection/);
     assertNoOutput();
-    isRegistryAvailable = false;
+
+    registryMode = "unavailable";
     assert.match((await run()).stderr, /dist-tag lookup failed with HTTP 503/);
     assertNoOutput();
-    isRegistryAvailable = true;
 
+    registryMode = "malformed";
+    assert.match((await run()).stderr, /SyntaxError/);
+    assertNoOutput();
+
+    registryMode = "available";
     assert.equal((await run({ script: linkedScript })).isAccepted, true);
     assert.equal(readFileSync(outputPath, "utf8"), `version=${version}\ntag=latest\n`);
   } finally {

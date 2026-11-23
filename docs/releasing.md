@@ -63,28 +63,28 @@ The normal release path is the [GitHub publishing workflow](#publish-with-github
 
 Authenticate the package owner on the machine that will publish. Run `npm login --registry=https://registry.npmjs.org/` yourself, complete its browser sign-in, and check `npm whoami --registry=https://registry.npmjs.org/`. A 401 means the publishing session needs to be restored. Keep tokens, passwords, and recovery codes out of repository files and chat.
 
-Build, test and publish the same archive in one fail-stop procedure. Run it from a clean checkout whose HEAD is the reviewed tip of its release branch. Set the policy tag first: `latest`, or `node20` only for 0.7.x maintenance after 1.0. The subshell uses `set -e`, and every check whose failure matters runs as its own command. The procedure:
+Build, test and publish the same archive in one fail-stop procedure. Set two inputs first: the reviewed release commit (the full SHA whose required checks passed) and the policy tag (`latest`, or `node20` only for 0.7.x maintenance after 1.0). The subshell uses `set -e`, and every check whose failure matters runs as its own command. The procedure:
 
-1. Pins HEAD, then confirms the worktree is clean and the freshly fetched branch tip is that commit.
+1. Confirms that HEAD and the canonical repository's branch tip are both the reviewed commit, and that the worktree is clean.
 2. Runs the policy, which reads the current npm `latest` itself.
-3. Packs into a private temporary directory and records the archive's SHA-512.
-4. Runs smoke and a dry run, then pauses for you to inspect the file list.
+3. Removes ignored build outputs, reinstalls the locked dependencies, packs into a private temporary directory and records the archive's SHA-512.
+4. Runs smoke and a dry run, then shows the commit, version and tag and waits for your confirmation.
 5. Repeats the source and policy checks, confirms the archive still has its recorded digest, and only then publishes.
 
 ```sh
+inbox_release_commit=<reviewed full commit SHA>
 inbox_release_tag=latest
 (
   set -eu
   branch=$(git branch --show-current)
-  source_commit=$(git rev-parse HEAD)
   check_release_source() {
+    current_commit=$(git rev-parse HEAD)
+    test "$current_commit" = "$inbox_release_commit"
     worktree_status=$(git status --porcelain)
     test -z "$worktree_status"
-    git fetch origin "refs/heads/$branch"
-    fetched_commit=$(git rev-parse FETCH_HEAD)
-    current_commit=$(git rev-parse HEAD)
-    test "$fetched_commit" = "$source_commit"
-    test "$current_commit" = "$source_commit"
+    git fetch https://github.com/deveshsangwan/html-inbox.git "refs/heads/$branch"
+    upstream_commit=$(git rev-parse FETCH_HEAD)
+    test "$upstream_commit" = "$inbox_release_commit"
     EXPECTED_VERSION="$version" RELEASE_TAG="$inbox_release_tag" GITHUB_REF="refs/heads/$branch" \
       GITHUB_OUTPUT=/dev/null node scripts/release-policy.mjs
   }
@@ -93,13 +93,15 @@ inbox_release_tag=latest
   }
   version=$(node -p "require('./packages/cli/package.json').version")
   check_release_source
+  rm -rf packages/cli/bundle packages/cli/dist
+  corepack pnpm install --frozen-lockfile
   pack_directory=$(mktemp -d)
   npm pack ./packages/cli --pack-destination "$pack_directory"
   archive="$pack_directory/html-inbox-${version}.tgz"
   tested_digest=$(archive_digest)
   node scripts/package-smoke.mjs "$archive"
   npm publish "$archive" --dry-run --access public --tag "$inbox_release_tag" --registry=https://registry.npmjs.org/
-  printf 'Type publish to release %s as %s: ' "$version" "$inbox_release_tag"
+  printf 'Type publish to release %s as %s from %s: ' "$version" "$inbox_release_tag" "$inbox_release_commit"
   read -r confirmation
   test "$confirmation" = publish
   check_release_source
@@ -110,7 +112,7 @@ inbox_release_tag=latest
 )
 ```
 
-`npm pack` builds from the working tree, so the cleanliness check keeps uncommitted edits out of the archive. The private directory and the digest check mean only the archive that passed smoke can be published. Keep that directory until you have compared the public `dist.integrity` with the printed digest.
+`npm pack` builds from the working tree. The cleanliness check keeps tracked and untracked edits out of the archive. Removing the ignored `bundle` and `dist` outputs and reinstalling with the lockfile keeps stale build products and dependency drift out too. The private directory and the digest check mean only the archive that passed smoke can be published. Keep that directory until you have compared the public `dist.integrity` with the printed digest.
 
 Complete any npm authentication or 2FA challenge. Local publication does not claim GitHub provenance. A dry run validates the archive; it does not prove that npm will authorize the real publish.
 

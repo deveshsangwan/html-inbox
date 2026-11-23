@@ -3,16 +3,20 @@ import { fileURLToPath } from "node:url";
 
 const stableVersionPattern = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/;
 
+const distTagsUrl = "https://registry.npmjs.org/-/package/html-inbox/dist-tags";
+
 // npm's own fetch layer can answer from its local cache when revalidation fails. Node's fetch
-// keeps no HTTP cache, so every check sees the registry's current dist-tags or fails.
-export async function readNpmLatestVersion(registry = "https://registry.npmjs.org") {
-  const response = await fetch(`${registry}/-/package/html-inbox/dist-tags`, { cache: "no-store", signal: AbortSignal.timeout(30_000) });
+// keeps no HTTP cache, so every check sees the public registry's current dist-tags or fails.
+export async function readNpmDistTags() {
+  const response = await fetch(distTagsUrl, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(30_000),
+  });
   if (!response.ok) {
     throw new Error(`npm dist-tag lookup failed with HTTP ${response.status}`);
   }
 
-  const { latest } = await response.json();
-  return latest;
+  return response.json();
 }
 
 // Release-branch publication stays off until a release administrator protects the release
@@ -86,8 +90,7 @@ if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToP
     requestedVersion: process.env.EXPECTED_VERSION,
     ref: process.env.GITHUB_REF,
     tag: process.env.RELEASE_TAG,
-    // Tests point this at a local registry; publication uses the public default.
-    latestVersion: await readNpmLatestVersion(process.env.HTML_INBOX_NPM_REGISTRY),
+    latestVersion: (await readNpmDistTags()).latest,
   });
 
   appendFileSync(process.env.GITHUB_OUTPUT, `version=${release.version}\ntag=${release.tag}\n`);
