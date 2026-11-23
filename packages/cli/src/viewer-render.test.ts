@@ -108,8 +108,6 @@ test("formatters are lazy and bounded to one per render, including filtered resu
     constructions: 0,
   });
 
-  assert.equal(constructions, 0);
-
   renderIndex(validDocuments, "");
   assert.equal(constructions, 1);
   renderIndex(validDocuments, "", { timeZone: "UTC", basePath: "/i/static" });
