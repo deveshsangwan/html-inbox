@@ -1,0 +1,3 @@
+{"label": "head", "command": ["git", "rev-parse", "HEAD"], "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod", "exit": 0}
+{"label": "status", "command": ["git", "status", "--porcelain"], "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod", "exit": 0}
+{"label": "source-clean", "command": ["git", "diff", "--quiet", "HEAD", "--", "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/packages/cli/src/private-storage.ts"], "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod", "exit": 1}

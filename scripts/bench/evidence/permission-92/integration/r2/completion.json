@@ -1,0 +1,22 @@
+{
+  "failure": {
+    "type": "RuntimeError",
+    "message": "Command failed or owned descendants remain: typecheck",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/artifacts/permission-92/validation-735-r2-controller.py\", line 238, in <module>\n    raise RuntimeError('Command failed or owned descendants remain: ' + spec['name'])\nRuntimeError: Command failed or owned descendants remain: typecheck\n"
+  },
+  "cleanupErrors": [],
+  "commandsRun": 1,
+  "unrun": [
+    "build",
+    "focused-20.20.2",
+    "focused-24.19.0",
+    "hub-browser-20.20.2",
+    "hub-browser-24.19.0"
+  ],
+  "allSixExitZero": false,
+  "elapsed": 8.05158225307241,
+  "finishedMonotonic": 1434172.893496955,
+  "fixedFinalDeadline": 1435604.841913949,
+  "cleanupDeadline": 1434348.859350932,
+  "remainingOwned": []
+}

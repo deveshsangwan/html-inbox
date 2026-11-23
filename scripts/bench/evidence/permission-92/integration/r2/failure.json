@@ -1,0 +1,5 @@
+{
+  "type": "RuntimeError",
+  "message": "Command failed or owned descendants remain: typecheck",
+  "traceback": "Traceback (most recent call last):\n  File \"/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/artifacts/permission-92/validation-735-r2-controller.py\", line 238, in <module>\n    raise RuntimeError('Command failed or owned descendants remain: ' + spec['name'])\nRuntimeError: Command failed or owned descendants remain: typecheck\n"
+}

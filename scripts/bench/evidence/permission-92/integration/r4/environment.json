@@ -1,0 +1,15 @@
+{
+  "PATH": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin:/home/agent/.local/share/vite-plus/bin:/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/@openai/codex/node_modules/@openai/codex-linux-x64/vendor/x86_64-unknown-linux-musl/codex-path:/home/agent/.grok/bin:/run/user/1001/fnm_multishells/454072_1794715530145/bin:/home/agent/.local/share/fnm:/home/agent/.local/bin:/home/agent/.local/bin:/home/agent/.codex/tmp/arg0-linux/codex-arg0YUxlq0:/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/@openai/codex/node_modules/@openai/codex-linux-x64/vendor/x86_64-unknown-linux-musl/codex-path:/home/agent/.grok/bin:/run/user/1001/fnm_multishells/2946453_1794168515724/bin:/home/agent/.local/share/fnm:/home/agent/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/home/agent/.local/share/vite-plus/fallback-bin",
+  "COREPACK_ENABLE_NETWORK": "0",
+  "COREPACK_HOME": "/home/agent/.cache/node/corepack",
+  "HOME": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/artifacts/permission-92/validation-735-r4/fixtures/home",
+  "TMPDIR": "/tmp/hi92-735-r4",
+  "TMP": "/tmp/hi92-735-r4",
+  "TEMP": "/tmp/hi92-735-r4",
+  "HTML_INBOX_CATALOG_HOME": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/artifacts/permission-92/validation-735-r4/fixtures/catalog",
+  "XDG_CONFIG_HOME": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/artifacts/permission-92/validation-735-r4/fixtures/config",
+  "XDG_CACHE_HOME": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/artifacts/permission-92/validation-735-r4/fixtures/cache",
+  "XDG_DATA_HOME": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/artifacts/permission-92/validation-735-r4/fixtures/data",
+  "PLAYWRIGHT_BROWSERS_PATH": "/home/agent/.cache/ms-playwright",
+  "HTML_INBOX_BROWSER_EXECUTABLE": "/home/agent/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome"
+}

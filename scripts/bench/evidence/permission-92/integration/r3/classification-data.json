@@ -1,0 +1,120 @@
+{
+  "generatedExact": true,
+  "generatedBeforeEntries": {
+    "dist": 395,
+    "bundle": 2
+  },
+  "generatedBuildEntries": {
+    "dist": 399,
+    "bundle": 2
+  },
+  "toolsExact": true,
+  "toolEntries": {
+    "bin": 4,
+    "tsc-link": 1,
+    "tsc": 578,
+    "native": 122,
+    "ncc-link": 1,
+    "ncc": 143,
+    "playwright": 78,
+    "playwright-core": 140,
+    "node20": 1,
+    "node24": 1,
+    "pnpm": 555,
+    "corepack": 59,
+    "pnpm-link": 1,
+    "browser": 315
+  },
+  "sourceSemanticExact": true,
+  "rawIndexExact": true,
+  "toolDelta": false,
+  "browserFailures": [
+    {
+      "test": "hub dropdown applies filters immediately and preserves query, history and keyboard focus",
+      "fatalSocketPath": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/artifacts/permission-92/validation-735-r3/fixtures/tmp/org.chromium.Chromium.11E7xh/SingletonSocket.",
+      "socketPathBytes": 150,
+      "launchPIDs": [
+        "462988"
+      ]
+    },
+    {
+      "test": "hub GET search works with JavaScript disabled through Search and Enter",
+      "fatalSocketPath": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/artifacts/permission-92/validation-735-r3/fixtures/tmp/org.chromium.Chromium.63U9Vx/SingletonSocket.",
+      "socketPathBytes": 150,
+      "launchPIDs": [
+        "462997"
+      ]
+    },
+    {
+      "test": "hub reads colliding source IDs with search, filters, isolation and partial failure",
+      "fatalSocketPath": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/artifacts/permission-92/validation-735-r3/fixtures/tmp/org.chromium.Chromium.77dbJ4/SingletonSocket.",
+      "socketPathBytes": 150,
+      "launchPIDs": [
+        "463006"
+      ]
+    }
+  ],
+  "processIdentities": 287,
+  "groups": [
+    458828,
+    458856,
+    458863,
+    458890,
+    460897,
+    462971
+  ],
+  "remainingOwned": [],
+  "remainingObservedSocketRows": [],
+  "logHashes": {
+    "typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "clean-dist.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "focused-20.20.2.log": "0777877566421cd8e9c7cea2fc44069ca0c504d1781da33e6b0062937a723e00",
+    "focused-24.19.0.log": "a413ef44183dfc51cdbf7feebac4d53e162547431cf0f1eca27c33853b6cf564",
+    "hub-browser-20.20.2.log": "c7e425c82abb736566293764064774ec16da43bb87975df3f3f2bb15d57f44a1"
+  },
+  "commands": [
+    {
+      "name": "typecheck",
+      "exit": 0,
+      "seconds": 0.4849997719284147,
+      "cap_seconds": 120,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/packages/cli"
+    },
+    {
+      "name": "clean-dist",
+      "exit": 0,
+      "seconds": 0.12805069400928915,
+      "cap_seconds": 10,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod"
+    },
+    {
+      "name": "build",
+      "exit": 0,
+      "seconds": 0.6002874500118196,
+      "cap_seconds": 110,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod/packages/cli"
+    },
+    {
+      "name": "focused-20.20.2",
+      "exit": 0,
+      "seconds": 82.66899350611493,
+      "cap_seconds": 300,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod"
+    },
+    {
+      "name": "focused-24.19.0",
+      "exit": 0,
+      "seconds": 79.4283128560055,
+      "cap_seconds": 300,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod"
+    },
+    {
+      "name": "hub-browser-20.20.2",
+      "exit": 1,
+      "seconds": 1.1471788680646569,
+      "cap_seconds": 180,
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-92-chmod"
+    }
+  ]
+}

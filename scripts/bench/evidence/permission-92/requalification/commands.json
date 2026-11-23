@@ -1,0 +1,42 @@
+[
+  {
+    "command": [
+      "pnpm",
+      "typecheck"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "pnpm",
+      "build"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/bench/permissions.py",
+      "--out",
+      "artifacts/permission-92/requalification/comparison",
+      "--node20",
+      "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+      "--node24",
+      "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node"
+    ],
+    "exit": 0
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/bench/evidence/permission-92/requalify.py",
+      "--out",
+      "artifacts/permission-92/requalification/safety",
+      "--node20",
+      "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+      "--node24",
+      "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node"
+    ],
+    "exit": 0
+  }
+]

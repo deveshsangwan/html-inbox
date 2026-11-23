@@ -1,0 +1,87 @@
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
+import test from "node:test";
+import { hardenPrivateDirectory, hardenPrivateFile } from "./private-storage";
+import { temporaryHome } from "./test-fixtures";
+
+// Characterize path-based chmod at a controlled lstat-to-chmod interleaving.
+// These cases pin current path semantics, not a race-free or symlink-swap
+// guarantee. A descriptor-based design would need an explicitly reviewed
+// contract change and different tests.
+for (const kind of ["file", "directory"] as const) {
+  const privateMode = kind === "file" ? 0o600 : 0o700;
+  const harden = kind === "file" ? hardenPrivateFile : hardenPrivateDirectory;
+
+  test(`private ${kind} removed after inspection still reports ENOENT`, async (t) => {
+    const home = await temporaryHome(t);
+    const target = path.join(home, "target");
+
+    if (kind === "file") {
+      await fs.writeFile(target, "fixture");
+    } else {
+      await fs.mkdir(target);
+    }
+
+    // Set the private mode explicitly so a restrictive umask cannot change the premise.
+    await fs.chmod(target, privateMode);
+
+    const originalLstat = fs.lstat;
+    let interceptions = 0;
+    t.mock.method(fs, "lstat", async (...args: Parameters<typeof fs.lstat>) => {
+      const checked = await originalLstat(...args);
+
+      if (String(args[0]) === target) {
+        interceptions += 1;
+        await (kind === "file" ? fs.unlink(target) : fs.rmdir(target));
+      }
+
+      return checked;
+    });
+
+    await assert.rejects(harden(target), { code: "ENOENT" });
+    assert.equal(interceptions, 1);
+  });
+
+  test(`private ${kind} replaced after inspection still repairs the replacement`, {
+    skip: process.platform === "win32" ? "POSIX mode repair contract" : false,
+  }, async (t) => {
+    const home = await temporaryHome(t);
+    const target = path.join(home, "target");
+
+    if (kind === "file") {
+      await fs.writeFile(target, "fixture");
+    } else {
+      await fs.mkdir(target);
+    }
+
+    // Set the private mode explicitly so a restrictive umask cannot change the premise.
+    await fs.chmod(target, privateMode);
+
+    const originalLstat = fs.lstat;
+    let interceptions = 0;
+    t.mock.method(fs, "lstat", async (...args: Parameters<typeof fs.lstat>) => {
+      const checked = await originalLstat(...args);
+
+      if (String(args[0]) === target) {
+        interceptions += 1;
+        await (kind === "file" ? fs.unlink(target) : fs.rmdir(target));
+
+        if (kind === "file") {
+          await fs.writeFile(target, "replacement");
+        } else {
+          await fs.mkdir(target);
+        }
+
+        await fs.chmod(target, 0o777);
+      }
+
+      return checked;
+    });
+
+    await harden(target);
+
+    assert.equal(interceptions, 1);
+    assert.equal((await fs.stat(target)).mode & 0o7777, privateMode);
+  });
+}

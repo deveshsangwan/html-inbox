@@ -1,0 +1,18 @@
+{
+  "path": "/tmp/hi92-735-r4",
+  "identity": {
+    "dev": 40,
+    "ino": 3475583,
+    "uid": 1001,
+    "mode": 448
+  },
+  "entries": {
+    ".": {
+      "type": "directory",
+      "mode": 448,
+      "uid": 1001,
+      "gid": 1001,
+      "mtime_ns": 1794718007042103942
+    }
+  }
+}

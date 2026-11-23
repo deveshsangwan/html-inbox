@@ -1,0 +1,12 @@
+{
+  "failure": null,
+  "cleanupErrors": [],
+  "commandsRun": 2,
+  "unrun": [],
+  "allCommandsExitZero": true,
+  "elapsed": 24.0970622128807,
+  "finishedMonotonic": 1435914.921099541,
+  "fixedFinalDeadline": 1436550.824036732,
+  "cleanupDeadline": 1436090.72350827,
+  "remainingOwned": []
+}
