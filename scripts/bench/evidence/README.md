@@ -1,5 +1,9 @@
 # Issue 89 qualification
 
+The [Node 24 and Node 20 qualification at 2e1dbc6](2e1dbc6/README.md) includes the revised runner, verified cleanup, and raw samples.
+
+## Historical measurements at 485273a
+
 > **Historical evidence only.** These two runs were produced by the harness at `485273a2f7f20f604a2ae1e5e6a915396eba290e` against that revision's CLI build. They qualified the original measurement infrastructure and are not a baseline for new runs. The current runner ends process wall time at pidfd exit instead of a 5 ms poll, gives every fixture document a distinct body, labels sync source setup separately from the managed workload, checks peer identities and verifies process groups during cleanup. The runs used tmpfs, where kernel read/write byte counters stay near zero, and their `cleanup.json` predates the `process_groups_empty` check. The closing remark that measured workload code is unchanged applied only until those later changes. Their numbers are therefore not comparable with runs from the current harness, and they do not measure the integrated `release/0.7` source. Any comparison must re-measure both sides with one harness revision, build, runtime and machine.
 
 A later local qualification at `dc690e48e895d4ed4cb04bc7b37c3c8f2fafc28d` completed on both runtimes. Whole-file fingerprinting in the runner contaminated process peak RSS. Those readings are invalid for workload memory comparisons. Its original raw data is retained. The successor attempt at `69d185ade9054c43499240f6dbe7250fe1ae5d18` stopped during synthetic teardown after six `pidfd_open` EINVAL tracebacks. Neither runtime baseline ran. The logs did not capture the affected PID or its identity.
