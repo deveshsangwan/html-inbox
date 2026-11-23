@@ -26,10 +26,10 @@ for (const kind of ["file", "directory"] as const) {
     // Set the private mode explicitly so a restrictive umask cannot change the premise.
     await fs.chmod(target, privateMode);
 
-    const lstat = fs.lstat;
+    const originalLstat = fs.lstat;
     let interceptions = 0;
     t.mock.method(fs, "lstat", async (...args: Parameters<typeof fs.lstat>) => {
-      const checked = await lstat(...args);
+      const checked = await originalLstat(...args);
 
       if (String(args[0]) === target) {
         interceptions += 1;
@@ -58,10 +58,10 @@ for (const kind of ["file", "directory"] as const) {
     // Set the private mode explicitly so a restrictive umask cannot change the premise.
     await fs.chmod(target, privateMode);
 
-    const lstat = fs.lstat;
+    const originalLstat = fs.lstat;
     let interceptions = 0;
     t.mock.method(fs, "lstat", async (...args: Parameters<typeof fs.lstat>) => {
-      const checked = await lstat(...args);
+      const checked = await originalLstat(...args);
 
       if (String(args[0]) === target) {
         interceptions += 1;

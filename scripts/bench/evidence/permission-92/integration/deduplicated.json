@@ -1,0 +1,38 @@
+{
+  "r2/generated-restored.json": {
+    "identicalTo": "r2/generated-before.json",
+    "sha256": "d153e13c798a9fbe2621d997b5b2e04c52a869bc4db1ee2c1d7a4c108e435c2f"
+  },
+  "r2/source-final.json": {
+    "identicalTo": "r2/source-before.json",
+    "sha256": "dcb8236382ec64ee45ab2caef2c8794304b2aa74108323713b81fcd3475a5e7f"
+  },
+  "r2/tools-restored.json": {
+    "identicalTo": "r2/tools-before.json",
+    "sha256": "11b48fc1c128670c8d0d9acded43696addb60185a93bdcd69fcd7b6380d164f7"
+  },
+  "r3/generated-restored.json": {
+    "identicalTo": "r3/generated-before.json",
+    "sha256": "d153e13c798a9fbe2621d997b5b2e04c52a869bc4db1ee2c1d7a4c108e435c2f"
+  },
+  "r3/source-final.json": {
+    "identicalTo": "r3/source-before.json",
+    "sha256": "dcb8236382ec64ee45ab2caef2c8794304b2aa74108323713b81fcd3475a5e7f"
+  },
+  "r3/tools-restored.json": {
+    "identicalTo": "r3/tools-before.json",
+    "sha256": "11b48fc1c128670c8d0d9acded43696addb60185a93bdcd69fcd7b6380d164f7"
+  },
+  "r4/generated-restored.json": {
+    "identicalTo": "r4/generated-before.json",
+    "sha256": "d153e13c798a9fbe2621d997b5b2e04c52a869bc4db1ee2c1d7a4c108e435c2f"
+  },
+  "r4/source-final.json": {
+    "identicalTo": "r4/source-before.json",
+    "sha256": "dcb8236382ec64ee45ab2caef2c8794304b2aa74108323713b81fcd3475a5e7f"
+  },
+  "r4/tools-restored.json": {
+    "identicalTo": "r4/tools-before.json",
+    "sha256": "11b48fc1c128670c8d0d9acded43696addb60185a93bdcd69fcd7b6380d164f7"
+  }
+}

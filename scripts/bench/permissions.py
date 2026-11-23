@@ -9,10 +9,21 @@ libraries.
 
 A SIGINT or SIGTERM delivered to this runner's PID is deferred until the active
 command finishes, then source is restored and rebuilt before exit. A terminal
-or process-group signal also reaches the build itself, and the 300-second
-command timeout kills only the direct child, not its process tree. SIGKILL and
-machine failure cannot be handled.
+or process-group signal also reaches the build itself. The 300-second command
+timeout kills only the direct child, so descendants of a timed-out build may
+still write packages/cli/dist. After a timeout the runner restores source bytes,
+skips the rebuild, records build restoration as unverified and exits; discard
+that checkout. SIGKILL and machine failure cannot be handled.
 """
+
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import signal
+import subprocess
+
 
 CASES = [
     ("private file removed after inspection still reports ENOENT",
@@ -25,13 +36,9 @@ CASES = [
      "511 !== 448"),
 ]
 
-import argparse
-import hashlib
-import json
-import os
-from pathlib import Path
-import signal
-import subprocess
+
+class CommandTimedOut(RuntimeError):
+    pass
 
 
 def digest(data):
@@ -46,7 +53,10 @@ def tap_results(output):
     for line in output.splitlines():
         for prefix, passed in [("not ok ", False), ("ok ", True)]:
             if line.startswith(prefix):
-                name = line[len(prefix):].split(" - ", 1)[1]
+                _number, separator, name = line[len(prefix):].partition(" - ")
+                if not separator:
+                    raise RuntimeError(f"TAP result has no test name: {line!r}")
+
                 current = results[name] = [passed, []]
                 break
         else:
@@ -110,14 +120,23 @@ def main():
     signal.signal(signal.SIGTERM, request_stop)
     signal.signal(signal.SIGINT, request_stop)
 
+    def record(label, command, exit_status):
+        with (out / "commands.jsonl").open("a") as manifest:
+            manifest.write(json.dumps({"label": label, "command": command,
+                                       "cwd": str(root), "exit": exit_status}) + "\n")
+
     def run(label, command, expected=0):
         check_interruption()
 
-        result = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=300)
+        try:
+            result = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=300)
+        except subprocess.TimeoutExpired as error:
+            (out / f"{label}.log").write_text((error.stdout or "") + (error.stderr or ""))
+            record(label, command, "timeout")
+            raise CommandTimedOut(f"{label}: timed out after 300 seconds") from error
+
         (out / f"{label}.log").write_text(result.stdout + result.stderr)
-        with (out / "commands.jsonl").open("a") as manifest:
-            manifest.write(json.dumps({"label": label, "command": command,
-                                       "cwd": str(root), "exit": result.returncode}) + "\n")
+        record(label, command, result.returncode)
 
         check_interruption()
 
@@ -148,7 +167,10 @@ def main():
     fingerprint("baseline")
 
     for label, node in [("20", args.node20), ("24", args.node24)]:
-        run(f"node-{label}", [node, "--version"])
+        version = run(f"node-{label}", [node, "--version"])
+        if not version.startswith(f"v{label}."):
+            raise RuntimeError(f"--node{label} reports {version.strip()}")
+
         output = run(f"baseline-{label}", [node, "--test", "--test-reporter=tap",
                                           "packages/cli/dist/private-storage.test.js"])
         check_baseline(output)
@@ -181,6 +203,15 @@ def main():
         failure = error
     finally:
         is_restoring = True
+
+        if isinstance(failure, CommandTimedOut):
+            source.write_bytes(original)
+            (out / "restoration.json").write_text(json.dumps({
+                "sourceByteIdentical": source.read_bytes() == original,
+                "allBuildHashesIdentical": None,
+                "buildRestoration": "skipped after timeout; discard this checkout",
+            }, indent=2) + "\n")
+            raise failure
 
         try:
             source.write_bytes(original)

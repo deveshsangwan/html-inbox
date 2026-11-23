@@ -3,10 +3,12 @@
 Issue: https://github.com/deveshsangwan/html-inbox/issues/92
 
 The original investigation inspected immediate parent
-`52cdb70cc4a504fa8b983e6cdbcb23432d295592`. Draft PR #118 now targets
-`perf/91-listing` at `bf80f9fa4815376f1771c3a6cb78d5ed19231ad2`; the
+`52cdb70cc4a504fa8b983e6cdbcb23432d295592`. Draft PR #118 targets
+`perf/91-listing`. Its reviewed merge base is
+`bf80f9fa4815376f1771c3a6cb78d5ed19231ad2`; the
 [integration receipt](permission-92/integration-2026-11-15.md) records that
-merge and its scoped requalification. `packages/cli/src/private-storage.ts` is
+merge and its scoped requalification. Any later parent pin is recorded at the
+end of this report. `packages/cli/src/private-storage.ts` is
 byte-identical at 52cdb70, bf80f9f and `610c931` (the stack's pre-#89
 baseline and an ancestor of bf80f9f), so the experiment below still applies
 to the current base. Inherited listing, storage-policy and
@@ -17,7 +19,8 @@ runtime changes are outside this investigation's diff.
 NO-GO. The controlled adversarial comparison shows that the mode-only shortcut
 changes observable missing-path and replacement behavior on Node 20.20.2 and
 Node 24.19.0. Issue #92 requires that path replacement and error behavior do
-not weaken, so the shortcut fails its acceptance criteria.
+not weaken. This decision takes that criterion strictly, so the shortcut fails
+it.
 There is no production change or claimed performance improvement. Performance
 experiments stopped at the failed correctness gate. This is a contract rejection,
 not a finding that chmod elision is fast or slow; its benefit remains unquantified.
@@ -50,15 +53,26 @@ by another user, for example one left by an earlier privileged run, therefore
 makes the current helper reject with `EPERM`. The shortcut would return
 successfully, and later reads or writes might fail with `EACCES` instead.
 Issue #92 asks that ownership behavior stay unchanged. This is analysis only;
-no foreign-owner or privileged run was made.
+no foreign-owner or privileged run was made. It applies to the mode-only
+candidate: a variant that also required the current user's uid would remove
+the `EPERM` difference, but not the two timing cases.
+
+Any design that skips `chmod` because of an earlier `lstat` changes these
+interleavings, because the skipped call is what observes the path last. On the
+current path-based design, issue #92's first criterion (avoid redundant
+`chmod`) and second criterion (do not weaken replacement or error behavior)
+therefore cannot both be met.
 
 `packages/cli/src/private-storage.test.ts` adds these cases for files and
-directories. All four cases pass on baseline and fail on the temporary shortcut
-under both runtimes. They describe specific observable interleavings in the current path-based implementation, not a
-claim that path-based chmod is race-free. These are characterization tests; a
-descriptor-based design would require a deliberately reviewed contract change.
-Adding another lstat would move the interval in which replacement can occur. Descriptor-based identity and storage-ownership
-changes require separate review and are outside this compatibility optimization.
+directories. In every recorded comparison, all four cases pass on baseline and
+fail on the temporary shortcut under both runtimes. The test revisions that ran
+are named with each run below. They describe specific observable interleavings
+in the current path-based implementation, not a claim that path-based chmod is
+race-free. These are characterization tests; a descriptor-based design would
+require a deliberately reviewed contract change. Adding another lstat would
+move the interval in which replacement can occur. Descriptor-based identity and
+storage-ownership changes require separate review and are outside this
+compatibility optimization.
 
 Windows production behavior remains unchanged. POSIX mode-repair assertions are
 skipped on Windows. chmod is not owner-only ACL enforcement. Read-only source
@@ -86,7 +100,8 @@ python3 scripts/bench/permissions.py --out artifacts/permission-92/comparison --
 ```
 
 Run the comparison on POSIX storage. Choose a fresh output directory. The
-runner refuses unstaged or staged edits to `private-storage.ts`, builds the
+current runner checks that `--node20` and `--node24` report those major
+versions and refuses unstaged or staged edits to `private-storage.ts`, builds the
 unchanged source and requires all four named tests to pass on both runtimes
 before changing production source. It records the temporary candidate source
 and diff, builds it, and requires exit 1 with each named test failing for its
@@ -95,16 +110,26 @@ expected reason: `Missing expected rejection` for both removals and
 original source in `finally`, rebuilds, and verifies source and every compiled
 artifact hash equal the baseline hashes. No real libraries are opened. Test
 fixtures use the existing `temporaryHome` cleanup helper.
+`scripts/bench/test_permissions.py` checks these TAP checks against the
+archived logs and five negative controls.
+
+The original and requalified comparisons below used earlier runner revisions
+(`a8ea2d1` and `9c266b4`). Those checked exit codes and the `# pass` and
+`# fail` totals, not named results or the index. Their archived logs satisfy the
+current named checks.
 
 Signal handling covers a SIGINT or SIGTERM delivered to the runner's PID. A
-terminal or process-group signal also reaches the active build, and the
-300-second command timeout kills only the direct child, not its process tree.
+terminal or process-group signal also reaches the active build. The 300-second
+command timeout kills only the direct child, so after a timeout the runner
+restores source bytes, skips the rebuild, records build restoration as
+unverified and exits. Discard that checkout.
 
 The candidate only guards each existing chmod with
 `process.platform === "win32" || (fileStat.mode & 0o7777) !== requiredMode`.
 The complete mask includes special bits, so the demonstrated failure does not
 come from accidentally ignoring them. It adds no cache or descriptor machinery.
-Ownership/EPERM was not measured and is not needed to establish this rejection.
+Ownership/EPERM was not measured; the rejection rests on the two tested
+differences.
 
 | Runtime | Baseline | Temporary shortcut | Restored source/build |
 |---|---|---|---|
@@ -180,10 +205,10 @@ equivalence.
   since the correctness gate failed; no benefit is claimed.
 
 No part of this rejected shortcut is deferred to 1.x, and no modern contract
-change is approved here. Issue #92 routes contract changes that the
-optimization would need to 1.x. No benefit was measured, so this investigation
-gives no reason to propose one. A maintainer can reopen it for 1.x with
-measurements. Descriptor/ownership design would be separate work.
+change is approved here. Eliding `chmod` would require a contract change, and
+issue #92 routes such changes to 1.x. This PR proposes no 1.x change: whether
+the unmeasured benefit justifies one is the maintainer's decision, which would
+need measurements first. Descriptor/ownership design would be separate work.
 
 ## Review dispositions
 
@@ -281,7 +306,9 @@ prior findings/dispositions and new raw evidence. Both were read-only.
 | [GPT-6.1 Sol High](permission-92/review-sol-r2.txt) | PASS, investigation scope | PASS, no findings | PASS |
 | [Claude Code Sonnet 5.5 Medium](permission-92/review-claude-r2.txt) | PASS | PASS, only optional items below | PASS |
 
-All original review conditions are satisfied. The final follow-up changes only
+As of `6dd7d3a`, all original review conditions were satisfied. Council review
+later changed the tests and runner; see the council sections below. The final
+follow-up at that time changed only
 review records, report prose and the safety procedure's module docstring. Its
 executed statements, tests, production source and compiled files remain unchanged
 from the requalified and reviewed pins. No additional runtime execution or third
@@ -294,16 +321,16 @@ review round was needed for these documentation-only updates.
 | Low 3, wait deadline anchored at checkpoint-search start | Optional change declined for this completed one-off. The existing bound can shorten the post-signal window after a late checkpoint. Its deadline-expiry path is written to invoke emergency/outer cleanup, but that path was not exercised. The successful receipt covers an early checkpoint only. Retain the qualified executable procedure; do not claim a fresh fixed restoration window or unexercised timeout behavior. |
 | Suggestion 1, evidence volume | Retain original and new raw evidence for the requested independent audit. No new workload or artifact mechanism added. |
 | Suggestion 2, changed test hash | Accepted; explicitly identify the sole baseline artifact difference and renewed candidate-failure proof above. |
+| Suggestion 3, timing-dependent checkpoint | Accepted limitation. The 5 ms process scan observed one successful candidate-build interleaving; it is not proof that every future execution will hit that window. |
 
 Correction to the archived second-round Claude transcript, which is kept
 unchanged: its "Candidate build" line says the candidate differs from baseline
 in `private-storage.js` and `.test.js`. The fingerprint maps show each
 candidate build differs only in `private-storage.js`. The test JS differs only
 between the original and updated baselines, as stated above.
-| Suggestion 3, timing-dependent checkpoint | Accepted limitation. The 5 ms process scan observed one successful candidate-build interleaving; it is not proof that every future execution will hit that window. |
 
-The final documentation receipt remains subject to final-head CI and the
-maintainer's integration audit. The optimization itself remains rejected.
+At `aa72af4`, the final documentation receipt remained subject to final-head
+CI and the maintainer's integration audit. The optimization itself remains rejected.
 
 ## Council round 1
 
@@ -318,7 +345,7 @@ redesign is needed.
 | Finding | Disposition |
 |---|---|
 | Sol M1, runner overwrites existing generated output; Git index restore can lose concurrent staging; signal scope | Accepted. Runner, safety procedure and reproduction text require a clean, disposable checkout with no concurrent builds or Git writes, state that a fresh baseline build is restored, and limit the signal guarantee to the runner PID. The 300-second timeout's direct-child limit is stated. |
-| Sol M2, four failures for any reason pass | Accepted. The runner requires the four named baseline passes and each named candidate failure's expected diagnostic. The new checks accept every archived baseline and candidate log and reject three negative controls. |
+| Sol M2, four failures for any reason pass | Accepted. The runner requires the four named baseline passes and each named candidate failure's expected diagnostic. The new checks accept every archived baseline and candidate log. |
 | Sol M3 / Opus M5, integration evidence only in ignored local files | Accepted. R1 to R4 receipts, logs and restoration maps are committed under `permission-92/integration/` with pre-compression hashes. Compiled output and fixture trees are excluded. |
 | Sol L4, staged edits with restored working bytes pass preflight | Accepted. Added an index-against-HEAD check. |
 | Sol L5 / Opus M6, PR body and transcript labels | Accepted. The PR body now links current evidence and labels CI by SHA. A correction note sits beside the archived second-round Claude transcript entry above; the transcript stays unchanged. |
@@ -334,3 +361,29 @@ redesign is needed.
 The changed test and runner await a local rerun in a disposable checkout under
 a separately granted slot. Results will be recorded here; hosted CI covers the
 changed test on Linux, macOS and Windows.
+
+## Council round 2
+
+Fresh full read-only reviews of `27f7a53b7e36725b291942c4f6cd0619e4f7135b`
+against `bf80f9f` used one shared brief. Claude Opus 5.5 High scored 8.5/10
+with all three verdicts PASS. GPT-6.2 Sol High scored 8.8/10, with
+functionality and no-go evidence PASS and code quality FAIL on the runner's
+timeout path. Both found that all round 1 dispositions were applied. Both said
+the pending local rerun blocks 9.5, and the pending `3a61d7c` parent merge does
+not.
+
+| Finding | Disposition |
+|---|---|
+| Sol M1, a timed-out build can race the restoration build | Accepted. After a timeout the runner restores source bytes, skips the rebuild, writes a receipt marking build restoration unverified, and exits; the operator discards the checkout. The signal path the earlier receipt validated is unchanged. |
+| Opus M1, never-run test and runner revisions described as if run | Accepted. Present-tense claims now name the revisions that ran, and earlier runner revisions are described separately. The queued local rerun will record the current revisions. |
+| Opus M2, criteria conflict not stated; `EPERM` scope; circular 1.x reasoning | Accepted. The decision states the strict reading, that any `lstat`-based elision changes these interleavings, that a uid-aware variant removes only the `EPERM` difference, and that a 1.x proposal is the maintainer's decision. |
+| Sol L2, no receipt for a staged-only refusal | Accepted for the queued run: stage the edit, restore the working file, and require `source-index-clean` to refuse before any build. |
+| Sol L3, reviewed base versus live tip | Accepted. `bf80f9f` is named as the reviewed merge base; a later pin will be recorded below. |
+| Sol L4, R1 and R4 controls overstated | Accepted. R1 ran a read-only preflight and no application command; R4 used fresh fixture directories as well as the short temporary path. |
+| Opus L1, transcript correction broke a table | Accepted. Moved below the table. |
+| Opus L2, stale statements at `27f7a53` | Accepted. Pinned to `6dd7d3a`, `aa72af4` and `7356498`. |
+| Opus L3 / Sol optional, negative controls unbacked | Accepted. `scripts/bench/test_permissions.py` runs them under the existing bench unit-test step. |
+| Opus L4, controller scripts not archived | Accepted. Stated in the integration receipt. |
+| Opus L5, evidence volume | Accepted in part. Nine restored snapshots byte-identical to their before snapshots are replaced by a hash record. Environment receipts stay as recorded. |
+| Sol optional, runtime major versions unchecked | Accepted. |
+| Opus nits: `CASES` before imports, bare `IndexError`, `lstat` name, PR body check count | Accepted. Line wrapping in older sections is left as is. |
