@@ -52,10 +52,10 @@ Sync uses an equal-size plain `x` body and peer-specific metadata; CLI/parser/vi
 
 ## Managed complete reads for #96
 
-PR122 now stacks on reviewed PR120b249; its existing compiled/bundle bytes
-are stale for that combination. Build/qualification requires a new root grant.
-See the [source-only integration receipt](../../docs/performance/96-integration-120.md).
-The new parent-selection plumbing has source checks only and no runtime proof.
+At the [b249 integration checkpoint](../../docs/performance/96-integration-120.md),
+the existing bundles predated the merge. The subsequent [caf2d6f smoke](evidence/issue-96/actual-parent-smoke-caf2d6f.md)
+rebuilt both bundles and exercised explicit parent selection on Node 20.20.2 and
+24.19.0. That receipt covers the revisions it names.
 
 `managed-read` requires a clean app-managed baseline checkout with built
 release artifacts. `--expected-baseline-commit` accepts exactly40 hexadecimal
@@ -67,9 +67,8 @@ commits, compiled JS maps and bundle hashes. Build provenance still requires
 recorded build commands.
 
 The explicit legacy default is `610c931b7b22920cce59cf03e49c0de15ebaf2a2`.
-Omission preserves historical command reproduction; it does not make an old
-610 comparison isolated evidence against the new b249 parent. All new
-integrated measurements and smoke commands must explicitly select b249:
+Use the default to reproduce older commands. For a comparison against a
+particular parent, pass its full SHA. The b249 smoke used this command shape:
 
 ```sh
 python3 scripts/bench/run.py managed-read \
@@ -80,9 +79,9 @@ python3 scripts/bench/run.py managed-read \
   --out /absolute/fresh/managed-read-b249-node20
 ```
 
-This is a proposed one-record smoke invocation, not execution authorization.
-Later sustained1/100-record seven-pair runs require their own grant and the
-same explicit b249 argument. The old historical command shape remains valid:
+The [seven-pair measurement](evidence/issue-96/paired-performance-c491419.md)
+used the same explicit b249 argument at c491419. Earlier runs against 610 used
+the default:
 
 ```sh
 python3 scripts/bench/run.py managed-read \

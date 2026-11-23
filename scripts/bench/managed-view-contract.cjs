@@ -375,10 +375,12 @@ for (const target of ['ledger', 'body']) {
       const entered = deferred();
       const release = deferred();
       const callbackDone = deferred();
+      const closeEntered = deferred();
+      const allowClose = deferred();
       const open = fs.open;
       let armed = true;
       let heldHandle;
-      let closeCalls = 0;
+      let completedCloses = 0;
       let opensAtCut = 0;
       const filename = target === 'ledger' ? path.join(f.home, 'sync', 'ledger.json')
         : path.join(f.home, 'sync', 'bodies', f.ledger.records[canonicalKey(f.ledger.inboxId, 'original')].bodyFile);
@@ -391,8 +393,10 @@ for (const target of ['ledger', 'body']) {
           heldHandle = handle;
           const close = handle.close.bind(handle);
           t.mock.method(handle, 'close', async () => {
-            closeCalls += 1;
+            closeEntered.resolve();
+            await allowClose.promise;
             await close();
+            completedCloses += 1;
             if (outcome === 'close failure') throw reason;
           });
           if (outcome === 'read failure') {
@@ -406,7 +410,7 @@ for (const target of ['ledger', 'body']) {
       });
       let escaped;
       let admitted;
-      let settled = false;
+      let closesAtSettlement;
       const scope = f.source.withReadView(async (view) => {
         escaped = view;
         admitted = target === 'ledger' ? view.listDocuments() : view.getDocument('original');
@@ -423,18 +427,24 @@ for (const target of ['ledger', 'body']) {
         callbackDone.resolve();
         if (outcome === 'callback failure') throw reason;
       }, controller.signal);
-      const result = scope.then((value) => { settled = true; callbackDone.resolve(); return value; },
-        (error) => { settled = true; callbackDone.resolve(); throw error; });
+      const result = scope.finally(() => {
+        closesAtSettlement = completedCloses;
+        callbackDone.resolve();
+      });
       void result.catch(() => {});
 
       try {
         await callbackDone.promise;
-        await Promise.resolve();
-        assert.equal(settled, false, 'callback completion must drain the admitted native read');
-        assert.equal(closeCalls, 0);
+        await nextTurn();
+        assert.equal(closesAtSettlement, undefined, 'scope settled while the opened handle was held');
         assert(heldHandle);
         assert.equal(intercepted.mock.callCount(), opensAtCut, 'rejected admission did not open more files');
         release.resolve();
+        await Promise.race([closeEntered.promise, result.then(() => assert.fail('scope settled before close'))]);
+        await nextTurn();
+        assert.equal(closesAtSettlement, undefined, 'scope settled while native close was held');
+        allowClose.resolve();
+
         if (outcome === 'success') {
           await result;
           if (target === 'ledger') assert.equal((await admitted).length, 1);
@@ -446,13 +456,14 @@ for (const target of ['ledger', 'body']) {
           // The scope's final check would reject anyway; the admitted read itself must not deliver data.
           await assert.rejects(admitted, (error) => error === reason);
         }
-        assert.equal(closeCalls, 1, 'native handle closed before the scope settled');
+        assert.equal(closesAtSettlement, 1, 'native close must finish before the scope settles');
         await assert.rejects(escaped.listDocuments(), /view is closed/);
         await assert.rejects(escaped.getDocumentMetadata('original'), /view is closed/);
         await assert.rejects(escaped.getDocument('original'), /view is closed/);
       } finally {
         release.resolve();
-        await result.catch(() => {});
+        allowClose.resolve();
+        await Promise.allSettled([admitted, result]);
         t.mock.restoreAll();
       }
     });

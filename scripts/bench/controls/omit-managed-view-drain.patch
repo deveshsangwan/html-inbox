@@ -1,0 +1,5 @@
+--- a/packages/cli/src/document-read-view.ts
++++ b/packages/cli/src/document-read-view.ts
+@@ -57 +57 @@
+-        await pending;
++        void pending;
