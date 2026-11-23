@@ -118,7 +118,7 @@ inferred. Hosted CI does not execute this ignored controller, replace this local
 interrupted result, or resolve shared historical causes/original610 criteria.
 New documentation heads require their own CI accounting.
 
-[Lossless selected evidence](full-tests-3be43b8-stop.tar.gz),983845bytes, SHA256
+[Lossless selected evidence](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/full-tests-3be43b8-stop.tar.gz),983845bytes, SHA256
 `2658a57c4f31e83d7a3c589c8b123d47e049e5545ccec6dd20d31920642994d6`.
 All30 file members were compared to disk;29 records have full evidence hashes.
 Prefix is full-tests-3be43b8-stop/, with attempt/,launch/,hosted-ci/ and the

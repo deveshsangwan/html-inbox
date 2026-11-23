@@ -11,7 +11,7 @@ publication is `1d54cd9e6b6bff03172c0080da88ca05256f1314`.
 
 Prepared a new ignored controller at
 `artifacts/issue-96/integrated-correctness-continuation-prepared/execute.py`.
-The original controller was not edited. The [source archive](integrated-correctness-continuation-source.tar.gz)
+The original controller was not edited. The [source archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/integrated-correctness-continuation-source.tar.gz)
 contains this controller, a complete diff from the original, seven prepared
 helper controls, an input-invariance receipt and file hashes. Only AST syntax
 and read-only hash/diff checks ran. Neither controller nor helper controls ran.

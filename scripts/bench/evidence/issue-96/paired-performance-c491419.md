@@ -159,7 +159,7 @@ raw rows, every file/manifest, independent audits and source/controller hashes
 are in the accompanying lossless archive. Standalone CSV copies use LF line
 endings; their original CRLF archive copies and every numeric value are preserved.
 
-[Lossless archive](paired-performance-c491419.tar.gz),4539686bytes, SHA256
+[Lossless archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/paired-performance-c491419.tar.gz),4539686bytes, SHA256
 `676918f0018dfb5d762c4e83bb4ae64c4f9c3348cdd3b9822fb2526bb90f4f11`.
 All11510 file members were compared byte-for-byte to disk;11509 execution
 artifact hashes are separate from the unchanged original five-file source

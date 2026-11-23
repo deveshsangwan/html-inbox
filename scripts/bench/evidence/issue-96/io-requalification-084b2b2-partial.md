@@ -4,7 +4,7 @@ Related to [#96](https://github.com/deveshsangwan/html-inbox/issues/96).
 Requalification stopped at the first independent-audit mismatch. Full harness
 qualification remains withheld. No performance benefit is claimed.
 
-The [lossless partial archive](io-requalification-084b2b2-partial.tar.gz) is
+The [lossless partial archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/io-requalification-084b2b2-partial.tar.gz) is
 268589 bytes, SHA256
 `a262402a7ba5fb45ab3372c446e37388c84e88036ad1ed2336279f608cab4646`.
 It contains 109 regular members with 108 artifact hashes. Every member was

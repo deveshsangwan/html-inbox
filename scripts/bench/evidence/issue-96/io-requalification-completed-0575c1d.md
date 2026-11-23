@@ -5,11 +5,11 @@ Root accepted the corrected harness for one-record smoke on exact Node20.20.2
 and24.19.0 only. Practical benefit, larger counts, generic interruption and
 full issue qualification remain open.
 
-This completion adds the [lossless additive/Node24 archive](io-requalification-completed-0575c1d.tar.gz),
+This completion adds the [lossless additive/Node24 archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/io-requalification-completed-0575c1d.tar.gz),
 274520 bytes, SHA256
 `f1f513e6648e9307e16caaf6be930fb5556c47798a46feb5acbbe1a6d001695c`.
 Its107 regular members include106 artifact hashes. Every member matched disk.
-Use it with the immutable [Node20 partial archive](io-requalification-084b2b2-partial.tar.gz),
+Use it with the immutable [Node20 partial archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/io-requalification-084b2b2-partial.tar.gz),
 SHA256 `a262402a7ba5fb45ab3372c446e37388c84e88036ad1ed2336279f608cab4646`,
 which retains the original failed auditor/traceback and complete Node20 data.
 The additive auditor and new audit results have distinct paths. No original

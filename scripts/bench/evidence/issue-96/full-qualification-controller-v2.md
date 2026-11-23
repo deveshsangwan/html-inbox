@@ -39,7 +39,7 @@ controller or manifest byte was edited to match publication.
 
 ## Exact source package and invariance
 
-[Lossless v2 source archive](full-qualification-v2-source.tar.gz),395274bytes,
+[Lossless v2 source archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/full-qualification-v2-source.tar.gz),395274bytes,
 SHA256 `2d5e0cbfa073f68060f85b32695775482a8616d9c1d36d37765312b3d3a746d2`.
 Its five members were compared byte-for-byte with the separate ignored
 `artifacts/issue-96/full-qualification-prepared-v2` directory. They are execute.py,

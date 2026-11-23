@@ -61,7 +61,7 @@ Practical measurements, package qualification and both fresh reviews remain open
 
 ## Lossless raw evidence
 
-[Archive](integrated-correctness-44ef6c0-stop.tar.gz), 840536bytes,
+[Archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/integrated-correctness-44ef6c0-stop.tar.gz), 840536bytes,
 SHA-256 `b70f5570a9fc3c724a92d79cb4b1dfd675d4dce018463a9ce824d70d3f3d00db`. All26 archive members were compared byte-for-byte
 to disk; `artifact-hashes.json` covers the other25 files. Unpack with
 `tar -xzf integrated-correctness-44ef6c0-stop.tar.gz`. The original receipts

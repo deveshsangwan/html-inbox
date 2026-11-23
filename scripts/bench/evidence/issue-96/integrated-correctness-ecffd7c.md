@@ -128,7 +128,7 @@ O(N) bytes per body. No practical gain, full issue completion or release is clai
 
 ## Lossless raw evidence
 
-[Archive](integrated-correctness-ecffd7c.tar.gz),1045034bytes, SHA256
+[Archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/integrated-correctness-ecffd7c.tar.gz),1045034bytes, SHA256
 `cdfbf2dd72cca6c50d0838792a472604be7ae1b8575d0f58f61eac3798cf96e0`.
 All617 file members were compared byte-for-byte to disk;616 artifact hashes are
 retained. It includes the exact controller and root diff/preparation, unchanged

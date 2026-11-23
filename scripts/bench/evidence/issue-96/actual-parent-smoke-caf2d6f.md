@@ -143,7 +143,7 @@ or practical benefit is claimed.
 
 ## Lossless evidence
 
-[Raw archive](actual-parent-smoke-caf2d6f.tar.gz),549157bytes, SHA256
+[Raw archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/actual-parent-smoke-caf2d6f.tar.gz),549157bytes, SHA256
 `4ca44ec21f70e36d58072f975952df0e2f9ec21b9f3544689bf86f2e88b5cef0`.
 All211 file members were compared byte-for-byte to disk;210 execution artifact
 hashes are recorded separately from the original six-file source manifest.

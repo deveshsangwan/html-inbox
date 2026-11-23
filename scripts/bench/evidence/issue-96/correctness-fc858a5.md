@@ -7,7 +7,7 @@ preflights also passed. This receipt is distinct from the earlier 18-case
 baseline characterization at 42232780. It provides no performance result or
 approval of later implementation changes.
 
-The [lossless raw evidence](correctness-fc858a5.tar.gz) has SHA-256
+The [lossless raw evidence](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/correctness-fc858a5.tar.gz) has SHA-256
 `f00ddf66af1b8b30da94201cabfa12470f023276c4b5165c58b53a98e62ac805`.
 It contains the exact runner, cleanup-only observer, environment policy, every
 command log, source/compiled maps, per-case diagnostics, actual export bytes,

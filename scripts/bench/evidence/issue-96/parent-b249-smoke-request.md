@@ -85,7 +85,7 @@ parent, both clean source trees, immutable accepted build/correctness receipts,
 400 candidate outputs, recorded tools and reservation fingerprints must match.
 No automatic parent inference or baseline identity bypass exists.
 
-The [lossless source archive](parent-b249-smoke-source.tar.gz) is32684bytes,
+The [lossless source archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/parent-b249-smoke-source.tar.gz) is32684bytes,
 seven byte-verified members, SHA256
 `38067e8e500be1b7d6ec8a6c69ce5e9f69aa22c8cebf3ed4db83a2496f02aed1`.
 Controller SHA256:

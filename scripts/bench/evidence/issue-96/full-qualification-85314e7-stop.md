@@ -129,7 +129,7 @@ with those limits. No application/runtime work occurred after release.
 
 ## Lossless selected evidence
 
-[Archive](full-qualification-85314e7-stop.tar.gz),4110955bytes, SHA256
+[Archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/full-qualification-85314e7-stop.tar.gz),4110955bytes, SHA256
 `5c6ed1e4bc0a9734980e8ee2bcd0545ca57855a9ef5c30c67c4e7c80f583bf27`.
 All438 file members were compared to disk;437 evidence entries have complete
 size/hash records. Member prefix is exactly full-qualification-85314e7-stop/,

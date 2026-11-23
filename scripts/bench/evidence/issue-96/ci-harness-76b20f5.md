@@ -6,7 +6,7 @@ The twelve granted commands and two exact-version preflights exited 0 at
 qualified**. The final evidence audit found an invalid `/proc` counter parser.
 No performance benefit or zero-I/O result follows from this run.
 
-The [lossless archive](ci-harness-76b20f5.tar.gz) is 470033 bytes, SHA256
+The [lossless archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/ci-harness-76b20f5.tar.gz) is 470033 bytes, SHA256
 `4bf9f60c34f5b19468576962777d9f2e63c4de681370670e13fd09d1c35cc2a7`.
 Its 223 regular members include 222 artifact hashes, the exact runner, all
 original logs/profiles, source/compiled/compiler/runtime/bundle hashes,

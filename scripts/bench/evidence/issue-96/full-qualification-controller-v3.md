@@ -26,7 +26,7 @@ Controller SHA256 is
 `97f58a302a82e21b8d8ee699e0dc2dc99e5f36a7f9d9c291df4c0e1c9209fe5a`;
 manifest SHA256 is
 `5ee20b560323ea4a8a184d18a48ccbdba26ed9079fffc0e10c5b0d740c421ec5`.
-The [lossless source archive](full-qualification-v3-source.tar.gz) is395019bytes,
+The [lossless source archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/full-qualification-v3-source.tar.gz) is395019bytes,
 SHA256 `894ee48eaef7af96d07e7dfae2e4283861cc0fc7acb0eb851408ea17b5d8e4b3`.
 It has exactly five byte-verified file members under full-qualification-prepared-v3/:
 execute.py,manifest.json,controller.diff,preparation.json,artifact-hashes.json.

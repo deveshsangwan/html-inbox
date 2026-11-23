@@ -102,7 +102,7 @@ same-depth directory only after root binds a full clean `--expected-head` and
 new `--grant`. Nothing has executed. AST syntax/function inspection and read-only
 hashes only; no auditor/controller/helper-control tests ran.
 
-[Lossless source archive](paired-performance-source.tar.gz),37011bytes, six
+[Lossless source archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/paired-performance-source.tar.gz),37011bytes, six
 byte-verified members, SHA256
 `96c7d672ca44c1c88ee0540815896895718ed1ed6419a3f05866a499d3bbd379`.
 Controller SHA256:

@@ -74,7 +74,7 @@ need their own CI accounting.
 
 ## Lossless file evidence
 
-[Raw archive](integrated-correctness-79a2912-cache-mode-stop.tar.gz), 847486bytes,
+[Raw archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/integrated-correctness-79a2912-cache-mode-stop.tar.gz), 847486bytes,
 SHA256 `1066be540f73d0054e97bf288f079ee83cc776807a89506aeed17a47f83bb557`. All22 members were compared byte-for-byte
 to disk; the hash manifest covers the other21 files. Includes original
 controller, receipt, commands/logs, full maps, additive inspection/release and

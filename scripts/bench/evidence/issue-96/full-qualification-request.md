@@ -33,7 +33,7 @@ parent is1276123bytes, SHA256
 Candidate full400-file map aggregate is
 `caf0bebd71a784a521077005f08a9a9d6afe7e17047e6e531ef2c2e681f4f64d`.
 Maps use the recorded sorted compact JSON SHA256 convention. Full per-file maps
-remain in the [lossless measured archive](paired-performance-c491419.tar.gz).
+remain in the [lossless measured archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/paired-performance-c491419.tar.gz).
 The earlier typecheck lacks retrospectively retained installed transitive
 declaration/tool-library hashes. Accepted tracked/compiler/tool proof is retained;
 this request does not turn that historical limitation into a full byte proof.

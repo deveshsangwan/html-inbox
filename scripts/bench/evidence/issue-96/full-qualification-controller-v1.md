@@ -11,7 +11,7 @@ Only static AST/JSON, read-only hashes/Git and source/evidence packaging ran.
 
 ## Versioned source and frozen inputs
 
-The [source archive](full-qualification-v1-source.tar.gz) contains exactly five
+The [source archive](https://raw.githubusercontent.com/deveshsangwan/html-inbox/6169df8db82d31c1955412a260f7d44db80c9381/scripts/bench/evidence/issue-96/full-qualification-v1-source.tar.gz) contains exactly five
 byte-verified files: execute.py, manifest.json, full controller.diff against the
 accepted c491 controller, preparation.json and artifact-hashes.json. The ignored
 review copy is `artifacts/issue-96/full-qualification-prepared-v1`. Archive/source
