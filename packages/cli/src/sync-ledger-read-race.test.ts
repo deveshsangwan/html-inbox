@@ -368,6 +368,9 @@ test("an enabled owned worker keeps its process identity through a benign ledger
   }
 
   const race = await holdReplacement(t, ledgerPath, () => store.recordWorkerRun(Date.now(), null), "lstat-result");
+  // lastRunAt precedes startup-flight settlement. Retain a fresh admission even
+  // when tick joins a state read that began before this race was installed.
+  worker.requestWake();
   await assert.doesNotReject(worker.tick());
   assert.equal(race.hits(), 1);
   await delay(300);

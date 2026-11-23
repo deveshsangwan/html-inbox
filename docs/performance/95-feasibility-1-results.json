@@ -1,0 +1,1152 @@
+{
+  "environment": {
+    "parent": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+    "candidate": "a7f87190129a353689ee8759756292164ec8ff87",
+    "phase": "feasibility",
+    "counts": [
+      0,
+      1000,
+      10000
+    ],
+    "samples": 1,
+    "started_monotonic": 800264.118337305,
+    "started_wall_ns": 1794082362461305132,
+    "directions": [
+      "none",
+      "outbound",
+      "inbound"
+    ],
+    "idle_ms": 65000,
+    "case_seconds": 240,
+    "setup_seconds": 90,
+    "budget_seconds": 5400,
+    "runtimes": [
+      {
+        "version": "v20.20.2",
+        "path": "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "sha256": "6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd"
+      },
+      {
+        "version": "v24.19.0",
+        "path": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "sha256": "bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12"
+      }
+    ],
+    "machine": [
+      "Linux",
+      "homeserver",
+      "6.12.113+deb13-amd64",
+      "#1 SMP PREEMPT_DYNAMIC Debian 6.12.113-1 (2026-10-15)",
+      "x86_64"
+    ],
+    "clock_ticks": 100,
+    "observation_ms": 100,
+    "cache": "fresh disposable fixtures; uncontrolled warm OS caches; no cache eviction",
+    "harness": {
+      "scheduler.py": "ea6854b1d96277cdfdae16a808f115c81d8f2153c638e3268194804bfec997d8",
+      "scheduler-workload.cjs": "3dab8e8f19b2bec06f1a683fcc26c860a4370e811cbb20d3462e59cd4391f5b7",
+      "scheduler-process.cjs": "19ff588c42b7d1edd460a15c99c5f80e33bac4211905aa54377cc6cc08cdeac3"
+    },
+    "fixture_root": "/tmp/html-inbox-scheduler-kad7zpzf",
+    "filesystem": "tmpfs",
+    "builds": {
+      "parent": {
+        "revision": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+        "dist": "/tmp/html-inbox-scheduler-kad7zpzf/build-parent/packages/cli/dist",
+        "dist_js_sha256": "41663c8ae9c916f5613ae86def13123a29f24749da88ea14b09eeb4fb7822ebc"
+      },
+      "candidate": {
+        "revision": "a7f87190129a353689ee8759756292164ec8ff87",
+        "dist": "/tmp/html-inbox-scheduler-kad7zpzf/build-candidate/packages/cli/dist",
+        "dist_js_sha256": "742950a62a3e02494700e45d917ec271d887da5fd6c6738ef81473f085d4671e"
+      }
+    }
+  },
+  "outer": {
+    "command": [
+      "python3",
+      "scripts/bench/scheduler.py",
+      "--candidate",
+      "a7f87190129a353689ee8759756292164ec8ff87",
+      "--node20",
+      "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+      "--node24",
+      "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+      "--phase",
+      "feasibility",
+      "--budget-seconds",
+      "5400",
+      "--out",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-1"
+    ],
+    "head": "a7f87190129a353689ee8759756292164ec8ff87",
+    "status": "",
+    "controller_pid": 2596401,
+    "controller_group": 2596401,
+    "started_monotonic": 800263.481454334,
+    "started_wall_ns": 1794082361824382825,
+    "runner_deadline_monotonic": 805663.481454334,
+    "cleanup_allowance_seconds": 60,
+    "exit": 1,
+    "pid": 2596409,
+    "group": 2596409,
+    "initial_stat": "2596409 (python3) R 2596401 2596409 2596409 0 -1 4194304 11 0 0 0 0 0 0 0 20 0 1 0 80026348 7700480 33 18446744073709551615 4325376 7599353 140724584142752 0 0 0 0 0 0 0 0 0 17 1 0 0 0 0 0 10436024 11028232 757641216 140724584145389 140724584145788 140724584145788 140724584148967 0\n",
+    "cleanup_started_monotonic": 801250.875971215,
+    "elapsed_seconds": 987.3945168809732,
+    "owned_groups": [
+      2596409,
+      2596421,
+      2596422,
+      2596423,
+      2596456,
+      2596457,
+      2596489,
+      2596506,
+      2596524,
+      2596559,
+      2596577,
+      2597071,
+      2597540,
+      2598015,
+      2598740,
+      2599427,
+      2599830,
+      2600188,
+      2600789,
+      2601286,
+      2601986
+    ],
+    "remaining": {},
+    "fixture_root_removed": true,
+    "cleanup_elapsed_seconds": 0.2885194660630077
+  },
+  "summary": {
+    "phase": "feasibility",
+    "qualified_cases": 10,
+    "total_cases": 11,
+    "required_cases": 36,
+    "complete": false,
+    "pairs": [
+      {
+        "runtime": "20.20.2",
+        "count": 0,
+        "direction": "none",
+        "sample": 0,
+        "parent": 0.029252675709353058,
+        "candidate": 0.005535179976712907,
+        "delta": -0.02371749573264015
+      },
+      {
+        "runtime": "20.20.2",
+        "count": 0,
+        "direction": "outbound",
+        "sample": 0,
+        "parent": 0.03605456371092414,
+        "candidate": 0.01063876573841077,
+        "delta": -0.025415797972513365
+      },
+      {
+        "runtime": "20.20.2",
+        "count": 0,
+        "direction": "inbound",
+        "sample": 0,
+        "parent": 0.04105005124602136,
+        "candidate": 0.01201969977005236,
+        "delta": -0.029030351475969
+      },
+      {
+        "runtime": "24.19.0",
+        "count": 0,
+        "direction": "none",
+        "sample": 0,
+        "parent": 0.02233206687401703,
+        "candidate": 0.0039770016537573364,
+        "delta": -0.018355065220259693
+      },
+      {
+        "runtime": "24.19.0",
+        "count": 0,
+        "direction": "outbound",
+        "sample": 0,
+        "parent": 0.02832004578014711,
+        "candidate": 0.00640544720302091,
+        "delta": -0.021914598577126198
+      }
+    ],
+    "performance_retention_decision": "pending all required gates and independent reviews",
+    "unrun_cases": [
+      "24.19.0-0-inbound-0-candidate",
+      "20.20.2-1000-none-0-parent",
+      "20.20.2-1000-none-0-candidate",
+      "20.20.2-1000-outbound-0-parent",
+      "20.20.2-1000-outbound-0-candidate",
+      "20.20.2-1000-inbound-0-parent",
+      "20.20.2-1000-inbound-0-candidate",
+      "24.19.0-1000-none-0-parent",
+      "24.19.0-1000-none-0-candidate",
+      "24.19.0-1000-outbound-0-parent",
+      "24.19.0-1000-outbound-0-candidate",
+      "24.19.0-1000-inbound-0-parent",
+      "24.19.0-1000-inbound-0-candidate",
+      "20.20.2-10000-none-0-parent",
+      "20.20.2-10000-none-0-candidate",
+      "20.20.2-10000-outbound-0-parent",
+      "20.20.2-10000-outbound-0-candidate",
+      "20.20.2-10000-inbound-0-parent",
+      "20.20.2-10000-inbound-0-candidate",
+      "24.19.0-10000-none-0-parent",
+      "24.19.0-10000-none-0-candidate",
+      "24.19.0-10000-outbound-0-parent",
+      "24.19.0-10000-outbound-0-candidate",
+      "24.19.0-10000-inbound-0-parent",
+      "24.19.0-10000-inbound-0-candidate"
+    ],
+    "groups": [
+      {
+        "runtime": "20.20.2",
+        "count": 0,
+        "direction": "inbound",
+        "n": 1,
+        "cpu_fraction": {
+          "parent": {
+            "median": 0.04105005124602136,
+            "minimum": 0.04105005124602136,
+            "maximum": 0.04105005124602136
+          },
+          "candidate": {
+            "median": 0.01201969977005236,
+            "minimum": 0.01201969977005236,
+            "maximum": 0.01201969977005236
+          },
+          "delta": {
+            "median": -0.029030351475969,
+            "minimum": -0.029030351475969,
+            "maximum": -0.029030351475969
+          }
+        }
+      },
+      {
+        "runtime": "20.20.2",
+        "count": 0,
+        "direction": "none",
+        "n": 1,
+        "cpu_fraction": {
+          "parent": {
+            "median": 0.029252675709353058,
+            "minimum": 0.029252675709353058,
+            "maximum": 0.029252675709353058
+          },
+          "candidate": {
+            "median": 0.005535179976712907,
+            "minimum": 0.005535179976712907,
+            "maximum": 0.005535179976712907
+          },
+          "delta": {
+            "median": -0.02371749573264015,
+            "minimum": -0.02371749573264015,
+            "maximum": -0.02371749573264015
+          }
+        }
+      },
+      {
+        "runtime": "20.20.2",
+        "count": 0,
+        "direction": "outbound",
+        "n": 1,
+        "cpu_fraction": {
+          "parent": {
+            "median": 0.03605456371092414,
+            "minimum": 0.03605456371092414,
+            "maximum": 0.03605456371092414
+          },
+          "candidate": {
+            "median": 0.01063876573841077,
+            "minimum": 0.01063876573841077,
+            "maximum": 0.01063876573841077
+          },
+          "delta": {
+            "median": -0.025415797972513365,
+            "minimum": -0.025415797972513365,
+            "maximum": -0.025415797972513365
+          }
+        }
+      },
+      {
+        "runtime": "24.19.0",
+        "count": 0,
+        "direction": "none",
+        "n": 1,
+        "cpu_fraction": {
+          "parent": {
+            "median": 0.02233206687401703,
+            "minimum": 0.02233206687401703,
+            "maximum": 0.02233206687401703
+          },
+          "candidate": {
+            "median": 0.0039770016537573364,
+            "minimum": 0.0039770016537573364,
+            "maximum": 0.0039770016537573364
+          },
+          "delta": {
+            "median": -0.018355065220259693,
+            "minimum": -0.018355065220259693,
+            "maximum": -0.018355065220259693
+          }
+        }
+      },
+      {
+        "runtime": "24.19.0",
+        "count": 0,
+        "direction": "outbound",
+        "n": 1,
+        "cpu_fraction": {
+          "parent": {
+            "median": 0.02832004578014711,
+            "minimum": 0.02832004578014711,
+            "maximum": 0.02832004578014711
+          },
+          "candidate": {
+            "median": 0.00640544720302091,
+            "minimum": 0.00640544720302091,
+            "maximum": 0.00640544720302091
+          },
+          "delta": {
+            "median": -0.021914598577126198,
+            "minimum": -0.021914598577126198,
+            "maximum": -0.021914598577126198
+          }
+        }
+      }
+    ]
+  },
+  "checkpoint": {
+    "failed_case": "24.19.0-0-inbound-0-parent",
+    "reason": "Stop at first infeasible cell; remaining cells require a new disposition/grant"
+  },
+  "commands": [
+    {
+      "label": "filesystem",
+      "command": [
+        "stat",
+        "-f",
+        "-c",
+        "%T",
+        "/tmp/html-inbox-scheduler-kad7zpzf"
+      ],
+      "timeout_seconds": 5,
+      "exit": 0,
+      "pid": 2596421,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.016250938992016017,
+      "output_sha256": "f23f0177ae6d4b7017fcaacd265360c0a7aa662f35571247acd86b32f6675ba7"
+    },
+    {
+      "label": "archive-parent",
+      "command": [
+        "git",
+        "archive",
+        "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+        "packages/cli/src",
+        "packages/cli/tsconfig.json",
+        "tsconfig.base.json"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2596422,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.04578239202965051,
+      "output_sha256": "86188674797c578bb250d72de44319a89b283326d33006b91fbeb203c5f47424"
+    },
+    {
+      "label": "build-parent",
+      "command": [
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/node_modules/.bin/tsc-rs",
+        "-p",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-parent/packages/cli/tsconfig.json"
+      ],
+      "timeout_seconds": 60,
+      "exit": 0,
+      "pid": 2596423,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.5293121010763571,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "archive-candidate",
+      "command": [
+        "git",
+        "archive",
+        "a7f87190129a353689ee8759756292164ec8ff87",
+        "packages/cli/src",
+        "packages/cli/tsconfig.json",
+        "tsconfig.base.json"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2596456,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.04664861795026809,
+      "output_sha256": "f056c1ec085ba3b22accb3a1eea6fd18eef68bace7cfea5747fc73193447782b"
+    },
+    {
+      "label": "build-candidate",
+      "command": [
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/node_modules/.bin/tsc-rs",
+        "-p",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-candidate/packages/cli/tsconfig.json"
+      ],
+      "timeout_seconds": 60,
+      "exit": 0,
+      "pid": 2596457,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.5324963780585676,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "reader-race-20.20.2-parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-name-pattern=an enabled owned worker keeps its process identity",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-parent/packages/cli/dist/sync-ledger-read-race.test.js"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2596489,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.6312202779809013,
+      "output_sha256": "336cff9744d99290aa1069a38f2dafa1efa9a81a0c802be906d223a5776b5aa0"
+    },
+    {
+      "label": "reader-race-20.20.2-candidate",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-name-pattern=an enabled owned worker keeps its process identity",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-candidate/packages/cli/dist/sync-ledger-read-race.test.js"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2596506,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.7099517470924184,
+      "output_sha256": "06b7da1c18ae93643920dd16d510ab45815ae0340d37b51742e89121d37ca691"
+    },
+    {
+      "label": "reader-race-24.19.0-parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-name-pattern=an enabled owned worker keeps its process identity",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-parent/packages/cli/dist/sync-ledger-read-race.test.js"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2596524,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.7096653040498495,
+      "output_sha256": "b49a3dbf63e941fa7329d05df9e55b3d52eedddc3cbba1af29abcec43c338e76"
+    },
+    {
+      "label": "reader-race-24.19.0-candidate",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-name-pattern=an enabled owned worker keeps its process identity",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-candidate/packages/cli/dist/sync-ledger-read-race.test.js"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2596559,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.6311662279767916,
+      "output_sha256": "c8d170a1d0e8f45ac1385579d71bfb5df554202f6ba766671bac84057471b5a6"
+    },
+    {
+      "name": "20.20.2-0-none-0-parent",
+      "runtime": "20.20.2",
+      "count": 0,
+      "direction": "none",
+      "sample": 0,
+      "revision": "parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-parent/packages/cli/dist",
+        "/tmp/html-inbox-scheduler-kad7zpzf/20.20.2-0-none-0-parent",
+        "0",
+        "none",
+        "65000"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 65.84050876193214,
+      "setup_seconds": 0.4627159379888326,
+      "waited_cpu_seconds": 2.6494329999999997,
+      "waited_peak_rss_kib": 143100,
+      "idle": [
+        {
+          "elapsedMs": 65006.22435,
+          "cpuMs": 1901.606,
+          "cpuFraction": 0.029252675709353058,
+          "rssStart": 57888768,
+          "rssEnd": 56471552,
+          "lifetimePeakRssKiB": 57052,
+          "completedPasses": 2,
+          "requests": 0
+        }
+      ],
+      "qualified_case": true,
+      "pid": 2596577,
+      "terminated_exit": 0,
+      "trace_sha256": "c5863040dcc4bd2a3ec74577277007d20ffa4bb20323fdeecb4b1ef3cc70b43a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "process_trace_sha256": "ca809a2dc1e1fec218180f0cc71fbd605d1756014920a6c3c83a35d8cf42dfe3"
+    },
+    {
+      "name": "20.20.2-0-none-0-candidate",
+      "runtime": "20.20.2",
+      "count": 0,
+      "direction": "none",
+      "sample": 0,
+      "revision": "candidate",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-candidate/packages/cli/dist",
+        "/tmp/html-inbox-scheduler-kad7zpzf/20.20.2-0-none-0-candidate",
+        "0",
+        "none",
+        "65000"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 65.61145048995968,
+      "setup_seconds": 0.3357909159967676,
+      "waited_cpu_seconds": 0.936264,
+      "waited_peak_rss_kib": 143100,
+      "idle": [
+        {
+          "elapsedMs": 65006.919651000004,
+          "cpuMs": 359.825,
+          "cpuFraction": 0.005535179976712907,
+          "rssStart": 57843712,
+          "rssEnd": 53620736,
+          "lifetimePeakRssKiB": 56616,
+          "completedPasses": 2,
+          "requests": 0
+        }
+      ],
+      "qualified_case": true,
+      "pid": 2597071,
+      "terminated_exit": 0,
+      "trace_sha256": "7bb5e4d6c08c0f0fc1d76f1138a6cc558d5089a140d80d9fa51dfcefded298c0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "process_trace_sha256": "ef7622cef3783fe0cad20e81a3cd93cc5f76ed84c40a1375719a063cc37b6100"
+    },
+    {
+      "name": "20.20.2-0-outbound-0-parent",
+      "runtime": "20.20.2",
+      "count": 0,
+      "direction": "outbound",
+      "sample": 0,
+      "revision": "parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-parent/packages/cli/dist",
+        "/tmp/html-inbox-scheduler-kad7zpzf/20.20.2-0-outbound-0-parent",
+        "0",
+        "outbound",
+        "65000"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 98.59555394097697,
+      "setup_seconds": 0.8969666769262403,
+      "waited_cpu_seconds": 7.917280999999999,
+      "waited_peak_rss_kib": 143100,
+      "idle": [
+        {
+          "elapsedMs": 65004.946913,
+          "cpuMs": 2343.725,
+          "cpuFraction": 0.03605456371092414,
+          "rssStart": 63021056,
+          "rssEnd": 60518400,
+          "lifetimePeakRssKiB": 63796,
+          "completedPasses": 2,
+          "requests": 6
+        },
+        {
+          "elapsedMs": 65006.16105100001,
+          "cpuMs": 216.217,
+          "cpuFraction": 0.003326100118885176,
+          "rssStart": 61890560,
+          "rssEnd": 58433536,
+          "lifetimePeakRssKiB": 60568,
+          "completedPasses": 0,
+          "requests": 0
+        }
+      ],
+      "qualified_case": true,
+      "pid": 2597540,
+      "terminated_exit": 0,
+      "trace_sha256": "7953fb57fee078a7bb2dfe423fe206a6a9e38454bf55072b8a959feb9e7ca468",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "process_trace_sha256": "32d7f8a7a4de3e52f916ab213b7acdc15ee2e45d095ba0a51e6851e212033b12"
+    },
+    {
+      "name": "20.20.2-0-outbound-0-candidate",
+      "runtime": "20.20.2",
+      "count": 0,
+      "direction": "outbound",
+      "sample": 0,
+      "revision": "candidate",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-candidate/packages/cli/dist",
+        "/tmp/html-inbox-scheduler-kad7zpzf/20.20.2-0-outbound-0-candidate",
+        "0",
+        "outbound",
+        "65000"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 98.40732610796113,
+      "setup_seconds": 0.88925541494973,
+      "waited_cpu_seconds": 5.070805999999999,
+      "waited_peak_rss_kib": 143100,
+      "idle": [
+        {
+          "elapsedMs": 65006.601048000004,
+          "cpuMs": 691.59,
+          "cpuFraction": 0.01063876573841077,
+          "rssStart": 62599168,
+          "rssEnd": 59285504,
+          "lifetimePeakRssKiB": 61984,
+          "completedPasses": 2,
+          "requests": 6
+        },
+        {
+          "elapsedMs": 65007.980169999995,
+          "cpuMs": 227.426,
+          "cpuFraction": 0.003498432029502633,
+          "rssStart": 61755392,
+          "rssEnd": 57483264,
+          "lifetimePeakRssKiB": 60436,
+          "completedPasses": 0,
+          "requests": 0
+        }
+      ],
+      "qualified_case": true,
+      "pid": 2598015,
+      "terminated_exit": 0,
+      "trace_sha256": "ef3299712776949143b212958ed71b1c5b4f88eb6077c77bba1f6da0d3624be9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "process_trace_sha256": "81ee2a38c9e68d36d3fe586c1fbc7bb707d61338eb1f000fffb5320bed25cff9"
+    },
+    {
+      "name": "20.20.2-0-inbound-0-parent",
+      "runtime": "20.20.2",
+      "count": 0,
+      "direction": "inbound",
+      "sample": 0,
+      "revision": "parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-parent/packages/cli/dist",
+        "/tmp/html-inbox-scheduler-kad7zpzf/20.20.2-0-inbound-0-parent",
+        "0",
+        "inbound",
+        "65000"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 98.95462591003161,
+      "setup_seconds": 0.8755399159854278,
+      "waited_cpu_seconds": 8.472562,
+      "waited_peak_rss_kib": 143100,
+      "idle": [
+        {
+          "elapsedMs": 65007.129564999996,
+          "cpuMs": 2668.546,
+          "cpuFraction": 0.04105005124602136,
+          "rssStart": 65708032,
+          "rssEnd": 63803392,
+          "lifetimePeakRssKiB": 66404,
+          "completedPasses": 3,
+          "requests": 11
+        },
+        {
+          "elapsedMs": 65008.16224800001,
+          "cpuMs": 341.93,
+          "cpuFraction": 0.005259801049221624,
+          "rssStart": 61759488,
+          "rssEnd": 58646528,
+          "lifetimePeakRssKiB": 62456,
+          "completedPasses": 0,
+          "requests": 0
+        }
+      ],
+      "qualified_case": true,
+      "pid": 2598740,
+      "terminated_exit": 0,
+      "trace_sha256": "bab3d024eb037427395cc4bf0c594ce8572da3dbe0104c31dd17d609c5713e25",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "process_trace_sha256": "43d59a90fb30578027062f948592547a74401bb30669e3e38e26d2c599044910"
+    },
+    {
+      "name": "20.20.2-0-inbound-0-candidate",
+      "runtime": "20.20.2",
+      "count": 0,
+      "direction": "inbound",
+      "sample": 0,
+      "revision": "candidate",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-candidate/packages/cli/dist",
+        "/tmp/html-inbox-scheduler-kad7zpzf/20.20.2-0-inbound-0-candidate",
+        "0",
+        "inbound",
+        "65000"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 98.48245323705487,
+      "setup_seconds": 0.8788659650599584,
+      "waited_cpu_seconds": 5.190654,
+      "waited_peak_rss_kib": 143100,
+      "idle": [
+        {
+          "elapsedMs": 65002.705138,
+          "cpuMs": 781.313,
+          "cpuFraction": 0.01201969977005236,
+          "rssStart": 64180224,
+          "rssEnd": 60116992,
+          "lifetimePeakRssKiB": 63216,
+          "completedPasses": 2,
+          "requests": 8
+        },
+        {
+          "elapsedMs": 65002.579321000005,
+          "cpuMs": 305.99,
+          "cpuFraction": 0.004707351665061476,
+          "rssStart": 61939712,
+          "rssEnd": 58261504,
+          "lifetimePeakRssKiB": 60488,
+          "completedPasses": 0,
+          "requests": 0
+        }
+      ],
+      "qualified_case": true,
+      "pid": 2599427,
+      "terminated_exit": 0,
+      "trace_sha256": "35381d650c665f5829792e87ec8d148b75faf50df1c68b1682662d28fdc269c5",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "process_trace_sha256": "d6ec60ce284b716553717990bb476c62f63c901de7bf86135c419703af3da9c4"
+    },
+    {
+      "name": "24.19.0-0-none-0-parent",
+      "runtime": "24.19.0",
+      "count": 0,
+      "direction": "none",
+      "sample": 0,
+      "revision": "parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-parent/packages/cli/dist",
+        "/tmp/html-inbox-scheduler-kad7zpzf/24.19.0-0-none-0-parent",
+        "0",
+        "none",
+        "65000"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 65.75057508889586,
+      "setup_seconds": 0.3514975979924202,
+      "waited_cpu_seconds": 2.063098,
+      "waited_peak_rss_kib": 143100,
+      "idle": [
+        {
+          "elapsedMs": 65001.462166000005,
+          "cpuMs": 1451.617,
+          "cpuFraction": 0.02233206687401703,
+          "rssStart": 72708096,
+          "rssEnd": 74149888,
+          "lifetimePeakRssKiB": 72412,
+          "completedPasses": 2,
+          "requests": 0
+        }
+      ],
+      "qualified_case": true,
+      "pid": 2599830,
+      "terminated_exit": 0,
+      "trace_sha256": "e78db563be0d997b36bd9783804c5e0358d2a170e90a30bfd780e6dccb178daf",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "process_trace_sha256": "d89842cb2c0bc743290a82990121afc99b177d95553aa94a99cf4e7ec95c0b94"
+    },
+    {
+      "name": "24.19.0-0-none-0-candidate",
+      "runtime": "24.19.0",
+      "count": 0,
+      "direction": "none",
+      "sample": 0,
+      "revision": "candidate",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-candidate/packages/cli/dist",
+        "/tmp/html-inbox-scheduler-kad7zpzf/24.19.0-0-none-0-candidate",
+        "0",
+        "none",
+        "65000"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 65.65590748691466,
+      "setup_seconds": 0.3348273589508608,
+      "waited_cpu_seconds": 0.8042320000000001,
+      "waited_peak_rss_kib": 143100,
+      "idle": [
+        {
+          "elapsedMs": 65001.733090999995,
+          "cpuMs": 258.512,
+          "cpuFraction": 0.0039770016537573364,
+          "rssStart": 73043968,
+          "rssEnd": 73568256,
+          "lifetimePeakRssKiB": 72064,
+          "completedPasses": 2,
+          "requests": 0
+        }
+      ],
+      "qualified_case": true,
+      "pid": 2600188,
+      "terminated_exit": 0,
+      "trace_sha256": "47876ae49a089b499f420454a4c4db866248581db04dff6ebde62fc6218a7360",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "process_trace_sha256": "0f0a7e662326d736de40f4bff9f5f2c3455773f0822b9b0453dfa24c1f032fec"
+    },
+    {
+      "name": "24.19.0-0-outbound-0-parent",
+      "runtime": "24.19.0",
+      "count": 0,
+      "direction": "outbound",
+      "sample": 0,
+      "revision": "parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-parent/packages/cli/dist",
+        "/tmp/html-inbox-scheduler-kad7zpzf/24.19.0-0-outbound-0-parent",
+        "0",
+        "outbound",
+        "65000"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 98.21322508202866,
+      "setup_seconds": 0.7865551559953019,
+      "waited_cpu_seconds": 6.160925000000001,
+      "waited_peak_rss_kib": 143100,
+      "idle": [
+        {
+          "elapsedMs": 65002.048877,
+          "cpuMs": 1840.861,
+          "cpuFraction": 0.02832004578014711,
+          "rssStart": 76804096,
+          "rssEnd": 80211968,
+          "lifetimePeakRssKiB": 78332,
+          "completedPasses": 2,
+          "requests": 6
+        },
+        {
+          "elapsedMs": 65003.157946,
+          "cpuMs": 112.01,
+          "cpuFraction": 0.0017231470522255231,
+          "rssStart": 75096064,
+          "rssEnd": 75751424,
+          "lifetimePeakRssKiB": 73976,
+          "completedPasses": 0,
+          "requests": 0
+        }
+      ],
+      "qualified_case": true,
+      "pid": 2600789,
+      "terminated_exit": 0,
+      "trace_sha256": "41ef398f01c78a185fae109855115c095279de916865886a7fb50a524cfe7b4f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "process_trace_sha256": "84375f3a2861e837ce1314a6c23bc631aeb81739d0bd22510f3d4e02412b5678"
+    },
+    {
+      "name": "24.19.0-0-outbound-0-candidate",
+      "runtime": "24.19.0",
+      "count": 0,
+      "direction": "outbound",
+      "sample": 0,
+      "revision": "candidate",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-candidate/packages/cli/dist",
+        "/tmp/html-inbox-scheduler-kad7zpzf/24.19.0-0-outbound-0-candidate",
+        "0",
+        "outbound",
+        "65000"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 98.15829977602698,
+      "setup_seconds": 0.7861069269711152,
+      "waited_cpu_seconds": 3.899319,
+      "waited_peak_rss_kib": 143100,
+      "idle": [
+        {
+          "elapsedMs": 65003.267813,
+          "cpuMs": 416.375,
+          "cpuFraction": 0.00640544720302091,
+          "rssStart": 76824576,
+          "rssEnd": 79183872,
+          "lifetimePeakRssKiB": 77328,
+          "completedPasses": 2,
+          "requests": 6
+        },
+        {
+          "elapsedMs": 65004.172941,
+          "cpuMs": 109.408,
+          "cpuFraction": 0.0016830919470247306,
+          "rssStart": 75366400,
+          "rssEnd": 76021760,
+          "lifetimePeakRssKiB": 74240,
+          "completedPasses": 0,
+          "requests": 0
+        }
+      ],
+      "qualified_case": true,
+      "pid": 2601286,
+      "terminated_exit": 0,
+      "trace_sha256": "a35577885e43b8a0a8ceaf225a036dd61632c56a128de6b44fae8ad6103688df",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "process_trace_sha256": "8652444e8d949ced4919aabdacf958ff41914801a1023d72418e168bf2028615"
+    },
+    {
+      "name": "24.19.0-0-inbound-0-parent",
+      "runtime": "24.19.0",
+      "count": 0,
+      "direction": "inbound",
+      "sample": 0,
+      "revision": "parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-scheduler-kad7zpzf/build-parent/packages/cli/dist",
+        "/tmp/html-inbox-scheduler-kad7zpzf/24.19.0-0-inbound-0-parent",
+        "0",
+        "inbound",
+        "65000"
+      ],
+      "exit": 1,
+      "elapsed_seconds": 128.62807664100546,
+      "setup_seconds": 0.786066235974431,
+      "waited_cpu_seconds": 12.155313,
+      "waited_peak_rss_kib": 143100,
+      "idle": [
+        {
+          "elapsedMs": 65005.521379,
+          "cpuMs": 1892.142,
+          "cpuFraction": 0.029107404415207958,
+          "rssStart": 77869056,
+          "rssEnd": 80871424,
+          "lifetimePeakRssKiB": 78988,
+          "completedPasses": 2,
+          "requests": 8
+        },
+        {
+          "elapsedMs": 65003.520939999995,
+          "cpuMs": 166.909,
+          "cpuFraction": 0.002567691681717695,
+          "rssStart": 76001280,
+          "rssEnd": 76656640,
+          "lifetimePeakRssKiB": 74860,
+          "completedPasses": 0,
+          "requests": 0
+        }
+      ],
+      "qualified_case": false,
+      "pid": 2601986,
+      "terminated_exit": 1,
+      "trace_sha256": "52261e113c90a88254f8100f3c8bf0d211ad9faac8bc268f3d8b7c5eb2ac3232",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "process_trace_sha256": "5e1b9d3dd198a8a7bd289905bdea1ca768b46d03d40feb1e1452a7a2822c9399"
+    }
+  ],
+  "failed_shutdown_sequence": [
+    {
+      "wall": 1794083348674,
+      "monotonic": 128422.638663,
+      "type": "repair-complete",
+      "elapsedMs": 30300.883812999993,
+      "resources": [
+        {
+          "elapsedMs": 30300.820458000002,
+          "cpuMs": 961.269,
+          "cpuFraction": 0.03172419048297441,
+          "rssStart": 85155840,
+          "rssEnd": 80637952,
+          "lifetimePeakRssKiB": 83416,
+          "completedPasses": 0,
+          "requests": 4
+        },
+        {
+          "elapsedMs": 30300.857965999996,
+          "cpuMs": 72.7,
+          "cpuFraction": 0.002399271996904354,
+          "rssStart": 78491648,
+          "rssEnd": 78622720,
+          "lifetimePeakRssKiB": 76780,
+          "completedPasses": 0,
+          "requests": 0
+        }
+      ]
+    },
+    {
+      "wall": 1794083348704,
+      "monotonic": 128452.629528,
+      "type": "stale-route-rejected"
+    },
+    {
+      "wall": 1794083348739,
+      "monotonic": 128107.30615,
+      "role": "worker",
+      "pid": 2602040,
+      "type": "read-held"
+    },
+    {
+      "wall": 1794083348755,
+      "monotonic": 128123.110286,
+      "role": "worker",
+      "pid": 2602040,
+      "type": "stopping"
+    },
+    {
+      "wall": 1794083348760,
+      "monotonic": 128128.460988,
+      "role": "worker",
+      "pid": 2602040,
+      "type": "worker-event",
+      "event": "closed"
+    },
+    {
+      "wall": 1794083348780,
+      "monotonic": 128266.190981,
+      "role": "peer",
+      "pid": 2602026,
+      "type": "stopping"
+    },
+    {
+      "wall": 1794083348798,
+      "monotonic": 128546.837016,
+      "type": "cleanup",
+      "exactPorts": [
+        "https://127.0.0.1:44307",
+        "http://127.0.0.1:34255"
+      ],
+      "childrenReaped": 2,
+      "failures": []
+    },
+    {
+      "wall": 1794083348798,
+      "monotonic": 128547.123206,
+      "type": "workload-failed",
+      "error": "Error: ENOENT: no such file or directory, lstat '/tmp/html-inbox-scheduler-kad7zpzf/24.19.0-0-inbound-0-parent/receiver/sync/worker/lifetime.lock'\n    at async Object.lstat (node:internal/fs/promises:1086:18)\n    at async main (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs:324:15)"
+    }
+  ],
+  "cleanup": {
+    "owned_groups": [
+      2596409,
+      2596421,
+      2596422,
+      2596423,
+      2596456,
+      2596457,
+      2596489,
+      2596506,
+      2596524,
+      2596559,
+      2596577,
+      2597071,
+      2597540,
+      2598015,
+      2598740,
+      2599427,
+      2599830,
+      2600188,
+      2600789,
+      2601286,
+      2601986
+    ],
+    "alive": {},
+    "observed_identity_count": 32,
+    "remaining_process_identities": [],
+    "fixture_root": "/tmp/html-inbox-scheduler-kad7zpzf",
+    "fixture_root_absent": true,
+    "exact_ports_rebound_by_workload": [
+      "https://127.0.0.1:35507",
+      "http://127.0.0.1:45857",
+      "https://127.0.0.1:42179",
+      "http://127.0.0.1:44259",
+      "http://127.0.0.1:46695",
+      "http://127.0.0.1:34839",
+      "https://127.0.0.1:45039",
+      "http://127.0.0.1:36517",
+      "https://127.0.0.1:41327",
+      "http://127.0.0.1:46053",
+      "https://127.0.0.1:44307",
+      "http://127.0.0.1:34255",
+      "http://127.0.0.1:43483",
+      "http://127.0.0.1:34503",
+      "https://127.0.0.1:39511",
+      "http://127.0.0.1:38273",
+      "https://127.0.0.1:39443",
+      "http://127.0.0.1:38171"
+    ],
+    "cleanup_failures": [],
+    "case_cleanup_count": 11,
+    "checkout_heavy_processes": [],
+    "outer_elapsed_seconds": 987.3945168809732,
+    "outer_cleanup_seconds": 0.2885194660630077,
+    "commands": 20,
+    "preliminary_count": 9,
+    "timed_count": 11,
+    "passed_cells": 10,
+    "unrun_cells": 25,
+    "outer_controller_absent": true
+  },
+  "raw_artifacts": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-1",
+  "outer_artifacts": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-grant-2026-11-08",
+  "outer_source_sha256": "39110e3b3192282dbe1690fd583cfb35ad12e37103091d83f0620d8bb867641d",
+  "bounds_exercised": {
+    "setup_timeout": false,
+    "case_timeout": false,
+    "runner_timeout": false,
+    "forced_cleanup": false,
+    "first_unqualified_case_checkpoint": true
+  },
+  "limitations": [
+    "One attempt stopped before final zero-record candidate and all1000/10000 cases.",
+    "Five successful zero-record pairs have n=1; no noise, practical benefit or performance-retention qualification.",
+    "The held snapshot caller is not tagged; parent tick/close source supports an unjoined observation hypothesis but does not prove this trace caller.",
+    "Outer controller timeout path was not exercised. It waits up to50s after runner-deadline TERM before starting cleanup; future reuse needs one absolute runner+cleanup deadline rather than independent grace allowances. Actual run ended at987.395s with0.289s final cleanup."
+  ],
+  "owner_ci_triage": {
+    "head": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+    "job": "https://github.com/deveshsangwan/html-inbox/actions/runs/42408139596/job/128510296669",
+    "failure": "scripts/sync-reader-browser.test.mjs:136 managed backend Back to inbox immediate card count0!==3",
+    "file_diff_from_parent": "none",
+    "current_a7_ubuntu24_browser_at_triage": "SUCCESS",
+    "disposition": "Historical shared browser evidence sent to root; no cause/pre-existing claim or local browser run.",
+    "log_sha256": "527a0f6780e3979d8f7e5172caa9cd2e6ad2cbb2599a73fd7cd8145e2c79167d"
+  }
+}

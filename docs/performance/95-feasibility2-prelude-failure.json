@@ -1,0 +1,363 @@
+{
+  "grant_id": "root-95-feasibility-a2d9545-20261108-r1",
+  "source_pin": "a2d954517455cd0b891b45298726857ffcf813b1",
+  "parent": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+  "production_pin": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+  "executed_controller_sha256": "ea1421fa3e0bc0cb05994017bc77ba774825a04cd56bb610505d577945f611bc",
+  "executed_manifest_sha256": "4b56b9caaa0c3e4da0df477372b749332e2fc9d543b5e5a6eda9a03ef7e4e682",
+  "outer": {
+    "argv": [
+      "/usr/bin/python3.13",
+      "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/controller-feasibility2.py",
+      "--manifest",
+      "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/manifest-feasibility2.json",
+      "--grant-id",
+      "root-95-feasibility-a2d9545-20261108-r1"
+    ],
+    "identity": {
+      "pid": 2923481,
+      "start_ticks": 88188436,
+      "ppid": 2880094,
+      "group": 2923481,
+      "session": 2923481,
+      "state": "R"
+    },
+    "tool_session_id": 96812,
+    "exit": 1,
+    "started_monotonic": 881884.456935365,
+    "application_deadline": 887284.456935365,
+    "fixed_final_deadline": 887344.456935365,
+    "finished_monotonic": 881885.647900266,
+    "elapsed_seconds": 1.190964901004918,
+    "within_final_deadline": true
+  },
+  "first_unexpected": {
+    "kind": "command-manifest",
+    "detail": "classifier-tests",
+    "monotonic": 881885.629766272
+  },
+  "commands_started": [
+    {
+      "label": "pin",
+      "command": [
+        "/usr/bin/git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 5,
+      "started_monotonic": 881884.665986169,
+      "command_deadline": 881889.665986169,
+      "identity": {
+        "pid": 2923484,
+        "start_ticks": 88188466,
+        "ppid": 2923481,
+        "group": 2923484,
+        "session": 2923484,
+        "state": "R"
+      },
+      "exit": 0,
+      "terminated_exit": 0,
+      "elapsed_seconds": 0.059495775029063225,
+      "group_joined": true,
+      "fixture_removed": true,
+      "original_output_sha256": {
+        "tap_original_sha256": "a65a9afa2a79eb4974a48a9be65496e951086994286064fbad47c5bdf03b288c",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "status",
+      "command": [
+        "/usr/bin/git",
+        "status",
+        "--porcelain"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 5,
+      "started_monotonic": 881884.726940998,
+      "command_deadline": 881889.726940998,
+      "identity": {
+        "pid": 2923485,
+        "start_ticks": 88188472,
+        "ppid": 2923481,
+        "group": 2923485,
+        "session": 2923485,
+        "state": "R"
+      },
+      "exit": 0,
+      "terminated_exit": 0,
+      "elapsed_seconds": 0.05962052498944104,
+      "group_joined": true,
+      "fixture_removed": true,
+      "original_output_sha256": {
+        "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "production-frozen",
+      "command": [
+        "/usr/bin/git",
+        "diff",
+        "--exit-code",
+        "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+        "--",
+        "packages/cli/src",
+        ":!packages/cli/src/sync-worker-schedule.test.ts"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 5,
+      "started_monotonic": 881884.788229867,
+      "command_deadline": 881889.788229867,
+      "identity": {
+        "pid": 2923486,
+        "start_ticks": 88188478,
+        "ppid": 2923481,
+        "group": 2923486,
+        "session": 2923486,
+        "state": "R"
+      },
+      "exit": 0,
+      "terminated_exit": 0,
+      "elapsed_seconds": 0.05963383603375405,
+      "group_joined": true,
+      "fixture_removed": true,
+      "original_output_sha256": {
+        "tap_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "node-24.19.0",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--version"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 5,
+      "started_monotonic": 881885.225881744,
+      "command_deadline": 881890.225881744,
+      "identity": {
+        "pid": 2923487,
+        "start_ticks": 88188522,
+        "ppid": 2923481,
+        "group": 2923487,
+        "session": 2923487,
+        "state": "R"
+      },
+      "exit": 0,
+      "terminated_exit": 0,
+      "elapsed_seconds": 0.058949739090166986,
+      "group_joined": true,
+      "fixture_removed": true,
+      "original_output_sha256": {
+        "tap_original_sha256": "b7677d3ec37ee1897ba07dc2cfe8292fe421c9ac93396cca5bbece486d1a2a41",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "label": "node-20.20.2",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--version"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler",
+      "bound_seconds": 5,
+      "started_monotonic": 881885.568563526,
+      "command_deadline": 881890.568563526,
+      "identity": {
+        "pid": 2923488,
+        "start_ticks": 88188556,
+        "ppid": 2923481,
+        "group": 2923488,
+        "session": 2923488,
+        "state": "R"
+      },
+      "exit": 0,
+      "terminated_exit": 0,
+      "elapsed_seconds": 0.059538209927268326,
+      "group_joined": true,
+      "fixture_removed": true,
+      "original_output_sha256": {
+        "tap_original_sha256": "fa2f297fd185bb1c8acba036117f05240eaa1f42eeb8902e870982523ae06edf",
+        "stderr_original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "commands_unrun": [
+    "classifier-tests",
+    "cleanup-tests",
+    "feasibility"
+  ],
+  "admission_evidence": {
+    "provided_argv": [
+      "/usr/bin/python3.13",
+      "{repo}/scripts/bench/test_scheduler_cleanup.py",
+      "SchedulerClassificationTests",
+      "-v"
+    ],
+    "expected_expanded_argv": [
+      "/usr/bin/python3.13",
+      "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/test_scheduler_cleanup.py",
+      "SchedulerClassificationTests",
+      "-v"
+    ],
+    "differing_argument_indices": [
+      1
+    ],
+    "source_callsite": "controller-feasibility2.py:373 passes raw spec.command; run:178-183 requires expansion equality",
+    "before_fixture_or_popen": true,
+    "same_unexecuted_pattern_in_cleanup_test_call": true
+  },
+  "coverage": {
+    "outer_commands_started": 5,
+    "outer_commands_exited_zero": 5,
+    "classifier_methods_unrun": 17,
+    "cleanup_methods_unrun": 5,
+    "runner_preliminary_commands_unrun": [
+      "filesystem",
+      "archive-parent",
+      "build-parent",
+      "archive-candidate",
+      "build-candidate",
+      "reader-race-20.20.2-parent",
+      "reader-race-20.20.2-candidate",
+      "reader-race-24.19.0-parent",
+      "reader-race-24.19.0-candidate"
+    ],
+    "fresh_cases_started": 0,
+    "fresh_case_names_unrun": [
+      "20.20.2-0-none-0-parent",
+      "20.20.2-0-none-0-candidate",
+      "20.20.2-0-outbound-0-parent",
+      "20.20.2-0-outbound-0-candidate",
+      "20.20.2-0-inbound-0-parent",
+      "20.20.2-0-inbound-0-candidate",
+      "24.19.0-0-none-0-parent",
+      "24.19.0-0-none-0-candidate",
+      "24.19.0-0-outbound-0-parent",
+      "24.19.0-0-outbound-0-candidate",
+      "24.19.0-0-inbound-0-parent",
+      "24.19.0-0-inbound-0-candidate",
+      "20.20.2-1000-none-0-parent",
+      "20.20.2-1000-none-0-candidate",
+      "20.20.2-1000-outbound-0-parent",
+      "20.20.2-1000-outbound-0-candidate",
+      "20.20.2-1000-inbound-0-parent",
+      "20.20.2-1000-inbound-0-candidate",
+      "24.19.0-1000-none-0-parent",
+      "24.19.0-1000-none-0-candidate",
+      "24.19.0-1000-outbound-0-parent",
+      "24.19.0-1000-outbound-0-candidate",
+      "24.19.0-1000-inbound-0-parent",
+      "24.19.0-1000-inbound-0-candidate",
+      "20.20.2-10000-none-0-parent",
+      "20.20.2-10000-none-0-candidate",
+      "20.20.2-10000-outbound-0-parent",
+      "20.20.2-10000-outbound-0-candidate",
+      "20.20.2-10000-inbound-0-parent",
+      "20.20.2-10000-inbound-0-candidate",
+      "24.19.0-10000-none-0-parent",
+      "24.19.0-10000-none-0-candidate",
+      "24.19.0-10000-outbound-0-parent",
+      "24.19.0-10000-outbound-0-candidate",
+      "24.19.0-10000-inbound-0-parent",
+      "24.19.0-10000-inbound-0-candidate"
+    ],
+    "runner_output_directory_created": false,
+    "classifier_or_worker_verdict_observed": false,
+    "resource_feasibility_complete": false,
+    "full_behavior_qualification": false,
+    "resource_gain_eligible": false
+  },
+  "cleanup": {
+    "identities_including_outer": 6,
+    "group_session_pairs": 6,
+    "remaining_identities": [],
+    "remaining_group_members": [],
+    "fixture_paths_checked": [
+      "/tmp/html-inbox-issue95-feasibility2-qy59ybb9",
+      "/tmp/html-inbox-issue95-feasibility2-qy59ybb9/fixture-pin",
+      "/tmp/html-inbox-issue95-feasibility2-qy59ybb9/fixture-status",
+      "/tmp/html-inbox-issue95-feasibility2-qy59ybb9/fixture-production-frozen",
+      "/tmp/html-inbox-issue95-feasibility2-qy59ybb9/fixture-node-24.19.0",
+      "/tmp/html-inbox-issue95-feasibility2-qy59ybb9/fixture-node-20.20.2"
+    ],
+    "remaining_fixtures": [],
+    "ports_started": 0,
+    "ports_rebound": 0,
+    "port_reason": "No test, build, worker, peer, application or listener invocation started; only git and Node --version prelude commands ran. No port was invented or rebound.",
+    "actions": [
+      {
+        "label": "pin",
+        "actions": [],
+        "remaining": [],
+        "monotonic": 881884.725478956,
+        "final_deadline": 887344.456935365
+      },
+      {
+        "label": "status",
+        "actions": [],
+        "remaining": [],
+        "monotonic": 881884.786558725,
+        "final_deadline": 887344.456935365
+      },
+      {
+        "label": "production-frozen",
+        "actions": [],
+        "remaining": [],
+        "monotonic": 881884.847861874,
+        "final_deadline": 887344.456935365
+      },
+      {
+        "label": "node-24.19.0",
+        "actions": [],
+        "remaining": [],
+        "monotonic": 881885.284829549,
+        "final_deadline": 887344.456935365
+      },
+      {
+        "label": "node-20.20.2",
+        "actions": [],
+        "remaining": [],
+        "monotonic": 881885.628099745,
+        "final_deadline": 887344.456935365
+      },
+      {
+        "label": "final",
+        "actions": [],
+        "remaining": [],
+        "monotonic": 881885.647751857,
+        "final_deadline": 887344.456935365
+      }
+    ],
+    "independent_audit_sha256": "a65e977a04e99cc6f12091629de956b7d35d1db1e310d9728a262e351d6eac72",
+    "local_released_before_packaging": true,
+    "root_independently_accepted_release": true
+  },
+  "history": {
+    "original_failed_untagged_case_unchanged": true,
+    "original_25_unrun_unchanged": true,
+    "original_receipt_sha256": "6ec1aee5dfa388cd965bfc5747a9c4a7b37cd154361702245d2e530883ec3304",
+    "windows_browser_128824469528_and_verify_128825854790": "separate unresolved CI blocker; no retry or source change"
+  },
+  "review_limitation": "Owner and root static review missed the literal {repo} test-loop callsite. Source/hash/AST checks were not dispatch or classifier execution. Strict admission guard correctly refused it.",
+  "root_dispatch_correction": {
+    "source_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility2-controller-correction/controller-feasibility2-r2.py",
+    "sha256": "66f43e6bb44b668a3088ba1304383d1318dfd3336010af475bbab6343d851c4e",
+    "root_review_sha256": "22b8b90f227db738946383c1b5c037a1da3243653fd0ef62ce9e1fedb167d99b",
+    "controller_import_or_execution": false,
+    "classifier_or_application_execution_credit": false,
+    "requires_new_manifest_and_separate_grant": true
+  },
+  "raw_artifacts": {
+    "host_root": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility2-grant-1",
+    "root_workspace_relative": "artifacts/performance-issues-2026-11-07/issue95-feasibility2-grant-1",
+    "controller_receipt_sha256": "82577b4da46f49bc343fa922d2f0ba70a3bedbdd0bb164808e236ef9d234ac3e",
+    "raw_index_sha256": "5d6dce28e64c9fc513299fcf8d2d8006c8d4ae44d428a45e66e3fd2463ecb375",
+    "public_raw_reference": "not yet published; remains an open gate"
+  },
+  "no_retry_source_fix_or_bound_extension": true,
+  "unused_timeout_or_interruption_paths_qualified": false
+}

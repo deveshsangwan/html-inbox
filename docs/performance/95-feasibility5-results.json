@@ -1,0 +1,609 @@
+{
+  "grant_id": "root-95-feasibility5-fad2da5-20261109-r1",
+  "tested_head": "fad2da58d91d5608e8e89f4f0ab1657c1280cd11",
+  "parent": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+  "production_equivalent_to": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+  "publication": "Documentation-only descendant; tested head stays fad2da58d91d5608e8e89f4f0ab1657c1280cd11.",
+  "outcome": "Stopped partial feasibility; no resume or runtime authorization.",
+  "controller_sha256": "66f43e6bb44b668a3088ba1304383d1318dfd3336010af475bbab6343d851c4e",
+  "manifest5_sha256": "19bb558e0d3b2dbacc9c130ea330c6c216b9ffba29aec78d048673b8b470cdd2",
+  "launch": {
+    "grant_id": "root-95-feasibility5-fad2da5-20261109-r1",
+    "tool_session_id": 29138,
+    "exact_argv": [
+      "/usr/bin/python3.13",
+      "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/controller-feasibility2-r2.py",
+      "--manifest",
+      "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/manifest-feasibility5.json",
+      "--grant-id",
+      "root-95-feasibility5-fad2da5-20261109-r1"
+    ],
+    "preexec_identity": {
+      "pid": 3027498,
+      "start_ticks": 90555400,
+      "ppid": 2978068,
+      "group": 3027498,
+      "session": 3027498,
+      "state": "R"
+    },
+    "independent_live_identity": {
+      "pid": 3027498,
+      "start_ticks": 90555400,
+      "ppid": 2978068,
+      "group": 3027498,
+      "session": 3027498,
+      "state": "S"
+    },
+    "preexec_umask": "0002",
+    "live_umask": "0002",
+    "started_monotonic": 905554.114498458,
+    "application_deadline": 910954.114498458,
+    "fixed_final_deadline": 911014.114498458,
+    "checked_monotonic": 905581.864529142,
+    "output": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility5-grant-1",
+    "runner_output": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-5"
+  },
+  "elapsed_seconds": 1449.0983253300656,
+  "controller_exit": 1,
+  "runner_exit": 1,
+  "outer_commands": [
+    {
+      "label": "pin",
+      "command": [
+        "/usr/bin/git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "bound_seconds": 5,
+      "exit": 0,
+      "elapsed_seconds": 0.05444444401655346
+    },
+    {
+      "label": "status",
+      "command": [
+        "/usr/bin/git",
+        "status",
+        "--porcelain"
+      ],
+      "bound_seconds": 5,
+      "exit": 0,
+      "elapsed_seconds": 0.055237501044757664
+    },
+    {
+      "label": "production-frozen",
+      "command": [
+        "/usr/bin/git",
+        "diff",
+        "--exit-code",
+        "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+        "--",
+        "packages/cli/src",
+        ":!packages/cli/src/sync-worker-schedule.test.ts"
+      ],
+      "bound_seconds": 5,
+      "exit": 0,
+      "elapsed_seconds": 0.05491862294729799
+    },
+    {
+      "label": "node-24.19.0",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--version"
+      ],
+      "bound_seconds": 5,
+      "exit": 0,
+      "elapsed_seconds": 0.05575254396535456
+    },
+    {
+      "label": "node-20.20.2",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--version"
+      ],
+      "bound_seconds": 5,
+      "exit": 0,
+      "elapsed_seconds": 0.05515368597116321
+    },
+    {
+      "label": "classifier-tests",
+      "command": [
+        "/usr/bin/python3.13",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/test_scheduler_cleanup.py",
+        "SchedulerClassificationTests",
+        "-v"
+      ],
+      "bound_seconds": 30,
+      "exit": 0,
+      "elapsed_seconds": 1.0955676150042564
+    },
+    {
+      "label": "cleanup-tests",
+      "command": [
+        "/usr/bin/python3.13",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/test_scheduler_cleanup.py",
+        "SchedulerCleanupTests",
+        "-v"
+      ],
+      "bound_seconds": 45,
+      "exit": 0,
+      "elapsed_seconds": 8.589537953026593
+    },
+    {
+      "label": "feasibility",
+      "command": [
+        "/usr/bin/python3.13",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler.py",
+        "--candidate",
+        "fad2da58d91d5608e8e89f4f0ab1657c1280cd11",
+        "--node20",
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--node24",
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--phase",
+        "feasibility",
+        "--budget-seconds",
+        "5400",
+        "--identity-manifest",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/manifest-feasibility5.json",
+        "--deadline-monotonic",
+        "910954.114498458",
+        "--out",
+        "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-5"
+      ],
+      "bound_seconds": 5400,
+      "exit": 1,
+      "elapsed_seconds": 1438.3191425009863
+    }
+  ],
+  "preliminaries": [
+    {
+      "label": "filesystem",
+      "exit": 0,
+      "elapsed_seconds": 0.023539235000498593
+    },
+    {
+      "label": "archive-parent",
+      "exit": 0,
+      "elapsed_seconds": 0.05538545397575945
+    },
+    {
+      "label": "build-parent",
+      "exit": 0,
+      "elapsed_seconds": 0.5900293769082054
+    },
+    {
+      "label": "archive-candidate",
+      "exit": 0,
+      "elapsed_seconds": 0.05429361900314689
+    },
+    {
+      "label": "build-candidate",
+      "exit": 0,
+      "elapsed_seconds": 0.5925388259347528
+    },
+    {
+      "label": "reader-race-20.20.2-parent",
+      "exit": 0,
+      "elapsed_seconds": 0.6935187699273229
+    },
+    {
+      "label": "reader-race-20.20.2-candidate",
+      "exit": 0,
+      "elapsed_seconds": 0.6907946459250525
+    },
+    {
+      "label": "reader-race-24.19.0-parent",
+      "exit": 0,
+      "elapsed_seconds": 0.6414928910089657
+    },
+    {
+      "label": "reader-race-24.19.0-candidate",
+      "exit": 0,
+      "elapsed_seconds": 0.6449937649304047
+    }
+  ],
+  "tests": {
+    "classifier": {
+      "methods": 17,
+      "passed": 17,
+      "elapsed_seconds": 0.929,
+      "log": {
+        "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility5-grant-1/classifier-tests.stderr",
+        "sha256": "089ac76db53912498ec96aae53a5474ff3a5d2573ba1e757dff42332d784aa61"
+      }
+    },
+    "cleanup": {
+      "methods": 5,
+      "passed": 5,
+      "elapsed_seconds": 8.419,
+      "log": {
+        "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility5-grant-1/cleanup-tests.stderr",
+        "sha256": "716a3f50e27f63973fa6e5d111adf7c495bfbec8f453d3a4cfaa071e80f72473"
+      }
+    }
+  },
+  "build_identities": {
+    "source_counts": {
+      "parent": 198,
+      "candidate": 201
+    },
+    "emitted_counts": {
+      "parent": 195,
+      "candidate": 198
+    },
+    "parent_compiled_aggregate": "41663c8ae9c916f5613ae86def13123a29f24749da88ea14b09eeb4fb7822ebc",
+    "candidate_compiled_aggregate": "cc1dc274e01b9869d407e3f53c5889c38197627d21d53ada9e0304d3ce2b042a",
+    "environment": {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-5/environment.json",
+      "sha256": "98f992642eba2acb29c9f42fe6ea511cd06e503b25c2fb9861122d75427993eb"
+    },
+    "source_and_emitted_provenance_matched_cases": 15
+  },
+  "cases": [
+    {
+      "name": "20.20.2-0-none-0-parent",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "resource_observation_complete": true,
+      "shutdown_correctness": "passed",
+      "continue_case": true,
+      "elapsed_seconds": 65.95350819197483,
+      "setup_seconds": 0.5854655880248174
+    },
+    {
+      "name": "20.20.2-0-none-0-candidate",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "resource_observation_complete": true,
+      "shutdown_correctness": "passed",
+      "continue_case": true,
+      "elapsed_seconds": 65.80304534500465,
+      "setup_seconds": 0.5839223508955911
+    },
+    {
+      "name": "20.20.2-0-outbound-0-parent",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "resource_observation_complete": true,
+      "shutdown_correctness": "passed",
+      "continue_case": true,
+      "elapsed_seconds": 99.03798709099647,
+      "setup_seconds": 1.1374968349700794
+    },
+    {
+      "name": "20.20.2-0-outbound-0-candidate",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "resource_observation_complete": true,
+      "shutdown_correctness": "passed",
+      "continue_case": true,
+      "elapsed_seconds": 98.54020652896725,
+      "setup_seconds": 1.1345200469950214
+    },
+    {
+      "name": "20.20.2-0-inbound-0-parent",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "resource_observation_complete": true,
+      "shutdown_correctness": "passed",
+      "continue_case": true,
+      "elapsed_seconds": 129.06039530294947,
+      "setup_seconds": 1.1269527008989826
+    },
+    {
+      "name": "20.20.2-0-inbound-0-candidate",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "resource_observation_complete": true,
+      "shutdown_correctness": "passed",
+      "continue_case": true,
+      "elapsed_seconds": 98.59482590702828,
+      "setup_seconds": 1.1296494411071762
+    },
+    {
+      "name": "24.19.0-0-none-0-parent",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "resource_observation_complete": true,
+      "shutdown_correctness": "passed",
+      "continue_case": true,
+      "elapsed_seconds": 65.94987513602246,
+      "setup_seconds": 0.6529870970407501
+    },
+    {
+      "name": "24.19.0-0-none-0-candidate",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "resource_observation_complete": true,
+      "shutdown_correctness": "passed",
+      "continue_case": true,
+      "elapsed_seconds": 65.87370141001884,
+      "setup_seconds": 0.6519989180378616
+    },
+    {
+      "name": "24.19.0-0-outbound-0-parent",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "resource_observation_complete": true,
+      "shutdown_correctness": "passed",
+      "continue_case": true,
+      "elapsed_seconds": 98.51565117901191,
+      "setup_seconds": 1.1067558369832113
+    },
+    {
+      "name": "24.19.0-0-outbound-0-candidate",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "resource_observation_complete": true,
+      "shutdown_correctness": "passed",
+      "continue_case": true,
+      "elapsed_seconds": 98.0473332889378,
+      "setup_seconds": 1.1149962469935417
+    },
+    {
+      "name": "24.19.0-0-inbound-0-parent",
+      "exit": 1,
+      "qualified_case": false,
+      "passing_cell": false,
+      "resource_observation_complete": true,
+      "shutdown_correctness": "failed-proven-parent-timer",
+      "continue_case": true,
+      "elapsed_seconds": 128.41849294106942,
+      "setup_seconds": 1.11120366002433
+    },
+    {
+      "name": "24.19.0-0-inbound-0-candidate",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "resource_observation_complete": true,
+      "shutdown_correctness": "passed",
+      "continue_case": true,
+      "elapsed_seconds": 128.41392048203852,
+      "setup_seconds": 1.0861982899950817
+    },
+    {
+      "name": "20.20.2-1000-none-0-parent",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "resource_observation_complete": true,
+      "shutdown_correctness": "passed",
+      "continue_case": true,
+      "elapsed_seconds": 153.02801390201785,
+      "setup_seconds": 9.248451284016483
+    },
+    {
+      "name": "20.20.2-1000-none-0-candidate",
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "resource_observation_complete": true,
+      "shutdown_correctness": "passed",
+      "continue_case": true,
+      "elapsed_seconds": 76.69251560105477,
+      "setup_seconds": 5.715714390040375
+    },
+    {
+      "name": "20.20.2-1000-outbound-0-parent",
+      "exit": 1,
+      "qualified_case": false,
+      "passing_cell": false,
+      "resource_observation_complete": false,
+      "shutdown_correctness": "unrecognized",
+      "continue_case": false,
+      "elapsed_seconds": 56.12486291700043,
+      "setup_seconds": null
+    }
+  ],
+  "unrun_cases": [
+    "20.20.2-1000-outbound-0-candidate",
+    "20.20.2-1000-inbound-0-parent",
+    "20.20.2-1000-inbound-0-candidate",
+    "24.19.0-1000-none-0-parent",
+    "24.19.0-1000-none-0-candidate",
+    "24.19.0-1000-outbound-0-parent",
+    "24.19.0-1000-outbound-0-candidate",
+    "24.19.0-1000-inbound-0-parent",
+    "24.19.0-1000-inbound-0-candidate",
+    "20.20.2-10000-none-0-parent",
+    "20.20.2-10000-none-0-candidate",
+    "20.20.2-10000-outbound-0-parent",
+    "20.20.2-10000-outbound-0-candidate",
+    "20.20.2-10000-inbound-0-parent",
+    "20.20.2-10000-inbound-0-candidate",
+    "24.19.0-10000-none-0-parent",
+    "24.19.0-10000-none-0-candidate",
+    "24.19.0-10000-outbound-0-parent",
+    "24.19.0-10000-outbound-0-candidate",
+    "24.19.0-10000-inbound-0-parent",
+    "24.19.0-10000-inbound-0-candidate"
+  ],
+  "summary": {
+    "qualified_cases": 13,
+    "total_cases": 15,
+    "required_cases": 36,
+    "resource_observations_complete": 14,
+    "resource_feasibility_complete": false,
+    "behavior_qualification_complete": false,
+    "resource_gain_eligible": false,
+    "global_cleanup_passed": true
+  },
+  "native_parent_red": {
+    "name": "24.19.0-0-inbound-0-parent",
+    "held": 127578.382028,
+    "stopping": 127597.791068,
+    "closed": 127601.860146,
+    "selected_active_at_close": true,
+    "release_and_finish_observed": false,
+    "read_joined": false,
+    "exit": 1,
+    "passing_cell": false,
+    "qualified_case": false,
+    "resource_only_continuation_accepted": true,
+    "cleanup_checked_at": 906586.819053448,
+    "next_candidate_started_at": 906587.14181239,
+    "candidate_release_fulfilled_close_observed": true,
+    "does_not_reclassify_historical_untagged_row": true
+  },
+  "native_parent_caller": {
+    "observer": "scheduler-process.cjs:79:54",
+    "worker": "actual parent sync-worker.js:341:36",
+    "interval": "actual parent sync-worker.js:135:42",
+    "native": [
+      "node:internal/timers:635:17",
+      "node:internal/timers:571:7"
+    ],
+    "worker_pid": 3030040,
+    "read_id": 1,
+    "store_id": 1,
+    "script_store": false,
+    "classification": {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-5/24.19.0-0-inbound-0-parent.classification.json",
+      "sha256": "ab1c54ed815f0d30d822e35a46fdb91a2010038f4b1f5e5ba74866a01a05c6d6"
+    }
+  },
+  "first_unexpected_stop": {
+    "name": "20.20.2-1000-outbound-0-parent",
+    "elapsed_seconds": 56.12486291700043,
+    "setup_seconds": null,
+    "formal_errors": [
+      "Setup/case bound failed"
+    ],
+    "raw_failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n0 !== 1000\n\n    at assertCaughtUp (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs:170:14)\n    at async main (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs:187:5)",
+    "phase": "initial caught-up assertion before setup-complete/idle/held-read controls",
+    "not_a_measured_setup_or_case_timeout": true,
+    "request_observation": "One intercepted SyncClient.json identity invocation, not proof of native HTTP request or receiver admission.",
+    "completed_pass_observation": "The observer counts fulfilled recordWorkerRun bookkeeping; it does not record reconciliation result/success.",
+    "second_pass_event": true,
+    "second_pass_note": "A second worker pass event occurred before initial-catch-up-settled; its result was not recorded and closure followed the assertion failure. Do not equate settle/status idle with complete successful synchronization.",
+    "clock_limit": "Worker monotonic values and parent workload monotonic values have different origins; do not subtract across processes.",
+    "cause": "unresolved",
+    "held_read_control": "unreached"
+  },
+  "stop_formal_fields": {
+    "exit": 1,
+    "qualified_case": false,
+    "passing_cell": false,
+    "resource_observation_complete": false,
+    "shutdown_correctness": "unrecognized",
+    "continue_case": false,
+    "errors": [
+      "Setup/case bound failed"
+    ],
+    "release_observation": "unobserved",
+    "completion_observation": "unobserved"
+  },
+  "bounds": {
+    "application_seconds": 5400,
+    "fixed_final_from_start_seconds": 5460,
+    "setup_seconds": 90,
+    "case_seconds": 240,
+    "idle_seconds": 65,
+    "request_seconds": 5,
+    "pass_seconds": 60,
+    "reconcile_seconds": 30,
+    "reaction_seconds": 30,
+    "custody_repair_seconds": 65,
+    "observed_timeout_at_stop": false
+  },
+  "cleanup": {
+    "owner_initial": {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility5-grant-1/independent-cleanup.json",
+      "sha256": "012a3efaca09851a490e1ff2912ccae5835b5dad5785dad2e0f62eac32730ed5"
+    },
+    "owner_additive": {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility5-grant-1/independent-cleanup-final.json",
+      "sha256": "fe014e43000785231b19bda9271ff780e7959e0a821d408b2f73820faeb20a99"
+    },
+    "identities": 80,
+    "groups": 38,
+    "observed_group_session_pairs": 37,
+    "missing_separately_observed_session_pairs": 1,
+    "paths": 25,
+    "timed_ports_rebound": 24,
+    "remaining_identities": [],
+    "remaining_groups": [],
+    "remaining_paths": [],
+    "unreadable_proc_entries": [],
+    "physical_audit_after_controller_seconds": 48.07121314294636,
+    "url_annotation_after_controller_seconds": 66.57551542390138,
+    "fixed_final_from_start_seconds": 5460,
+    "annotation_is_additive_metadata_not_new_cleanup": true,
+    "root_did_not_repeat_binds": true,
+    "limits": [
+      "Preliminary numeric ports were not retained for independent rebind.",
+      "One short-lived group lacks a separately sampled session pair; PGID absence was checked.",
+      "Normal completion does not qualify unused controller timeout/interruption/native-call paths."
+    ]
+  },
+  "root_result": {
+    "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility5-fad2da5-root-result.json",
+    "sha256": "5db75be8cb200bb535d37017d2160dcadf04033c45fa9508d57b9b258f81d7f9"
+  },
+  "root_decision": {
+    "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility5-result-next-source-decision.json",
+    "sha256": "a2210f1204b9c091c098bda8943fcbca1bba9cd48f41719f4a2c4d09beedd5c2"
+  },
+  "root_release": {
+    "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility5-fad2da5-root-release.json",
+    "sha256": "72240f0d11717f4bb336c7f4dedb360d6f83178dc6cc2ca2c141a670deb32253"
+  },
+  "raw_evidence": {
+    "outer_root": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility5-grant-1",
+    "runner_root": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-5",
+    "runner_output_hashes_independently_verified": 89,
+    "executed_inputs_independently_verified": 15,
+    "selected_hashes": {
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility5-grant-1/receipt.json": "76c9d2d5a5255e5f62344f1a2c8920ef2d2775fd8f27e30ad5151878a67b3a8d",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-5/summary.json": "7346c01db764c7859d95fb0bab85a40a6279f369640957e9b77624139b68c1d1",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-5/checkpoint.json": "5bde9790a0c7aa7e32c43a7ad5ec60320bb70866661dc2aef43021cf3c10ba7f",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-5/commands.jsonl": "a964c1dcceabe834c605638bccd0f8383dde250c205cc92c89bc0f6b98390e5f",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-5/environment.json": "98f992642eba2acb29c9f42fe6ea511cd06e503b25c2fb9861122d75427993eb",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-5/cleanup.json": "156db59e5c24339ee974756a6448272c4722a48aeabd5a258a1aa94ad6e596a6",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-5/24.19.0-0-inbound-0-parent.classification.json": "ab1c54ed815f0d30d822e35a46fdb91a2010038f4b1f5e5ba74866a01a05c6d6",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-5/24.19.0-0-inbound-0-parent.jsonl": "19ede9694951a14c25c078d463e6f7b0fef4dbf8d7f4e2a1093626a639dbe933",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-5/20.20.2-1000-outbound-0-parent.classification.json": "a589c48353ef62ed238ab91be411f40bc7b252f70acffb6e6959ec11e96e0c77",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-5/20.20.2-1000-outbound-0-parent.jsonl": "018a80c5249db1178f3231b761c80bf79c3422999ec1e838fc51e767482932ca"
+    },
+    "durable_public_raw_artifact_gate": "OPEN; local hashes/references do not establish durable public access."
+  },
+  "historical_invariance": {
+    "R2_33_unrun_and_unrecognized_row": "Unchanged",
+    "old_original_25_unrun_and_untagged_failure": "Unchanged",
+    "R1_stop": "Unchanged",
+    "CI": "Windows deletion renameEPERM/Verify remains readiness failure; older held-ACK/acquisition/browser observations separate, no cause/baseline/flake attribution."
+  },
+  "history_note": "Feasibility4 stopped row and25 fresh unrun; R2 original unrecognized row and33 unrun; original untagged failure and25 unrun; R1 admission stop and both original/additive release receipts are immutable. No old failed row is reclassified.",
+  "ci": {
+    "browser_job": 128927921366,
+    "browser": "Ubuntu24 managed-reader count0 versus3 unresolved; no cause or baseline attribution.",
+    "browser_receipt": {
+      "path": "artifacts/issue95-shutdown-diagnosis/ci-fad2da5-browser-receipt.json",
+      "sha256": "430159482696c4ffa0ab1ce47c1d0d29be9642c92e90965b38f318716e0d55a6"
+    },
+    "verify_job": 128929316176,
+    "verify": "Aggregate-only gate; RESULTS string does not identify dependency ordering.",
+    "verify_receipt": {
+      "path": "artifacts/issue95-shutdown-diagnosis/ci-fad2da5-verify-receipt.json",
+      "sha256": "5e7df00248689229e3b8c6c211c4c77712007274e9029fc78026fbf9ad66c4b1"
+    },
+    "verify_decoded_log": {
+      "path": "artifacts/issue95-shutdown-diagnosis/ci-fad2da5-verify-job.log",
+      "sha256": "856b15ca72219273430048332035b6bb6b03491c48adafa7966139185f759384"
+    },
+    "history": "Windows deletion EPERM, earlier viewer-record EPERM/acquisition/finalization/browser histories remain separate and unresolved as recorded."
+  },
+  "next_scope": "Ignored failure-only source proposal using the two already acquired snapshots; no tracked harness change, execution or replay authorized.",
+  "qualification": "No full resource feasibility, full behavior, noise/practical-benefit/retention claim. All seven pairs are n=1; all10000 and most1000 cases remain unrun. No new reviewer or runtime grant."
+}

@@ -1,0 +1,1245 @@
+{
+  "base": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+  "red_pin": {
+    "head": "ee3783aef4656525de3fc79cc06086b087d998b2",
+    "status": "",
+    "production_pin": "fddde69afaa9e030a3df0058f6f47ef4c2f8abb3",
+    "unchanged_production_diff": "",
+    "hashes": {
+      "packages/cli/src/sync-worker.ts": "6fdf35c16ac449d91470ee2b8bd8148bfcd792d1f38180110b7e95e4886e82c6",
+      "packages/cli/src/sync-worker-schedule.ts": "03677f2064508c316e4538de0cb30a2bc0b96bda99fbeaa5d5bbe706230db1a7",
+      "packages/cli/src/sync-worker-startup-schedule.regression.ts": "a3b9fdd8d747ef4a3d6f582422af69a24db51259d0b49da25cdb1f8723bddc96",
+      "packages/cli/src/sync-worker-fatal.test.ts": "c9bdc00e0785761e0d040b3f620df8afcc4230635fd33dd193099b3f962cdb9d",
+      "pnpm-lock.yaml": "5a022657a76a03234db5f20fdd70162869356b4444cf4fe3ad0938a44806c677",
+      "package.json": "078082715a1c29bab6d9d0e11a8fc8f2c16ed01d17b3ecb1a1a3d26495bc7944",
+      "packages/cli/package.json": "31b211048bc9423a778cb3c6ddb6fe3c9ae70c28c03cd9ce6f790c02e4de3d77",
+      "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node": "6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd",
+      "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node": "bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12"
+    },
+    "dist_js_sha256": "9506ebcdd3b3b1b39ebb8d15dc93fadeb888f104beac6ef959360d0dedf3138b",
+    "compiled_hashes": {
+      "sync-worker.js": "c2b556ebba3e00fdfdaeee1a6ce888a1220ea8b6e39d1b40ab45d7a365eef902",
+      "sync-worker-schedule.js": "2df8df2b022865faecb8f5b61a6b455a502c99c604dd9a6b8798201f3f05a679",
+      "sync-worker-startup-schedule.regression.js": "b04c62d03e1ac68f7426ea46d308a861e07df6495b970663845cea12cd718a7a",
+      "sync-worker-fatal.test.js": "5ca9d3651a8cfd55a88d2d89dc1a9de70ce839f9a08eeec9d8f4857dc19f032c"
+    }
+  },
+  "green_pin": {
+    "head": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+    "status": "",
+    "hashes": {
+      "packages/cli/src/sync-worker.ts": "055642f8f03012662c36eb1ffde7126eb742f67e87441f018ffd7f7b015d6c0c",
+      "packages/cli/src/sync-worker-schedule.ts": "03677f2064508c316e4538de0cb30a2bc0b96bda99fbeaa5d5bbe706230db1a7",
+      "packages/cli/src/sync-worker-startup-schedule.test.ts": "38d04751ff7ec3342a68ec57a1a648aab87b792c74aa7001aa95974903b68054",
+      "packages/cli/src/sync-worker-fatal.test.ts": "c9bdc00e0785761e0d040b3f620df8afcc4230635fd33dd193099b3f962cdb9d",
+      "pnpm-lock.yaml": "5a022657a76a03234db5f20fdd70162869356b4444cf4fe3ad0938a44806c677",
+      "package.json": "078082715a1c29bab6d9d0e11a8fc8f2c16ed01d17b3ecb1a1a3d26495bc7944",
+      "packages/cli/package.json": "31b211048bc9423a778cb3c6ddb6fe3c9ae70c28c03cd9ce6f790c02e4de3d77"
+    },
+    "production_diff_from_red": "diff --git a/packages/cli/src/sync-worker.ts b/packages/cli/src/sync-worker.ts\nindex fd026ce..c7af68d 100644\n--- a/packages/cli/src/sync-worker.ts\n+++ b/packages/cli/src/sync-worker.ts\n@@ -466,6 +466,10 @@ export async function startOwnedSyncWorker(home: string, options: { temporary?:\n     backgroundEnabled = !options.temporary && ledger.worker.enabled && !ledger.worker.retryPaused;\n     reconcileMs = ledger.runtime?.config.timings.reconcileMs ?? defaultRuntimeConfig().timings.reconcileMs;\n     nextRetryAt = backgroundEnabled ? nextWorkerRetryAt(ledger) : Infinity;\n+    if (backgroundEnabled && nextReconcileAt === Infinity) {\n+      nextReconcileAt = monotonicNow() + reconcileMs;\n+    }\n+\n     // Slow reads must not turn fallback refresh into a continuous catch-up loop.\n     nextRefreshAt = Math.max(startedAt + 5000, monotonicNow() + 250);\n   }\n",
+    "dist_js_sha256": "742950a62a3e02494700e45d917ec271d887da5fd6c6738ef81473f085d4671e",
+    "compiled_hashes": {
+      "sync-worker.js": "7645ddb8a64fb20b070532bb4b2573dfc3f3cb1d5cc506605fd72c34ab8dad87",
+      "sync-worker-schedule.js": "2df8df2b022865faecb8f5b61a6b455a502c99c604dd9a6b8798201f3f05a679",
+      "sync-worker-startup-schedule.test.js": "883d284a02ca858fcd07bc6aee6aebb6d923e6e4a6305a61c1173e16c1e3e078",
+      "sync-worker-fatal.test.js": "5ca9d3651a8cfd55a88d2d89dc1a9de70ce839f9a08eeec9d8f4857dc19f032c"
+    },
+    "stale_regression_output_absent": true
+  },
+  "budget": {
+    "application_limit_seconds": 600,
+    "charged_seconds": 288.13496522186324,
+    "cleanup_limit_seconds": 60,
+    "cleanup_seconds": 3.4197776754153892
+  },
+  "totals": {
+    "20.20.2": 109,
+    "24.19.0": 109
+  },
+  "commands": [
+    {
+      "label": "red-runtime20",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--version"
+      ],
+      "timeout_seconds": 90,
+      "exit": 0,
+      "pid": 2582543,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.021153434994630516,
+      "log_sha256": "fa2f297fd185bb1c8acba036117f05240eaa1f42eeb8902e870982523ae06edf"
+    },
+    {
+      "label": "red-runtime24",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--version"
+      ],
+      "timeout_seconds": 90,
+      "exit": 0,
+      "pid": 2582544,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.021795521024614573,
+      "log_sha256": "b7677d3ec37ee1897ba07dc2cfe8292fe421c9ac93396cca5bbece486d1a2a41"
+    },
+    {
+      "label": "red-typecheck",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.cache/node/corepack/v1/pnpm/11.7.0/bin/pnpm.cjs",
+        "typecheck"
+      ],
+      "timeout_seconds": 90,
+      "exit": 0,
+      "pid": 2582545,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 1.7338101930217817,
+      "log_sha256": "7491e964fffdba7e79dcde458b279b9861608837987ef50fffd72318c94a2c65"
+    },
+    {
+      "label": "red-build",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.cache/node/corepack/v1/pnpm/11.7.0/bin/pnpm.cjs",
+        "build"
+      ],
+      "timeout_seconds": 90,
+      "exit": 0,
+      "pid": 2582614,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 1.9373258110135794,
+      "log_sha256": "52aa23ae94ef591f86df0a1de48709f5620eaacea41124e19fa6f2c717b99e88"
+    },
+    {
+      "label": "red-regression20",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-startup-schedule.regression.js"
+      ],
+      "timeout_seconds": 150,
+      "exit": 1,
+      "pid": 2582688,
+      "error": "CalledProcessError(1, ['/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node', '--test', '--test-concurrency=1', 'packages/cli/dist/sync-worker-startup-schedule.regression.js'])",
+      "timed_out": false,
+      "interrupted": false,
+      "terminated_exit": 1,
+      "group_reaped": true,
+      "elapsed_seconds": 4.092461480060592,
+      "log_sha256": "99497e3cf43e76e0bf6e4c6a8abe1b2883c08b909e40e05e854ac163706afa2f",
+      "tests": {
+        "tests": 4,
+        "pass": 2,
+        "fail": 2,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "red-regression24",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-startup-schedule.regression.js"
+      ],
+      "timeout_seconds": 150,
+      "exit": 1,
+      "pid": 2582902,
+      "error": "CalledProcessError(1, ['/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node', '--test', '--test-concurrency=1', 'packages/cli/dist/sync-worker-startup-schedule.regression.js'])",
+      "timed_out": false,
+      "interrupted": false,
+      "terminated_exit": 1,
+      "group_reaped": true,
+      "elapsed_seconds": 3.234318131930195,
+      "log_sha256": "c01bb173bb4cfde0cd3902b24985ea0755cce9dc3cf336f4809398ee66e46629",
+      "tests": {
+        "tests": 4,
+        "pass": 2,
+        "fail": 2,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "green-typecheck",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.cache/node/corepack/v1/pnpm/11.7.0/bin/pnpm.cjs",
+        "typecheck"
+      ],
+      "timeout_seconds": 90,
+      "exit": 0,
+      "pid": 2583233,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 1.7394629259360954,
+      "log_sha256": "7491e964fffdba7e79dcde458b279b9861608837987ef50fffd72318c94a2c65"
+    },
+    {
+      "label": "green-build",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.cache/node/corepack/v1/pnpm/11.7.0/bin/pnpm.cjs",
+        "--filter",
+        "html-inbox",
+        "build"
+      ],
+      "timeout_seconds": 90,
+      "exit": 0,
+      "pid": 2583291,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 1.2349409899907187,
+      "log_sha256": "ace5e449477623d82fac1c3a0519c9c729967336e5b8b4a264eb1b104811fb6e"
+    },
+    {
+      "label": "green-regression20",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-startup-schedule.test.js"
+      ],
+      "timeout_seconds": 150,
+      "exit": 0,
+      "pid": 2583337,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 6.5022641060641035,
+      "log_sha256": "3879d343f3d93ee69793e66fab6a80772bc815b9b7af829bd5f7faebea291236",
+      "tests": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "green-regression24",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-startup-schedule.test.js"
+      ],
+      "timeout_seconds": 150,
+      "exit": 0,
+      "pid": 2583405,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 7.3251213119365275,
+      "log_sha256": "3bc20c7856c019ade70ab74f33f17c3586511f34bf5cbdf6bf892e6505ab6b5a",
+      "tests": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "green-20-sync-worker-schedule",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-schedule.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2583492,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 3.5679912210907787,
+      "log_sha256": "a46029b67c348f9012aa60c9c9fa562da291eb75e6cc6454f08951c9003385ee",
+      "tests": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "green-20-sync-worker-runtime",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-runtime.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2583511,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.4555111250374466,
+      "log_sha256": "d15ab89e2c47579bbb770c848ac572bab38febccc9feb6fa30dbf12fe9b07f75",
+      "tests": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "green-20-sync-worker-fatal",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-fatal.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2583539,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 11.077753575984389,
+      "log_sha256": "6a9628d6fe5b285993eeb781c27446b41e0d50d0cd9656003af8b5551f4154f4",
+      "tests": {
+        "tests": 26,
+        "pass": 26,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "green-20-sync-worker-credentials",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-credentials.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": null,
+      "pid": 2583827,
+      "error": "InterruptedError('SIGTERM')",
+      "timed_out": false,
+      "interrupted": true,
+      "terminated_exit": 1,
+      "group_reaped": true,
+      "elapsed_seconds": 103.72312051302288,
+      "log_sha256": "97b316ddd9fd39470696b0fd26fe2bacde4b11392905228d973f69ce4b76f969"
+    },
+    {
+      "label": "continued-20-sync-worker-credentials",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-credentials.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2585662,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 31.728434431017376,
+      "log_sha256": "c3b336c8a144daf2929b999d63d310a9328bf332b957ae39415994ebf2113c6f",
+      "tests": {
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "continued-20-sync-pause-admission",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-pause-admission.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2586882,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 4.189129443024285,
+      "log_sha256": "afb9059e5121fc2061741bb6aed29125ca855d338d83923e8045d34d9fd4f81d",
+      "tests": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "continued-20-sync-revocation-order",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-revocation-order.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2587076,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 2.984470949973911,
+      "log_sha256": "ae7e299198e716f592cf1d75fb4621476be4a8f7813201fef2c64b4cd9d310e9",
+      "tests": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "continued-20-sync-shutdown-ownership",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-shutdown-ownership.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2587200,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 3.309682174003683,
+      "log_sha256": "08adbf086899de165c5d81b9a39abf5d2b83ec0f96fa8fad13537d415dd7fc35",
+      "tests": {
+        "tests": 21,
+        "pass": 21,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "continued-20-sync-shutdown-ingestion",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-shutdown-ingestion.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2587229,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 13.543503573979251,
+      "log_sha256": "47c4a3dc75769a5dd9b61c979914aa874cceb3727f38cc767ead32e3f1077622",
+      "tests": {
+        "tests": 11,
+        "pass": 11,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "continued-20-sync-attempt-lifetime",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-attempt-lifetime.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2587494,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 9.97442973696161,
+      "log_sha256": "35256e83981f9f382b80c52f6124d767c6408b11e6d0881ee9e6039c731f9186",
+      "tests": {
+        "tests": 25,
+        "pass": 25,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "continued-24-sync-worker-schedule",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-schedule.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2587680,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 2.076516884029843,
+      "log_sha256": "1e2147a13c680046c03751a5006092c8ce7e0baa508bfddc522f3ec8a277aaf4",
+      "tests": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "continued-24-sync-worker-runtime",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-runtime.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2587722,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.44328693207353354,
+      "log_sha256": "05b9e9a15ff5d33d757c0c46c43967d621765fbc1c8c608eb5c4b455bb0187b1",
+      "tests": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "continued-24-sync-worker-fatal",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-fatal.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2587751,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 10.996727713034488,
+      "log_sha256": "a8db57803d33b3a0a33329d86c3d0b325011edb47fe7c85de52df1b51b7953be",
+      "tests": {
+        "tests": 26,
+        "pass": 26,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "continued-24-sync-worker-credentials",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-worker-credentials.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2588041,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 29.561070222989656,
+      "log_sha256": "f0d5f08daa808d816708c7fcd0a7c3f0076b14923a5afa2e80672c6131d40779",
+      "tests": {
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "continued-24-sync-pause-admission",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-pause-admission.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2589346,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 3.7075544990366325,
+      "log_sha256": "a99914614d2fe8a0ac0b2fc2c38c0a5d8cdd6ff3d8250d20db739f434dadef32",
+      "tests": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "continued-24-sync-revocation-order",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-revocation-order.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2589576,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 2.4377124649472535,
+      "log_sha256": "95d9f073f241616e5eb00c3f09e661f192253b00ae41725137222d1df56de1d6",
+      "tests": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "continued-24-sync-shutdown-ownership",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-shutdown-ownership.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2589741,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 3.04335617297329,
+      "log_sha256": "95ccc9df3d5215e23ad964cf3e958f99b441f218a5cd4c245c325779c5842114",
+      "tests": {
+        "tests": 21,
+        "pass": 21,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "continued-24-sync-shutdown-ingestion",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-shutdown-ingestion.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2589773,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 13.748782423092052,
+      "log_sha256": "84c2110797b65946636ac3a17c6703f5017b9599612c8d6b030edd8186c23e73",
+      "tests": {
+        "tests": 11,
+        "pass": 11,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "continued-24-sync-attempt-lifetime",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-attempt-lifetime.test.js"
+      ],
+      "timeout_seconds": 120,
+      "exit": 0,
+      "pid": 2590222,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 9.719712532008998,
+      "log_sha256": "ef09730ae4bc9ef6f322c54af3edce4b9e785dbb3c4aeab313407deb60a643e4",
+      "tests": {
+        "tests": 25,
+        "pass": 25,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "cleanup": {
+    "groups": [
+      2582543,
+      2582544,
+      2582545,
+      2582614,
+      2582688,
+      2582902,
+      2583233,
+      2583291,
+      2583337,
+      2583405,
+      2583492,
+      2583511,
+      2583539,
+      2583827,
+      2583982,
+      2584011,
+      2584034,
+      2584056,
+      2584091,
+      2584133,
+      2584546,
+      2584569,
+      2585053,
+      2585075,
+      2585662,
+      2585815,
+      2585838,
+      2585860,
+      2585882,
+      2585916,
+      2585958,
+      2586158,
+      2586180,
+      2586356,
+      2586378,
+      2586585,
+      2586615,
+      2586797,
+      2586825,
+      2586882,
+      2587076,
+      2587200,
+      2587229,
+      2587494,
+      2587680,
+      2587722,
+      2587751,
+      2588041,
+      2588202,
+      2588226,
+      2588251,
+      2588275,
+      2588311,
+      2588342,
+      2588586,
+      2588610,
+      2588824,
+      2588848,
+      2589045,
+      2589069,
+      2589260,
+      2589284,
+      2589346,
+      2589576,
+      2589741,
+      2589773,
+      2590222
+    ],
+    "alive": {},
+    "fixtures_remaining": [],
+    "checkout_heavy_processes": [],
+    "all_commands_group_reaped": true,
+    "all_fixture_removals": true
+  },
+  "runner_hashes": {
+    "run-initial.py": "3bb12be259f7dafc325561bc0e457687a41294b86cf52606eb7a126fbd90d267",
+    "run.py": "c91f32245c198c5ff52ebe031af3abe6bbc340822149e13cc9beb5c617bb288c"
+  },
+  "observations": {
+    "red-regression20": [
+      {
+        "mode": "paused",
+        "blocked_passes": 0,
+        "blocked_ledger_reads": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5000,
+          10000
+        ],
+        "periods": [
+          {
+            "at": 18250,
+            "passes": 0,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 0,
+            "ledger_read_count": 13,
+            "last_ledger_read_at": 17250
+          },
+          {
+            "at": 24250,
+            "passes": 0,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 0,
+            "ledger_read_count": 14,
+            "last_ledger_read_at": 22250
+          },
+          {
+            "at": 30250,
+            "passes": 0,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 0,
+            "ledger_read_count": 15,
+            "last_ledger_read_at": 27250
+          }
+        ]
+      },
+      {
+        "mode": "disabled-before-admission",
+        "blocked_passes": 0,
+        "blocked_ledger_reads": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5000,
+          10000
+        ],
+        "periods": [
+          {
+            "at": 18250,
+            "passes": 0,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 0,
+            "ledger_read_count": 14,
+            "last_ledger_read_at": 17250
+          },
+          {
+            "at": 24250,
+            "passes": 0,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 0,
+            "ledger_read_count": 15,
+            "last_ledger_read_at": 22250
+          },
+          {
+            "at": 30250,
+            "passes": 0,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 0,
+            "ledger_read_count": 16,
+            "last_ledger_read_at": 27250
+          }
+        ]
+      },
+      {
+        "at": 30000,
+        "passes": 0,
+        "gaps": 0,
+        "closed": false,
+        "admissions": [],
+        "ledgerReads": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5000,
+          10000,
+          12000,
+          12000,
+          12250,
+          17250,
+          22250,
+          27250
+        ]
+      }
+    ],
+    "red-regression24": [
+      {
+        "mode": "paused",
+        "blocked_passes": 0,
+        "blocked_ledger_reads": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5000,
+          10000
+        ],
+        "periods": [
+          {
+            "at": 18250,
+            "passes": 0,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 0,
+            "ledger_read_count": 13,
+            "last_ledger_read_at": 17250
+          },
+          {
+            "at": 24250,
+            "passes": 0,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 0,
+            "ledger_read_count": 14,
+            "last_ledger_read_at": 22250
+          },
+          {
+            "at": 30250,
+            "passes": 0,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 0,
+            "ledger_read_count": 15,
+            "last_ledger_read_at": 27250
+          }
+        ]
+      },
+      {
+        "mode": "disabled-before-admission",
+        "blocked_passes": 0,
+        "blocked_ledger_reads": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5000,
+          10000
+        ],
+        "periods": [
+          {
+            "at": 18250,
+            "passes": 0,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 0,
+            "ledger_read_count": 14,
+            "last_ledger_read_at": 17250
+          },
+          {
+            "at": 24250,
+            "passes": 0,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 0,
+            "ledger_read_count": 15,
+            "last_ledger_read_at": 22250
+          },
+          {
+            "at": 30250,
+            "passes": 0,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 0,
+            "ledger_read_count": 16,
+            "last_ledger_read_at": 27250
+          }
+        ]
+      },
+      {
+        "at": 30000,
+        "passes": 0,
+        "gaps": 0,
+        "closed": false,
+        "admissions": [],
+        "ledgerReads": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5000,
+          10000,
+          12000,
+          12000,
+          12250,
+          17250,
+          22250,
+          27250
+        ]
+      }
+    ],
+    "green-regression20": [
+      {
+        "mode": "paused",
+        "blocked_passes": 0,
+        "blocked_ledger_reads": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5000,
+          10000
+        ],
+        "periods": [
+          {
+            "at": 18250,
+            "passes": 1,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 3,
+            "ledger_read_count": 42,
+            "last_ledger_read_at": 18250
+          },
+          {
+            "at": 24250,
+            "passes": 2,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 6,
+            "ledger_read_count": 72,
+            "last_ledger_read_at": 24250
+          },
+          {
+            "at": 30250,
+            "passes": 3,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 9,
+            "ledger_read_count": 102,
+            "last_ledger_read_at": 30250
+          }
+        ]
+      },
+      {
+        "mode": "disabled-before-admission",
+        "blocked_passes": 0,
+        "blocked_ledger_reads": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5000,
+          10000
+        ],
+        "periods": [
+          {
+            "at": 18250,
+            "passes": 1,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 3,
+            "ledger_read_count": 43,
+            "last_ledger_read_at": 18250
+          },
+          {
+            "at": 24250,
+            "passes": 2,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 6,
+            "ledger_read_count": 73,
+            "last_ledger_read_at": 24250
+          },
+          {
+            "at": 30250,
+            "passes": 3,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 9,
+            "ledger_read_count": 103,
+            "last_ledger_read_at": 30250
+          }
+        ]
+      },
+      {
+        "at": 30000,
+        "passes": 0,
+        "gaps": 0,
+        "closed": false,
+        "admissions": [],
+        "ledgerReads": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5000,
+          10000,
+          12000,
+          12000,
+          12250,
+          17250,
+          22250,
+          27250
+        ]
+      }
+    ],
+    "green-regression24": [
+      {
+        "mode": "paused",
+        "blocked_passes": 0,
+        "blocked_ledger_reads": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5000,
+          10000
+        ],
+        "periods": [
+          {
+            "at": 18250,
+            "passes": 1,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 3,
+            "ledger_read_count": 42,
+            "last_ledger_read_at": 18250
+          },
+          {
+            "at": 24250,
+            "passes": 2,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 6,
+            "ledger_read_count": 72,
+            "last_ledger_read_at": 24250
+          },
+          {
+            "at": 30250,
+            "passes": 3,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 9,
+            "ledger_read_count": 102,
+            "last_ledger_read_at": 30250
+          }
+        ]
+      },
+      {
+        "mode": "disabled-before-admission",
+        "blocked_passes": 0,
+        "blocked_ledger_reads": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5000,
+          10000
+        ],
+        "periods": [
+          {
+            "at": 18250,
+            "passes": 1,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 3,
+            "ledger_read_count": 43,
+            "last_ledger_read_at": 18250
+          },
+          {
+            "at": 24250,
+            "passes": 2,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 6,
+            "ledger_read_count": 73,
+            "last_ledger_read_at": 24250
+          },
+          {
+            "at": 30250,
+            "passes": 3,
+            "gaps": 0,
+            "closed": false,
+            "admissions": 9,
+            "ledger_read_count": 103,
+            "last_ledger_read_at": 30250
+          }
+        ]
+      },
+      {
+        "at": 30000,
+        "passes": 0,
+        "gaps": 0,
+        "closed": false,
+        "admissions": [],
+        "ledgerReads": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5000,
+          10000,
+          12000,
+          12000,
+          12250,
+          17250,
+          22250,
+          27250
+        ]
+      }
+    ]
+  },
+  "raw_artifacts": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-startup-correctness",
+  "retained_failures": [
+    {
+      "label": "red-regression20",
+      "expected_exit": 1,
+      "passed": 2,
+      "failed": 2,
+      "cause": "first bounded periodic-pass assertions, both persistent modes"
+    },
+    {
+      "label": "red-regression24",
+      "expected_exit": 1,
+      "passed": 2,
+      "failed": 2,
+      "cause": "same intended starvation assertions"
+    },
+    {
+      "label": "green-20-sync-worker-credentials",
+      "expected_exit": null,
+      "interrupted": true,
+      "cause": "confirmed adopted worker zombies remained children of wrapper while fixture waited for PID disappearance; first body succeeded, cleanup failed; corrected artifact wrapper reaps adopted children concurrently with the command",
+      "details": "initial-wrapper-confound.json and original failed log retained"
+    }
+  ],
+  "qualification": "correctness only; c00 smoke is historical; no corrected-candidate performance qualification or retention decision"
+}

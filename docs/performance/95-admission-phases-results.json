@@ -1,0 +1,729 @@
+{
+  "outcome": "FAILED_DIAGNOSTIC_PHASE_BOUNDARY_EVIDENCE_ONLY",
+  "tested_head": "4f554c98028f5afb71a4e4feb931d7d9b970a314",
+  "actual_parent": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+  "production_equivalent_to": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+  "publication": "Documentation-only descendant; publication head is recorded separately.",
+  "grant_id": "root-95-admission-phases-4f554c9-20261109-r1",
+  "execution": {
+    "scope": "One actual parent610, exactNode20.20.2,1000records,outbound,65000ms requested idle. Existing private390 compiled input reused; no build/install/candidate/Node24 command.",
+    "controller_exit": 1,
+    "controller_elapsed_seconds": 79.74109323590528,
+    "workload_elapsed_seconds": 78.65287770004943,
+    "admission_seconds": 30,
+    "application_seconds": 270,
+    "fixed_final_seconds_from_start": 330,
+    "cleanup_seconds_max": 60,
+    "case_seconds": 240,
+    "setup_seconds": 90,
+    "no_clock_reset": true,
+    "unrun_commands": [],
+    "no_observed_setup_case_application_timeout": true
+  },
+  "commands": [
+    {
+      "label": "pin",
+      "exit": 0,
+      "terminated_exit": 0,
+      "error": null,
+      "elapsed_seconds": 0.05504777596797794,
+      "setup_seconds": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "status",
+      "exit": 0,
+      "terminated_exit": 0,
+      "error": null,
+      "elapsed_seconds": 0.05432621797081083,
+      "setup_seconds": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "production-frozen",
+      "exit": 0,
+      "terminated_exit": 0,
+      "error": null,
+      "elapsed_seconds": 0.05548174201976508,
+      "setup_seconds": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "node-20.20.2",
+      "exit": 0,
+      "terminated_exit": 0,
+      "error": null,
+      "elapsed_seconds": 0.05583342397585511,
+      "setup_seconds": null,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "workload",
+      "exit": 1,
+      "terminated_exit": 1,
+      "error": null,
+      "elapsed_seconds": 78.65287770004943,
+      "setup_seconds": null,
+      "group_joined": true,
+      "fixture_removed": true
+    }
+  ],
+  "first_failure": {
+    "assertion": "Expected values to be strictly equal: 0 !== 1000",
+    "code": "ERR_ASSERTION",
+    "source": "scripts/bench/scheduler-workload.cjs:229:16 -> main:247:5",
+    "before_setup_and_idle": true,
+    "first_controller_issue": "command-result: original workload exit1; no command error"
+  },
+  "observer": {
+    "event_count": 1,
+    "line": 51,
+    "utf8_bytes_including_lf": 1857,
+    "sha256": "2a37d687ca3a16de8da89d0d82e8ec75b1914191a9967de62684d5e7e4b6a089",
+    "framed_cap4096_satisfied": true,
+    "payload": {
+      "wall": 1794203814464,
+      "monotonic": 17442.454539,
+      "role": "worker",
+      "pid": 3069289,
+      "type": "issue95-first-generic-blocked",
+      "ordinal": 1,
+      "timingEligibility": "ineligible",
+      "errorKind": "error",
+      "messageKind": "communication-authorization-deadline",
+      "codeKind": "unknown",
+      "frameKind": "communication-deadline",
+      "admission": {
+        "schema": 1,
+        "firstIdentity": "identity-json",
+        "firstRequestCallId": 3,
+        "errorCallIds": [
+          6,
+          3
+        ],
+        "historyOmitted": 0,
+        "outputOmitted": 0,
+        "observationFaults": 0,
+        "phases": {
+          "schema": 1,
+          "selection": "selected",
+          "callId": 5,
+          "callbackEntriesObserved": 1,
+          "selectionMisses": 0,
+          "observationFaults": 0,
+          "mutation": [
+            1794203808215,
+            11192.993598,
+            1794203808215,
+            11193.032986,
+            1794203814463,
+            17440.917169,
+            "fulfilled"
+          ],
+          "callback": [
+            1794203812138,
+            15116.820182,
+            1794203812139,
+            15116.875041,
+            1794203813483,
+            16461.252679,
+            "fulfilled"
+          ]
+        },
+        "calls": [
+          [
+            1,
+            1,
+            "attempt",
+            "outer-attempt",
+            null,
+            null,
+            1794203858900,
+            null,
+            1794203801551,
+            4529.391492,
+            1794203801552,
+            4530.457203,
+            1794203808213,
+            11191.232837,
+            57349,
+            57348,
+            50687,
+            "fulfilled",
+            0
+          ],
+          [
+            2,
+            1,
+            "communication",
+            "attempt-registration",
+            null,
+            1,
+            1794203858900,
+            null,
+            1794203801552,
+            4530.041559,
+            1794203801552,
+            4530.449435,
+            1794203808213,
+            11191.12448,
+            57348,
+            57348,
+            50687,
+            "fulfilled",
+            1
+          ],
+          [
+            3,
+            1,
+            "request",
+            "identity-json",
+            1,
+            null,
+            1794203858900,
+            5000,
+            1794203808214,
+            11192.293676,
+            1794203808215,
+            11193.044445,
+            1794203814464,
+            17442.081769,
+            50686,
+            50685,
+            44436,
+            "rejected",
+            0
+          ],
+          [
+            4,
+            1,
+            "attempt",
+            "client-attempt",
+            1,
+            3,
+            1794203813214,
+            null,
+            1794203808214,
+            11192.622096,
+            1794203808215,
+            11193.041574,
+            1794203814463,
+            17441.329248,
+            5000,
+            4999,
+            -1249,
+            "fulfilled",
+            1
+          ],
+          [
+            5,
+            1,
+            "communication",
+            "attempt-registration",
+            1,
+            4,
+            1794203813214,
+            null,
+            1794203808214,
+            11192.815556,
+            1794203808215,
+            11193.038197,
+            1794203814463,
+            17441.245586,
+            5000,
+            4999,
+            -1249,
+            "fulfilled",
+            2
+          ],
+          [
+            6,
+            1,
+            "communication",
+            "request-authorization",
+            null,
+            null,
+            1794203813214,
+            null,
+            1794203814463,
+            17441.493972,
+            1794203814463,
+            17441.599779,
+            1794203814463,
+            17441.655889,
+            -1249,
+            -1249,
+            -1249,
+            "rejected",
+            1
+          ]
+        ]
+      }
+    },
+    "source_schema": {
+      "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/admission-phases-source-v1/output.schema.json",
+      "sha256": "20a79aa2e9dcf347057d3d70bf13e6923c12d1b6d0655870f9ecae94cdf28632",
+      "actual_data_validated": true,
+      "limit": "Manual read-only validator covers all used schema validation keywords for this one recorded event; no observer/control/test/parser execution credit."
+    },
+    "original_19_columns": [
+      "callId",
+      "storeId",
+      "kind",
+      "caller",
+      "requestId",
+      "parentId",
+      "submittedDeadlineAt",
+      "submittedRequestMs",
+      "entryWall",
+      "entryMonotonic",
+      "invocationReturnWall",
+      "invocationReturnMonotonic",
+      "settlementObservedWall",
+      "settlementObservedMonotonic",
+      "remainingAtEntry",
+      "remainingAtInvocationReturn",
+      "remainingAtSettlementObserved",
+      "outcome",
+      "otherRecordedUnsettledForStore"
+    ],
+    "row_observed_intervals": [
+      {
+        "callId": 1,
+        "observed_entry_to_reaction_ms": 6661.841345,
+        "synchronous_return_ms": 1.065711
+      },
+      {
+        "callId": 2,
+        "observed_entry_to_reaction_ms": 6661.082921,
+        "synchronous_return_ms": 0.407876
+      },
+      {
+        "callId": 3,
+        "observed_entry_to_reaction_ms": 6249.788093,
+        "synchronous_return_ms": 0.750769
+      },
+      {
+        "callId": 4,
+        "observed_entry_to_reaction_ms": 6248.707152,
+        "synchronous_return_ms": 0.419478
+      },
+      {
+        "callId": 5,
+        "observed_entry_to_reaction_ms": 6248.43003,
+        "synchronous_return_ms": 0.222641
+      },
+      {
+        "callId": 6,
+        "observed_entry_to_reaction_ms": 0.161917,
+        "synchronous_return_ms": 0.105807
+      }
+    ],
+    "at_most8_unique_actual19_cell_rows": true,
+    "original_framed_utf8_json": "{\"wall\":1794203814464,\"monotonic\":17442.454539,\"role\":\"worker\",\"pid\":3069289,\"type\":\"issue95-first-generic-blocked\",\"ordinal\":1,\"timingEligibility\":\"ineligible\",\"errorKind\":\"error\",\"messageKind\":\"communication-authorization-deadline\",\"codeKind\":\"unknown\",\"frameKind\":\"communication-deadline\",\"admission\":{\"schema\":1,\"firstIdentity\":\"identity-json\",\"firstRequestCallId\":3,\"errorCallIds\":[6,3],\"historyOmitted\":0,\"outputOmitted\":0,\"observationFaults\":0,\"phases\":{\"schema\":1,\"selection\":\"selected\",\"callId\":5,\"callbackEntriesObserved\":1,\"selectionMisses\":0,\"observationFaults\":0,\"mutation\":[1794203808215,11192.993598,1794203808215,11193.032986,1794203814463,17440.917169,\"fulfilled\"],\"callback\":[1794203812138,15116.820182,1794203812139,15116.875041,1794203813483,16461.252679,\"fulfilled\"]},\"calls\":[[1,1,\"attempt\",\"outer-attempt\",null,null,1794203858900,null,1794203801551,4529.391492,1794203801552,4530.457203,1794203808213,11191.232837,57349,57348,50687,\"fulfilled\",0],[2,1,\"communication\",\"attempt-registration\",null,1,1794203858900,null,1794203801552,4530.041559,1794203801552,4530.449435,1794203808213,11191.12448,57348,57348,50687,\"fulfilled\",1],[3,1,\"request\",\"identity-json\",1,null,1794203858900,5000,1794203808214,11192.293676,1794203808215,11193.044445,1794203814464,17442.081769,50686,50685,44436,\"rejected\",0],[4,1,\"attempt\",\"client-attempt\",1,3,1794203813214,null,1794203808214,11192.622096,1794203808215,11193.041574,1794203814463,17441.329248,5000,4999,-1249,\"fulfilled\",1],[5,1,\"communication\",\"attempt-registration\",1,4,1794203813214,null,1794203808214,11192.815556,1794203808215,11193.038197,1794203814463,17441.245586,5000,4999,-1249,\"fulfilled\",2],[6,1,\"communication\",\"request-authorization\",null,null,1794203813214,null,1794203814463,17441.493972,1794203814463,17441.599779,1794203814463,17441.655889,-1249,-1249,-1249,\"rejected\",1]]}}\n"
+  },
+  "phase_identity": {
+    "selected_callId": 5,
+    "selected_storeId": 1,
+    "requestId": 1,
+    "parent_chain": [
+      5,
+      4,
+      3
+    ],
+    "source_supported_callers": [
+      "attempt-registration",
+      "client-attempt",
+      "identity-json"
+    ],
+    "source_seam": "Exact pinned immediate ManagedSyncStore.startCommunication sync-store.js453 frame plus guarded same-store live ancestry selects one mutate; per-invocation callback closure carries this identity. Payload retains labels/IDs, not raw stack.",
+    "callback_entries_observed": 1,
+    "selection_misses": 0,
+    "phase_faults": 0,
+    "mutation_row": [
+      1794203808215,
+      11192.993598,
+      1794203808215,
+      11193.032986,
+      1794203814463,
+      17440.917169,
+      "fulfilled"
+    ],
+    "callback_row": [
+      1794203812138,
+      15116.820182,
+      1794203812139,
+      15116.875041,
+      1794203813483,
+      16461.252679,
+      "fulfilled"
+    ],
+    "observed_intervals_ms": {
+      "mutation_preoriginal_to_observed_fulfillment_ms": 6247.923571,
+      "before_callback_preoriginal_ms": 3923.826584,
+      "callback_preoriginal_to_observed_fulfillment_ms": 1344.432497,
+      "callback_observed_fulfillment_to_mutation_observed_fulfillment_ms": 979.66449,
+      "mutation_synchronous_invocation_return_ms": 0.039388,
+      "callback_synchronous_invocation_return_ms": 0.054859
+    },
+    "phase_wall_deadline_margins": {
+      "effective_inner_deadline": 1794203813214,
+      "mutation_pre_original_remaining_ms": 4999,
+      "callback_pre_original_remaining_ms": 1076,
+      "callback_observed_fulfillment_remaining_ms": -269,
+      "mutation_observed_fulfillment_remaining_ms": -1249
+    },
+    "phases_are_source_selected_not_clock_associated": true
+  },
+  "rejection_identity": {
+    "original_error_callIds": [
+      6,
+      3
+    ],
+    "source_supported_connection": "The original error-object identity links standalone later request-authorization call6 and selected identity-json request3 to classifier input. Selected phases call5 attach to request3 via parent4; call5 itself fulfilled, not an errorCallId. Thus same selected request ancestry survives, without claiming callback/mutation generated later rejection.",
+    "later_call6_parentId": null,
+    "later_call6_requestId": null,
+    "no_nearest_clock_or_shared_deadline_identity_inference": true,
+    "reuse_or_propagation_limit": "One recorded communication rejection shares this object, not a universal unique origin proof; reused/propagated/replaced or omitted errors remain possible outside recorded window."
+  },
+  "deadline_observations": {
+    "request_options_cap": 1794203858900,
+    "requestMs": 5000,
+    "effective_client_attempt_deadline": 1794203813214,
+    "later_authorization_remaining_at_pre_original": -1249,
+    "initial_client_attempt_observed_fulfillment_remaining": -1249,
+    "callback_observed_fulfillment_remaining": -269,
+    "mutation_observed_fulfillment_remaining": -1249,
+    "limits": "Same-worker observed samples only. Request options cap is not effective inner deadline. Entry follows source/identity selection preparation; synchronous return and promise reaction differ. No interval measures lock wait,CPU,I/O/native cleanup or why budget elapsed."
+  },
+  "mismatch": {
+    "line": 187,
+    "utf8_bytes_including_lf": 579,
+    "sha256": "3fa910d5d133fecaeb5bf976573bcd57c9cf782ed17563b7d49682c21796a785",
+    "payload": {
+      "type": "caught-up-count-mismatch",
+      "expectedCount": 1000,
+      "sourceCount": 1000,
+      "receiverCount": 0,
+      "sourceRoute": {
+        "present": true,
+        "state": "reconnecting",
+        "lastError": null
+      },
+      "receiverRoute": {
+        "present": true,
+        "state": "reconnecting",
+        "lastError": null
+      },
+      "localWorker": {
+        "enabled": true,
+        "retryPaused": false,
+        "ownerQuarantined": false,
+        "bootSupervised": false,
+        "lastError": null
+      },
+      "localRetry": {
+        "present": true,
+        "attempts": 1,
+        "blocked": true,
+        "hasDeadline": true,
+        "lastError": "local-validation-or-storage-failed"
+      },
+      "localOutbox": {
+        "pending": 0,
+        "confirmed": 0,
+        "blocked": 1000,
+        "retired": 0
+      },
+      "receiverCommittedReceipts": 0
+    },
+    "cause_link": "No original-error-object identity into durable snapshot/retry/outbox/count state; no automatic causation from earlier admission event.",
+    "original_framed_utf8_json": "{\"type\":\"caught-up-count-mismatch\",\"expectedCount\":1000,\"sourceCount\":1000,\"receiverCount\":0,\"sourceRoute\":{\"present\":true,\"state\":\"reconnecting\",\"lastError\":null},\"receiverRoute\":{\"present\":true,\"state\":\"reconnecting\",\"lastError\":null},\"localWorker\":{\"enabled\":true,\"retryPaused\":false,\"ownerQuarantined\":false,\"bootSupervised\":false,\"lastError\":null},\"localRetry\":{\"present\":true,\"attempts\":1,\"blocked\":true,\"hasDeadline\":true,\"lastError\":\"local-validation-or-storage-failed\"},\"localOutbox\":{\"pending\":0,\"confirmed\":0,\"blocked\":1000,\"retired\":0},\"receiverCommittedReceipts\":0}\n"
+  },
+  "event_order": [
+    {
+      "line": 7,
+      "type": "worker-event",
+      "event": "pass",
+      "role": "worker",
+      "same_process_monotonic": 1878.508235
+    },
+    {
+      "line": 51,
+      "type": "issue95-first-generic-blocked",
+      "role": "worker",
+      "same_process_monotonic": 17442.454539
+    },
+    {
+      "line": 182,
+      "type": "pass-finished",
+      "role": "worker",
+      "same_process_monotonic": 64066.500214,
+      "completedPasses": 1
+    },
+    {
+      "line": 185,
+      "type": "initial-catch-up-settled",
+      "same_process_monotonic": 72872.765682,
+      "completedPasses": 1,
+      "requests": 1
+    },
+    {
+      "line": 186,
+      "type": "worker-event",
+      "event": "pass",
+      "role": "worker",
+      "same_process_monotonic": 69289.748098
+    },
+    {
+      "line": 187,
+      "type": "caught-up-count-mismatch"
+    },
+    {
+      "line": 188,
+      "type": "stopping",
+      "role": "worker",
+      "same_process_monotonic": 70286.402074,
+      "activeReads": []
+    },
+    {
+      "line": 189,
+      "type": "pass-finished",
+      "role": "worker",
+      "same_process_monotonic": 74932.178253,
+      "completedPasses": 2
+    },
+    {
+      "line": 190,
+      "type": "worker-event",
+      "event": "closed",
+      "role": "worker",
+      "same_process_monotonic": 74936.184602,
+      "activeReads": []
+    },
+    {
+      "line": 192,
+      "type": "stopping",
+      "role": "peer",
+      "same_process_monotonic": 76338.65394,
+      "activeReads": []
+    },
+    {
+      "line": 194,
+      "type": "cleanup",
+      "same_process_monotonic": 78558.935844
+    },
+    {
+      "line": 195,
+      "type": "workload-failed",
+      "same_process_monotonic": 78559.098206
+    }
+  ],
+  "reached": [
+    "actual610 source/private390 pins and exact20 runtime command",
+    "all5 command invocations; peer/worker readiness and one intercepted identity call",
+    "first bounded generic failure event with selected phases",
+    "first recordWorkerRun bookkeeping fulfillment and initial-settled status",
+    "original mismatch-safe snapshot payload and strict assertion",
+    "worker/peer stop, worker closed with activeReads[] and cleanup failures[]",
+    "joined direct/owned work and prompt independent safety/invariance audit before explicit LOCAL release"
+  ],
+  "unreached": [
+    "successful assertCaughtUp/setup-complete marker",
+    "65s primary idle window and two completed periodic idle passes",
+    "explicit wake/clock-event/newly due retry reaction controls",
+    "external actual custody/lost-body repair controls",
+    "stale-route fencing/held pending-read shutdown oracle",
+    "candidate/Node24/high-count matrix/five-pair qualification"
+  ],
+  "source_interpretation": "Pinned mutate1099-1122 includes directory/acquisition/recovery/readLedger/anchor/barrier/reader checks before callback. startCommunication453-475 callback includes authorization/baseline/start; baseline1240-1252 syncs checked ledger and flushes five directories. Source shows alternatives, not which consumed recorded intervals. Post-callback observed interval includes original adoption/ownership cleanup and handler scheduling.",
+  "disposition": "Accept exact selected admission/callback boundary observations, not an identified mechanism. Phase5 fulfilled and is not an errorCallId. Original-error[6,3] links later expired authorization to selected request; it does not make phase5 the rejection origin or link to durable blocked state/count.",
+  "limits": [
+    "Failed diagnostic only; every instrumented timing/resource gain-ineligible, including all observations before failure.",
+    "Source selection and retained original-error links connect observations to selected request ancestry; they do not prove a native mechanism or count-state cause.",
+    "Callback/prototype substitution and extra handlers, stack/clock/IPC/V8 effects remain unquantified.",
+    "No missing fields are silently zeroed. Actual event has zero omissions/faults/misses and one observed callback; this does not qualify unseen omission/repeat/sync-throw/install/timeout paths.",
+    "Call6 has null parent/request; it is linked by original rejection identity only, never chronological proximity.",
+    "otherRecordedUnsettled counts include nested ancestor calls, not proof of competing queue/lock contenders.",
+    "recordWorkerRun fulfillment is bookkeeping, intercepted identity invocation precedes native request dispatch/admission, status/settle is not a complete drain.",
+    "Do not subtract worker and parent performance.now origins; row ordering, not cross-process monotonic differences, is retained.",
+    "Hosted4f Source eligibleLookups0vs2 and aggregate Verify remain separate unresolved readiness gates; no retry/waiver/repair.",
+    "Only observed successful diagnostic branch shape qualified; missing/unknown/overcap/install/send/sync-throw/repeat/unused timeout paths remain untested.",
+    "Exact579B mismatch has BOTH route errors null, retry1blocked/local-validation-or-storage-failed, blocked1000/receipts0; do not substitute prior611B or551B states.",
+    "Owner safety audit123.133874s afterfinish and127.125033s before originalfinal is retained; later root read-only review is not runtime authority."
+  ],
+  "release": {
+    "accepted": true,
+    "explicit_owner_release_before_classification": true,
+    "controller_identity": {
+      "pid": 3069242,
+      "start_ticks": 92169396,
+      "group": 3069242,
+      "session": 3069242
+    },
+    "tool_session": 5147,
+    "terminal_exit": 1,
+    "umask": "0002",
+    "same_fixed_final_deadline": 922024.076686545,
+    "owner_audit_monotonic": 921896.951653373,
+    "owner_audit_seconds_after_finish": 123.13387359201442,
+    "owner_audit_margin_seconds": 127.1250331720803,
+    "interval_not_cleanup_duration_or_finish_plus60": true,
+    "saved_identities_absent": 9,
+    "groups_absent": 6,
+    "group_session_pairs_absent": 6,
+    "fixture_paths_absent": 11,
+    "unreadable_proc_entries": [],
+    "owner_recorded_ports_rebound": [
+      41393,
+      36909
+    ],
+    "root_binds_signals_deletes": false,
+    "pins_checked": 869,
+    "private_files_verified": 390,
+    "parent_source_config_generated_js": [
+      198,
+      390,
+      195
+    ],
+    "parent_index_ref_unchanged": true,
+    "executed_source_copy_hashes_verified": 25,
+    "controller_signals_cleanup_interventions_adopted_reaps": [],
+    "sampling_limits": "Recorded identities and original two owned URL ports only; transient unsampled processes are not invented. Later root read-only audit does not reset runtime authority.",
+    "root_reader_corrections": [
+      {
+        "issue": "Owner port witness lines are one-based; initial root reader used zero-based indexing. Corrected read-only, original port evidence matched.",
+        "receipt": {
+          "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-phases-root-release-reader-correction.json",
+          "sha256": "25597119fc1fbf8e369e2c48e2edcd7c0bb31ba6af1a6afb287d3ae13ae9d40c"
+        }
+      },
+      {
+        "issue": "Workload stdout digest key is jsonl_original_sha256; other command stdout keys are tap_original_sha256. Corrected read-only, all10 original log hashes matched.",
+        "receipt": {
+          "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-phases-root-release-reader-correction-2.json",
+          "sha256": "a1102d6d99956387178ee3de805cb3d02639d0359a795545c5cf92a280962f05"
+        }
+      }
+    ],
+    "corrections_are_application_failures": false
+  },
+  "originals": [
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-phases-probe-1/receipt.json",
+      "bytes": 289606,
+      "sha256": "73f60d729f28e9d64de087afacb820a9160ad576cc0882a42621a8235cbae825"
+    },
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-phases-probe-1/workload.jsonl",
+      "bytes": 86308,
+      "sha256": "6e8e1b262e32775e0a9bc0d7f2a016721ba3966e2e30ca897bdaad9044443b65"
+    },
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-phases-probe-1/workload.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-phases-probe-1/independent-cleanup.json",
+      "bytes": 5463,
+      "sha256": "9ef475a3fc4e7a8e7f9cf6d772348a3632fdb26f00efc984043d685696bca242"
+    }
+  ],
+  "executed_input_index": {
+    "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/admission-phases-v1-executed-inputs/index-with-launch.json",
+    "sha256": "ba298f9074d8eb000122db3bc69b27db1372c1b275aa20c234420fb9a5efffd2"
+  },
+  "launch": {
+    "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/admission-phases-v1-launch.json",
+    "sha256": "7c1f94163fa5b2d72902e9f1b5d27c2fc72d78ab9691461ab22c21589200ce2c"
+  },
+  "terminal": {
+    "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/admission-phases-v1-terminal.json",
+    "sha256": "4ca45ba65925362cc05c969fa3229c0d69ea670de32548e5cf4f85abecbc36f9"
+  },
+  "owner_result": {
+    "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/admission-phases-v1-result.json",
+    "sha256": "5feca84ce36a92c4d7eedcb3de0be681ecdee39186428d019eec56c76a80a647"
+  },
+  "owner_support": {
+    "path": "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/admission-phases-v1-result-support.json",
+    "sha256": "9c3d2e9b8b394fa6b326b0862fd61b43cdcd17de7828344f9e37501d99dbdf0b"
+  },
+  "root_release": {
+    "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-phases-4f554c9-root-release.json",
+    "sha256": "2323527880d1121eaf02d9bdad0caf9506d5079c78388d80c24ff27a8480a528"
+  },
+  "root_result": {
+    "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-phases-4f554c9-root-result.json",
+    "sha256": "96c4434b9b9f7dde015057dd19b5345353dd8f71cd599d6ceb4d5e6fff612dbc"
+  },
+  "next_decision": {
+    "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-admission-phases-4f554c9-next-decision.json",
+    "sha256": "ec8ae98c34717595358a637054206abf5898c349c49fdb91075f3a4d500ed9cc"
+  },
+  "CI": {
+    "tested4f_state": "RED unresolved",
+    "Source": {
+      "job": 128999677047,
+      "observation": "eligibleLookups0vs2 after publication returned; eligible custody/suppression commands and later result assertions unreached. Cause unresolved."
+    },
+    "Verify": {
+      "job": 129001556936,
+      "observation": "Aggregate gate only; no additional defect/dependency mapping inferred."
+    },
+    "root_observation": {
+      "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-ci-4f554c9-root-observation.json",
+      "sha256": "d1549321be1899f7999d18b4d90d383d58d8c945cbab678e860d6c3da750f3d8"
+    },
+    "new_publication_head": "Separate unassessed CI; historical failures are not cleared.",
+    "retry_or_shared_test_repair": false
+  },
+  "history": [
+    {
+      "evidence": "95-feasibility-1.md",
+      "preserved": "Original untagged shutdown failure and25unrun remain unchanged; later timer evidence does not identify that old caller."
+    },
+    {
+      "evidence": "95-feasibility2-prelude-failure.md",
+      "preserved": "R1 prelude admission failure and unexecuted classifier/cleanup/matrix remain unchanged."
+    },
+    {
+      "evidence": "95-feasibility2-r2-results.md",
+      "preserved": "R2 formal unrecognized row/exit1/33unrun remain unchanged; raw reconciliation completion is not retroactive pass."
+    },
+    {
+      "evidence": "95-feasibility4-results.md",
+      "preserved": "Original task-queue classification stop/exit1/25unrun remain unchanged."
+    },
+    {
+      "evidence": "95-feasibility5-results.md",
+      "preserved": "New proven parent timer red remains failed/unjoined/nonpassing; strict high-count stop and21unrun remain unchanged."
+    },
+    {
+      "evidence": "95-caught-up-count-results.md",
+      "preserved": "Original611-byte payload stays separate; no retroactive cause assignment."
+    },
+    {
+      "evidence": "95-first-classification-results.md",
+      "preserved": "Original293-byte event/551-byte count payload stay separate."
+    },
+    {
+      "evidence": "95-admission-correlation-results.md",
+      "preserved": "Original1513-byte event/611-byte payload and exact[6,3] associations retain their own run identities."
+    }
+  ],
+  "privacy": "Only approved bounded event/mismatch data and selected receipts/hashes are published. No full controller environment/issues, raw credentials/control tokens, managed ledger, status dump or fixture-entry listing.",
+  "qualification": false,
+  "resource_gain_eligible": false,
+  "full_feasibility": false,
+  "full_behavior": false,
+  "readiness": false,
+  "LOCAL": "FREE; grant consumed",
+  "runtime_grant": null,
+  "next_work": "Phase boundary question answered at observed/source-reviewed boundaries. No new proposal, source/binding/helper/reviewer/runtime or retry authorized."
+}

@@ -1,0 +1,882 @@
+{
+  "grant_id": "root-95-feasibility-02fc856-20261108-r2",
+  "result": "Operational classifier coverage stop after three exit-0 workloads; no observed worker/shutdown failure",
+  "source": {
+    "executed_head": "02fc856f99a0e37fd443529e0b8f5c52a61c5202",
+    "parent": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+    "production_equivalent_to": "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+    "allowed_compiled_difference_from_production_pin": [
+      "sync-worker-schedule.test.js"
+    ],
+    "harness": {
+      "scheduler.py": "95e9d29f5c4cf61dece56dad4b6b74aba642b1a148744c6d5015d096567a7ff2",
+      "scheduler-workload.cjs": "d8a24571f29576d56ce5285f83bd520e409ac9f295c248fc0216775f9e9116db",
+      "scheduler-process.cjs": "8a3ae1dae1d580ac5609719fc5ee041d292d2b2661b3f8be9d340a9095668912"
+    },
+    "cleanup_test_sha256": "da98590a97bd38cc1e44499ad1580b53be14b0115941314a4b7c20f183927792",
+    "controller_sha256": "66f43e6bb44b668a3088ba1304383d1318dfd3336010af475bbab6343d851c4e",
+    "manifest_sha256": "ae33134247a989817a91978c3cf58db0f30aa41ffd277c11f73505cacea34c5c",
+    "runtimes": [
+      {
+        "version": "v20.20.2",
+        "path": "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "sha256": "6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd"
+      },
+      {
+        "version": "v24.19.0",
+        "path": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "sha256": "bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12"
+      }
+    ],
+    "builds": {
+      "parent": {
+        "revision": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+        "source_files": 198,
+        "compiled_files": 195,
+        "archive_sha256": "86188674797c578bb250d72de44319a89b283326d33006b91fbeb203c5f47424",
+        "compiled_aggregate_sha256": "41663c8ae9c916f5613ae86def13123a29f24749da88ea14b09eeb4fb7822ebc",
+        "identity_table": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-2/identities-parent.json",
+        "identity_table_sha256": "e0e770fa926f1633111ffc0f412b6b5dbafd7f2f1a5703a05d3cdad15ab60df7"
+      },
+      "candidate": {
+        "revision": "02fc856f99a0e37fd443529e0b8f5c52a61c5202",
+        "source_files": 201,
+        "compiled_files": 198,
+        "archive_sha256": "992918e4607c54c944133dc2b781085abe297f40a1adfe945e47db5a0140826f",
+        "compiled_aggregate_sha256": "cc1dc274e01b9869d407e3f53c5889c38197627d21d53ada9e0304d3ce2b042a",
+        "identity_table": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-2/identities-candidate.json",
+        "identity_table_sha256": "c227bf22efa7b643fda4c5500f9b57e01af43e871c32938ecc95249431ecda85"
+      }
+    }
+  },
+  "launch": {
+    "grant_id": "root-95-feasibility-02fc856-20261108-r2",
+    "tool_session_id": 16234,
+    "exact_argv": [
+      "/usr/bin/python3.13",
+      "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/controller-feasibility2-r2.py",
+      "--manifest",
+      "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/manifest-feasibility2-r2.json",
+      "--grant-id",
+      "root-95-feasibility-02fc856-20261108-r2"
+    ],
+    "outer_identity": {
+      "pid": 2928152,
+      "start_ticks": 88316468,
+      "ppid": 2880094,
+      "group": 2928152,
+      "session": 2928152,
+      "state": "R"
+    },
+    "started_monotonic": 883164.779338089,
+    "application_deadline": 888564.779338089,
+    "fixed_final_deadline": 888624.779338089,
+    "outer_output": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility2-grant-2",
+    "runner_output": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-2",
+    "attempt": "R2 once"
+  },
+  "finished_monotonic": 883413.232219098,
+  "elapsed_seconds": 248.4528810089687,
+  "controller_exit": 1,
+  "runner_exit": 1,
+  "first_unexpected": {
+    "kind": "partial-feasibility",
+    "detail": "{'checkpoint': {'failed_case': '20.20.2-0-outbound-0-parent', 'error': None, 'cleanup_error': None, 'classification_errors': ['Unknown actual archived worker-owned caller'], 'reason': 'Stop at first unrecognized/infeasible case; remaining cells require a new disposition/grant'}, 'actual': ['20.20.2-0-none-0-parent', '20.20.2-0-none-0-candidate', '20.20.2-0-outbound-0-parent'], 'unrun': ['20.20.2-0-outbound-0-candidate', '20.20.2-0-inbound-0-parent', '20.20.2-0-inbound-0-candidate', '24.19.0-0-none-0-parent', '24.19.0-0-none-0-candidate', '24.19.0-0-outbound-0-parent', '24.19.0-0-outbound-0-candidate', '24.19.0-0-inbound-0-parent', '24.19.0-0-inbound-0-candidate', '20.20.2-1000-none-0-parent', '20.20.2-1000-none-0-candidate', '20.20.2-1000-outbound-0-parent', '20.20.2-1000-outbound-0-candidate', '20.20.2-1000-inbound-0-parent', '20.20.2-1000-inbound-0-candidate', '24.19.0-1000-none-0-parent', '24.19.0-1000-none-0-candidate', '24.19.0-1000-outbound-0-parent', '24.19.0-1000-outbound-0-candidate', '24.19.0-1000-inbound-0-parent', '24.19.0-1000-inbound-0-candidate', '20.20.2-10000-none-0-parent', '20.20.2-10000-none-0-candidate', '20.20.2-10000-outbound-0-parent', '20.20.2-10000-outbound-0-candidate', '20.20.2-10000-inbound-0-parent', '20.20.2-10000-inbound-0-candidate', '24.19.0-10000-none-0-parent', '24.19.0-10000-none-0-candidate', '24.19.0-10000-outbound-0-parent', '24.19.0-10000-outbound-0-candidate', '24.19.0-10000-inbound-0-parent', '24.19.0-10000-inbound-0-candidate']}",
+    "monotonic": 883413.200727193
+  },
+  "outer_commands": [
+    {
+      "label": "pin",
+      "command": [
+        "/usr/bin/git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "identity": {
+        "pid": 2928155,
+        "start_ticks": 88316498,
+        "ppid": 2928152,
+        "group": 2928155,
+        "session": 2928155,
+        "state": "R"
+      },
+      "bound_seconds": 5,
+      "started_monotonic": 883164.98179153,
+      "command_deadline": 883169.98179153,
+      "elapsed_seconds": 0.05957452300935984,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "status",
+      "command": [
+        "/usr/bin/git",
+        "status",
+        "--porcelain"
+      ],
+      "exit": 0,
+      "identity": {
+        "pid": 2928156,
+        "start_ticks": 88316504,
+        "ppid": 2928152,
+        "group": 2928156,
+        "session": 2928156,
+        "state": "R"
+      },
+      "bound_seconds": 5,
+      "started_monotonic": 883165.042820556,
+      "command_deadline": 883170.042820556,
+      "elapsed_seconds": 0.05881674203556031,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "production-frozen",
+      "command": [
+        "/usr/bin/git",
+        "diff",
+        "--exit-code",
+        "9fd509e4bc7be62b17bffa4eb3c47b6cb9f9d51f",
+        "--",
+        "packages/cli/src",
+        ":!packages/cli/src/sync-worker-schedule.test.ts"
+      ],
+      "exit": 0,
+      "identity": {
+        "pid": 2928157,
+        "start_ticks": 88316510,
+        "ppid": 2928152,
+        "group": 2928157,
+        "session": 2928157,
+        "state": "R"
+      },
+      "bound_seconds": 5,
+      "started_monotonic": 883165.103225285,
+      "command_deadline": 883170.103225285,
+      "elapsed_seconds": 0.05827242007944733,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "node-24.19.0",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--version"
+      ],
+      "exit": 0,
+      "identity": {
+        "pid": 2928159,
+        "start_ticks": 88316554,
+        "ppid": 2928152,
+        "group": 2928159,
+        "session": 2928159,
+        "state": "R"
+      },
+      "bound_seconds": 5,
+      "started_monotonic": 883165.544009747,
+      "command_deadline": 883170.544009747,
+      "elapsed_seconds": 0.05960087105631828,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "node-20.20.2",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--version"
+      ],
+      "exit": 0,
+      "identity": {
+        "pid": 2928160,
+        "start_ticks": 88316590,
+        "ppid": 2928152,
+        "group": 2928160,
+        "session": 2928160,
+        "state": "R"
+      },
+      "bound_seconds": 5,
+      "started_monotonic": 883165.900246216,
+      "command_deadline": 883170.900246216,
+      "elapsed_seconds": 0.058781006024219096,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "classifier-tests",
+      "command": [
+        "/usr/bin/python3.13",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/test_scheduler_cleanup.py",
+        "SchedulerClassificationTests",
+        "-v"
+      ],
+      "exit": 0,
+      "identity": {
+        "pid": 2928161,
+        "start_ticks": 88316596,
+        "ppid": 2928152,
+        "group": 2928161,
+        "session": 2928161,
+        "state": "R"
+      },
+      "bound_seconds": 30,
+      "started_monotonic": 883165.961032648,
+      "command_deadline": 883195.961032648,
+      "elapsed_seconds": 0.22751979099120945,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "cleanup-tests",
+      "command": [
+        "/usr/bin/python3.13",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/test_scheduler_cleanup.py",
+        "SchedulerCleanupTests",
+        "-v"
+      ],
+      "exit": 0,
+      "identity": {
+        "pid": 2928162,
+        "start_ticks": 88316619,
+        "ppid": 2928152,
+        "group": 2928162,
+        "session": 2928162,
+        "state": "R"
+      },
+      "bound_seconds": 45,
+      "started_monotonic": 883166.190625129,
+      "command_deadline": 883211.190625129,
+      "elapsed_seconds": 8.588336015003733,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "feasibility",
+      "command": [
+        "/usr/bin/python3.13",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler.py",
+        "--candidate",
+        "02fc856f99a0e37fd443529e0b8f5c52a61c5202",
+        "--node20",
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--node24",
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--phase",
+        "feasibility",
+        "--budget-seconds",
+        "5400",
+        "--identity-manifest",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/artifacts/issue95-shutdown-diagnosis/manifest-feasibility2-r2.json",
+        "--deadline-monotonic",
+        "888564.779338089",
+        "--out",
+        "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-2"
+      ],
+      "exit": 1,
+      "identity": {
+        "pid": 2928179,
+        "start_ticks": 88317478,
+        "ppid": 2928152,
+        "group": 2928179,
+        "session": 2928179,
+        "state": "R"
+      },
+      "bound_seconds": 5400,
+      "started_monotonic": 883174.781059571,
+      "command_deadline": 888564.779338089,
+      "elapsed_seconds": 238.41574812307954,
+      "group_joined": true,
+      "fixture_removed": true
+    }
+  ],
+  "preliminary_commands": [
+    {
+      "label": "filesystem",
+      "command": [
+        "stat",
+        "-f",
+        "-c",
+        "%T",
+        "/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt"
+      ],
+      "timeout_seconds": 5,
+      "exit": 0,
+      "pid": 2928191,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.027453774004243314
+    },
+    {
+      "label": "archive-parent",
+      "command": [
+        "git",
+        "archive",
+        "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+        "packages/cli/src",
+        "packages/cli/tsconfig.json",
+        "tsconfig.base.json"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2928192,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.0710296779870987
+    },
+    {
+      "label": "build-parent",
+      "command": [
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/node_modules/.bin/tsc-rs",
+        "-p",
+        "/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/build-parent/packages/cli/tsconfig.json"
+      ],
+      "timeout_seconds": 60,
+      "exit": 0,
+      "pid": 2928193,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.85762105404865
+    },
+    {
+      "label": "archive-candidate",
+      "command": [
+        "git",
+        "archive",
+        "02fc856f99a0e37fd443529e0b8f5c52a61c5202",
+        "packages/cli/src",
+        "packages/cli/tsconfig.json",
+        "tsconfig.base.json"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2928228,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.05582411598879844
+    },
+    {
+      "label": "build-candidate",
+      "command": [
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/node_modules/.bin/tsc-rs",
+        "-p",
+        "/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/build-candidate/packages/cli/tsconfig.json"
+      ],
+      "timeout_seconds": 60,
+      "exit": 0,
+      "pid": 2928229,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.8626631640363485
+    },
+    {
+      "label": "reader-race-20.20.2-parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-name-pattern=an enabled owned worker keeps its process identity",
+        "/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/build-parent/packages/cli/dist/sync-ledger-read-race.test.js"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2928269,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.6961127299582586
+    },
+    {
+      "label": "reader-race-20.20.2-candidate",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-name-pattern=an enabled owned worker keeps its process identity",
+        "/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/build-candidate/packages/cli/dist/sync-ledger-read-race.test.js"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2928286,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.6875514630228281
+    },
+    {
+      "label": "reader-race-24.19.0-parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-name-pattern=an enabled owned worker keeps its process identity",
+        "/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/build-parent/packages/cli/dist/sync-ledger-read-race.test.js"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2928303,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.650398705038242
+    },
+    {
+      "label": "reader-race-24.19.0-candidate",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-name-pattern=an enabled owned worker keeps its process identity",
+        "/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/build-candidate/packages/cli/dist/sync-ledger-read-race.test.js"
+      ],
+      "timeout_seconds": 15,
+      "exit": 0,
+      "pid": 2928323,
+      "terminated_exit": 0,
+      "group_reaped": true,
+      "elapsed_seconds": 0.6480981879867613
+    }
+  ],
+  "tests": {
+    "classifier": {
+      "methods": 17,
+      "passed": 17,
+      "skipped": 0,
+      "reported_seconds": 0.043
+    },
+    "cleanup": {
+      "methods": 5,
+      "passed": 5,
+      "skipped": 0,
+      "reported_seconds": 8.413
+    },
+    "reader_race": {
+      "selected_test": "an enabled owned worker keeps its process identity through a benign ledger replacement",
+      "20.20.2_each_role": {
+        "tests_reported": 33,
+        "passed": 1,
+        "failed": 0,
+        "cancelled": 0,
+        "nonmatching_skipped": 32
+      },
+      "24.19.0_each_role": {
+        "tests_reported": 1,
+        "passed": 1,
+        "failed": 0,
+        "cancelled": 0,
+        "skipped": 0
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "20.20.2-0-none-0-parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/build-parent/packages/cli/dist",
+        "/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/20.20.2-0-none-0-parent",
+        "0",
+        "none",
+        "65000"
+      ],
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "shutdown_correctness": "passed",
+      "continue_case": true,
+      "resource_observation_complete": true,
+      "resource_gain_eligible": false,
+      "release_observation": "observed",
+      "completion_observation": "observed",
+      "errors": [],
+      "setup_seconds": 0.6134694879874587,
+      "elapsed_seconds": 65.87704317597672,
+      "started_monotonic": 883180.47110072,
+      "evidence_written_monotonic": 883246.675303045,
+      "raw_primary_idle_elapsed_ms": 65004.371557,
+      "raw_primary_idle_completed_passes": 2,
+      "fresh_cleanup_checked_monotonic": 883246.373716186,
+      "evidence_precedes_next_start": true,
+      "raw_selected_read": {
+        "worker_pid": 2928353,
+        "read_id": 1,
+        "store_id": 1,
+        "caller": "Error: issue95-routed-held-read\n    at ManagedSyncStore.snapshot (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-process.cjs:79:54)\n    at assertManagedLifecycle (/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/build-parent/packages/cli/dist/sync-lifecycle.js:27:52)\n    at async drain (/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/build-parent/packages/cli/dist/sync-worker.js:246:28)",
+        "worker_monotonic_ms": {
+          "read-held": 65326.876432,
+          "stopping": 65351.3842,
+          "read-released": 65377.143768,
+          "read-finished": 65378.554753,
+          "closed": 65387.109881
+        }
+      },
+      "raw_controls": {
+        "reaction_elapsed_ms": {
+          "explicit-wake": 27.93208799999411,
+          "wall-forward": 30.66491700000188,
+          "wall-backward": 28.35833299999649,
+          "monotonic-gap": 28.0399019999968,
+          "suspend-both": 27.6645720000015
+        },
+        "other_events": [
+          {
+            "wall": 1794165344653,
+            "monotonic": 65560.044692,
+            "type": "pending-read-shutdown-joined"
+          },
+          {
+            "wall": 1794165344655,
+            "monotonic": 65562.73782,
+            "type": "cleanup",
+            "exactPorts": [
+              "http://127.0.0.1:42967"
+            ],
+            "childrenReaped": 1,
+            "failures": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "20.20.2-0-none-0-candidate",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/build-candidate/packages/cli/dist",
+        "/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/20.20.2-0-none-0-candidate",
+        "0",
+        "none",
+        "65000"
+      ],
+      "exit": 0,
+      "qualified_case": true,
+      "passing_cell": true,
+      "shutdown_correctness": "passed",
+      "continue_case": true,
+      "resource_observation_complete": true,
+      "resource_gain_eligible": false,
+      "release_observation": "observed",
+      "completion_observation": "observed",
+      "errors": [],
+      "setup_seconds": 0.7550314790569246,
+      "elapsed_seconds": 65.90855492500123,
+      "started_monotonic": 883246.675503177,
+      "evidence_written_monotonic": 883312.942833475,
+      "raw_primary_idle_elapsed_ms": 65005.659843999994,
+      "raw_primary_idle_completed_passes": 2,
+      "fresh_cleanup_checked_monotonic": 883312.617258314,
+      "evidence_precedes_next_start": true,
+      "raw_selected_read": {
+        "worker_pid": 2928716,
+        "read_id": 1,
+        "store_id": 1,
+        "caller": "Error: issue95-routed-held-read\n    at ManagedSyncStore.snapshot (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-process.cjs:79:54)\n    at assertManagedLifecycle (/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/build-candidate/packages/cli/dist/sync-lifecycle.js:27:52)\n    at async drain (/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/build-candidate/packages/cli/dist/sync-worker.js:271:28)",
+        "worker_monotonic_ms": {
+          "read-held": 65305.239549,
+          "stopping": 65330.258035,
+          "read-released": 65358.570797,
+          "read-finished": 65361.376522,
+          "closed": 65368.89432
+        }
+      },
+      "raw_controls": {
+        "reaction_elapsed_ms": {
+          "explicit-wake": 28.40871700000571,
+          "wall-forward": 14.57394000000204,
+          "wall-backward": 26.226400999999896,
+          "monotonic-gap": 31.31362399999489,
+          "suspend-both": 24.896593999998004
+        },
+        "other_events": [
+          {
+            "wall": 1794165410876,
+            "monotonic": 65558.32419,
+            "type": "pending-read-shutdown-joined"
+          },
+          {
+            "wall": 1794165410879,
+            "monotonic": 65561.718523,
+            "type": "cleanup",
+            "exactPorts": [
+              "http://127.0.0.1:39049"
+            ],
+            "childrenReaped": 1,
+            "failures": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "20.20.2-0-outbound-0-parent",
+      "command": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-workload.cjs",
+        "/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/build-parent/packages/cli/dist",
+        "/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/20.20.2-0-outbound-0-parent",
+        "0",
+        "outbound",
+        "65000"
+      ],
+      "exit": 0,
+      "qualified_case": false,
+      "passing_cell": false,
+      "shutdown_correctness": "unrecognized",
+      "continue_case": false,
+      "resource_observation_complete": false,
+      "resource_gain_eligible": false,
+      "release_observation": "unobserved",
+      "completion_observation": "unobserved",
+      "errors": [
+        "Unknown actual archived worker-owned caller"
+      ],
+      "setup_seconds": 1.7542008010204881,
+      "elapsed_seconds": 99.66860045201611,
+      "started_monotonic": 883312.943079215,
+      "evidence_written_monotonic": 883412.924037591,
+      "raw_primary_idle_elapsed_ms": 65005.411273000005,
+      "raw_primary_idle_completed_passes": 3,
+      "raw_selected_read_events": [
+        {
+          "wall": 1794165510784,
+          "monotonic": 98459.498942,
+          "role": "worker",
+          "pid": 2928947,
+          "type": "read-held",
+          "readId": 1,
+          "storeId": 1,
+          "scriptStore": false,
+          "caller": "Error: issue95-routed-held-read\n    at ManagedSyncStore.snapshot (/home/agent/.t3/worktrees/html-inbox/perf-95-scheduler/scripts/bench/scheduler-process.cjs:79:54)\n    at reconcileSyncRoutes (/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/build-parent/packages/cli/dist/sync-reconciliation.js:99:49)\n    at async drain (/tmp/html-inbox-issue95-feasibility2-cdt9gwa4/fixture-feasibility/html-inbox-scheduler-7p4tl6wt/build-parent/packages/cli/dist/sync-worker.js:307:21)",
+          "activeReads": [
+            {
+              "readId": 1,
+              "storeId": 1,
+              "scriptStore": false
+            }
+          ]
+        },
+        {
+          "wall": 1794165510790,
+          "monotonic": 98466.0572,
+          "role": "worker",
+          "pid": 2928947,
+          "type": "stopping",
+          "activeReads": [
+            {
+              "readId": 1,
+              "storeId": 1,
+              "scriptStore": false
+            }
+          ]
+        },
+        {
+          "wall": 1794165510815,
+          "monotonic": 98491.24977,
+          "role": "worker",
+          "pid": 2928947,
+          "type": "read-released",
+          "readId": 1,
+          "storeId": 1,
+          "scriptStore": false,
+          "reason": "rpc"
+        },
+        {
+          "wall": 1794165510818,
+          "monotonic": 98493.833251,
+          "role": "worker",
+          "pid": 2928947,
+          "type": "read-finished",
+          "readId": 1,
+          "storeId": 1,
+          "scriptStore": false,
+          "outcome": "fulfilled",
+          "activeReads": []
+        },
+        {
+          "wall": 1794165510827,
+          "monotonic": 98503.106184,
+          "role": "worker",
+          "pid": 2928947,
+          "type": "worker-event",
+          "event": "closed",
+          "activeReads": []
+        }
+      ],
+      "fresh_cleanup_checked_monotonic": 883412.635614972,
+      "interpretation": "Formal unrecognized return precedes release/completion collection. Its unobserved defaults do not describe the full raw trace. Actual RPC release, fulfilled read and empty-active close are observed in order; original formal fields remain unchanged and the cell remains unqualified.",
+      "raw_controls": {
+        "reaction_elapsed_ms": {
+          "explicit-wake": 178.6181440000073,
+          "wall-forward": 179.77815899999405,
+          "wall-backward": 154.6724669999967,
+          "monotonic-gap": 155.8805699999939,
+          "suspend-both": 155.69181899999967,
+          "retry-deadline": 770.681878000003
+        },
+        "other_events": [
+          {
+            "wall": 1794165479636,
+            "monotonic": 68026.742768,
+            "type": "retry-reaction",
+            "deadlineAt": 1794165479374,
+            "requestAt": 1794165479623,
+            "latenessMs": 249
+          },
+          {
+            "wall": 1794165480255,
+            "monotonic": 68645.62399,
+            "type": "external-commit-custody",
+            "elapsedMs": 618.8330609999975,
+            "state": "live"
+          },
+          {
+            "wall": 1794165510753,
+            "monotonic": 99143.65157,
+            "type": "repair-complete",
+            "elapsedMs": 30487.896485000005
+          },
+          {
+            "wall": 1794165510765,
+            "monotonic": 99155.076752,
+            "type": "stale-route-rejected"
+          },
+          {
+            "wall": 1794165510833,
+            "monotonic": 99223.313192,
+            "type": "pending-read-shutdown-joined"
+          },
+          {
+            "wall": 1794165510843,
+            "monotonic": 99233.696285,
+            "type": "cleanup",
+            "exactPorts": [
+              "https://127.0.0.1:46179",
+              "http://127.0.0.1:40129"
+            ],
+            "childrenReaped": 2,
+            "failures": []
+          }
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "phase": "feasibility",
+    "qualified_cases": 2,
+    "total_cases": 3,
+    "required_cases": 36,
+    "complete": false,
+    "performance_retention_decision": "pending all required gates and independent reviews",
+    "resource_observations_complete": 2,
+    "resource_feasibility_complete": false,
+    "shutdown_controls_complete": false,
+    "behavior_qualification_complete": false,
+    "resource_gain_eligible": false,
+    "global_cleanup_passed": true,
+    "failed_shutdown_controls": [
+      {
+        "name": "20.20.2-0-outbound-0-parent",
+        "exit": 0,
+        "correctness": "unrecognized"
+      }
+    ],
+    "unrun_cases": [
+      "20.20.2-0-outbound-0-candidate",
+      "20.20.2-0-inbound-0-parent",
+      "20.20.2-0-inbound-0-candidate",
+      "24.19.0-0-none-0-parent",
+      "24.19.0-0-none-0-candidate",
+      "24.19.0-0-outbound-0-parent",
+      "24.19.0-0-outbound-0-candidate",
+      "24.19.0-0-inbound-0-parent",
+      "24.19.0-0-inbound-0-candidate",
+      "20.20.2-1000-none-0-parent",
+      "20.20.2-1000-none-0-candidate",
+      "20.20.2-1000-outbound-0-parent",
+      "20.20.2-1000-outbound-0-candidate",
+      "20.20.2-1000-inbound-0-parent",
+      "20.20.2-1000-inbound-0-candidate",
+      "24.19.0-1000-none-0-parent",
+      "24.19.0-1000-none-0-candidate",
+      "24.19.0-1000-outbound-0-parent",
+      "24.19.0-1000-outbound-0-candidate",
+      "24.19.0-1000-inbound-0-parent",
+      "24.19.0-1000-inbound-0-candidate",
+      "20.20.2-10000-none-0-parent",
+      "20.20.2-10000-none-0-candidate",
+      "20.20.2-10000-outbound-0-parent",
+      "20.20.2-10000-outbound-0-candidate",
+      "20.20.2-10000-inbound-0-parent",
+      "20.20.2-10000-inbound-0-candidate",
+      "24.19.0-10000-none-0-parent",
+      "24.19.0-10000-none-0-candidate",
+      "24.19.0-10000-outbound-0-parent",
+      "24.19.0-10000-outbound-0-candidate",
+      "24.19.0-10000-inbound-0-parent",
+      "24.19.0-10000-inbound-0-candidate"
+    ]
+  },
+  "known_parent_timer_failure_dispositions": 0,
+  "cleanup": {
+    "owner_audit": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility2-grant-2/independent-cleanup.json",
+    "owner_audit_sha256": "7464688e725345908cdd1136ea45d2105dd86eee24ebea6e30fd2114548c14ea",
+    "pid_start_identities": 37,
+    "owned_pgids": 26,
+    "observed_group_session_pairs": 23,
+    "absent_fixture_paths": 13,
+    "exact_timed_workload_ports": [
+      {
+        "origin": "http://127.0.0.1:39049",
+        "port": 39049,
+        "rebound": true
+      },
+      {
+        "origin": "http://127.0.0.1:40129",
+        "port": 40129,
+        "rebound": true
+      },
+      {
+        "origin": "http://127.0.0.1:42967",
+        "port": 42967,
+        "rebound": true
+      },
+      {
+        "origin": "https://127.0.0.1:46179",
+        "port": 46179,
+        "rebound": true
+      }
+    ],
+    "remaining_identities": [],
+    "remaining_group_members": [],
+    "remaining_fixtures": [],
+    "outer_signal_actions": 0,
+    "outer_adopted_reaps": [],
+    "port_limit": "Five cleanup methods and four reader checks passed their own port-rebind assertions; their numeric ports were not retained for an independent later bind. Four timed-workload ports were independently rebound by owner; root did not repeat binds.",
+    "path_limit": "Three short-lived inner PGIDs lack independently observed start/session pairs; they are owned Popen groups and were scanned absent.",
+    "unused_paths": "Normal controller completion does not qualify unused controller timeout/interruption paths; legacy cleanup tests separately exercise their selected failure paths."
+  },
+  "root_release_audit": {
+    "path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility2-r2-release-root-audit.json",
+    "sha256": "d0ad26ee099e41e4b9227b244910aea645f872f58f24946828a3e03845c47148",
+    "release_accepted": true,
+    "root_review_limitation": "Root also missed the awaited reconciliation call path during static classifier review."
+  },
+  "artifacts": {
+    "outer": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility2-grant-2",
+    "runner": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility-2",
+    "index": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue95-feasibility2-grant-2/raw-artifact-index.json",
+    "index_sha256": "4794bf220f2f26b5fed7994959047369536778f6e27d65898c6d3823c8363524",
+    "indexed_files": 54,
+    "public_raw_artifact_gate": "Open; these local retained artifacts are not a durable public artifact publication."
+  },
+  "historical_invariance": {
+    "original_untagged_failure_and_25_unrun": "Unchanged; no historical caller classification inferred",
+    "original_receipt_sha256": "6ec1aee5dfa388cd965bfc5747a9c4a7b37cd154361702245d2e530883ec3304",
+    "R1_stop_receipt_sha256": "24fafa6625400b1bc6369c2e54be55dc78ad0fe5ca73f75a8b09b0f57423dcb7",
+    "R1_status": "Five preflight exits 0, literal {repo} dispatch admission failure before classifier/cleanup/matrix; review omission retained",
+    "separate_minimized_timer_defect": "Previously proven on both runtimes; not exercised or disproved by R2",
+    "hosted_CI": "02fc all 18 green is CI only; historical Windows EPERM/aggregate cause remains unresolved."
+  },
+  "remaining_gates": [
+    "33 fresh unrun cases, including every high-count and Node24 workload",
+    "Feasibility completion",
+    "At least five alternating parent/candidate pairs per required cell and benefit beyond noise",
+    "Full behavior/integration/check gates",
+    "Durable public raw-artifact reference",
+    "Two fresh independent whole-diff reviews at one measured freeze and dispositions",
+    "Root/final CI approval"
+  ],
+  "next_execution_authorized": false
+}
