@@ -168,11 +168,12 @@ test("current holdings receipts acknowledge one page with one ledger replacement
   }
 
   const batches: { receipts: number; replacements: number }[] = [];
-  const acknowledgeBatch = f.a.store.acknowledgeBatch.bind(f.a.store);
-  f.a.store.acknowledgeBatch = async (authorization, values) => {
+  const acknowledgeHoldings = f.a.store.acknowledgeHoldings.bind(f.a.store);
+  f.a.store.acknowledgeHoldings = async (authorization, incarnation, members) => {
     const before = f.a.store.counters.events["ledger-renamed"] ?? 0;
-    await acknowledgeBatch(authorization, values);
-    batches.push({ receipts: Array.isArray(values) ? values.length : -1, replacements: (f.a.store.counters.events["ledger-renamed"] ?? 0) - before });
+    await acknowledgeHoldings(authorization, incarnation, members);
+    assert.ok(Array.isArray(members));
+    batches.push({ receipts: members.length, replacements: (f.a.store.counters.events["ledger-renamed"] ?? 0) - before });
   };
 
   const first = await f.run(f.a, f.outbound);
