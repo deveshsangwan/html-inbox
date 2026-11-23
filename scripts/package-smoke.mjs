@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { execFile, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
 import {
   mkdtemp,
   mkdir,
@@ -14,11 +14,9 @@ import http from "node:http";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
-import { promisify } from "node:util";
 import { createPackageTailscaleFixture } from "./package-tailscale-fixture.mjs";
 
-const executeFile = promisify(execFile);
-const repositoryRoot =path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const temporaryRoot = await mkdtemp(path.join(tmpdir(), "html-inbox-package-"));
 let viewer;
 let tailscaleEnvironment;
@@ -332,6 +330,7 @@ Module._load = function (request, ...args) {
     }
 
     // Every step runs even when disable fails, so a detached worker is never stranded silently.
+    // A live recorded PID cannot be proven to be the worker, so it is reported, never signalled.
     const cleanupFailures = [];
     try {
       await runManaged(["sync", "worker", "disable"]);
@@ -341,8 +340,9 @@ Module._load = function (request, ...args) {
 
     for (const pid of workerPids) {
       try {
-        const survivor = await stopManagedWorker(pid, managedHome);
-        if (survivor) cleanupFailures.push(survivor);
+        if (!await waitForProcessExit(pid, 3000)) {
+          cleanupFailures.push(new Error(`Managed worker ${pid} is still running after disable, or its PID was reused; it was not signalled`));
+        }
       } catch (error) {
         cleanupFailures.push(error);
       }
@@ -393,32 +393,6 @@ async function deleteThroughViewer(origin, documentUrl) {
   });
   assert.equal(result.status, 204, await result.text());
   assert.equal((await fetch(documentUrl, { signal: AbortSignal.timeout(3000) })).status, 404);
-}
-
-// Returns a failure when the worker outlives disable; it is killed only while its
-// command line still names this fixture's home, so a reused PID is never signalled.
-async function stopManagedWorker(pid, home) {
-  if (await waitForProcessExit(pid, 3000)) return undefined;
-
-  const workerCommand = `sync worker start --foreground --home ${home} --json`;
-  let command;
-  try {
-    command = (await executeFile("ps", ["-ww", "-o", "command=", "-p", String(pid)])).stdout.trim();
-  } catch (error) {
-    if (error.code === 1 && await waitForProcessExit(pid, 0)) return undefined;
-
-    return new Error(`Managed worker ${pid} survived disable and could not be identified`, { cause: error });
-  }
-
-  if (!command.endsWith(workerCommand)) return undefined;
-
-  try {
-    process.kill(pid, "SIGKILL");
-  } catch (error) {
-    if (error.code !== "ESRCH") throw error;
-  }
-  const isKilled = await waitForProcessExit(pid, 3000);
-  return new Error(`Managed worker ${pid} survived disable; forced cleanup ${isKilled ? "succeeded" : "failed"}`);
 }
 
 async function waitForProcessExit(pid, timeoutMs) {
