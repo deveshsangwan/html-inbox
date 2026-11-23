@@ -146,7 +146,7 @@ async function createFilterFixture(t, contextOptions = {}) {
     sources.push({ name, home, instanceId });
   }
 
-  hub = await startFixtureHub(root, { schemaVersion: 1, name: "Filter test", sources }, (started) => { hub = started; });
+  hub = await startFixtureHub(root, { schemaVersion: 1, name: "Filter test", sources }, (started) => { hub = started; }, t.signal);
   browser = await chromium.launch(process.env.HTML_INBOX_BROWSER_EXECUTABLE ? { executablePath: process.env.HTML_INBOX_BROWSER_EXECUTABLE } : {});
   const context = await browser.newContext(contextOptions);
   const page = await context.newPage();
@@ -172,7 +172,7 @@ test("hub reads colliding source IDs with search, filters, isolation and partial
   }
 
   const hubName = "Development ".repeat(16).trim();
-  hub = await startFixtureHub(root, { schemaVersion: 1, name: hubName, sources }, (started) => { hub = started; });
+  hub = await startFixtureHub(root, { schemaVersion: 1, name: hubName, sources }, (started) => { hub = started; }, t.signal);
   const origin = hub.urls[0];
   browser = await chromium.launch(process.env.HTML_INBOX_BROWSER_EXECUTABLE ? { executablePath: process.env.HTML_INBOX_BROWSER_EXECUTABLE } : {});
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -245,7 +245,7 @@ test("hub reads colliding source IDs with search, filters, isolation and partial
   await assertScopedCopy(page, "/sources/home/documents/same-id/copy.json", "Quarterly results\nloading\nloading");
 });
 
-async function startFixtureHub(root, configuration, onStarted) {
+async function startFixtureHub(root, configuration, onStarted, signal) {
   if (!process.env.HTML_INBOX_HUB_TEST_CLI) {
     return startHub(configuration, 0);
   }
@@ -260,6 +260,8 @@ async function startFixtureHub(root, configuration, onStarted) {
   await writeHubConfig(config, configuration);
 
   const origin = `http://127.0.0.1:${await availablePort()}`;
+  // A test that timed out or was cancelled while preparing must not start a child its teardown cannot see.
+  signal?.throwIfAborted();
   const child = spawn(process.execPath, [executable, "hub", "--config", config,
     "--loopback", "--host", "127.0.0.1", "--port", new URL(origin).port], {
     cwd: root,
@@ -318,7 +320,7 @@ async function startFixtureHub(root, configuration, onStarted) {
       child.unref();
     }
 
-    closeOutcome = { pid: child.pid, readinessPublished, teardownRequested, hadExited,
+    closeOutcome = { pid: child.pid, root, readinessPublished, teardownRequested, hadExited,
       nativeExit, nativeClose: result ?? "unjoined", forced, stderr,
       errors: childErrors.map((error) => error instanceof Error
         ? { ...error, name: error.name, message: error.message, stack: error.stack }
@@ -340,6 +342,9 @@ async function startFixtureHub(root, configuration, onStarted) {
     if (forced) {
       failures.push(new Error("Installed hub required forced shutdown"));
     }
+
+    // Node's reporter omits a t.after error once the test body has failed, so the diagnostic carries the reasons.
+    closeOutcome.failures = failures.map((failure) => failure instanceof Error ? failure.message : String(failure));
 
     if (failures.length) {
       const error = new AggregateError(failures, `Installed hub shutdown failed.\n${stderr}`);
@@ -448,7 +453,11 @@ async function closeHubFixture(t, browser, hub, root) {
   }
 
   if (failures.length) {
-    throw new AggregateError(failures, `Hub fixture shutdown failed; evidence retained at ${root}`);
+    const message = `Hub fixture shutdown failed; evidence retained at ${root}`;
+    // Printed as well as thrown: the reporter drops this hook's error when the test body already failed.
+    try { t.diagnostic(`${message}: ${failures.map((failure) => failure?.message ?? String(failure)).join("; ")}`); } catch (error) { failures.push(error); }
+
+    throw new AggregateError(failures, message);
   }
 
   // A failed startup already fails its test; keep the inputs that reproduce it.

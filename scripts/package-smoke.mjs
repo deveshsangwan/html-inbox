@@ -62,9 +62,11 @@ try {
     "npm",
     [
       "install",
-      // Explicit, so inherited global or location settings cannot install into a real npm prefix.
+      // Explicit, so inherited global, location or workspace settings cannot install outside the consumer.
       "--global=false",
       "--location=project",
+      `--prefix=${consumerRoot}`,
+      "--workspaces=false",
       "--ignore-scripts",
       "--no-audit",
       "--no-fund",
@@ -452,7 +454,9 @@ Module._load = function (request, ...args) {
     }
   }
 
-  if (process.env.HTML_INBOX_KEEP_PACKAGE_SMOKE !== "1" && !shouldRetainFixture) {
+  // One decision for both removal and reporting, whether the fixture is kept on request or for evidence.
+  const isFixtureKept = process.env.HTML_INBOX_KEEP_PACKAGE_SMOKE === "1" || shouldRetainFixture;
+  if (!isFixtureKept) {
     try {
       await rm(temporaryRoot, { recursive: true, force: true });
     } catch (error) {
@@ -464,10 +468,10 @@ Module._load = function (request, ...args) {
     const failures = [primaryFailure, ...cleanupFailures]
       .filter((error, index, all) => error && all.indexOf(error) === index);
     throw new AggregateError(failures,
-      `Installed package smoke cleanup failed${shouldRetainFixture ? `; fixture retained at ${temporaryRoot}` : ""}`);
+      `Installed package smoke cleanup failed${isFixtureKept ? `; fixture retained at ${temporaryRoot}` : ""}`);
   }
 
-  if (primaryFailure && shouldRetainFixture) {
+  if (primaryFailure && isFixtureKept) {
     throw new AggregateError([primaryFailure], `Installed package smoke failed; fixture retained at ${temporaryRoot}`);
   }
 
@@ -543,12 +547,13 @@ async function isZombie(pid) {
 // reads empty fixture-owned user and global config files instead of the developer's.
 function fixtureEnvironment(overrides) {
   const inherited = Object.entries(process.env)
-    .filter(([key]) => !/^(HTML_INBOX_|NODE_|npm_config_(node_options|userconfig|globalconfig)$)/i.test(key));
+    .filter(([key]) => !/^(HTML_INBOX_|NODE_|npm_config_(node_options|userconfig|globalconfig|logs_dir)$)/i.test(key));
 
   return {
     ...Object.fromEntries(inherited),
     npm_config_userconfig: npmUserConfig,
     npm_config_globalconfig: npmGlobalConfig,
+    npm_config_logs_dir: path.join(temporaryRoot, "npm-logs"),
     ...overrides,
   };
 }

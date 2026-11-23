@@ -81,36 +81,43 @@ def main():
             with tempfile.TemporaryFile() as stdout, tempfile.TemporaryFile() as stderr:
                 # SIGINT and SIGTERM are recorded while the child is being created or cleaned up, and interrupt
                 # only the wait between, so a sample group is always killed and reaped before the signal takes
-                # effect. The child still starts with default dispositions, because exec resets caught signals.
-                # Handlers raise only while waiting and clear that state first, so no signal can raise inside the
-                # cleanup below and skip the kill or the reap.
+                # effect. Handlers raise only while waiting and clear that state first, so nothing raises inside
+                # the cleanup. An inherited SIG_IGN is left alone, and the child starts with default
+                # dispositions because exec resets caught signals.
                 interrupts = []
-                is_waiting = [False]
+                is_waiting = False
+
                 def interrupt(signum, frame):
+                    nonlocal is_waiting
                     interrupts.append(signum)
-                    if is_waiting[0]:
-                        is_waiting[0] = False
+                    if is_waiting:
+                        is_waiting = False
                         raise SampleInterrupted(signum)
-                deferred = {number: signal.signal(number, interrupt) for number in (signal.SIGINT, signal.SIGTERM)}
+
                 def timeout(signum, frame):
-                    if is_waiting[0]:
-                        is_waiting[0] = False
+                    nonlocal is_waiting
+                    if is_waiting:
+                        is_waiting = False
                         raise TimeoutError(command)
+
+                deferred = {number: signal.signal(number, interrupt) for number in (signal.SIGINT, signal.SIGTERM)
+                            if signal.getsignal(number) is not signal.SIG_IGN}
                 previous = signal.signal(signal.SIGALRM, timeout)
                 try:
                     start = time.perf_counter()
                     child = subprocess.Popen(command, cwd=consumer, env=env, stdout=stdout, stderr=stderr, start_new_session=True)
+
                     try:
-                        is_waiting[0] = True
+                        is_waiting = True
                         if interrupts:
-                            is_waiting[0] = False
+                            is_waiting = False
                             raise SampleInterrupted(interrupts[0])
                         signal.alarm(30)
                         os.waitid(os.P_PID, child.pid, os.WEXITED | os.WNOWAIT)
-                        is_waiting[0] = False
+                        is_waiting = False
                         elapsed = (time.perf_counter() - start) * 1000
                     finally:
-                        is_waiting[0] = False
+                        is_waiting = False
                         signal.alarm(0)
                         # Kill the group before reaping: the unreaped leader keeps its group ID from being reused.
                         try:
@@ -122,7 +129,8 @@ def main():
                     signal.signal(signal.SIGALRM, previous)
                     for number, handler in deferred.items():
                         signal.signal(number, handler)
-                    # The recorded signal takes precedence over a timeout or the internal interruption.
+                    # The recorded signal takes precedence over a timeout or the internal interruption. Under the
+                    # runner's own SIGTERM handler it surfaces as InterruptedError.
                     if interrupts:
                         signal.raise_signal(interrupts[0])
                 child.returncode = os.waitstatus_to_exitcode(status)
