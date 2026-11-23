@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
+import { mkdtemp, readFile, stat } from "node:fs/promises";
 import http from "node:http";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
@@ -78,9 +78,22 @@ test("isolation fixture joins owned viewer cleanup before removing its home", { 
   const teardown = async () => {
     for (const hook of hooks) await hook();
   };
-  const fixture = await createIsolationFixture({ after: (hook) => { hooks.push(hook); } }, {
-    launch: async () => ({ close: async () => {} }),
-  });
+  let fixture;
+  try {
+    fixture = await createIsolationFixture({ after: (hook) => { hooks.push(hook); } }, {
+      launch: async () => ({ close: async () => {} }),
+    });
+  } catch (setupError) {
+    // A partial setup may already own a viewer; drain what it registered.
+    try {
+      await teardown();
+    } catch (teardownError) {
+      throw new AggregateError([setupError, teardownError], "Isolation fixture setup and teardown failed");
+    }
+
+    throw setupError;
+  }
+
   const entered = gate();
   const release = gate();
   const remove = records.removeViewerRecord;
@@ -89,24 +102,39 @@ test("isolation fixture joins owned viewer cleanup before removing its home", { 
     await release.promise;
     return remove(...args);
   });
-  const closing = teardown();
-  const outcome = closing.then(() => undefined, (error) => error);
+  const outcome = teardown().then(() => ({}), (error) => ({ error }));
+  let failure;
 
   try {
-    await entered.promise;
+    const first = await Promise.race([entered.promise.then(() => "entered"), outcome.then(() => "settled")]);
     // Drain callbacks from native listener close while owned record cleanup is gated.
     await setImmediate();
     const isHomePresent = await stat(fixture.home).then((entry) => entry.isDirectory(), () => false);
     assert.equal(isHomePresent, true, "isolation home removed before owned viewer cleanup completed");
+    assert.equal(first, "entered", "isolation teardown settled before owned viewer record cleanup started");
     assert(await records.readViewerRecord(fixture.home));
     release.release();
-    await closing;
-    await assert.rejects(stat(fixture.home), { code: "ENOENT" });
-  } finally {
-    release.release();
-    await outcome;
-    t.mock.restoreAll();
-    await rm(fixture.home, { recursive: true, force: true });
+    if (!(await outcome).error) {
+      await assert.rejects(stat(fixture.home), { code: "ENOENT" });
+    }
+  } catch (error) {
+    failure = error;
+  }
+
+  release.release();
+  const { error: teardownError } = await outcome;
+  t.mock.restoreAll();
+  if (failure || teardownError) {
+    // Failed teardown keeps its home as evidence.
+    t.diagnostic(`isolation fixture evidence retained at ${fixture.home}`);
+  }
+
+  if (failure && teardownError) {
+    throw new AggregateError([failure, teardownError], `Isolation fixture assertion and teardown failed at ${fixture.home}`);
+  }
+
+  if (failure || teardownError) {
+    throw failure ?? teardownError;
   }
 });
 
