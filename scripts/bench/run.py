@@ -20,6 +20,7 @@ REPO = Path(__file__).resolve().parents[2]
 BUNDLE = REPO / 'packages/cli/bundle/index.js'
 DIST = REPO / 'packages/cli/dist'
 HARNESS = [Path(__file__).resolve(), REPO / 'scripts/bench/workload.cjs', REPO / 'scripts/bench/sync.cjs']
+SIGNATURE_WORKLOADS = ('signatures', 'signature-history')
 SUPPORTED_COUNTS = [0, 100, 1000, 5000, 10000]
 SUPPORTED_SIZES = [10240, 1048576, 9437184]
 MAX_FIXTURE_BYTES = 1 << 30
@@ -46,13 +47,17 @@ def expect(condition, message):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('workload', choices=['baseline', 'cli', 'viewer', 'worker', 'parser', 'managed', 'sync'])
+    parser.add_argument('workload', choices=['baseline', 'cli', 'viewer', 'worker', 'parser', 'managed', 'sync', *SIGNATURE_WORKLOADS])
     parser.add_argument('--counts', default='0,100')
     parser.add_argument('--sizes', default='10240,1048576,9437184')
     parser.add_argument('--samples', type=int, default=3)
     parser.add_argument('--node', default=shutil.which('node'))
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--candidate', help='CommonJS module exporting validateHtml for exact-result parser comparison')
+    parser.add_argument('--signature-mode', choices=['full', 'keys'], default='full',
+                        help='Signatures companion only: production behavior or parsed-key reuse without verification reuse')
+    parser.add_argument('--implementation-dist', type=Path, help='Signatures only: prebuilt production dist directory')
+    parser.add_argument('--implementation-ref', help='Signatures only: asserted source pin for the selected build, independently verify its build receipt')
     parser.add_argument('--timeout', type=int, default=600)
     parser.add_argument('--allow-stale-build', action='store_true',
                         help='measure even when build inputs are newer than the build; recorded in environment.json')
@@ -68,6 +73,14 @@ def parse_arguments():
         parser.error('node was not found; supply --node with an executable path')
     if args.candidate and args.workload not in ['baseline', 'parser']:
         parser.error('--candidate requires the parser or baseline workload')
+    if args.signature_mode != 'full' and args.workload not in SIGNATURE_WORKLOADS:
+        parser.error('--signature-mode requires the signatures workload')
+    if (args.implementation_dist or args.implementation_ref) and args.workload not in SIGNATURE_WORKLOADS:
+        parser.error('--implementation-dist and --implementation-ref require the signatures workload')
+    if bool(args.implementation_dist) != bool(args.implementation_ref):
+        parser.error('--implementation-dist and --implementation-ref must be supplied together')
+    if args.workload in SIGNATURE_WORKLOADS and len(args.sizes) != 1:
+        parser.error('signature workloads take exactly one --sizes value')
     if len(set(args.counts)) != len(args.counts) or len(set(args.sizes)) != len(args.sizes):
         parser.error('counts and sizes must not contain duplicates')
     if any(n not in SUPPORTED_COUNTS for n in args.counts):
@@ -84,6 +97,11 @@ def parse_arguments():
         parser.error('resource collection requires Linux 5.3+ /proc and Python 3.9+ pidfd_open')
     if not BUNDLE.is_file() or not (DIST / 'index.js').is_file():
         parser.error('build and bundle first: pnpm build && pnpm --filter html-inbox bundle')
+
+    if args.workload in SIGNATURE_WORKLOADS:
+        args.implementation_dist = (args.implementation_dist or DIST).resolve()
+        if not (args.implementation_dist / 'sync-store.js').is_file():
+            parser.error('signature implementation dist must contain sync-store.js')
 
     stale_inputs = stale_build_inputs()
     if stale_inputs and not args.allow_stale_build:
@@ -138,6 +156,22 @@ def build_fingerprints(args):
                 candidate_sha256=sha256_file(Path(args.candidate)) if args.candidate else None)
 
 
+def signature_implementation(args):
+    if args.workload not in SIGNATURE_WORKLOADS:
+        return None
+
+    dist = args.implementation_dist
+    digest = hashlib.sha256()
+    for artifact in sorted(dist.rglob('*.js')):
+        digest.update(str(artifact.relative_to(dist)).encode() + b'\0')
+        update_hash(digest, artifact)
+
+    return dict(dist=str(dist), asserted_source_ref=args.implementation_ref, dist_js_sha256=digest.hexdigest(),
+                signature_mode=args.signature_mode, source_pin_verified=False,
+                companion_sha256={name: sha256_file(REPO / 'scripts/bench' / name)
+                                  for name in ['run.py', 'workload.cjs', 'signatures.cjs']})
+
+
 def host_description():
     cpuinfo = Path('/proc/cpuinfo').read_text()
     model = next((line.split(':', 1)[1].strip() for line in cpuinfo.splitlines() if line.startswith('model name')), None)
@@ -171,7 +205,8 @@ def collect_metadata(args, runner, fixture_root):
                 bundle_bytes=BUNDLE.stat().st_size, stale_build_inputs=args.stale_inputs,
                 allow_stale_build=args.allow_stale_build,
                 limits={'timeout_seconds': args.timeout, 'concurrency': 1}, fixture_root=str(fixture_root),
-                fingerprints=build_fingerprints(args), runner_peak_rss_kib_before_workloads=runner_peak_rss_kib(),
+                fingerprints=build_fingerprints(args), signature_implementation=signature_implementation(args),
+                runner_peak_rss_kib_before_workloads=runner_peak_rss_kib(),
                 invocation=sys.argv)
 
 
@@ -410,6 +445,15 @@ def run_workloads(args, runner, root):
     for count in args.counts:
         home = root / f'library-{count}'
         expected_ids = [f'bench-{i:05}' for i in range(count)]
+        if args.workload in SIGNATURE_WORKLOADS:
+            signature_helper = node + ['--expose-gc', str(REPO / 'scripts/bench/workload.cjs')]
+            for sample in range(args.samples):
+                signature_root = root / f'signatures-{count}-{sample}'
+                fixture_args = [str(signature_root), str(count), str(args.sizes[0]), '1', args.signature_mode, '-', str(args.implementation_dist)]
+                runner.run(f'signatures/setup/{count}', signature_helper + ['signature-setup'] + fixture_args, helper_checks=True)
+                runner.run(f'signatures/process/{count}', signature_helper + [args.workload] + fixture_args, helper_checks=True)
+                shutil.rmtree(signature_root)
+
         if args.workload in ['baseline', 'cli', 'viewer']:
             runner.run(f'setup/{count}', helper + ['seed', str(home), str(count), str(args.sizes[0]), '1'], helper_checks=True)
 

@@ -1,4 +1,6 @@
-"""Exercise the public runner end to end with synthetic Node executables."""
+"""Exercise the public runner end to end with synthetic fixtures."""
+import argparse
+import importlib.util
 import json
 import os
 import select
@@ -479,6 +481,153 @@ class TeardownTests(unittest.TestCase):
         with mock.patch.object(module, 'observe_process', return_value=(None, None, b'')):
             self.assertIn('owner unobservable', kill_recorded_process(12345, self.executable, 100))
 
+
+class InstrumentationTests(unittest.TestCase):
+    def test_existing_parser_workload_reports_nonzero_read_counters(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / 'results'
+            result = subprocess.run(['python3', str(RUNNER), 'parser', '--counts', '0', '--sizes', '10240',
+                                     '--samples', '1', '--out', str(output)], capture_output=True, timeout=20)
+            self.assertEqual(result.returncode, 0, result.stderr.decode())
+            rows = [json.loads(line) for line in (output / 'samples.jsonl').read_text().splitlines()]
+            operations = [json.loads(line) for row in rows for line in row['stdout'].splitlines()]
+            self.assertEqual(len(operations), 2)
+            for operation in operations:
+                self.assertGreater(operation['io']['rchar'], 0, operation['label'])
+            cleanup = json.loads((output / 'cleanup.json').read_text())
+            self.assertEqual({key: cleanup[key] for key in CLEAN}, CLEAN)
+            self.assertEqual(cleanup['unverified_groups'], [])
+
+    def test_signature_setup_preserves_measured_fixture_body(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = root / 'signatures'
+            env = {key: directory for key in ('HOME', 'TMPDIR', 'XDG_CONFIG_HOME', 'XDG_STATE_HOME', 'XDG_DATA_HOME',
+                                               'HTML_INBOX_HOME', 'HTML_INBOX_CATALOG_HOME')}
+            subprocess.run(['node', str(RUNNER.with_name('workload.cjs')), 'signature-setup', str(fixture),
+                            '2', '10240', '1', 'full'], env={**env, 'PATH': os.environ['PATH']},
+                           check=True, timeout=30, capture_output=True)
+
+            # SHA-256 of the 10 KiB HTML used by the a97f965 signature fixture.
+            for store in ('source', 'churn'):
+                ledger = json.loads((fixture / store / 'sync/ledger.json').read_text())
+                hashes = [record['sha256'] for record in ledger['records'].values()]
+                self.assertEqual(hashes, ['c74131ed556bec6b02af2922797d49d0a1850163aa7da04efb7d043a1a308524'] * 2)
+
+    def test_companion_arguments_stay_opt_in_and_require_complete_build_identity(self):
+        cases = [(['cli', '--signature-mode', 'keys'], '--signature-mode requires'),
+                 (['cli', '--implementation-dist', '/synthetic/dist', '--implementation-ref', 'synthetic'],
+                  '--implementation-dist and --implementation-ref require'),
+                 (['signatures', '--implementation-dist', '/synthetic/dist'], 'must be supplied together'),
+                 (['signature-history', '--implementation-ref', 'synthetic'], 'must be supplied together'),
+                 (['signatures', '--sizes', '10240,1048576'], 'exactly one --sizes value'),
+                 (['signature-history'], 'exactly one --sizes value')]
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / 'results'
+            for arguments, message in cases:
+                with self.subTest(arguments=arguments):
+                    result = subprocess.run(['python3', str(RUNNER), *arguments, '--out', str(output)],
+                                            capture_output=True, timeout=5)
+                    self.assertEqual(result.returncode, 2)
+                    self.assertIn(message, result.stderr.decode())
+                    self.assertFalse(output.exists())
+
+    def test_signature_pair_driver_rejects_incomplete_or_reused_qualification_inputs(self):
+        driver = RUNNER.with_name('signature_pairs.py')
+        required = ['--parent-dist', '/synthetic/parent', '--parent-ref', 'parent', '--candidate-dist', '/synthetic/candidate',
+                    '--candidate-ref', 'candidate', '--node', 'node']
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / 'pairs'
+            cases = [(required[2:], 'the following arguments are required: --parent-dist'),
+                     (required + ['--variants', 'parent,parent'], '--variants must be'),
+                     (required + ['--pairs', '0'], '--pairs must be'),
+                     (required + ['--out', directory], '--out must not exist')]
+            for arguments, message in cases:
+                with self.subTest(arguments=arguments):
+                    if '--out' not in arguments:
+                        arguments = arguments + ['--out', str(output)]
+                    result = subprocess.run(['python3', str(driver), *arguments], capture_output=True, timeout=5)
+                    self.assertEqual(result.returncode, 2)
+                    self.assertIn(message, result.stderr.decode())
+                    self.assertFalse(output.exists())
+
+    def test_signature_pair_plan_gives_every_dotted_runtime_process_its_own_output_and_log(self):
+        spec = importlib.util.spec_from_file_location('signature_pairs', RUNNER.with_name('signature_pairs.py'))
+        signature_pairs = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(signature_pairs)
+        args = argparse.Namespace(out=Path('/synthetic/pairs'), cells=[(100, 10240)], pairs=5, variants=['parent', 'keys', 'candidate'])
+        runs = signature_pairs.plan_runs(args, ['v20.20.2', 'v24.19.0'])
+
+        self.assertEqual(len(runs), 30)
+        paths = [run['out'] for run in runs] + [run['log'] for run in runs]
+        self.assertEqual(len(set(paths)), 60)
+        for run in runs:
+            self.assertEqual(run['log'].name, run['out'].name + '.log')
+        self.assertEqual([run['variant'] for run in runs[:6]], ['parent', 'keys', 'candidate', 'candidate', 'keys', 'parent'])
+
+    def test_signature_pair_summary_checks_every_block_against_intended_operations(self):
+        spec = importlib.util.spec_from_file_location('signature_pairs', RUNNER.with_name('signature_pairs.py'))
+        signature_pairs = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(signature_pairs)
+        intended = signature_pairs.intended_operations('signatures', 100)
+        self.assertEqual(sum(intended.values()), 19)
+        self.assertEqual(intended['signatures/snapshot-warm/100'], 5)
+        self.assertEqual(signature_pairs.intended_operations('signature-history', 1000)['signatures/churn-miss/1000'], 18)
+        self.assertNotIn('signatures/worker-idle/1000', signature_pairs.intended_operations('signature-history', 1000))
+        empty_cell = signature_pairs.intended_operations('signatures', 0)
+        self.assertNotIn('signatures/get/0', empty_cell)
+        self.assertNotIn('signatures/adversarial/0', empty_cell)
+        self.assertEqual(sum(empty_cell.values()), 17)
+
+        def write_block(run, labels):
+            run['out'].mkdir()
+            (run['out'] / 'summary.json').write_text(json.dumps({'success': True}))
+            (run['out'] / 'cleanup.json').write_text(json.dumps(dict(CLEAN, unverified_groups=[])))
+            rows = [json.dumps({'label': label, 'cpu_ms': 4.0 if run['variant'] == 'candidate' else 10.0, 'wall_ms': 1.0,
+                                'crypto': {'verifications': 0}, 'memory_after_gc': {'heapUsed': 1}}) for label in labels]
+            (run['out'] / 'samples.jsonl').write_text(json.dumps({'stdout': '\n'.join(rows)}) + '\n')
+
+        # Adversarial is absent from every block, so it cannot be inferred from observed rows.
+        complete_labels = [label for label, times in intended.items() for _ in range(times) if 'adversarial' not in label]
+        truncated_labels = [label for label in complete_labels if 'snapshot-warm' not in label] + ['signatures/snapshot-warm/100']
+        with tempfile.TemporaryDirectory() as directory:
+            args = argparse.Namespace(out=Path(directory), cells=[(100, 10240)], pairs=2, variants=['parent', 'candidate'])
+            planned = signature_pairs.plan_runs(args, ['v20.20.2'])
+            write_block(planned[0], complete_labels)
+            write_block(planned[1], truncated_labels)
+            write_block(planned[2], complete_labels)
+            commands = [dict(planned[0], exit_code=0), dict(planned[1], exit_code=0), dict(planned[2], exit_code=1)]
+            result = signature_pairs.summarize(planned, commands, 'signatures')
+
+            empty = signature_pairs.plan_runs(argparse.Namespace(out=Path(directory) / 'empty', cells=[(100, 10240)], pairs=1,
+                                                                 variants=['parent', 'candidate']), ['v24.19.0'])
+            (Path(directory) / 'empty').mkdir()
+            for run in empty:
+                write_block(run, [])
+            empty_result = signature_pairs.summarize(empty, [dict(run, exit_code=0) for run in empty], 'signatures')
+
+        self.assertFalse(result['complete'])
+        self.assertEqual([(row['pair'], row['variant'], row['reason']) for row in result['missing_processes']],
+                         [(1, 'candidate', 'exit 1'), (1, 'parent', 'not run')])
+        self.assertEqual(sorted((row['pair'], row['variant'], row['operation'].split('/')[1], row['expected'], row['observed'])
+                                for row in result['missing_operations']),
+                         [(0, 'candidate', 'adversarial', 1, 0), (0, 'candidate', 'snapshot-warm', 5, 1), (0, 'parent', 'adversarial', 1, 0)])
+        self.assertEqual({row['operation'].split('/')[1]: row['cpu_ratio'] for row in result['paired']}['get'], 0.4)
+        self.assertEqual({(row['operation'].split('/')[1], row['variant']): row['samples'] for row in result['marginal']}
+                         [('snapshot-warm', 'parent')], 5)
+        with tempfile.TemporaryDirectory() as directory:
+            zero = signature_pairs.plan_runs(argparse.Namespace(out=Path(directory), cells=[(0, 10240)], pairs=1, variants=['parent']), ['v20.20.2'])
+            write_block(zero[0], [label for label, times in empty_cell.items() for _ in range(times)])
+            zero_result = signature_pairs.summarize(zero, [dict(zero[0], exit_code=0)], 'signatures')
+            cleanup = dict(CLEAN, process_groups_empty=False, unverified_groups=[{'group': 123, 'survivors': [124]}])
+            (zero[0]['out'] / 'cleanup.json').write_text(json.dumps(cleanup))
+            with self.assertRaisesRegex(ValueError, 'incomplete cleanup'):
+                signature_pairs.summarize(zero, [dict(zero[0], exit_code=0)], 'signatures')
+
+        self.assertTrue(zero_result['complete'], zero_result['missing_operations'])
+        self.assertFalse(empty_result['complete'])
+        self.assertEqual(len(empty_result['missing_operations']), 2 * len(intended))
+        self.assertEqual(empty_result['marginal'], [])
 
 if __name__ == '__main__':
     unittest.main()

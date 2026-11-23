@@ -1,0 +1,116 @@
+import { createPublicKey, verify as verifyEd25519, type KeyObject } from "node:crypto";
+
+export const ORIGIN_SIGNATURE_CACHE_LIMITS = Object.freeze({
+  keys: 128,
+  keyBytes: 256 * 1024,
+  keyCodeUnits: 1024,
+  verifications: 16_384,
+  verificationBytes: 16 * 1024 * 1024,
+  verificationEntryBytes: 128 * 1024,
+});
+
+// createPublicKey also derives keys from private PEM and ignores bytes after the SPKI structure.
+// Retain only text whose payload is exactly the parsed public key, so no other input is held.
+const PUBLIC_KEY_PEM = /^-----BEGIN PUBLIC KEY-----\r?\n([A-Za-z0-9+/=\r\n]+)-----END PUBLIC KEY-----\s*$/;
+// Fixed DER header of an Ed25519 SPKI; it is 12 bytes, so its base64 joins the key's base64 exactly.
+// A DER export costs about as much as parsing on OpenSSL 3.0, while the JWK coordinate is cheap.
+const ED25519_SPKI_PREFIX = "MCowBQYDK2VwAyEA";
+
+/** Reuses cryptographic facts only. Callers must still parse and authorize every current state. */
+export class OriginSignatureVerifier {
+  private readonly keys = new Map<string, { key: KeyObject; bytes: number }>();
+  private readonly successes = new Map<string, number>();
+  private keyBytes = 0;
+  private verificationBytes = 0;
+
+  parsePublicKey(publicKey: string): KeyObject {
+    return this.admitPublicKey(publicKey).key;
+  }
+
+  /** Decides retention once per key text; a cached key has already passed the canonical check. */
+  private admitPublicKey(publicKey: string): { key: KeyObject; isRetainable: boolean } {
+    const cached = this.keys.get(publicKey);
+    if (cached) {
+      return { key: cached.key, isRetainable: true };
+    }
+
+    const key = createPublicKey(publicKey);
+    if (key.asymmetricKeyType !== "ed25519" || !isCanonicalPublicKey(publicKey, key)) {
+      return { key, isRetainable: false };
+    }
+
+    // Two bytes per code unit plus an allowance for the fixed-size Ed25519 KeyObject and map entry.
+    // This bounds retained inputs and entries; qualification measures actual heap/RSS separately.
+    const bytes = publicKey.length * 2 + 512;
+    for (const [oldest, entry] of this.keys) {
+      if (this.keys.size < ORIGIN_SIGNATURE_CACHE_LIMITS.keys && this.keyBytes + bytes <= ORIGIN_SIGNATURE_CACHE_LIMITS.keyBytes) {
+        break;
+      }
+
+      this.keys.delete(oldest);
+      this.keyBytes -= entry.bytes;
+    }
+
+    this.keys.set(copyText(publicKey), { key, bytes });
+    this.keyBytes += bytes;
+    return { key, isRetainable: true };
+  }
+
+  verify(publicKey: string, signature: string, signedBytes: Buffer): void {
+    // Latin-1 preserves every byte. Length prefixes make the tuple unambiguous without hashing.
+    // The immutable text also owns the input before verification, including caller-owned Buffers.
+    const message = signedBytes.toString("latin1");
+    const prefix = `${publicKey.length}:${publicKey}${signature.length}:${signature}`;
+    const bytes = (prefix.length + message.length) * 2 + 256;
+    const identity = bytes <= ORIGIN_SIGNATURE_CACHE_LIMITS.verificationEntryBytes ? prefix + message : undefined;
+
+    if (identity !== undefined && this.successes.has(identity)) {
+      return;
+    }
+
+    const { key, isRetainable } = this.admitPublicKey(publicKey);
+    const isValid = key.asymmetricKeyType === "ed25519" && verifyEd25519(null, Buffer.from(message, "latin1"), key, Buffer.from(signature, "base64url"));
+    if (!isValid) {
+      throw new Error("Origin signature verification failed");
+    }
+
+    if (identity === undefined || !isRetainable) {
+      return;
+    }
+
+    for (const [oldest, retainedBytes] of this.successes) {
+      if (this.successes.size < ORIGIN_SIGNATURE_CACHE_LIMITS.verifications && this.verificationBytes + bytes <= ORIGIN_SIGNATURE_CACHE_LIMITS.verificationBytes) {
+        break;
+      }
+
+      this.successes.delete(oldest);
+      this.verificationBytes -= retainedBytes;
+    }
+
+    this.successes.set(copyText(identity), bytes);
+    this.verificationBytes += bytes;
+  }
+
+  usage(): { keys: number; keyBytes: number; verifications: number; verificationBytes: number } {
+    return { keys: this.keys.size, keyBytes: this.keyBytes, verifications: this.successes.size, verificationBytes: this.verificationBytes };
+  }
+}
+
+function isCanonicalPublicKey(publicKey: string, key: KeyObject): boolean {
+  if (publicKey.length > ORIGIN_SIGNATURE_CACHE_LIMITS.keyCodeUnits) {
+    return false;
+  }
+
+  const payload = PUBLIC_KEY_PEM.exec(publicKey)?.[1].replace(/\s/g, "");
+  if (payload === undefined) {
+    return false;
+  }
+
+  const { x } = key.export({ format: "jwk" });
+  return typeof x === "string" && payload === ED25519_SPKI_PREFIX + Buffer.from(x, "base64url").toString("base64");
+}
+
+function copyText(value: string): string {
+  // Detach retained text from caller substrings or ropes backed by much larger input strings.
+  return Buffer.from(value, "utf16le").toString("utf16le");
+}

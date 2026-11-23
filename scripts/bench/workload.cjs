@@ -3,7 +3,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const { performance } = require('node:perf_hooks');
 const { setTimeout: delay } = require('node:timers/promises');
-const dist = path.resolve(__dirname, '../../packages/cli/dist');
+let dist = path.resolve(__dirname, '../../packages/cli/dist');
 const load = name => require(path.join(dist, name));
 
 // A per-document label keeps equal-size bodies distinct, so byte checks also verify identity.
@@ -16,7 +16,7 @@ function html(size, shape = 'text', label = '') {
   return head + unit.repeat(Math.floor(remaining / unit.length)) + ' '.repeat(remaining % unit.length) + tail;
 }
 
-async function seed(root, count, size) {
+async function seed(root, count, size, sharedBody) {
   const { parseDocumentMetadata } = load('documents.js');
   await fs.mkdir(root, { recursive: true, mode: 0o700 });
   for (let i = 0; i < count; i++) {
@@ -26,7 +26,7 @@ async function seed(root, count, size) {
       createdAt: '2026-11-07T00:00:00.000Z', sourceFileName: 'fixture.html' });
     await fs.mkdir(directory, { recursive: true, mode: 0o700 });
     await fs.writeFile(path.join(directory, 'metadata.json'), JSON.stringify(metadata), { mode: 0o600 });
-    await fs.writeFile(path.join(directory, 'index.html'), html(size, 'text', id), { mode: 0o600 });
+    await fs.writeFile(path.join(directory, 'index.html'), sharedBody ?? html(size, 'text', id), { mode: 0o600 });
   }
 }
 
@@ -42,9 +42,9 @@ async function closeAfter(operation, close) {
 }
 
 async function main() {
-  const [mode, root, countValue, sizeValue, samplesValue, shape = 'text', candidate] = process.argv.slice(2);
+  const [mode, root, countValue, sizeValue, samplesValue, shape = 'text', candidate, implementationDist] = process.argv.slice(2);
   const count = Number(countValue), size = Number(sizeValue), samples = Number(samplesValue);
-  const record = async (label, operation) => {
+  const record = async (label, operation, inspect) => {
     const ioBefore = await fs.readFile('/proc/self/io', 'utf8');
     const cpu = process.cpuUsage();
     const start = performance.now();
@@ -54,11 +54,17 @@ async function main() {
     const ioAfter = await fs.readFile('/proc/self/io', 'utf8');
     const ioValue = (text, key) => Number(text.match(new RegExp(`^${key}: (\\d+)$`, 'm'))?.[1] ?? 0);
     const io = Object.fromEntries(['rchar', 'wchar', 'read_bytes', 'write_bytes', 'cancelled_write_bytes'].map(key => [key, ioValue(ioAfter, key) - ioValue(ioBefore, key)]));
+    const inspection = inspect ? await inspect() : {};
     console.log(JSON.stringify({ label: ['viewer', 'worker'].includes(mode) ? `${label}/${count}` : label, io, wall_ms: elapsed, cpu_ms: (used.user + used.system) / 1000,
-      rss_bytes: process.memoryUsage().rss, ...result }));
+      rss_bytes: process.memoryUsage().rss, ...result, ...inspection }));
   };
 
   if (mode === 'seed') return seed(root, count, size);
+  if (mode === 'signature-setup' || mode === 'signatures' || mode === 'signature-history') {
+    if (implementationDist) dist = path.resolve(implementationDist);
+
+    return require('./signatures.cjs').runSignatures({ root, count, size, record, seed, html, setup: mode === 'signature-setup', historyOnly: mode === 'signature-history', signatureMode: shape, implementationDist: dist });
+  }
   if (mode === 'sync' || mode === 'managed') {
     return require('./sync.cjs').runSync({ root, count, size, samples, record, mode });
   }
