@@ -304,3 +304,33 @@ between the original and updated baselines, as stated above.
 
 The final documentation receipt remains subject to final-head CI and the
 maintainer's integration audit. The optimization itself remains rejected.
+
+## Council round 1
+
+Fresh read-only reviews of `fee002f4dcb605d29c78c2f442a6d41656da31c4` against
+`bf80f9fa4815376f1771c3a6cb78d5ed19231ad2` used the same brief. Claude Opus 5.5
+High scored 7.5/10, with functionality and code quality PASS and no-go evidence
+PASS conditional on documentation fixes. GPT-6.2 Sol High scored 8.5/10, with
+functionality and no-go evidence PASS and code quality FAIL on the runner. Both
+agreed that the NO-GO is sound and that no benchmark, full-suite rerun or
+redesign is needed.
+
+| Finding | Disposition |
+|---|---|
+| Sol M1, runner overwrites existing generated output; Git index restore can lose concurrent staging; signal scope | Accepted. Runner, safety procedure and reproduction text require a clean, disposable checkout with no concurrent builds or Git writes, state that a fresh baseline build is restored, and limit the signal guarantee to the runner PID. The 300-second timeout's direct-child limit is stated. |
+| Sol M2, four failures for any reason pass | Accepted. The runner requires the four named baseline passes and each named candidate failure's expected diagnostic. The new checks accept every archived baseline and candidate log and reject three negative controls. |
+| Sol M3 / Opus M5, integration evidence only in ignored local files | Accepted. R1 to R4 receipts, logs and restoration maps are committed under `permission-92/integration/` with pre-compression hashes. Compiled output and fixture trees are excluded. |
+| Sol L4, staged edits with restored working bytes pass preflight | Accepted. Added an index-against-HEAD check. |
+| Sol L5 / Opus M6, PR body and transcript labels | Accepted. The PR body now links current evidence and labels CI by SHA. A correction note sits beside the archived second-round Claude transcript entry above; the transcript stays unchanged. |
+| Opus M1, regressions overstated; ownership argument missing | Accepted with one correction. The decision now calls these timing-sensitive differences and adds the untested `EPERM` reasoning. Listing's `ENOENT` classification is also a consumer, not only post-write hardening. |
+| Opus M2, 1.x routing unaddressed | Accepted. Added the reason no 1.x proposal follows. |
+| Opus M3 / M4, stale and chatty integration receipt | Accepted. Rewritten as merge, commands, outcomes, restoration, evidence and limits. The original text stays linked at `b813f68`. |
+| Opus L7, non-TTY pnpm | Accepted. Reproduction text states it. |
+| Opus L8, `610c931` unexplained | Accepted. |
+| Opus L9 / Sol optional, test intent and umask | Accepted. The test comment disclaims symlink-swap and descriptor semantics, and fixtures set the private mode explicitly. |
+| Opus N10, recursive `rm` inside the mocked `lstat` | Accepted. Uses `unlink` or `rmdir`. |
+| Opus N11, baseline checks only exit 0 | Accepted with Sol M2. |
+
+The changed test and runner await a local rerun in a disposable checkout under
+a separately granted slot. Results will be recorded here; hosted CI covers the
+changed test on Linux, macOS and Windows.
