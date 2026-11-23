@@ -250,18 +250,18 @@ export async function reconcileSyncRoutes(options: ReconcileOptions) {
 
       await options.store.reconcileHoldings(auth, holdings.holdings.map((holding, index) => ({ ...identities[index],
         fingerprint: holding.state ? stateFingerprint(holding.state) : null, available: holding.available, suppressed: holding.suppressed, storageIncarnation: holdings.storageIncarnation })));
-      const receipts: DurableReceipt[] = [];
+      const members: { requested: OriginState; receipt: DurableReceipt }[] = [];
       for (const [index, holding] of holdings.holdings.entries()) {
         for (const receipt of holding.receipts) {
           validateReceipt(route, receipt, holdings.storageIncarnation);
           if (receipt.fingerprint === stateFingerprint(states[index]) && (receipt.disposition !== "committed" || holding.available)) {
-            receipts.push(receipt);
+            members.push({ requested: states[index], receipt });
           }
         }
       }
 
-      if (receipts.length) {
-        await options.store.acknowledgeBatch(auth, receipts);
+      if (members.length) {
+        await options.store.acknowledgeHoldings(auth, holdings.storageIncarnation, members);
       }
     }
 

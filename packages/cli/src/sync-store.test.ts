@@ -473,6 +473,42 @@ test("exact acknowledgement replays revalidate the ownership anchor and reader i
   assert.deepEqual(await readFile(ledgerPath), bytes);
 });
 
+test("holdings acknowledgements skip receipts overtaken by a newer local deletion without hiding invalid members", async (t) => {
+  const f = await acknowledgementFixture(t, 3);
+  const members = f.states.map((requested, index) => ({ requested, receipt: f.receipts[index] }));
+  const [current, overtaken, invalid] = members;
+  const incarnation = current.receipt.storageIncarnation;
+  const overtakenKey = canonicalKey(overtaken.requested.originInboxId, overtaken.requested.originDocumentId);
+  await f.source.store.deleteDocument((await f.source.store.snapshot()).records[overtakenKey].localId);
+  const ledgerPath = path.join(f.source.home, "sync", "ledger.json");
+  const bytes = await readFile(ledgerPath);
+
+  await assert.rejects(f.source.store.acknowledge(f.auth, overtaken.receipt), /current queued state/);
+  await assert.rejects(f.source.store.acknowledgeBatch(f.auth, [current.receipt, overtaken.receipt]), /current queued state/);
+  await assert.rejects(f.source.store.acknowledgeHoldings(f.auth, incarnation, [current, overtaken, { ...invalid, receipt: { ...invalid.receipt, routeId: randomUUID() } }]), /binding conflict/);
+  await assert.rejects(f.source.store.acknowledgeHoldings(f.auth, incarnation, [overtaken, { ...overtaken, receipt: { ...overtaken.receipt, disposition: "suppressed" } }]), /Conflicting receipts/);
+  await assert.rejects(f.source.store.acknowledgeHoldings(f.auth, incarnation, [current, { ...overtaken, receipt: { ...overtaken.receipt, storageIncarnation: randomUUID() } }]), /mixes receiver storage incarnations/);
+  await assert.rejects(f.source.store.acknowledgeHoldings(f.auth, randomUUID(), [current, overtaken]), /requested state and receiver incarnation/);
+  await assert.rejects(f.source.store.acknowledgeHoldings(f.auth, incarnation, [{ requested: current.requested, receipt: overtaken.receipt }]), /requested state and receiver incarnation/);
+  await f.source.store.acknowledgeHoldings(f.auth, incarnation, [overtaken]);
+  assert.deepEqual(await readFile(ledgerPath), bytes);
+
+  const before = f.source.store.counters.events["ledger-renamed"] ?? 0;
+  await f.source.store.acknowledgeHoldings(f.auth, incarnation, [current, overtaken]);
+  assert.equal((f.source.store.counters.events["ledger-renamed"] ?? 0) - before, 1);
+  const ledger = await f.source.store.snapshot();
+  assert.deepEqual(Object.values(ledger.receipts).map((receipt) => receipt.fingerprint), [current.receipt.fingerprint]);
+  const entry = ledger.outbox[outboxKey(f.route.id, 1, overtakenKey)];
+  assert.equal(entry.disposition, "pending");
+  assert.equal(entry.fingerprint, stateFingerprint(ledger.records[overtakenKey]));
+  assert.equal((await f.source.store.deliveryStatus(f.route.id, current.requested.originInboxId, current.requested.originDocumentId)).isCommitted, true);
+  assert.equal((await f.source.store.deliveryStatus(f.route.id, overtaken.requested.originInboxId, overtaken.requested.originDocumentId)).isCommitted, false);
+
+  const repeated = f.source.store.counters.events["ledger-renamed"] ?? 0;
+  await f.source.store.acknowledgeHoldings(f.auth, incarnation, [current, overtaken]);
+  assert.equal((f.source.store.counters.events["ledger-renamed"] ?? 0) - repeated, 0);
+});
+
 test("a retired obligation cannot be revived by a receipt even with current route authority", async (t) => {
   const f = await acknowledgementFixture(t, 1);
   const ledger = await f.source.store.snapshot();

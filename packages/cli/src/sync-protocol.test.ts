@@ -160,6 +160,7 @@ test("current holdings receipts acknowledge one page with one ledger replacement
   const f = await pair(t);
   // An empty pass completes trusted terminal inventory so the receiver accepts live states directly.
   assert.equal((await f.run(f.a, f.outbound)).routes[0].status, "confirmed");
+  assert.equal((await f.b.store.snapshot()).routes[f.inbound.id].state, "active");
   const ids = ["held-0", "held-1", "held-2"];
   for (const id of ids) {
     await f.a.store.publish(input, id);
@@ -184,6 +185,44 @@ test("current holdings receipts acknowledge one page with one ledger replacement
 
   assert.equal((await f.run(f.a, f.outbound)).routes[0].status, "confirmed");
   assert.deepEqual(batches, [{ receipts: ids.length, replacements: 1 }, { receipts: ids.length, replacements: 0 }]);
+});
+
+test("a local deletion after the inventory cut neither blocks a held sibling nor lets the old receipt confirm the tombstone", { timeout: 30_000 }, async (t) => {
+  const f = await pair(t);
+  assert.equal((await f.run(f.a, f.outbound)).routes[0].status, "confirmed");
+  assert.equal((await f.b.store.snapshot()).routes[f.inbound.id].state, "active");
+  for (const id of ["cut-current", "cut-overtaken"]) {
+    await f.a.store.publish(input, id);
+    assert.notEqual((await f.b.store.apply(routeAuthorization(f.inbound), await descriptor(f.a, id), bytes)).status, "needs-body");
+  }
+
+  const delivery = (id: string) => f.a.store.deliveryStatus(f.outbound.id, f.outbound.sourceInboxId, id);
+  const overtakenKey = canonicalKey(f.outbound.sourceInboxId, "cut-overtaken");
+  const boundary: { members: number; current: boolean; overtaken: boolean; receipts: number }[] = [];
+  const acknowledgeHoldings = f.a.store.acknowledgeHoldings.bind(f.a.store);
+  f.a.store.acknowledgeHoldings = async (authorization, storageIncarnation, members) => {
+    if (boundary.length === 0) {
+      // The holdings response was requested for the earlier cut; the owner deletes before acknowledgement.
+      await f.a.store.deleteDocument((await f.a.store.snapshot()).records[overtakenKey].localId);
+    }
+
+    await acknowledgeHoldings(authorization, storageIncarnation, members);
+    boundary.push({ members: Array.isArray(members) ? members.length : -1, current: (await delivery("cut-current")).isCommitted,
+      overtaken: (await delivery("cut-overtaken")).isCommitted, receipts: Object.keys((await f.a.store.snapshot()).receipts).length });
+  };
+
+  const result = await f.run(f.a, f.outbound);
+  assert.equal(result.routes[0].status, "confirmed", JSON.stringify(result));
+  assert.deepEqual(boundary, [{ members: 2, current: true, overtaken: false, receipts: 1 }]);
+  // Only the later tombstone offer counts as a confirmation; the overtaken holdings receipt adds none.
+  assert.equal(result.routes[0].confirmed, 1);
+  assert.equal(result.routes[0].transferred, 0);
+  const tombstone = await delivery("cut-overtaken");
+  assert.equal(tombstone.status, "deleted");
+  assert.equal(tombstone.isCommitted, false);
+  const ledger = await f.a.store.snapshot();
+  assert.equal(Object.values(ledger.receipts).find((receipt) => canonicalKey(receipt.originState.originInboxId, receipt.originState.originDocumentId) === overtakenKey)?.disposition, "deleted");
+  assert.equal((await f.b.store.listDocuments()).some((document) => document.origin?.documentId === "cut-overtaken"), false);
 });
 
 test("new route IDs and explicit reconnection reconcile retained copies and offline tombstones before live bytes", { timeout: 30_000 }, async (t) => {

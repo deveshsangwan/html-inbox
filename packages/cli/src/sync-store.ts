@@ -11,7 +11,7 @@ import { readInboxIdentity } from "./inbox-home";
 import { writeAtomicPrivateFileIfAbsent } from "./private-storage";
 import { isOwnedDirectory } from "./local-storage-checks";
 import { DurableFiles, checkDirectory, createStorageCounters, hasCode, openPrivateFile, optionalStat, readPrivateFile, withStoreLock, type StorageTestHooks } from "./sync-files";
-import { type SyncLedger, type ManagedRecord, type DurableReceipt, type OwnerAnchor, parseLedger, parseReceipt, outboxKey, receiptKey } from "./sync-ledger";
+import { type SyncLedger, type ManagedRecord, type DurableReceipt, type OutboxEntry, type OwnerAnchor, parseLedger, parseReceipt, outboxKey, receiptKey } from "./sync-ledger";
 import { readManagedLedgerBytes } from "./sync-ledger-reader";
 import { type OriginState, type OriginGrant, type SyncRoute, type RouteAuthorization, type CompleteInventory, SYNC_LIMITS, SYNC_DEFAULTS, IncompleteSyncHistoryError, canonicalKey, metadataEncoding, metadataProjection,
   parseOriginState, parseOriginalMetadata, parseAuthorization, parseRoute, parseCompleteInventory, sha256, signOriginState, stateFingerprint, sameImmutableDescriptor, verifyOriginState,
@@ -720,19 +720,38 @@ export class ManagedSyncStore {
 
   async acknowledgeBatch(authorization: unknown, values: unknown): Promise<void> {
     const auth = parseAuthorization(authorization);
-    if (!Array.isArray(values) || values.length < 1 || values.length > SYNC_LIMITS.manifestPage) {
+    await this.acknowledgeReceipts(auth, parseReceiptPage(values));
+  }
+
+  /**
+   * Holdings acknowledgements answer one authenticated holdings page for states requested from an inventory cut.
+   * A receipt for a requested state that a newer local deletion has since overtaken confirms nothing and is skipped.
+   */
+  async acknowledgeHoldings(authorization: unknown, storageIncarnation: unknown, members: unknown): Promise<void> {
+    const auth = parseAuthorization(authorization);
+    const incarnation = parseUuid(storageIncarnation);
+    if (!Array.isArray(members)) {
       throw new Error(`Acknowledgement batch requires 1 to ${SYNC_LIMITS.manifestPage} receipts`);
     }
 
-    const receipts = values.map(parseReceipt);
-    // One page answers one authenticated holdings response, so it speaks for a single receiver incarnation.
-    if (receipts.some((receipt) => receipt.storageIncarnation !== receipts[0].storageIncarnation)) {
-      throw new Error("Acknowledgement batch mixes receiver storage incarnations");
+    const page = members.map((value) => {
+      const member = parseObject(value, "holdings acknowledgement");
+      assertExactKeys(member, ["requested", "receipt"]);
+      return { requested: parseOriginState(member.requested), receipt: member.receipt };
+    });
+    const receipts = parseReceiptPage(page.map((member) => member.receipt));
+    for (const [index, receipt] of receipts.entries()) {
+      if (receipt.storageIncarnation !== incarnation || receipt.fingerprint !== stateFingerprint(page[index].requested)) {
+        throw new Error("Holdings receipt does not answer the requested state and receiver incarnation");
+      }
     }
 
+    await this.acknowledgeReceipts(auth, receipts, true);
+  }
+
+  private async acknowledgeReceipts(auth: RouteAuthorization, receipts: DurableReceipt[], canSkipOvertaken = false): Promise<void> {
     await this.mutate(async (ledger) => {
       this.authorizeRoute(ledger, auth, "outbound");
-      const bindings = new Map<string, string>();
       let changed = false;
       for (const receipt of receipts) {
         const route = this.authorize(ledger, auth, receipt.originState, "outbound");
@@ -745,9 +764,12 @@ export class ManagedSyncStore {
         }
 
         const key = canonicalKey(receipt.originState.originInboxId, receipt.originState.originDocumentId);
-        const entryKey = outboxKey(route.id, route.revision, key);
-        const entry = ledger.outbox[entryKey];
+        const entry = ledger.outbox[outboxKey(route.id, route.revision, key)];
         const record = ledger.records[key];
+        if (canSkipOvertaken && isOvertakenReceipt(receipt, entry, record)) {
+          continue;
+        }
+
         if (!entry || entry.disposition === "retired" || entry.fingerprint !== receipt.fingerprint || !record || stateFingerprint(record) !== receipt.fingerprint) {
           throw new Error("Receipt does not acknowledge the current queued state");
         }
@@ -757,15 +779,8 @@ export class ManagedSyncStore {
         }
 
         const id = receiptKey(receipt);
-        const encoded = JSON.stringify(receipt);
-        const previous = bindings.get(entryKey);
-        if (previous !== undefined && previous !== encoded) {
-          throw new Error("Conflicting receipts for one queued obligation");
-        }
-
-        bindings.set(entryKey, encoded);
         if (entry.disposition === "confirmed" && entry.receiptDisposition === receipt.disposition && entry.lastError === null &&
-            entry.receiverStorageIncarnation === receipt.storageIncarnation && JSON.stringify(ledger.receipts[id]) === encoded) {
+            entry.receiverStorageIncarnation === receipt.storageIncarnation && JSON.stringify(ledger.receipts[id]) === JSON.stringify(receipt)) {
           continue;
         }
 
@@ -1864,6 +1879,46 @@ function readerMetadata(record: ManagedRecord, localInboxId: string): DocumentMe
   return { ...metadata, origin: { schemaVersion: 1, inboxId: record.originInboxId, documentId: record.originDocumentId, historyEpoch: record.historyEpoch, version: record.version,
     sha256: record.sha256, byteLength: record.byteLength, metadataSha256: record.metadataSha256, signature: record.signature,
     detached: !record.contributions.some((contribution) => contribution.state === "attached"), originalMetadata: metadataProjection(record.metadata) } };
+}
+
+/** Page-wide checks run before any member can be skipped, so a skip cannot hide a mixed or conflicting page. */
+function parseReceiptPage(values: unknown): DurableReceipt[] {
+  if (!Array.isArray(values) || values.length < 1 || values.length > SYNC_LIMITS.manifestPage) {
+    throw new Error(`Acknowledgement batch requires 1 to ${SYNC_LIMITS.manifestPage} receipts`);
+  }
+
+  const receipts = values.map(parseReceipt);
+  // One page answers one authenticated holdings response, so it speaks for a single receiver incarnation.
+  if (receipts.some((receipt) => receipt.storageIncarnation !== receipts[0].storageIncarnation)) {
+    throw new Error("Acknowledgement batch mixes receiver storage incarnations");
+  }
+
+  const encodings = new Map<string, string>();
+  for (const receipt of receipts) {
+    const key = canonicalKey(receipt.originState.originInboxId, receipt.originState.originDocumentId);
+    const encoded = JSON.stringify(receipt);
+    const previous = encodings.get(key);
+    if (previous !== undefined && previous !== encoded) {
+      throw new Error("Conflicting receipts for one queued obligation");
+    }
+
+    encodings.set(key, encoded);
+  }
+
+  return receipts;
+}
+
+/** A newer local deletion of the same immutable document overtook the state this receipt answers. */
+function isOvertakenReceipt(receipt: DurableReceipt, entry: OutboxEntry | undefined, record: ManagedRecord | undefined): boolean {
+  if (!entry || entry.disposition === "retired" || !record || entry.fingerprint !== stateFingerprint(record)) {
+    return false;
+  }
+
+  if (entry.receiverStorageIncarnation !== null && entry.receiverStorageIncarnation !== receipt.storageIncarnation) {
+    return false;
+  }
+
+  return sameImmutableDescriptor(record, receipt.originState) && record.version > receipt.originState.version;
 }
 
 function isVisible(record: ManagedRecord): boolean {
