@@ -317,6 +317,13 @@ async function startFixtureHub(root, configuration, onStarted) {
       clearTimeout(deadlineTimer);
     }
 
+    if (!result) {
+      // Release the parent's references so an unkillable child cannot keep the test process alive.
+      child.stdout.destroy();
+      child.stderr.destroy();
+      child.unref();
+    }
+
     closeOutcome = { pid: child.pid, readinessPublished, teardownRequested, hadExited,
       nativeExit, nativeClose: result ?? "unjoined", forced, stderr,
       errors: childErrors.map((error) => error instanceof Error

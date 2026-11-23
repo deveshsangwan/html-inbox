@@ -24,6 +24,7 @@ let viewer;
 let tailscaleEnvironment;
 let shouldRetainFixture = false;
 let primaryFailure;
+let viewerEnvironment;
 
 try {
   assert.equal(process.argv.length <= 3, true, "Pass at most one package tarball");
@@ -148,6 +149,7 @@ Module._load = function (request, ...args) {
   await assert.rejects(runInstalledCli(["--internal-viewer-owner-preflight", "x".repeat(8193)]), /input is too large/);
 
   // Own a foreground process so even a failed publish cannot strand a detached viewer.
+  viewerEnvironment = cliEnvironment;
   viewer = await startInstalledViewer(executable, consumerRoot, cliEnvironment);
   const originalHtml = Buffer.from(
     '<!doctype html><html><head><title>Installed report</title></head><body><h1>Packaged quarterly results</h1><p>Revenue grew by 12%.</p></body></html>\n',
@@ -387,12 +389,19 @@ Module._load = function (request, ...args) {
     cleanupFailures.push(error);
   }
 
-  const installedExecutable = path.join(temporaryRoot, "consumer", "node_modules", "html-inbox", "bundle", "index.js");
-  await run(process.execPath, [installedExecutable, "viewer", "stop", "--json"], temporaryRoot, {
-    HTML_INBOX_HOME: path.join(temporaryRoot, "home"),
-    HTML_INBOX_CATALOG_HOME: path.join(temporaryRoot, "catalog"),
-    ...tailscaleEnvironment,
-  }).catch(() => {});
+  // Once a viewer may have started, an unconfirmed stop could leave it running against this fixture.
+  if (viewerEnvironment) {
+    const installedExecutable = path.join(temporaryRoot, "consumer", "node_modules", "html-inbox", "bundle", "index.js");
+    try {
+      await run(process.execPath, [installedExecutable, "viewer", "stop", "--json"], temporaryRoot, {
+        ...viewerEnvironment,
+        ...tailscaleEnvironment,
+      });
+    } catch (error) {
+      cleanupFailures.push(error);
+      shouldRetainFixture = true;
+    }
+  }
 
   if (process.env.HTML_INBOX_KEEP_PACKAGE_SMOKE !== "1" && !shouldRetainFixture) {
     try {
@@ -403,7 +412,8 @@ Module._load = function (request, ...args) {
   }
 
   if (cleanupFailures.length > 0) {
-    throw new AggregateError([primaryFailure, ...cleanupFailures].filter(Boolean), "Installed package smoke cleanup failed");
+    throw new AggregateError([primaryFailure, ...cleanupFailures].filter(Boolean),
+      `Installed package smoke cleanup failed${shouldRetainFixture ? `; fixture retained at ${temporaryRoot}` : ""}`);
   }
 
   if (primaryFailure) throw primaryFailure;
@@ -437,11 +447,20 @@ async function waitForProcessExit(pid, timeoutMs) {
   }
 }
 
+// Children see only this fixture's html-inbox and Node settings, never the developer shell's
+// (for example a saved Tailscale configuration that could reach a real daemon).
+function fixtureEnvironment(overrides) {
+  const inherited = Object.entries(process.env)
+    .filter(([key]) => !/^(HTML_INBOX_|NODE_)/i.test(key));
+
+  return { ...Object.fromEntries(inherited), ...overrides };
+}
+
 async function run(command, args, cwd, env = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd,
-      env: { ...process.env, ...env },
+      env: fixtureEnvironment(env),
       shell: process.platform === "win32" && command !== process.execPath,
       stdio: ["ignore", "pipe", "pipe"],
       timeout: 120_000,
@@ -500,7 +519,7 @@ async function readWithHost(url, host) {
 async function startInstalledViewer(executable, cwd, env) {
   const child = spawn(process.execPath, [executable, "viewer", "--foreground"], {
     cwd,
-    env: { ...process.env, ...env },
+    env: fixtureEnvironment(env),
     stdio: ["ignore", "ignore", "pipe"],
   });
   const closed = new Promise((resolve) => child.once("close", resolve));
