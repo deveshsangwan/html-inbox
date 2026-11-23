@@ -1,10 +1,10 @@
 # Release lines and activation gates
 
-The current CLI is 0.6.3 with Node >=20. The planned lines are 0.7.x for compatible improvements and 1.x for modern runtime and storage work. Version 0.7.0 and the `node20` npm tag remain pending; no modern candidate exists yet.
+Current 0.6.x releases require Node >=20. The planned lines are 0.7.x for compatible improvements and 1.x for modern runtime and storage work. Version 0.7.0 and the `node20` npm tag remain pending; no modern candidate exists yet.
 
 ## Branches and publication
 
-- Create `release/0.7` from the reviewed compatibility base on `main`.
+- `release/0.7` starts from the reviewed compatibility base on `main`.
 - Compatible performance changes target `release/0.7`. The 0.7.x package keeps Node >=20 and current storage, wire, validation, permissions and durability behavior.
 - Forward-port shared fixes to `main` with separate tests against its implementation. Storage divergence makes an untested cherry-pick unsafe.
 - A separate reviewed activation PR changes `main` to 1.0.0, Node >=24.19.0, modern CI and pre-storage runtime rejection together, after driver/minimum qualification. Modern production changes wait for activation; isolated design/prototype PRs may proceed earlier.
@@ -13,7 +13,7 @@ Before 1.0, stable releases retain npm `latest`. After 1.0, `latest` belongs to 
 
 ## Runtime and library selection
 
-Today, use the current 0.6.3 CLI on Node >=20. Both skills retain the independently tested published 0.5.0 npm fallback and their current installed-version rules. The fallback has no managed-sync commands. A missing feature requires an authorized compatible upgrade, preserving the selected library and saved exposure.
+Until 0.7 is published, use the current 0.6.x CLI on Node >=20. Both skills retain the independently tested published 0.5.0 npm fallback and their current installed-version rules. The fallback has no managed-sync commands. A missing feature requires an authorized compatible upgrade, preserving the selected library and saved exposure.
 
 Once 0.7 is published, Node 20 users will install `html-inbox@0.7`, or `html-inbox@node20` after that tag is explicitly published. These are future installation choices, not currently tested fallback pins. Maintaining a Node 20 compatible package does not promise upstream Node 20 maintenance.
 

@@ -1,6 +1,6 @@
 # HTML Inbox
 
-The planned release lines are 0.7.x on Node >=20 and 1.x on Node >=24.19.0. Both are pending; the current CLI remains 0.6.3. See the [release policy and remaining activation gates](https://github.com/deveshsangwan/html-inbox/blob/main/docs/release-policy.md).
+The planned release lines are 0.7.x on Node >=20 and 1.x on Node >=24.19.0. Both are pending; current 0.6.x releases keep Node >=20. See the [release policy and remaining activation gates](https://github.com/deveshsangwan/html-inbox/blob/main/docs/release-policy.md).
 
 Version 0.6.3 applies hub inbox filters immediately while preserving search text, URL navigation and keyboard focus. Search and Enter still work without JavaScript. Restart the hub after updating to load the fix. See the [0.6.3 upgrade notes](https://github.com/deveshsangwan/html-inbox/blob/main/CHANGELOG.md#upgrade-to-063).
 
