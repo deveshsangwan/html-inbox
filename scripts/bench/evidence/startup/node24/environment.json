@@ -1,0 +1,54 @@
+{
+  "base_ref": "610c931b7b22920cce59cf03e49c0de15ebaf2a2",
+  "candidate_ref": "8ae19fd9c746d335b0fbf0c8ca6e21ada1dd9f80",
+  "node": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+  "node_version": "v24.19.0",
+  "machine": [
+    "Linux",
+    "homeserver",
+    "6.12.113+deb13-amd64",
+    "#1 SMP PREEMPT_DYNAMIC Debian 6.12.113-1 (2026-10-15)",
+    "x86_64"
+  ],
+  "samples": 20,
+  "warmups": 2,
+  "node_sha256": "bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12",
+  "runner_sha256": "af079526a03c22128610bfa1a6992d6ef3c08d82a397a6c0a85b30db967d6795",
+  "cache": "uncontrolled warm filesystem caches",
+  "launchers": [
+    "direct",
+    "npm",
+    "npx"
+  ],
+  "fingerprints": {
+    "base": {
+      "LICENSE": "1ac0baf0d52f7b16e9f8a21797cd2a3273b4cf082b791aa6e91bfe79f6bd32e2",
+      "README.md": "67fb776ac31405224ffc629ed085f182b88f5e326f85f26c142d39a37789c84b",
+      "bundle/index.js": "a6fa54ab38173962a4f77134821b6b1938984533d9e78568af0139807ce1b535",
+      "package.json": "31b211048bc9423a778cb3c6ddb6fe3c9ae70c28c03cd9ce6f790c02e4de3d77"
+    },
+    "candidate": {
+      "LICENSE": "1ac0baf0d52f7b16e9f8a21797cd2a3273b4cf082b791aa6e91bfe79f6bd32e2",
+      "README.md": "67fb776ac31405224ffc629ed085f182b88f5e326f85f26c142d39a37789c84b",
+      "bundle/291.index.js": "5d73fdd973af99c05b2582c44477a57cbc5daaa9def273fa69b3c1a4586dc248",
+      "bundle/561.index.js": "e1b26d7858e885fe8c41392dfceead35cebb177a6ea7701d0182e9be160777e1",
+      "bundle/575.index.js": "31525d9885b61e6ad4edc3cb075b03b827bda6e81086805027505a7b7da9e413",
+      "bundle/740.index.js": "8f2e684678d61f00980877fd77777651b3ded28ca9b82cd307d363adb19b8808",
+      "bundle/785.index.js": "5aa145b6a6791cbceb0981279f882b1fe968515a9f170f97370e9bcc2fb14b63",
+      "bundle/826.index.js": "90fa5f9dabe477dded732fc7fb3753269fc3151c05056d2ca5e4ddd5248d848d",
+      "bundle/918.index.js": "333e6deddc419e91afaafd4e5833cde43c4643a7fee1920601b9e7bcee72959a",
+      "bundle/index.js": "299c888551fab9d3a61bbf247a77a97c80b486bc4204009961f127927a8c26e6",
+      "package.json": "31b211048bc9423a778cb3c6ddb6fe3c9ae70c28c03cd9ce6f790c02e4de3d77"
+    }
+  },
+  "npm": {
+    "path": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/npm/bin/npm-cli.js",
+    "sha256": "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7",
+    "version": "11.17.0"
+  },
+  "npx": {
+    "path": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/npm/bin/npx-cli.js",
+    "sha256": "237adf8f3747cad8b9b62fcfd0d9c8d509a64e550337707f55100afcb79e8900",
+    "version": "11.17.0"
+  }
+}

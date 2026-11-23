@@ -23,7 +23,7 @@ os.userInfo = (...args) => {
 };
 `, { mode: 0o600 });
   const environment = {
-    NODE_OPTIONS: [process.env.NODE_OPTIONS, `--require ${JSON.stringify(accountPreload)}`].filter(Boolean).join(" "),
+    NODE_OPTIONS: `--require ${JSON.stringify(accountPreload)}`,
   };
   const originalConfig = {
     TCP: { "443": { HTTPS: true }, "8443": { HTTPS: true } },

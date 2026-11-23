@@ -5,6 +5,7 @@ import {
   mkdir,
   readFile,
   readdir,
+  realpath,
   rm,
   stat,
   writeFile,
@@ -17,11 +18,19 @@ import { fileURLToPath } from "node:url";
 import { createPackageTailscaleFixture } from "./package-tailscale-fixture.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const temporaryRoot = await mkdtemp(path.join(tmpdir(), "html-inbox-package-"));
+// Canonical, so paths the CLI reports (such as macOS /private/var) match the fixture's spelling.
+const temporaryRoot = await realpath(await mkdtemp(path.join(tmpdir(), process.platform === "win32" ? "html-inbox package-" : "html-inbox-package-")));
+const npmUserConfig = path.join(temporaryRoot, "npm-user.npmrc");
+const npmGlobalConfig = path.join(temporaryRoot, "npm-global.npmrc");
 let viewer;
 let tailscaleEnvironment;
+let shouldRetainFixture = false;
+let primaryFailure;
+let viewerEnvironment;
 
 try {
+  await writeFile(npmUserConfig, "");
+  await writeFile(npmGlobalConfig, "");
   assert.equal(process.argv.length <= 3, true, "Pass at most one package tarball");
   let tarballPath = process.argv[2]
     ? path.resolve(repositoryRoot, process.argv[2])
@@ -31,9 +40,9 @@ try {
     assert.equal(path.extname(tarballPath), ".tgz", "Package artifact must be a .tgz file");
     assert.equal((await stat(tarballPath)).isFile(), true);
   } else {
-    const packResult = await run(
-      "npm",
-      ["pack", "--pack-destination", temporaryRoot],
+    const packResult = await runNpm(
+      // Explicit, so an inherited ignore-scripts setting cannot skip the prepack build being qualified.
+      ["pack", "--ignore-scripts=false", "--pack-destination", temporaryRoot],
       path.join(repositoryRoot, "packages", "cli"),
       { npm_config_cache: path.join(temporaryRoot, "npm-cache") },
     );
@@ -48,10 +57,14 @@ try {
     path.join(consumerRoot, "package.json"),
     `${JSON.stringify({ name: "html-inbox-package-smoke", private: true }, null, 2)}\n`,
   );
-  await run(
-    "npm",
+  await runNpm(
     [
       "install",
+      // Explicit, so inherited global, location or workspace settings cannot install outside the consumer.
+      "--global=false",
+      "--location=project",
+      `--prefix=${consumerRoot}`,
+      "--workspaces=false",
       "--ignore-scripts",
       "--no-audit",
       "--no-fund",
@@ -83,23 +96,41 @@ try {
 
   const executable = path.join(installedRoot, "bundle", "index.js");
   assert.equal((await stat(executable)).isFile(), true);
+  await assertNoStaleChunks(path.dirname(executable));
   assert.equal((await run(process.execPath, [executable, "--version"], consumerRoot)).output.trim(), installedPackage.version);
-  const installedBin = path.join(
-    consumerRoot,
-    "node_modules",
-    ".bin",
-    process.platform === "win32" ? "html-inbox.cmd" : "html-inbox",
-  );
-  assert.equal((await run(installedBin, ["--version"], consumerRoot)).output.trim(), installedPackage.version);
+  const shimVersion = process.platform === "win32"
+    ? await run("cmd.exe", ["/d", "/c", ".\\node_modules\\.bin\\html-inbox.cmd", "--version"], consumerRoot)
+    : await run(path.join(consumerRoot, "node_modules", ".bin", "html-inbox"), ["--version"], consumerRoot);
+  assert.equal(shimVersion.output.trim(), installedPackage.version);
   const help = (await run(process.execPath, [executable, "--help"], consumerRoot)).output;
   assert.match(help, /remote init --account/);
   assert.match(help, /export --out <directory>/);
   assert.match(help, /viewer \[--foreground\]/);
   assert.match(help, /viewer service install/);
 
+  const startupGuard = path.join(temporaryRoot, "startup-guard.cjs");
+  await writeFile(startupGuard, `
+const Module = require("node:module");
+const load = Module._load;
+Module._load = function (request, ...args) {
+  // Canonical help/version must need no deferred ncc chunk (./NNN.index.js) and no network/process subsystem.
+  if (/^(node:)?(http|https|http2|tls|net|crypto|child_process|readline(?:\\/promises)?)$/.test(request) ||
+    /\\.index\\.js$/.test(request)) {
+    throw new Error("Unexpected module during help/version: " + request);
+  }
+  return load.call(this, request, ...args);
+};
+`);
+  for (const args of [[], ["--help"], ["-h"], ["--version"], ["-v"]]) {
+    const result = await run(process.execPath, ["--require", startupGuard, executable, ...args], consumerRoot);
+    assert.equal(result.stdout, args[0] === "--version" || args[0] === "-v" ? `${installedPackage.version}\n` : help);
+    assert.equal(result.stderr, "");
+  }
+
   const isolatedHome = path.join(temporaryRoot, "home");
   const viewerPort = await findAvailablePort();
   const cliEnvironment = {
+    HTML_INBOX_CATALOG_HOME: path.join(temporaryRoot, "catalog"),
     HTML_INBOX_HOME: isolatedHome,
     HTML_INBOX_PORT: String(viewerPort),
   };
@@ -119,7 +150,12 @@ try {
     operation: null,
   });
 
+  await assert.rejects(runInstalledCli(["__delete-document"]), /Unknown command/);
+  await assert.rejects(runInstalledCli(["--internal-viewer-owner-preflight"]), /requires one bounded input/);
+  await assert.rejects(runInstalledCli(["--internal-viewer-owner-preflight", "x".repeat(8193)]), /input is too large/);
+
   // Own a foreground process so even a failed publish cannot strand a detached viewer.
+  viewerEnvironment = cliEnvironment;
   viewer = await startInstalledViewer(executable, consumerRoot, cliEnvironment);
   const originalHtml = Buffer.from(
     '<!doctype html><html><head><title>Installed report</title></head><body><h1>Packaged quarterly results</h1><p>Revenue grew by 12%.</p></body></html>\n',
@@ -194,13 +230,19 @@ try {
   const viewerStatus = await runInstalledCli(["viewer", "status", "--json"]);
   assert.equal(JSON.parse(viewerStatus.stdout).state, "stopped");
 
-  const backgroundStarts = await Promise.all([
+  // Join every concurrent start before judging any, so cleanup never races a still-starting sibling.
+  const backgroundStarts = await Promise.allSettled([
     runInstalledCli(["viewer"]),
     runInstalledCli(["viewer"]),
     runInstalledCli(["viewer"]),
   ]);
+  const failedStarts = backgroundStarts.filter((start) => start.status === "rejected").map((start) => start.reason);
+  if (failedStarts.length > 0) {
+    throw new AggregateError(failedStarts, "Concurrent detached viewer starts failed");
+  }
+
   for (const started of backgroundStarts) {
-    assert.equal(started.stdout.trim(), viewer.origin);
+    assert.equal(started.value.stdout.trim(), viewer.origin);
   }
 
   const backgroundStatus = JSON.parse((await runInstalledCli(["viewer", "status", "--json"])).stdout);
@@ -272,20 +314,188 @@ try {
     await assert.rejects(runInstalledCli(["viewer", "service", "install", "--user", userInfo().username]), /administrator privileges/);
   }
 
+  if (process.platform !== "win32") {
+    const managedHome = path.join(temporaryRoot, "managed");
+    const runManaged = (args) => runInstalledCli([...args, "--home", managedHome, "--json"]);
+    await runInstalledCli(["inbox", "create", "managed", "--home", managedHome, "--json"]);
+    const workerPids = [];
+    let managedFailure;
+    let isOwnerPreflightRun = false;
+    let isEnrolled = false;
+    try {
+      assert.equal(JSON.parse((await runManaged(["sync", "enroll", "--yes"])).stdout).enrolled, true);
+      isEnrolled = true;
+      assert.equal(JSON.parse((await runManaged(["sync", "worker", "startup"])).stdout).skipped, true);
+
+      const enabled = JSON.parse((await runManaged(["sync", "worker", "enable"])).stdout);
+      assert.equal(enabled.worker.running, true);
+      workerPids.push(JSON.parse(await readFile(path.join(managedHome, "sync", "worker", "runtime.json"), "utf8")).pid);
+      const status = JSON.parse((await runManaged(["sync", "worker", "status"])).stdout);
+      assert.equal(status.worker.running, true);
+
+      await runManaged(["sync", "worker", "stop"]);
+      assert.equal(await waitForProcessExit(workerPids[0], 3000), true, `Managed worker ${workerPids[0]} survived stop`);
+      assert.equal(JSON.parse((await runManaged(["sync", "worker", "status"])).stdout).worker.running, false);
+
+      await runManaged(["sync", "worker", "start"]);
+      workerPids.push(JSON.parse(await readFile(path.join(managedHome, "sync", "worker", "runtime.json"), "utf8")).pid);
+      assert.equal(JSON.parse((await runManaged(["sync", "worker", "status"])).stdout).worker.running, true);
+
+      const user = userInfo();
+      if (user.uid > 0) {
+        const preflight = await runInstalledCli(["--internal-viewer-owner-preflight", JSON.stringify({
+          home: managedHome, user: { name: user.username, uid: user.uid, gid: user.gid, home: temporaryRoot },
+        })]);
+        const inspection = JSON.parse(preflight.stdout);
+        assert.equal(inspection.home, managedHome);
+        assert.equal(inspection.managed, true);
+        assert.equal(typeof inspection.instanceId, "string");
+        isOwnerPreflightRun = true;
+      }
+    } catch (error) {
+      managedFailure = error;
+    }
+
+    // Every step runs even when disable fails, so a detached worker is never stranded silently.
+    // A live recorded PID cannot be proven to be the worker, so it is reported, never signalled.
+    const cleanupFailures = [];
+    // A worker started by a command that then failed may be recorded only in runtime.json, which shutdown
+    // removes before the process exits; capture it now so it is probed too.
+    try {
+      const recordedPid = JSON.parse(await readFile(path.join(managedHome, "sync", "worker", "runtime.json"), "utf8")).pid;
+      assert(Number.isSafeInteger(recordedPid) && recordedPid > 0, `Invalid worker runtime record PID: ${recordedPid}`);
+      if (!workerPids.includes(recordedPid)) {
+        workerPids.push(recordedPid);
+      }
+    } catch (error) {
+      // Only a missing record means no worker; any other read or validation failure leaves its exit unconfirmed.
+      if (error.code !== "ENOENT") {
+        cleanupFailures.push(error);
+      }
+    }
+
+    // Worker commands require an enrolled inbox, and no worker can start before enrollment succeeds.
+    if (isEnrolled) {
+      try {
+        await runManaged(["sync", "worker", "disable"]);
+      } catch (error) {
+        cleanupFailures.push(error);
+      }
+    }
+
+    for (const pid of workerPids) {
+      try {
+        if (!await waitForProcessExit(pid, 3000)) {
+          cleanupFailures.push(new Error(`Managed worker ${pid} is still running after disable, or its PID was reused; it was not signalled`));
+        }
+      } catch (error) {
+        cleanupFailures.push(error);
+      }
+    }
+
+    if (isEnrolled) {
+      try {
+        assert.equal(JSON.parse((await runManaged(["sync", "worker", "status"])).stdout).worker.running, false);
+      } catch (error) {
+        cleanupFailures.push(error);
+      }
+    }
+
+    try {
+      await assert.rejects(readFile(path.join(managedHome, "sync", "worker", "runtime.json")), { code: "ENOENT" });
+    } catch (error) {
+      cleanupFailures.push(error);
+    }
+
+    if (managedFailure || cleanupFailures.length > 0) {
+      shouldRetainFixture ||= cleanupFailures.length > 0;
+      throw new AggregateError([managedFailure, ...cleanupFailures].filter(Boolean),
+        `Installed managed worker qualification failed${shouldRetainFixture ? `; fixture retained at ${temporaryRoot}` : ""}`);
+    }
+    console.log(isOwnerPreflightRun
+      ? "Installed package owner preflight and detached managed worker enable/status/stop/start/disable passed."
+      : "Installed package detached managed worker enable/status/stop/start/disable passed; owner preflight skipped under root.");
+  }
+
   console.log("Installed package foreground, detached concurrency, LAN, exposure reset, publish restart, content, export, CLI/UI deletion, and shutdown passed.");
+} catch (error) {
+  primaryFailure = error;
 } finally {
+  // Cleanup failures are appended to, never substituted for, the smoke's own failure.
+  const cleanupFailures = [];
   try {
     await viewer?.close();
+  } catch (error) {
+    cleanupFailures.push(error);
+    shouldRetainFixture = true;
+  }
+
+  // Once a viewer may have started, an unconfirmed stop could leave it running against this fixture.
+  if (viewerEnvironment) {
     const installedExecutable = path.join(temporaryRoot, "consumer", "node_modules", "html-inbox", "bundle", "index.js");
-    await run(process.execPath, [installedExecutable, "viewer", "stop", "--json"], temporaryRoot, {
-      HTML_INBOX_HOME: path.join(temporaryRoot, "home"),
-      ...tailscaleEnvironment,
-    }).catch(() => {});
-  } finally {
-    if (process.env.HTML_INBOX_KEEP_PACKAGE_SMOKE !== "1") {
-      await rm(temporaryRoot, { recursive: true, force: true });
+    try {
+      const stopped = await run(process.execPath, [installedExecutable, "viewer", "stop", "--json"], temporaryRoot, {
+        ...viewerEnvironment,
+        ...tailscaleEnvironment,
+      });
+      // Conflict and incompatible also exit 0, but leave the viewer unsignalled.
+      const { state } = JSON.parse(stopped.stdout);
+      if (state !== "stopped") {
+        throw new Error(`Fallback viewer stop was not confirmed: ${state}`);
+      }
+    } catch (error) {
+      cleanupFailures.push(error);
+      shouldRetainFixture = true;
     }
   }
+
+  // One decision for both removal and reporting, whether the fixture is kept on request or for evidence.
+  const isFixtureKept = process.env.HTML_INBOX_KEEP_PACKAGE_SMOKE === "1" || shouldRetainFixture;
+  if (!isFixtureKept) {
+    try {
+      await rm(temporaryRoot, { recursive: true, force: true });
+    } catch (error) {
+      cleanupFailures.push(error);
+    }
+  }
+
+  if (cleanupFailures.length > 0) {
+    const failures = [primaryFailure, ...cleanupFailures]
+      .filter((error, index, all) => error && all.indexOf(error) === index);
+    throw new AggregateError(failures,
+      `Installed package smoke cleanup failed${isFixtureKept ? `; fixture retained at ${temporaryRoot}` : ""}`);
+  }
+
+  if (primaryFailure && isFixtureKept) {
+    throw new AggregateError([primaryFailure], `Installed package smoke failed; fixture retained at ${temporaryRoot}`);
+  }
+
+  if (primaryFailure) throw primaryFailure;
+}
+
+// ncc writes into bundle/ without clearing it, so a pack that skips the clean bundle script can carry
+// chunks from an earlier build. Shipped JavaScript anywhere under bundle/ must be exactly what index.js
+// can reach through chunk requests; stale chunks that only reference each other are still unreachable.
+// Only JavaScript is checked: ncc emits no other assets for this package.
+async function assertNoStaleChunks(bundleDirectory) {
+  const shipped = (await readdir(bundleDirectory, { recursive: true }))
+    .map((name) => name.split(path.sep).join("/"))
+    .filter((name) => /\.[cm]?js$/.test(name))
+    .sort();
+  const reachable = new Set(["index.js"]);
+  const pending = ["index.js"];
+  while (pending.length > 0) {
+    const source = await readFile(path.join(bundleDirectory, pending.pop()), "utf8");
+    for (const match of source.matchAll(/__nccwpck_require__\.e\((\d+)\)/g)) {
+      const chunk = `${match[1]}.index.js`;
+      if (!reachable.has(chunk)) {
+        reachable.add(chunk);
+        pending.push(chunk);
+      }
+    }
+  }
+
+  assert.deepEqual(shipped, [...reachable].sort(), "Installed bundle JavaScript must be exactly what index.js can reach");
 }
 
 async function deleteThroughViewer(origin, documentUrl) {
@@ -301,12 +511,63 @@ async function deleteThroughViewer(origin, documentUrl) {
   assert.equal((await fetch(documentUrl, { signal: AbortSignal.timeout(3000) })).status, 404);
 }
 
+async function waitForProcessExit(pid, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (true) {
+    try {
+      process.kill(pid, 0);
+    } catch (error) {
+      if (error.code === "ESRCH") return true;
+      throw new Error(`Cannot probe managed worker ${pid}`, { cause: error });
+    }
+
+    // Signal 0 also succeeds for an exited worker that a non-reaping init has not collected yet.
+    if (await isZombie(pid)) return true;
+
+    if (Date.now() >= deadline) return false;
+    await delay(20);
+  }
+}
+
+async function isZombie(pid) {
+  if (process.platform !== "linux") return false;
+
+  const stat = await readFile(`/proc/${pid}/stat`, "utf8").catch(() => "");
+  return stat.slice(stat.lastIndexOf(")") + 2).startsWith("Z");
+}
+
+// Children see only this fixture's html-inbox and Node settings, never the developer shell's
+// (for example a saved Tailscale configuration that could reach a real daemon). npm copies its
+// node-options setting into NODE_OPTIONS for lifecycle scripts and ignores empty overrides, so npm
+// reads empty fixture-owned user and global config files instead of the developer's.
+function fixtureEnvironment(overrides) {
+  const inherited = Object.entries(process.env)
+    .filter(([key]) => !/^(HTML_INBOX_|NODE_|npm_config_(node_options|userconfig|globalconfig|logs_dir)$)/i.test(key));
+
+  return {
+    ...Object.fromEntries(inherited),
+    npm_config_userconfig: npmUserConfig,
+    npm_config_globalconfig: npmGlobalConfig,
+    npm_config_logs_dir: path.join(temporaryRoot, "npm-logs"),
+    ...overrides,
+  };
+}
+
+function runNpm(args, cwd, env) {
+  if (process.platform === "win32") {
+    const npmCli = path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js");
+
+    return run(process.execPath, [npmCli, ...args], cwd, env);
+  }
+
+  return run("npm", args, cwd, env);
+}
+
 async function run(command, args, cwd, env = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd,
-      env: { ...process.env, ...env },
-      shell: process.platform === "win32" && command !== process.execPath,
+      env: fixtureEnvironment(env),
       stdio: ["ignore", "pipe", "pipe"],
       timeout: 120_000,
       killSignal: "SIGKILL",
@@ -321,7 +582,20 @@ async function run(command, args, cwd, env = {}) {
       stderr += chunk.toString();
     });
     child.once("error", reject);
+    // A descendant holding an output pipe can delay close indefinitely after the command exits.
+    let closeTimer;
+    child.once("exit", () => {
+      closeTimer = setTimeout(() => {
+        shouldRetainFixture = true;
+        child.stdout.destroy();
+        child.stderr.destroy();
+        child.unref();
+        reject(new Error(`${command} exited but is unjoined: its output pipes stayed open for 5 s; ` +
+          `fixture retained at ${temporaryRoot}.\n${(stdout + stderr).slice(-4000)}`));
+      }, 5000);
+    });
     child.once("close", (code, signal) => {
+      clearTimeout(closeTimer);
       const output = stdout + stderr;
       if (code === 0) {
         resolve({ output, stdout, stderr });
@@ -364,7 +638,7 @@ async function readWithHost(url, host) {
 async function startInstalledViewer(executable, cwd, env) {
   const child = spawn(process.execPath, [executable, "viewer", "--foreground"], {
     cwd,
-    env: { ...process.env, ...env },
+    env: fixtureEnvironment(env),
     stdio: ["ignore", "ignore", "pipe"],
   });
   const closed = new Promise((resolve) => child.once("close", resolve));
@@ -373,18 +647,32 @@ async function startInstalledViewer(executable, cwd, env) {
   child.once("error", (error) => { failure = error; });
   child.stderr.on("data", (chunk) => { stderr += chunk.toString(); });
 
-  const close = async () => {
+  // Memoized, so a later cleanup call reuses the first outcome instead of waiting again.
+  let closing;
+  const close = () => closing ??= (async () => {
     if (child.exitCode === null && child.signalCode === null) {
       child.kill("SIGTERM");
     }
 
-    const timeout = setTimeout(() => child.kill("SIGKILL"), 3000);
+    const forceTimer = setTimeout(() => child.kill("SIGKILL"), 3000);
+    let deadlineTimer;
+    const deadline = new Promise((resolve) => { deadlineTimer = setTimeout(() => resolve(false), 6000); });
+    let isJoined;
     try {
-      await closed;
+      isJoined = await Promise.race([closed.then(() => true), deadline]);
     } finally {
-      clearTimeout(timeout);
+      clearTimeout(forceTimer);
+      clearTimeout(deadlineTimer);
     }
-  };
+
+    // An unjoined viewer may still own the fixture, so keep it and stop holding this process open.
+    if (!isJoined) {
+      shouldRetainFixture = true;
+      child.stderr.destroy();
+      child.unref();
+      throw new Error(`Installed foreground viewer ${child.pid} is unjoined: no close within 6 s, including forced cleanup`);
+    }
+  })();
 
   const origin = `http://127.0.0.1:${env.HTML_INBOX_PORT}`;
   try {
@@ -412,7 +700,11 @@ async function startInstalledViewer(executable, cwd, env) {
 
     throw new Error(`Installed viewer did not become ready at ${origin}.\n${stderr}`);
   } catch (error) {
-    await close();
+    try {
+      await close();
+    } catch (cleanupError) {
+      throw new AggregateError([error, cleanupError], "Installed viewer startup and cleanup failed");
+    }
 
     throw error;
   }

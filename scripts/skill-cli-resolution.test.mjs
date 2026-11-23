@@ -17,6 +17,24 @@ const shells = process.platform === "win32"
   ? [powershellPath, path.join(process.env.SystemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe")]
   : ["/bin/bash", ...await access("/bin/zsh").then(() => ["/bin/zsh"]).catch(() => [])];
 
+test("Windows registry smoke preserves a failed native status even when stdout reports running", { skip: !powershellPath }, async (t) => {
+  const fixture = await createExecutables(t, { version: "0.5.0" });
+  const registryResolution = await readResolution({ scriptDirectory: fixture.cwd });
+  await writeFile(path.join(fixture.cwd, "recording", "html-inbox.cjs"), `
+if (process.argv[2] === "--version") {
+  console.log("0.5.0");
+} else {
+  console.log(JSON.stringify({ state: "running" }));
+  process.exitCode = 23;
+}
+`);
+
+  const result = await runResolvedCli(registryResolution, ["viewer", "status", "--json"], fixture);
+  assert.equal(result.code, 23, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout), { state: "running" });
+  assert.match(result.stderr, /Windows dispatcher exit: 23/);
+});
+
 for (const shell of shells) {
   test(`${path.basename(shell)} selects once and reuses its prefix throughout an operation`, async (t) => {
     for (const version of ["0.2.0", "0.2.2", "0.3.0", "0.4.0", "0.5.0", "0.6.0", null]) {

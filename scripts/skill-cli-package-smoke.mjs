@@ -20,7 +20,7 @@ let cleanupEnvironment;
 let failure;
 
 try {
-  resolution = await readResolution();
+  resolution = await readResolution({ scriptDirectory: temporaryRoot });
   consumerRoot = path.join(temporaryRoot, "empty consumer");
   await mkdir(consumerRoot);
   const environment = await createConsumerEnvironment(temporaryRoot);
@@ -424,7 +424,7 @@ async function verifyRegistryFailure(resolution, cwd, env, sourcePath) {
 
 async function runCli(resolution, args, cwd, env) {
   const result = await runResolvedCli(resolution, args, { cwd, env });
-  assert.equal(result.code, 0, `Resolved inbox ${args[0]} failed.\n${result.stdout}${result.stderr}`);
+  assert.equal(result.code, 0, `Resolved inbox ${JSON.stringify(args)} exited ${result.code}.\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
 
   return result;
 }

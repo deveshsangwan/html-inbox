@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-export async function readResolution() {
+export async function readResolution({ scriptDirectory } = {}) {
   const reference = await readFile(new URL("../skills/html-inbox/references/cli-resolution.md", import.meta.url), "utf8");
   const remoteReference = await readFile(new URL("../skills/html-inbox-remote/references/cli-resolution.md", import.meta.url), "utf8");
   assert.equal(remoteReference, reference, "Individually installed skills must carry the same resolution policy");
@@ -18,7 +19,33 @@ export async function readResolution() {
 
   const skillDirectory = fileURLToPath(new URL("../skills/html-inbox/", import.meta.url)).replaceAll("'", "''");
 
-  return { bash, powershell: powershell.replace("<installed-skill-directory>", skillDirectory) };
+  const resolver = powershell.replace("<installed-skill-directory>", skillDirectory);
+  if (scriptDirectory && process.platform === "win32") {
+    // Run the registry smoke as a script so PowerShell reports a file and line on failure.
+    // Record the dispatcher's status before the host exits. The viewer's JSON only describes the viewer.
+    const scriptFile = path.join(scriptDirectory, "skill-operation.ps1");
+    await writeFile(scriptFile, `try {
+${powerShellOperation(resolver)}
+  $dispatcherExit = $LASTEXITCODE
+  [Console]::Error.WriteLine("Windows dispatcher exit: $dispatcherExit")
+  exit $dispatcherExit
+} catch {
+  [Console]::Error.WriteLine($_.Exception.ToString())
+  throw
+}
+`, { flag: "wx" });
+
+    return { bash, powershell: resolver, scriptFile };
+  }
+
+  return { bash, powershell: resolver };
+}
+
+function powerShellOperation(resolver) {
+  return `$ErrorActionPreference = 'Stop'
+${resolver}
+$operationArguments = [string[]](ConvertFrom-Json $env:HTML_INBOX_TEST_ARGUMENTS)
+inbox @operationArguments`;
 }
 
 export async function runResolvedCli(resolution, args, { cwd, env = {}, shell } = {}) {
@@ -26,8 +53,11 @@ export async function runResolvedCli(resolution, args, { cwd, env = {}, shell } 
     ? (await runCommand("where.exe", ["pwsh"])).stdout.trim().split(/\r?\n/)[0]
     : "/bin/bash");
   const isPowerShell = /(?:^|[/\\])(?:pwsh|powershell)(?:\.exe)?$/.test(command);
+  const powershellArgs = resolution.scriptFile
+    ? ["-File", resolution.scriptFile]
+    : ["-Command", `${powerShellOperation(resolution.powershell)}\nexit $LASTEXITCODE`];
   const shellArguments = isPowerShell
-    ? ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", `$ErrorActionPreference = 'Stop'\n${resolution.powershell}\n$operationArguments = [string[]](ConvertFrom-Json $env:HTML_INBOX_TEST_ARGUMENTS)\ninbox @operationArguments\nexit $LASTEXITCODE`]
+    ? ["-NoLogo", "-NoProfile", "-NonInteractive", ...powershellArgs]
     : ["-c", `${resolution.bash}\ninbox "$@"`, "skill-operation", ...args];
 
   return runCommand(command, shellArguments, {
