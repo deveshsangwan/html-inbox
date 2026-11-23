@@ -126,7 +126,7 @@ export async function closeFixtureResources(root, { browser, servers = [], viewe
     failures.push(error);
   }
 
-  const shutdownFailureCount = failures.length;
+  const browserFailureCount = failures.length;
   for (const server of servers) {
     try {
       await closeServer(server);
@@ -141,7 +141,7 @@ export async function closeFixtureResources(root, { browser, servers = [], viewe
     failures.push(error);
   }
 
-  if (failures.length > shutdownFailureCount) {
+  if (failures.length > browserFailureCount) {
     throw new AggregateError(failures, `Browser fixture shutdown failed; evidence retained at ${root}`);
   }
 
