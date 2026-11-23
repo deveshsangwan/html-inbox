@@ -50,6 +50,8 @@ test("reject invalid versions, refs, engines and premature tags before publicati
     [{ version: "0.7.0-rc.1", requestedVersion: "0.7.0-rc.1" }, /stable semantic version/],
     [{ latestVersion: "" }, /Read a stable npm latest/],
     [{ latestVersion: "1.0.0-rc.1" }, /Read a stable npm latest/],
+    [{ latestVersion: ["0.6.3"] }, /Read a stable npm latest/],
+    [{ latestVersion: "0.6.3\n" }, /Read a stable npm latest/],
     [{ latestVersion: undefined }, /Read a stable npm latest/],
     [{ latestVersion: "0.6.3\n1.0.0" }, /Read a stable npm latest/],
     [{ version: "0.5.1", requestedVersion: "0.5.1", latestVersion: "0.6.3" }, /only 0.6.x or 0.7.x/],
@@ -136,7 +138,7 @@ test("the workflow entry point reads npm latest itself and writes outputs only o
     assertNoOutput();
 
     registryMode = "unavailable";
-    assert.match((await run()).stderr, /dist-tag lookup failed with HTTP 503/);
+    assert.match((await run()).stderr, /dist-tags failed: HTTP 503/);
     assertNoOutput();
 
     registryMode = "malformed";

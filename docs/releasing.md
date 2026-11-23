@@ -169,4 +169,4 @@ Compare `dist.integrity` with the tested archive's SHA-512 integrity. Confirm th
 
 If npm reports an error after uploading, query the exact version before retrying. A version that already exists cannot be overwritten or republished. Preserve the tested artifact and command output while determining whether the upload completed.
 
-npm may accept the upload before the version becomes publicly available. The publish workflow gives its registry lookups and waits a single five-minute budget and compares the public integrity with the verified archive. If verification times out after a successful upload, check the registry again; do not rerun publication just to repeat verification.
+npm may accept the upload before the version becomes publicly available. The publish workflow allows five minutes in total for registry requests, response bodies and retry waits. It compares the public package name, version and SHA-512 integrity with the verified archive and checks the selected dist-tag's exact version string. If verification times out after a successful upload, check the registry again; do not rerun publication just to repeat verification.

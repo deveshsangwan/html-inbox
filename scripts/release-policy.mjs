@@ -3,20 +3,32 @@ import { fileURLToPath } from "node:url";
 
 const stableVersionPattern = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/;
 
-const distTagsUrl = "https://registry.npmjs.org/-/package/html-inbox/dist-tags";
+export class RegistryUnavailableError extends Error {}
 
-// npm's own fetch layer can answer from its local cache when revalidation fails. Node's fetch
-// keeps no HTTP cache, so every check sees the public registry's current dist-tags or fails.
-export async function readNpmDistTags({ timeoutMs = 30_000 } = {}) {
-  const response = await fetch(distTagsUrl, {
-    cache: "no-store",
-    signal: AbortSignal.timeout(timeoutMs),
-  });
-  if (!response.ok) {
-    throw new Error(`npm dist-tag lookup failed with HTTP ${response.status}`);
+export function isStableVersion(value) {
+  return typeof value === "string" && stableVersionPattern.test(value);
+}
+
+// Node fetch keeps no local npm cache. Keep the signal attached through the body read.
+export async function readNpmRegistryJson(path, signal) {
+  let body;
+  try {
+    const response = await fetch(`https://registry.npmjs.org${path}`, { cache: "no-store", signal });
+    if (!response.ok) {
+      await response.body?.cancel();
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    body = await response.text();
+  } catch (cause) {
+    throw new RegistryUnavailableError(`npm lookup for ${path} failed: ${cause.message}`, { cause });
   }
 
-  const tags = await response.json();
+  return JSON.parse(body);
+}
+
+export async function readNpmDistTags(signal = AbortSignal.timeout(30_000)) {
+  const tags = await readNpmRegistryJson("/-/package/html-inbox/dist-tags", signal);
   if (typeof tags !== "object" || tags === null || Array.isArray(tags)) {
     throw new Error("npm dist-tag lookup returned a value that is not a tag object");
   }
@@ -28,11 +40,11 @@ export async function readNpmDistTags({ timeoutMs = 30_000 } = {}) {
 // branches and binds npm trusted publishing to an approval-gated environment. Enabling it
 // takes a reviewed change to the entry point below.
 export function verifyReleasePolicy({ version, engines, requestedVersion, ref, tag, latestVersion, isReleaseBranchApproved = false }) {
-  if (!stableVersionPattern.test(version) || version !== requestedVersion) {
+  if (!isStableVersion(version) || version !== requestedVersion) {
     throw new Error("Requested version must match the package's stable semantic version");
   }
 
-  if (!stableVersionPattern.test(latestVersion)) {
+  if (!isStableVersion(latestVersion)) {
     throw new Error("Read a stable npm latest version before choosing a release tag");
   }
 
