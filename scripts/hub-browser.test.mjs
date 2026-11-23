@@ -383,6 +383,7 @@ async function startFixtureHub(root, configuration, onStarted) {
     });
     return handle;
   } catch (error) {
+    handle.isStartupFailed = true;
     try {
       await close();
     } catch (cleanupError) {
@@ -446,6 +447,12 @@ async function closeHubFixture(t, browser, hub, root) {
 
   if (failures.length) {
     throw new AggregateError(failures, `Hub fixture shutdown failed; evidence retained at ${root}`);
+  }
+
+  // A failed startup already fails its test; keep the inputs that reproduce it.
+  if (hub?.isStartupFailed) {
+    t.diagnostic(`Installed hub startup failed; evidence retained at ${root}`);
+    return;
   }
 
   await rm(root, { recursive: true, force: true });

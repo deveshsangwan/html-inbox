@@ -224,13 +224,19 @@ Module._load = function (request, ...args) {
   const viewerStatus = await runInstalledCli(["viewer", "status", "--json"]);
   assert.equal(JSON.parse(viewerStatus.stdout).state, "stopped");
 
-  const backgroundStarts = await Promise.all([
+  // Join every concurrent start before judging any, so cleanup never races a still-starting sibling.
+  const backgroundStarts = await Promise.allSettled([
     runInstalledCli(["viewer"]),
     runInstalledCli(["viewer"]),
     runInstalledCli(["viewer"]),
   ]);
+  const failedStarts = backgroundStarts.filter((start) => start.status === "rejected").map((start) => start.reason);
+  if (failedStarts.length > 0) {
+    throw new AggregateError(failedStarts, "Concurrent detached viewer starts failed");
+  }
+
   for (const started of backgroundStarts) {
-    assert.equal(started.stdout.trim(), viewer.origin);
+    assert.equal(started.value.stdout.trim(), viewer.origin);
   }
 
   const backgroundStatus = JSON.parse((await runInstalledCli(["viewer", "status", "--json"])).stdout);
@@ -308,8 +314,10 @@ Module._load = function (request, ...args) {
     await runInstalledCli(["inbox", "create", "managed", "--home", managedHome, "--json"]);
     const workerPids = [];
     let managedFailure;
+    let isEnrolled = false;
     try {
       assert.equal(JSON.parse((await runManaged(["sync", "enroll", "--yes"])).stdout).enrolled, true);
+      isEnrolled = true;
       assert.equal(JSON.parse((await runManaged(["sync", "worker", "startup"])).stdout).skipped, true);
       const enabled = JSON.parse((await runManaged(["sync", "worker", "enable"])).stdout);
       assert.equal(enabled.worker.running, true);
@@ -356,18 +364,18 @@ Module._load = function (request, ...args) {
       }
     }
 
-    if (cleanupFailures.length === 0) {
+    if (isEnrolled) {
       try {
         assert.equal(JSON.parse((await runManaged(["sync", "worker", "status"])).stdout).worker.running, false);
       } catch (error) {
         cleanupFailures.push(error);
       }
+    }
 
-      try {
-        await assert.rejects(readFile(path.join(managedHome, "sync", "worker", "runtime.json")), { code: "ENOENT" });
-      } catch (error) {
-        cleanupFailures.push(error);
-      }
+    try {
+      await assert.rejects(readFile(path.join(managedHome, "sync", "worker", "runtime.json")), { code: "ENOENT" });
+    } catch (error) {
+      cleanupFailures.push(error);
     }
 
     if (managedFailure || cleanupFailures.length > 0) {
@@ -394,10 +402,15 @@ Module._load = function (request, ...args) {
   if (viewerEnvironment) {
     const installedExecutable = path.join(temporaryRoot, "consumer", "node_modules", "html-inbox", "bundle", "index.js");
     try {
-      await run(process.execPath, [installedExecutable, "viewer", "stop", "--json"], temporaryRoot, {
+      const stopped = await run(process.execPath, [installedExecutable, "viewer", "stop", "--json"], temporaryRoot, {
         ...viewerEnvironment,
         ...tailscaleEnvironment,
       });
+      // Conflict and incompatible also exit 0, but leave the viewer unsignalled.
+      const { state } = JSON.parse(stopped.stdout);
+      if (state !== "stopped") {
+        throw new Error(`Fallback viewer stop was not confirmed: ${state}`);
+      }
     } catch (error) {
       cleanupFailures.push(error);
       shouldRetainFixture = true;
