@@ -49,7 +49,8 @@ export class LocalDocumentSource implements DocumentSource {
     }, operation, signal);
 
     if (await ManagedSyncStore.isEnrolled(this.location.home)) {
-      return new ManagedSyncStore(this.location.home).withReadView(read, signal, this.maximumDocumentBytes);
+      // This scope owns cancellation, so an admitted read still finishes through the private store scope.
+      return new ManagedSyncStore(this.location.home).withReadView(read, undefined, this.maximumDocumentBytes);
     }
 
     return read();

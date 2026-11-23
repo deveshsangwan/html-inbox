@@ -446,3 +446,21 @@ unchanged. The [actual-parent request](../../scripts/bench/evidence/issue-96/par
 amends that later phase separately from queued combined correctness. No
 parent output mutation or application execution is authorized yet, and
 compiled artifacts remain stale for the current integrated source.
+
+## Council round 1 follow-up
+
+Two council findings at d3821fb tightened the existing lifetime policy:
+
+- When an adapter wraps the private managed scope, only the adapter scope
+  receives the caller's signal. An abort during an admitted adapter check now
+  finishes that read through the managed scope and rejects with the caller's
+  reason instead of "Document read view is closed". Direct store callers keep
+  their signal.
+- A scoped legacy backend list waits for every started metadata read before
+  it rejects with the first failure in entry order. The ordinary
+  `listDocuments` path keeps its fail-fast `Promise.all` behaviour.
+
+The regression for unobserved admitted-read rejections now keeps its test open
+for one turn, and the probe fixture rejects node:test's after-test activity
+diagnostic. Three controls were added, so the actual-view probe expects 47
+tests instead of the original 44.

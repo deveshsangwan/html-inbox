@@ -79,13 +79,14 @@ export class LocalDocumentBackend implements DocumentBackend {
 
   async withReadView<T>(operation: (view: DocumentReadView) => Promise<T>, signal?: AbortSignal): Promise<T> {
     const read = (managed?: DocumentReadView) => withDocumentReadView({
-      listDocuments: () => this.listCurrentDocuments(managed),
+      listDocuments: () => this.listCurrentDocuments({ managed }),
       getDocumentMetadata: (id) => this.readCurrentMetadata(id, managed),
       getDocument: (id) => this.readCurrentDocument(id, managed),
     }, operation, signal);
 
     if (await ManagedSyncStore.isEnrolled(this.home)) {
-      return new ManagedSyncStore(this.home).withReadView(read, signal);
+      // This scope owns cancellation, so an admitted read still finishes through the private store scope.
+      return new ManagedSyncStore(this.home).withReadView(read);
     }
 
     return read();
@@ -95,9 +96,9 @@ export class LocalDocumentBackend implements DocumentBackend {
     return this.listCurrentDocuments();
   }
 
-  private async listCurrentDocuments(managed?: DocumentReadView): Promise<DocumentMetadata[]> {
+  private async listCurrentDocuments(scope?: { managed?: DocumentReadView }): Promise<DocumentMetadata[]> {
     if (await ManagedSyncStore.isEnrolled(this.home)) {
-      return managed ? managed.listDocuments() : new ManagedSyncStore(this.home).listDocuments();
+      return scope?.managed ? scope.managed.listDocuments() : new ManagedSyncStore(this.home).listDocuments();
     }
 
     await this.prepareStorage();
@@ -113,7 +114,9 @@ export class LocalDocumentBackend implements DocumentBackend {
       throw error;
     }
 
-    const documents = await Promise.all(entries.map((id) => this.readMetadata(id)));
+    const reads = entries.map((id) => this.readMetadata(id));
+    // A scoped read must not settle while sibling reads still touch storage.
+    const documents = scope ? await settleAll(reads) : await Promise.all(reads);
     return documents
       .filter((metadata): metadata is DocumentMetadata => metadata !== null)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -283,4 +286,19 @@ export class LocalDocumentBackend implements DocumentBackend {
       }
     }
   }
+}
+
+/** Waits for every read, then rejects with the first failure in input order. */
+async function settleAll<T>(reads: Promise<T>[]): Promise<T[]> {
+  const values: T[] = [];
+
+  for (const result of await Promise.allSettled(reads)) {
+    if (result.status === "rejected") {
+      throw result.reason;
+    }
+
+    values.push(result.value);
+  }
+
+  return values;
 }

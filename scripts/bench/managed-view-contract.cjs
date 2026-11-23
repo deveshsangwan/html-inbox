@@ -479,8 +479,82 @@ test('callback and admitted-read failures both reach the scope without observing
   await entered.promise;
   release.resolve();
   await verdict;
+  // An unobserved wrapper rejection is reported on a later turn; keep the test open for it.
+  await new Promise((resolve) => setImmediate(resolve));
   assert.equal(disposed, 1);
   await assert.rejects(escaped.listDocuments(), /view is closed/);
+});
+
+for (const sourceKind of ['backend', 'read-only source']) {
+  test(`${sourceKind}: cancellation during an admitted adapter check keeps the caller's reason`, async (t) => {
+    const f = await fixture(t, sourceKind);
+    const controller = new AbortController();
+    const reason = new Error('cancelled during the adapter check');
+    const entered = deferred();
+    const release = deferred();
+    const isEnrolled = ManagedSyncStore.isEnrolled;
+    let isInsideScope = false;
+    let isHeld = false;
+    t.mock.method(ManagedSyncStore, 'isEnrolled', async (home) => {
+      if (isInsideScope && !isHeld) {
+        isHeld = true;
+        entered.resolve();
+        await release.promise;
+      }
+
+      return isEnrolled.call(ManagedSyncStore, home);
+    });
+
+    const scope = f.source.withReadView((view) => {
+      isInsideScope = true;
+      return view.listDocuments();
+    }, controller.signal);
+    await entered.promise;
+    controller.abort(reason);
+    release.resolve();
+    await assert.rejects(scope, (error) => error === reason);
+  });
+}
+
+test('legacy scoped list waits for every started metadata read before rejecting', async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), 'html-inbox-view-legacy-join-'));
+  t.after(async () => {
+    await rm(root, { recursive: true, force: true });
+    await assert.rejects(lstat(root), { code: 'ENOENT' });
+    t.diagnostic('legacy join fixture removed');
+  });
+  const ids = ['first', 'second'];
+  const backend = new LocalDocumentBackend(path.join(root, 'library'), () => {}, () => ids.shift());
+  await backend.publish(input('first'));
+  await backend.publish(input('second'));
+  const failure = new Error('first metadata read failed');
+  const siblingEntered = deferred();
+  const release = deferred();
+  const readMetadata = LocalDocumentBackend.prototype.readMetadata;
+  let isSiblingFinished = false;
+  t.mock.method(LocalDocumentBackend.prototype, 'readMetadata', async function (id) {
+    if (id === 'first') {
+      await siblingEntered.promise;
+      throw failure;
+    }
+
+    siblingEntered.resolve();
+    await release.promise;
+    const metadata = await readMetadata.call(this, id);
+    isSiblingFinished = true;
+    return metadata;
+  });
+
+  let isSettled = false;
+  const scope = backend.withReadView((view) => view.listDocuments());
+  const observed = scope.finally(() => { isSettled = true; });
+  void observed.catch(() => {});
+  await siblingEntered.promise;
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(isSettled, false, 'scope settled while a sibling read still touched storage');
+  release.resolve();
+  await assert.rejects(scope, (error) => error === failure);
+  assert.equal(isSiblingFinished, true);
 });
 
 test('already cancelled scopes dispose without invoking their callback or admitting a read', async () => {

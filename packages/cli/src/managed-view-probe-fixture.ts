@@ -81,7 +81,9 @@ export async function runManagedViewProbe(t: TestContext, kind: "actual-view" | 
 
     assert.equal(result.signal, null);
     assert.equal(result.code, 0, `${script} failed; its complete output is above`);
-    const expected = kind === "actual-view" ? 44 : 1;
+    // node:test only prints a diagnostic for rejections that arrive after a test ends.
+    assert.doesNotMatch(stdout, /asynchronous activity after the test ended/);
+    const expected = kind === "actual-view" ? 47 : 1;
     assert.match(stdout, new RegExp(`^# tests ${expected}$`, "m"));
     assert.match(stdout, new RegExp(`^# pass ${expected}$`, "m"));
     assert.match(stdout, /^# fail 0$/m);
