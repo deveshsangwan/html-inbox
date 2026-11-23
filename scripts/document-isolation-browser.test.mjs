@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, stat } from "node:fs/promises";
+import fs, { mkdtemp, readFile, stat } from "node:fs/promises";
 import http from "node:http";
-import { createRequire } from "node:module";
+import { createRequire, syncBuiltinESMExports } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -97,11 +97,23 @@ test("isolation fixture joins owned viewer cleanup before removing its home", { 
   const entered = gate();
   const release = gate();
   const remove = records.removeViewerRecord;
+  const rm = fs.rm;
+  let hasCompletedRecordRemoval = false;
+  let isRecordRemovedAtRootRemoval;
   t.mock.method(records, "removeViewerRecord", async (...args) => {
     entered.release();
     await release.promise;
-    return remove(...args);
+    await remove(...args);
+    hasCompletedRecordRemoval = true;
   });
+  t.mock.method(fs, "rm", async (target, options) => {
+    if (target === fixture.home) {
+      isRecordRemovedAtRootRemoval ??= hasCompletedRecordRemoval;
+    }
+
+    return rm(target, options);
+  });
+  syncBuiltinESMExports();
   const outcome = teardown().then(() => ({}), (error) => ({ error }));
   let failure;
 
@@ -110,12 +122,13 @@ test("isolation fixture joins owned viewer cleanup before removing its home", { 
     // Drain callbacks from native listener close while owned record cleanup is gated.
     await setImmediate();
     const isHomePresent = await stat(fixture.home).then((entry) => entry.isDirectory(), () => false);
-    assert.equal(isHomePresent, true, "isolation home removed before owned viewer cleanup completed");
+    assert.equal(isHomePresent, true, `isolation home removed before owned viewer cleanup completed (teardown ${first} first)`);
     assert.equal(first, "entered", "isolation teardown settled before owned viewer record cleanup started");
     assert(await records.readViewerRecord(fixture.home));
     release.release();
     if (!(await outcome).error) {
       await assert.rejects(stat(fixture.home), { code: "ENOENT" });
+      assert.equal(isRecordRemovedAtRootRemoval, true, "isolation home removal started before owned record cleanup completed");
     }
   } catch (error) {
     failure = error;
@@ -124,9 +137,10 @@ test("isolation fixture joins owned viewer cleanup before removing its home", { 
   release.release();
   const { error: teardownError } = await outcome;
   t.mock.restoreAll();
+  syncBuiltinESMExports();
   if (failure || teardownError) {
-    // Failed teardown keeps its home as evidence.
-    t.diagnostic(`isolation fixture evidence retained at ${fixture.home}`);
+    const isEvidencePresent = await stat(fixture.home).then(() => true, () => false);
+    t.diagnostic(`isolation fixture home ${fixture.home} ${isEvidencePresent ? "retained as evidence" : "already removed"}`);
   }
 
   if (failure && teardownError) {

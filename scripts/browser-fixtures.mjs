@@ -142,6 +142,10 @@ export async function closeFixtureResources(root, { browser, servers = [], viewe
   }
 
   if (failures.length > browserFailureCount) {
+    if (failedViewerStartup) {
+      failures.push(failedViewerStartup.error);
+    }
+
     throw new AggregateError(failures, `Browser fixture shutdown failed; evidence retained at ${root}`);
   }
 

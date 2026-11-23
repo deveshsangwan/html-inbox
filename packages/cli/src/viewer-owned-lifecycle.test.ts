@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import http from "node:http";
-import { test } from "node:test";
+import { test, type TestContext } from "node:test";
 import { LocalDocumentBackend } from "./backend";
 import { temporaryHome } from "./test-fixtures";
 import * as records from "./viewer-records";
 import { startViewerLifecycle } from "./viewer-server";
+import * as startLock from "./viewer-start-lock";
 
 for (const hasSuccessor of [false, true]) {
   test(`owned close is memoized and preserves successor record ${hasSuccessor}`, async (t) => {
@@ -73,6 +74,53 @@ test("owned close memoizes rejection and completes failure journaling once", asy
     process.exitCode = previousExitCode;
   }
 });
+
+test("start-lock release failure after readiness rolls back the live viewer", async (t) => {
+  const home = await temporaryHome(t);
+  const releaseError = new Error("viewer start lock release failed");
+  failLockRelease(t, releaseError);
+  const write = records.writeViewerRecord;
+  let written: Parameters<typeof write>[1] | undefined;
+  t.mock.method(records, "writeViewerRecord", async (...args: Parameters<typeof write>) => {
+    written = args[1];
+    return write(...args);
+  });
+
+  await assert.rejects(startViewerLifecycle(new LocalDocumentBackend(home), home, 0), (error) => error === releaseError);
+  assert(written, "startup must reach readiness before the lock is released");
+  assert.equal(await records.readViewerRecord(home), null, "live viewer record survived a start-lock release failure");
+  await rebind(written.config.port);
+  await rebind(Number(new URL(written.controlUrl).port));
+});
+
+test("startup failure keeps both its cause and a start-lock release failure", async (t) => {
+  const home = await temporaryHome(t);
+  const startupError = new Error("viewer configuration failed");
+  const releaseError = new Error("viewer start lock release failed");
+  failLockRelease(t, releaseError);
+  t.mock.method(records, "saveViewerConfiguration", async () => { throw startupError; });
+
+  await assert.rejects(startViewerLifecycle(new LocalDocumentBackend(home), home, 0), (error) => {
+    assert(error instanceof AggregateError, "start-lock release failure replaced the startup cause");
+    assert.deepEqual(error.errors, [startupError, releaseError]);
+    return true;
+  });
+  assert.equal(await records.readViewerRecord(home), null);
+});
+
+function failLockRelease(t: TestContext, releaseError: Error) {
+  const acquire = startLock.acquireViewerStartLock;
+  t.mock.method(startLock, "acquireViewerStartLock", async (...args: Parameters<typeof acquire>) => {
+    const lock = await acquire(...args);
+    return {
+      ...lock,
+      release: async () => {
+        await lock.release();
+        throw releaseError;
+      },
+    };
+  });
+}
 
 async function rebind(port: number) {
   const server = http.createServer();

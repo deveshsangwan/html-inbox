@@ -217,6 +217,8 @@ export async function startViewerLifecycle(
   await assertManagedLifecycle(home);
   const inherited = await hasInheritedViewerStartLock(home);
   const lock = inherited ? null : await acquireViewerStartLock(home);
+  let lockRelease: Promise<void> | undefined;
+  const releaseLock = () => lockRelease ??= lock?.release() ?? Promise.resolve();
   try {
     const existing = await getViewerStatus(home, undefined, { refreshLanUrls: false });
     if (existing.state === "running") {
@@ -341,7 +343,7 @@ export async function startViewerLifecycle(
         throw new Error("Viewer startup finished without a reader");
       }
 
-      return {
+      const lifecycle = {
         server: reader.server,
         close: () => ownedClosing ??= close("reader-close").catch(async (error: unknown) => {
           // Join failure journaling too, so callers can safely retain or inspect the fixture.
@@ -349,6 +351,9 @@ export async function startViewerLifecycle(
           throw error;
         }),
       };
+      // Release inside the rollback boundary: a failure here must stop the live viewer, not strand it handle-less.
+      await releaseLock();
+      return lifecycle;
     } catch (error) {
       try {
         await close("startup-failure");
@@ -359,9 +364,18 @@ export async function startViewerLifecycle(
 
       throw error;
     }
-  } finally {
-    await lock?.release();
+  } catch (error) {
+    const release = await releaseLock().then(() => ({ hasFailed: false as const }), (failure: unknown) => ({ hasFailed: true as const, failure }));
+    if (!release.hasFailed || containsError(error, release.failure)) {
+      throw error;
+    }
+
+    throw new AggregateError([error, release.failure], "Viewer startup failed and its startup lock could not be released");
   }
+}
+
+function containsError(error: unknown, candidate: unknown) {
+  return error === candidate || (error instanceof AggregateError && error.errors.includes(candidate));
 }
 
 function shutdownDeadline(record: ViewerRecord): number {
