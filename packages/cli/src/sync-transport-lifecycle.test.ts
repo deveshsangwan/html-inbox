@@ -233,7 +233,17 @@ for (const fault of ["truncated", "malformed"] as const) {
     assert.equal((await c.listDocuments()).length, 0);
     assert.equal(Object.keys(initial.checkpoints).length, 0);
     await a.publish(input, "upstream-ready");
-    assert.equal((await f.run(a, ab.outbound)).routes[0].status, "confirmed");
+    const started = performance.now();
+    const upstream = await f.run(a, ab.outbound);
+    const route = upstream.routes[0];
+    if (route.status !== "confirmed") {
+      t.diagnostic(JSON.stringify({
+        phase: "A to B after first history error", elapsedMs: Math.round(performance.now() - started),
+        route, client: upstream.counters, relay: relay.server.status().counters, downstreamStatuses: upstreamStatuses,
+      }));
+    }
+
+    assert.equal(route.status, "confirmed");
     if (fault === "truncated") {
       await until(() => c.listDocuments(), (documents) => documents.length === 1, "automatic independent pull after interruption");
     } else {
