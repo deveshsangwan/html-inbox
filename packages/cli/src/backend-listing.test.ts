@@ -108,15 +108,21 @@ test("ordinary listings share a read limit across instances and keep enumeration
   });
 
   const backends = Array.from({ length: listingCount }, () => new LocalDocumentBackend(home));
-  const results = await Promise.all(backends.map((backend) => backend.listDocuments()));
+  const listings = backends.map((backend) => backend.listDocuments());
+  try {
+    const results = await Promise.all(listings);
 
-  for (const result of results) {
-    assert.deepEqual(result, expected);
+    for (const result of results) {
+      assert.deepEqual(result, expected);
+    }
+
+    assert.ok(peakReads > 1);
+    assert.ok(peakReads <= 8, `aggregate active reads: ${peakReads}`);
+    assert.equal(activeReads, 0);
+  } finally {
+    releaseDelayedReads();
+    await Promise.allSettled(listings);
   }
-
-  assert.ok(peakReads > 1);
-  assert.ok(peakReads <= 8, `aggregate active reads: ${peakReads}`);
-  assert.equal(activeReads, 0);
 });
 
 test("a failed listing keeps its first error and skips queued reads while a waiting listing completes", { timeout: 10_000 }, async (t) => {
@@ -239,41 +245,54 @@ test("a failed listing keeps its first error and skips queued reads while a wait
   await eightHeld;
 
   let isHealthySettled = false;
-  const healthy = new LocalDocumentBackend(healthyHome).listDocuments().finally(() => { isHealthySettled = true; });
-  await healthyEnumerated;
-  await setImmediate();
-  assert.equal(healthyReads, 0, "the second listing waits while the first holds all eight permits");
-  assert.equal(isHealthySettled, false);
+  const pending: Promise<unknown>[] = [failing];
+  try {
+    const healthy = new LocalDocumentBackend(healthyHome).listDocuments().finally(() => { isHealthySettled = true; });
+    pending.push(healthy);
+    await healthyEnumerated;
+    await setImmediate();
+    assert.equal(healthyReads, 0, "the second listing waits while the first holds all eight permits");
+    assert.equal(isHealthySettled, false);
 
-  // This worker finishes, claims another record and queues behind the waiting listing.
-  heldReads[7]();
-  await setImmediate();
+    // This worker finishes, claims another record and queues behind the waiting listing.
+    heldReads[7]();
+    await setImmediate();
 
-  const firstError = Object.assign(new Error("first synthetic failure"), { code: "EACCES" });
-  heldReads[0](firstError);
-  await setImmediate();
-  heldReads[1](Object.assign(new Error("sibling synthetic failure"), { code: "EACCES" }));
+    const firstError = Object.assign(new Error("first synthetic failure"), { code: "EACCES" });
+    heldReads[0](firstError);
+    await setImmediate();
+    heldReads[1](Object.assign(new Error("sibling synthetic failure"), { code: "EACCES" }));
 
-  for (const release of heldReads.slice(2, 7)) {
-    release();
+    for (const release of heldReads.slice(2, 7)) {
+      release();
+    }
+
+    assert.equal(await failing, firstError);
+    assert.equal(activeFailingReadsAtSettlement, 0, "the failed listing drains its own reads before rejecting");
+    assert.equal(failingReads, 8, "the queued worker skips its read after receiving a permit");
+    assert.deepEqual(await healthy, expected);
+    assert.equal(activeHealthyReads, 0);
+
+    // Both listings enumerate together, so their sixteen workers ask for permits in one turn. Exactly eight
+    // may be admitted: a leaked permit admits fewer, and a permit released twice admits more.
+    isCountingAdmissions = true;
+    const concurrent = [0, 1].map(() => new LocalDocumentBackend(healthyHome).listDocuments());
+    pending.push(...concurrent);
+    await bothEnumerated;
+    await setImmediate();
+    assert.equal(admittedRecords, 8);
+
+    releaseAdmissions();
+    assert.deepEqual(await Promise.all(concurrent), [expected, expected]);
+  } finally {
+    releaseEnumerations();
+    releaseAdmissions();
+    for (const release of heldReads) {
+      release();
+    }
+
+    await Promise.allSettled(pending);
   }
-
-  assert.equal(await failing, firstError);
-  assert.equal(activeFailingReadsAtSettlement, 0, "the failed listing drains its own reads before rejecting");
-  assert.equal(failingReads, 8, "the queued worker skips its read after receiving a permit");
-  assert.deepEqual(await healthy, expected);
-  assert.equal(activeHealthyReads, 0);
-
-  // Both listings enumerate together, so their sixteen workers ask for permits in one turn. Exactly eight
-  // may be admitted: a leaked permit admits fewer, and a permit released twice admits more.
-  isCountingAdmissions = true;
-  const concurrent = Promise.all([0, 1].map(() => new LocalDocumentBackend(healthyHome).listDocuments()));
-  await bothEnumerated;
-  await setImmediate();
-  assert.equal(admittedRecords, 8);
-
-  releaseAdmissions();
-  assert.deepEqual(await concurrent, [expected, expected]);
 });
 
 test("waiting listings receive released permits in arrival order", { timeout: 10_000 }, async (t) => {
@@ -321,6 +340,9 @@ test("waiting listings receive released permits in arrival order", { timeout: 10
     return bytes;
   });
 
+  const holding = new LocalDocumentBackend(holdingHome).listDocuments();
+  const pending = [holding];
+
   const startWaitingListing = async (home: string, label: string) => {
     const enumerated = new Promise<void>((resolve) => { enumerationSignals.set(path.join(home, "documents"), resolve); });
     const listing = new LocalDocumentBackend(home).listDocuments().then((documents) => {
@@ -328,23 +350,27 @@ test("waiting listings receive released permits in arrival order", { timeout: 10
       return documents;
     });
 
+    pending.push(listing);
     await enumerated;
     await setImmediate();
     return { listing };
   };
 
-  const holding = new LocalDocumentBackend(holdingHome).listDocuments();
   await eightHeld;
-  const first = await startWaitingListing(firstHome, "first");
-  const second = await startWaitingListing(secondHome, "second");
+  try {
+    const first = await startWaitingListing(firstHome, "first");
+    const second = await startWaitingListing(secondHome, "second");
 
-  // One permit circulates: every waiter of the earlier listing is served before any waiter of the later one.
-  heldReads[0]();
-  assert.deepEqual(await Promise.all([first.listing, second.listing]), [firstExpected, secondExpected]);
-  assert.deepEqual(settlementOrder, ["first", "second"]);
+    // One permit circulates: every waiter of the earlier listing is served before any waiter of the later one.
+    heldReads[0]();
+    assert.deepEqual(await Promise.all([first.listing, second.listing]), [firstExpected, secondExpected]);
+    assert.deepEqual(settlementOrder, ["first", "second"]);
+  } finally {
+    for (const release of heldReads) {
+      release();
+    }
 
-  for (const release of heldReads.slice(1)) {
-    release();
+    await Promise.allSettled(pending);
   }
 
   assert.equal((await holding).length, 8);
@@ -399,42 +425,55 @@ test("ordinary listing retains corruption diagnostics, unsafe-entry handling and
   assert.equal(await backend.getDocumentMetadata("document-005"), null);
 });
 
-test("a failed hardening operation drains its sibling before releasing the listing slot", { timeout: 10_000 }, async (t) => {
-  const home = await temporaryHome(t);
-  await seed(home, 1);
-  const chmod = fs.chmod;
-  let releaseHtml = () => {};
-  const htmlGate = new Promise<void>((resolve) => { releaseHtml = resolve; });
-  let reportFailure = () => {};
-  const failureStarted = new Promise<void>((resolve) => { reportFailure = resolve; });
-  const failure = Object.assign(new Error("synthetic chmod denial"), { code: "EACCES" });
-  let hasSettled = false;
+for (const code of ["EACCES", "ENOENT"]) {
+  test(`hardening drains its sibling before reporting ${code}`, { timeout: 10_000 }, async (t) => {
+    const home = await temporaryHome(t);
+    await seed(home, 1);
+    const warnings: string[] = [];
+    let releaseHtml = () => {};
+    const htmlGate = new Promise<void>((resolve) => { releaseHtml = resolve; });
+    let reportFailure = () => {};
+    const failureStarted = new Promise<void>((resolve) => { reportFailure = resolve; });
+    const failure = Object.assign(new Error("synthetic chmod failure"), { code });
+    const chmod = fs.chmod;
 
-  t.mock.method(fs, "chmod", async (...args: Parameters<typeof fs.chmod>) => {
-    if (String(args[0]).endsWith("index.html")) {
-      await htmlGate;
+    t.mock.method(fs, "chmod", async (...args: Parameters<typeof chmod>) => {
+      if (String(args[0]).endsWith("index.html")) {
+        await htmlGate;
+      }
+
+      if (String(args[0]).endsWith("metadata.json")) {
+        reportFailure();
+        throw failure;
+      }
+
+      return chmod(...args);
+    });
+
+    let hasSettled = false;
+    const backend = new LocalDocumentBackend(home, (message) => warnings.push(message));
+    const outcome = backend.listDocuments().catch((error: unknown) => error)
+      .finally(() => { hasSettled = true; });
+
+    try {
+      await failureStarted;
+      await setImmediate();
+      assert.equal(hasSettled, false);
+      assert.deepEqual(warnings, []);
+    } finally {
+      releaseHtml();
+      await outcome;
     }
 
-    if (String(args[0]).endsWith("metadata.json")) {
-      reportFailure();
-      throw failure;
+    if (code === "ENOENT") {
+      assert.deepEqual(await outcome, []);
+      assert.deepEqual(warnings, ["skipping corrupt document document-000: document files are incomplete"]);
+    } else {
+      assert.equal(await outcome, failure);
+      assert.deepEqual(warnings, []);
     }
-
-    return chmod(...args);
   });
-
-  const listing = new LocalDocumentBackend(home).listDocuments();
-  const rejection = assert.rejects(listing, (error) => error === failure).then(() => { hasSettled = true; });
-
-  try {
-    await failureStarted;
-    await setImmediate();
-    assert.equal(hasSettled, false);
-  } finally {
-    releaseHtml();
-    await rejection;
-  }
-});
+}
 
 test("a record removed after enumeration remains a silent missing record", { timeout: 10_000 }, async (t) => {
   const home = await temporaryHome(t);

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { chmod, cp, link, lstat, mkdir, readFile, readdir, realpath, rename, rm, stat, symlink, writeFile } from "node:fs/promises";
+import fs, { chmod, cp, link, lstat, mkdir, readFile, readdir, realpath, rename, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 import { test, type TestContext } from "node:test";
@@ -454,8 +454,8 @@ test("catalog retries native zero-link inode observations during atomic replacem
       try {
         await fs.writeFile(target + ".replacement", JSON.stringify({ schemaVersion: 1, name: "second" }), { mode: 0o600 });
         await fs.rename(target + ".replacement", target);
-        const unlinked = await old.stat();
-        assert.equal(unlinked.nlink, 0);
+        const unlinked = await old.stat(args[1]);
+        assert.equal(unlinked.nlink, 0n);
         return unlinked;
       } finally {
         await old.close();
@@ -555,7 +555,7 @@ test("catalog metadata retries unlinked regular snapshots without reading or rep
       }
 
       if (mode !== "replace" || inspections === 1) {
-        Object.defineProperty(info, "nlink", { value: 0 });
+        Object.defineProperty(info, "nlink", { value: 0n });
       }
 
       return info;
@@ -608,40 +608,94 @@ test("catalog metadata retries unlinked regular snapshots without reading or rep
   }
 });
 
-test("catalog replacement retries stop after a bounded number of changing files", async (t) => {
+test("catalog replacement retries stop after a bounded number of changing files", { timeout: 10_000 }, async (t) => {
   const { root, catalogHome } = await catalogFixture(t);
   await createInbox("work", path.join(root, "work"), catalogHome);
   await setDefaultInbox("work", catalogHome);
-  const modulePath = path.join(__dirname, "inbox-catalog.js");
-  const defaultPath = path.join(catalogHome, "default.json");
-  const worker = `
-    const assert = require("node:assert/strict");
-    const fs = require("node:fs/promises");
-    const [modulePath, catalogHome, defaultPath] = process.argv.slice(1);
-    const perform = fs.open;
-    let attempts = 0;
-    fs.open = async (...args) => {
-      if (args[0] === defaultPath) {
-        attempts += 1;
-        assert(attempts <= 20, "Catalog retry loop did not stop");
-        const replacementPath = defaultPath + ".replacement";
-        await fs.writeFile(replacementPath, '{"schemaVersion":1,"name":"work"}', {mode: 0o600});
-        await fs.rename(replacementPath, defaultPath);
-      }
-      return perform(...args);
-    };
-    require(modulePath).readInboxCatalog(catalogHome)
-      .then(() => { throw new Error("Continuously changing record was accepted"); })
-      .catch(error => {
-        assert.match(error.message, /changed repeatedly during read/);
-        assert(attempts > 1 && attempts <= 20);
-        process.stdout.write("bounded retries verified");
-      });
-  `;
+  const target = await realpath(path.join(catalogHome, "default.json"));
+  const open = fs.open;
+  const changes: string[] = [];
 
-  const result = await runNode(process.execPath, ["-e", worker, modulePath, catalogHome, defaultPath], { timeout: 5000 });
-  assert.equal(result.stdout, "bounded retries verified");
+  t.mock.method(fs, "open", async (...args: Parameters<typeof open>) => {
+    if (args[0] !== target) {
+      return open(...args);
+    }
+
+    assert.ok(changes.length < 10, "catalog exceeded its ten attempts");
+    const before = await lstat(target, { bigint: true });
+    const replacement = target + ".replacement";
+    await writeFile(replacement, '{"schemaVersion":1,"name":"work"}', { mode: 0o600 });
+    await rename(replacement, target);
+
+    const file = await open(...args);
+    try {
+      const after = await file.stat({ bigint: true });
+      changes.push(`${before.dev}/${before.ino} -> ${after.dev}/${after.ino}`);
+      assert.ok(before.dev !== after.dev || before.ino !== after.ino, changes.join(", "));
+      return file;
+    } catch (error) {
+      await file.close();
+      throw error;
+    }
+  });
+
+  const outcome = await readInboxCatalog(catalogHome).catch((error: unknown) => error);
+  const result = outcome instanceof Error ? outcome.message : JSON.stringify(outcome);
+  const diagnostic = `target=${target}, replacements=[${changes.join(", ")}], result=${result}`;
+  assert.equal(changes.length, 10, diagnostic);
+  assert.ok(outcome instanceof Error, diagnostic);
+  assert.match(outcome.message, /changed repeatedly during read/);
 });
+
+for (const field of ["dev", "ino"] as const) {
+  test(`catalog compares the full ${field} before accepting an open record`, async (t) => {
+    const { root, catalogHome } = await catalogFixture(t);
+    await createInbox("work", path.join(root, "work"), catalogHome);
+    await setDefaultInbox("work", catalogHome);
+
+    const target = await realpath(path.join(catalogHome, "default.json"));
+    const checkedId = 2n ** 53n;
+    const openedId = checkedId + 1n;
+    assert.equal(Number(checkedId), Number(openedId));
+
+    const inspect = fs.lstat;
+    const open = fs.open;
+    let inspections = 0;
+    let descriptorStats = 0;
+
+    t.mock.method(fs, "lstat", async (...args: Parameters<typeof inspect>) => {
+      const info = await inspect(...args);
+      if (args[0] === target) {
+        inspections += 1;
+        assert.ok(inspections <= 10, "catalog exceeded its ten attempts");
+        info[field] = typeof info[field] === "bigint" ? checkedId : Number(checkedId);
+      }
+
+      return info;
+    });
+
+    t.mock.method(fs, "open", async (...args: Parameters<typeof open>) => {
+      const file = await open(...args);
+      if (args[0] !== target) {
+        return file;
+      }
+
+      const stat = file.stat.bind(file);
+      t.mock.method(file, "stat", async (...options: Parameters<typeof stat>) => {
+        const info = await stat(...options);
+        descriptorStats += 1;
+        info[field] = typeof info[field] === "bigint" ? openedId : Number(openedId);
+        return info;
+      });
+
+      return file;
+    });
+
+    await assert.rejects(readInboxCatalog(catalogHome), /changed repeatedly during read/);
+    assert.equal(inspections, 10);
+    assert.equal(descriptorStats, 10);
+  });
+}
 
 test("100 alternating default updates preserve three concurrent bound and catalog readers", async (t) => {
   const { root, catalogHome } = await catalogFixture(t);
