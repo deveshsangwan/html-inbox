@@ -20,6 +20,8 @@ import { createPackageTailscaleFixture } from "./package-tailscale-fixture.mjs";
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 // Canonical, so paths the CLI reports (such as macOS /private/var) match the fixture's spelling.
 const temporaryRoot = await realpath(await mkdtemp(path.join(tmpdir(), "html-inbox-package-")));
+const npmUserConfig = path.join(temporaryRoot, "npm-user.npmrc");
+const npmGlobalConfig = path.join(temporaryRoot, "npm-global.npmrc");
 let viewer;
 let tailscaleEnvironment;
 let shouldRetainFixture = false;
@@ -27,6 +29,8 @@ let primaryFailure;
 let viewerEnvironment;
 
 try {
+  await writeFile(npmUserConfig, "");
+  await writeFile(npmGlobalConfig, "");
   assert.equal(process.argv.length <= 3, true, "Pass at most one package tarball");
   let tarballPath = process.argv[2]
     ? path.resolve(repositoryRoot, process.argv[2])
@@ -38,7 +42,8 @@ try {
   } else {
     const packResult = await run(
       "npm",
-      ["pack", "--pack-destination", temporaryRoot],
+      // Explicit, so an inherited ignore-scripts setting cannot skip the prepack build being qualified.
+      ["pack", "--ignore-scripts=false", "--pack-destination", temporaryRoot],
       path.join(repositoryRoot, "packages", "cli"),
       { npm_config_cache: path.join(temporaryRoot, "npm-cache") },
     );
@@ -451,10 +456,13 @@ Module._load = function (request, ...args) {
 }
 
 // ncc writes into bundle/ without clearing it, so a pack that skips the clean bundle script can carry
-// chunks from an earlier build. Shipped JavaScript must be exactly what index.js can reach through chunk
-// requests; stale chunks that only reference each other are still unreachable.
+// chunks from an earlier build. Shipped JavaScript anywhere under bundle/ must be exactly what index.js
+// can reach through chunk requests; stale chunks that only reference each other are still unreachable.
 async function assertNoStaleChunks(bundleDirectory) {
-  const shipped = (await readdir(bundleDirectory)).filter((name) => name.endsWith(".js")).sort();
+  const shipped = (await readdir(bundleDirectory, { recursive: true }))
+    .map((name) => name.split(path.sep).join("/"))
+    .filter((name) => /\.[cm]?js$/.test(name))
+    .sort();
   const reachable = new Set(["index.js"]);
   const pending = ["index.js"];
   while (pending.length > 0) {
@@ -500,13 +508,19 @@ async function waitForProcessExit(pid, timeoutMs) {
 }
 
 // Children see only this fixture's html-inbox and Node settings, never the developer shell's
-// (for example a saved Tailscale configuration that could reach a real daemon). npm copies its own
-// node-options configuration into NODE_OPTIONS for lifecycle scripts, so that is cleared too.
+// (for example a saved Tailscale configuration that could reach a real daemon). npm copies its
+// node-options setting into NODE_OPTIONS for lifecycle scripts and ignores empty overrides, so npm
+// reads empty fixture-owned user and global config files instead of the developer's.
 function fixtureEnvironment(overrides) {
   const inherited = Object.entries(process.env)
-    .filter(([key]) => !/^(HTML_INBOX_|NODE_|npm_config_node_options$)/i.test(key));
+    .filter(([key]) => !/^(HTML_INBOX_|NODE_|npm_config_(node_options|userconfig|globalconfig)$)/i.test(key));
 
-  return { ...Object.fromEntries(inherited), npm_config_node_options: "", ...overrides };
+  return {
+    ...Object.fromEntries(inherited),
+    npm_config_userconfig: npmUserConfig,
+    npm_config_globalconfig: npmGlobalConfig,
+    ...overrides,
+  };
 }
 
 async function run(command, args, cwd, env = {}) {

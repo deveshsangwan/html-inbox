@@ -75,24 +75,35 @@ def main():
                 command = [str(node), cli, *prefix, *arguments]
 
             with tempfile.TemporaryFile() as stdout, tempfile.TemporaryFile() as stderr:
-                start = time.perf_counter()
-                child = subprocess.Popen(command, cwd=consumer, env=env, stdout=stdout, stderr=stderr, start_new_session=True)
+                # Defer interrupts from spawn until reap, so an interrupted run never leaves a sample group alive.
+                # The child still starts with default dispositions, because exec resets caught signals.
+                interrupts = []
+                deferred = {number: signal.signal(number, lambda signum, frame: interrupts.append(signum))
+                            for number in (signal.SIGINT, signal.SIGTERM)}
                 def timeout(signum, frame):
                     raise TimeoutError(command)
                 previous = signal.signal(signal.SIGALRM, timeout)
                 try:
-                    signal.alarm(30)
-                    os.waitid(os.P_PID, child.pid, os.WEXITED | os.WNOWAIT)
-                    elapsed = (time.perf_counter() - start) * 1000
-                finally:
-                    signal.alarm(0)
-                    signal.signal(signal.SIGALRM, previous)
-                    # Kill the group before reaping: the unreaped leader keeps its group ID from being reused.
+                    start = time.perf_counter()
+                    child = subprocess.Popen(command, cwd=consumer, env=env, stdout=stdout, stderr=stderr, start_new_session=True)
                     try:
-                        os.killpg(child.pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
-                    _, status, usage = os.wait4(child.pid, 0)
+                        signal.alarm(30)
+                        os.waitid(os.P_PID, child.pid, os.WEXITED | os.WNOWAIT)
+                        elapsed = (time.perf_counter() - start) * 1000
+                    finally:
+                        signal.alarm(0)
+                        # Kill the group before reaping: the unreaped leader keeps its group ID from being reused.
+                        try:
+                            os.killpg(child.pid, signal.SIGKILL)
+                        except ProcessLookupError:
+                            pass
+                        _, status, usage = os.wait4(child.pid, 0)
+                finally:
+                    signal.signal(signal.SIGALRM, previous)
+                    for number, handler in deferred.items():
+                        signal.signal(number, handler)
+                if interrupts:
+                    signal.raise_signal(interrupts[0])
                 child.returncode = os.waitstatus_to_exitcode(status)
                 stdout.seek(0)
                 stderr.seek(0)

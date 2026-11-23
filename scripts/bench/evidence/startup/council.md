@@ -156,4 +156,4 @@ So this PR's Windows Source job has failed only at `5d4f93f`. That remains an ob
 
 ### Still required
 
-Not yet executed at any head: installed hub mode with the hub failure probes, the real scripts-enabled pack and `npm run bundle` over a seeded obsolete chunk, and package smoke's failure paths. The first two are in the queued root-granted qualification; the last stays review-only.
+The installed hub mode happy path ran at `fad6cd5` and `fee269e` (3/3 each, native exit and close 0/null). Outstanding is qualification of the successor head: both negative hub probes (a startup failure that closes cleanly, and an unjoined child), and both seeded-obsolete-chunk controls through the real package scripts (a scripts-enabled `npm pack` and a direct `npm run bundle`). These are queued for the root grant. Package smoke's own failure paths stay review-only.
