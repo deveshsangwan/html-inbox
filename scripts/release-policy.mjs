@@ -1,9 +1,11 @@
-import { appendFileSync, readFileSync } from "node:fs";
-import { pathToFileURL } from "node:url";
+import { appendFileSync, readFileSync, realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 const stableVersionPattern = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/;
 
-export function verifyReleasePolicy({ version, engines, requestedVersion, ref, tag, latestVersion }) {
+// Release-branch publication stays off until a release administrator protects the release
+// branches and binds npm trusted publishing to an approval-gated environment.
+export function verifyReleasePolicy({ version, engines, requestedVersion, ref, tag, latestVersion, isReleaseBranchApproved = false }) {
   if (!stableVersionPattern.test(version) || version !== requestedVersion) {
     throw new Error("Requested version must match the package's stable semantic version");
   }
@@ -45,6 +47,10 @@ export function verifyReleasePolicy({ version, engines, requestedVersion, ref, t
     throw new Error("Publish 0.7.x releases from main or the approved release/0.7 branch");
   }
 
+  if (ref === "refs/heads/release/0.7" && !isReleaseBranchApproved) {
+    throw new Error("Publication from release/0.7 waits for branch protection and an approval-gated npm environment");
+  }
+
   // Explicit tag selection is a maintainer-approved double check before publication.
   const expectedTag = hasModernLatest ? "node20" : "latest";
   if (tag !== expectedTag) {
@@ -58,7 +64,8 @@ export function verifyReleasePolicy({ version, engines, requestedVersion, ref, t
   return { version, tag };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Compare real paths so a symlinked invocation still runs the check instead of exiting silently.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { version, engines } = JSON.parse(readFileSync("packages/cli/package.json", "utf8"));
   const release = verifyReleasePolicy({
     version,

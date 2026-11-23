@@ -11,15 +11,16 @@ const compatibilityRelease = {
   version: "0.7.0",
   requestedVersion: "0.7.0",
   engines: { node: ">=20" },
-  ref: "refs/heads/release/0.7",
+  ref: "refs/heads/main",
   tag: "latest",
   latestVersion: "0.6.1",
 };
 
 test("compatibility releases retain latest until a modern stable exists", () => {
-  for (const ref of ["refs/heads/main", "refs/heads/release/0.7"]) {
-    assert.deepEqual(verifyReleasePolicy({ ...compatibilityRelease, ref }), { version: "0.7.0", tag: "latest" });
-  }
+  const releaseBranch = { ...compatibilityRelease, ref: "refs/heads/release/0.7" };
+  assert.deepEqual(verifyReleasePolicy(compatibilityRelease), { version: "0.7.0", tag: "latest" });
+  assert.deepEqual(verifyReleasePolicy({ ...releaseBranch, isReleaseBranchApproved: true }), { version: "0.7.0", tag: "latest" });
+  assert.throws(() => verifyReleasePolicy(releaseBranch), /waits for branch protection/);
 
   assert.deepEqual(verifyReleasePolicy({
     ...compatibilityRelease, version: "0.6.1", requestedVersion: "0.6.1", ref: "refs/heads/main",
@@ -27,7 +28,7 @@ test("compatibility releases retain latest until a modern stable exists", () => 
 });
 
 test("modern latest routes compatibility maintenance exclusively to node20", () => {
-  const release = { ...compatibilityRelease, latestVersion: "1.0.0", tag: "node20" };
+  const release = { ...compatibilityRelease, ref: "refs/heads/release/0.7", latestVersion: "1.0.0", tag: "node20", isReleaseBranchApproved: true };
   assert.equal(verifyReleasePolicy(release).tag, "node20");
 
   for (const [change, message] of [
@@ -48,7 +49,7 @@ test("reject invalid versions, refs, engines and premature tags before publicati
     [{ latestVersion: undefined }, /Read a stable npm latest/],
     [{ latestVersion: "0.6.3\n1.0.0" }, /Read a stable npm latest/],
     [{ version: "0.5.1", requestedVersion: "0.5.1", latestVersion: "0.6.3" }, /only 0.6.x or 0.7.x/],
-    [{ version: "0.6.4", requestedVersion: "0.6.4" }, /0.6.x releases only from main/],
+    [{ version: "0.6.4", requestedVersion: "0.6.4", ref: "refs/heads/release/0.7" }, /0.6.x releases only from main/],
     [{ version: "0.8.0", requestedVersion: "0.8.0" }, /only 0.6.x or 0.7.x/],
     [{ ref: "refs/heads/feature" }, /approved release\/0.7 branch/],
     [{ ref: "refs/tags/v0.7.0" }, /approved release\/0.7 branch/],

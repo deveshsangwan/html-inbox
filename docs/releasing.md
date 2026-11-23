@@ -59,43 +59,42 @@ On hosts where zsh startup adds Node to the resolver tests' restricted PATH, run
 
 ## Publish locally
 
-The normal release path is the [GitHub publishing workflow](#publish-with-github-actions). Both paths follow the [release policy](release-policy.md): 0.6.x and 0.7.x compatibility releases use npm tag `latest` before 1.0, and after 1.0 0.7.x maintenance publishes only from `release/0.7` with tag `node20`. Local publication is an alternative for an authenticated package owner.
+The normal release path is the [GitHub publishing workflow](#publish-with-github-actions). Both paths follow the [release policy](release-policy.md): 0.6.x and 0.7.x compatibility releases use npm tag `latest` before 1.0, and after 1.0 0.7.x maintenance publishes only from `release/0.7` with tag `node20`, once that branch's release-control gate is complete. Local publication is an alternative for an authenticated package owner.
 
 Authenticate the package owner on the machine that will publish. Run `npm login --registry=https://registry.npmjs.org/` yourself, complete its browser sign-in, and check `npm whoami --registry=https://registry.npmjs.org/`. A 401 means the publishing session needs to be restored. Keep tokens, passwords, and recovery codes out of repository files and chat.
 
-Build and test the same archive you will publish, from a checkout whose HEAD is the reviewed commit at the tip of its release branch. Set the policy tag first: `latest`, or `node20` only for 0.7.x maintenance after 1.0. Each block below runs in a subshell with `set -e`, so a failed fetch, lookup, policy check or smoke test stops it before anything later runs:
+Build, test and publish the same archive in one fail-stop procedure. Run it from a clean checkout whose HEAD is the reviewed tip of its release branch. Set the policy tag first: `latest`, or `node20` only for 0.7.x maintenance after 1.0. The subshell uses `set -e`, so a failed fetch, cleanliness or tip check, lookup, policy check, pack, smoke test or dry run stops it before publication. It then pauses for you to inspect the dry-run file list. Before the irreversible publish, it repeats the tip, cleanliness and policy checks against the current npm `latest`:
 
 ```sh
 inbox_release_tag=latest
-mkdir -p artifacts
 (
   set -eu
   branch=$(git branch --show-current)
-  git fetch origin "$branch"
-  test "$(git rev-parse HEAD)" = "$(git rev-parse "origin/$branch")"
+  check_release_source() {
+    git fetch origin "$branch"
+    test -z "$(git status --porcelain)"
+    test "$(git rev-parse HEAD)" = "$(git rev-parse "origin/$branch")"
+    NPM_LATEST_VERSION=$(npm view html-inbox@latest version --prefer-online --registry=https://registry.npmjs.org/)
+    EXPECTED_VERSION="$version" RELEASE_TAG="$inbox_release_tag" GITHUB_REF="refs/heads/$branch" \
+      NPM_LATEST_VERSION="$NPM_LATEST_VERSION" GITHUB_OUTPUT=/dev/null node scripts/release-policy.mjs
+  }
   version=$(node -p "require('./packages/cli/package.json').version")
-  NPM_LATEST_VERSION=$(npm view html-inbox@latest version --prefer-online --registry=https://registry.npmjs.org/)
-  EXPECTED_VERSION="$version" RELEASE_TAG="$inbox_release_tag" GITHUB_REF="refs/heads/$branch" \
-    NPM_LATEST_VERSION="$NPM_LATEST_VERSION" GITHUB_OUTPUT=/dev/null node scripts/release-policy.mjs
+  archive="artifacts/html-inbox-${version}.tgz"
+  check_release_source
+  rm -f "$archive"
+  mkdir -p artifacts
   npm pack ./packages/cli --pack-destination ./artifacts
-  node scripts/package-smoke.mjs "artifacts/html-inbox-${version}.tgz"
-  npm publish "./artifacts/html-inbox-${version}.tgz" --dry-run --access public --tag "$inbox_release_tag" --registry=https://registry.npmjs.org/
+  node scripts/package-smoke.mjs "$archive"
+  npm publish "./$archive" --dry-run --access public --tag "$inbox_release_tag" --registry=https://registry.npmjs.org/
+  printf 'Type publish to release %s as %s: ' "$version" "$inbox_release_tag"
+  read -r confirmation
+  test "$confirmation" = publish
+  check_release_source
+  npm publish "./$archive" --access public --tag "$inbox_release_tag" --registry=https://registry.npmjs.org/
 )
 ```
 
-After the file list and installed-package checks pass, publish that exact archive. The block repeats the policy check against the current npm `latest` immediately before the irreversible publish:
-
-```sh
-(
-  set -eu
-  branch=$(git branch --show-current)
-  version=$(node -p "require('./packages/cli/package.json').version")
-  NPM_LATEST_VERSION=$(npm view html-inbox@latest version --prefer-online --registry=https://registry.npmjs.org/)
-  EXPECTED_VERSION="$version" RELEASE_TAG="$inbox_release_tag" GITHUB_REF="refs/heads/$branch" \
-    NPM_LATEST_VERSION="$NPM_LATEST_VERSION" GITHUB_OUTPUT=/dev/null node scripts/release-policy.mjs
-  npm publish "./artifacts/html-inbox-${version}.tgz" --access public --tag "$inbox_release_tag" --registry=https://registry.npmjs.org/
-)
-```
+`npm pack` builds from the working tree, so the cleanliness check keeps uncommitted edits out of the archive. Removing the archive before packing means a stale or failed archive can never reach the publish step.
 
 Complete any npm authentication or 2FA challenge. Local publication does not claim GitHub provenance. A dry run validates the archive; it does not prove that npm will authorize the real publish.
 
@@ -128,7 +127,7 @@ Complete the browser 2FA challenge. Inspect existing relationships first; preser
 
 Complete the first successful publish within two days of creating the connection. Otherwise npm marks it expired and disables editing; delete that expired connection, recreate it with the values above, and publish before the new deadline.
 
-For each release, merge the reviewed version change into its release branch (`main`, or `release/0.7` for compatibility maintenance) and verify that merge commit's required checks. Open Actions, choose **Publish npm release**, select **Run workflow** on that branch, enter the exact package version and choose the npm tag. The default, `choose`, fails the policy so that the tag is always an explicit selection. The workflow reads the current npm `latest` and refuses a mismatched or non-stable version, a wrong branch, engine or tag, or a release that would move `latest` backward. It rereads `latest` immediately before publishing and confirms the selected tag afterward; these checks cover the registry state it observes, not a concurrent publication elsewhere. It has a manual trigger so merging code or pushing an artifact tag does not publish unexpectedly. Successful trusted publishing from this public repository produces npm provenance automatically.
+For each release, merge the reviewed version change into `main` and verify that merge commit's required checks. The policy refuses publication from `release/0.7` until its release-control gate is complete. Open Actions, choose **Publish npm release**, select **Run workflow** on `main`, enter the exact package version and choose the npm tag. The default, `choose`, fails the policy so that the tag is always an explicit selection. The workflow reads the current npm `latest` and refuses a mismatched or non-stable version, a wrong branch, engine or tag, or a release that would move `latest` backward. It rereads `latest` immediately before publishing and confirms the selected tag afterward; these checks cover the registry state it observes, not a concurrent publication elsewhere. It has a manual trigger so merging code or pushing an artifact tag does not publish unexpectedly. Successful trusted publishing from this public repository produces npm provenance automatically.
 
 The existing [Package release artifact workflow](../.github/workflows/package.yml) still creates verified archives on `v<version>` tags or manual runs and never publishes to npm. Website deployment, package artifact generation, and npm publication are separate workflows.
 
