@@ -1908,9 +1908,17 @@ function parseReceiptPage(values: unknown): DurableReceipt[] {
   return receipts;
 }
 
-/** A newer local deletion of the same immutable document overtook the state this receipt answers. */
-function isOvertakenReceipt(receipt: DurableReceipt, entry: OutboxEntry | undefined, record: ManagedRecord | undefined): boolean {
-  if (!entry || entry.disposition === "retired" || !record || entry.fingerprint !== stateFingerprint(record)) {
+/**
+ * The only permitted overtaking is a live receipt answered for a state that a newer local tombstone of the same
+ * immutable document has replaced. Deletion is terminal, so any other pairing (a deleted receipt against a newer live
+ * record, live against live, deleted against deleted) is a history conflict and stays fail-closed.
+ */
+export function isOvertakenReceipt(receipt: DurableReceipt, entry: OutboxEntry | undefined, record: ManagedRecord | undefined): boolean {
+  if (receipt.originState.state !== "live" || record?.state !== "deleted") {
+    return false;
+  }
+
+  if (!entry || entry.disposition === "retired" || entry.fingerprint !== stateFingerprint(record)) {
     return false;
   }
 

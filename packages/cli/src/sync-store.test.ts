@@ -14,7 +14,7 @@ import { createOneShotStorageFault, type StorageEvent } from "./sync-files";
 import { outboxKey, type DurableReceipt } from "./sync-ledger";
 import { MANIFEST_DOMAIN, SYNC_LIMITS, canonicalKey, inventoryDigest, metadataEncoding, parseOriginState, parseRoute, sha256, signOriginState, stateEncoding, stateFingerprint, verifyOriginState,
   type CompleteInventory, type OriginState, type RouteAuthorization, type SyncRoute } from "./sync-model";
-import { MANAGED_FORMAT_BARRIER, ManagedSyncStore, toOriginState } from "./sync-store";
+import { MANAGED_FORMAT_BARRIER, ManagedSyncStore, isOvertakenReceipt, toOriginState } from "./sync-store";
 import { renderDocumentShell, renderIndex } from "./viewer-render";
 
 // Managed durability requires POSIX directory fsync; Windows opt-in rejection has its own active regression.
@@ -507,6 +507,35 @@ test("holdings acknowledgements skip receipts overtaken by a newer local deletio
   const repeated = f.source.store.counters.events["ledger-renamed"] ?? 0;
   await f.source.store.acknowledgeHoldings(f.auth, incarnation, [current, overtaken]);
   assert.equal((f.source.store.counters.events["ledger-renamed"] ?? 0) - repeated, 0);
+});
+
+test("only a live receipt overtaken by a newer local tombstone of the same document counts as overtaken", async (t) => {
+  const f = await acknowledgementFixture(t, 1);
+  const ledger = await f.source.store.snapshot();
+  const key = canonicalKey(f.states[0].originInboxId, f.states[0].originDocumentId);
+  const record = ledger.records[key];
+  const entry = ledger.outbox[outboxKey(f.route.id, 1, key)];
+  const live = f.receipts[0];
+  const deleted = { ...live, originState: { ...live.originState, state: "deleted" as const } };
+  const newer = (state: "live" | "deleted", change: Partial<typeof record> = {}) => {
+    const next = { ...record, version: record.version + 1, state, ...change };
+    return { record: next, entry: { ...entry, disposition: "pending" as const, fingerprint: stateFingerprint(next) } };
+  };
+
+  const tombstone = newer("deleted");
+  assert.equal(isOvertakenReceipt(live, tombstone.entry, tombstone.record), true);
+  const revived = newer("live");
+  assert.equal(isOvertakenReceipt(deleted, revived.entry, revived.record), false, "deletion is terminal");
+  assert.equal(isOvertakenReceipt(live, revived.entry, revived.record), false);
+  assert.equal(isOvertakenReceipt(deleted, tombstone.entry, tombstone.record), false);
+  const sameVersion = newer("deleted", { version: record.version });
+  assert.equal(isOvertakenReceipt(live, sameVersion.entry, sameVersion.record), false);
+  const otherDescriptor = newer("deleted", { sha256: "0".repeat(64) });
+  assert.equal(isOvertakenReceipt(live, otherDescriptor.entry, otherDescriptor.record), false);
+  assert.equal(isOvertakenReceipt(live, { ...tombstone.entry, disposition: "retired" }, tombstone.record), false);
+  assert.equal(isOvertakenReceipt(live, { ...tombstone.entry, fingerprint: live.fingerprint }, tombstone.record), false);
+  assert.equal(isOvertakenReceipt(live, { ...tombstone.entry, receiverStorageIncarnation: randomUUID() }, tombstone.record), false);
+  assert.equal(isOvertakenReceipt(live, undefined, tombstone.record), false);
 });
 
 test("a retired obligation cannot be revived by a receipt even with current route authority", async (t) => {
