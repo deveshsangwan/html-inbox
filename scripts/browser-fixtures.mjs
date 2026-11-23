@@ -59,48 +59,8 @@ export async function publishLibraryFixtures(backend) {
 
 export async function createBrowserFixture(t, mode, publishDocuments, options = {}) {
   const root = await mkdtemp(path.join(tmpdir(), "html-inbox-browser-"));
-  let server;
-  let closeViewer;
-  let failedViewerStartup;
-  let browser;
-  t.after(async () => {
-    const failures = [];
-    try {
-      await browser?.close();
-    } catch (error) {
-      failures.push(error);
-    }
-
-    try {
-      if (closeViewer) {
-        await closeViewer();
-      } else if (server) {
-        await closeServer(server);
-      }
-    } catch (error) {
-      failures.push(error);
-      throw new AggregateError(failures, `Browser fixture shutdown failed; evidence retained at ${root}`);
-    }
-
-    if (failedViewerStartup) {
-      failures.push(failedViewerStartup.error);
-      throw new AggregateError(failures, `Browser fixture startup failed; evidence retained at ${root}`);
-    }
-
-    try {
-      await rm(root, { recursive: true, force: true });
-    } catch (error) {
-      failures.push(error);
-    }
-
-    if (failures.length > 1) {
-      throw new AggregateError(failures, `Browser fixture cleanup failed at ${root}`);
-    }
-
-    if (failures.length) {
-      throw failures[0];
-    }
-  });
+  const resources = { servers: [] };
+  t.after(() => closeFixtureResources(root, resources));
 
   const home = path.join(root, "home");
   if (options.appearance !== undefined) {
@@ -111,6 +71,7 @@ export async function createBrowserFixture(t, mode, publishDocuments, options = 
   const documents = await publishDocuments(backend);
   const requests = [];
   let inboxPath = "";
+  let server;
 
   if (mode === "static") {
     const snapshot = await exportStaticSnapshot(backend, {
@@ -120,32 +81,88 @@ export async function createBrowserFixture(t, mode, publishDocuments, options = 
     assert.equal(snapshot.manifest.documentCount, documents.length);
     inboxPath = snapshot.inboxPath;
     server = await startStaticServer(snapshot, requests);
+    resources.servers.push(server);
   } else {
     assert.equal(mode, "local");
-    try {
-      const viewer = await startViewerLifecycle(backend, home, 0);
-      server = viewer.server;
-      closeViewer = viewer.close;
-    } catch (error) {
-      // A failed initializer cannot hand us its close handle; keep its diagnostics.
-      failedViewerStartup = { error };
-      throw error;
-    }
+    server = await startFixtureViewer(resources, backend, home);
   }
 
   const address = server.address();
   assert(address && typeof address !== "string");
   const origin = `http://127.0.0.1:${address.port}`;
-  browser = await (options.browserType ?? chromium).launch(
+  const browser = await (options.browserType ?? chromium).launch(
     process.env.HTML_INBOX_BROWSER_EXECUTABLE
       ? { executablePath: process.env.HTML_INBOX_BROWSER_EXECUTABLE }
       : {},
   );
+  resources.browser = browser;
   const context = await browser.newContext({ colorScheme: "dark" });
   const page = await context.newPage();
   page.setDefaultTimeout(10_000);
 
   return { page, context, documents, requests, origin, home, inboxUrl: `${origin}${inboxPath}/` };
+}
+
+export async function startFixtureViewer(resources, backend, home) {
+  try {
+    resources.viewer = await startViewerLifecycle(backend, home, 0);
+    return resources.viewer.server;
+  } catch (error) {
+    // A failed initializer cannot hand us its close handle; keep its diagnostics.
+    resources.failedViewerStartup = { error };
+    throw error;
+  }
+}
+
+/**
+ * Releases fixture resources in dependency order: browser, plain servers, then the owned viewer.
+ * The root is removed only after the viewer proves its record cleanup, so failures keep evidence.
+ */
+export async function closeFixtureResources(root, { browser, servers = [], viewer, failedViewerStartup }) {
+  const failures = [];
+  try {
+    await browser?.close();
+  } catch (error) {
+    failures.push(error);
+  }
+
+  const shutdownFailureCount = failures.length;
+  for (const server of servers) {
+    try {
+      await closeServer(server);
+    } catch (error) {
+      failures.push(error);
+    }
+  }
+
+  try {
+    await viewer?.close();
+  } catch (error) {
+    failures.push(error);
+  }
+
+  if (failures.length > shutdownFailureCount) {
+    throw new AggregateError(failures, `Browser fixture shutdown failed; evidence retained at ${root}`);
+  }
+
+  if (failedViewerStartup) {
+    failures.push(failedViewerStartup.error);
+    throw new AggregateError(failures, `Browser fixture startup failed; evidence retained at ${root}`);
+  }
+
+  try {
+    await rm(root, { recursive: true, force: true });
+  } catch (error) {
+    failures.push(error);
+  }
+
+  if (failures.length > 1) {
+    throw new AggregateError(failures, `Browser fixture cleanup failed at ${root}`);
+  }
+
+  if (failures.length) {
+    throw failures[0];
+  }
 }
 
 async function startStaticServer(snapshot, requests) {

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile } from "node:fs/promises";
 import http from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -7,7 +7,7 @@ import { test } from "node:test";
 import { chromium } from "playwright";
 import { LocalDocumentBackend } from "../packages/cli/dist/backend.js";
 import { exportStaticSnapshot } from "../packages/cli/dist/static-export.js";
-import { startViewer } from "../packages/cli/dist/viewer-server.js";
+import { closeFixtureResources, startFixtureViewer } from "./browser-fixtures.mjs";
 
 const storageKey = "html-inbox-isolation-secret";
 const viewerSecret = "viewer-only-data";
@@ -20,7 +20,9 @@ const cdnScripts = new Map([
 
 test("response sandbox isolates direct documents and reader frames", { timeout: 120_000 }, async (t) => {
   const home = await mkdtemp(path.join(tmpdir(), "html-inbox-document-isolation-"));
-  t.after(() => rm(home, { recursive: true, force: true }));
+  const resources = { servers: [] };
+  // Hooks run in registration order, so one hook owns the whole teardown sequence.
+  t.after(() => closeFixtureResources(home, resources));
 
   const backend = new LocalDocumentBackend(home);
   const published = await backend.publish({
@@ -29,8 +31,7 @@ test("response sandbox isolates direct documents and reader frames", { timeout: 
     sourceFileName: "isolation.html",
     originalBytes: Buffer.from(renderIsolationProbe()),
   });
-  const viewer = await startViewer(backend, home, 0);
-  t.after(() => closeServer(viewer));
+  const viewer = await startFixtureViewer(resources, backend, home);
   const localOrigin = serverOrigin(viewer);
 
   const snapshot = await exportStaticSnapshot(backend, {
@@ -38,7 +39,7 @@ test("response sandbox isolates direct documents and reader frames", { timeout: 
     capability: "AAAAAAAAAAAAAAAAAAAAAA",
   });
   const staticServer = await serveSnapshot(snapshot, published.id);
-  t.after(() => closeServer(staticServer));
+  resources.servers.push(staticServer);
   const staticOrigin = serverOrigin(staticServer);
 
   const browser = await chromium.launch(
@@ -46,7 +47,7 @@ test("response sandbox isolates direct documents and reader frames", { timeout: 
       ? { executablePath: process.env.HTML_INBOX_BROWSER_EXECUTABLE }
       : {},
   );
-  t.after(() => browser.close());
+  resources.browser = browser;
 
   const documentPaths = [
     { name: "local content", origin: localOrigin, inboxPath: "", contentPath: `/documents/${published.id}/content` },
@@ -340,10 +341,4 @@ function serverOrigin(server) {
   assert(address && typeof address !== "string");
 
   return `http://127.0.0.1:${address.port}`;
-}
-
-function closeServer(server) {
-  return new Promise((resolve, reject) => {
-    server.close((error) => error ? reject(error) : resolve());
-  });
 }

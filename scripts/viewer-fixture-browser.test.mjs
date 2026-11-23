@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
+import http from "node:http";
 import { syncBuiltinESMExports, createRequire } from "node:module";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { setImmediate } from "node:timers/promises";
-import { createBrowserFixture } from "./browser-fixtures.mjs";
+import { closeFixtureResources, createBrowserFixture } from "./browser-fixtures.mjs";
 
 const require = createRequire(import.meta.url);
 const records = require("../packages/cli/dist/viewer-records.js");
@@ -223,3 +225,46 @@ for (const mode of ["local", "static"]) {
     }
   });
 }
+
+test("fixture teardown releases browser and servers before the owned viewer and root", async (t) => {
+  const root = await fs.mkdtemp(path.join(tmpdir(), "html-inbox-teardown-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const order = [];
+  const server = http.createServer();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  server.once("close", () => order.push("server"));
+
+  await closeFixtureResources(root, {
+    browser: { close: async () => { order.push("browser"); } },
+    servers: [server],
+    viewer: {
+      close: async () => {
+        assert((await fs.stat(root)).isDirectory(), "fixture root removed before owned viewer cleanup");
+        order.push("viewer");
+      },
+    },
+  });
+
+  assert.deepEqual(order, ["browser", "server", "viewer"]);
+  assert.equal(server.listening, false);
+  await assert.rejects(fs.stat(root), { code: "ENOENT" });
+});
+
+test("fixture teardown retains its root when a plain server cannot close", async (t) => {
+  const root = await fs.mkdtemp(path.join(tmpdir(), "html-inbox-teardown-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  let hasClosedViewer = false;
+
+  await assert.rejects(closeFixtureResources(root, {
+    servers: [http.createServer()],
+    viewer: { close: async () => { hasClosedViewer = true; } },
+  }), (error) => {
+    assert(error instanceof AggregateError);
+    assert(error.message.includes(root));
+    assert.equal(error.errors.length, 1);
+    assert.equal(error.errors[0].code, "ERR_SERVER_NOT_RUNNING");
+    return true;
+  });
+  assert.equal(hasClosedViewer, true);
+  assert((await fs.stat(root)).isDirectory());
+});
