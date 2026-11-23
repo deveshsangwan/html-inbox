@@ -2,7 +2,8 @@
 
 The raw archives are available from the published evidence revision `6169df8db82d31c1955412a260f7d44db80c9381`.
 These links pin the original bytes and the checksums below verify each download.
-The current source tree keeps the reports and summaries. Earlier Git commits still contain their original archive blobs.
+The tag `evidence/issue-96-6169df8` keeps that revision reachable after this branch is rebased or squash-merged.
+The current source tree keeps the reports and summaries.
 
 | Archive | Bytes | SHA-256 |
 | --- | ---: | --- |
