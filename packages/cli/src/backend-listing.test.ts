@@ -31,70 +31,40 @@ async function seed(home: string, count: number) {
   return metadata.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
 }
 
-test("ordinary listings share a read limit across instances, preserve ties and release slots after failure", async (t) => {
+// Neither ascending nor descending, so tied records cannot match by ID order alone.
+function interleaveByThree(names: string[]) {
+  const sorted = [...names].sort();
+
+  return [2, 0, 1].flatMap((remainder) => sorted.filter((_, index) => index % 3 === remainder));
+}
+
+function inEnumerationOrder<T extends { id: string; createdAt: string }>(records: T[], enumeration: string[]) {
+  return [...records]
+    .sort((left, right) => enumeration.indexOf(left.id) - enumeration.indexOf(right.id))
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+}
+
+test("ordinary listings share a read limit across instances and keep enumeration order for ties", async (t) => {
   const home = await temporaryHome(t);
-  const expected = await seed(home, 96);
+  const records = await seed(home, 96);
+  const documentsDirectory = path.join(home, "documents");
+  const enumeration = interleaveByThree(records.map((record) => record.id));
+  const expected = inEnumerationOrder(records, enumeration);
+  const delayedFile = path.join(documentsDirectory, enumeration[0], "metadata.json");
+  const readdir = fs.readdir;
   const readFile = fs.readFile;
+  const completedFiles: string[] = [];
   let activeReads = 0;
   let peakReads = 0;
-  let shouldFail = false;
-  const failure = Object.assign(new Error("synthetic metadata permission failure"), { code: "EACCES" });
 
-  t.mock.method(fs, "readFile", async (...args: Parameters<typeof fs.readFile>) => {
-    if (!String(args[0]).endsWith("metadata.json")) {
-      return readFile(...args);
+  t.mock.method(fs, "readdir", async (...args: Parameters<typeof fs.readdir>) => {
+    if (String(args[0]) === documentsDirectory) {
+      const storageEntries = (await readdir(documentsDirectory)).filter((name) => !enumeration.includes(name));
+      return [...enumeration, ...storageEntries];
     }
 
-    activeReads += 1;
-    peakReads = Math.max(peakReads, activeReads);
-
-    try {
-      await setImmediate();
-
-      if (shouldFail) {
-        throw failure;
-      }
-
-      return await readFile(...args);
-    } finally {
-      activeReads -= 1;
-    }
+    return readdir(...args);
   });
-
-  const backends = Array.from({ length: 3 }, () => new LocalDocumentBackend(home));
-  const results = await Promise.all(backends.map((backend) => backend.listDocuments()));
-
-  for (const result of results) {
-    assert.deepEqual(result, expected);
-  }
-
-  assert.ok(peakReads > 1);
-  assert.ok(peakReads <= 8, `aggregate active reads: ${peakReads}`);
-  assert.equal(activeReads, 0);
-
-  shouldFail = true;
-  await assert.rejects(backends[0].listDocuments(), (error) => error === failure);
-  assert.equal(activeReads, 0, "failed listing drains active workers before rejecting");
-
-  shouldFail = false;
-  assert.deepEqual(await backends[1].listDocuments(), expected);
-});
-
-test("a failing listing keeps its error while another listing's queued workers complete", { timeout: 10_000 }, async (t) => {
-  const failingHome = await temporaryHome(t);
-  const healthyHome = await temporaryHome(t);
-  await seed(failingHome, 24);
-  const expected = await seed(healthyHome, 48);
-  const readFile = fs.readFile;
-  const failingRecords = new Map([
-    [path.join(failingHome, "documents", "document-003", "metadata.json"), "first synthetic failure"],
-    [path.join(failingHome, "documents", "document-004", "metadata.json"), "sibling synthetic failure"],
-  ]);
-  let activeReads = 0;
-  let peakReads = 0;
-  let isGated = false;
-  let openGate = () => {};
-  const gate = new Promise<void>((resolve) => { openGate = resolve; });
 
   t.mock.method(fs, "readFile", async (...args: Parameters<typeof fs.readFile>) => {
     const file = String(args[0]);
@@ -107,8 +77,106 @@ test("a failing listing keeps its error while another listing's queued workers c
     peakReads = Math.max(peakReads, activeReads);
 
     try {
+      // The first enumerated record finishes after later tied records.
+      const turns = file === delayedFile ? 5 : 1;
+
+      for (let turn = 0; turn < turns; turn += 1) {
+        await setImmediate();
+      }
+
+      const bytes = await readFile(...args);
+      completedFiles.push(file);
+      return bytes;
+    } finally {
+      activeReads -= 1;
+    }
+  });
+
+  const backends = Array.from({ length: 3 }, () => new LocalDocumentBackend(home));
+  const results = await Promise.all(backends.map((backend) => backend.listDocuments()));
+
+  for (const result of results) {
+    assert.deepEqual(result, expected);
+  }
+
+  assert.ok(completedFiles.indexOf(delayedFile) > 0, "a later tied read completed first");
+  assert.ok(peakReads > 1);
+  assert.ok(peakReads <= 8, `aggregate active reads: ${peakReads}`);
+  assert.equal(activeReads, 0);
+});
+
+test("a failed listing keeps its first error and skips queued reads while a waiting listing completes", { timeout: 10_000 }, async (t) => {
+  const failingHome = await temporaryHome(t);
+  const healthyHome = await temporaryHome(t);
+  await seed(failingHome, 24);
+  const expected = await seed(healthyHome, 48);
+  const healthyDocuments = path.join(healthyHome, "documents");
+  const readdir = fs.readdir;
+  const readFile = fs.readFile;
+  const heldReads: Array<(error?: Error) => void> = [];
+  let failingReads = 0;
+  let activeFailingReads = 0;
+  let healthyReads = 0;
+  let activeHealthyReads = 0;
+  let isGated = false;
+  let openGate = () => {};
+  const gate = new Promise<void>((resolve) => { openGate = resolve; });
+  let reportEightHeld = () => {};
+  const eightHeld = new Promise<void>((resolve) => { reportEightHeld = resolve; });
+  let reportHealthyEnumerated = () => {};
+  const healthyEnumerated = new Promise<void>((resolve) => { reportHealthyEnumerated = resolve; });
+
+  t.mock.method(fs, "readdir", async (...args: Parameters<typeof fs.readdir>) => {
+    const entries = await readdir(...args);
+
+    if (String(args[0]) === healthyDocuments) {
+      reportHealthyEnumerated();
+    }
+
+    return entries;
+  });
+
+  t.mock.method(fs, "readFile", async (...args: Parameters<typeof fs.readFile>) => {
+    const file = String(args[0]);
+
+    if (!file.endsWith("metadata.json")) {
+      return readFile(...args);
+    }
+
+    if (file.startsWith(failingHome + path.sep)) {
+      failingReads += 1;
+      activeFailingReads += 1;
+
+      try {
+        const bytes = await readFile(...args);
+
+        // Only the first eight reads are held; later ones would come from a worker that ignored the failure.
+        if (heldReads.length < 8) {
+          const error = await new Promise<Error | undefined>((resolve) => {
+            heldReads.push(resolve);
+
+            if (heldReads.length === 8) {
+              reportEightHeld();
+            }
+          });
+
+          if (error) {
+            throw error;
+          }
+        }
+
+        return bytes;
+      } finally {
+        activeFailingReads -= 1;
+      }
+    }
+
+    healthyReads += 1;
+    activeHealthyReads += 1;
+
+    try {
       if (isGated) {
-        if (activeReads === 8) {
+        if (activeHealthyReads === 8) {
           openGate();
         }
 
@@ -116,30 +184,42 @@ test("a failing listing keeps its error while another listing's queued workers c
       }
 
       await setImmediate();
-
-      const message = failingRecords.get(file);
-
-      if (message) {
-        throw Object.assign(new Error(message), { code: "EACCES" });
-      }
-
       return await readFile(...args);
     } finally {
-      activeReads -= 1;
+      activeHealthyReads -= 1;
     }
   });
 
-  const [failed, healthy] = await Promise.allSettled([
-    new LocalDocumentBackend(failingHome).listDocuments(),
-    new LocalDocumentBackend(healthyHome).listDocuments(),
-  ]);
+  let activeFailingReadsAtSettlement = -1;
+  const failing = new LocalDocumentBackend(failingHome).listDocuments().then(() => undefined, (error: unknown) => error)
+    .finally(() => { activeFailingReadsAtSettlement = activeFailingReads; });
+  await eightHeld;
 
-  assert.equal(failed.status, "rejected");
-  assert.ok(failed.reason instanceof Error);
-  assert.ok([...failingRecords.values()].includes(failed.reason.message));
-  assert.deepEqual(healthy, { status: "fulfilled", value: expected });
-  assert.ok(peakReads <= 8, `aggregate active reads: ${peakReads}`);
-  assert.equal(activeReads, 0, "both listings drain before settling");
+  let isHealthySettled = false;
+  const healthy = new LocalDocumentBackend(healthyHome).listDocuments().finally(() => { isHealthySettled = true; });
+  await healthyEnumerated;
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.equal(healthyReads, 0, "the second listing waits while the first holds all eight permits");
+  assert.equal(isHealthySettled, false);
+
+  // This worker finishes, claims another record and queues behind the waiting listing.
+  heldReads[7]();
+  await setImmediate();
+
+  const firstError = Object.assign(new Error("first synthetic failure"), { code: "EACCES" });
+  heldReads[0](firstError);
+  await setImmediate();
+  heldReads[1](Object.assign(new Error("sibling synthetic failure"), { code: "EACCES" }));
+
+  for (const release of heldReads.slice(2, 7)) {
+    release();
+  }
+
+  assert.equal(await failing, firstError);
+  assert.equal(activeFailingReadsAtSettlement, 0, "the failed listing drains its own reads before rejecting");
+  assert.equal(failingReads, 8, "the queued worker skips its read after receiving a permit");
+  assert.deepEqual(await healthy, expected);
+  assert.equal(activeHealthyReads, 0);
 
   // A leaked permit would leave fewer than eight slots, so this listing could never open the gate.
   isGated = true;

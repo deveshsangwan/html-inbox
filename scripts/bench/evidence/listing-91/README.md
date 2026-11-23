@@ -1,5 +1,7 @@
 # Ordinary listing bounds, issue #91
 
+> Historical record for parent `610c931`, reviewed revision `427942f` and formatting follow-up `52cdb70`. Its status lines describe that state. For the integrated head, see [the 15 November integration receipt](integration-2026-11-15.md) and the dated follow-ups in [reviews.md](reviews.md). No measurement here was taken on a later head.
+
 Immediate parent: `610c931b7b22920cce59cf03e49c0de15ebaf2a2` on `perf/89-bench`, Node >=20 release line. No inherited benchmark or compatibility policy changes.
 
 ## Decision and scope
@@ -8,7 +10,7 @@ Primary decision metric: peak process RSS of ordinary metadata listing at 5,000 
 
 The change affects ordinary `LocalDocumentBackend.listDocuments`. Managed dispatch and the read-only `LocalDocumentSource` remain unchanged. It retains validation, hardening, corruption warnings and stable createdAt sorting. Concurrent warning arrival order was already nondeterministic under the parent's Promise.all; warning contents and valid record order are preserved.
 
-Only 8 worker promises per listing are created. A process-shared FIFO admits at most 8 active metadata reads across backend instances and homes loaded from this module. Each metadata read can have two file-hardening operations in flight; those siblings drain even on failure before the slot is released. Thus at most 16 filesystem operations from these metadata reads are active. Storage preparation, enrollment checks, readdir, direct getDocumentMetadata and managed/source reads are outside this limit. Workers stop admitting records after a fatal error and drain before the listing rejects. The first original error is preserved.
+Only 8 worker promises per listing are created. A process-shared FIFO admits at most 8 active metadata reads across backend instances and homes loaded from this module. Each metadata read can have two file-hardening operations in flight; those siblings drain even on failure before the slot is released. Thus at most 16 filesystem operations from these metadata reads are active. Storage preparation, enrollment checks, readdir, direct getDocumentMetadata and managed/source reads are outside this limit. Workers stop admitting records after a fatal error and drain before the listing rejects. The first original error is preserved. Unlike the parent, which kept reading every entry after rejecting, records not yet admitted are never read after a fatal error, so their corruption warnings are not emitted.
 
 A request has at most 8 pending/active worker continuations and slot waiters. For R concurrent requests these scale as O(8R), independently of record count. Directory entries, indexed metadata results, sorting/filtering arrays and HTTP rendering/response strings remain O(N) per request, or O(NR) across concurrent requests. This is not a global request or total-memory cap. The existing backend reads each metadata file in full before validation, so unusually large metadata files can still consume large buffers within those eight slots; no new byte limit is imposed. No result cache, persistent worker, service or general concurrency framework was added.
 
