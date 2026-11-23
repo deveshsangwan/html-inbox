@@ -8,12 +8,14 @@ on:
         required: true
         type: string
 
+      # The neutral default fails the policy, so the operator must choose the tag deliberately.
       tag:
         description: "npm tag: latest before 1.0; node20 for 0.7 maintenance after 1.0"
         required: true
-        default: latest
+        default: choose
         type: choice
         options:
+          - choose
           - latest
           - node20
 

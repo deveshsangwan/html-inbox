@@ -1,6 +1,6 @@
 # Issue 88 prerequisite validation
 
-Base: `099dcbd6378e3b6f73216966cfe9ea7f91ed5d8e`. Initial branch `perf/88-runtime` was clean. Candidate is the commit containing this report; no production CLI version, runtime, storage or wire change is included.
+Base: `099dcbd6378e3b6f73216966cfe9ea7f91ed5d8e`. Initial branch `perf/88-runtime` was clean. The validation below ran on candidate `157722a9649eb409852c4ed14936c983ff70afc9`; the reviewed revision was `8b9fbb4d1267a2157057966f29fa2ee52fd20494` and the final pre-integration head `1b2009132b8df184540c1990091fd1e9911dbb00`. No production CLI version, runtime, storage or wire change is included.
 
 Environment: Linux, Node v24.19.0, pnpm 11.7.0. This is a policy prerequisite, with no latency/CPU/memory improvement claim. It enables the separately measured compatibility and modern work in #87. No benchmark or full package/runtime matrix ran; #89 owns the first measurement slot.
 
@@ -27,6 +27,7 @@ This prerequisite supplies branch/tag publication guards, lightweight policy tes
 Before #88 can close:
 
 - Qualify 0.7.x packages on Node 20 and a modern runtime, preserving existing behavior.
+- Before any publication from `release/0.7`, protect the release branches and bind npm trusted publishing to a protected, approval-gated GitHub environment.
 - Before 0.7.0 publication, extend both skills' installed-version check to accept stable 0.7.x, with tests. Today it accepts 0.2.x through 0.6.x and would select the 0.5.0 fallback for 0.7.x.
 - Select the modern driver and qualify the actual Node >=24.19.0 minimum. Raising that minimum later requires a deliberate release-policy change, never a silent patch.
 - Build a modern candidate with an entry point that rejects unsupported runtimes before imports or initialization can touch storage. An `engines` declaration alone is insufficient.

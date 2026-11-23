@@ -63,25 +63,38 @@ The normal release path is the [GitHub publishing workflow](#publish-with-github
 
 Authenticate the package owner on the machine that will publish. Run `npm login --registry=https://registry.npmjs.org/` yourself, complete its browser sign-in, and check `npm whoami --registry=https://registry.npmjs.org/`. A 401 means the publishing session needs to be restored. Keep tokens, passwords, and recovery codes out of repository files and chat.
 
-Build and test the same archive you will publish. From the checkout root, read its version from the reviewed package metadata, choose the policy tag (`node20` only for 0.7.x maintenance after 1.0) and apply the same policy check as the workflow:
+Build and test the same archive you will publish, from a checkout whose HEAD is the reviewed commit at the tip of its release branch. Set the policy tag first: `latest`, or `node20` only for 0.7.x maintenance after 1.0. Each block below runs in a subshell with `set -e`, so a failed fetch, lookup, policy check or smoke test stops it before anything later runs:
 
 ```sh
-mkdir -p artifacts
-inbox_release_version=$(node -p "require('./packages/cli/package.json').version")
 inbox_release_tag=latest
-NPM_LATEST_VERSION=$(npm view html-inbox@latest version --prefer-online --registry=https://registry.npmjs.org/) \
-  EXPECTED_VERSION="$inbox_release_version" RELEASE_TAG="$inbox_release_tag" \
-  GITHUB_REF="refs/heads/$(git branch --show-current)" GITHUB_OUTPUT=/dev/null \
-  node scripts/release-policy.mjs
-npm pack ./packages/cli --pack-destination ./artifacts
-node scripts/package-smoke.mjs "artifacts/html-inbox-${inbox_release_version}.tgz"
-npm publish "./artifacts/html-inbox-${inbox_release_version}.tgz" --dry-run --access public --tag "$inbox_release_tag" --registry=https://registry.npmjs.org/
+mkdir -p artifacts
+(
+  set -eu
+  branch=$(git branch --show-current)
+  git fetch origin "$branch"
+  test "$(git rev-parse HEAD)" = "$(git rev-parse "origin/$branch")"
+  version=$(node -p "require('./packages/cli/package.json').version")
+  NPM_LATEST_VERSION=$(npm view html-inbox@latest version --prefer-online --registry=https://registry.npmjs.org/)
+  EXPECTED_VERSION="$version" RELEASE_TAG="$inbox_release_tag" GITHUB_REF="refs/heads/$branch" \
+    NPM_LATEST_VERSION="$NPM_LATEST_VERSION" GITHUB_OUTPUT=/dev/null node scripts/release-policy.mjs
+  npm pack ./packages/cli --pack-destination ./artifacts
+  node scripts/package-smoke.mjs "artifacts/html-inbox-${version}.tgz"
+  npm publish "./artifacts/html-inbox-${version}.tgz" --dry-run --access public --tag "$inbox_release_tag" --registry=https://registry.npmjs.org/
+)
 ```
 
-After the file list and installed-package checks pass, rerun the policy check above, then publish that exact archive:
+After the file list and installed-package checks pass, publish that exact archive. The block repeats the policy check against the current npm `latest` immediately before the irreversible publish:
 
 ```sh
-npm publish "./artifacts/html-inbox-${inbox_release_version}.tgz" --access public --tag "$inbox_release_tag" --registry=https://registry.npmjs.org/
+(
+  set -eu
+  branch=$(git branch --show-current)
+  version=$(node -p "require('./packages/cli/package.json').version")
+  NPM_LATEST_VERSION=$(npm view html-inbox@latest version --prefer-online --registry=https://registry.npmjs.org/)
+  EXPECTED_VERSION="$version" RELEASE_TAG="$inbox_release_tag" GITHUB_REF="refs/heads/$branch" \
+    NPM_LATEST_VERSION="$NPM_LATEST_VERSION" GITHUB_OUTPUT=/dev/null node scripts/release-policy.mjs
+  npm publish "./artifacts/html-inbox-${version}.tgz" --access public --tag "$inbox_release_tag" --registry=https://registry.npmjs.org/
+)
 ```
 
 Complete any npm authentication or 2FA challenge. Local publication does not claim GitHub provenance. A dry run validates the archive; it does not prove that npm will authorize the real publish.
@@ -98,7 +111,7 @@ The package owner must configure a trusted publisher once in [html-inbox package
 | Organization or user | `deveshsangwan` |
 | Repository | `html-inbox` |
 | Workflow filename | `publish.yml` |
-| Environment name | Leave blank |
+| Environment name | Leave blank until the release-control gate in the [release policy](release-policy.md#activation-requirements) adds a protected environment |
 | Allowed actions | Enable direct `npm publish` |
 
 The workflow file must already exist on GitHub. New trusted-publisher configurations can allow staged publishing alone; this workflow uses direct publishing, so select its permission explicitly. See the [current npm trusted-publisher documentation](https://docs.npmjs.com/trusted-publishers/).
@@ -115,7 +128,7 @@ Complete the browser 2FA challenge. Inspect existing relationships first; preser
 
 Complete the first successful publish within two days of creating the connection. Otherwise npm marks it expired and disables editing; delete that expired connection, recreate it with the values above, and publish before the new deadline.
 
-For each release, merge the reviewed version change into its release branch (`main`, or `release/0.7` for compatibility maintenance) and verify that merge commit's required checks. Open Actions, choose **Publish npm release**, select **Run workflow** on that branch, enter the exact package version and choose the npm tag (default `latest`). The workflow reads the current npm `latest` and refuses a mismatched or non-stable version, a wrong branch, engine or tag, or a release that would move `latest` backward. It rereads `latest` immediately before publishing and confirms the selected tag afterward; these checks cover the registry state it observes, not a concurrent publication elsewhere. It has a manual trigger so merging code or pushing an artifact tag does not publish unexpectedly. Successful trusted publishing from this public repository produces npm provenance automatically.
+For each release, merge the reviewed version change into its release branch (`main`, or `release/0.7` for compatibility maintenance) and verify that merge commit's required checks. Open Actions, choose **Publish npm release**, select **Run workflow** on that branch, enter the exact package version and choose the npm tag. The default, `choose`, fails the policy so that the tag is always an explicit selection. The workflow reads the current npm `latest` and refuses a mismatched or non-stable version, a wrong branch, engine or tag, or a release that would move `latest` backward. It rereads `latest` immediately before publishing and confirms the selected tag afterward; these checks cover the registry state it observes, not a concurrent publication elsewhere. It has a manual trigger so merging code or pushing an artifact tag does not publish unexpectedly. Successful trusted publishing from this public repository produces npm provenance automatically.
 
 The existing [Package release artifact workflow](../.github/workflows/package.yml) still creates verified archives on `v<version>` tags or manual runs and never publishes to npm. Website deployment, package artifact generation, and npm publication are separate workflows.
 

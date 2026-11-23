@@ -15,6 +15,16 @@ export function verifyReleasePolicy({ version, engines, requestedVersion, ref, t
   const versionParts = version.split(".").map(BigInt);
   const latestParts = latestVersion.split(".").map(BigInt);
   const [major, minor] = versionParts;
+
+  if (major >= 1n) {
+    // Modern publication stays blocked until the candidate's driver and package gates exist.
+    throw new Error("Modern release activation is pending the 1.x runtime, storage and package qualification PR");
+  }
+
+  if (minor !== 6n && minor !== 7n) {
+    throw new Error("Before 1.x activation, publish only 0.6.x or 0.7.x compatibility releases");
+  }
+
   const hasModernLatest = latestParts[0] >= 1n;
   const differingPart = versionParts.findIndex((part, index) => part !== latestParts[index]);
 
@@ -22,39 +32,30 @@ export function verifyReleasePolicy({ version, engines, requestedVersion, ref, t
     throw new Error("A release must not move npm latest backward");
   }
 
-  if (major === 0n && (minor === 6n || minor === 7n)) {
-    // Keep 0.6 patch releases possible until the unpublished 0.7 line is ready.
-    const allowedRefs = minor === 7n
-      ? ["refs/heads/main", "refs/heads/release/0.7"]
-      : ["refs/heads/main"];
-    const expectedTag = hasModernLatest ? "node20" : "latest";
-
-    if (engines?.node !== ">=20") {
-      throw new Error('Compatibility package engines.node must be exactly ">=20"');
-    }
-
-    if (!allowedRefs.includes(ref)) {
-      throw new Error("Publish compatibility releases from main or the approved release/0.7 branch");
-    }
-
-    // Explicit tag selection is a maintainer-approved double check before publication.
-    if (tag !== expectedTag) {
-      throw new Error(`Compatibility releases require npm tag ${expectedTag}`);
-    }
-
-    if (hasModernLatest && (minor !== 7n || ref !== "refs/heads/release/0.7")) {
-      throw new Error("After 1.0, compatibility maintenance publishes only from release/0.7");
-    }
-
-    return { version, tag };
+  if (engines?.node !== ">=20") {
+    throw new Error('Compatibility package engines.node must be exactly ">=20"');
   }
 
-  if (major === 0n) {
-    throw new Error("Before 1.x activation, publish only 0.6.x or 0.7.x compatibility releases");
+  // Keep 0.6 patch releases possible from main until the unpublished 0.7 line is ready.
+  if (minor === 6n && ref !== "refs/heads/main") {
+    throw new Error("Publish 0.6.x releases only from main");
   }
 
-  // Modern publication stays blocked until the candidate's driver and package gates exist.
-  throw new Error("Modern release activation is pending the 1.x runtime, storage and package qualification PR");
+  if (minor === 7n && ref !== "refs/heads/main" && ref !== "refs/heads/release/0.7") {
+    throw new Error("Publish 0.7.x releases from main or the approved release/0.7 branch");
+  }
+
+  // Explicit tag selection is a maintainer-approved double check before publication.
+  const expectedTag = hasModernLatest ? "node20" : "latest";
+  if (tag !== expectedTag) {
+    throw new Error(`Compatibility releases require npm tag ${expectedTag}`);
+  }
+
+  if (hasModernLatest && (minor !== 7n || ref !== "refs/heads/release/0.7")) {
+    throw new Error("After 1.0, compatibility maintenance publishes only from release/0.7");
+  }
+
+  return { version, tag };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

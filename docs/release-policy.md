@@ -4,7 +4,7 @@ Current 0.6.x releases require Node >=20. The planned lines are 0.7.x for compat
 
 ## Branches and publication
 
-- `release/0.7` was created from this policy PR's reviewed head and now points at an integration of it with `main`. Reconcile it with `main` after the policy PR merges.
+- `release/0.7` is maintained from this policy's reviewed integration with `main`. Reconcile it with `main` after the policy merges, and advance it to include the current publish safeguards before any publication from it.
 - Compatible performance changes target `release/0.7`. The 0.7.x package keeps Node >=20 and current storage, wire, validation, permissions and durability behavior.
 - Forward-port shared fixes to `main` with separate tests against its implementation. Storage divergence makes an untested cherry-pick unsafe.
 - A separate reviewed activation PR changes `main` to 1.0.0, Node >=24.19.0, modern CI and pre-storage runtime rejection together, after driver/minimum qualification. Modern production changes wait for activation; isolated design/prototype PRs may proceed earlier.
@@ -23,4 +23,4 @@ Before switching versions or formats, stop viewers, hubs and independent sync wo
 
 ## Activation requirements
 
-Before 0.7.0 is published, both skills must accept installed stable 0.7.x, with tests; their current check accepts only 0.2.x through 0.6.x and would route 0.7.x users to the 0.5.0 fallback. Modern activation requires driver qualification, pre-storage runtime rejection, exact-archive tests on Node 24.19.0 and Node 26, and format-aware skill resolution. Raising the runtime minimum later requires a deliberate release-policy change, never a silent patch. Package engines, CI, package smoke checks, READMEs, website and both skills must agree at activation. See the [implementation receipt and remaining gates](performance/88-prerequisite-validation.md) for current validation status.
+Before any publication from `release/0.7`, protect `main` and `release/0.7` so that only reviewed changes land, and bind npm trusted publishing to a protected GitHub environment that requires release approval and admits only those branches. The workflow's branch check matches names only; it cannot prove that the selected commit was reviewed. Before 0.7.0 is published, both skills must accept installed stable 0.7.x, with tests; their current check accepts only 0.2.x through 0.6.x and would route 0.7.x users to the 0.5.0 fallback. Modern activation requires driver qualification, pre-storage runtime rejection, exact-archive tests on Node 24.19.0 and Node 26, and format-aware skill resolution. Raising the runtime minimum later requires a deliberate release-policy change, never a silent patch. Package engines, CI, package smoke checks, READMEs, website and both skills must agree at activation. See the [implementation receipt and remaining gates](performance/88-prerequisite-validation.md) for current validation status.
