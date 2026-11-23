@@ -25,3 +25,11 @@ Neither reviewer found a Critical, High or Medium defect.
 | Retained-byte budget charges 2 bytes per character although V8 likely stores these strings at 1 byte | Opus, Low | Declined. The budget is a deliberate upper bound that does not depend on V8's internal string representation, and the measured retention, heap and RSS figures rely on it. Halving the charge would double real retention and invalidate those figures. The 10,000-record repeated-scan regime remains explicitly unqualified; it still verifies every record correctly and beats the parent |
 | Evidence prose is dense | Opus, Nit | Declined as a rewrite of preserved historical receipts. This file and the PR description carry the current summary |
 | The parser read-counter test is loosely tied to issue 94 | Opus, Nit | Kept. It guards the shared runner instrumentation this PR's companion depends on |
+
+## Root pre-slot finding on `36d94b20`
+
+Before granting the measurement slot, root reproduced a defect in the new driver. Runtime directory names such as `v20.20.2-100-10240-pair0-parent` contain dots, so `Path.with_suffix('.log')` mapped several processes to `v20.20.log`, and opening it with `'w'` discarded earlier transcripts.
+
+- Fixed: `plan_runs` appends `.log` to the full basename and rejects any colliding output or log path before a process starts. Failure readback uses the same path, and transcripts open with `'x'` so none can be overwritten. A runner test plans the proposed 30 processes for `v20.20.2` and `v24.19.0` and checks 60 distinct paths and the alternating order.
+- The summary now records five within-block variant/parent CPU comparisons per runtime and operation as well as marginal medians. Raw `samples.jsonl` files stay in each process directory.
+- Historical disclosure: the archived `artifacts/94/qualify.py` used the same `with_suffix` call. Its per-invocation transcript files collapsed to names such as `matrix-qualified-small-node20.20.log`, so only the last transcript per runtime and prefix survived. The per-process output directories, which hold the `samples.jsonl`, `environment.json`, `summary.json` and `cleanup.json` files the published statistics come from, were unaffected. Those historical results remain scoped to their original pins and are not changed here.

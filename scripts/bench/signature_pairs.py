@@ -45,43 +45,61 @@ def parse_args():
     return args
 
 
-def run_pairs(args):
-    builds = {'parent': (args.parent_dist, args.parent_ref), 'candidate': (args.candidate_dist, args.candidate_ref)}
-    commands = []
-    for node in args.node:
-        runtime = subprocess.check_output([node, '--version'], text=True).strip()
+def plan_runs(args, runtimes):
+    """Every process in execution order. Runtime versions contain dots, so logs append to the full name."""
+    runs = []
+    for runtime in runtimes:
         for count, size in args.cells:
             for pair in range(args.pairs):
                 # Reverse alternate pairs so warm-up and thermal drift do not favor one variant.
                 order = args.variants if pair % 2 == 0 else list(reversed(args.variants))
                 for variant in order:
-                    dist, ref = builds['parent' if variant == 'parent' else 'candidate']
                     output = args.out / f'{runtime}-{count}-{size}-pair{pair}-{variant}'
-                    command = [sys.executable, str(RUNNER), args.workload, '--node', node, '--counts', str(count), '--sizes', str(size),
-                               '--samples', '1', '--timeout', str(args.timeout), '--implementation-dist', str(dist),
-                               '--implementation-ref', ref, '--out', str(output)]
-                    if variant == 'keys':
-                        command += ['--signature-mode', 'keys']
+                    runs.append(dict(runtime=runtime, count=count, size=size, pair=pair, variant=variant,
+                                     out=output, log=output.parent / (output.name + '.log')))
 
-                    started = time.time()
-                    with output.with_suffix('.log').open('w') as log:
-                        result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT)
-                    entry = dict(runtime=runtime, count=count, size=size, pair=pair, variant=variant, command=command,
-                                 exit_code=result.returncode, wall_seconds=round(time.time() - started, 3), out=str(output))
-                    commands.append(entry)
-                    with (args.out / 'commands.jsonl').open('a') as log:
-                        log.write(json.dumps(entry) + '\n')
-                    print('DONE', output.name, result.returncode, entry['wall_seconds'], flush=True)
+    paths = [run['out'] for run in runs] + [run['log'] for run in runs]
+    if len(set(paths)) != len(paths):
+        raise ValueError('planned output or log paths collide')
 
-                    if result.returncode:
-                        print(output.with_suffix('.log').read_text(), flush=True)
-                        sys.exit(result.returncode)
+    return runs
+
+
+def run_pairs(args):
+    builds = {'parent': (args.parent_dist, args.parent_ref), 'candidate': (args.candidate_dist, args.candidate_ref)}
+    nodes = {subprocess.check_output([node, '--version'], text=True).strip(): node for node in args.node}
+    if len(nodes) != len(args.node):
+        raise ValueError('each --node must be a distinct runtime version')
+
+    commands = []
+    for run in plan_runs(args, list(nodes)):
+        dist, ref = builds['parent' if run['variant'] == 'parent' else 'candidate']
+        command = [sys.executable, str(RUNNER), args.workload, '--node', nodes[run['runtime']], '--counts', str(run['count']),
+                   '--sizes', str(run['size']), '--samples', '1', '--timeout', str(args.timeout), '--implementation-dist', str(dist),
+                   '--implementation-ref', ref, '--out', str(run['out'])]
+        if run['variant'] == 'keys':
+            command += ['--signature-mode', 'keys']
+
+        started = time.time()
+        with run['log'].open('x') as log:
+            result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT)
+        entry = dict(run, out=str(run['out']), log=str(run['log']), command=command, exit_code=result.returncode,
+                     wall_seconds=round(time.time() - started, 3))
+        commands.append(entry)
+        with (args.out / 'commands.jsonl').open('a') as log:
+            log.write(json.dumps(entry) + '\n')
+        print('DONE', run['out'].name, result.returncode, entry['wall_seconds'], flush=True)
+
+        if result.returncode:
+            print(run['log'].read_text(), flush=True)
+            sys.exit(result.returncode)
 
     return commands
 
 
 def summarize(commands):
     per_process = defaultdict(list)
+    per_pair = {}
     for entry in commands:
         output = Path(entry['out'])
         assert json.loads((output / 'summary.json').read_text())['success'], output
@@ -96,10 +114,12 @@ def summarize(commands):
 
         for label, rows in operations.items():
             key = (entry['runtime'], entry['count'], entry['size'], label, entry['variant'])
-            per_process[key].append(dict(cpu_ms=statistics.median(row['cpu_ms'] for row in rows),
-                                         wall_ms=statistics.median(row['wall_ms'] for row in rows),
-                                         verifications=statistics.median(row['crypto']['verifications'] for row in rows),
-                                         retained_heap_bytes=max(row['memory_after_gc']['heapUsed'] for row in rows)))
+            process = dict(cpu_ms=statistics.median(row['cpu_ms'] for row in rows),
+                           wall_ms=statistics.median(row['wall_ms'] for row in rows),
+                           verifications=statistics.median(row['crypto']['verifications'] for row in rows),
+                           retained_heap_bytes=max(row['memory_after_gc']['heapUsed'] for row in rows))
+            per_process[key].append(process)
+            per_pair[key + (entry['pair'],)] = process
 
     summary = []
     for (runtime, count, size, label, variant), processes in sorted(per_process.items()):
@@ -109,7 +129,22 @@ def summarize(commands):
                             wall_ms_median=statistics.median(process['wall_ms'] for process in processes),
                             verifications_median=statistics.median(process['verifications'] for process in processes),
                             retained_heap_bytes_max=max(process['retained_heap_bytes'] for process in processes)))
-    return summary
+    return summary, paired_comparisons(per_pair)
+
+
+def paired_comparisons(per_pair):
+    """Each variant against the parent inside the same interleaved block, so drift between blocks cancels."""
+    comparisons = []
+    for (runtime, count, size, label, variant, pair), process in sorted(per_pair.items()):
+        parent = per_pair.get((runtime, count, size, label, 'parent', pair))
+        if variant == 'parent' or parent is None:
+            continue
+
+        comparisons.append(dict(runtime=runtime, count=count, body_bytes=size, operation=label, pair=pair, variant=variant,
+                                parent_cpu_ms=parent['cpu_ms'], variant_cpu_ms=process['cpu_ms'],
+                                cpu_ms_delta=process['cpu_ms'] - parent['cpu_ms'],
+                                cpu_ratio=process['cpu_ms'] / parent['cpu_ms'] if parent['cpu_ms'] else None))
+    return comparisons
 
 
 def main():
@@ -120,11 +155,14 @@ def main():
                    invocation=sys.argv)
     (args.out / 'harness.json').write_text(json.dumps(harness, indent=2) + '\n')
 
-    summary = summarize(run_pairs(args))
-    (args.out / 'pairs-summary.json').write_text(json.dumps(summary, indent=2) + '\n')
+    summary, comparisons = summarize(run_pairs(args))
+    (args.out / 'pairs-summary.json').write_text(json.dumps(dict(marginal=summary, paired=comparisons), indent=2) + '\n')
     for row in summary:
         print(f"{row['runtime']} {row['count']}:{row['body_bytes']} {row['operation']} {row['variant']}: "
               f"CPU median {row['cpu_ms_median']:.3f} ms [{row['cpu_ms_min']:.3f}, {row['cpu_ms_max']:.3f}] n={row['processes']}")
+    for row in comparisons:
+        print(f"{row['runtime']} {row['count']}:{row['body_bytes']} {row['operation']} pair{row['pair']} {row['variant']}/parent: "
+              f"{row['variant_cpu_ms']:.3f}/{row['parent_cpu_ms']:.3f} ms")
 
 
 if __name__ == '__main__':

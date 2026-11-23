@@ -1,4 +1,6 @@
 """Exercise cleanup through the public runner, including an uncooperative descendant."""
+import argparse
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -112,6 +114,20 @@ class InstrumentationTests(unittest.TestCase):
                     self.assertEqual(result.returncode, 2)
                     self.assertIn(message, result.stderr.decode())
                     self.assertFalse(output.exists())
+
+    def test_signature_pair_plan_gives_every_dotted_runtime_process_its_own_output_and_log(self):
+        spec = importlib.util.spec_from_file_location('signature_pairs', RUNNER.with_name('signature_pairs.py'))
+        signature_pairs = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(signature_pairs)
+        args = argparse.Namespace(out=Path('/synthetic/pairs'), cells=[(100, 10240)], pairs=5, variants=['parent', 'keys', 'candidate'])
+        runs = signature_pairs.plan_runs(args, ['v20.20.2', 'v24.19.0'])
+
+        self.assertEqual(len(runs), 30)
+        paths = [run['out'] for run in runs] + [run['log'] for run in runs]
+        self.assertEqual(len(set(paths)), 60)
+        for run in runs:
+            self.assertEqual(run['log'].name, run['out'].name + '.log')
+        self.assertEqual([run['variant'] for run in runs[:6]], ['parent', 'keys', 'candidate', 'candidate', 'keys', 'parent'])
 
 if __name__ == '__main__':
     unittest.main()
