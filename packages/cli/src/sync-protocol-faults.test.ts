@@ -517,7 +517,7 @@ test("repeated actual holdings polls preserve blocked repair attempts and errors
   assert.equal((await f.run()).routes[0].status, "confirmed");
 });
 
-test("actual sender process killed after receipt persistence recovers retirement without retransmitting bytes", { timeout: 20_000 }, async (t) => {
+test("actual sender process killed after atomic acknowledgement recovers confirmation without retransmitting bytes", { timeout: 20_000 }, async (t) => {
   const f = await pair(t);
   await f.source.store.publish(input, "sender-crash");
   const original = await stateFor(f.source, "sender-crash");
@@ -526,12 +526,12 @@ test("actual sender process killed after receipt persistence recovers retirement
   const sending = runner.command({ type: "run", routeIds: [f.outbound.id] });
   const observed = Promise.allSettled([sending]);
   const fault = await runner.waitFor("fault");
-  assert.equal(fault.event, "receipt-before-retirement");
+  assert.equal(fault.event, "acknowledgements-committed");
   assert.equal(fault.hits, 1);
   assert.equal(runner.messages.filter((message) => message.type === "fault").length, 1);
   const durable = await diskLedger(f.source);
   const obligation = durable.outbox[outboxKey(f.outbound.id, 1, canonicalKey(original.originInboxId, original.originDocumentId))];
-  assert.equal(obligation.disposition, "pending");
+  assert.equal(obligation.disposition, "confirmed");
   assert.equal(Object.keys(durable.receipts).length, 1);
   const receiver = await f.receiver.store.snapshot();
   assert.equal(Object.keys(receiver.records).length, 1);

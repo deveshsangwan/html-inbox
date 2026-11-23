@@ -1,0 +1,75 @@
+{
+  "grant": "root-97-correctness-a3e087c-20261108-r1",
+  "candidate": "a3e087c3fc8bafdf3d604a1737bc9677ee5a0d2a",
+  "base": "b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad",
+  "started_utc": "2026-11-08T21:49:43.270082+00:00",
+  "application_budget_seconds": 900,
+  "cleanup_allowance_seconds": 120,
+  "application_deadline_monotonic": 893384.927162167,
+  "absolute_final_deadline_monotonic": 893504.927162167,
+  "result": "execution-adapter failure before first subprocess; no application correctness verdict",
+  "first_failure": {
+    "kind": "sequence",
+    "detail": "TypeError(\"dict() got multiple values for keyword argument 'XDG_CACHE_HOME'\")",
+    "monotonic": 892484.983023053
+  },
+  "commands": [],
+  "unrun_commands": [
+    "node20-version",
+    "node24-version",
+    "install",
+    "typecheck",
+    "build",
+    "bundle",
+    "node20-tests",
+    "node24-tests"
+  ],
+  "source_unchanged": true,
+  "git_status": "",
+  "owned_processes_observed": [],
+  "independent_cleanup": {
+    "grant": "root-97-correctness-a3e087c-20261108-r1",
+    "original_receipt_sha256": "3abe55e8187d42c0215a8b7ef987c082a55455cc6fecc7c8062d30d33fb5d1b0",
+    "sequence_owner_absent": true,
+    "spawned_or_observed_processes": [],
+    "commands_started": 0,
+    "pre_removal_inventory": [
+      {
+        "path": "owned-command-roots/fixture-node20-version",
+        "dev": 66306,
+        "ino": 20340374,
+        "uid": 1001,
+        "mode": 16893,
+        "bytes": 4096
+      }
+    ],
+    "command_roots_removed": true,
+    "retained_tool_cache_entries": 0,
+    "cleanup_completed_monotonic": 892513.595165252,
+    "within_absolute_final_deadline": true,
+    "classification": "execution-adapter TypeError before subprocess creation; all authorized commands unrun; original receipt retained unchanged"
+  },
+  "artifact_directory": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-correctness-a3e087c-attempt1",
+  "raw_artifact_sha256": {
+    "execute-granted-sequence.py": "bbbeab4ed04f12cb2165760c5fd1cb7742efd1be42128fae5560a504f474ac51",
+    "executed-manifest.json": "dfac5ec51edfd82d06019576106d89829466bc0348ccf5d86bbe2aeb277d7f13",
+    "independent-cleanup.json": "d31b9f4261e6be4fef9eebb56acf826cbf87d13e30a18779409b05c9835b88cb",
+    "receipt.json": "3abe55e8187d42c0215a8b7ef987c082a55455cc6fecc7c8062d30d33fb5d1b0",
+    "reused-execution.py": "87d98accb4a6f69308bd27221e8e53bfe65014fd155229fb02d0e04fbe4aee68"
+  },
+  "remote_ci": {
+    "source_head": "a3e087c3fc8bafdf3d604a1737bc9677ee5a0d2a",
+    "run_url": "https://github.com/deveshsangwan/html-inbox/actions/runs/42526569454",
+    "verify": "SUCCESS",
+    "source_matrix": "SUCCESS",
+    "browser_matrix": "SUCCESS",
+    "skills_matrix": "SUCCESS",
+    "local_application_verdict": null
+  },
+  "remaining": [
+    "new root-authorized local correctness attempt",
+    "paired exact20/24 measurements and spread",
+    "multi-page case under later authority",
+    "fresh same-pin Sol High and Sonnet5.5 Medium full-rubric reviews, each with functionality/code-quality/validation verdicts"
+  ]
+}

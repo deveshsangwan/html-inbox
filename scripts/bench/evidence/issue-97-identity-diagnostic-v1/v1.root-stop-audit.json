@@ -1,0 +1,76 @@
+{
+  "recorded_at": "2026-11-09T00:25:08.855864+00:00",
+  "receipt_sha256": "9e8c2f3cdf94025a40e93ccc059c68cd8fe98f540ab03c5b55fea29faf086736",
+  "owner_safety_sha256": "dd6f6c91dfd32b8e1352f7fe0183a217d7f6c865d8aa770afdec6765c25c7ccb",
+  "release_sha256": "e2eb4e3c88fd8f7ed383430148860f6dad468b910b4ffa3fbca0901d38e792ac",
+  "classification": "Operational admission mode expectation mismatch after exact successful git apply; no build or application test ran.",
+  "original_failure": {
+    "kind": "sequence",
+    "detail": "AssertionError('Owned entry set/type/mode drift')",
+    "monotonic": 901566.708654888
+  },
+  "commands": [
+    {
+      "label": "node20-version",
+      "exit": 0
+    },
+    {
+      "label": "node24-version",
+      "exit": 0
+    },
+    {
+      "label": "apply-reviewed-test-patch",
+      "exit": 0
+    }
+  ],
+  "unrun": [
+    "diagnostic-build",
+    "identity-response-cases-node20"
+  ],
+  "exact_signature_delta": {
+    "packages/cli/src/sync-protocol-faults.test.ts": {
+      "mode": [
+        436,
+        384
+      ]
+    }
+  },
+  "mode_octal": {
+    "before": "0664",
+    "after_apply": "0600",
+    "restored": "0664"
+  },
+  "diagnostic_target_content_exact": true,
+  "no_added_or_removed_owned_entries": true,
+  "no_other_file_hash_changed": true,
+  "root_independent_current_and_backup_checks": {
+    "tracked": 525,
+    "owned_signatures": 593,
+    "current_and_backup_generated": 393,
+    "tools": 1784,
+    "runtimes": 2,
+    "semantic_index": 525,
+    "clean_head": "887e0c5daa0812097ee8028b177244827f8420df"
+  },
+  "ownership": {
+    "exact_identities_including_adapter_launcher": 5,
+    "groups": 5,
+    "all_absent": true,
+    "root_independent_group_matches": [],
+    "all_command_roots_absent": true
+  },
+  "deadlines": {
+    "adapter_finished_monotonic": 901568.588582757,
+    "adapter_elapsed_seconds": 9.539643948082812,
+    "adapter_cleanup_deadline": 901686.708670026,
+    "owner_audit_finished_monotonic": 901657.465236174,
+    "release_monotonic": 901688.584999218,
+    "fixed_final_deadline": 902099.089898221,
+    "adapter_and_owner_audit_within_shorter_cleanup_deadline": true,
+    "release_within_fixed_final_deadline": true,
+    "release_after_shorter_cleanup_deadline_seconds": 1.8763291919603944
+  },
+  "disposition": "Accept process release and verified restoration. Original stop remains exit1; focused9 UNRUN. Raw release timestamp is1.876s after adapter shorter cleanup boundary while safety audit and adapter exit were inside it and release remained within fixedSTART+540. Do not claim every postflight/release timestamp was inside the shorter boundary.",
+  "review_accountability": "Owner and root source review both missed the expected git-apply target mode transition. No product fault or cause of hosted CI red inferred.",
+  "next": "Root may prepare narrow versioned mode-preserving application of the same patch; no unmodified retry or launch authorized by this audit."
+}

@@ -1,0 +1,183 @@
+TAP version 13
+# Subtest: every protected endpoint rejects all identity bindings before reading or disclosing live and terminal records
+ok 1 - every protected endpoint rejects all identity bindings before reading or disclosing live and terminal records # SKIP test name does not match pattern
+  ---
+  duration_ms: 1.82938
+  ...
+# Subtest: ingestion has no process administration; actual reader and private control listeners cannot ingest
+ok 2 - ingestion has no process administration; actual reader and private control listeners cannot ingest # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.183335
+  ...
+# Subtest: malformed JSON, UTF-8, headers, URL and declared lengths cannot install or create history
+ok 3 - malformed JSON, UTF-8, headers, URL and declared lengths cannot install or create history # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.18829
+  ...
+# Subtest: actual client rejects accepted identity response and leaves recoverable work
+ok 4 - actual client rejects accepted identity response and leaves recoverable work
+  ---
+  duration_ms: 1551.04477
+  ...
+# fault proxy child 3018476: reaped; loopback port rebound
+# application child 3018465: reaped; loopback port rebound
+# Subtest: actual client rejects redirect identity response and leaves recoverable work
+ok 5 - actual client rejects redirect identity response and leaves recoverable work
+  ---
+  duration_ms: 1487.084826
+  ...
+# fault proxy child 3018515: reaped; loopback port rebound
+# application child 3018504: reaped; loopback port rebound
+# Subtest: actual client rejects compressed identity response and leaves recoverable work
+ok 6 - actual client rejects compressed identity response and leaves recoverable work
+  ---
+  duration_ms: 1328.054254
+  ...
+# fault proxy child 3018547: reaped; loopback port rebound
+# application child 3018536: reaped; loopback port rebound
+# Subtest: actual client rejects json identity response and leaves recoverable work
+ok 7 - actual client rejects json identity response and leaves recoverable work
+  ---
+  duration_ms: 1378.460905
+  ...
+# fault proxy child 3018579: reaped; loopback port rebound
+# application child 3018568: reaped; loopback port rebound
+# Subtest: actual client rejects utf8 identity response and leaves recoverable work
+ok 8 - actual client rejects utf8 identity response and leaves recoverable work
+  ---
+  duration_ms: 1341.768497
+  ...
+# fault proxy child 3018612: reaped; loopback port rebound
+# application child 3018601: reaped; loopback port rebound
+# Subtest: actual client rejects extra identity response and leaves recoverable work
+ok 9 - actual client rejects extra identity response and leaves recoverable work
+  ---
+  duration_ms: 1587.405789
+  ...
+# fault proxy child 3018644: reaped; loopback port rebound
+# application child 3018633: reaped; loopback port rebound
+# Subtest: actual client rejects oversized identity response and leaves recoverable work
+ok 10 - actual client rejects oversized identity response and leaves recoverable work
+  ---
+  duration_ms: 1509.720936
+  ...
+# fault proxy child 3018676: reaped; loopback port rebound
+# application child 3018665: reaped; loopback port rebound
+# Subtest: actual client rejects headers identity response and leaves recoverable work
+ok 11 - actual client rejects headers identity response and leaves recoverable work
+  ---
+  duration_ms: 1571.743567
+  ...
+# fault proxy child 3018709: reaped; loopback port rebound
+# application child 3018698: reaped; loopback port rebound
+# Subtest: actual client rejects length identity response and leaves recoverable work
+ok 12 - actual client rejects length identity response and leaves recoverable work
+  ---
+  duration_ms: 1729.137807
+  ...
+# fault proxy child 3018741: reaped; loopback port rebound
+# application child 3018730: reaped; loopback port rebound
+# Subtest: exists at offer cannot replace a valid durable receipt
+ok 13 - exists at offer cannot replace a valid durable receipt # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.480199
+  ...
+# Subtest: ack at manifest cannot replace a valid durable receipt
+ok 14 - ack at manifest cannot replace a valid durable receipt # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.261482
+  ...
+# Subtest: accepted at body cannot replace a valid durable receipt
+ok 15 - accepted at body cannot replace a valid durable receipt # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.181988
+  ...
+# Subtest: receipt at body cannot replace a valid durable receipt
+ok 16 - receipt at body cannot replace a valid durable receipt # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.166313
+  ...
+# Subtest: opaque manifest cursors reject cross-session and cross-route reuse and retain a cut across owner deletion
+ok 17 - opaque manifest cursors reject cross-session and cross-route reuse and retain a cut across owner deletion # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.171955
+  ...
+# Subtest: an older HTTPS server establishes durability before exposing another process's uncertain custody
+ok 18 - an older HTTPS server establishes durability before exposing another process's uncertain custody # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.16166
+  ...
+# Subtest: empty physical outbox durably requeues missing receiver body before any repair bytes
+ok 19 - empty physical outbox durably requeues missing receiver body before any repair bytes # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.158553
+  ...
+# Subtest: empty physical outbox durably requeues truncated receiver body before any repair bytes
+ok 20 - empty physical outbox durably requeues truncated receiver body before any repair bytes # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.215394
+  ...
+# Subtest: empty physical outbox durably requeues nonregular receiver body before any repair bytes
+ok 21 - empty physical outbox durably requeues nonregular receiver body before any repair bytes # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.149386
+  ...
+# Subtest: repeated actual holdings polls preserve blocked repair attempts and errors after a historical receipt
+ok 22 - repeated actual holdings polls preserve blocked repair attempts and errors after a historical receipt # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.144894
+  ...
+# Subtest: actual sender process killed after atomic acknowledgement recovers confirmation without retransmitting bytes
+ok 23 - actual sender process killed after atomic acknowledgement recovers confirmation without retransmitting bytes # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.140541
+  ...
+# Subtest: five unchanged wire passes open, hash and transfer zero managed HTML with positive calibration
+ok 24 - five unchanged wire passes open, hash and transfer zero managed HTML with positive calibration # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.142256
+  ...
+# Subtest: cross-process local revoke after remote commit fences all later starts and cannot retract remote custody
+ok 25 - cross-process local revoke after remote commit fences all later starts and cannot retract remote custody # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.137526
+  ...
+# Subtest: abort while authenticated offer is pending prevents new starts while retaining a durable retry
+ok 26 - abort while authenticated offer is pending prevents new starts while retaining a durable retry # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.151245
+  ...
+# Subtest: full copied store and explicit restore quarantine block before credentials or network
+ok 27 - full copied store and explicit restore quarantine block before credentials or network # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.143085
+  ...
+# Subtest: protocol fixture teardown reaps every application before removing its shared store
+ok 28 - protocol fixture teardown reaps every application before removing its shared store # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.159604
+  ...
+# Subtest: real concurrent HTTPS streams share the staging bytes quota across application processes
+ok 29 - real concurrent HTTPS streams share the staging bytes quota across application processes # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.141963
+  ...
+# Subtest: real concurrent HTTPS streams share the staging files quota across application processes
+ok 30 - real concurrent HTTPS streams share the staging files quota across application processes # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.140611
+  ...
+# Subtest: partial HTTPS stage survives live recovery and is reclaimed only after its application owner dies
+ok 31 - partial HTTPS stage survives live recovery and is reclaimed only after its application owner dies # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.138568
+  ...
+1..31
+# tests 31
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 22
+# todo 0
+# duration_ms 13614.109901

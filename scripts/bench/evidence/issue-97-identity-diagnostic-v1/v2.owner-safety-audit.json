@@ -1,0 +1,103 @@
+{
+  "state": "POST_EXIT_INDEPENDENT_SAFETY_AUDIT",
+  "grant": "root-97-identity-diagnostic-887e0c5-v2",
+  "checks": {
+    "clean887": true,
+    "all525_source_equal": true,
+    "all593_owned_signature_equal": true,
+    "target_current_and_saved_equal": true,
+    "all393_current_R2": true,
+    "all393_saved_R2": true,
+    "diagnostic393_preserved": true,
+    "semantic_index_equal": true,
+    "all1784_tools_equal": true,
+    "both_runtime_hashes_equal": true,
+    "all_recorded_identities_absent": true,
+    "all_recorded_groups_absent": true,
+    "all_command_roots_absent": true,
+    "all_original_log_hashes_equal": true,
+    "all8_prepared_bytes_equal": true,
+    "umask0002_admitted": true,
+    "outer_identity_matches": true
+  },
+  "observed_process_entries": 38,
+  "unique_identities_including_adapter_launcher": 40,
+  "groups": 7,
+  "remaining_identities": [],
+  "remaining_groups": [],
+  "roots": {
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots": false,
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node20-version": false,
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-node24-version": false,
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-apply-reviewed-test-patch": false,
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-diagnostic-build": false,
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/owned-command-roots/fixture-identity-response-cases-node20": false
+  },
+  "logs": {
+    "node20-version": {
+      "tap": {
+        "sha256": "fa2f297fd185bb1c8acba036117f05240eaa1f42eeb8902e870982523ae06edf",
+        "receipt": "fa2f297fd185bb1c8acba036117f05240eaa1f42eeb8902e870982523ae06edf"
+      },
+      "stderr": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "receipt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "node24-version": {
+      "tap": {
+        "sha256": "b7677d3ec37ee1897ba07dc2cfe8292fe421c9ac93396cca5bbece486d1a2a41",
+        "receipt": "b7677d3ec37ee1897ba07dc2cfe8292fe421c9ac93396cca5bbece486d1a2a41"
+      },
+      "stderr": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "receipt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "apply-reviewed-test-patch": {
+      "tap": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "receipt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "receipt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "diagnostic-build": {
+      "tap": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "receipt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "sha256": "52aa23ae94ef591f86df0a1de48709f5620eaacea41124e19fa6f2c717b99e88",
+        "receipt": "52aa23ae94ef591f86df0a1de48709f5620eaacea41124e19fa6f2c717b99e88"
+      }
+    },
+    "identity-response-cases-node20": {
+      "tap": {
+        "sha256": "96f43491940a252aa69692b52d93594cab920cf07260e108a8eb30fbd1acdbc7",
+        "receipt": "96f43491940a252aa69692b52d93594cab920cf07260e108a8eb30fbd1acdbc7"
+      },
+      "stderr": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "receipt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  "runtime_hashes": {
+    "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node": "6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd",
+    "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node": "bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12"
+  },
+  "receipt_sha256": "21f8f09b1732bfb5fdf306788310280ef25c41366f298cd06d41d818338cf280",
+  "audit_started_monotonic": 902524.380277765,
+  "audit_finished_monotonic": 902525.503820322,
+  "cleanup_restoration_deadline": 902571.639957162,
+  "fixed_outer_deadline": 902962.169489401,
+  "raw_index_snapshots": {
+    "raw-index-before.bin": "233b200d49adfcd5c3d5339fc3c6bd41dd2a3fe42e21209688aabc320bb669b6",
+    "raw-index-after.bin": "233b200d49adfcd5c3d5339fc3c6bd41dd2a3fe42e21209688aabc320bb669b6"
+  },
+  "owner_raw_index_sha256": "233b200d49adfcd5c3d5339fc3c6bd41dd2a3fe42e21209688aabc320bb669b6",
+  "raw_index_equality_or_cause_claim": false
+}

@@ -1,0 +1,366 @@
+{
+  "grant": "root-97-peer-feasibility-620cc2b-20261108-r1",
+  "head": "620cc2be65b4c90ec15ace9ee62ea380061cacf8",
+  "candidate_source_pin": "a3e087c3fc8bafdf3d604a1737bc9677ee5a0d2a",
+  "baseline_production_source_pin": "b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad",
+  "result": "stopped at first failure; baseline sync/100 child120s timeout; candidate unrun; no performance comparison",
+  "limits": {
+    "application_seconds": 900,
+    "final_cleanup_seconds": 120,
+    "runner_outer_seconds": 270,
+    "child_seconds": 120
+  },
+  "elapsed_seconds": 127.23676538898144,
+  "within_absolute_final_deadline": true,
+  "commands": [
+    {
+      "label": "node20-version",
+      "argv": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--version"
+      ],
+      "cap_seconds": 15,
+      "elapsed_seconds": 0.07637540902942419,
+      "exit": 0,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "node24-version",
+      "argv": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--version"
+      ],
+      "cap_seconds": 15,
+      "elapsed_seconds": 0.05485458509065211,
+      "exit": 0,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "baseline-overlay",
+      "argv": [
+        "/usr/bin/git",
+        "restore",
+        "--source=b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad",
+        "--worktree",
+        "--",
+        "packages/cli/src"
+      ],
+      "cap_seconds": 15,
+      "elapsed_seconds": 0.05480409297160804,
+      "exit": 0,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "baseline-build",
+      "argv": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/corepack/dist/pnpm.js",
+        "build"
+      ],
+      "cap_seconds": 60,
+      "elapsed_seconds": 1.952832852024585,
+      "exit": 0,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "baseline-bundle",
+      "argv": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/corepack/dist/pnpm.js",
+        "--filter",
+        "html-inbox",
+        "bundle"
+      ],
+      "cap_seconds": 120,
+      "elapsed_seconds": 2.113309168955311,
+      "exit": 0,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "baseline-node20",
+      "argv": [
+        "/usr/bin/python3",
+        "scripts/bench/run.py",
+        "sync",
+        "--counts",
+        "0,100",
+        "--sizes",
+        "10240",
+        "--samples",
+        "1",
+        "--timeout",
+        "120",
+        "--node",
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--out",
+        "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-peer-feasibility-620cc2b-attempt1/baseline-node20"
+      ],
+      "cap_seconds": 270,
+      "elapsed_seconds": 121.14854926406406,
+      "exit": 1,
+      "group_joined": true,
+      "fixture_removed": true
+    }
+  ],
+  "unrun_commands": [
+    "baseline-node24",
+    "candidate-source-restore",
+    "candidate-node20",
+    "candidate-node24"
+  ],
+  "unrun_note": "candidate-source-restore command row is unrun, but mandatory outer-finally restoration did execute and passed independent audit.",
+  "raw_inner_failure": {
+    "label": "sync/100",
+    "command": [
+      "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+      "/home/agent/.t3/worktrees/html-inbox/perf-97-acks/scripts/bench/workload.cjs",
+      "sync",
+      "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-peer-feasibility-620cc2b-attempt1/owned-command-roots/fixture-baseline-node20/html-inbox-bench-gu89nsxo/sync-100",
+      "100",
+      "10240",
+      "1"
+    ],
+    "error": "TimeoutError('sync/100')",
+    "stdout": "{\"label\":\"managed/enroll/100\",\"io\":{\"rchar\":8365,\"wchar\":7735,\"read_bytes\":0,\"write_bytes\":32768,\"cancelled_write_bytes\":0},\"wall_ms\":92.39471299999997,\"cpu_ms\":66.175,\"rss_bytes\":57348096,\"source\":{\"commits\":3,\"ledgerReplacementBytes\":3294,\"htmlOpens\":0,\"htmlBytesRead\":0,\"hashPasses\":0,\"bodyTransfers\":0}}\n{\"label\":\"managed/publish/100\",\"io\":{\"rchar\":4805664,\"wchar\":5744558,\"read_bytes\":0,\"write_bytes\":6770688,\"cancelled_write_bytes\":0},\"wall_ms\":3891.3985430000002,\"cpu_ms\":3484.424,\"rss_bytes\":100823040,\"source\":{\"commits\":100,\"ledgerReplacementBytes\":4517954,\"htmlOpens\":0,\"htmlBytesRead\":0,\"hashPasses\":100,\"bodyTransfers\":0},\"bodyBytes\":1024000}\n{\"label\":\"managed/status/100\",\"io\":{\"rchar\":88948,\"wchar\":288,\"read_bytes\":0,\"write_bytes\":0,\"cancelled_write_bytes\":0},\"wall_ms\":33.70948200000021,\"cpu_ms\":33.377,\"rss_bytes\":105459712,\"records\":100}\n",
+    "stderr": ""
+  },
+  "completed_empty_control_operations": [
+    {
+      "label": "managed/enroll/0",
+      "io": {
+        "rchar": 8369,
+        "wchar": 7745,
+        "read_bytes": 0,
+        "write_bytes": 32768,
+        "cancelled_write_bytes": 0
+      },
+      "wall_ms": 58.044793,
+      "cpu_ms": 40.716,
+      "rss_bytes": 57282560,
+      "source": {
+        "commits": 3,
+        "ledgerReplacementBytes": 3288,
+        "htmlOpens": 0,
+        "htmlBytesRead": 0,
+        "hashPasses": 0,
+        "bodyTransfers": 0
+      }
+    },
+    {
+      "label": "managed/publish/0",
+      "io": {
+        "rchar": 151,
+        "wchar": 40,
+        "read_bytes": 0,
+        "write_bytes": 0,
+        "cancelled_write_bytes": 0
+      },
+      "wall_ms": 0.17648299999996198,
+      "cpu_ms": 0.19,
+      "rss_bytes": 57675776,
+      "source": {
+        "commits": 0,
+        "ledgerReplacementBytes": 0,
+        "htmlOpens": 0,
+        "htmlBytesRead": 0,
+        "hashPasses": 0,
+        "bodyTransfers": 0
+      },
+      "bodyBytes": 0
+    },
+    {
+      "label": "managed/status/0",
+      "io": {
+        "rchar": 1588,
+        "wchar": 280,
+        "read_bytes": 0,
+        "write_bytes": 0,
+        "cancelled_write_bytes": 0
+      },
+      "wall_ms": 1.5493649999999661,
+      "cpu_ms": 1.566,
+      "rss_bytes": 57806848,
+      "records": 0
+    },
+    {
+      "label": "peer/initial/0",
+      "io": {
+        "rchar": 133940,
+        "wchar": 50298,
+        "read_bytes": 0,
+        "write_bytes": 106496,
+        "cancelled_write_bytes": 0
+      },
+      "wall_ms": 271.560098,
+      "cpu_ms": 247.444,
+      "rss_bytes": 69271552,
+      "transferred": 0,
+      "source": {
+        "commits": 2,
+        "ledgerReplacementBytes": 3776,
+        "htmlOpens": 0,
+        "htmlBytesRead": 0,
+        "hashPasses": 0,
+        "bodyTransfers": 0
+      },
+      "receiver": {
+        "commits": 1,
+        "ledgerReplacementBytes": 2686,
+        "htmlOpens": 0,
+        "htmlBytesRead": 0,
+        "hashPasses": 0,
+        "bodyTransfers": 0
+      },
+      "wire": {
+        "requests": 3,
+        "rejected": 0,
+        "requestBytes": 731,
+        "responseBytes": 1205,
+        "activeRequests": 0,
+        "activeTransfers": 0
+      }
+    },
+    {
+      "label": "peer/noop/0",
+      "io": {
+        "rchar": 141456,
+        "wchar": 52819,
+        "read_bytes": 0,
+        "write_bytes": 110592,
+        "cancelled_write_bytes": 0
+      },
+      "wall_ms": 262.90442599999994,
+      "cpu_ms": 228.307,
+      "rss_bytes": 69353472,
+      "transferred": 0,
+      "source": {
+        "commits": 2,
+        "ledgerReplacementBytes": 3776,
+        "htmlOpens": 0,
+        "htmlBytesRead": 0,
+        "hashPasses": 0,
+        "bodyTransfers": 0
+      },
+      "receiver": {
+        "commits": 1,
+        "ledgerReplacementBytes": 2686,
+        "htmlOpens": 0,
+        "htmlBytesRead": 0,
+        "hashPasses": 0,
+        "bodyTransfers": 0
+      },
+      "wire": {
+        "requests": 3,
+        "rejected": 0,
+        "requestBytes": 731,
+        "responseBytes": 1205,
+        "activeRequests": 0,
+        "activeTransfers": 0
+      }
+    }
+  ],
+  "baseline_binding": {
+    "raw_environment_head": "620cc2be65b4c90ec15ace9ee62ea380061cacf8",
+    "raw_environment_dirty": " M packages/cli/src/sync-files.ts\n M packages/cli/src/sync-protocol-fault-child.ts\n M packages/cli/src/sync-protocol-faults.test.ts\n M packages/cli/src/sync-protocol-fixture.ts\n M packages/cli/src/sync-reconciliation.ts\n M packages/cli/src/sync-storage-faults.test.ts\n M packages/cli/src/sync-store.test.ts\n M packages/cli/src/sync-store.ts\n",
+    "production_source_pin": "b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad",
+    "entire_src_diff_vs_base_empty": true,
+    "unchanged_harness_config_lock_hashes": {
+      "scripts/bench/sync.cjs": "f5bb8defbb8aa0de13827ed6f0690b44c990dd0b4af0b3ab30b813e4c83fddef",
+      "scripts/bench/workload.cjs": "5718b18562428716236bd52521ea88ae0b54eb38ed28bfb72d3ed4ad59d0579f",
+      "scripts/bench/run.py": "13da40426bdd09112be273a78874080986f612741125dc43761c1c9372f734ec",
+      "pnpm-lock.yaml": "5a022657a76a03234db5f20fdd70162869356b4444cf4fe3ad0938a44806c677",
+      "package.json": "078082715a1c29bab6d9d0e11a8fc8f2c16ed01d17b3ecb1a1a3d26495bc7944",
+      "packages/cli/package.json": "31b211048bc9423a778cb3c6ddb6fe3c9ae70c28c03cd9ce6f790c02e4de3d77",
+      "packages/cli/tsconfig.json": "1a9f0873fec04475a675b9b11b9402a9eca94c930c65a199019538b9f521b861",
+      "tsconfig.base.json": "0ee61cc4109d97d227f5ccb5c3f40d179959ec0a67f433b89dc1a861a029a977"
+    }
+  },
+  "runtime_hashes_before": {
+    "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node": "6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd",
+    "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node": "bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12"
+  },
+  "runtime_hashes_after": {
+    "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node": "6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd",
+    "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node": "bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12"
+  },
+  "restoration_and_cleanup": {
+    "original_receipt_sha256": "d15b5155489c5ee7fc14384f312f4049fcd07740db798a8bbfed8b3cbfc3c93a",
+    "grant": "root-97-peer-feasibility-620cc2b-20261108-r1",
+    "original_engine_observed_entries": 17,
+    "unique_identities_including_separate_adapter": 18,
+    "owned_groups_absent": 9,
+    "remaining_owned_identities": [],
+    "source_and_index_restored": true,
+    "qualified_candidate_files_restored": 393,
+    "backup_matches_R2": true,
+    "command_roots_absent": true,
+    "baseline_runner_cleanup": {
+      "fixture_root_removed": true,
+      "children_reaped": true
+    },
+    "elapsed_seconds": 127.23676538898144,
+    "within_absolute_final_deadline": true,
+    "failed_command": "baseline-node20",
+    "failed_inner_workload": "sync/100",
+    "classification": "existing sync/100 inner120s child timeout; not assertion verdict, not outer270s or application900s exhaustion",
+    "partial_100_labels": [
+      "managed/enroll/100",
+      "managed/publish/100",
+      "managed/status/100"
+    ],
+    "complete_outer_workloads": [
+      "sync/0"
+    ],
+    "unrun_commands": [
+      "baseline-node24",
+      "candidate-source-restore",
+      "candidate-node20",
+      "candidate-node24"
+    ],
+    "comparison_available": false,
+    "retained_backups": [
+      "candidate-source",
+      "candidate-qualified"
+    ],
+    "cleanup_audit_monotonic": 893523.276129685
+  },
+  "raw_artifact_directory": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-peer-feasibility-620cc2b-attempt1",
+  "raw_artifact_sha256": {
+    "baseline-build.stderr": "52aa23ae94ef591f86df0a1de48709f5620eaacea41124e19fa6f2c717b99e88",
+    "baseline-build.tap": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "baseline-bundle.stderr": "67bd102e126ea4f971fd8b4a6688e53cb1118030070cca8dbb428da1df7ce81b",
+    "baseline-bundle.tap": "3c86ffe5f82e35af7a4e13e4f2e298cd12035eddc8fa6f9f7c313756ac627873",
+    "baseline-node20/cleanup.json": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+    "baseline-node20/environment.json": "6fa706f63a38763168512079791b3fca33f89ec0f74bf3c387207e29056116ad",
+    "baseline-node20/failures.jsonl": "43052faf3c6a67709bcb1f10d6a26ad751b114b17ced17722729923bea0e4a08",
+    "baseline-node20/samples.jsonl": "1b0ac686f8454634534ba0fe417078052740557dc482e5c78dd67d426c5e55df",
+    "baseline-node20/summary.json": "98ead22c3540a0b8b505f342805f82d7b426d785a394f02badcbbc402e14c24f",
+    "baseline-node20.stderr": "0a6f3a131abd243993790aeffc122ebad3ab7fbeab7a2e0c763cfbe5363527f3",
+    "baseline-node20.tap": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "baseline-overlay.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "baseline-overlay.tap": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "current-command.json": "4e403c0461039fbb2445049eb46e31dfeb492d77d567938d1b1517afc55ec8ba",
+    "execute-granted-sequence.py": "0b340b4835d5f0ab8b409c1ddaa3fdff7ae7a638b55cc9025a2ca90656c0880b",
+    "executed-manifest.json": "3ebdc98ec5c919972ad3696520b39db2a2c5715a7f3f8b0142fb2040518aa96f",
+    "execution.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "execution.stdout": "fdbe358282c3923ab18b0b3bcd3ad8e439a06e7b73079b455c1aea39d9165b7f",
+    "independent-audit.json": "03b72e5d8d47f1c29e684dd854e4848a8bb5f7c389289f9c18ac89cb8cd7ece3",
+    "node20-version.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "node20-version.tap": "fa2f297fd185bb1c8acba036117f05240eaa1f42eeb8902e870982523ae06edf",
+    "node24-version.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "node24-version.tap": "b7677d3ec37ee1897ba07dc2cfe8292fe421c9ac93396cca5bbece486d1a2a41",
+    "outer-exit.json": "536eb7bf3b69948cd12e53e1ca27ef5ca4f237fffc26c99d76c71d4eb1f4aa67",
+    "outer-identity.json": "a2a1abb0dafd95879e1ddeaca2980b5e482a8dc80c54cd787276237890c707cf",
+    "receipt.json": "d15b5155489c5ee7fc14384f312f4049fcd07740db798a8bbfed8b3cbfc3c93a",
+    "reused-execution.py": "87d98accb4a6f69308bd27221e8e53bfe65014fd155229fb02d0e04fbe4aee68"
+  },
+  "candidate_backup_file_count": 393,
+  "candidate_outputs_restored_equal_R2": true,
+  "no_performance_claim": true,
+  "reviewers_launched": false
+}

@@ -1,0 +1,123 @@
+{
+  "scope": "One operational V1 mode-stop and one exact20 serial V2 selected-case pass; source diagnostic publication for normal default-concurrency CI, no hosted red clearance or performance credit",
+  "tested_head": "887e0c5daa0812097ee8028b177244827f8420df",
+  "production_source": "a3e087c3fc8bafdf3d604a1737bc9677ee5a0d2a",
+  "base": "b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad",
+  "current_target_source_sha256": "d30101e59453829dcb51024ac6746b8d421e5d8033b900dc9626c66a159ca95f",
+  "current_target_mode_octal": "0664",
+  "original_files": {
+    "v1.owner-safety-audit.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1-launch/owner-safety-audit.json",
+      "sha256": "dd6f6c91dfd32b8e1352f7fe0183a217d7f6c865d8aa770afdec6765c25c7ccb",
+      "bytes": 4373,
+      "copied_original_bytes": true
+    },
+    "v1.release.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1-launch/local-release.json",
+      "sha256": "e2eb4e3c88fd8f7ed383430148860f6dad468b910b4ffa3fbca0901d38e792ac",
+      "bytes": 366,
+      "copied_original_bytes": true
+    },
+    "v1.preexec-identity.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1-launch/outer-preexec-identity.json",
+      "sha256": "a9dfddd3488c884d58bb3864d89832f66bda3843897c0e0db1ac2e120ac90000",
+      "bytes": 458,
+      "copied_original_bytes": true
+    },
+    "v1.live-identity.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1-launch/outer-live-identity.json",
+      "sha256": "1bdc4b93f68551b679fc50baf5ad204499786c379d3a664c7bc999032c225faf",
+      "bytes": 1574,
+      "copied_original_bytes": true
+    },
+    "v1.outer-exit.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1-launch/outer-exit.json",
+      "sha256": "93ef7251338167f51b101d59ef3a04a53a72984223387606403dcabcc89b88a6",
+      "bytes": 175,
+      "copied_original_bytes": true
+    },
+    "v2.owner-safety-audit.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2-launch/owner-safety-audit.json",
+      "sha256": "d069d86a0f1de72b9c70b76ebe56ae512c12bfb2ed5b1ff1d8e0c417909c4e42",
+      "bytes": 5120,
+      "copied_original_bytes": true
+    },
+    "v2.release.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2-launch/local-release.json",
+      "sha256": "991a0736ec087863d44da0d7a43d678f32cac6d07daadb6b9aa5e5d08a3de4a3",
+      "bytes": 524,
+      "copied_original_bytes": true
+    },
+    "v2.preexec-identity.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2-launch/outer-preexec-identity.json",
+      "sha256": "caae9d5894a53d85692ee7636bf212f070c3eba8c3b79a27dd6bf94c592fcf59",
+      "bytes": 514,
+      "copied_original_bytes": true
+    },
+    "v2.live-identity.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2-launch/outer-live-identity.json",
+      "sha256": "fa2ab810bc7cd18c2c696478dd057182a7ed690d8bec6721ecd0cbdfdc42cdf1",
+      "bytes": 1615,
+      "copied_original_bytes": true
+    },
+    "v2.outer-exit.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2-launch/outer-exit.json",
+      "sha256": "c50f20068ca37783937f61c8c5aa365f594f440a6320bb02cb5a99fa33efcb60",
+      "bytes": 175,
+      "copied_original_bytes": true
+    },
+    "v1.outer.stdout": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt1-launch/outer.stdout",
+      "sha256": "7f0293edaa3fe35b5e276a01ec61998717da08b27c471aa95e885b245d771a0b",
+      "bytes": 591,
+      "copied_original_bytes": true
+    },
+    "v2.tests.tap": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2/identity-response-cases-node20.tap",
+      "sha256": "96f43491940a252aa69692b52d93594cab920cf07260e108a8eb30fbd1acdbc7",
+      "bytes": 9017,
+      "copied_original_bytes": true
+    },
+    "v2.independent-live-identity.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-attempt2-launch/outer-independent-observation.json",
+      "sha256": "f7cb1309ef74b18655ef93d038c3746c031e21f83aa12a6ec6f929f121833ae1",
+      "bytes": 178,
+      "copied_original_bytes": true
+    },
+    "v1.root-stop-audit.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-root-stop-audit.json",
+      "sha256": "e830d288a2ddd3208c4f1432ba45c7c14419263f01ea6cae4880fa6f8fb2fb26",
+      "bytes": 2937,
+      "copied_original_bytes": true
+    },
+    "v2.root-result.json": {
+      "original_path": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-identity-diagnostic-887e0c5-v2-root-result.json",
+      "sha256": "49335ddcbcabc7178af055127cd2b652f476338c7dc5b2f34f5336d1a229f8a7",
+      "bytes": 1663,
+      "copied_original_bytes": true
+    }
+  },
+  "derived_receipt_extracts": {
+    "v1.receipt-extract.json": {
+      "sha256": "2107867c3f1ca8d5da65c06a310e52df7495a5b8ab3b422a7ab077545267143c",
+      "description": "Unmodified selected fields from the original receipt, not a replacement original receipt"
+    },
+    "v2.receipt-extract.json": {
+      "sha256": "903abca60079b89880c44b8b19931aedcc23217d45595450cd41a6c84a9f8bb3",
+      "description": "Unmodified selected fields from the original receipt, not a replacement original receipt"
+    }
+  },
+  "v1_operational_limit": "Release1.8763291919603944s after shorter cleanup boundary; adapter exit and owner audit before it, release inside fixed540. Root additive stop audit preserved beside original owner records.",
+  "v2_acceptance": "Five commands exit0,9 selected pass/22 filter skips/0fail/0cancel, zero mismatch tags; restored/released46.13570995396003s before shorter boundary. Root accepts this scope only.",
+  "current_generated_state": "All393 current bytes remain R2. Only dist/sync-protocol-faults.test.js is stale against the newly published diagnostic TS; production/bundle and other392 emitted files match the accepted temporary diagnostic build.",
+  "stale_testJS_R2_sha256": "3023a1b2f20aa08c000ede09bbb992489ddc2b2370ec01f10b9e46e83e34eaba",
+  "observed_diagnostic_testJS_sha256": "0810789ae611b87a2b7571947a483539313dcc0868ea1b568d66f8bdcaa7409e",
+  "original_hosted_failure": {
+    "url": "https://github.com/deveshsangwan/html-inbox/actions/runs/42533920965/job/128893913453",
+    "head": "887e0c5daa0812097ee8028b177244827f8420df",
+    "failure": "headers identity-response receiver requests0 vs1; cause and injection unproven",
+    "raw_log_sha256": "7a34e35eccc3676c85b729de59552f38179a72ff6f6bbaf5a7c7c14a52cbb61b"
+  },
+  "remaining": "Normal CI on this diagnostic source publication pending; mismatch/cap/IPC failure paths unqualified; repeated/cross-runtime/multi-page/610/full-rubric reviews pending. Measurement-v1 remains pinned887, unchanged and UNGRANTED; A1/A2 unresolved.",
+  "excluded": "No managed ledgers, credentials, TLS keys, tokens or fixture contents copied. Only source/provenance/test TAP and control evidence."
+}

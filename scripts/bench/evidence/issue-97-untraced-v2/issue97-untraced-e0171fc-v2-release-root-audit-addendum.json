@@ -1,0 +1,11 @@
+{
+  "state": "COMPLETE_IDENTITY_AND_NCC_METADATA_ADDENDUM",
+  "prior_root_audit_sha256": "52e35cef9e82260b51537e49bcd7d1c93e1121df358eff42b775a6963e970892",
+  "note": "Prior root audit covered engine observations plus adapter identity, with engine descendant groups. This addendum includes saved launcher identity and both outer groups; no original record rewritten.",
+  "all_saved_identities": 103,
+  "all_saved_groups": 51,
+  "remaining": [],
+  "preexec_live_independent_self_match": true,
+  "current_ncc_full_tree_matches_after_capture": true,
+  "checked_monotonic": 944964.784553462
+}

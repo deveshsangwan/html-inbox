@@ -1,0 +1,767 @@
+[
+  {
+    "runtime": "20.20.2",
+    "operation": "sync/0",
+    "metric": "cpu_ms",
+    "parent": {
+      "n": 3,
+      "min": 830.699,
+      "median": 850.9359999999999,
+      "max": 858.257
+    },
+    "candidate": {
+      "n": 3,
+      "min": 825.82,
+      "median": 837.68,
+      "max": 851.0600000000001
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -13.255999999999972,
+      "median": -7.196999999999889,
+      "max": -4.878999999999905
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -1.5578139836603426,
+      "median": -0.838560011744721,
+      "max": -0.587336688740435
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "P-C",
+      "C-P",
+      "P-C"
+    ]
+  },
+  {
+    "runtime": "20.20.2",
+    "operation": "sync/0",
+    "metric": "input_blocks",
+    "parent": {
+      "n": 3,
+      "min": 0,
+      "median": 0,
+      "max": 0
+    },
+    "candidate": {
+      "n": 3,
+      "min": 0,
+      "median": 0,
+      "max": 0
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": 0,
+      "median": 0,
+      "max": 0
+    },
+    "paired_relative_change_percent": null,
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "P-C",
+      "C-P",
+      "P-C"
+    ]
+  },
+  {
+    "runtime": "20.20.2",
+    "operation": "sync/0",
+    "metric": "output_blocks",
+    "parent": {
+      "n": 3,
+      "min": 808,
+      "median": 816,
+      "max": 824
+    },
+    "candidate": {
+      "n": 3,
+      "min": 800,
+      "median": 808,
+      "max": 808
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -16,
+      "median": -8,
+      "max": -8
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -1.9417475728155338,
+      "median": -0.9900990099009901,
+      "max": -0.9803921568627451
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "P-C",
+      "C-P",
+      "P-C"
+    ]
+  },
+  {
+    "runtime": "20.20.2",
+    "operation": "sync/0",
+    "metric": "peak_rss_kib",
+    "parent": {
+      "n": 3,
+      "min": 70148,
+      "median": 70208,
+      "max": 70872
+    },
+    "candidate": {
+      "n": 3,
+      "min": 68860,
+      "median": 69704,
+      "max": 70068
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -2012,
+      "median": -504,
+      "max": -80
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -2.838920871430184,
+      "median": -0.7178669097538742,
+      "max": -0.11404459143525118
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "P-C",
+      "C-P",
+      "P-C"
+    ]
+  },
+  {
+    "runtime": "20.20.2",
+    "operation": "sync/0",
+    "metric": "wall_ms",
+    "parent": {
+      "n": 3,
+      "min": 912.4710130272433,
+      "median": 914.2190649872646,
+      "max": 922.1584829501808
+    },
+    "candidate": {
+      "n": 3,
+      "min": 896.6159609844908,
+      "median": 906.8262620130554,
+      "max": 917.8357190685347
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -17.60310400277376,
+      "median": -15.332220937125385,
+      "max": 5.364706041291356
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -1.9254798632993921,
+      "median": -1.6626448946253096,
+      "max": 0.5879316673845051
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "P-C",
+      "C-P",
+      "P-C"
+    ]
+  },
+  {
+    "runtime": "20.20.2",
+    "operation": "sync/100",
+    "metric": "cpu_ms",
+    "parent": {
+      "n": 3,
+      "min": 173936.83000000002,
+      "median": 179313.492,
+      "max": 179494.03399999999
+    },
+    "candidate": {
+      "n": 3,
+      "min": 153541.561,
+      "median": 153950.206,
+      "max": 155520.75100000002
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -25363.285999999993,
+      "median": -23973.282999999967,
+      "max": -20395.26900000003
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -14.144661239434228,
+      "median": -13.35603332643355,
+      "max": -11.725675924989565
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "P-C",
+      "C-P",
+      "P-C"
+    ]
+  },
+  {
+    "runtime": "20.20.2",
+    "operation": "sync/100",
+    "metric": "input_blocks",
+    "parent": {
+      "n": 3,
+      "min": 0,
+      "median": 0,
+      "max": 0
+    },
+    "candidate": {
+      "n": 3,
+      "min": 0,
+      "median": 0,
+      "max": 8
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": 0,
+      "median": 0,
+      "max": 8
+    },
+    "paired_relative_change_percent": null,
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "P-C",
+      "C-P",
+      "P-C"
+    ]
+  },
+  {
+    "runtime": "20.20.2",
+    "operation": "sync/100",
+    "metric": "output_blocks",
+    "parent": {
+      "n": 3,
+      "min": 365464,
+      "median": 365600,
+      "max": 365672
+    },
+    "candidate": {
+      "n": 3,
+      "min": 115056,
+      "median": 115064,
+      "max": 115088
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -250616,
+      "median": -250512,
+      "max": -250400
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -68.53573694458422,
+      "median": -68.52078774617067,
+      "max": -68.51564039139286
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "P-C",
+      "C-P",
+      "P-C"
+    ]
+  },
+  {
+    "runtime": "20.20.2",
+    "operation": "sync/100",
+    "metric": "peak_rss_kib",
+    "parent": {
+      "n": 3,
+      "min": 143616,
+      "median": 146724,
+      "max": 148212
+    },
+    "candidate": {
+      "n": 3,
+      "min": 122160,
+      "median": 130920,
+      "max": 131496
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -26052,
+      "median": -15228,
+      "max": -12696
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -17.57752408711845,
+      "median": -10.378670156211662,
+      "max": -8.840240641711231
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "P-C",
+      "C-P",
+      "P-C"
+    ]
+  },
+  {
+    "runtime": "20.20.2",
+    "operation": "sync/100",
+    "metric": "wall_ms",
+    "parent": {
+      "n": 3,
+      "min": 173803.90288704075,
+      "median": 179167.83165407833,
+      "max": 179629.06030600425
+    },
+    "candidate": {
+      "n": 3,
+      "min": 152062.9384140484,
+      "median": 152332.37238100264,
+      "max": 154050.45088590123
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -26835.459273075685,
+      "median": -25578.60942010302,
+      "max": -21740.964472992346
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -14.97783336736879,
+      "median": -14.239683365558436,
+      "max": -12.508904640146262
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "P-C",
+      "C-P",
+      "P-C"
+    ]
+  },
+  {
+    "runtime": "24.19.0",
+    "operation": "sync/0",
+    "metric": "cpu_ms",
+    "parent": {
+      "n": 3,
+      "min": 707.637,
+      "median": 714.818,
+      "max": 777.0129999999999
+    },
+    "candidate": {
+      "n": 3,
+      "min": 715.3629999999999,
+      "median": 715.893,
+      "max": 722.644
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -54.368999999999915,
+      "median": 1.0750000000000455,
+      "max": 7.725999999999999
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -6.997180227357832,
+      "median": 0.15038793091388933,
+      "max": 1.0918027180602483
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "C-P",
+      "P-C",
+      "C-P"
+    ]
+  },
+  {
+    "runtime": "24.19.0",
+    "operation": "sync/0",
+    "metric": "input_blocks",
+    "parent": {
+      "n": 3,
+      "min": 0,
+      "median": 0,
+      "max": 0
+    },
+    "candidate": {
+      "n": 3,
+      "min": 0,
+      "median": 0,
+      "max": 0
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": 0,
+      "median": 0,
+      "max": 0
+    },
+    "paired_relative_change_percent": null,
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "C-P",
+      "P-C",
+      "C-P"
+    ]
+  },
+  {
+    "runtime": "24.19.0",
+    "operation": "sync/0",
+    "metric": "output_blocks",
+    "parent": {
+      "n": 3,
+      "min": 784,
+      "median": 792,
+      "max": 816
+    },
+    "candidate": {
+      "n": 3,
+      "min": 792,
+      "median": 792,
+      "max": 792
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -24,
+      "median": 0,
+      "max": 8
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -2.941176470588235,
+      "median": 0.0,
+      "max": 1.0204081632653061
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "C-P",
+      "P-C",
+      "C-P"
+    ]
+  },
+  {
+    "runtime": "24.19.0",
+    "operation": "sync/0",
+    "metric": "peak_rss_kib",
+    "parent": {
+      "n": 3,
+      "min": 79560,
+      "median": 79924,
+      "max": 80044
+    },
+    "candidate": {
+      "n": 3,
+      "min": 79344,
+      "median": 79460,
+      "max": 79708
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -464,
+      "median": -336,
+      "max": -216
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -0.5805515239477503,
+      "median": -0.4197691269801609,
+      "max": -0.27149321266968324
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "C-P",
+      "P-C",
+      "C-P"
+    ]
+  },
+  {
+    "runtime": "24.19.0",
+    "operation": "sync/0",
+    "metric": "wall_ms",
+    "parent": {
+      "n": 3,
+      "min": 783.1748690223321,
+      "median": 800.1888729631901,
+      "max": 876.1240378953516
+    },
+    "candidate": {
+      "n": 3,
+      "min": 790.0229649385437,
+      "median": 796.8641039915383,
+      "max": 808.5517060244456
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -67.57233187090605,
+      "median": -3.3247689716517925,
+      "max": 6.848095916211605
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -7.712644437108483,
+      "median": -0.41549802602725483,
+      "max": 0.8744018975941289
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "C-P",
+      "P-C",
+      "C-P"
+    ]
+  },
+  {
+    "runtime": "24.19.0",
+    "operation": "sync/100",
+    "metric": "cpu_ms",
+    "parent": {
+      "n": 3,
+      "min": 100205.645,
+      "median": 100205.66,
+      "max": 100346.285
+    },
+    "candidate": {
+      "n": 3,
+      "min": 87285.061,
+      "median": 88177.827,
+      "max": 88367.294
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -12920.584000000003,
+      "median": -12168.457999999999,
+      "max": -11838.366000000009
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -12.894067993874,
+      "median": -12.126465867670138,
+      "max": -11.814069185313492
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "C-P",
+      "P-C",
+      "C-P"
+    ]
+  },
+  {
+    "runtime": "24.19.0",
+    "operation": "sync/100",
+    "metric": "input_blocks",
+    "parent": {
+      "n": 3,
+      "min": 0,
+      "median": 0,
+      "max": 168
+    },
+    "candidate": {
+      "n": 3,
+      "min": 0,
+      "median": 0,
+      "max": 0
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -168,
+      "median": 0,
+      "max": 0
+    },
+    "paired_relative_change_percent": {
+      "n": 1,
+      "min": -100.0,
+      "median": -100.0,
+      "max": -100.0
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "C-P",
+      "P-C",
+      "C-P"
+    ]
+  },
+  {
+    "runtime": "24.19.0",
+    "operation": "sync/100",
+    "metric": "output_blocks",
+    "parent": {
+      "n": 3,
+      "min": 363024,
+      "median": 363032,
+      "max": 363064
+    },
+    "candidate": {
+      "n": 3,
+      "min": 112800,
+      "median": 113080,
+      "max": 113144
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -250232,
+      "median": -249944,
+      "max": -249920
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -68.92835893254589,
+      "median": -68.8505443166292,
+      "max": -68.83634841240112
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "C-P",
+      "P-C",
+      "C-P"
+    ]
+  },
+  {
+    "runtime": "24.19.0",
+    "operation": "sync/100",
+    "metric": "peak_rss_kib",
+    "parent": {
+      "n": 3,
+      "min": 246344,
+      "median": 252956,
+      "max": 259224
+    },
+    "candidate": {
+      "n": 3,
+      "min": 217560,
+      "median": 221888,
+      "max": 249540
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -41664,
+      "median": -24456,
+      "max": -3416
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -16.072585871678548,
+      "median": -9.927580943720976,
+      "max": -1.3504324862821993
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "C-P",
+      "P-C",
+      "C-P"
+    ]
+  },
+  {
+    "runtime": "24.19.0",
+    "operation": "sync/100",
+    "metric": "wall_ms",
+    "parent": {
+      "n": 3,
+      "min": 102977.08214796148,
+      "median": 103122.51003098208,
+      "max": 103230.59114499483
+    },
+    "candidate": {
+      "n": 3,
+      "min": 88646.85333799571,
+      "median": 89590.62864107545,
+      "max": 89746.61386210937
+    },
+    "paired_candidate_minus_parent": {
+      "n": 3,
+      "min": -14330.228809965774,
+      "median": -13531.88138990663,
+      "max": -13483.977282885462
+    },
+    "paired_relative_change_percent": {
+      "n": 3,
+      "min": -13.915939849000134,
+      "median": -13.12214121421319,
+      "max": -13.061997546779752
+    },
+    "pairs": [
+      1,
+      2,
+      3
+    ],
+    "orders": [
+      "C-P",
+      "P-C",
+      "C-P"
+    ]
+  }
+]

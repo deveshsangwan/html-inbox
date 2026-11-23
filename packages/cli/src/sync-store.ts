@@ -11,7 +11,7 @@ import { readInboxIdentity } from "./inbox-home";
 import { writeAtomicPrivateFileIfAbsent } from "./private-storage";
 import { isOwnedDirectory } from "./local-storage-checks";
 import { DurableFiles, checkDirectory, createStorageCounters, hasCode, openPrivateFile, optionalStat, readPrivateFile, withStoreLock, type StorageTestHooks } from "./sync-files";
-import { type SyncLedger, type ManagedRecord, type DurableReceipt, type OwnerAnchor, parseLedger, parseReceipt, outboxKey, receiptKey } from "./sync-ledger";
+import { type SyncLedger, type ManagedRecord, type DurableReceipt, type OutboxEntry, type OwnerAnchor, parseLedger, parseReceipt, outboxKey, receiptKey } from "./sync-ledger";
 import { readManagedLedgerBytes } from "./sync-ledger-reader";
 import { type OriginState, type OriginGrant, type SyncRoute, type RouteAuthorization, type CompleteInventory, SYNC_LIMITS, SYNC_DEFAULTS, IncompleteSyncHistoryError, canonicalKey, metadataEncoding, metadataProjection,
   parseOriginState, parseOriginalMetadata, parseAuthorization, parseRoute, parseCompleteInventory, sha256, signOriginState, stateFingerprint, sameImmutableDescriptor, verifyOriginState,
@@ -718,36 +718,91 @@ export class ManagedSyncStore {
   }
 
   async acknowledge(authorization: unknown, value: unknown): Promise<void> {
+    return this.acknowledgeBatch(authorization, [value]);
+  }
+
+  async acknowledgeBatch(authorization: unknown, values: unknown): Promise<void> {
     const auth = parseAuthorization(authorization);
-    const receipt = parseReceipt(value);
+    await this.acknowledgeReceipts(auth, parseReceiptPage(values));
+  }
+
+  /**
+   * Holdings acknowledgements answer one authenticated holdings page for states requested from an inventory cut.
+   * A receipt for a requested state that a newer local deletion has since overtaken confirms nothing and is skipped.
+   */
+  async acknowledgeHoldings(authorization: unknown, storageIncarnation: unknown, members: unknown): Promise<void> {
+    const auth = parseAuthorization(authorization);
+    const incarnation = parseUuid(storageIncarnation);
+    if (!Array.isArray(members) || members.length < 1 || members.length > SYNC_LIMITS.manifestPage) {
+      throw new Error(`Acknowledgement batch requires 1 to ${SYNC_LIMITS.manifestPage} receipts`);
+    }
+
+    const page = members.map((value) => {
+      const member = parseObject(value, "holdings acknowledgement");
+      assertExactKeys(member, ["requested", "receipt"]);
+      return { requested: parseOriginState(member.requested), receipt: member.receipt };
+    });
+    const receipts = parseReceiptPage(page.map((member) => member.receipt));
+    for (const [index, receipt] of receipts.entries()) {
+      if (receipt.storageIncarnation !== incarnation || receipt.fingerprint !== stateFingerprint(page[index].requested)) {
+        throw new Error("Holdings receipt does not answer the requested state and receiver incarnation");
+      }
+    }
+
+    await this.acknowledgeReceipts(auth, receipts, true);
+  }
+
+  private async acknowledgeReceipts(auth: RouteAuthorization, receipts: DurableReceipt[], canSkipOvertaken = false): Promise<void> {
     await this.mutate(async (ledger) => {
-      const route = this.authorize(ledger, auth, receipt.originState, "outbound");
-      if (receipt.receiverInboxId !== route.destinationInboxId || receipt.destinationInboxId !== route.destinationInboxId || receipt.routeId !== route.id || receipt.revision !== route.revision) {
-        throw new Error("Receipt receiver or route binding conflict");
+      this.authorizeRoute(ledger, auth, "outbound");
+      let changed = false;
+      for (const receipt of receipts) {
+        const route = this.authorize(ledger, auth, receipt.originState, "outbound");
+        if (receipt.receiverInboxId !== route.destinationInboxId || receipt.destinationInboxId !== route.destinationInboxId || receipt.routeId !== route.id || receipt.revision !== route.revision) {
+          throw new Error("Receipt receiver or route binding conflict");
+        }
+
+        if (receipt.disposition === "superseded" && receipt.originState.state !== "deleted") {
+          throw new Error("Superseded live state does not prove custody");
+        }
+
+        const key = canonicalKey(receipt.originState.originInboxId, receipt.originState.originDocumentId);
+        const entry = ledger.outbox[outboxKey(route.id, route.revision, key)];
+        const record = ledger.records[key];
+        if (canSkipOvertaken && isOvertakenReceipt(receipt, entry, record)) {
+          continue;
+        }
+
+        if (!entry || entry.disposition === "retired" || entry.fingerprint !== receipt.fingerprint || !record || stateFingerprint(record) !== receipt.fingerprint) {
+          throw new Error("Receipt does not acknowledge the current queued state");
+        }
+
+        if (entry.receiverStorageIncarnation !== null && entry.receiverStorageIncarnation !== receipt.storageIncarnation) {
+          throw new Error("Historical receipt belongs to a replaced receiver storage incarnation");
+        }
+
+        const id = receiptKey(receipt);
+        if (entry.disposition === "confirmed" && entry.receiptDisposition === receipt.disposition && entry.lastError === null &&
+            entry.receiverStorageIncarnation === receipt.storageIncarnation && JSON.stringify(ledger.receipts[id]) === JSON.stringify(receipt)) {
+          continue;
+        }
+
+        entry.receiverStorageIncarnation = receipt.storageIncarnation;
+        ledger.receipts[id] = receipt;
+        entry.disposition = "confirmed";
+        entry.receiptDisposition = receipt.disposition;
+        entry.lastError = null;
+        changed = true;
       }
 
-      if (receipt.disposition === "superseded" && receipt.originState.state !== "deleted") {
-        throw new Error("Superseded live state does not prove custody");
+      if (!changed) {
+        return;
       }
 
-      const key = canonicalKey(receipt.originState.originInboxId, receipt.originState.originDocumentId);
-      const entry = ledger.outbox[outboxKey(route.id, route.revision, key)];
-      if (!entry || entry.fingerprint !== receipt.fingerprint) {
-        throw new Error("Receipt does not acknowledge the current queued state");
-      }
-
-      if (entry.receiverStorageIncarnation !== null && entry.receiverStorageIncarnation !== receipt.storageIncarnation) {
-        throw new Error("Historical receipt belongs to a replaced receiver storage incarnation");
-      }
-
-      entry.receiverStorageIncarnation = receipt.storageIncarnation;
-      ledger.receipts[receiptKey(receipt)] = receipt;
+      // One durable replacement makes receipt evidence and retirement visible together.
+      // A pre-rename failure leaves pending work; post-rename uncertainty requires recovery.
       await this.commit(ledger);
-      await this.files.event("receipt-before-retirement");
-      entry.disposition = "confirmed";
-      entry.receiptDisposition = receipt.disposition;
-      entry.lastError = null;
-      await this.commit(ledger);
+      await this.files.event("acknowledgements-committed");
     });
   }
 
@@ -1836,6 +1891,54 @@ function readerMetadata(record: ManagedRecord, localInboxId: string): DocumentMe
   return { ...metadata, origin: { schemaVersion: 1, inboxId: record.originInboxId, documentId: record.originDocumentId, historyEpoch: record.historyEpoch, version: record.version,
     sha256: record.sha256, byteLength: record.byteLength, metadataSha256: record.metadataSha256, signature: record.signature,
     detached: !record.contributions.some((contribution) => contribution.state === "attached"), originalMetadata: metadataProjection(record.metadata) } };
+}
+
+/** Page-wide checks run before any member can be skipped, so a skip cannot hide a mixed or conflicting page. */
+function parseReceiptPage(values: unknown): DurableReceipt[] {
+  if (!Array.isArray(values) || values.length < 1 || values.length > SYNC_LIMITS.manifestPage) {
+    throw new Error(`Acknowledgement batch requires 1 to ${SYNC_LIMITS.manifestPage} receipts`);
+  }
+
+  const receipts = values.map(parseReceipt);
+  // One page answers one authenticated holdings response, so it speaks for a single receiver incarnation.
+  if (receipts.some((receipt) => receipt.storageIncarnation !== receipts[0].storageIncarnation)) {
+    throw new Error("Acknowledgement batch mixes receiver storage incarnations");
+  }
+
+  const encodings = new Map<string, string>();
+  for (const receipt of receipts) {
+    const key = canonicalKey(receipt.originState.originInboxId, receipt.originState.originDocumentId);
+    const encoded = JSON.stringify(receipt);
+    const previous = encodings.get(key);
+    if (previous !== undefined && previous !== encoded) {
+      throw new Error("Conflicting receipts for one queued obligation");
+    }
+
+    encodings.set(key, encoded);
+  }
+
+  return receipts;
+}
+
+/**
+ * The only permitted overtaking is a live receipt answered for a state that a newer local tombstone of the same
+ * immutable document has replaced. Deletion is terminal, so any other pairing (a deleted receipt against a newer live
+ * record, live against live, deleted against deleted) is a history conflict and stays fail-closed.
+ */
+export function isOvertakenReceipt(receipt: DurableReceipt, entry: OutboxEntry | undefined, record: ManagedRecord | undefined): boolean {
+  if (receipt.originState.state !== "live" || record?.state !== "deleted") {
+    return false;
+  }
+
+  if (!entry || entry.disposition === "retired" || entry.fingerprint !== stateFingerprint(record)) {
+    return false;
+  }
+
+  if (entry.receiverStorageIncarnation !== null && entry.receiverStorageIncarnation !== receipt.storageIncarnation) {
+    return false;
+  }
+
+  return sameImmutableDescriptor(record, receipt.originState) && record.version > receipt.originState.version;
 }
 
 function isVisible(record: ManagedRecord): boolean {

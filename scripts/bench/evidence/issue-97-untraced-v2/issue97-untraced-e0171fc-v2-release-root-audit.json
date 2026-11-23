@@ -1,0 +1,33 @@
+{
+  "state": "RELEASE_AND_RESTORATION_ACCEPTED",
+  "receipt_sha256": "d6a5a01c275aa5ccd0b56173e1412459dba4b712004944e11fee81b48cfa3856",
+  "owner_audit_sha256": "126a3b7418144dccf5a8af5ce9e61ada9123ae50d6ddcad3a7904d6990913c78",
+  "owner_release_before_both_deadlines": true,
+  "native_exit": 0,
+  "independent_root_check_monotonic": 944916.178005422,
+  "current_head": "e0171fc548d449eb1de1e76975155fb699449d79",
+  "tracked": 544,
+  "owned_entries": 593,
+  "generated_current_candidate": 393,
+  "saved_parent_and_candidate_source_generated_verified": true,
+  "semantic_index": true,
+  "tools_frozen_verified": 1784,
+  "runtime_hashes_verified": 2,
+  "command_log_hashes_verified": 42,
+  "recorded_identity_count": 102,
+  "recorded_groups": 49,
+  "remaining": [],
+  "cache_changed_permitted_paths": [
+    "cli.js.cache",
+    "index.js.cache",
+    "loaders/relocate-loader.js.cache",
+    "loaders/shebang-loader.js.cache"
+  ],
+  "limits": [
+    "Root check after owner release does not replace original owner audit timing",
+    "Only recorded identities; no universal short-lived coverage",
+    "No extra signals, binds, cleanup, cache restore or application command",
+    "Original owner metadata-parser stop remains disclosed; no workload retry",
+    "Raw-index snapshots differ; semantic equality only"
+  ]
+}

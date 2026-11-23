@@ -1,0 +1,7 @@
+{
+  "exit_code": 1,
+  "elapsed_seconds": 9.539643948082812,
+  "finished_monotonic": 901568.588582757,
+  "within_outer_fixed_final_deadline": true,
+  "launcher_pid": 3016096
+}

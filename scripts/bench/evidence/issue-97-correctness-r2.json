@@ -1,0 +1,243 @@
+{
+  "grant": "root-97-correctness-ddc9f62-20261108-r2",
+  "head": "ddc9f6274844186a8743a114ed78b6d5a7698333",
+  "source_pin": "a3e087c3fc8bafdf3d604a1737bc9677ee5a0d2a",
+  "base": "b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad",
+  "result": "all eight commands passed once; LOCAL released after cleanup",
+  "started_utc": "2026-11-08T21:53:30.793071+00:00",
+  "application_budget_seconds": 900,
+  "cleanup_allowance_seconds": 120,
+  "execution_seconds": 223.85163550497964,
+  "within_absolute_final_deadline": true,
+  "runtime_binary_hashes": {
+    "20.20.2": {
+      "path": "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+      "sha256": "6295488653f0d93b0a157841746fef7e72cc4328cfb60c4bbe0ca2668a836ffd",
+      "matches_prelaunch": true
+    },
+    "24.19.0": {
+      "path": "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+      "sha256": "bc17c508ffeed0ec622934f9b7fa72f8e78da65350e63c3eceb56fa688aa5e12",
+      "matches_prelaunch": true
+    }
+  },
+  "tooling": {
+    "corepack_pnpm_sha256": "7c2a67995976b5b592b611d8b236e3b0633bd654fb49aedd96c6eb7ce04c9cbb",
+    "pinned_pnpm_version": "pnpm@11.7.0",
+    "cached_pnpm_version": "11.7.0",
+    "reused_engine_sha256": "87d98accb4a6f69308bd27221e8e53bfe65014fd155229fb02d0e04fbe4aee68",
+    "sequence_sha256": "cfa939ea53ceef28c2f5e77209f030b295a2a3e56ef440feadbb282d532de61a"
+  },
+  "source_before_and_after": {
+    "file_count": 515,
+    "sha256_of_sorted_hash_manifest": "8c8fe2aedf044e5275ccf4ac01ed8e2cd49746f6242f83947e3382de77687189"
+  },
+  "compiled_bytes_for_both_runtimes": {
+    "file_count": 392,
+    "sha256_of_sorted_hash_manifest": "1f505ead0d178e09a3504a0f43ced33e0fbb75ea0334b750a6f40e686d21de9d"
+  },
+  "bundle_bytes_for_both_runtimes": {
+    "packages/cli/bundle/index.js": {
+      "sha256": "c20c5f95415a30cfe1ecf58ac878fcde81d3190550d8f2840391d93ba4db592f",
+      "bytes": 1277958
+    }
+  },
+  "commands": [
+    {
+      "label": "node20-version",
+      "argv": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--version"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "cap_seconds": 15,
+      "elapsed_seconds": 0.06913993007037789,
+      "exit": 0,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "node24-version",
+      "argv": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--version"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "cap_seconds": 15,
+      "elapsed_seconds": 0.05703353590797633,
+      "exit": 0,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "install",
+      "argv": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/corepack/dist/pnpm.js",
+        "install",
+        "--frozen-lockfile"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "cap_seconds": 120,
+      "elapsed_seconds": 4.621113768080249,
+      "exit": 0,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "typecheck",
+      "argv": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/corepack/dist/pnpm.js",
+        "typecheck"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "cap_seconds": 60,
+      "elapsed_seconds": 1.6682721939869225,
+      "exit": 0,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "build",
+      "argv": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/corepack/dist/pnpm.js",
+        "build"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "cap_seconds": 60,
+      "elapsed_seconds": 1.9899317850358784,
+      "exit": 0,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "bundle",
+      "argv": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/corepack/dist/pnpm.js",
+        "--filter",
+        "html-inbox",
+        "bundle"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "cap_seconds": 120,
+      "elapsed_seconds": 2.499884422053583,
+      "exit": 0,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "node20-tests",
+      "argv": [
+        "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-store.test.js",
+        "packages/cli/dist/sync-storage-faults.test.js",
+        "packages/cli/dist/sync-protocol-faults.test.js"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "cap_seconds": 240,
+      "elapsed_seconds": 112.25801315100398,
+      "exit": 0,
+      "group_joined": true,
+      "fixture_removed": true
+    },
+    {
+      "label": "node24-tests",
+      "argv": [
+        "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "packages/cli/dist/sync-store.test.js",
+        "packages/cli/dist/sync-storage-faults.test.js",
+        "packages/cli/dist/sync-protocol-faults.test.js"
+      ],
+      "cwd": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks",
+      "cap_seconds": 240,
+      "elapsed_seconds": 99.37111891398672,
+      "exit": 0,
+      "group_joined": true,
+      "fixture_removed": true
+    }
+  ],
+  "test_results": {
+    "node20-tests": {
+      "format": "TAP",
+      "summary": {
+        "tests": 178,
+        "pass": 178,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    "node24-tests": {
+      "format": "Node default spec reporter",
+      "summary": {
+        "tests": 178,
+        "pass": 178,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    }
+  },
+  "reporter_note": "Unchanged granted argv. Node20 emitted TAP; Node24 emitted its default spec report, retained verbatim in node24-tests.tap. No reporter rerun or output conversion.",
+  "unrun_commands": [],
+  "source_unchanged": true,
+  "emitted_bytes_unchanged": true,
+  "cleanup": {
+    "observed_pid_start_identity_count": 304,
+    "remaining_owned_identities": [],
+    "outer_identity_absent": true,
+    "owned_command_roots_removed": true,
+    "each_command_group_joined": true,
+    "each_command_fixture_removed": true,
+    "retained_tool_cache": {
+      "root": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-correctness-ddc9f62-attempt2/tool-cache",
+      "files": 0,
+      "logical_bytes": 0
+    }
+  },
+  "raw_artifact_directory": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-correctness-ddc9f62-attempt2",
+  "raw_artifact_sha256": {
+    "adapter.diff": "3642fd30c48efe7990d3e21c0fc5bd1cea528a2182a1475b2ef3959c0232a28f",
+    "build.stderr": "52aa23ae94ef591f86df0a1de48709f5620eaacea41124e19fa6f2c717b99e88",
+    "build.tap": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bundle.stderr": "67bd102e126ea4f971fd8b4a6688e53cb1118030070cca8dbb428da1df7ce81b",
+    "bundle.tap": "1b39d927ec2b2ac691b5d3fc47e9594dd15ae34c83ccf17e15228ed6e43886b6",
+    "current-command.json": "58c8d34face0c353b740aa161b3752e05d568b747e3062babe064804da06211a",
+    "execute-granted-sequence.py": "cfa939ea53ceef28c2f5e77209f030b295a2a3e56ef440feadbb282d532de61a",
+    "executed-manifest.json": "f26ffaf4c66ce44af6f64c1f91cc80e620a5eb44202f95fa2f46c8b3cc636956",
+    "execution.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "execution.stdout": "e0ff20dd04a9b9064ade42bc061a3265dd64a66566e9674671b3ff52fc9868bb",
+    "independent-audit.json": "1f8352934b3fe942211a969ab70659749fd45e8df079f9dfd136a9997608ca82",
+    "install.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "install.tap": "b03b248543648c0d583d55b3d534b5f56c969fbe8a9204a21f4b231906a02725",
+    "node20-tests.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "node20-tests.tap": "958383ba1f8de9d7b819b87ba60423137752bfe679ead2639fef0902daf4287a",
+    "node20-version.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "node20-version.tap": "fa2f297fd185bb1c8acba036117f05240eaa1f42eeb8902e870982523ae06edf",
+    "node24-tests.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "node24-tests.tap": "b0eda351359aff9cdef16b197dccaed82a5934862f8f4521e85d70202f37cfe8",
+    "node24-version.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "node24-version.tap": "b7677d3ec37ee1897ba07dc2cfe8292fe421c9ac93396cca5bbece486d1a2a41",
+    "outer-exit.json": "a00128425a4d6a7ecd1846e3916a8dc968bd80d873e8ec249af20ba937dbc075",
+    "outer-identity.json": "239c725822384eac885a66afe4a06d79601ffe1093cbed2f16d48cf0f49a309a",
+    "postrun-runtime-hashes.json": "52db179a4be6528c9853a556f550ddba107366844715c568f157d959af4f89f3",
+    "prelaunch-runtime-hashes.json": "c5507d4bdaaf7f628176c633d7364ba63ce59f73a28d3f2b02bac4c708afcb47",
+    "receipt.json": "97ab80a0364c85ba45a65e081ecb4b058cdf2e5697785e49ac2026a0508ca95a",
+    "reused-execution.py": "87d98accb4a6f69308bd27221e8e53bfe65014fd155229fb02d0e04fbe4aee68",
+    "review.json": "c7a2292ffa52f9fb236dfe59ea6c317402345bf02824c44011c453fa7302477b",
+    "typecheck.stderr": "7491e964fffdba7e79dcde458b279b9861608837987ef50fffd72318c94a2c65",
+    "typecheck.tap": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "environment_selection": "Exact Node24.19.0 bin first on PATH for tooling; absolute exact20/24 test binaries; private per-command HOME/TMPDIR/XDG/catalog; pinned cached Corepack pnpm11.7.0; no inherited application config or NODE_OPTIONS. Exact environment and argv in executed-manifest.json and original receipt command rows.",
+  "no_performance_claim": true,
+  "reviewers_launched": false
+}

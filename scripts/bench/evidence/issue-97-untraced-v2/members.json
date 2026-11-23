@@ -1,0 +1,1123 @@
+{
+  "kind": "archive members; original copies and explicit extracts distinguished",
+  "members": [
+    {
+      "member": "runner/01-node20.20.2-repeat-pair1-counts0-100-parent/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/01-node20.20.2-repeat-pair1-counts0-100-parent/environment.json",
+      "bytes": 2353,
+      "sha256": "42d0b8bedcee37921dd6df2b069ad810d5f2e634514c89ac019b8cbdd3cb286c",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/01-node20.20.2-repeat-pair1-counts0-100-parent/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/01-node20.20.2-repeat-pair1-counts0-100-parent/samples.jsonl",
+      "bytes": 6296,
+      "sha256": "1453bf4a2e30c0e473b72f03e9f353e1d2c1b020cdb810d5c090598f0a2af76d",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/01-node20.20.2-repeat-pair1-counts0-100-parent/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/01-node20.20.2-repeat-pair1-counts0-100-parent/summary.json",
+      "bytes": 2106,
+      "sha256": "abf244fb5a6d072345027888fc60bb33d5a515b62fa2183467ebc3ceb23621cd",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/01-node20.20.2-repeat-pair1-counts0-100-parent/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/01-node20.20.2-repeat-pair1-counts0-100-parent/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/02-node20.20.2-repeat-pair1-counts0-100-candidate/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/02-node20.20.2-repeat-pair1-counts0-100-candidate/environment.json",
+      "bytes": 2010,
+      "sha256": "4824357b0f2e142098835a98708cdb6b4e7a8c7e1a0b9494846e66a6f88e28b0",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/02-node20.20.2-repeat-pair1-counts0-100-candidate/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/02-node20.20.2-repeat-pair1-counts0-100-candidate/samples.jsonl",
+      "bytes": 6274,
+      "sha256": "533c5520b1f8047be724a1fb1c676a69da28b0f8ad556f6fbac218fce8aa09ed",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/02-node20.20.2-repeat-pair1-counts0-100-candidate/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/02-node20.20.2-repeat-pair1-counts0-100-candidate/summary.json",
+      "bytes": 2079,
+      "sha256": "0d74467ae80f7d5a9c9504c62ea3ea83fbe2cbf54f763ac081b674b6ecdb01da",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/02-node20.20.2-repeat-pair1-counts0-100-candidate/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/02-node20.20.2-repeat-pair1-counts0-100-candidate/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/03-node20.20.2-repeat-pair2-counts0-100-candidate/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/03-node20.20.2-repeat-pair2-counts0-100-candidate/environment.json",
+      "bytes": 2010,
+      "sha256": "e9f399c6c151939b10fd4f2fa95b5e39ae53b5d27c38c867b85772173eba03c0",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/03-node20.20.2-repeat-pair2-counts0-100-candidate/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/03-node20.20.2-repeat-pair2-counts0-100-candidate/samples.jsonl",
+      "bytes": 6291,
+      "sha256": "9c88f59989367955ce3890f3dc2a9a131fcc2acbac4b1f690e2b77260c717b8f",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/03-node20.20.2-repeat-pair2-counts0-100-candidate/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/03-node20.20.2-repeat-pair2-counts0-100-candidate/summary.json",
+      "bytes": 2100,
+      "sha256": "63a633870bc71ff797248f60b32e04a2c5871f13a7a35b9a78c981d8b8168166",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/03-node20.20.2-repeat-pair2-counts0-100-candidate/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/03-node20.20.2-repeat-pair2-counts0-100-candidate/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/04-node20.20.2-repeat-pair2-counts0-100-parent/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/04-node20.20.2-repeat-pair2-counts0-100-parent/environment.json",
+      "bytes": 2353,
+      "sha256": "2bc8e121e03ed9c6a0252299ba9cc46f0a88dccb1ac8f41b1c50fe5a8b07e816",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/04-node20.20.2-repeat-pair2-counts0-100-parent/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/04-node20.20.2-repeat-pair2-counts0-100-parent/samples.jsonl",
+      "bytes": 6285,
+      "sha256": "04be1b4a2cf6c4a336a11ca2dc98c1c8d0a89598f65a3d72e71af4d43af49f21",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/04-node20.20.2-repeat-pair2-counts0-100-parent/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/04-node20.20.2-repeat-pair2-counts0-100-parent/summary.json",
+      "bytes": 2091,
+      "sha256": "0a0672ab942052742516a339e0b91e16c63c156b6d1684c51fb8f5ae971d6f92",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/04-node20.20.2-repeat-pair2-counts0-100-parent/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/04-node20.20.2-repeat-pair2-counts0-100-parent/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/05-node20.20.2-repeat-pair3-counts0-100-parent/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/05-node20.20.2-repeat-pair3-counts0-100-parent/environment.json",
+      "bytes": 2353,
+      "sha256": "07003069acd12d45e71232228b41efb8f5dee76553f035c65f65b34b5f107075",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/05-node20.20.2-repeat-pair3-counts0-100-parent/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/05-node20.20.2-repeat-pair3-counts0-100-parent/samples.jsonl",
+      "bytes": 6306,
+      "sha256": "116df6a084924fbc308d6f996fb3ffc5b9aff1a99052645283c10b45b6c5e91f",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/05-node20.20.2-repeat-pair3-counts0-100-parent/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/05-node20.20.2-repeat-pair3-counts0-100-parent/summary.json",
+      "bytes": 2103,
+      "sha256": "f8b3c94942e3064316689669e932332587860ffd35c28f71e80a5615070268a9",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/05-node20.20.2-repeat-pair3-counts0-100-parent/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/05-node20.20.2-repeat-pair3-counts0-100-parent/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/06-node20.20.2-repeat-pair3-counts0-100-candidate/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/06-node20.20.2-repeat-pair3-counts0-100-candidate/environment.json",
+      "bytes": 2010,
+      "sha256": "81aea96c5feed4fdab526251072f1c0cde6b352dbc2802b831119897b40a488b",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/06-node20.20.2-repeat-pair3-counts0-100-candidate/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/06-node20.20.2-repeat-pair3-counts0-100-candidate/samples.jsonl",
+      "bytes": 6287,
+      "sha256": "a4498944f80f999cd6c6025b703bdbf977f87a8d55da1d2afed1909a227d8267",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/06-node20.20.2-repeat-pair3-counts0-100-candidate/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/06-node20.20.2-repeat-pair3-counts0-100-candidate/summary.json",
+      "bytes": 2100,
+      "sha256": "812f7bb151abeb7862bc241e3ce3109417b9ab6d9d16cd15f7505813089c295d",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/06-node20.20.2-repeat-pair3-counts0-100-candidate/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/06-node20.20.2-repeat-pair3-counts0-100-candidate/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/07-node24.19.0-repeat-pair1-counts0-100-candidate/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/07-node24.19.0-repeat-pair1-counts0-100-candidate/environment.json",
+      "bytes": 2186,
+      "sha256": "fce72c600d1e562741f1332cd0096dd864be6614c8ec921e67b8994b474c5b5d",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/07-node24.19.0-repeat-pair1-counts0-100-candidate/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/07-node24.19.0-repeat-pair1-counts0-100-candidate/samples.jsonl",
+      "bytes": 6282,
+      "sha256": "9c3bc29ed68f09b756074c8142738a82583dd2f853cfe9a7af8e9d12a513b79d",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/07-node24.19.0-repeat-pair1-counts0-100-candidate/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/07-node24.19.0-repeat-pair1-counts0-100-candidate/summary.json",
+      "bytes": 2088,
+      "sha256": "14e7a10a5702b44abb78861edbebbe17f349ddb63c5f4b369adae4e859da45ac",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/07-node24.19.0-repeat-pair1-counts0-100-candidate/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/07-node24.19.0-repeat-pair1-counts0-100-candidate/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/08-node24.19.0-repeat-pair1-counts0-100-parent/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/08-node24.19.0-repeat-pair1-counts0-100-parent/environment.json",
+      "bytes": 2529,
+      "sha256": "e1fbef8412d27590e6219d5e46c16fd090d101d7eacb9f9320752a99c2410120",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/08-node24.19.0-repeat-pair1-counts0-100-parent/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/08-node24.19.0-repeat-pair1-counts0-100-parent/samples.jsonl",
+      "bytes": 6279,
+      "sha256": "73a4b2fbe165ca9f864234e7144cfb70f07183ccbbdc2ec9326f216debcaa327",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/08-node24.19.0-repeat-pair1-counts0-100-parent/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/08-node24.19.0-repeat-pair1-counts0-100-parent/summary.json",
+      "bytes": 2091,
+      "sha256": "739f5fdec3e53fee6e32a5a0ee9fdacd8712263db9b7d5ffb38710d6d75345f7",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/08-node24.19.0-repeat-pair1-counts0-100-parent/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/08-node24.19.0-repeat-pair1-counts0-100-parent/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/09-node24.19.0-repeat-pair2-counts0-100-parent/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/09-node24.19.0-repeat-pair2-counts0-100-parent/environment.json",
+      "bytes": 2529,
+      "sha256": "fa3c23e15397b7c7bb1c1cd7401dde4cd79e0554591e94ec9e65045b72a4bf0b",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/09-node24.19.0-repeat-pair2-counts0-100-parent/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/09-node24.19.0-repeat-pair2-counts0-100-parent/samples.jsonl",
+      "bytes": 6280,
+      "sha256": "3c5790fb382a8239ddfdad73db2c140aac88f95565466d9b02830114476eef81",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/09-node24.19.0-repeat-pair2-counts0-100-parent/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/09-node24.19.0-repeat-pair2-counts0-100-parent/summary.json",
+      "bytes": 2091,
+      "sha256": "eebe4e919524a0a79a49b3f0bbc2e48589bbe64af259418b5051830803119bbb",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/09-node24.19.0-repeat-pair2-counts0-100-parent/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/09-node24.19.0-repeat-pair2-counts0-100-parent/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/10-node24.19.0-repeat-pair2-counts0-100-candidate/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/10-node24.19.0-repeat-pair2-counts0-100-candidate/environment.json",
+      "bytes": 2186,
+      "sha256": "998ce5427d89f87bc764899e661ca14fc0eba7197bcb1c3fbb7058daa46e7e8b",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/10-node24.19.0-repeat-pair2-counts0-100-candidate/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/10-node24.19.0-repeat-pair2-counts0-100-candidate/samples.jsonl",
+      "bytes": 6266,
+      "sha256": "a3c4a50a5b72054fd039692a121073212ff95cd97342c9b05850818a8cb931ed",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/10-node24.19.0-repeat-pair2-counts0-100-candidate/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/10-node24.19.0-repeat-pair2-counts0-100-candidate/summary.json",
+      "bytes": 2067,
+      "sha256": "d0c62ea8b8b2a8580f47df0ec81e81143ecce90ab92ae8a5724674d15cad09fc",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/10-node24.19.0-repeat-pair2-counts0-100-candidate/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/10-node24.19.0-repeat-pair2-counts0-100-candidate/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/11-node24.19.0-repeat-pair3-counts0-100-candidate/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/11-node24.19.0-repeat-pair3-counts0-100-candidate/environment.json",
+      "bytes": 2186,
+      "sha256": "e33c99b8eaf1952c169e58bce711266dbdcdabd79efb3f5f423cdc5effbae131",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/11-node24.19.0-repeat-pair3-counts0-100-candidate/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/11-node24.19.0-repeat-pair3-counts0-100-candidate/samples.jsonl",
+      "bytes": 6285,
+      "sha256": "465e6194e45e1dee75cf9a0e5acd03abe8c038bb7eaf99bdb4f2538ce47d3c44",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/11-node24.19.0-repeat-pair3-counts0-100-candidate/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/11-node24.19.0-repeat-pair3-counts0-100-candidate/summary.json",
+      "bytes": 2127,
+      "sha256": "4bd594a42539bfd11ebe0899ffb8614370f9e33585db9edfa1430e4d66de4d9b",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/11-node24.19.0-repeat-pair3-counts0-100-candidate/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/11-node24.19.0-repeat-pair3-counts0-100-candidate/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/12-node24.19.0-repeat-pair3-counts0-100-parent/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/12-node24.19.0-repeat-pair3-counts0-100-parent/environment.json",
+      "bytes": 2529,
+      "sha256": "8f714c89bebd6966ff6eaca1573e410f94107abcaafff0a0adb05bfbacb1d22a",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/12-node24.19.0-repeat-pair3-counts0-100-parent/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/12-node24.19.0-repeat-pair3-counts0-100-parent/samples.jsonl",
+      "bytes": 6287,
+      "sha256": "cf8946c823af30b65829ad44182d68329f005f01056b8f685723725b9b4b06f6",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/12-node24.19.0-repeat-pair3-counts0-100-parent/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/12-node24.19.0-repeat-pair3-counts0-100-parent/summary.json",
+      "bytes": 2070,
+      "sha256": "a7b844b42a0896d2ebb6afe976f51313e12651e31585bc66dd2f018f52dc1742",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/12-node24.19.0-repeat-pair3-counts0-100-parent/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/12-node24.19.0-repeat-pair3-counts0-100-parent/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/13-node20.20.2-multipage-pair1-counts129-parent/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/13-node20.20.2-multipage-pair1-counts129-parent/environment.json",
+      "bytes": 2346,
+      "sha256": "dc55de0c89f99418513a606f329f3e8b59f9468fc25a53576b95cfbf372a0505",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/13-node20.20.2-multipage-pair1-counts129-parent/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/13-node20.20.2-multipage-pair1-counts129-parent/samples.jsonl",
+      "bytes": 3540,
+      "sha256": "42b521a1519a785ddf05439e89b5548d7f67b50891d138a94205ecb3fde7c973",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/13-node20.20.2-multipage-pair1-counts129-parent/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/13-node20.20.2-multipage-pair1-counts129-parent/summary.json",
+      "bytes": 1151,
+      "sha256": "4486920eb43db882e5e1723e1236884b42ae66202d947791eb2caef2f6ba6b5c",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/13-node20.20.2-multipage-pair1-counts129-parent/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/13-node20.20.2-multipage-pair1-counts129-parent/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/14-node20.20.2-multipage-pair1-counts129-candidate/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/14-node20.20.2-multipage-pair1-counts129-candidate/environment.json",
+      "bytes": 2003,
+      "sha256": "4405318ed8fc8179bb6f03c034d00edbf37411d35a219d1819b3749e3e3b8b4a",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/14-node20.20.2-multipage-pair1-counts129-candidate/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/14-node20.20.2-multipage-pair1-counts129-candidate/samples.jsonl",
+      "bytes": 3544,
+      "sha256": "918fc5745cb7414caddf6332dbb3a1182b182512adf3dfcc57dcd704aa45e813",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/14-node20.20.2-multipage-pair1-counts129-candidate/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/14-node20.20.2-multipage-pair1-counts129-candidate/summary.json",
+      "bytes": 1163,
+      "sha256": "d25ffe2df5d6e066b8e05e144d4e6cf31429b3ba3f72c5bc5cadcc7b627969c1",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/14-node20.20.2-multipage-pair1-counts129-candidate/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/14-node20.20.2-multipage-pair1-counts129-candidate/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/15-node24.19.0-multipage-pair1-counts129-candidate/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/15-node24.19.0-multipage-pair1-counts129-candidate/environment.json",
+      "bytes": 2179,
+      "sha256": "41395eabb380e5523c1893f618423f3babe1fe96bbed60cab281542112f74bf2",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/15-node24.19.0-multipage-pair1-counts129-candidate/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/15-node24.19.0-multipage-pair1-counts129-candidate/samples.jsonl",
+      "bytes": 3532,
+      "sha256": "dc7a1c3d07c550454e2b4d573e59669020cbcde497f91d8f90839d6b43eb3263",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/15-node24.19.0-multipage-pair1-counts129-candidate/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/15-node24.19.0-multipage-pair1-counts129-candidate/summary.json",
+      "bytes": 1166,
+      "sha256": "2fe532635eade4a25ce69f12fb807f7996985460181a397a5049ad4918aa8b4f",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/15-node24.19.0-multipage-pair1-counts129-candidate/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/15-node24.19.0-multipage-pair1-counts129-candidate/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/16-node24.19.0-multipage-pair1-counts129-parent/environment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/16-node24.19.0-multipage-pair1-counts129-parent/environment.json",
+      "bytes": 2522,
+      "sha256": "9ff1acab91238c2dd6ae09cad1513333e0dce740fdc851404ac48a666ede8dcd",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/16-node24.19.0-multipage-pair1-counts129-parent/samples.jsonl",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/16-node24.19.0-multipage-pair1-counts129-parent/samples.jsonl",
+      "bytes": 3537,
+      "sha256": "62133330eb96f10c087d1a4f624112a2563812864028903b19b19a3057a20e31",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/16-node24.19.0-multipage-pair1-counts129-parent/summary.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/16-node24.19.0-multipage-pair1-counts129-parent/summary.json",
+      "bytes": 1148,
+      "sha256": "e8897b60181d14a24bd0cd466467beb60c872cae02ba7099e5d9f9bafd16eb67",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "runner/16-node24.19.0-multipage-pair1-counts129-parent/cleanup.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/measurements/16-node24.19.0-multipage-pair1-counts129-parent/cleanup.json",
+      "bytes": 55,
+      "sha256": "b186cb10066cedd71d785c07c5f77b54e538559cbc9b036beabc5ec7998eca37",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/node20-version.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/node20-version.tap",
+      "bytes": 9,
+      "sha256": "fa2f297fd185bb1c8acba036117f05240eaa1f42eeb8902e870982523ae06edf",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/node20-version.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/node20-version.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/node24-version.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/node24-version.tap",
+      "bytes": 9,
+      "sha256": "b7677d3ec37ee1897ba07dc2cfe8292fe421c9ac93396cca5bbece486d1a2a41",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/node24-version.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/node24-version.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/parent-overlay.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/parent-overlay.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/parent-overlay.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/parent-overlay.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/parent-build.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/parent-build.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/parent-build.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/parent-build.stderr",
+      "bytes": 153,
+      "sha256": "52aa23ae94ef591f86df0a1de48709f5620eaacea41124e19fa6f2c717b99e88",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/parent-bundle.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/parent-bundle.tap",
+      "bytes": 112,
+      "sha256": "248b04e223c33147efd20ab434d0a94e0db51727d4cf91cc441a2242660007ed",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/parent-bundle.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/parent-bundle.stderr",
+      "bytes": 36,
+      "sha256": "67bd102e126ea4f971fd8b4a6688e53cb1118030070cca8dbb428da1df7ce81b",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/01-node20.20.2-repeat-pair1-counts0-100-parent.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/01-node20.20.2-repeat-pair1-counts0-100-parent.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/01-node20.20.2-repeat-pair1-counts0-100-parent.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/01-node20.20.2-repeat-pair1-counts0-100-parent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/02-node20.20.2-repeat-pair1-counts0-100-candidate.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/02-node20.20.2-repeat-pair1-counts0-100-candidate.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/02-node20.20.2-repeat-pair1-counts0-100-candidate.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/02-node20.20.2-repeat-pair1-counts0-100-candidate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/03-node20.20.2-repeat-pair2-counts0-100-candidate.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/03-node20.20.2-repeat-pair2-counts0-100-candidate.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/03-node20.20.2-repeat-pair2-counts0-100-candidate.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/03-node20.20.2-repeat-pair2-counts0-100-candidate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/04-node20.20.2-repeat-pair2-counts0-100-parent.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/04-node20.20.2-repeat-pair2-counts0-100-parent.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/04-node20.20.2-repeat-pair2-counts0-100-parent.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/04-node20.20.2-repeat-pair2-counts0-100-parent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/05-node20.20.2-repeat-pair3-counts0-100-parent.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/05-node20.20.2-repeat-pair3-counts0-100-parent.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/05-node20.20.2-repeat-pair3-counts0-100-parent.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/05-node20.20.2-repeat-pair3-counts0-100-parent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/06-node20.20.2-repeat-pair3-counts0-100-candidate.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/06-node20.20.2-repeat-pair3-counts0-100-candidate.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/06-node20.20.2-repeat-pair3-counts0-100-candidate.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/06-node20.20.2-repeat-pair3-counts0-100-candidate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/07-node24.19.0-repeat-pair1-counts0-100-candidate.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/07-node24.19.0-repeat-pair1-counts0-100-candidate.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/07-node24.19.0-repeat-pair1-counts0-100-candidate.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/07-node24.19.0-repeat-pair1-counts0-100-candidate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/08-node24.19.0-repeat-pair1-counts0-100-parent.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/08-node24.19.0-repeat-pair1-counts0-100-parent.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/08-node24.19.0-repeat-pair1-counts0-100-parent.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/08-node24.19.0-repeat-pair1-counts0-100-parent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/09-node24.19.0-repeat-pair2-counts0-100-parent.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/09-node24.19.0-repeat-pair2-counts0-100-parent.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/09-node24.19.0-repeat-pair2-counts0-100-parent.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/09-node24.19.0-repeat-pair2-counts0-100-parent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/10-node24.19.0-repeat-pair2-counts0-100-candidate.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/10-node24.19.0-repeat-pair2-counts0-100-candidate.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/10-node24.19.0-repeat-pair2-counts0-100-candidate.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/10-node24.19.0-repeat-pair2-counts0-100-candidate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/11-node24.19.0-repeat-pair3-counts0-100-candidate.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/11-node24.19.0-repeat-pair3-counts0-100-candidate.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/11-node24.19.0-repeat-pair3-counts0-100-candidate.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/11-node24.19.0-repeat-pair3-counts0-100-candidate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/12-node24.19.0-repeat-pair3-counts0-100-parent.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/12-node24.19.0-repeat-pair3-counts0-100-parent.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/12-node24.19.0-repeat-pair3-counts0-100-parent.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/12-node24.19.0-repeat-pair3-counts0-100-parent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/13-node20.20.2-multipage-pair1-counts129-parent.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/13-node20.20.2-multipage-pair1-counts129-parent.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/13-node20.20.2-multipage-pair1-counts129-parent.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/13-node20.20.2-multipage-pair1-counts129-parent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/14-node20.20.2-multipage-pair1-counts129-candidate.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/14-node20.20.2-multipage-pair1-counts129-candidate.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/14-node20.20.2-multipage-pair1-counts129-candidate.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/14-node20.20.2-multipage-pair1-counts129-candidate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/15-node24.19.0-multipage-pair1-counts129-candidate.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/15-node24.19.0-multipage-pair1-counts129-candidate.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/15-node24.19.0-multipage-pair1-counts129-candidate.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/15-node24.19.0-multipage-pair1-counts129-candidate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/16-node24.19.0-multipage-pair1-counts129-parent.tap",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/16-node24.19.0-multipage-pair1-counts129-parent.tap",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "command-logs/16-node24.19.0-multipage-pair1-counts129-parent.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/16-node24.19.0-multipage-pair1-counts129-parent.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "source/execute-granted-sequence.py",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/execute-granted-sequence.py",
+      "bytes": 37560,
+      "sha256": "42b8a348261125dd355a50fc3ab08a6abfb5dc819864889128f20c00cf106b13",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "source/reused-execution.py",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/reused-execution.py",
+      "bytes": 33589,
+      "sha256": "87d98accb4a6f69308bd27221e8e53bfe65014fd155229fb02d0e04fbe4aee68",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "source/manifest.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/manifest.json",
+      "bytes": 852483,
+      "sha256": "8005899641bd7d0e5c99af59ff33576fcd2b9c75e23a3e0b642ccbba940116ad",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "source/adapter.diff",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/adapter.diff",
+      "bytes": 28493,
+      "sha256": "e5b166cf47c0948a9853740369259f75274fcdf808fe984cc6f4ecdb5943b317",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "source/expanded-commands.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/expanded-commands.json",
+      "bytes": 73275,
+      "sha256": "42ef8a94c38e2bf5d53e57cff735c241e1a11cb74f2ba155ed5312eef868d988",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "source/expanded-schedule.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/expanded-schedule.json",
+      "bytes": 15802,
+      "sha256": "5ec69f353c73e00ececeabd3499abaa3a0932b4c0c9a319e0c422185ae3c20a6",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "source/review-notes.txt",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/review-notes.txt",
+      "bytes": 7445,
+      "sha256": "c6a11f8e8ac16fdf27debe965ee2ac7adbe2dbe0ad3be9505bf657e076455910",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "source/review.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/review.json",
+      "bytes": 4848,
+      "sha256": "56fc956e91a1e08e53ebdfd1e4f1c1ce27c18e67c0eae38acabd6563ab7856c1",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "source/static-review.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/static-review.json",
+      "bytes": 2927,
+      "sha256": "fdb331429093505f8fed36d1b2998452a05ace874c5c4e3fb411f8e5298721a6",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "source/harness/run.py",
+      "source": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks/scripts/bench/run.py",
+      "bytes": 13426,
+      "sha256": "05f7f6f1b689aac9aab3eb80f502c5bb1f6214e3952cb25e9264af5696555c9a",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "source/harness/workload.cjs",
+      "source": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks/scripts/bench/workload.cjs",
+      "bytes": 9575,
+      "sha256": "24b52d1447777eee13894281779a9b0471b62a849bf4a3b7cb949897d39dbca5",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "source/harness/sync.cjs",
+      "source": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks/scripts/bench/sync.cjs",
+      "bytes": 13227,
+      "sha256": "150de09f10d51860ccd859b1eb1f52b6f37e6f0d6b2f2d339ebf1dd9e22cccb6",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "root/issue97-untraced-e0171fc-v2-root-result-decision.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-root-result-decision.json",
+      "bytes": 22299,
+      "sha256": "2ad86634b06b9c47afb27e3340663f31b4c51d391677c99aa42ce34737e9d0ca",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "root/issue97-untraced-e0171fc-v2-root-measurement-review.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-root-measurement-review.json",
+      "bytes": 1179064,
+      "sha256": "2448a99ed5f9ba68d23055495e3d83be6f6fd142ebcbd310b9862fba28cde69e",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "root/issue97-untraced-e0171fc-v2-release-root-audit.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-release-root-audit.json",
+      "bytes": 1311,
+      "sha256": "52e35cef9e82260b51537e49bcd7d1c93e1121df358eff42b775a6963e970892",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "root/issue97-untraced-e0171fc-v2-release-root-audit-addendum.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-release-root-audit-addendum.json",
+      "bytes": 589,
+      "sha256": "f96bd80d0a30b3d80fdf717995b4cb0711027bafe1bedd96e00306081479126a",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "root/issue97-untraced-e0171fc-v2-root-review.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-root-review.json",
+      "bytes": 2085,
+      "sha256": "658fe9e7541c8a1374b7d6efb7b0b9488f98145bf237abc9a2577e01b33d44bd",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "root/issue97-adapter-v2-root-controls-result.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-adapter-v2-root-controls-result.json",
+      "bytes": 1539,
+      "sha256": "741b5d3504debe4536960fc4407c4772a13f101aeed5749f21b5c70756f07c53",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "root/issue97-untraced-e0171fc-v2-grant.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-grant.json",
+      "bytes": 1651,
+      "sha256": "d75bd22cd39130a5e5a9f15f66b830da9276ab80905af1c6957e3735f44abc15",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "root/issue97-original610-readonly-root-closure-assessment.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-original610-readonly-root-closure-assessment.json",
+      "bytes": 5994,
+      "sha256": "d5e744d56d4ecf764440c10c32472a993e46eeeb49ef37a25d9529a79748db7c",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "root/issue97-startup-lstat-diagnostic-e017-root-review.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-startup-lstat-diagnostic-e017-root-review.json",
+      "bytes": 4884,
+      "sha256": "f1456ee306e105b1ab41421201d420a37742905fc26fd985f6b7f37586b044f0",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/owner-measurement-classification.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/owner-measurement-classification.json",
+      "bytes": 1463418,
+      "sha256": "c18d35d8800910ded30a538da6e0901b85e63dce9ba13d6ab2128d4b2bab1b80",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/owner-paired-samples.csv",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/owner-paired-samples.csv",
+      "bytes": 302958,
+      "sha256": "5720ed7c14cc3355a9772f6cd3127a11b27cdb0327284017eee764323dafc5b2",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/owner-paired-spreads.csv",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/owner-paired-spreads.csv",
+      "bytes": 46584,
+      "sha256": "4ead7d027e3fd74e68e11041b2101b469d99711304957ce4911fa66d65adee98",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/owner-safety-audit.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/owner-safety-audit.json",
+      "bytes": 3757,
+      "sha256": "126a3b7418144dccf5a8af5ce9e61ada9123ae50d6ddcad3a7904d6990913c78",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/local-release.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/local-release.json",
+      "bytes": 519,
+      "sha256": "f9f10e82d2e1c9f656cc9868c1a6ddb97962afa1b0d88f5b206d19347fec71d5",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/owner-initial-audit-parser-stop.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/owner-initial-audit-parser-stop.json",
+      "bytes": 936,
+      "sha256": "c8198fd8665ca8c6b2e16ae1c7a3e171dec72eed4210ec0d3622cb443bb9bc67",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/outer-preexec-identity.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/outer-preexec-identity.json",
+      "bytes": 530,
+      "sha256": "2d14bdad596af866e438e8dd38ad2a19a4efece94ac91b070c33f26d8d62cba3",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/outer-live-identity.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/outer-live-identity.json",
+      "bytes": 1561,
+      "sha256": "f7f4ecc1ea5fc5a0196dfa958f5b6396adea95bf734b462d0b3d600c9e819b0a",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/outer-independent-observation.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/outer-independent-observation.json",
+      "bytes": 208,
+      "sha256": "e5c84d4956af4cbbd6c5431e95496ec1f0c5ad594caed711e986de74a8e66e62",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/outer-exit.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/outer-exit.json",
+      "bytes": 287,
+      "sha256": "33ee48d6bf69a19fca2f9b4ed56da160e5b3320614dfe43752531db754352d9c",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/copy-verification.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/copy-verification.json",
+      "bytes": 1486,
+      "sha256": "af9b8e4063d1423630fd80f3d2fb10261c8d8cf73eb3a46db8b56dd9eafc1c31",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/tool-session.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/tool-session.json",
+      "bytes": 98,
+      "sha256": "cca565fe2d6a16ffc4d1a7d2680394095607d321f7ad3a8dc3d6943af84b8d1f",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/tool-completion.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/tool-completion.json",
+      "bytes": 246,
+      "sha256": "47e0149fcb0f5c08b1df3213f98790d01cb8eff86d23861b979e85f8d8602aed",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/outer.stdout",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/outer.stdout",
+      "bytes": 3227,
+      "sha256": "95c187528f7e16a2fdadcd12d166df2fd1bd81c74a9e23a6bd5ef2ff2a212805",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/outer.stderr",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/outer.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "startup-diagnostic/diagnostic.patch",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-startup-lstat-diagnostic-e017-v1-prepared/diagnostic.patch",
+      "bytes": 3485,
+      "sha256": "a35fe4d074364b0ab4296b7c78a379922060bc976500bf284d816bb43c519fbb",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "startup-diagnostic/sync-worker-fatal.test.ts",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-startup-lstat-diagnostic-e017-v1-prepared/sync-worker-fatal.test.ts",
+      "bytes": 31514,
+      "sha256": "1fa6bb902f7d32ac0edf4f15ebd6f3286ae34fff92a1324e85d5718fc629ad99",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "startup-diagnostic/review.md",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-startup-lstat-diagnostic-e017-v1-prepared/review.md",
+      "bytes": 4942,
+      "sha256": "a1cb4bca008ac1723f6b9692ff90c865033764b7f269a639669b73570be2eea9",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "startup-diagnostic/source-receipt.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-startup-lstat-diagnostic-e017-v1-prepared/source-receipt.json",
+      "bytes": 659,
+      "sha256": "792a2b74a64ee86c0384691c46bdc779f00dee0ea88f2f694f002bf0672012cb",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "startup-diagnostic/source-audit.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-startup-lstat-diagnostic-e017-v1-prepared/source-audit.json",
+      "bytes": 1112,
+      "sha256": "7e16f28264a6732dd5342db1c7f8c6b6dab0580228fab5c5dc912997e62b7119",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "startup-diagnostic/root-compiler-only-result.json",
+      "source": "/home/agent/.t3/worktrees/html-inbox/perf-97-acks/artifacts/issue97-startup-lstat-root-typecheck-v1/result.json",
+      "bytes": 1454,
+      "sha256": "1be0392459b5e9751d2e3c998fb2ca60c2448a8e96703c00faf475a7e5d10d3b",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "source/original610-gap-source-only.json",
+      "source": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-original610-source-gap-e017-v1-prepared/assessment-final.json",
+      "bytes": 252709,
+      "sha256": "c55eac988b2759a3feca3717af7ec1b47fc10f98bba77fca8a29244ea17fbfc3",
+      "copy": "original byte-identical"
+    },
+    {
+      "member": "owner/receipt-extract.json",
+      "bytes": 823082,
+      "sha256": "9bb7283f7c4937292f36411e9097e4f9c1bcb005667302fab2c31164dcd74755",
+      "copy": "explicit extract/derived data",
+      "source_fields": [
+        "started_monotonic",
+        "started_wall_ns",
+        "application_deadline",
+        "final_deadline",
+        "cleanup_restoration_deadline",
+        "grant_id",
+        "controller_identity",
+        "command_umask",
+        "first_unexpected",
+        "issues",
+        "commands",
+        "cleanup",
+        "adopted_exits",
+        "signals",
+        "steps",
+        "completed_invocations",
+        "source_before",
+        "qualified_candidate_outputs",
+        "verified_backups",
+        "mutation_started",
+        "ncc_cache_captures",
+        "ncc_cache_window",
+        "completed",
+        "source_after",
+        "outputs_after",
+        "semantic_index_restored",
+        "qualified393_restored",
+        "raw_index_snapshot_sha256",
+        "remaining_owned",
+        "unrun_commands",
+        "incomplete_invocations",
+        "retained_command_roots",
+        "command_roots_removed",
+        "finished_monotonic",
+        "within_cleanup_allowance",
+        "within_fixed_final_deadline",
+        "raw_index_byte_identity_or_cause_claim",
+        "observed_processes"
+      ]
+    },
+    {
+      "member": "source/provenance.json",
+      "bytes": 271858,
+      "sha256": "2009519d8725b1064aa52216a931261fb5a94a92d6b4d3a76a1eebd19d33a814",
+      "copy": "explicit extract/derived data",
+      "source_fields": [
+        "manifest roles",
+        "published test source hashes",
+        "raw runner values retained"
+      ]
+    },
+    {
+      "member": "data-read-audit.json",
+      "bytes": 656,
+      "sha256": "54017a54708b576e9e7bdc788b469aba82837b429392b37fb3c3594cdff948ab",
+      "copy": "explicit extract/derived data",
+      "source_fields": [
+        "entire root review parsed and all sections retained",
+        "owner report original"
+      ]
+    }
+  ],
+  "runner_original_files": 64,
+  "excluded": [
+    "all managed ledgers/body/key/token/private fixture content",
+    "retained source/generated backup bodies",
+    "NCC data cache bodies",
+    "every raw index binary"
+  ],
+  "originals_unchanged": true
+}

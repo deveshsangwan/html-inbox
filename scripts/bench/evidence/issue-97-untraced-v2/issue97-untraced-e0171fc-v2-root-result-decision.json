@@ -1,0 +1,695 @@
+{
+  "state": "ACCEPTED_SCOPED_IMMEDIATE_PARENT_BENEFIT_AND_CONTROLS_NOT_READY",
+  "timestamp_utc": "2026-11-09T12:32:37.010573+00:00",
+  "head": "e0171fc548d449eb1de1e76975155fb699449d79",
+  "production": "a3e087c3fc8bafdf3d604a1737bc9677ee5a0d2a",
+  "immediate_parent": "b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad",
+  "evidence": {
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-release-root-audit.json": "52e35cef9e82260b51537e49bcd7d1c93e1121df358eff42b775a6963e970892",
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-release-root-audit-addendum.json": "f96bd80d0a30b3d80fdf717995b4cb0711027bafe1bedd96e00306081479126a",
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-root-measurement-review.json": "2448a99ed5f9ba68d23055495e3d83be6f6fd142ebcbd310b9862fba28cde69e",
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-v2-root-data-review.py": "fa3b0163f246434dcbd553122bf379c660d7f3f10c484747bd171428252298f2",
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1/receipt.json": "d6a5a01c275aa5ccd0b56173e1412459dba4b712004944e11fee81b48cfa3856",
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/owner-measurement-classification.json": "c18d35d8800910ded30a538da6e0901b85e63dce9ba13d6ab2128d4b2bab1b80",
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/owner-safety-audit.json": "126a3b7418144dccf5a8af5ce9e61ada9123ae50d6ddcad3a7904d6990913c78",
+    "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue97-untraced-e0171fc-v2-attempt1-launch/local-release.json": "f9f10e82d2e1c9f656cc9868c1a6ddb97962afa1b0d88f5b206d19347fec71d5"
+  },
+  "independent_root_checks": {
+    "commands": 21,
+    "invocations": 16,
+    "outer_samples": 28,
+    "operation_rows": 156,
+    "paired_metrics": 1504,
+    "repeated_metric_spreads": 422,
+    "paired_peer_controls": 36,
+    "outer_metric_pairs": 70,
+    "outer_metric_spreads": 20,
+    "mismatches_with_owner": 0
+  },
+  "accepted": [
+    "Native adapter/tool exit0; all21 commands,16 scheduled invocations,28 outer samples and156 operation rows complete, no unexpected/incomplete/unrun. All36 counterpart wire/body/transfer vectors match.",
+    "Repeatable practical benefit versus b249 for preselected source-noop logical ledger replacement bytes at100 documents x10240B, n3 pairs separately on20.20.2 and24.19.0. All six pairs save52839991 logical bytes:53632600 ->792609 (-98.52215070684622%); source commits203 ->3. This satisfies the immediate-parent practical-benefit criterion in this measured scope.",
+    "Untraced noop100 latency and CPU improve in every pair, with disjoint parent/candidate latency ranges on each runtime. Repair100 latency improves in every pair. Operation duration includes existing equivalence/snapshot checks and stat observer overhead; CPU includes both peers in one process. No claim of production-only overhead-free timing.",
+    "Both roles on both exact runtimes complete129 document controls. Verified128-page source path and noop6 requests versus4 at100 support actual two-page behavior; no per-page event trace,129 repeated spread or gain claim.",
+    "Original fixture route-confirmation, transfers, identities, metadata, signatures, fingerprints, receipts, confirmed obligations, body/repair and listener-close assertions complete. This does not prove arbitrary concurrency/fault cases beyond focused correctness and existing suites.",
+    "Actual A1 normal role switches and final544tracked/593owned/393current+saved restoration verified; original indices differ as bytes, semantic modes/objects/paths/tree equal. A2 permits four of seven exact NCC data values changed in one bundle window; remaining1777 tool pins and exact runtimes strict, full after tree frozen. Normal execution does not qualify all unused native/interrupt/adversarial paths.",
+    "Owner explicit release persisted55.554268859s before shortercleanup and before fixedfinal. Root separately verified all103 saved PID/start identities/51groups absent; no extra root bind/signal/delete. Sampled identity coverage is not complete short-lived-process coverage."
+  ],
+  "primary_and_latency": [
+    {
+      "runtime": "20.20.2",
+      "operation": "peer/noop/100",
+      "metric": "source.ledgerReplacementBytes",
+      "parent": {
+        "n": 3,
+        "min": 53632600,
+        "median": 53632600,
+        "max": 53632600
+      },
+      "candidate": {
+        "n": 3,
+        "min": 792609,
+        "median": 792609,
+        "max": 792609
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -52839991,
+        "median": -52839991,
+        "max": -52839991
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -98.52215070684622,
+        "median": -98.52215070684622,
+        "max": -98.52215070684622
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "P-C",
+        "C-P",
+        "P-C"
+      ]
+    },
+    {
+      "runtime": "20.20.2",
+      "operation": "peer/noop/100",
+      "metric": "source.commits",
+      "parent": {
+        "n": 3,
+        "min": 203,
+        "median": 203,
+        "max": 203
+      },
+      "candidate": {
+        "n": 3,
+        "min": 3,
+        "median": 3,
+        "max": 3
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -200,
+        "median": -200,
+        "max": -200
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -98.52216748768473,
+        "median": -98.52216748768473,
+        "max": -98.52216748768473
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "P-C",
+        "C-P",
+        "P-C"
+      ]
+    },
+    {
+      "runtime": "20.20.2",
+      "operation": "peer/noop/100",
+      "metric": "wall_ms",
+      "parent": {
+        "n": 3,
+        "min": 14258.392476000008,
+        "median": 14721.627613999997,
+        "max": 14779.670180999994
+      },
+      "candidate": {
+        "n": 3,
+        "min": 2804.0414600000076,
+        "median": 2871.136576000019,
+        "max": 2910.820448000013
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -11975.628720999986,
+        "median": -11850.491037999978,
+        "max": -11347.572027999995
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -81.02771289440042,
+        "median": -80.49715254806729,
+        "max": -79.58521303927101
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "P-C",
+        "C-P",
+        "P-C"
+      ]
+    },
+    {
+      "runtime": "20.20.2",
+      "operation": "peer/noop/100",
+      "metric": "cpu_ms",
+      "parent": {
+        "n": 3,
+        "min": 13776.43,
+        "median": 14187.662,
+        "max": 14353.77
+      },
+      "candidate": {
+        "n": 3,
+        "min": 2836.584,
+        "median": 2919.258,
+        "max": 2942.877
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -11517.186000000002,
+        "median": -11268.404,
+        "max": -10833.553
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -80.23805592537711,
+        "median": -79.42396710606722,
+        "max": -78.63831921622655
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "P-C",
+        "C-P",
+        "P-C"
+      ]
+    },
+    {
+      "runtime": "20.20.2",
+      "operation": "peer/noop/100",
+      "metric": "rss_bytes",
+      "parent": {
+        "n": 3,
+        "min": 120799232,
+        "median": 126803968,
+        "max": 132136960
+      },
+      "candidate": {
+        "n": 3,
+        "min": 120295424,
+        "median": 120537088,
+        "max": 123817984
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -8318976,
+        "median": -6266880,
+        "max": -503808
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -6.2957222566646,
+        "median": -4.942179727372569,
+        "max": -0.41706225417062254
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "P-C",
+        "C-P",
+        "P-C"
+      ]
+    },
+    {
+      "runtime": "24.19.0",
+      "operation": "peer/noop/100",
+      "metric": "source.ledgerReplacementBytes",
+      "parent": {
+        "n": 3,
+        "min": 53632600,
+        "median": 53632600,
+        "max": 53632600
+      },
+      "candidate": {
+        "n": 3,
+        "min": 792609,
+        "median": 792609,
+        "max": 792609
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -52839991,
+        "median": -52839991,
+        "max": -52839991
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -98.52215070684622,
+        "median": -98.52215070684622,
+        "max": -98.52215070684622
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "C-P",
+        "P-C",
+        "C-P"
+      ]
+    },
+    {
+      "runtime": "24.19.0",
+      "operation": "peer/noop/100",
+      "metric": "source.commits",
+      "parent": {
+        "n": 3,
+        "min": 203,
+        "median": 203,
+        "max": 203
+      },
+      "candidate": {
+        "n": 3,
+        "min": 3,
+        "median": 3,
+        "max": 3
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -200,
+        "median": -200,
+        "max": -200
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -98.52216748768473,
+        "median": -98.52216748768473,
+        "max": -98.52216748768473
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "C-P",
+        "P-C",
+        "C-P"
+      ]
+    },
+    {
+      "runtime": "24.19.0",
+      "operation": "peer/noop/100",
+      "metric": "wall_ms",
+      "parent": {
+        "n": 3,
+        "min": 8414.762250000014,
+        "median": 8634.327485999995,
+        "max": 8667.689006999994
+      },
+      "candidate": {
+        "n": 3,
+        "min": 1705.5191499999928,
+        "median": 1710.4631649999938,
+        "max": 1737.9470349999901
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -6929.741972000003,
+        "median": -6928.808336000002,
+        "max": -6704.299085000021
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -80.2472265180423,
+        "median": -79.94913022841001,
+        "max": -79.67306604533015
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "C-P",
+        "P-C",
+        "C-P"
+      ]
+    },
+    {
+      "runtime": "24.19.0",
+      "operation": "peer/noop/100",
+      "metric": "cpu_ms",
+      "parent": {
+        "n": 3,
+        "min": 7855.759,
+        "median": 8056.018,
+        "max": 8149.038
+      },
+      "candidate": {
+        "n": 3,
+        "min": 1723.404,
+        "median": 1745.144,
+        "max": 1799.193
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -6349.844999999999,
+        "median": -6310.874,
+        "max": -6132.355
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -78.33738703165757,
+        "median": -78.06190337559998,
+        "max": -77.92140618315928
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "C-P",
+        "P-C",
+        "C-P"
+      ]
+    },
+    {
+      "runtime": "24.19.0",
+      "operation": "peer/noop/100",
+      "metric": "rss_bytes",
+      "parent": {
+        "n": 3,
+        "min": 233668608,
+        "median": 237469696,
+        "max": 247386112
+      },
+      "candidate": {
+        "n": 3,
+        "min": 210300928,
+        "median": 211791872,
+        "max": 229769216
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -35594240,
+        "median": -23367680,
+        "max": -7700480
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -14.388131860854017,
+        "median": -10.000350581966064,
+        "max": -3.242721125983165
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "C-P",
+        "P-C",
+        "C-P"
+      ]
+    }
+  ],
+  "supporting_full_workload": [
+    {
+      "runtime": "20.20.2",
+      "operation": "sync/100",
+      "metric": "wall_ms",
+      "parent": {
+        "n": 3,
+        "min": 173803.90288704075,
+        "median": 179167.83165407833,
+        "max": 179629.06030600425
+      },
+      "candidate": {
+        "n": 3,
+        "min": 152062.9384140484,
+        "median": 152332.37238100264,
+        "max": 154050.45088590123
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -26835.459273075685,
+        "median": -25578.60942010302,
+        "max": -21740.964472992346
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -14.97783336736879,
+        "median": -14.239683365558436,
+        "max": -12.508904640146262
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "P-C",
+        "C-P",
+        "P-C"
+      ]
+    },
+    {
+      "runtime": "20.20.2",
+      "operation": "sync/100",
+      "metric": "cpu_ms",
+      "parent": {
+        "n": 3,
+        "min": 173936.83000000002,
+        "median": 179313.492,
+        "max": 179494.03399999999
+      },
+      "candidate": {
+        "n": 3,
+        "min": 153541.561,
+        "median": 153950.206,
+        "max": 155520.75100000002
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -25363.285999999993,
+        "median": -23973.282999999967,
+        "max": -20395.26900000003
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -14.144661239434228,
+        "median": -13.35603332643355,
+        "max": -11.725675924989565
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "P-C",
+        "C-P",
+        "P-C"
+      ]
+    },
+    {
+      "runtime": "20.20.2",
+      "operation": "sync/100",
+      "metric": "peak_rss_kib",
+      "parent": {
+        "n": 3,
+        "min": 143616,
+        "median": 146724,
+        "max": 148212
+      },
+      "candidate": {
+        "n": 3,
+        "min": 122160,
+        "median": 130920,
+        "max": 131496
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -26052,
+        "median": -15228,
+        "max": -12696
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -17.57752408711845,
+        "median": -10.378670156211662,
+        "max": -8.840240641711231
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "P-C",
+        "C-P",
+        "P-C"
+      ]
+    },
+    {
+      "runtime": "24.19.0",
+      "operation": "sync/100",
+      "metric": "wall_ms",
+      "parent": {
+        "n": 3,
+        "min": 102977.08214796148,
+        "median": 103122.51003098208,
+        "max": 103230.59114499483
+      },
+      "candidate": {
+        "n": 3,
+        "min": 88646.85333799571,
+        "median": 89590.62864107545,
+        "max": 89746.61386210937
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -14330.228809965774,
+        "median": -13531.88138990663,
+        "max": -13483.977282885462
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -13.915939849000134,
+        "median": -13.12214121421319,
+        "max": -13.061997546779752
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "C-P",
+        "P-C",
+        "C-P"
+      ]
+    },
+    {
+      "runtime": "24.19.0",
+      "operation": "sync/100",
+      "metric": "cpu_ms",
+      "parent": {
+        "n": 3,
+        "min": 100205.645,
+        "median": 100205.66,
+        "max": 100346.285
+      },
+      "candidate": {
+        "n": 3,
+        "min": 87285.061,
+        "median": 88177.827,
+        "max": 88367.294
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -12920.584000000003,
+        "median": -12168.457999999999,
+        "max": -11838.366000000009
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -12.894067993874,
+        "median": -12.126465867670138,
+        "max": -11.814069185313492
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "C-P",
+        "P-C",
+        "C-P"
+      ]
+    },
+    {
+      "runtime": "24.19.0",
+      "operation": "sync/100",
+      "metric": "peak_rss_kib",
+      "parent": {
+        "n": 3,
+        "min": 246344,
+        "median": 252956,
+        "max": 259224
+      },
+      "candidate": {
+        "n": 3,
+        "min": 217560,
+        "median": 221888,
+        "max": 249540
+      },
+      "paired_candidate_minus_parent": {
+        "n": 3,
+        "min": -41664,
+        "median": -24456,
+        "max": -3416
+      },
+      "paired_relative_change_percent": {
+        "n": 3,
+        "min": -16.072585871678548,
+        "median": -9.927580943720976,
+        "max": -1.3504324862821993
+      },
+      "pairs": [
+        1,
+        2,
+        3
+      ],
+      "orders": [
+        "C-P",
+        "P-C",
+        "C-P"
+      ]
+    }
+  ],
+  "tradeoffs_and_nonclaims": [
+    "Bundle1276123 ->1277958 bytes: +1835 (+0.1437949163207622%). Receiver noop100 replacement231542 ->231545 (+3) with one commit each; source count0 noop3828 ->3834 (+6) with two commits each. These byte changes are retained observations, not explained by an asserted metadata cause.",
+    "Initial100 source replacement41054022 ->20797909 and203 ->103 commits, but initial latency and CPU changes have mixed paired signs/overlapping ranges; no repeatable initial-transfer speedup accepted.",
+    "Empty-library noop latency changes have mixed signs/overlapping ranges; no empty-library speedup or universal nonregression guarantee. All managed samples, regressions and spreads retained.",
+    "Post-operation RSS and whole-command peak RSS are separate measurements. No causal memory explanation or extrapolation to all workloads. All current noop100/repair100 RSS pairs and outer100 peaks were lower; small samples are descriptive.",
+    "Logical replacement lengths are observer-derived, not physical device writes. Raw process IO counters are separate scope including existing proc reads; no zero-IO/cold-cache/device-write inference.",
+    "Three pairs per role/runtime, deliberately reversed order imbalance across runtimes, same host/fresh isolated fixtures/uncontrolled warm filesystem caches. No pooled driver effect, significance/p95, gain-based stopping, higher-count or issue1.9GB estimate verification.",
+    "Original120s failures and traced gain-ineligible histories remain immutable. Only unrelated protocol diagnostic testJS is stale against e017 TS; this run does not qualify current test source.",
+    "Hosted e017 Node24.22.2 startup-reader nlink guard failure remains RED and unexplained. Verify is aggregate-only;50 selected24.19.0 passes and454-test same-driver shard pass are nonreproduction, not baseline/flake/exoneration/green."
+  ],
+  "root_data_reader_corrections": [
+    "Initial metadata-only comparison used an unconditional relative_basis label for parent-zero values; owner correctly used undefined_parent_zero. Numeric relative values were null throughout. Root label reconciled.",
+    "Root initially represented empty relative spreads with n0/null fields; owner uses null. Reconciled absent-value representation, no numerical discrepancy.",
+    "Vector comparison initially assumed list order rather than unique runtime/case/pair/operation keys. Exact keyed comparison matches all36 records.",
+    "One exploratory stdlib exec used separate globals/locals and raised NameError before result generation; repeated only data parsing with shared scope. No application/adapter/control/test rerun, no original file changes."
+  ],
+  "remaining_gates": [
+    "Original610 combined-stack comparison before integration recommendation.",
+    "Current normal CI failure diagnosis/disposition and final-head checks.",
+    "Two fresh same-pin full-rubric independent SolHigh and Sonnet5.5Medium reviews, each all3 verdicts; final findings dispositions.",
+    "Durable public selected raw artifact handoff and coherent measured freeze."
+  ],
+  "next_authorized_work": {
+    "owner": "Existing issue97 owner only; no new agent/reviewer/runtime.",
+    "evidence": "Prepare a coherent durable evidence/report package now in ignored staging, with all16 original environment/samples/summary/cleanup sets (64files), exact source/baseline/output provenance, commands, all metric samples and spreads, original release/native exit/owner+root audits and operational guard limits. Keep original data bytes/hashes; use explicit extracts for controller receipts if environment/private fields would otherwise leak. Exclude all fixture/ledger/key/token/retained-work bodies and any raw-index content from public packaging. Bundle/hash/member-compare archive; compact report explains immediate-parent benefit, costs, empty/initial limits, controls and remaining610/CI/reviews. No public claim full readiness.",
+    "ci": "Continue ignored exact test-only startup diagnostic patch/source/review already assigned. Root will source-review before any tracked source application/publication or new runtime. Preserve all original guards, error identity, deadlines, promises; no speculative production fix.",
+    "610": "Read-only scope/input assessment already assigned. No build, mutation, grant or execution inferred.",
+    "publication": "Stage evidence now. Wait only for root exact diagnostic source disposition before one coherent evidence+diagnostic publication; root is actively reviewing. Normal push must be immediately linked124; preserve draft/backlinks/history/watch. No merge/release or extra CI retry."
+  }
+}
