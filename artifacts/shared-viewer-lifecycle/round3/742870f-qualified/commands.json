@@ -1,0 +1,300 @@
+[
+  {
+    "label": "typecheck-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "pnpm",
+      "typecheck"
+    ],
+    "exit_code": 0,
+    "seconds": 2.2,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "prefix-5c49486-copy-build-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47/node_modules/.bin/tsc-rs",
+      "-p",
+      "/tmp/claude-1001/-home-agent--t3-worktrees-html-inbox-t3-26d1cd47/eaedad0e-0d8d-4c7f-b8c4-f3a43d6ff252/scratchpad/round3-742870f-20261123T232227/prefix-5c49486-copy/packages/cli/tsconfig.json"
+    ],
+    "exit_code": 0,
+    "seconds": 0.8,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "emitted_viewer_server_js_sha256": "360c33f1e341e8600cfccac73cabdc05832a94b97205f75ed1582fc9853605b2"
+  },
+  {
+    "label": "red-prefix-5c49486-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "--test-force-exit",
+      "--test-name-pattern=start-lock release",
+      "/tmp/claude-1001/-home-agent--t3-worktrees-html-inbox-t3-26d1cd47/eaedad0e-0d8d-4c7f-b8c4-f3a43d6ff252/scratchpad/round3-742870f-20261123T232227/prefix-5c49486-copy/packages/cli/dist/viewer-owned-lifecycle.test.js"
+    ],
+    "exit_code": 1,
+    "seconds": 0.3,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "failed_count": 3,
+    "failed_cases": [
+      "a signal during start-lock release rejects startup after its shared shutdown",
+      "start-lock release failure after readiness rolls back the live viewer",
+      "startup failure keeps both its cause and a start-lock release failure"
+    ],
+    "verdict": "CONFIRMED"
+  },
+  {
+    "label": "prior-0463edb-copy-build-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47/node_modules/.bin/tsc-rs",
+      "-p",
+      "/tmp/claude-1001/-home-agent--t3-worktrees-html-inbox-t3-26d1cd47/eaedad0e-0d8d-4c7f-b8c4-f3a43d6ff252/scratchpad/round3-742870f-20261123T232227/prior-0463edb-copy/packages/cli/tsconfig.json"
+    ],
+    "exit_code": 0,
+    "seconds": 0.7,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "emitted_viewer_server_js_sha256": "86388d3d421939315398fb95c738210c926b578c52ee6fefd2fdb2a9b1b6bedc"
+  },
+  {
+    "label": "red-prior-0463edb-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "--test-force-exit",
+      "--test-name-pattern=a signal during start-lock release",
+      "/tmp/claude-1001/-home-agent--t3-worktrees-html-inbox-t3-26d1cd47/eaedad0e-0d8d-4c7f-b8c4-f3a43d6ff252/scratchpad/round3-742870f-20261123T232227/prior-0463edb-copy/packages/cli/dist/viewer-owned-lifecycle.test.js"
+    ],
+    "exit_code": 1,
+    "seconds": 0.2,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "failed_count": 1,
+    "failed_cases": [
+      "a signal during start-lock release rejects startup after its shared shutdown"
+    ],
+    "verdict": "CONFIRMED"
+  },
+  {
+    "label": "build-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "pnpm",
+      "build"
+    ],
+    "exit_code": 0,
+    "seconds": 2.2,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "fifo-probe-node20",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=20.20.2",
+      "node",
+      "--test",
+      "/tmp/claude-1001/-home-agent--t3-worktrees-html-inbox-t3-26d1cd47/eaedad0e-0d8d-4c7f-b8c4-f3a43d6ff252/scratchpad/round3-742870f-20261123T232227/fifo-probe.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.1,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "observed_order": [
+      "first-registered",
+      "second-registered"
+    ]
+  },
+  {
+    "label": "fifo-probe-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "/tmp/claude-1001/-home-agent--t3-worktrees-html-inbox-t3-26d1cd47/eaedad0e-0d8d-4c7f-b8c4-f3a43d6ff252/scratchpad/round3-742870f-20261123T232227/fifo-probe.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.1,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "observed_order": [
+      "first-registered",
+      "second-registered"
+    ]
+  },
+  {
+    "label": "focused-node20",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=20.20.2",
+      "node",
+      "--test",
+      "packages/cli/dist/viewer-owned-lifecycle.test.js",
+      "packages/cli/dist/viewer-mutation-shutdown.test.js",
+      "packages/cli/dist/viewer-shutdown.test.js",
+      "packages/cli/dist/viewer-startup-races.test.js",
+      "packages/cli/dist/viewer-tailscale-lifecycle.test.js",
+      "packages/cli/dist/viewer-background.test.js",
+      "packages/cli/dist/viewer-record-shutdown-race.test.js",
+      "scripts/viewer-fixture-browser.test.mjs",
+      "scripts/document-deletion-browser.test.mjs",
+      "scripts/document-isolation-browser.test.mjs",
+      "scripts/hub-browser.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 26.9,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "focused-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "packages/cli/dist/viewer-owned-lifecycle.test.js",
+      "packages/cli/dist/viewer-mutation-shutdown.test.js",
+      "packages/cli/dist/viewer-shutdown.test.js",
+      "packages/cli/dist/viewer-startup-races.test.js",
+      "packages/cli/dist/viewer-tailscale-lifecycle.test.js",
+      "packages/cli/dist/viewer-background.test.js",
+      "packages/cli/dist/viewer-record-shutdown-race.test.js",
+      "scripts/viewer-fixture-browser.test.mjs",
+      "scripts/document-deletion-browser.test.mjs",
+      "scripts/document-isolation-browser.test.mjs",
+      "scripts/hub-browser.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 29.6,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "ownership-node20",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=20.20.2",
+      "node",
+      "--test",
+      "packages/cli/dist/sync-maintenance.test.js",
+      "packages/cli/dist/sync-acquisition-deadline.test.js",
+      "packages/cli/dist/viewer-service-owner.test.js",
+      "packages/cli/dist/viewer-service.test.js",
+      "packages/cli/dist/hub-http.test.js"
+    ],
+    "exit_code": 0,
+    "seconds": 12.1,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "ownership-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "packages/cli/dist/sync-maintenance.test.js",
+      "packages/cli/dist/sync-acquisition-deadline.test.js",
+      "packages/cli/dist/viewer-service-owner.test.js",
+      "packages/cli/dist/viewer-service.test.js",
+      "packages/cli/dist/hub-http.test.js"
+    ],
+    "exit_code": 0,
+    "seconds": 11.7,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  },
+  {
+    "label": "red-old-isolation-wiring-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "--test-name-pattern=isolation fixture joins owned viewer cleanup",
+      "/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47/scripts/zz-red-isolation-overlay.test.mjs"
+    ],
+    "exit_code": 1,
+    "seconds": 0.7,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "verdict": "CONFIRMED"
+  },
+  {
+    "label": "branch-settles-first-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "--test-force-exit",
+      "--test-name-pattern=isolation fixture joins owned viewer cleanup",
+      "/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47/scripts/zz-red-isolation-overlay.test.mjs"
+    ],
+    "exit_code": 1,
+    "seconds": 0.7,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "verdict": "CONFIRMED"
+  },
+  {
+    "label": "branch-setup-failure-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "--test",
+      "--test-name-pattern=isolation fixture joins owned viewer cleanup",
+      "/home/agent/.t3/worktrees/html-inbox/t3-26d1cd47/scripts/zz-red-isolation-overlay.test.mjs"
+    ],
+    "exit_code": 1,
+    "seconds": 0.7,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0,
+    "verdict": "CONFIRMED"
+  },
+  {
+    "label": "browser-suite-node24",
+    "command": [
+      "fnm",
+      "exec",
+      "--using=24.19.0",
+      "node",
+      "scripts/run-browser-tests.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 50.8,
+    "joined_detached_fixtures": 0,
+    "preserved_fixtures": 0
+  }
+]
