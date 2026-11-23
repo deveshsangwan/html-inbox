@@ -44,3 +44,9 @@ Claude did not rerun checks. It only grepped/tailed the full source logs, inspec
 ## Remaining gates
 
 No material review finding remains unresolved. The optional failure-path teardown risk and cosmetic/structural suggestions are recorded above. Final required CI and root readiness remain authoritative; the PR stays draft. No watch, merge, release or forward-port action was performed.
+
+## Addendum, 23 November 2026: teardown hardening
+
+The optional Sol teardown finding above is now fixed in `scripts/package-smoke.mjs`. A managed-qualification failure no longer skips cleanup: a `sync worker disable` failure is collected, and every recorded worker PID is still awaited. The smoke never signals a recorded PID, because a live PID cannot be proven to be the original worker. A PID still alive after the deadline counts as a cleanup failure, never as a successful shutdown. Any such survivor, failed disable or failed postcondition keeps the temporary fixture. The smoke then reports every failure, including the original error, in one `AggregateError`. The success path and its assertions are unchanged.
+
+An intermediate revision, `8feebd0`, force-killed a survivor after checking its `ps` command line. Root review rejected that approach for two reasons: the check-then-kill sequence races with PID reuse, and a mismatched command was treated as a confirmed shutdown. `5601566` replaced it. Installed package-smoke execution of this teardown change waits for a separate root-granted LOCAL slot. Earlier measurements and reviews stay pinned to their original revisions.
