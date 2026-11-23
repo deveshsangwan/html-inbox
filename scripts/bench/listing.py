@@ -49,17 +49,17 @@ def main():
         source.write_bytes(candidate)
 
     fixture_root = Path(tempfile.mkdtemp(prefix='listing-fixtures-', dir=out))
-    environment = {'base': BASE, 'candidate_diff': subprocess.check_output(['git', 'diff', '--', 'packages/cli/src/backend.ts'], cwd=REPO, text=True),
-                   'build_node': subprocess.check_output(['node', '--version'], text=True).strip(),
-                   'kernel': subprocess.check_output(['uname', '-a'], text=True).strip(),
-                   'filesystem': subprocess.check_output(['df', '-T', str(fixture_root)], text=True),
-                   'builds': builds, 'fixture_root': str(fixture_root), 'samples': args.samples,
-                   'cache': 'uncontrolled warm OS cache; fixtures freshly written on ext4; child warms once before timing; no physical disk I/O claim'}
-    (out / 'environment.json').write_text(json.dumps(environment, indent=2))
-
     hashes = {}
 
     try:
+        environment = {'base': BASE, 'candidate_diff': subprocess.check_output(['git', 'diff', '--', 'packages/cli/src/backend.ts'], cwd=REPO, text=True),
+                       'build_node': subprocess.check_output(['node', '--version'], text=True).strip(),
+                       'kernel': subprocess.check_output(['uname', '-a'], text=True).strip(),
+                       'filesystem': subprocess.check_output(['df', '-T', str(fixture_root)], text=True),
+                       'builds': builds, 'fixture_root': str(fixture_root), 'samples': args.samples,
+                       'cache': 'uncontrolled warm OS cache; fixtures freshly written on ext4; child warms once before timing; no physical disk I/O claim'}
+        (out / 'environment.json').write_text(json.dumps(environment, indent=2))
+
         for count in [100, 1000, 5000]:
             home = fixture_root / str(count)
             env = {'PATH': os.environ['PATH'], 'HOME': str(fixture_root), 'TMPDIR': str(fixture_root),

@@ -270,7 +270,7 @@ async function readDefaultInbox(root: string, readOnly = false): Promise<string 
 
 async function readCatalogJson(filePath: string, readOnly = false): Promise<{ value: unknown } | null> {
   for (let attempt = 0; attempt < 10; attempt += 1) {
-    const checked = await lstat(filePath).catch((error: unknown) => {
+    const checked = await lstat(filePath, { bigint: true }).catch((error: unknown) => {
       if (hasErrorCode(error, "ENOENT")) {
         return null;
       }
@@ -282,11 +282,11 @@ async function readCatalogJson(filePath: string, readOnly = false): Promise<{ va
     }
 
     // Atomic replacement can unlink the looked-up inode while lstat is in flight.
-    if (checked.isFile() && !checked.isSymbolicLink() && checked.nlink === 0) {
+    if (checked.isFile() && !checked.isSymbolicLink() && checked.nlink === 0n) {
       continue;
     }
 
-    if (!checked.isFile() || checked.isSymbolicLink() || checked.nlink !== 1) {
+    if (!checked.isFile() || checked.isSymbolicLink() || checked.nlink !== 1n) {
       throw new Error(`Catalog record must be a regular private file: ${filePath}`);
     }
 
@@ -303,12 +303,12 @@ async function readCatalogJson(filePath: string, readOnly = false): Promise<{ va
     }
 
     try {
-      const info = await file.stat();
-      if (!info.isFile() || info.nlink > 1) {
+      const info = await file.stat({ bigint: true });
+      if (!info.isFile() || info.nlink > 1n) {
         throw new Error(`Catalog record must be a regular private file: ${filePath}`);
       }
 
-      if (info.nlink === 0 || info.dev !== checked.dev || info.ino !== checked.ino) {
+      if (info.nlink === 0n || info.dev !== checked.dev || info.ino !== checked.ino) {
         continue;
       }
 

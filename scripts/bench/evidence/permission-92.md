@@ -4,15 +4,13 @@ Issue: https://github.com/deveshsangwan/html-inbox/issues/92
 
 The original investigation inspected immediate parent
 `52cdb70cc4a504fa8b983e6cdbcb23432d295592`. Draft PR #118 targets
-`perf/91-listing`. Its reviewed merge base is
-`bf80f9fa4815376f1771c3a6cb78d5ed19231ad2`; the
-[integration receipt](permission-92/integration-2026-11-15.md) records that
-merge and its scoped requalification. Any later parent pin is recorded at the
-end of this report. `packages/cli/src/private-storage.ts` is
-byte-identical at 52cdb70, bf80f9f and `610c931` (the stack's pre-#89
-baseline and an ancestor of bf80f9f), so the experiment below still applies
-to the current base. Inherited listing, storage-policy and
-runtime changes are outside this investigation's diff.
+`perf/91-listing`. The [November 15 integration receipt](permission-92/integration-2026-11-15.md)
+records the merge of `bf80f9fa4815376f1771c3a6cb78d5ed19231ad2` and its
+scoped requalification. The November 24 integration uses PR #116 head
+`e2f99a93958a7434e0eac8cd594c267a2547cf32`.
+`packages/cli/src/private-storage.ts` has identical bytes at both parents,
+at 52cdb70 and at the stack's pre-#89 baseline `610c931`. The comparison
+results below retain their original revisions.
 
 ## Decision
 
