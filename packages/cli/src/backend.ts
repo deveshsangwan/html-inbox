@@ -3,7 +3,8 @@ import { lstat, readFile, readdir, realpath, rename, rm } from "node:fs/promises
 import { homedir } from "node:os";
 import path from "node:path";
 import { ManagedSyncStore } from "./sync-store";
-import { parseDocumentMetadata, DOCUMENT_SCHEMA_VERSION, DeleteResult, DocumentBackend, DocumentMetadata, isSafeDocumentId, PublishInput, StoredDocument } from "./documents";
+import { parseDocumentMetadata, DOCUMENT_SCHEMA_VERSION, DeleteResult, DocumentBackend, DocumentMetadata, isSafeDocumentId, PublishInput, StoredDocument, type DocumentReadView } from "./documents";
+import { withDocumentReadView } from "./document-read-view";
 import { deleteStoredDocument } from "./document-deletion";
 import {
   ensurePrivateDirectory,
@@ -76,9 +77,33 @@ export class LocalDocumentBackend implements DocumentBackend {
     return metadata;
   }
 
-  async listDocuments(): Promise<DocumentMetadata[]> {
+  async withReadView<T>(operation: (view: DocumentReadView) => Promise<T>, signal?: AbortSignal): Promise<T> {
+    // An already-cancelled operation must not start enrollment I/O that could replace the caller's reason.
+    signal?.throwIfAborted();
+
+    const read = (managed?: DocumentReadView) => withDocumentReadView({
+      listDocuments: () => this.listCurrentDocuments({ managed, isScoped: true }),
+      getDocumentMetadata: (id) => this.readCurrentMetadata(id, managed),
+      getDocument: (id) => this.readCurrentDocument(id, managed),
+    }, operation, signal);
+
     if (await ManagedSyncStore.isEnrolled(this.home)) {
-      return new ManagedSyncStore(this.home).listDocuments();
+      // This scope owns cancellation, so an admitted read still finishes through the private store scope.
+      return new ManagedSyncStore(this.home).withReadView(read);
+    }
+
+    return read();
+  }
+
+  async listDocuments(): Promise<DocumentMetadata[]> {
+    return this.listCurrentDocuments();
+  }
+
+  private async listCurrentDocuments(
+    { managed, isScoped = false }: { managed?: DocumentReadView; isScoped?: boolean } = {},
+  ): Promise<DocumentMetadata[]> {
+    if (await ManagedSyncStore.isEnrolled(this.home)) {
+      return managed ? managed.listDocuments() : new ManagedSyncStore(this.home).listDocuments();
     }
 
     await this.prepareStorage();
@@ -94,15 +119,25 @@ export class LocalDocumentBackend implements DocumentBackend {
       throw error;
     }
 
-    const documents = await Promise.all(entries.map((id) => this.readMetadata(id)));
+    const reads = entries.map((id) => this.readMetadata(id));
+    // A scoped read must not settle while sibling reads still touch storage.
+    const documents = isScoped ? await settleAll(reads) : await Promise.all(reads);
     return documents
       .filter((metadata): metadata is DocumentMetadata => metadata !== null)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
   async getDocument(id: string): Promise<StoredDocument | null> {
+    return this.readCurrentDocument(id);
+  }
+
+  private async readCurrentDocument(id: string, managed?: DocumentReadView): Promise<StoredDocument | null> {
     if (await ManagedSyncStore.isEnrolled(this.home)) {
-      return isSafeDocumentId(id) ? new ManagedSyncStore(this.home).getDocument(id) : null;
+      if (!isSafeDocumentId(id)) {
+        return null;
+      }
+
+      return managed ? managed.getDocument(id) : new ManagedSyncStore(this.home).getDocument(id);
     }
 
     const metadata = await this.getDocumentMetadata(id);
@@ -123,12 +158,16 @@ export class LocalDocumentBackend implements DocumentBackend {
   }
 
   async getDocumentMetadata(id: string): Promise<DocumentMetadata | null> {
+    return this.readCurrentMetadata(id);
+  }
+
+  private async readCurrentMetadata(id: string, managed?: DocumentReadView): Promise<DocumentMetadata | null> {
     if (!isSafeDocumentId(id)) {
       return null;
     }
 
     if (await ManagedSyncStore.isEnrolled(this.home)) {
-      return new ManagedSyncStore(this.home).getDocumentMetadata(id);
+      return managed ? managed.getDocumentMetadata(id) : new ManagedSyncStore(this.home).getDocumentMetadata(id);
     }
 
     await this.prepareStorage();
@@ -220,7 +259,8 @@ export class LocalDocumentBackend implements DocumentBackend {
     }
 
     try {
-      await Promise.all([
+      // Both checks settle before the document is classified, so no chmod outlives this read.
+      await settleAll([
         hardenPrivateFile(path.join(documentDir, "index.html")),
         hardenPrivateFile(path.join(documentDir, "metadata.json")),
       ]);
@@ -256,4 +296,19 @@ export class LocalDocumentBackend implements DocumentBackend {
       }
     }
   }
+}
+
+/** Like Promise.all, including its earliest rejection reason, but settles only after every promise does. */
+async function settleAll<T>(promises: Promise<T>[]): Promise<T[]> {
+  const failures: unknown[] = [];
+  const results = await Promise.allSettled(promises.map((promise) => promise.catch((reason: unknown) => {
+    failures.push(reason);
+    throw reason;
+  })));
+
+  if (failures.length > 0) {
+    throw failures[0];
+  }
+
+  return results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
 }

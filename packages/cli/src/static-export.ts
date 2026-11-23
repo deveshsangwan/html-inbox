@@ -23,7 +23,7 @@ const OWNERSHIP_MARKER_PATH = "__html-inbox/ownership.json";
 
 export type SnapshotDocumentSource = Pick<
   DocumentBackend,
-  "listDocuments" | "getDocument"
+  "listDocuments" | "getDocument" | "withReadView"
 >;
 
 export interface StaticSnapshotOptions {
@@ -86,59 +86,63 @@ export async function exportStaticSnapshot(
     throw new Error("Static export generatedAt must be a valid date");
   }
 
-  const documents = (await source.listDocuments()).map(parseDocumentMetadata).filter((metadata) => !metadata.origin);
-  documents.sort(compareDocuments);
-  const inboxPath = `/i/${capability}`;
-  const manifest = await replaceOutputDirectory(outputDir, async (stagingDir) => {
-    const manifestFiles: SnapshotFile[] = [];
-    const writeFile = async (filePath: string, contents: string | Buffer) => {
-      const bytes = typeof contents === "string" ? Buffer.from(contents, "utf8") : contents;
-      const destination = path.join(stagingDir, filePath);
-      await ensurePrivateDirectory(path.dirname(destination));
-      await writePrivateFile(destination, bytes);
-      manifestFiles.push(describeFile(filePath, bytes));
-    };
-    await writeFile("index.html", renderPrivateRoot());
-    await writeFile(
-      OWNERSHIP_MARKER_PATH,
-      JSON.stringify({ schemaVersion: 1, ownerId }, null, 2),
-    );
-    await writeFile(`${inboxPath.slice(1)}/index.html`, renderIndex(documents, "", {
-      basePath: inboxPath,
-      clientSearch: true,
-      timeZone: "UTC",
-      appearance: options.appearance,
-    }));
-    await writeFile(`${inboxPath.slice(1)}/assets/viewer.css`, VIEWER_STYLES);
-    await writeFile(`${inboxPath.slice(1)}/assets/viewer.js`, VIEWER_SCRIPT);
+  const writeSnapshot = async (reader: SnapshotDocumentSource) => {
+    const documents = (await reader.listDocuments()).map(parseDocumentMetadata).filter((metadata) => !metadata.origin);
+    documents.sort(compareDocuments);
+    const inboxPath = `/i/${capability}`;
+    const manifest = await replaceOutputDirectory(outputDir, async (stagingDir) => {
+      const manifestFiles: SnapshotFile[] = [];
+      const writeFile = async (filePath: string, contents: string | Buffer) => {
+        const bytes = typeof contents === "string" ? Buffer.from(contents, "utf8") : contents;
+        const destination = path.join(stagingDir, filePath);
+        await ensurePrivateDirectory(path.dirname(destination));
+        await writePrivateFile(destination, bytes);
+        manifestFiles.push(describeFile(filePath, bytes));
+      };
+      await writeFile("index.html", renderPrivateRoot());
+      await writeFile(
+        OWNERSHIP_MARKER_PATH,
+        JSON.stringify({ schemaVersion: 1, ownerId }, null, 2),
+      );
+      await writeFile(`${inboxPath.slice(1)}/index.html`, renderIndex(documents, "", {
+        basePath: inboxPath,
+        clientSearch: true,
+        timeZone: "UTC",
+        appearance: options.appearance,
+      }));
+      await writeFile(`${inboxPath.slice(1)}/assets/viewer.css`, VIEWER_STYLES);
+      await writeFile(`${inboxPath.slice(1)}/assets/viewer.js`, VIEWER_SCRIPT);
 
-    for (const metadata of documents) {
-      await addDocumentFiles(writeFile, source, metadata, inboxPath, options.appearance);
-    }
+      for (const metadata of documents) {
+        await addDocumentFiles(writeFile, reader, metadata, inboxPath, options.appearance);
+      }
 
-    await writeFile(
-      `${inboxPath.slice(1)}/security-headers.json`,
-      JSON.stringify(buildSecurityHeaders(), null, 2),
-    );
+      await writeFile(
+        `${inboxPath.slice(1)}/security-headers.json`,
+        JSON.stringify(buildSecurityHeaders(), null, 2),
+      );
 
-    manifestFiles.sort((a, b) => compareText(a.path, b.path));
-    const snapshotHash = hashManifestFiles(manifestFiles);
-    const manifest: SnapshotManifest = {
-      schemaVersion: SNAPSHOT_SCHEMA_VERSION,
-      generatedAt,
-      documentCount: documents.length,
-      snapshotHash,
-      files: [...manifestFiles],
-    };
-    await writeFile(
-      `${inboxPath.slice(1)}/snapshot-manifest.json`,
-      JSON.stringify(manifest, null, 2),
-    );
+      manifestFiles.sort((a, b) => compareText(a.path, b.path));
+      const snapshotHash = hashManifestFiles(manifestFiles);
+      const manifest: SnapshotManifest = {
+        schemaVersion: SNAPSHOT_SCHEMA_VERSION,
+        generatedAt,
+        documentCount: documents.length,
+        snapshotHash,
+        files: [...manifestFiles],
+      };
+      await writeFile(
+        `${inboxPath.slice(1)}/snapshot-manifest.json`,
+        JSON.stringify(manifest, null, 2),
+      );
 
-    return manifest;
-  });
+      return manifest;
+    });
 
-  return { outputDir, capability, inboxPath, ownerId, manifest };
+    return { outputDir, capability, inboxPath, ownerId, manifest };
+  };
+
+  return source.withReadView ? source.withReadView(writeSnapshot) : writeSnapshot(source);
 }
 
 export function generateInboxCapability(): string {

@@ -13,7 +13,7 @@ import { CloudflarePagesAdapter } from "./cloudflare-pages";
 import { type CommandInvocation } from "./command-runner";
 import { parseDocumentMetadata, type DocumentSource } from "./documents";
 import { LocalDocumentSource } from "./local-document-source";
-import { exportStaticSnapshot, type StaticSnapshotResult } from "./static-export";
+import { exportStaticSnapshot, type SnapshotDocumentSource, type StaticSnapshotResult } from "./static-export";
 import { createSyncIngestionServer } from "./sync-http-server";
 import { createSyncHttpsCredentials } from "./sync-https-fixtures";
 import { canonicalKey, inventoryDigest, MANIFEST_DOMAIN, sha256, verifyOriginState, type RouteAuthorization, type SyncRoute } from "./sync-model";
@@ -369,19 +369,70 @@ test("fork-inherited originals remain excluded from public exports alongside det
   assert.equal([...files.values()].some((contents) => contents.includes(originalBytes)), false);
 });
 
-test("export rechecks fetched managed origin and preserves the previous snapshot on a reader race", async (t) => {
-  const fixture = await createLibrary(t);
-  const outputDir = path.join(fixture.root, "racing-snapshot");
-  await exportStaticSnapshot(fixture.source, { outputDir });
-  const before = await captureTree(outputDir);
-  const imported = await fixture.source.getDocument(fixture.attachedRow.id);
-  assert.ok(imported);
-  const getDocument = t.mock.method(fixture.source, "getDocument", async () => imported);
-  await assert.rejects(exportStaticSnapshot(fixture.source, { outputDir }), /changed while exporting/);
-  assert.equal(getDocument.mock.callCount(), 1);
-  assert.deepEqual(await captureTree(outputDir), before);
-  assert.equal((await fs.readdir(fixture.root)).some((name) => name.includes(".staging-")), false);
-});
+for (const route of ["view", "fallback"] as const) {
+  for (const scenario of ["imported", "origin-only"] as const) {
+    test(`export fetched-origin guard rejects ${scenario} return through ${route}`, async (t) => {
+      const fixture = await createLibrary(t);
+      const outputDir = path.join(fixture.root, "racing-snapshot");
+      await exportStaticSnapshot(fixture.source, { outputDir });
+      const before = await captureTree(outputDir);
+      const imported = await fixture.source.getDocument(fixture.attachedRow.id);
+      assert.ok(imported);
+      let fetched = imported;
+      let callbackEntries = 0;
+      let fetches = 0;
+
+      const listDocuments = async (reader: Pick<DocumentSource, "listDocuments">) => {
+        const documents = await reader.listDocuments();
+        if (scenario === "origin-only") {
+          const listed = documents.find((metadata) => metadata.id === fixture.original.id);
+          assert.ok(listed);
+          assert.deepEqual(listed, fixture.original);
+
+          await fixture.store.quarantineRestore();
+          await fixture.store.fork();
+          const inherited = await fixture.backend.getDocument(listed.id);
+          assert.ok(inherited);
+
+          const { origin, ...nonOriginMetadata } = parseDocumentMetadata(inherited.metadata);
+          assert.ok(origin);
+          assert.deepEqual(nonOriginMetadata, listed);
+          assert.deepEqual(inherited.originalBytes, originalBytes);
+          fetched = inherited;
+        }
+
+        return documents;
+      };
+      const getDocument = async (id: string) => {
+        fetches += 1;
+        assert.equal(id, fixture.original.id);
+
+        return fetched;
+      };
+      const source: SnapshotDocumentSource = route === "view" ? {
+        async listDocuments() { throw new Error("Export bypassed the scoped reader"); },
+        async getDocument() { throw new Error("Export bypassed the scoped reader"); },
+        withReadView(operation) {
+          return fixture.source.withReadView(async (view) => {
+            callbackEntries += 1;
+
+            return operation({
+              listDocuments: () => listDocuments(view),
+              getDocumentMetadata: (id) => view.getDocumentMetadata(id),
+              getDocument,
+            });
+          });
+        },
+      } : { listDocuments: () => listDocuments(fixture.source), getDocument };
+
+      await assert.rejects(exportStaticSnapshot(source, { outputDir }), /changed while exporting/);
+      assert.equal(callbackEntries, route === "view" ? 1 : 0);
+      assert.equal(fetches, 1);
+      assert.deepEqual(await captureTree(outputDir), before);
+      assert.equal((await fs.readdir(fixture.root)).some((name) => name.includes(".staging-")), false);
+    });
+  }
+}
 
 test("dedicated HTTPS ingestion has no reader, control or process administration endpoints", async (t) => {
   const fixture = await createLibrary(t);

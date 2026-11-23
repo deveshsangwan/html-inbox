@@ -1,0 +1,57 @@
+{
+  "source_only": true,
+  "source_pin": "22ee41a2c6edf62b79e417c30d80a87005790fa4",
+  "original_request_sha256": "87715b0c66721eee7064890608f1c1b12644d2cf0b441c13442b9be2cba13761",
+  "controller_source": {
+    "bytes": 25247,
+    "sha256": "17eb4a9769e46bf7addda698f5174389bbab3e8001feadcb6128e7039d77ca47"
+  },
+  "manifest": {
+    "bytes": 2037535,
+    "sha256": "7f84219f8814aa46401ffff9de485a186d4b76cacbe873cbf5418499aa0f91ec"
+  },
+  "controller_diff": {
+    "bytes": 45971,
+    "sha256": "22650977503b6958ca627c99838c40403608afce0d84494241e052da2ff50d41"
+  },
+  "source_archive": {
+    "path": "scripts/bench/evidence/issue-96/full-qualification-v1-source.tar.gz",
+    "bytes": 404170,
+    "sha256": "936d50d52f775d758969bcd63b155b6968c39d15ef66e1b09eb7302dfddb98bb",
+    "file_members": 5,
+    "all_members_compared_to_prepared_bytes": true
+  },
+  "commands": 24,
+  "application_commands": 22,
+  "version_preflights": 2,
+  "sum_command_caps_seconds": 4170,
+  "application_deadline_seconds": 4500,
+  "fixed_cleanup_seconds": 120,
+  "bound_attempt_root": "/home/agent/.t3/worktrees/html-inbox/perf-96-snapshot/artifacts/issue-96/full-qualification-freeze-attempt1",
+  "all_output_targets_absent": true,
+  "prepared_source": "artifacts/issue-96/full-qualification-prepared-v1",
+  "controller_lines": 479,
+  "identity_counts": {
+    "reusable_inputs": 335,
+    "candidate_compiled": 400,
+    "parent_compiled": 392,
+    "original_runtimes": 2,
+    "original_tool_map": 8,
+    "original_extra_tool_map": 13,
+    "full_identity_files": 28,
+    "fresh_tree_entries": {
+      "/home/agent/.t3/worktrees/html-inbox/perf-96-snapshot/node_modules/.pnpm": 1419,
+      "/home/agent/.local/share/fnm/node-versions/v20.20.2/installation/lib/node_modules/npm": 2384,
+      "/home/agent/.local/share/fnm/node-versions/v24.19.0/installation/lib/node_modules/npm": 2388,
+      "/home/agent/.cache/ms-playwright/chromium_headless_shell-1243": 292,
+      "/home/agent/.cache/ms-playwright/chromium-1243": 317,
+      "/home/agent/.cache/ms-playwright/ffmpeg-1011": 4
+    }
+  },
+  "validation": "AST/JSON/hash/Git inspection only; controller never imported, compiled or executed. No helper/unit test, application, install, package, browser, workload or review ran.",
+  "historical_typecheck_limit": "All tracked non-documentation/evidence inputs, every tracked TS file, and original recorded compiler/tool hashes must match. Installed declaration dependency hashes were not retained at the earlier typecheck; they cannot be independently reconstructed retrospectively.",
+  "actual_parent": "b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad",
+  "current_local_owner": "issue95; no issue96 execution grant",
+  "unsupported_outputs": "No preload. Internal exports unobserved by outer controller; existing assertions and immutable measured output evidence remain distinct.",
+  "remaining_gates": "Root source review/clean execution pin and separate grant; unresolved shared CI observations; original610 combined criterion; normal qualification/root disposition; two fresh same-pin reviews."
+}

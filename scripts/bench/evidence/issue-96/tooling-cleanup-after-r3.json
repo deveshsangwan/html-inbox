@@ -1,0 +1,150 @@
+{
+  "authorization": "Root post-r3 exact disposed-tooling filesystem cleanup; no application execution",
+  "checkpoint_head": "ecffd7c44b68f72532148dd296b361d192633a28",
+  "archive": "scripts/bench/evidence/issue-96/integrated-correctness-79a2912-cache-mode-stop.tar.gz",
+  "archive_sha256": "1066be540f73d0054e97bf288f079ee83cc776807a89506aeed17a47f83bb557",
+  "all22_archive_members_byte_verified_before_removal": true,
+  "original21_artifact_hashes_reverified_before_removal": true,
+  "cache_files_rehashed": 9,
+  "original_ownership_modes_links_reverified": true,
+  "observed8_pid_paths_and3_groups_absent": true,
+  "pre_removal_current_identities": {
+    "build-home": {
+      "dev": 66306,
+      "ino": 26099596,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": "0o700",
+      "nlink": 3,
+      "size": 4096
+    },
+    "build-home/catalog": {
+      "dev": 66306,
+      "ino": 26099618,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": "0o700",
+      "nlink": 2,
+      "size": 4096
+    },
+    "build-tmp": {
+      "dev": 66306,
+      "ino": 26099585,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": "0o700",
+      "nlink": 3,
+      "size": 4096
+    },
+    "build-tmp/node-compile-cache": {
+      "dev": 66306,
+      "ino": 26100289,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": "0o775",
+      "nlink": 3,
+      "size": 4096
+    },
+    "build-tmp/node-compile-cache/v24.19.0-x64-cf738c9d-1001": {
+      "dev": 66306,
+      "ino": 26100290,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": "0o775",
+      "nlink": 2,
+      "size": 4096
+    },
+    "build-tmp/node-compile-cache/v24.19.0-x64-cf738c9d-1001/192b16f6": {
+      "dev": 66306,
+      "ino": 26100297,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": "0o600",
+      "nlink": 1,
+      "size": 2123780
+    },
+    "build-tmp/node-compile-cache/v24.19.0-x64-cf738c9d-1001/21de1b63": {
+      "dev": 66306,
+      "ino": 26100295,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": "0o600",
+      "nlink": 1,
+      "size": 2292
+    },
+    "build-tmp/node-compile-cache/v24.19.0-x64-cf738c9d-1001/43ff3ad1": {
+      "dev": 66306,
+      "ino": 26100292,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": "0o600",
+      "nlink": 1,
+      "size": 2636
+    },
+    "build-tmp/node-compile-cache/v24.19.0-x64-cf738c9d-1001/4f3c4bbc": {
+      "dev": 66306,
+      "ino": 26100298,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": "0o600",
+      "nlink": 1,
+      "size": 1860
+    },
+    "build-tmp/node-compile-cache/v24.19.0-x64-cf738c9d-1001/8319560d": {
+      "dev": 66306,
+      "ino": 26100301,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": "0o600",
+      "nlink": 1,
+      "size": 101932
+    },
+    "build-tmp/node-compile-cache/v24.19.0-x64-cf738c9d-1001/99864408": {
+      "dev": 66306,
+      "ino": 26100300,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": "0o600",
+      "nlink": 1,
+      "size": 6148
+    },
+    "build-tmp/node-compile-cache/v24.19.0-x64-cf738c9d-1001/c02a7d94": {
+      "dev": 66306,
+      "ino": 26100299,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": "0o600",
+      "nlink": 1,
+      "size": 2652
+    },
+    "build-tmp/node-compile-cache/v24.19.0-x64-cf738c9d-1001/e00672fb": {
+      "dev": 66306,
+      "ino": 26100296,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": "0o600",
+      "nlink": 1,
+      "size": 1068
+    },
+    "build-tmp/node-compile-cache/v24.19.0-x64-cf738c9d-1001/ead9d04c": {
+      "dev": 66306,
+      "ino": 26100294,
+      "uid": 1001,
+      "gid": 1001,
+      "mode": "0o600",
+      "nlink": 1,
+      "size": 2044
+    }
+  },
+  "identity_limit": "Original receipts did not separately record historical dev/inode. Exact archived bytes and original recorded owner/mode/link/size matched; current dev/inode rechecked immediately before descriptor-safe deletion. No inode-only authority.",
+  "removed_only": [
+    "artifacts/issue-96/integrated-correctness-79a2912-continuation1/build-home",
+    "artifacts/issue-96/integrated-correctness-79a2912-continuation1/build-tmp"
+  ],
+  "exact_targets_absent": true,
+  "rmtree_avoids_symlink_attacks": true,
+  "no_chmod_or_application_permission_change": true,
+  "old_receipts_unchanged": true,
+  "remaining_original_noncache_artifacts_unchanged": true,
+  "cleaned_at": "2026-11-08T17:22:19.563564+00:00"
+}

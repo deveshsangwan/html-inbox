@@ -1,0 +1,93 @@
+{
+  "version": 2,
+  "source_only": true,
+  "reviewed_v1_head": "62bc8fe8d1ff113804c423048f7d4ab123f2d1be",
+  "prepared_source": "artifacts/issue-96/full-qualification-prepared-v2",
+  "five_source_files": {
+    "execute.py": {
+      "bytes": 27228,
+      "sha256": "b85d7d350c44da898753749006655a5f81c38268d4163b85f4202e61c11c4dc7"
+    },
+    "manifest.json": {
+      "bytes": 2037535,
+      "sha256": "7f84219f8814aa46401ffff9de485a186d4b76cacbe873cbf5418499aa0f91ec"
+    },
+    "controller.diff": {
+      "bytes": 6077,
+      "sha256": "df0257f6b53cf91aa40cb78455ee59e1bc064192f5b4fb7b0e9c4a7ce2b7d9b5"
+    },
+    "preparation.json": {
+      "bytes": 7597,
+      "sha256": "a1ada9fa7d16b324f747cd2cf3507b806d7c6df7c27e9d92726cf39e653f6e9e"
+    },
+    "artifact-hashes.json": {
+      "bytes": 513,
+      "sha256": "e459e3230ad0e4c5b7c240a827a536117cee927cdec8b353f4c6e97a8a3b7434"
+    }
+  },
+  "archive": {
+    "path": "scripts/bench/evidence/issue-96/full-qualification-v2-source.tar.gz",
+    "bytes": 395274,
+    "sha256": "2d5e0cbfa073f68060f85b32695775482a8616d9c1d36d37765312b3d3a746d2",
+    "file_members": 5,
+    "all_members_byte_compared": true
+  },
+  "root_review_sha256": "20b264c3deae5ca779566d8294c3d195c33ec48695bcaa04e2d787529e2f8f75",
+  "manifest_byte_identical_to_v1": true,
+  "original_request_sha256": "87715b0c66721eee7064890608f1c1b12644d2cf0b441c13442b9be2cba13761",
+  "v1_archive_preserved_sha256": "936d50d52f775d758969bcd63b155b6968c39d15ef66e1b09eb7302dfddb98bb",
+  "disposition": "C1-C5 accepted as source-supported; exact root corrections copied unchanged; not reproduced or runtime-qualified.",
+  "static_function_comparison": {
+    "changed_functions": [
+      "git",
+      "inspect_installed_package",
+      "reap_adopted",
+      "signal_owned"
+    ],
+    "added_functions": [
+      "git_state"
+    ],
+    "unchanged_function_asts": [
+      "aggregate",
+      "audit_log",
+      "dispose_root",
+      "drain_group",
+      "file_map",
+      "group_exists",
+      "identity",
+      "inventory",
+      "observe_tree",
+      "own_children",
+      "remaining",
+      "run",
+      "save",
+      "tracked",
+      "verify_inputs",
+      "verify_tarball"
+    ],
+    "no_removed_functions": true,
+    "manifest_bytes_identical_to_v1": true,
+    "command_count": 24,
+    "application_commands": 22,
+    "version_preflights": 2,
+    "sum_caps_seconds": 4170,
+    "application_deadline_seconds": 4500,
+    "cleanup_allowance_seconds": 120,
+    "all_bound_targets_absent": true
+  },
+  "current_identity_hashes_match": {
+    "reusable_inputs": 335,
+    "candidate_compiled": 400,
+    "parent_compiled": 392,
+    "both_bundles": true,
+    "flattened_runtime_tool_identity_files": 28,
+    "parent_head_clean": "b24927abf4cae14c9bbf1753ff6ea2cfb7a945ad"
+  },
+  "bound_attempt_root": "/home/agent/.t3/worktrees/html-inbox/perf-96-snapshot/artifacts/issue-96/full-qualification-freeze-attempt1",
+  "all_bound_run_targets_absent": true,
+  "application_execution": false,
+  "controller_import_compile_execution": false,
+  "helper_controls_or_reviews": false,
+  "execution_granted": false,
+  "remaining_limits": "Historical missing declarations,100ms sampling and unsupported output limits remain. Shared CI causes/original610 combined criterion/full qualification/root disposition/fresh reviews remain open."
+}

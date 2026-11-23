@@ -1,0 +1,115 @@
+{
+  "version": 3,
+  "source_only": true,
+  "stop_publication_pin": "7d638d40d7260341d3fa823c0f330909f9e98526",
+  "proposal_source_head": "85314e7fd8dd356750c874c770d78fa3f6ba1304",
+  "prepared_source": "/home/agent/.t3/worktrees/html-inbox/perf-96-snapshot/artifacts/issue-96/full-qualification-prepared-v3",
+  "five_files": {
+    "execute.py": {
+      "bytes": 27668,
+      "sha256": "97f58a302a82e21b8d8ee699e0dc2dc99e5f36a7f9d9c291df4c0e1c9209fe5a"
+    },
+    "manifest.json": {
+      "bytes": 2034491,
+      "sha256": "5ee20b560323ea4a8a184d18a48ccbdba26ed9079fffc0e10c5b0d740c421ec5"
+    },
+    "controller.diff": {
+      "bytes": 7931,
+      "sha256": "87ae315e03ebf4529a34b7ae4eabc6bbe4acac1b93976d244be17cdfe9409b79"
+    },
+    "preparation.json": {
+      "bytes": 2933,
+      "sha256": "de8522df16540d0731d24e62ea60d97f0dcee5f22264b9911a3fe58bec56683b"
+    },
+    "artifact-hashes.json": {
+      "bytes": 513,
+      "sha256": "db75f950475529f7777f74940c104909b29e657ac9714a4daa44973b13975cfb"
+    }
+  },
+  "archive": {
+    "bytes": 395019,
+    "sha256": "894ee48eaef7af96d07e7dfae2e4283861cc0fc7acb0eb851408ea17b5d8e4b3",
+    "file_members": 5,
+    "prefix": "full-qualification-prepared-v3/",
+    "all_members_byte_compared": true
+  },
+  "static_comparison": {
+    "changed_functions": [
+      "dispose_root",
+      "run"
+    ],
+    "added_functions": [
+      "verify_reused_pack"
+    ],
+    "unchanged_existing_function_asts": [
+      "aggregate",
+      "audit_log",
+      "drain_group",
+      "file_map",
+      "git",
+      "git_state",
+      "group_exists",
+      "identity",
+      "inspect_installed_package",
+      "inventory",
+      "observe_tree",
+      "own_children",
+      "reap_adopted",
+      "remaining",
+      "save",
+      "signal_owned",
+      "tracked",
+      "verify_inputs",
+      "verify_tarball"
+    ],
+    "commands": 23,
+    "unrun_application_gates": 21,
+    "exact_versions": 2,
+    "sum_caps_seconds": 3990,
+    "application_seconds": 4500,
+    "fixed_cleanup_seconds": 120,
+    "same_remaining_argv_order_individual_caps": true,
+    "dependency_entries": 6804,
+    "new_accepted_exact_cache_baselines": [
+      [
+        "/home/agent/.t3/worktrees/html-inbox/perf-96-snapshot/node_modules/.pnpm",
+        "@vercel+ncc@0.44.1/node_modules/@vercel/ncc/dist/ncc/cli.js.cache"
+      ],
+      [
+        "/home/agent/.t3/worktrees/html-inbox/perf-96-snapshot/node_modules/.pnpm",
+        "@vercel+ncc@0.44.1/node_modules/@vercel/ncc/dist/ncc/index.js.cache"
+      ],
+      [
+        "/home/agent/.t3/worktrees/html-inbox/perf-96-snapshot/node_modules/.pnpm",
+        "@vercel+ncc@0.44.1/node_modules/@vercel/ncc/dist/ncc/loaders/relocate-loader.js.cache"
+      ],
+      [
+        "/home/agent/.t3/worktrees/html-inbox/perf-96-snapshot/node_modules/.pnpm",
+        "@vercel+ncc@0.44.1/node_modules/@vercel/ncc/dist/ncc/loaders/shebang-loader.js.cache"
+      ]
+    ],
+    "all_other6800_unchanged": true,
+    "original_input_build_identity_maps_unchanged": true
+  },
+  "reuse": {
+    "receipt": "/home/agent/.t3/worktrees/html-inbox/perf-96-snapshot/artifacts/issue-96/full-qualification-freeze-attempt1/receipt.json",
+    "receipt_sha256": "8528f8ed4fbd0a73ae105284343461ef8121b956b47a0b94b6fcdaf264f1b622",
+    "root_artifact_audit": "/home/agent/programming/html-inbox/artifacts/performance-issues-2026-11-07/issue96-full-85314e7-stop-root-audit.json",
+    "root_artifact_audit_sha256": "8ba0db805a17086b6aeb76a2de8de365026a604b918a6e0d50e48be8052d89a6",
+    "source_head": "85314e7fd8dd356750c874c770d78fa3f6ba1304",
+    "original_result": "stopped",
+    "original_incomplete": [
+      "npm-pack"
+    ],
+    "tarball_sha256": "b7e5a45f0204cba70e41cdbaf640218f47ef6e20453609326b2000b84422bfdb",
+    "classification": "Bounded pack process exit0 and exact artifact reproduction accepted independently. Original command/qualification remains incomplete. Four current V8 cache hashes pinned strictly, no wildcard exclusion."
+  },
+  "bound_run_root": "/home/agent/.t3/worktrees/html-inbox/perf-96-snapshot/artifacts/issue-96/full-qualification-tests-attempt1",
+  "all_future_targets_absent": true,
+  "old_retained_directories_read_only": true,
+  "controller_import_compile_execution": false,
+  "helper_or_application_execution": false,
+  "launch_granted": false,
+  "reviews_started": false,
+  "limits": "Source/data comparison only; no dynamic validation. Prior stopped/incomplete receipt unchanged. Historical typecheck hashes,100ms sampling/unsupported outputs/shared CI/original610 criterion remain open."
+}

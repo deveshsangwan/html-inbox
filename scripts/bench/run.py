@@ -18,15 +18,27 @@ REPO = Path(__file__).resolve().parents[2]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('workload', choices=['baseline', 'cli', 'viewer', 'worker', 'parser', 'managed', 'sync'])
-    parser.add_argument('--counts', default='0,100')
-    parser.add_argument('--sizes', default='10240,1048576,9437184')
-    parser.add_argument('--samples', type=int, default=3)
+    parser.add_argument('workload', choices=['baseline', 'cli', 'viewer', 'worker', 'parser', 'managed', 'sync', 'managed-read'])
+    parser.add_argument('--counts')
+    parser.add_argument('--sizes')
+    parser.add_argument('--samples', type=int)
     parser.add_argument('--node', default=shutil.which('node'))
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--candidate', help='CommonJS module exporting validateHtml for exact-result parser comparison')
+    parser.add_argument('--baseline-repo', type=Path, help='Clean app-managed baseline checkout with built release bundle, for managed-read only')
+    parser.add_argument('--expected-baseline-commit', help='Full 40-hex baseline SHA for managed-read; legacy default is 610c931b7b22920cce59cf03e49c0de15ebaf2a2')
     parser.add_argument('--timeout', type=int, default=600)
     args = parser.parse_args()
+    if args.workload == 'managed-read' or args.expected_baseline_commit is not None:
+        from managed_read import resolve_expected_baseline_commit
+        try:
+            args.expected_baseline_commit = resolve_expected_baseline_commit(args.workload, args.expected_baseline_commit)
+        except ValueError as error:
+            parser.error(str(error))
+
+    args.counts = args.counts if args.counts is not None else ('1,100' if args.workload == 'managed-read' else '0,100')
+    args.sizes = args.sizes if args.sizes is not None else ('10240' if args.workload == 'managed-read' else '10240,1048576,9437184')
+    args.samples = args.samples if args.samples is not None else (7 if args.workload == 'managed-read' else 3)
     try:
         counts = [int(n) for n in args.counts.split(',')]
         sizes = [int(n) for n in args.sizes.split(',')]
@@ -39,8 +51,13 @@ def main():
         parser.error('--candidate requires the parser or baseline workload')
     if len(set(counts)) != len(counts) or len(set(sizes)) != len(sizes):
         parser.error('counts and sizes must not contain duplicates')
-    if not counts or any(n not in [0, 100, 1000, 5000, 10000] for n in counts):
-        parser.error('counts must be drawn from 0,100,1000,5000,10000')
+    allowed_counts = [1, 100] if args.workload == 'managed-read' else [0, 100, 1000, 5000, 10000]
+    if not counts or any(n not in allowed_counts for n in counts):
+        parser.error(f'counts must be drawn from {allowed_counts}')
+    if args.workload == 'managed-read' and (not args.baseline_repo or sizes != [10240]):
+        parser.error('managed-read requires --baseline-repo and --sizes 10240; larger bodies need separate qualification')
+    if args.baseline_repo and args.workload != 'managed-read':
+        parser.error('--baseline-repo is only supported by managed-read')
     if any(n not in [10240, 1048576, 9437184] for n in sizes) or not 1 <= args.samples <= 100 or not 1 <= args.timeout <= 3600:
         parser.error('invalid sizes, samples or timeout')
     if not Path('/proc/self/io').exists() or not hasattr(os, 'wait4'):
@@ -64,11 +81,11 @@ def main():
                    'XDG_CONFIG_HOME': directory, 'XDG_STATE_HOME': directory, 'XDG_DATA_HOME': directory,
                    'HTML_INBOX_HOME': directory, 'HTML_INBOX_CATALOG_HOME': str(root / 'catalog')}
 
-            def run(label, command, check=None):
+            def run(label, command, check=None, extra_env=None):
                 nonlocal active
                 with tempfile.TemporaryFile() as stdout, tempfile.TemporaryFile() as stderr:
                     start = time.perf_counter()
-                    active = subprocess.Popen(command, env=env, cwd=REPO, stdout=stdout, stderr=stderr, start_new_session=True)
+                    active = subprocess.Popen(command, env={**env, **(extra_env or {})}, cwd=REPO, stdout=stdout, stderr=stderr, start_new_session=True)
                     child = active
                     try:
                         while True:
@@ -83,10 +100,12 @@ def main():
                         stdout.seek(0)
                         stderr.seek(0)
                         output, errors = stdout.read().decode(), stderr.read().decode()
-                        row = dict(label=label, command=command, exit_code=child.returncode, wall_ms=elapsed,
+                        row = dict(label=label, command=command, pid=child.pid, process_group=child.pid, exit_code=child.returncode, wall_ms=elapsed,
                                    cpu_ms=(usage.ru_utime + usage.ru_stime) * 1000, peak_rss_kib=usage.ru_maxrss,
                                    input_blocks=usage.ru_inblock, output_blocks=usage.ru_oublock,
                                    stdout=output, stderr=errors)
+                        if extra_env:
+                            row['explicit_probe_environment'] = extra_env
                         rows.append(row)
                         with (args.out / 'samples.jsonl').open('a') as stream:
                             stream.write(json.dumps(row) + '\n')
@@ -99,7 +118,7 @@ def main():
                         stdout.seek(0)
                         stderr.seek(0)
                         with (args.out / 'failures.jsonl').open('a') as stream:
-                            stream.write(json.dumps(dict(label=label, command=command, error=repr(error),
+                            stream.write(json.dumps(dict(label=label, command=command, pid=child.pid, process_group=child.pid, error=repr(error),
                                                          stdout=stdout.read().decode(errors='replace'),
                                                          stderr=stderr.read().decode(errors='replace'))) + '\n')
                         raise
@@ -144,6 +163,14 @@ def main():
                             bundle_bytes=(REPO / 'packages/cli/bundle/index.js').stat().st_size,
                             limits={'timeout_seconds': args.timeout, 'concurrency': 1}, fixture_root=directory,
                             fingerprints=fingerprints, invocation=sys.argv)
+            builds = None
+            if args.workload == 'managed-read':
+                from managed_read import build_info
+                builds = {'baseline': build_info(args.baseline_repo, args.expected_baseline_commit), 'candidate': build_info(REPO)}
+                metadata['compared_builds'] = builds
+                metadata['expected_baseline_commit'] = args.expected_baseline_commit
+                metadata['managed_read_policy'] = 'complete release CLI export primary; complete batch supporting; AB/BA pairs; separate instrumented I/O; fixed-option API output control'
+                args.managed_first_count = counts[0]
             (args.out / 'environment.json').write_text(json.dumps(metadata, indent=2))
             success = False
             try:
@@ -151,6 +178,10 @@ def main():
                     for _ in range(args.samples):
                         run('cli/version', cli + ['--version'])
                 for count in counts:
+                    if args.workload == 'managed-read':
+                        from managed_read import run_count
+                        run_count(args, REPO, root, count, node, run, rows, builds)
+                        continue
                     home = root / f'library-{count}'
                     if args.workload in ['baseline', 'cli', 'viewer']:
                         run(f'setup/{count}', helper + ['seed', str(home), str(count), str(sizes[0]), '1'])
@@ -194,7 +225,8 @@ def main():
                         try:
                             nested = json.loads(line)
                             if isinstance(nested, dict) and 'wall_ms' in nested:
-                                groups.setdefault('operation/' + nested['label'], []).append(nested['wall_ms'])
+                                label = row['label'] if args.workload == 'managed-read' else nested['label']
+                                groups.setdefault('operation/' + label, []).append(nested['wall_ms'])
                         except (ValueError, KeyError):
                             pass
                 summary = {label: dict(n=len(values), min_ms=min(values), median_ms=statistics.median(values), max_ms=max(values)) for label, values in groups.items()}
