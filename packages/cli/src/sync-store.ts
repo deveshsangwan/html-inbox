@@ -730,7 +730,7 @@ export class ManagedSyncStore {
   async acknowledgeHoldings(authorization: unknown, storageIncarnation: unknown, members: unknown): Promise<void> {
     const auth = parseAuthorization(authorization);
     const incarnation = parseUuid(storageIncarnation);
-    if (!Array.isArray(members)) {
+    if (!Array.isArray(members) || members.length < 1 || members.length > SYNC_LIMITS.manifestPage) {
       throw new Error(`Acknowledgement batch requires 1 to ${SYNC_LIMITS.manifestPage} receipts`);
     }
 
