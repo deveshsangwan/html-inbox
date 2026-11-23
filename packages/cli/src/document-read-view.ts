@@ -12,7 +12,6 @@ export async function withDocumentReadView<T>(
   let isClosed = false;
   let hasCallbackFailed = false;
   let callbackFailure: unknown;
-  const stopAdmission = () => { isClosed = true; };
 
   function read<Result>(action: (source: DocumentReadView) => Promise<Result>): Promise<Result> {
     if (isClosed || !current) {
@@ -42,7 +41,6 @@ export async function withDocumentReadView<T>(
     getDocumentMetadata: (id) => read((source) => source.getDocumentMetadata(id)),
     getDocument: (id) => read((source) => source.getDocument(id)),
   };
-  signal?.addEventListener("abort", stopAdmission, { once: true });
 
   try {
     signal?.throwIfAborted();
@@ -53,7 +51,6 @@ export async function withDocumentReadView<T>(
     throw error;
   } finally {
     isClosed = true;
-    signal?.removeEventListener("abort", stopAdmission);
 
     try {
       try {
@@ -63,7 +60,8 @@ export async function withDocumentReadView<T>(
           throw error;
         }
 
-        if (error !== callbackFailure) {
+        // Object.is treats a repeated NaN abort reason as the same failure.
+        if (!Object.is(error, callbackFailure)) {
           throw new AggregateError([callbackFailure, error], "Document read callback and admitted read both failed");
         }
       }

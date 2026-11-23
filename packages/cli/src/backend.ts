@@ -250,7 +250,8 @@ export class LocalDocumentBackend implements DocumentBackend {
     }
 
     try {
-      await Promise.all([
+      // Both checks settle before the document is classified, so no chmod outlives this read.
+      await settleAll([
         hardenPrivateFile(path.join(documentDir, "index.html")),
         hardenPrivateFile(path.join(documentDir, "metadata.json")),
       ]);
@@ -288,17 +289,17 @@ export class LocalDocumentBackend implements DocumentBackend {
   }
 }
 
-/** Waits for every read, then rejects with the first failure in input order. */
-async function settleAll<T>(reads: Promise<T>[]): Promise<T[]> {
-  const values: T[] = [];
+/** Like Promise.all, including its earliest rejection reason, but settles only after every promise does. */
+async function settleAll<T>(promises: Promise<T>[]): Promise<T[]> {
+  const failures: unknown[] = [];
+  const results = await Promise.allSettled(promises.map((promise) => promise.catch((reason: unknown) => {
+    failures.push(reason);
+    throw reason;
+  })));
 
-  for (const result of await Promise.allSettled(reads)) {
-    if (result.status === "rejected") {
-      throw result.reason;
-    }
-
-    values.push(result.value);
+  if (failures.length > 0) {
+    throw failures[0];
   }
 
-  return values;
+  return results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
 }

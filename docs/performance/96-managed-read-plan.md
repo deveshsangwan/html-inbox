@@ -464,3 +464,24 @@ The regression for unobserved admitted-read rejections now keeps its test open
 for one turn, and the probe fixture rejects node:test's after-test activity
 diagnostic. Three controls were added, so the actual-view probe expects 47
 tests instead of the original 44.
+
+## Council round 2 follow-up
+
+Round 2 at 823b972 found three gaps in the same lifetime policy:
+
+- An abort used to close the view immediately, so a read requested after the
+  abort but before the callback returned was refused as "closed". The view
+  now stays open until its callback settles. Every later read rejects with the
+  caller's abort reason.
+- Each legacy metadata read hardened `index.html` and `metadata.json` with a
+  fail-fast `Promise.all`. A missing file could classify the document while the
+  sibling chmod was still running. Both checks now settle first. The
+  classification and reported reason are unchanged, because the join keeps
+  `Promise.all`'s earliest rejection. The scoped list join uses the same rule.
+- A repeated `NaN` abort reason is now reported once instead of twice.
+
+The gated controls race their hold against the scope result and release in
+`finally`, so a failure on the pre-fix code cannot hang them. Three controls
+were added, so the actual-view probe now expects 50 tests.
+`LocalDocumentSource.withReadView` has no production caller today. Export
+uses `LocalDocumentBackend`. The probes still cover both adapters.

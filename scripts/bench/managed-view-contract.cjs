@@ -15,6 +15,7 @@ const { LocalDocumentBackend } = require(path.join(dist, 'backend.js'));
 const { LocalDocumentSource } = require(path.join(dist, 'local-document-source.js'));
 const { exportStaticSnapshot } = require(path.join(dist, 'static-export.js'));
 const { ManagedSyncStore, toOriginState } = require(path.join(dist, 'sync-store.js'));
+const privateStorage = require(path.join(dist, 'private-storage.js'));
 const { canonicalKey, inventoryDigest, MANIFEST_DOMAIN } = require(path.join(dist, 'sync-model.js'));
 
 // Enrollment requires POSIX directory fsync. This probe does not qualify Windows.
@@ -480,10 +481,14 @@ test('callback and admitted-read failures both reach the scope without observing
   release.resolve();
   await verdict;
   // An unobserved wrapper rejection is reported on a later turn; keep the test open for it.
-  await new Promise((resolve) => setImmediate(resolve));
+  await nextTurn();
   assert.equal(disposed, 1);
   await assert.rejects(escaped.listDocuments(), /view is closed/);
 });
+
+function nextTurn() {
+  return new Promise((resolve) => setImmediate(resolve));
+}
 
 for (const sourceKind of ['backend', 'read-only source']) {
   test(`${sourceKind}: cancellation during an admitted adapter check keeps the caller's reason`, async (t) => {
@@ -509,52 +514,154 @@ for (const sourceKind of ['backend', 'read-only source']) {
       isInsideScope = true;
       return view.listDocuments();
     }, controller.signal);
-    await entered.promise;
-    controller.abort(reason);
-    release.resolve();
+    void scope.catch(() => {});
+    try {
+      // An early scope failure ends the race instead of waiting for the hold forever.
+      await Promise.race([entered.promise, scope.then(() => assert.fail('scope settled before the held check'))]);
+      controller.abort(reason);
+    } finally {
+      release.resolve();
+    }
+
     await assert.rejects(scope, (error) => error === reason);
   });
 }
 
-test('legacy scoped list waits for every started metadata read before rejecting', async (t) => {
+test('an abort between admitted reads rejects the next read with the caller\'s reason', async () => {
+  const controller = new AbortController();
+  const reason = new Error('cancelled between reads');
+  let disposed = 0;
+  const scope = withDocumentReadView({
+    async listDocuments() { return []; },
+    async getDocumentMetadata() { return null; },
+    async getDocument() { assert.fail('read was admitted after the abort'); },
+  }, async (view) => {
+    await view.listDocuments();
+    controller.abort(reason);
+    return view.getDocument('original');
+  }, controller.signal, () => { disposed += 1; });
+
+  await assert.rejects(scope, (error) => error === reason);
+  assert.equal(disposed, 1);
+});
+
+test('a repeated NaN abort reason is reported once', async () => {
+  const controller = new AbortController();
+  const entered = deferred();
+  const release = deferred();
+  const scope = withDocumentReadView({
+    async listDocuments() { entered.resolve(); await release.promise; return []; },
+    async getDocumentMetadata() { return null; },
+    async getDocument() { return null; },
+  }, async (view) => {
+    void view.listDocuments();
+    await entered.promise;
+    controller.abort(Number.NaN);
+    throw controller.signal.reason;
+  }, controller.signal);
+  const verdict = assert.rejects(scope, (error) => Number.isNaN(error));
+  await entered.promise;
+  release.resolve();
+  await verdict;
+  await nextTurn();
+});
+
+async function legacyBackend(t, label, ids, onWarning = () => {}) {
   const root = await mkdtemp(path.join(tmpdir(), 'html-inbox-view-legacy-join-'));
   t.after(async () => {
     await rm(root, { recursive: true, force: true });
     await assert.rejects(lstat(root), { code: 'ENOENT' });
-    t.diagnostic('legacy join fixture removed');
+    t.diagnostic(`${label} fixture removed`);
   });
-  const ids = ['first', 'second'];
-  const backend = new LocalDocumentBackend(path.join(root, 'library'), () => {}, () => ids.shift());
-  await backend.publish(input('first'));
-  await backend.publish(input('second'));
-  const failure = new Error('first metadata read failed');
+  const queue = [...ids];
+  const home = path.join(root, 'library');
+  const backend = new LocalDocumentBackend(home, onWarning, () => queue.shift());
+  for (const id of ids) await backend.publish(input(id));
+
+  return { home, backend };
+}
+
+test('legacy scoped list waits for every started metadata read and keeps the earliest failure', async (t) => {
+  const { backend } = await legacyBackend(t, 'legacy join', ['first', 'second', 'third']);
+  const earliest = new Error('first metadata read failed');
+  const later = new Error('third metadata read failed');
   const siblingEntered = deferred();
   const release = deferred();
+  const siblingFinished = deferred();
   const readMetadata = LocalDocumentBackend.prototype.readMetadata;
-  let isSiblingFinished = false;
   t.mock.method(LocalDocumentBackend.prototype, 'readMetadata', async function (id) {
     if (id === 'first') {
       await siblingEntered.promise;
-      throw failure;
+      throw earliest;
+    }
+
+    if (id === 'third') {
+      await release.promise;
+      throw later;
     }
 
     siblingEntered.resolve();
-    await release.promise;
-    const metadata = await readMetadata.call(this, id);
-    isSiblingFinished = true;
-    return metadata;
+    try {
+      await release.promise;
+      return await readMetadata.call(this, id);
+    } finally {
+      siblingFinished.resolve();
+    }
   });
 
   let isSettled = false;
   const scope = backend.withReadView((view) => view.listDocuments());
-  const observed = scope.finally(() => { isSettled = true; });
-  void observed.catch(() => {});
-  await siblingEntered.promise;
-  await new Promise((resolve) => setImmediate(resolve));
-  assert.equal(isSettled, false, 'scope settled while a sibling read still touched storage');
-  release.resolve();
-  await assert.rejects(scope, (error) => error === failure);
-  assert.equal(isSiblingFinished, true);
+  void scope.finally(() => { isSettled = true; }).catch(() => {});
+  try {
+    await Promise.race([siblingEntered.promise, scope.then(() => assert.fail('scope settled before the sibling started'))]);
+    await nextTurn();
+    assert.equal(isSettled, false, 'scope settled while a sibling read still touched storage');
+  } finally {
+    release.resolve();
+    await siblingFinished.promise;
+  }
+
+  await assert.rejects(scope, (error) => error === earliest);
+});
+
+test('legacy scoped reads wait for both file hardening checks of an incomplete document', async (t) => {
+  const warnings = [];
+  const { home, backend } = await legacyBackend(t, 'legacy hardening', ['first'], (message) => warnings.push(message));
+  await rm(path.join(home, 'documents', 'first', 'index.html'));
+  const held = deferred();
+  const release = deferred();
+  const heldFinished = deferred();
+  const hardenPrivateFile = privateStorage.hardenPrivateFile;
+  let isArmed = true;
+  t.mock.method(privateStorage, 'hardenPrivateFile', async (filePath) => {
+    if (!isArmed || path.basename(filePath) !== 'metadata.json') {
+      return hardenPrivateFile(filePath);
+    }
+
+    isArmed = false;
+    held.resolve();
+    try {
+      await release.promise;
+      return await hardenPrivateFile(filePath);
+    } finally {
+      heldFinished.resolve();
+    }
+  });
+
+  let isSettled = false;
+  const scope = backend.withReadView((view) => view.listDocuments());
+  void scope.finally(() => { isSettled = true; }).catch(() => {});
+  try {
+    await Promise.race([held.promise, scope.then(() => assert.fail('scope settled before the held check'))]);
+    await nextTurn();
+    assert.equal(isSettled, false, 'scope settled while a sibling chmod was still running');
+  } finally {
+    release.resolve();
+    await heldFinished.promise;
+  }
+
+  assert.deepEqual(await scope, []);
+  assert.deepEqual(warnings, ['skipping corrupt document first: document files are incomplete']);
 });
 
 test('already cancelled scopes dispose without invoking their callback or admitting a read', async () => {
