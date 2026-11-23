@@ -458,6 +458,7 @@ Module._load = function (request, ...args) {
 // ncc writes into bundle/ without clearing it, so a pack that skips the clean bundle script can carry
 // chunks from an earlier build. Shipped JavaScript anywhere under bundle/ must be exactly what index.js
 // can reach through chunk requests; stale chunks that only reference each other are still unreachable.
+// Only JavaScript is checked: ncc emits no other assets for this package.
 async function assertNoStaleChunks(bundleDirectory) {
   const shipped = (await readdir(bundleDirectory, { recursive: true }))
     .map((name) => name.split(path.sep).join("/"))
@@ -502,6 +503,9 @@ async function waitForProcessExit(pid, timeoutMs) {
       throw new Error(`Cannot probe managed worker ${pid}`, { cause: error });
     }
 
+    // Signal 0 also succeeds for an exited worker that a non-reaping init has not collected yet.
+    if (await isZombie(pid)) return true;
+
     if (Date.now() >= deadline) return false;
     await delay(20);
   }
@@ -521,6 +525,13 @@ function fixtureEnvironment(overrides) {
     npm_config_globalconfig: npmGlobalConfig,
     ...overrides,
   };
+}
+
+async function isZombie(pid) {
+  if (process.platform !== "linux") return false;
+
+  const stat = await readFile(`/proc/${pid}/stat`, "utf8").catch(() => "");
+  return stat.slice(stat.lastIndexOf(")") + 2).startsWith("Z");
 }
 
 async function run(command, args, cwd, env = {}) {

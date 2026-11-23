@@ -2,10 +2,10 @@
 
 The user requested a council: one Anthropic and one OpenAI flagship reviewer, each at high effort. Both reviewers get the same brief and review the same exact revision, read-only, each in its own isolated worktree. Rounds repeat until both independently score at least 9.5/10 on the same revision. Scores are recorded as given, never averaged or rounded. Earlier stack-status and V1/V2 reviews in [reviews.md](reviews.md) do not count toward this council.
 
-| Delegate | Exact settings | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 |
-| --- | --- | --- | --- | --- | --- | --- |
-| Claude Opus | provider `claudeAgent`, model `claude-opus-5-5`, `effort=high` | 9.0/10 | 9.2/10 | 9.3/10 | no score | 9.4/10 |
-| GPT Sol | provider `codex`, model `gpt-6.2-sol`, `reasoningEffort=high` | 8.3/10 | 8.4/10 | 8.8/10 | 8.7/10 | 8.7/10 |
+| Delegate | Exact settings | Round 1 | Round 2 | Round 3 | Round 4 | Round 5 | Round 6 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Claude Opus | provider `claudeAgent`, model `claude-opus-5-5`, `effort=high` | 9.0/10 | 9.2/10 | 9.3/10 | no score | 9.4/10 | 9.5/10 |
+| GPT Sol | provider `codex`, model `gpt-6.2-sol`, `reasoningEffort=high` | 8.3/10 | 8.4/10 | 8.8/10 | 8.7/10 | 8.7/10 | 8.7/10 |
 
 ## Round 1
 
@@ -154,6 +154,32 @@ So this PR's Windows Source job has failed only at `5d4f93f`. That remains an ob
 | The plan said later commits change only tests, scripts and evidence | Opus, Nit | Fixed. It now names the package build-script change and says it changes how the tarball is assembled, not its source. |
 | No automated test covers the runner's kill-before-reap order, and package smoke's failure paths are review-only | Opus, Low | Acknowledged as the main residual risk. The order was checked in a scratchpad and by both reviewers. Package smoke's failure paths would need production test hooks. |
 
-### Still required
+### Pending after round 5
 
 The installed hub mode happy path ran at `fad6cd5` and `fee269e` (3/3 each, native exit and close 0/null). Outstanding is qualification of the successor head: both negative hub probes (a startup failure that closes cleanly, and an unjoined child), and both seeded-obsolete-chunk controls through the real package scripts (a scripts-enabled `npm pack` and a direct `npm run bundle`). These are queued for the root grant. Package smoke's own failure paths stay review-only.
+
+## Round 6
+
+Revision `79ed1589856243ddafb8230ca3c7d97abccdb5a7`, base `08d5b2b`. Both reviewers completed full reviews and found no production-code defect. Opus scored 9.5 and Sol 8.7, so the council is not yet satisfied on one revision. From this round on, the brief asks reviewers to label findings in pre-existing package-smoke code. Sol labelled finding 3 as pre-existing.
+
+### Hosted CI on the round 6 revision
+
+Normal pull_request run 45226185322, attempt 1, at `79ed158`: all 16 Actions jobs succeeded, including Verify (job 137878688478) and Source (windows-latest, 24, 1/1) (job 137873188926). Windows Source has now passed at `4e3e649` and `79ed158` after the single failure at `5d4f93f`. That failure was an `EPERM` rename and not a worker deadline, which a lost IPC message would produce. No cause is claimed.
+
+### Fixed
+
+| Finding | Reviewer, severity | Disposition |
+| --- | --- | --- |
+| npm ignores an empty `npm_config_node_options`, so a `node-options` line in `~/.npmrc` still reached lifecycle scripts | Sol, Medium | Fixed. Package-smoke children get separate, empty, fixture-owned `npm_config_userconfig` and `npm_config_globalconfig` files; inherited values of those and of `npm_config_node_options` are dropped. Checked on npm 10.8.2 and 11.17.0 with `npm config get`: a `~/.npmrc` sentinel `node-options` and `ignore-scripts=true` resolve to `null` and `false`. The round 5 empty override did not work, as Sol found. |
+| An interrupt between spawn and the cleanup block could skip the benchmark runner's `killpg`/`wait4` | Sol, Medium | Fixed. The runner defers SIGINT and SIGTERM from spawn until reap, then re-raises the first one. In a scratchpad check, SIGTERM during a sample ended the runner (143) only after the sample's background process was killed and reaped. The child keeps default dispositions, because exec resets caught signals. |
+| The smoke's own `npm pack` inherits an `ignore-scripts` setting and can skip `prepack` | Sol, Low (pre-existing) | Fixed. The pack passes `--ignore-scripts=false`, which overrides an inherited `ignore-scripts=true`. The consumer install still disables scripts. |
+| The stale-chunk check ignored JavaScript in `bundle/` subdirectories | Sol, Low | Fixed. It lists `bundle/` recursively. On Node 20 and 24 it fails a nested `old/obsolete.js` and the mutually referencing pair, and passes the clean bundles. |
+| The teardown addendum said the success-path assertions are unchanged | Opus, Low | Fixed. It now says the success path keeps its earlier assertions and adds the first worker's exit check. |
+| A zombie worker under a non-reaping init counts as still running | Opus, Low (speculative) | Fixed. On Linux, a `Z` state in `/proc/<pid>/stat` counts as exited; it was checked against a real zombie. Elsewhere, the reaping-init assumption stays. |
+| `reviews.md` cites the old runner's line and `child.wait()` without saying so | Opus, Nit | Fixed with "(at `ac2b3b7`)". |
+| Default in-process hub teardown now closes browser and hub concurrently and retains the root on a failed close | Opus, Nit | Recorded here. Startup in default mode is still exactly `startHub(configuration, 0)`; the teardown change fixes the base's hub leak when `browser.close` throws. |
+| The stale-chunk check covers only JavaScript | Opus, Nit | Documented in the code and README: ncc emits no other assets for this package. |
+
+### Still required
+
+Same as after round 5: the queued root-granted qualification of the successor head, covering both negative hub probes and both seeded-obsolete-chunk package-script controls. Package smoke's own failure paths stay review-only.
